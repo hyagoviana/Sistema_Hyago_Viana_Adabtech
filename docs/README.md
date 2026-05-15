@@ -184,11 +184,29 @@ Todas com RLS + soft-delete + audit log + organization_id (multi-tenant pronto).
 
 - **Começar pelo:** [`project-brief.md`](./project-brief.md) para contexto macro
 - **Para designer/UX:** [`prd/00-ux-design-system.md`](./prd/00-ux-design-system.md)
-- **Para tech lead/arquiteto:** [`prd/master-platform.md`](./prd/master-platform.md) (schema + decisões)
+- **Para tech lead/arquiteto:** [`prd/master-platform.md`](./prd/master-platform.md) (schema + decisões) · [`architecture/frontend-architecture.md`](./architecture/frontend-architecture.md) (técnica frontend)
 - **Para devs do FIES:** [`prd/01-plataforma-fies.md`](./prd/01-plataforma-fies.md) (módulo central)
+- **Para execução (F2):** [`sprints/README.md`](./sprints/README.md) → **8 sprints passo a passo**
 - **Para revisão de PM:** todos os PRDs têm seção **"Épicos e Stories"** com ACs prontos para sprint
 
 Cada PRD tem **checklist de validação QA + Arquiteto + UX** na seção final, indicando o que precisa estar verde antes do próximo nível.
+
+---
+
+## 🚀 Plano de execução F2 (Frontend Mock-First)
+
+> **Estratégia design-first aprovada:** construir TODA a UI primeiro (115 telas, mocks), depois aplicar backend.
+
+8 sprints detalhados em [`sprints/`](./sprints/):
+
+1. [Sprint 1 — Fundação Técnica](./sprints/sprint-01-fundacao-tecnica.md) ← **PRÓXIMO**
+2. [Sprint 2 — Design System Core](./sprints/sprint-02-design-system-core.md)
+3. [Sprint 3 — Cliente 360° + FIES (parte 1)](./sprints/sprint-03-cliente-360-fies-1.md)
+4. [Sprint 4 — FIES (parte 2) + Controladoria](./sprints/sprint-04-fies-2-controladoria.md)
+5. [Sprint 5 — Peticionamento + Comercial](./sprints/sprint-05-peticionamento-comercial.md)
+6. [Sprint 6 — Marketing + WhatsApp](./sprints/sprint-06-marketing-whatsapp.md)
+7. [Sprint 7 — Portal Cliente + Painel Institucional](./sprints/sprint-07-portal-painel.md)
+8. [Sprint 8 — Polish + A11y + Performance + Handoff](./sprints/sprint-08-polish-handoff.md)
 
 ---
 
