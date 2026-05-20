@@ -51,7 +51,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/ --max-time 5)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3002/ --max-time 5)",
       "Bash(curl -s -o /dev/null -w \"interno HTTP %{http_code}\\\\n\" http://localhost:3000/hoje)",
-      "Bash(curl -s -o /dev/null -w \"admin  HTTP %{http_code}\\\\n\" http://localhost:3000/dashboards/admin)"
+      "Bash(curl -s -o /dev/null -w \"admin  HTTP %{http_code}\\\\n\" http://localhost:3000/dashboards/admin)",
+      "Bash(bun --version)",
+      "Bash(npm run *)"
     ]
   }
 }
