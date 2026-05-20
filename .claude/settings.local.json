@@ -53,7 +53,12 @@
       "Bash(curl -s -o /dev/null -w \"interno HTTP %{http_code}\\\\n\" http://localhost:3000/hoje)",
       "Bash(curl -s -o /dev/null -w \"admin  HTTP %{http_code}\\\\n\" http://localhost:3000/dashboards/admin)",
       "Bash(bun --version)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code} | Tempo: %{time_total}s\\\\n\" http://localhost:8080/)",
+      "Bash(curl -s http://localhost:8080/)",
+      "Bash(curl -s -I http://localhost:8080/)",
+      "Bash(curl -sL -o /dev/null -w \"Final: %{http_code} | URL: %{url_effective}\\\\n\" http://localhost:8080/)",
+      "Bash(curl -sL http://localhost:8080/)"
     ]
   }
 }
