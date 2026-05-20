@@ -1,0 +1,19 @@
+import { Outlet } from "@tanstack/react-router";
+import { Sidebar } from "./Sidebar";
+import { Topbar } from "./Topbar";
+import { StatusBar } from "./StatusBar";
+
+export function AppLayout() {
+  return (
+    <div className="flex min-h-screen" style={{ background: "var(--bg-page)" }}>
+      <Sidebar />
+      <div className="flex-1 min-w-0 flex flex-col" style={{ paddingBottom: 28 }}>
+        <Topbar />
+        <main className="flex-1 min-w-0">
+          <Outlet />
+        </main>
+      </div>
+      <StatusBar />
+    </div>
+  );
+}
