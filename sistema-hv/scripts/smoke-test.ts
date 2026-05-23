@@ -6,7 +6,9 @@
 //
 // Falha rápido se qualquer variável crítica estiver ausente.
 
-import "dotenv/config";
+import { config as loadDotenv } from "dotenv";
+
+loadDotenv({ path: ".env.local" });
 
 import { assertEnvOrExit } from "../src/lib/validate-env";
 import { getSupabaseAdmin } from "../src/lib/supabase/server";
@@ -27,10 +29,10 @@ async function main() {
   assertEnvOrExit();
   console.log("   ✓ env vars OK\n");
 
-  // ─── 1. Supabase: ler organizations ──────────────────────────────────────
-  console.log("1) Supabase: lendo organizations...");
+  // ─── 1. Supabase: ler system_organizations ───────────────────────────────
+  console.log("1) Supabase: lendo system_organizations...");
   const sb = getSupabaseAdmin();
-  const { data: orgs, error } = await sb.from("organizations").select("id, name");
+  const { data: orgs, error } = await sb.from("system_organizations").select("id, name");
   if (error) {
     throw new Error(
       `Supabase: ${error.message} — a migration 0001_init.sql foi aplicada? (npm run db:push)`,

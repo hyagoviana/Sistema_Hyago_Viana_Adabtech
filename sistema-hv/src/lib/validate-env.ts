@@ -33,7 +33,7 @@ const ENV_CHECKS: EnvCheck[] = [
   {
     name: "GOOGLE_DRIVE_ROOT_FOLDER_ID",
     required: true,
-    validate: (v) => (v.length >= 20 ? null : "ID muito curto, suspeito"),
+    validate: (v) => (v.length >= 15 ? null : "ID muito curto, suspeito"),
   },
 ];
 
