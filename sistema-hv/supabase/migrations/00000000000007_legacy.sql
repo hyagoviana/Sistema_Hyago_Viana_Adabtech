@@ -1,0 +1,2 @@
+-- Legacy migration placeholder — already applied in remote DB.
+-- Created 2026-05-23 to reconcile history with Supabase CLI.

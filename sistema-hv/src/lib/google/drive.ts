@@ -41,7 +41,15 @@ export function getRootFolderId(): string {
   return getEnv().rootFolderId;
 }
 
-function commonParams() {
+// Params para operações em um único arquivo (get/create/update/delete).
+// `driveId` e `corpora` são parâmetros de busca — incluir em delete causa 404.
+function writeParams() {
+  const { sharedDriveId } = getEnv();
+  return sharedDriveId ? { supportsAllDrives: true } : {};
+}
+
+// Params para list/search — precisa indicar onde procurar.
+function searchParams() {
   const { sharedDriveId } = getEnv();
   if (!sharedDriveId) return {};
   return {
@@ -127,7 +135,7 @@ export async function createFolder(name: string, parentId?: string): Promise<Dri
   const parent = parentId ?? getRootFolderId();
   try {
     const res = await drive.files.create({
-      ...commonParams(),
+      ...writeParams(),
       requestBody: {
         name,
         mimeType: "application/vnd.google-apps.folder",
@@ -154,7 +162,7 @@ export async function uploadFile(opts: {
   const drive = getDriveClient();
   try {
     const res = await drive.files.create({
-      ...commonParams(),
+      ...writeParams(),
       requestBody: {
         name: opts.name,
         parents: [opts.parentId],
@@ -182,7 +190,7 @@ export async function downloadFile(fileId: string): Promise<Readable> {
   const drive = getDriveClient();
   try {
     const res = await drive.files.get(
-      { fileId, alt: "media", ...commonParams() },
+      { fileId, alt: "media", ...writeParams() },
       { responseType: "stream" },
     );
     return res.data as unknown as Readable;

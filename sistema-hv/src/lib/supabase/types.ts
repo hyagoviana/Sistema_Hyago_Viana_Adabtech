@@ -1,14 +1,13 @@
 // Tipos do schema Supabase do Sistema HV.
 // PLACEHOLDER — regenere com `npm run db:types` após aplicar migrations.
-// Mantém os clientes tipados (Database) sem quebrar build enquanto a migration
-// não foi pushed no projeto remoto.
+// Convenção: todas as tabelas/views/funcs do sistema usam prefixo `system_`.
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   public: {
     Tables: {
-      organizations: {
+      system_organizations: {
         Row: {
           id: string;
           name: string;
@@ -23,10 +22,10 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["organizations"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["system_organizations"]["Insert"]>;
         Relationships: [];
       };
-      clients: {
+      system_clients: {
         Row: {
           id: string;
           organization_id: string;
@@ -61,17 +60,17 @@ export type Database = {
           updated_at?: string;
           deleted_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["clients"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["system_clients"]["Insert"]>;
         Relationships: [
           {
-            foreignKeyName: "clients_organization_id_fkey";
+            foreignKeyName: "system_clients_organization_id_fkey";
             columns: ["organization_id"];
-            referencedRelation: "organizations";
+            referencedRelation: "system_organizations";
             referencedColumns: ["id"];
           },
         ];
       };
-      client_documents: {
+      system_client_documents: {
         Row: {
           id: string;
           client_id: string;
@@ -104,23 +103,23 @@ export type Database = {
           updated_at?: string;
           deleted_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["client_documents"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["system_client_documents"]["Insert"]>;
         Relationships: [
           {
-            foreignKeyName: "client_documents_client_id_fkey";
+            foreignKeyName: "system_client_documents_client_id_fkey";
             columns: ["client_id"];
-            referencedRelation: "clients";
+            referencedRelation: "system_clients";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "client_documents_organization_id_fkey";
+            foreignKeyName: "system_client_documents_organization_id_fkey";
             columns: ["organization_id"];
-            referencedRelation: "organizations";
+            referencedRelation: "system_organizations";
             referencedColumns: ["id"];
           },
         ];
       };
-      audit_log: {
+      system_audit_log: {
         Row: {
           id: string;
           organization_id: string | null;
@@ -145,22 +144,22 @@ export type Database = {
           user_agent?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["audit_log"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["system_audit_log"]["Insert"]>;
         Relationships: [];
       };
     };
     Views: {
-      clients_active: {
-        Row: Database["public"]["Tables"]["clients"]["Row"];
+      system_clients_active: {
+        Row: Database["public"]["Tables"]["system_clients"]["Row"];
         Relationships: [];
       };
-      client_documents_active: {
-        Row: Database["public"]["Tables"]["client_documents"]["Row"];
+      system_client_documents_active: {
+        Row: Database["public"]["Tables"]["system_client_documents"]["Row"];
         Relationships: [];
       };
     };
     Functions: {
-      current_organization_id: {
+      system_current_organization_id: {
         Args: Record<string, never>;
         Returns: string;
       };
