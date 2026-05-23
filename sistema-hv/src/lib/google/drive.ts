@@ -202,7 +202,7 @@ export async function downloadFile(fileId: string): Promise<Readable> {
 export async function deleteFile(fileId: string): Promise<void> {
   const drive = getDriveClient();
   try {
-    await drive.files.delete({ fileId, ...commonParams() });
+    await drive.files.delete({ fileId, ...writeParams() });
   } catch (err) {
     throw new DriveError(`Falha ao deletar arquivo ${fileId}.`, err);
   }
@@ -214,7 +214,7 @@ export async function getFileMeta(fileId: string) {
     const res = await drive.files.get({
       fileId,
       fields: "id, name, mimeType, size, webViewLink, createdTime, modifiedTime, parents",
-      ...commonParams(),
+      ...writeParams(),
     });
     return res.data;
   } catch (err) {
@@ -229,7 +229,7 @@ export async function listFilesInFolder(parentId: string, pageSize = 100) {
       q: `'${parentId}' in parents and trashed=false`,
       fields: "files(id, name, mimeType, size, webViewLink, createdTime)",
       pageSize,
-      ...commonParams(),
+      ...searchParams(),
     });
     return res.data.files ?? [];
   } catch (err) {
