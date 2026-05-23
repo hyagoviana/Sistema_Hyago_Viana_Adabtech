@@ -1,0 +1,6 @@
+# Configuração mínima do Supabase CLI para o Sistema HV.
+# Veja todas as opções em https://supabase.com/docs/guides/local-development/cli/config
+project_id = "sistema-hv"
+
+[db]
+major_version = 15
