@@ -121,6 +121,94 @@ export type Database = {
           },
         ];
       };
+      system_cases: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          case_code: string;
+          case_type: string;
+          macrostatus_op: string;
+          macrostatus_fin: string;
+          proximo_passo: string | null;
+          responsavel: string | null;
+          municipio: string | null;
+          valor_centavos: number | null;
+          inadimplente: boolean;
+          status_changed_at: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          case_code: string;
+          case_type: string;
+          macrostatus_op?: string;
+          macrostatus_fin?: string;
+          proximo_passo?: string | null;
+          responsavel?: string | null;
+          municipio?: string | null;
+          valor_centavos?: number | null;
+          inadimplente?: boolean;
+          status_changed_at?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_cases"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_cases_client_id_fkey";
+            columns: ["client_id"];
+            referencedRelation: "system_clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_cases_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "system_organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      system_case_events: {
+        Row: {
+          id: string;
+          case_id: string;
+          organization_id: string;
+          action: string;
+          from_macrostatus_op: string | null;
+          to_macrostatus_op: string | null;
+          diff: Json | null;
+          triggered_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          organization_id: string;
+          action: string;
+          from_macrostatus_op?: string | null;
+          to_macrostatus_op?: string | null;
+          diff?: Json | null;
+          triggered_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_events"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_case_events_case_id_fkey";
+            columns: ["case_id"];
+            referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_audit_log: {
         Row: {
           id: string;
@@ -159,11 +247,22 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_client_documents"]["Row"];
         Relationships: [];
       };
+      system_cases_active: {
+        Row: Database["public"]["Tables"]["system_cases"]["Row"] & {
+          client_name: string;
+          client_cpf_cnpj: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       system_current_organization_id: {
         Args: Record<string, never>;
         Returns: string;
+      };
+      nextval_seq_system_case_code: {
+        Args: Record<string, never>;
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

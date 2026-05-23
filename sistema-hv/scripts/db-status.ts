@@ -14,6 +14,9 @@ const SYSTEM_ENTITIES = [
   { name: "system_audit_log", kind: "table" },
   { name: "system_clients_active", kind: "view" },
   { name: "system_client_documents_active", kind: "view" },
+  { name: "system_cases", kind: "table" },
+  { name: "system_case_events", kind: "table" },
+  { name: "system_cases_active", kind: "view" },
 ] as const;
 
 async function main() {

@@ -3,6 +3,8 @@ import { AlertTriangle, ExternalLink, Pencil, RefreshCw, Trash2 } from "lucide-r
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
+import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
@@ -194,11 +196,16 @@ function ClienteDetalhe() {
       </div>
 
       <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
-        Casos vinculados
+        Documentos do cliente
       </h2>
-      <div className="card-editorial !p-10 text-center text-muted-foreground italic">
-        Casos chegam na Sprint F4 (módulo Operacional).
-      </div>
+      <ClientDocumentsSection
+        clientId={cliente.id}
+        clientHasDriveFolder={!!cliente.drive_folder_id}
+      />
+
+      <OrnamentalDivider />
+
+      <ClientCasesSection clientId={cliente.id} />
 
       <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
 

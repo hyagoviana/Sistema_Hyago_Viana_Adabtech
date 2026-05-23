@@ -69,7 +69,12 @@
       "Bash(npx prettier *)",
       "Bash(npx tsx *)",
       "Bash(curl -s -o /tmp/clientes.html -w \"STATUS: %{http_code}\\\\nSIZE: %{size_download} bytes\\\\n\" http://localhost:8080/clientes)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(grep -A 30 \"API route\\\\|http route\\\\|\\\\\\\\.server\\\\\\\\.tsx\\\\|createServerFileRoute\" node_modules/@tanstack/react-start/skills/react-start/SKILL.md)",
+      "Bash(curl -sf http://localhost:8080/api/clients/00000000-0000-0000-0000-000000000099/documents -o /tmp/docs.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -o /tmp/ficha.html -w \"STATUS: %{http_code} SIZE: %{size_download}\\\\n\" http://localhost:8080/clientes)",
+      "Bash(curl -sf http://localhost:8080/casos -o /tmp/k.html -w \"kanban: %{http_code}\\\\n\")",
+      "Bash(curl -sf http://localhost:8081/casos -o /tmp/k.html -w \"kanban: %{http_code}\\\\n\")"
     ]
   }
 }
