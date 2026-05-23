@@ -199,12 +199,19 @@ export async function downloadFile(fileId: string): Promise<Readable> {
   }
 }
 
+// Em Shared Drives, Service Accounts com role "Gerenciador de conteúdo" NÃO podem
+// deletar permanentemente — só mover pra lixeira. A lixeira do Shared Drive limpa
+// automaticamente em 30 dias. Pra MVP, trash é equivalente a delete (sumiu da UI).
 export async function deleteFile(fileId: string): Promise<void> {
   const drive = getDriveClient();
   try {
-    await drive.files.delete({ fileId, ...writeParams() });
+    await drive.files.update({
+      fileId,
+      requestBody: { trashed: true },
+      ...writeParams(),
+    });
   } catch (err) {
-    throw new DriveError(`Falha ao deletar arquivo ${fileId}.`, err);
+    throw new DriveError(`Falha ao mover arquivo ${fileId} para a lixeira.`, err);
   }
 }
 
