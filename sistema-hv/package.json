@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --project-id sptfmfeoikukrhbekitl --schema public > src/lib/supabase/types.ts",
-    "smoke": "tsx scripts/smoke-test.ts"
+    "smoke": "tsx scripts/smoke-test.ts",
+    "test:rls": "tsx scripts/test-rls.ts",
+    "test:validators": "tsx src/lib/validators/client.test.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -66,6 +68,7 @@
     "react-hook-form": "^7.71.2",
     "react-resizable-panels": "^4.6.5",
     "recharts": "^2.15.4",
+    "slugify": "^1.6.9",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",

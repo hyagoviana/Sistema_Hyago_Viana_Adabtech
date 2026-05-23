@@ -9,6 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { AppLayout } from "@/components/hv/AppLayout";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -75,15 +76,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Hyago Viana Advocacia — Sistema de Gestão Jurídica" },
-      { name: "description", content: "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM." },
+      {
+        name: "description",
+        content:
+          "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM.",
+      },
       { name: "author", content: "Hyago Viana Advocacia" },
       { property: "og:title", content: "Hyago Viana Advocacia — Sistema de Gestão Jurídica" },
-      { property: "og:description", content: "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM." },
+      {
+        property: "og:description",
+        content:
+          "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "Hyago Viana Advocacia — Sistema de Gestão Jurídica" },
-      { name: "twitter:description", content: "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/469e1847-cdcb-4b21-88d7-c35d3bd83e17/id-preview-205594be--1bd04073-66c8-49ea-9c46-cf61e145fed7.lovable.app-1778874656149.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/469e1847-cdcb-4b21-88d7-c35d3bd83e17/id-preview-205594be--1bd04073-66c8-49ea-9c46-cf61e145fed7.lovable.app-1778874656149.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/469e1847-cdcb-4b21-88d7-c35d3bd83e17/id-preview-205594be--1bd04073-66c8-49ea-9c46-cf61e145fed7.lovable.app-1778874656149.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/469e1847-cdcb-4b21-88d7-c35d3bd83e17/id-preview-205594be--1bd04073-66c8-49ea-9c46-cf61e145fed7.lovable.app-1778874656149.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -121,6 +142,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayout />
+      <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );
 }

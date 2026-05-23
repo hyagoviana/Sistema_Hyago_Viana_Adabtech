@@ -31,6 +31,7 @@ export type Database = {
           organization_id: string;
           full_name: string;
           cpf_cnpj: string;
+          tipo: string | null;
           email: string | null;
           phone: string | null;
           address: Json | null;
@@ -48,6 +49,7 @@ export type Database = {
           organization_id: string;
           full_name: string;
           cpf_cnpj: string;
+          tipo?: string | null;
           email?: string | null;
           phone?: string | null;
           address?: Json | null;

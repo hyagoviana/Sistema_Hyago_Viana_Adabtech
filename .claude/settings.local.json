@@ -66,7 +66,10 @@
       "Bash(npx supabase *)",
       "Bash(npx tsc *)",
       "Bash(npx eslint *)",
-      "Bash(npx prettier *)"
+      "Bash(npx prettier *)",
+      "Bash(npx tsx *)",
+      "Bash(curl -s -o /tmp/clientes.html -w \"STATUS: %{http_code}\\\\nSIZE: %{size_download} bytes\\\\n\" http://localhost:8080/clientes)",
+      "Read(//tmp/**)"
     ]
   }
 }
