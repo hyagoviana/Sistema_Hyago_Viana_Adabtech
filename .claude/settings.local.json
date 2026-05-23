@@ -58,7 +58,15 @@
       "Bash(curl -s http://localhost:8080/)",
       "Bash(curl -s -I http://localhost:8080/)",
       "Bash(curl -sL -o /dev/null -w \"Final: %{http_code} | URL: %{url_effective}\\\\n\" http://localhost:8080/)",
-      "Bash(curl -sL http://localhost:8080/)"
+      "Bash(curl -sL http://localhost:8080/)",
+      "Bash(xargs cat *)",
+      "Bash(node scripts/setup-drive-folders.mjs --dry-run)",
+      "Bash(node scripts/setup-drive-folders.mjs)",
+      "Bash(supabase --version)",
+      "Bash(npx supabase *)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)"
     ]
   }
 }
