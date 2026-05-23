@@ -14,7 +14,10 @@
     "db:types": "supabase gen types typescript --project-id sptfmfeoikukrhbekitl --schema public > src/lib/supabase/types.ts",
     "smoke": "tsx scripts/smoke-test.ts",
     "test:rls": "tsx scripts/test-rls.ts",
-    "test:validators": "tsx src/lib/validators/client.test.ts"
+    "test:upload": "tsx scripts/test-upload.ts",
+    "test:cases": "tsx scripts/test-cases.ts",
+    "seed:cases": "tsx scripts/seed-cases-demo.ts",
+    "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

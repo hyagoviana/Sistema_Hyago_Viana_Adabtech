@@ -1,0 +1,23 @@
+import { z } from "zod";
+
+import { CASE_TYPES, MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
+
+export const caseCreateSchema = z.object({
+  client_id: z.string().uuid("Cliente obrigatório"),
+  case_type: z.enum(CASE_TYPES),
+  macrostatus_op: z.enum(MACRO_OP).optional(),
+  macrostatus_fin: z.enum(MACRO_FIN).optional(),
+  proximo_passo: z.string().trim().max(500).optional().nullable(),
+  responsavel: z.string().trim().max(200).optional().nullable(),
+  municipio: z.string().trim().max(200).optional().nullable(),
+  valor_centavos: z.number().int().nonnegative().optional().nullable(),
+});
+
+export const caseUpdateSchema = caseCreateSchema
+  .partial()
+  .omit({ client_id: true, case_type: true });
+
+export type CaseCreateInput = z.input<typeof caseCreateSchema>;
+export type CaseCreateOutput = z.output<typeof caseCreateSchema>;
+export type CaseUpdateInput = z.input<typeof caseUpdateSchema>;
+export type CaseUpdateOutput = z.output<typeof caseUpdateSchema>;

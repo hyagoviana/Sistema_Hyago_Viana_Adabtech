@@ -12,4 +12,14 @@ export const queryKeys = {
     all: ["documents"] as const,
     byClient: (clientId: string) => [...queryKeys.documents.all, "client", clientId] as const,
   },
+  cases: {
+    all: ["cases"] as const,
+    lists: () => [...queryKeys.cases.all, "list"] as const,
+    list: (filters?: { search?: string; macrostatus_op?: string; client_id?: string }) =>
+      [...queryKeys.cases.lists(), filters ?? {}] as const,
+    byClient: (clientId: string) => [...queryKeys.cases.all, "client", clientId] as const,
+    details: () => [...queryKeys.cases.all, "detail"] as const,
+    detail: (id: string) => [...queryKeys.cases.details(), id] as const,
+    events: (caseId: string) => [...queryKeys.cases.all, "events", caseId] as const,
+  },
 } as const;

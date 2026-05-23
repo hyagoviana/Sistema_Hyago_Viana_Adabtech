@@ -93,8 +93,71 @@ async function main() {
       (anonInsertErr.code === "42501" || anonInsertErr.message.toLowerCase().includes("policy")),
   );
 
+  // ─── Teste 3: documentos respeitam RLS por org ───────────────────────────
+  console.log("\n4) RLS em system_client_documents...");
+  const docAId = crypto.randomUUID();
+  const docBId = crypto.randomUUID();
+  await admin.from("system_client_documents").insert([
+    {
+      id: docAId,
+      client_id: clientDefaultId,
+      organization_id: ORG_DEFAULT_ID,
+      name: "doc-A.pdf",
+      drive_file_id: "fake-A",
+      drive_url: "https://example/A",
+    },
+    {
+      id: docBId,
+      client_id: clientBId,
+      organization_id: orgBId,
+      name: "doc-B.pdf",
+      drive_file_id: "fake-B",
+      drive_url: "https://example/B",
+    },
+  ]);
+
+  const { data: anonDocs } = await anon
+    .from("system_client_documents")
+    .select("id, organization_id")
+    .in("id", [docAId, docBId]);
+  const docIds = (anonDocs ?? []).map((d) => d.id);
+  assert("anon VÊ doc de org-default", docIds.includes(docAId));
+  assert("anon NÃO VÊ doc de org-B (isolamento de docs OK)", !docIds.includes(docBId));
+
+  // ─── Teste 4: casos respeitam RLS por org ────────────────────────────────
+  console.log("\n5) RLS em system_cases...");
+  const caseAId = crypto.randomUUID();
+  const caseBId = crypto.randomUUID();
+  await admin.from("system_cases").insert([
+    {
+      id: caseAId,
+      client_id: clientDefaultId,
+      organization_id: ORG_DEFAULT_ID,
+      case_code: `HV-RLS-A-${Date.now()}`,
+      case_type: "FIES_ESF",
+    },
+    {
+      id: caseBId,
+      client_id: clientBId,
+      organization_id: orgBId,
+      case_code: `HV-RLS-B-${Date.now()}`,
+      case_type: "FIES_ESF",
+    },
+  ]);
+
+  const { data: anonCases } = await anon
+    .from("system_cases")
+    .select("id, organization_id")
+    .in("id", [caseAId, caseBId]);
+  const caseIds = (anonCases ?? []).map((c) => c.id);
+  assert("anon VÊ caso de org-default", caseIds.includes(caseAId));
+  assert("anon NÃO VÊ caso de org-B (isolamento OK)", !caseIds.includes(caseBId));
+
   // ─── Cleanup ─────────────────────────────────────────────────────────────
-  console.log("\n4) Cleanup...");
+  console.log("\n6) Cleanup...");
+  await admin.from("system_case_events").delete().in("case_id", [caseAId, caseBId]);
+  await admin.from("system_cases").delete().in("id", [caseAId, caseBId]);
+  await admin.from("system_client_documents").delete().in("id", [docAId, docBId]);
   await admin.from("system_clients").delete().in("id", [clientDefaultId, clientBId]);
   await admin.from("system_organizations").delete().eq("id", orgBId);
   console.log("   ✓ tudo limpo\n");

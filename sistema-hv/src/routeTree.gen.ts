@@ -63,6 +63,9 @@ import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
+import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
+import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
+import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes/api.clients.$id.documents.$docId.download'
 
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
@@ -336,6 +339,24 @@ const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
   path: '/elaborar',
   getParentRoute: () => CasosIdTermoRoute,
 } as any)
+const ApiClientsIdDocumentsIndexRoute =
+  ApiClientsIdDocumentsIndexRouteImport.update({
+    id: '/api/clients/$id/documents/',
+    path: '/api/clients/$id/documents/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiClientsIdDocumentsDocIdRoute =
+  ApiClientsIdDocumentsDocIdRouteImport.update({
+    id: '/api/clients/$id/documents/$docId',
+    path: '/api/clients/$id/documents/$docId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiClientsIdDocumentsDocIdDownloadRoute =
+  ApiClientsIdDocumentsDocIdDownloadRouteImport.update({
+    id: '/download',
+    path: '/download',
+    getParentRoute: () => ApiClientsIdDocumentsDocIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -392,6 +413,9 @@ export interface FileRoutesByFullPath {
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
+  '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -448,6 +472,9 @@ export interface FileRoutesByTo {
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/clients/$id/documents': typeof ApiClientsIdDocumentsIndexRoute
+  '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -505,6 +532,9 @@ export interface FileRoutesById {
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
+  '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -563,6 +593,9 @@ export interface FileRouteTypes {
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id/termo/elaborar'
+    | '/api/clients/$id/documents/$docId'
+    | '/api/clients/$id/documents/'
+    | '/api/clients/$id/documents/$docId/download'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -619,6 +652,9 @@ export interface FileRouteTypes {
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id/termo/elaborar'
+    | '/api/clients/$id/documents/$docId'
+    | '/api/clients/$id/documents'
+    | '/api/clients/$id/documents/$docId/download'
   id:
     | '__root__'
     | '/'
@@ -675,6 +711,9 @@ export interface FileRouteTypes {
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id/termo/elaborar'
+    | '/api/clients/$id/documents/$docId'
+    | '/api/clients/$id/documents/'
+    | '/api/clients/$id/documents/$docId/download'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -729,6 +768,8 @@ export interface RootRouteChildren {
   WhatsappIndexRoute: typeof WhatsappIndexRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
+  ApiClientsIdDocumentsDocIdRoute: typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  ApiClientsIdDocumentsIndexRoute: typeof ApiClientsIdDocumentsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1111,6 +1152,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdTermoElaborarRouteImport
       parentRoute: typeof CasosIdTermoRoute
     }
+    '/api/clients/$id/documents/': {
+      id: '/api/clients/$id/documents/'
+      path: '/api/clients/$id/documents'
+      fullPath: '/api/clients/$id/documents/'
+      preLoaderRoute: typeof ApiClientsIdDocumentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/clients/$id/documents/$docId': {
+      id: '/api/clients/$id/documents/$docId'
+      path: '/api/clients/$id/documents/$docId'
+      fullPath: '/api/clients/$id/documents/$docId'
+      preLoaderRoute: typeof ApiClientsIdDocumentsDocIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/clients/$id/documents/$docId/download': {
+      id: '/api/clients/$id/documents/$docId/download'
+      path: '/download'
+      fullPath: '/api/clients/$id/documents/$docId/download'
+      preLoaderRoute: typeof ApiClientsIdDocumentsDocIdDownloadRouteImport
+      parentRoute: typeof ApiClientsIdDocumentsDocIdRoute
+    }
   }
 }
 
@@ -1148,6 +1210,21 @@ const CasosFinanceiroRouteChildren: CasosFinanceiroRouteChildren = {
 const CasosFinanceiroRouteWithChildren = CasosFinanceiroRoute._addFileChildren(
   CasosFinanceiroRouteChildren,
 )
+
+interface ApiClientsIdDocumentsDocIdRouteChildren {
+  ApiClientsIdDocumentsDocIdDownloadRoute: typeof ApiClientsIdDocumentsDocIdDownloadRoute
+}
+
+const ApiClientsIdDocumentsDocIdRouteChildren: ApiClientsIdDocumentsDocIdRouteChildren =
+  {
+    ApiClientsIdDocumentsDocIdDownloadRoute:
+      ApiClientsIdDocumentsDocIdDownloadRoute,
+  }
+
+const ApiClientsIdDocumentsDocIdRouteWithChildren =
+  ApiClientsIdDocumentsDocIdRoute._addFileChildren(
+    ApiClientsIdDocumentsDocIdRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1201,6 +1278,8 @@ const rootRouteChildren: RootRouteChildren = {
   WhatsappIndexRoute: WhatsappIndexRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
+  ApiClientsIdDocumentsDocIdRoute: ApiClientsIdDocumentsDocIdRouteWithChildren,
+  ApiClientsIdDocumentsIndexRoute: ApiClientsIdDocumentsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

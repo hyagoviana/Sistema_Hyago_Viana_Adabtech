@@ -1,161 +1,323 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Phone, Mail, FileText, Activity, DollarSign, MessageCircle, ShieldCheck, CheckCircle2 } from "lucide-react";
-import { Breadcrumb, PageHeader, Btn, Eyebrow, Card, AlertStrip, OrnamentalDivider } from "@/components/hv/primitives";
-import { MacrostatusOp, MacrostatusFin } from "@/components/hv/MacrostatusBadge";
-import { casos, clientes, caseTypeLabels, fmtBRL, maskCPF } from "@/mocks/fixtures";
+import { ArrowRightLeft, CheckCircle2, Pencil, Phone, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
+import { useClient } from "@/hooks/useClients";
+import { useCase, useCaseEvents, useDeleteCase, useUpdateCase } from "@/hooks/useCases";
+import {
+  CASE_TYPE_LABELS,
+  MACRO_FIN_LABELS,
+  MACRO_OP_LABELS,
+  type CaseType,
+  type MacroFin,
+  type MacroOp,
+} from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/casos/$id")({
   component: CasoDetalhe,
 });
 
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function maskPhone(phone: string | null): string {
+  if (!phone) return "—";
+  const d = phone.replace(/\D/g, "");
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return phone;
+}
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
 function CasoDetalhe() {
   const { id } = Route.useParams();
-  const caso = casos.find((c) => c.id === id);
+  const navigate = Route.useNavigate();
+  const { data: caso, isLoading, isError, error } = useCase(id);
+  const { data: events } = useCaseEvents(id);
+  const update = useUpdateCase();
+  const remove = useDeleteCase();
+
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editPasso, setEditPasso] = useState(false);
+  const [passoDraft, setPassoDraft] = useState("");
+
+  // Carrega cliente vinculado pra header
+  const { data: cliente } = useClient(caso?.client_id ?? "");
+
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <Skeleton className="h-6 w-64 mb-4" />
+        <Skeleton className="h-24 w-full mb-8" />
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const msg = error instanceof Error ? error.message : "desconhecido";
+    if (msg.toLowerCase().includes("não encontrado")) throw notFound();
+    return (
+      <div className="page-container">
+        <Alert variant="destructive">
+          <AlertDescription>Erro ao carregar caso: {msg}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   if (!caso) throw notFound();
-  const cliente = clientes[parseInt(caso.clienteId.split("-")[1]) % clientes.length];
+
+  const dias = daysSince(caso.status_changed_at);
+  const tipoLabel = CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
+  const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
+  const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
+
+  async function savePasso() {
+    try {
+      await update.mutateAsync({ id, input: { proximo_passo: passoDraft || null } });
+      setEditPasso(false);
+      toast.success("Próximo passo atualizado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar");
+    }
+  }
 
   return (
-    <div className="page-container">
-      <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso.codigo }]} />
+    <div className="page-container !pb-32">
+      <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso.case_code }]} />
 
       <header className="flex items-start justify-between gap-8 mb-8">
         <div>
-          <div className="mb-3"><Eyebrow>Caso · {caso.codigo}</Eyebrow></div>
-          <h1 className="font-display text-[40px] font-bold text-[var(--navy)] leading-tight">
-            {caso.clienteNome} <span className="text-[var(--gold-700)]">— {caseTypeLabels[caso.tipo]}</span>
+          <Eyebrow>Caso · {caso.case_code}</Eyebrow>
+          <h1 className="font-display text-[40px] font-bold text-[var(--navy)] leading-tight mt-2">
+            {cliente?.full_name ?? "—"}{" "}
+            <span className="text-[var(--gold-700)]">— {tipoLabel}</span>
           </h1>
-          <div className="mt-4 flex items-center gap-5 text-[13px] text-muted-foreground">
-            <span>CPF {maskCPF(caso.clienteCpf)}</span>
-            <span className="text-[var(--gold)]">·</span>
-            <span className="inline-flex items-center gap-1.5"><Phone size={12} />{cliente.telefone}</span>
-            <span className="text-[var(--gold)]">·</span>
-            <span className="inline-flex items-center gap-1.5"><Mail size={12} />{cliente.email}</span>
-          </div>
-        </div>
-        <Card className="!p-5 w-[280px]">
-          <Eyebrow>Cliente vinculado</Eyebrow>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center font-display font-semibold text-[var(--navy)]"
-              style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}>
-              {cliente.nome[0]}
-            </div>
-            <div>
-              <div className="font-display text-[15px] text-[var(--navy)] font-semibold">{cliente.nome}</div>
-              <Link to="/clientes/$id" params={{ id: cliente.id }} className="text-[12px] text-[var(--gold-700)] hover:underline">
-                Ver dossiê completo →
+          {cliente && (
+            <div className="mt-4 flex items-center gap-5 text-[13px] text-muted-foreground flex-wrap">
+              <span className="inline-flex items-center gap-1.5">
+                <Phone size={12} /> {maskPhone(cliente.phone)}
+              </span>
+              {cliente.email && (
+                <>
+                  <span className="text-[var(--gold)]">·</span>
+                  <span>{cliente.email}</span>
+                </>
+              )}
+              <span className="text-[var(--gold)]">·</span>
+              <Link
+                to="/clientes/$id"
+                params={{ id: cliente.id }}
+                className="text-[var(--gold-700)] hover:underline"
+              >
+                Ver ficha do cliente →
               </Link>
             </div>
-          </div>
-        </Card>
+          )}
+        </div>
+        <div className="flex gap-2 self-start">
+          <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
+            <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 size={14} className="mr-1.5" /> Excluir
+          </Button>
+        </div>
       </header>
 
-      {caso.inadimplente && (
-        <div className="mb-6">
-          <AlertStrip tone="danger" title="Cliente com parcelas em atraso">
-            Existem 2 boletos vencidos somando R$ 4.800. Considere escalar para o jurídico de cobrança.
-          </AlertStrip>
-        </div>
-      )}
-
       <div className="grid lg:grid-cols-2 gap-6">
-        <div className="card-hero p-7 relative">
-          <div className="relative">
-            <Eyebrow>Rastro Operacional</Eyebrow>
-            <div className="mt-4 flex items-center gap-3">
-              <MacrostatusOp status={caso.macrostatusOp} />
-              <span className="text-[12px] text-muted-foreground">há {caso.diasNoEstado} dias neste estado</span>
+        <div className="card-hero p-7">
+          <Eyebrow>Rastro Operacional</Eyebrow>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="font-display text-[20px] font-semibold text-[var(--navy)]">
+              {opLabel}
+            </span>
+            <span className="text-[12px] text-muted-foreground">há {dias} dia(s) neste estado</span>
+          </div>
+          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center justify-between">
+              <span>Próximo passo</span>
+              {!editPasso && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPassoDraft(caso.proximo_passo ?? "");
+                    setEditPasso(true);
+                  }}
+                  className="text-[var(--gold-700)] hover:underline inline-flex items-center gap-1 normal-case tracking-normal"
+                >
+                  <Pencil size={11} /> editar
+                </button>
+              )}
             </div>
-            <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Próximo passo</div>
-              <div className="font-display text-[18px] text-[var(--navy)]">{caso.proximoPasso}</div>
-            </div>
+            {editPasso ? (
+              <div className="space-y-2">
+                <textarea
+                  value={passoDraft}
+                  onChange={(e) => setPassoDraft(e.target.value)}
+                  className="w-full p-2 border border-[var(--border)] rounded-md text-[14px] font-display"
+                  rows={2}
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" size="sm" onClick={() => setEditPasso(false)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={savePasso} disabled={update.isPending}>
+                    {update.isPending ? "Salvando…" : "Salvar"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="font-display text-[18px] text-[var(--navy)]">
+                {caso.proximo_passo ?? <span className="text-muted-foreground italic">—</span>}
+              </div>
+            )}
           </div>
         </div>
-        <div className="card-hero p-7 relative">
-          <div className="relative">
-            <Eyebrow>Rastro Financeiro</Eyebrow>
-            <div className="mt-4 flex items-center gap-3">
-              <MacrostatusFin status={caso.macrostatusFin} />
-              <span className="text-[12px] text-muted-foreground">{fmtBRL(caso.valor)} contratado</span>
-            </div>
-            <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Próximo passo financeiro</div>
-              <div className="font-display text-[18px] text-[var(--navy)]">Confirmar pagamento da parcela #4</div>
-            </div>
+
+        <div className="card-hero p-7">
+          <Eyebrow>Rastro Financeiro</Eyebrow>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="font-display text-[20px] font-semibold text-[var(--navy)]">
+              {finLabel}
+            </span>
+          </div>
+          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] text-[13px] text-muted-foreground italic">
+            Pipeline financeira ativa quando o módulo Financeiro entrar (Sprint F4-S04).
           </div>
         </div>
       </div>
 
       <OrnamentalDivider />
 
-      <Tabs />
+      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
+        Linha do tempo
+      </h2>
+      <div className="card-editorial !p-0 overflow-hidden">
+        {(events ?? []).length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground italic text-sm">
+            Sem eventos registrados.
+          </div>
+        ) : (
+          <ul>
+            {(events ?? []).map((e) => (
+              <li
+                key={e.id}
+                className="flex items-start gap-3 px-5 py-3 border-b border-[var(--border)] last:border-0"
+              >
+                <div className="w-2 h-2 rounded-full bg-[var(--gold)] mt-2 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] text-[var(--navy)] font-medium">
+                    {e.action === "created" && "Caso criado"}
+                    {e.action === "status_changed" &&
+                      `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`}
+                    {e.action === "updated" && "Caso editado"}
+                    {e.action === "soft_deleted" && "Caso excluído"}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {fmtDateTime(e.created_at)}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <div className="h-24" />
-
-      <footer className="fixed bottom-0 left-64 right-0 bg-white/95 backdrop-blur border-t border-[var(--border)] px-10 py-4 flex items-center justify-between z-30"
-        style={{ boxShadow: "0 -8px 24px -12px rgba(30,32,68,0.15)" }}>
+      <footer
+        className="fixed bottom-0 left-64 right-0 bg-white/95 backdrop-blur border-t border-[var(--border)] px-10 py-4 flex items-center justify-between z-30"
+        style={{ boxShadow: "0 -8px 24px -12px rgba(30,32,68,0.15)" }}
+      >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-            style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+            style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}
+          >
             <CheckCircle2 size={18} />
           </div>
           <div>
             <Eyebrow>Próxima ação</Eyebrow>
-            <div className="font-display text-[15px] text-[var(--navy)] font-semibold mt-1">{caso.proximoPasso}</div>
+            <div className="font-display text-[15px] text-[var(--navy)] font-semibold mt-1">
+              {caso.proximo_passo ?? "—"}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[12px] text-muted-foreground">Responsável: <span className="text-[var(--navy)] font-medium">{caso.responsavel}</span></span>
-          <Btn variant="primary">Marcar como feito</Btn>
+          <span className="text-[12px] text-muted-foreground">
+            Responsável:{" "}
+            <span className="text-[var(--navy)] font-medium">{caso.responsavel ?? "—"}</span>
+          </span>
+          <Button onClick={() => setMoveOpen(true)} variant="default">
+            Mover status
+          </Button>
         </div>
       </footer>
-    </div>
-  );
-}
 
-function Tabs() {
-  const tabs = [
-    { label: "Documentos", icon: FileText },
-    { label: "Timeline", icon: Activity },
-    { label: "Financeiro", icon: DollarSign },
-    { label: "Comunicação", icon: MessageCircle },
-    { label: "Auditoria", icon: ShieldCheck },
-  ];
-  return (
-    <div className="card-editorial !p-0 overflow-hidden">
-      <div className="flex border-b border-[var(--border)]">
-        {tabs.map((t, i) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.label}
-              className={`relative flex items-center gap-2 px-5 py-4 text-[13px] font-medium transition-colors ${
-                i === 0 ? "text-[var(--navy)]" : "text-muted-foreground hover:text-[var(--navy)]"
-              }`}
+      <MoveCaseDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        caseId={caso.id}
+        caseCode={caso.case_code}
+        currentStatus={caso.macrostatus_op as MacroOp}
+      />
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {caso.case_code}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O caso fica como excluído (soft-delete) e some do Kanban e da Lista.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await remove.mutateAsync(caso.id);
+                  toast.success(`${caso.case_code} excluído`);
+                  navigate({ to: "/casos" });
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha");
+                }
+              }}
             >
-              <Icon size={14} />
-              {t.label}
-              {i === 0 && <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[var(--gold)] rounded-full" />}
-            </button>
-          );
-        })}
-      </div>
-      <div className="p-7 space-y-3">
-        {["Procuração assinada","Comprovante de matrícula FIES","Histórico escolar","Parecer técnico interno","Petição inicial v3"].map((d, i) => (
-          <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--border)] last:border-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[var(--gold-pale)] text-[var(--gold-700)] flex items-center justify-center">
-                <FileText size={15} />
-              </div>
-              <div>
-                <div className="font-display text-[14.5px] text-[var(--navy)] font-semibold">{d}</div>
-                <div className="text-[11.5px] text-muted-foreground">PDF · 1.2 MB · enviado há 3 dias</div>
-              </div>
-            </div>
-            <Btn variant="ghost" size="sm">Abrir</Btn>
-          </div>
-        ))}
-      </div>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
