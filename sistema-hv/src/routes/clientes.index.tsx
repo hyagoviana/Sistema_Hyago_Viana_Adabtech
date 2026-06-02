@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Phone, Plus, Search } from "lucide-react";
+import { ChevronRight, Phone, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ClientCardMenu } from "@/components/clients/ClientCardMenu";
@@ -36,6 +36,7 @@ function maskPhone(phone: string | null): string {
 function ClientesList() {
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
+  const [showFilters, setShowFilters] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
 
@@ -90,29 +91,64 @@ function ClientesList() {
         }
       />
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gold)]"
-          />
+      {/* Barra de busca + filtros integrados, num painel único elevado */}
+      <div className="card-editorial !p-2 mb-6 flex items-center gap-2">
+        <button
+          onClick={() => setShowFilters((v) => !v)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-[13px] font-medium transition-colors shrink-0"
+          style={
+            showFilters || tipoFilter !== "Todos os tipos"
+              ? {
+                  background: "var(--gold-pale)",
+                  color: "var(--gold-700)",
+                  border: "1px solid rgba(152,120,20,0.28)",
+                }
+              : {
+                  background: "transparent",
+                  color: "var(--ink-700)",
+                  border: "1px solid var(--border)",
+                }
+          }
+        >
+          <SlidersHorizontal size={14} />
+          Filtros Avançados
+        </button>
+
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gold)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome ou CPF…"
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+            className="w-full pl-9 pr-4 py-2 bg-transparent text-[13px] outline-none"
           />
         </div>
-        <select
-          value={tipoFilter}
-          onChange={(e) => setTipoFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-[var(--border)] rounded-md text-[13px]"
-        >
-          {tipos.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
       </div>
+
+      {showFilters && (
+        <div className="card-editorial !p-4 mb-6 flex items-center gap-3">
+          <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[var(--ink-500)]">
+            Tipo
+          </span>
+          <select
+            value={tipoFilter}
+            onChange={(e) => setTipoFilter(e.target.value)}
+            className="px-4 py-2 bg-white border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+          >
+            {tipos.map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+          {tipoFilter !== "Todos os tipos" && (
+            <button
+              onClick={() => setTipoFilter("Todos os tipos")}
+              className="text-[12px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+      )}
 
       {isError && (
         <Alert variant="destructive" className="mb-4">
