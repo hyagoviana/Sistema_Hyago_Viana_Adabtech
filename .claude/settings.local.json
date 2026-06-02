@@ -76,7 +76,10 @@
       "Bash(curl -sf http://localhost:8080/casos -o /tmp/k.html -w \"kanban: %{http_code}\\\\n\")",
       "Bash(curl -sf http://localhost:8081/casos -o /tmp/k.html -w \"kanban: %{http_code}\\\\n\")",
       "Bash(awk '/^## Sprint 4/,/^## Sprint 5/' docs/sprints-f4/_followups.md)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\" -Directory | Where-Object { $_.Name -notin @\\('node_modules', '.git', 'dist', 'build'\\) } | Select-Object Name)"
     ]
   }
 }
