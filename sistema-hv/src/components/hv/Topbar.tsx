@@ -74,7 +74,11 @@ export function Topbar() {
           <button
             onClick={() => setOpenNew((v) => !v)}
             onBlur={() => setTimeout(() => setOpenNew(false), 150)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] bg-[#987814] text-white text-[12.5px] font-medium hover:bg-[var(--gold-700)] transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] text-white text-[12.5px] font-medium transition-all hover:-translate-y-px"
+            style={{
+              background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
+            }}
           >
             <Plus size={13} strokeWidth={2} />
             Novo
