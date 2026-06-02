@@ -36,9 +36,9 @@ export function Topbar() {
       className="sticky top-0 z-30 flex items-center gap-4 px-6"
       style={{
         height: 56,
-        background: "#ffffff",
-        borderBottom: "1px solid rgba(120,96,30,0.10)",
-        boxShadow: "0 1px 2px rgba(60,50,20,0.04)",
+        background: "#efe9db",
+        borderBottom: "1px solid rgba(120,96,30,0.14)",
+        boxShadow: "0 1px 2px rgba(60,50,20,0.05)",
       }}
     >
       <nav className="flex items-center gap-1.5 text-[12px] text-[var(--ink-400)] min-w-0">

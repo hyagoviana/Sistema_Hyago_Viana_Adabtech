@@ -38,7 +38,7 @@ export function CaseCardFin({ caso }: Props) {
       <Link
         to="/casos/$id"
         params={{ id: caso.id }}
-        className="block bg-white rounded-lg border border-[rgba(30,32,68,0.08)] p-3.5 hover:-translate-y-0.5 hover:border-[rgba(30,32,68,0.18)] hover:shadow-md transition-all"
+        className="block bg-[var(--card)] rounded-lg border border-[rgba(120,96,30,0.12)] p-3.5 hover:-translate-y-0.5 hover:border-[rgba(152,120,20,0.26)] hover:shadow-md transition-all"
       >
         <div className="flex items-center justify-between gap-2 mb-2">
           <span className="font-mono text-[10.5px] text-muted-foreground tracking-tight">
