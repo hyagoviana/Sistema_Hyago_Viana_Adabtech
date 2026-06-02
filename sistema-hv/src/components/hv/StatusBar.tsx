@@ -46,8 +46,12 @@ export function StatusBar() {
         <Keyboard size={12} strokeWidth={1.6} />
         Atalhos
         <span
-          className="hidden group-hover:block absolute right-0 bottom-7 w-60 p-3 rounded-xl text-left bg-white text-[#1a1a1f]"
-          style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}
+          className="hidden group-hover:block absolute right-0 bottom-7 w-60 p-3 rounded-xl text-left text-[#1a1a1f]"
+          style={{
+            background: "var(--card)",
+            border: "1px solid rgba(120,96,30,0.14)",
+            boxShadow: "0 12px 28px -10px rgba(60,50,20,0.22)",
+          }}
         >
           <div className="text-[10px] uppercase tracking-wider text-[var(--ink-400)] mb-1.5">
             Atalhos

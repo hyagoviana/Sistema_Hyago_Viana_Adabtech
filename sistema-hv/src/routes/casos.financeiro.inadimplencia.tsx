@@ -64,7 +64,7 @@ function Inadimplencia() {
         </Alert>
       )}
 
-      <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+      <div className="card-editorial !p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>

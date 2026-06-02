@@ -210,8 +210,8 @@ export function Btn({
     primary: "bg-[#1e2044] text-white hover:bg-[var(--navy-700)]",
     gold: "text-white hover:opacity-95",
     ghost: "text-[#1a1a1f] hover:bg-[var(--ink-50)]",
-    outline: "border border-[var(--border)] text-[#1a1a1f] bg-white hover:bg-[var(--ink-50)] hover:border-[rgba(15,17,35,0.12)]",
-    danger: "border border-[rgba(180,36,50,0.25)] text-[var(--danger)] bg-white hover:bg-[rgba(180,36,50,0.04)]",
+    outline: "border border-[rgba(120,96,30,0.18)] text-[#1a1a1f] bg-[var(--card)] hover:bg-[var(--ink-50)] hover:border-[rgba(152,120,20,0.3)]",
+    danger: "border border-[rgba(180,36,50,0.25)] text-[var(--danger)] bg-[var(--card)] hover:bg-[rgba(180,36,50,0.05)]",
   };
   const goldStyle =
     variant === "gold"

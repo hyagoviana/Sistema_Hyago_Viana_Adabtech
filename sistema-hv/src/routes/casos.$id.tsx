@@ -283,8 +283,12 @@ function CasoDetalhe() {
       </div>
 
       <footer
-        className="fixed bottom-0 left-64 right-0 bg-white/95 backdrop-blur border-t border-[var(--border)] px-10 py-4 flex items-center justify-between z-30"
-        style={{ boxShadow: "0 -8px 24px -12px rgba(30,32,68,0.15)" }}
+        className="fixed bottom-0 left-0 lg:left-[228px] right-0 backdrop-blur px-10 py-4 flex items-center justify-between z-30"
+        style={{
+          background: "rgba(247,242,233,0.92)",
+          borderTop: "1px solid rgba(120,96,30,0.14)",
+          boxShadow: "0 -8px 24px -12px rgba(60,50,20,0.18)",
+        }}
       >
         <div className="flex items-center gap-4">
           <div

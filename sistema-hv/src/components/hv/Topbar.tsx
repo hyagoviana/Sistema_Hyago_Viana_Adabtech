@@ -86,8 +86,12 @@ export function Topbar() {
           </button>
           {openNew && (
             <div
-              className="absolute right-0 top-9 w-44 bg-white rounded-xl py-1 z-50"
-              style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}
+              className="absolute right-0 top-9 w-44 rounded-xl py-1 z-50"
+              style={{
+                background: "var(--card)",
+                border: "1px solid rgba(120,96,30,0.14)",
+                boxShadow: "0 12px 28px -10px rgba(60,50,20,0.22)",
+              }}
             >
               {["Caso", "Cliente", "Tarefa", "Lead", "Documento"].map((it) => (
                 <button
