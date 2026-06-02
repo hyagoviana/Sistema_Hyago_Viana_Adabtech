@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import type { MacroOp } from "@/lib/cases/constants";
+import type { MacroFin, MacroOp } from "@/lib/cases/constants";
 import { queryKeys } from "@/lib/queryKeys";
 import type { CaseCreateInput, CaseUpdateInput } from "@/lib/validators/case";
 import {
@@ -9,12 +9,18 @@ import {
   getCaseFn,
   listCaseEventsFn,
   listCasesFn,
+  moveCaseStatusFinFn,
   moveCaseStatusFn,
   softDeleteCaseFn,
   updateCaseFn,
 } from "@/server/cases";
 
-type Filters = { search?: string; macrostatus_op?: MacroOp; client_id?: string };
+type Filters = {
+  search?: string;
+  macrostatus_op?: MacroOp;
+  macrostatus_fin?: MacroFin;
+  client_id?: string;
+};
 
 export function useCasesList(filters?: Filters) {
   const fn = useServerFn(listCasesFn);
@@ -69,6 +75,15 @@ export function useMoveCaseStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; to: MacroOp }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+export function useMoveCaseStatusFin() {
+  const fn = useServerFn(moveCaseStatusFinFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; to: MacroFin }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
+import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ function CasoDetalhe() {
   const remove = useDeleteCase();
 
   const [moveOpen, setMoveOpen] = useState(false);
+  const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editPasso, setEditPasso] = useState(false);
   const [passoDraft, setPassoDraft] = useState("");
@@ -93,9 +95,11 @@ function CasoDetalhe() {
   if (!caso) throw notFound();
 
   const dias = daysSince(caso.status_changed_at);
+  const diasFin = daysSince(caso.status_fin_changed_at);
   const tipoLabel = CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
+  const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
 
   async function savePasso() {
     try {
@@ -207,14 +211,32 @@ function CasoDetalhe() {
         </div>
 
         <div className="card-hero p-7">
-          <Eyebrow>Rastro Financeiro</Eyebrow>
+          <div className="flex items-start justify-between">
+            <Eyebrow>Rastro Financeiro</Eyebrow>
+            {finBifurcated && (
+              <button
+                type="button"
+                onClick={() => setMoveFinOpen(true)}
+                className="text-[var(--gold-700)] hover:underline text-[11px] inline-flex items-center gap-1 normal-case tracking-normal"
+              >
+                <ArrowRightLeft size={11} /> mover
+              </button>
+            )}
+          </div>
           <div className="mt-4 flex items-center gap-3">
             <span className="font-display text-[20px] font-semibold text-[var(--navy)]">
-              {finLabel}
+              {finBifurcated ? finLabel : "Não bifurcado"}
             </span>
+            {finBifurcated && (
+              <span className="text-[12px] text-muted-foreground">
+                há {diasFin} dia(s) neste estado
+              </span>
+            )}
           </div>
           <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] text-[13px] text-muted-foreground italic">
-            Pipeline financeira ativa quando o módulo Financeiro entrar (Sprint F4-S04).
+            {finBifurcated
+              ? "Pipeline financeira ativa. Parcelas e cobrança virão na Sprint F4-S09 (Conta Azul / Asaas)."
+              : "Será ativado automaticamente quando o caso for movido pra Implantado ou Implantação Parcial."}
           </div>
         </div>
       </div>
@@ -290,6 +312,14 @@ function CasoDetalhe() {
         caseId={caso.id}
         caseCode={caso.case_code}
         currentStatus={caso.macrostatus_op as MacroOp}
+      />
+
+      <MoveCaseFinDialog
+        open={moveFinOpen}
+        onOpenChange={setMoveFinOpen}
+        caseId={caso.id}
+        caseCode={caso.case_code}
+        currentStatus={caso.macrostatus_fin as MacroFin}
       />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

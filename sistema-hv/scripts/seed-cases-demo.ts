@@ -23,7 +23,19 @@ const DEMO_CLIENTS = [
   { name: "DEMO Mariana Albuquerque", cpf: "85274100632", tipo: "Dentista" },
 ];
 
-const CASOS: Array<{ type: CaseType; status: MacroOp; passo: string }> = [
+import { type MacroFin } from "../src/lib/cases/constants";
+
+type CaseSpec = {
+  type: CaseType;
+  status: MacroOp;
+  passo: string;
+  // Override do status financeiro depois da bifurcação automática (opcional).
+  // Só faz sentido pra casos com status op em IMPLANTADO/IMPLANTACAO_PARCIAL.
+  fin?: MacroFin;
+  valor_centavos?: number;
+};
+
+const CASOS: CaseSpec[] = [
   { type: "FIES_ESF", status: "ONBOARDING", passo: "Coletar CPF e procuração" },
   { type: "FIES_ESF", status: "ANALISE", passo: "Verificar histórico SISFIES" },
   { type: "FIES_DGM", status: "ANALISE", passo: "Cruzar dados com FNDE" },
@@ -33,8 +45,49 @@ const CASOS: Array<{ type: CaseType; status: MacroOp; passo: string }> = [
   { type: "MAIS_MEDICOS", status: "EM_ANDAMENTO", passo: "Réplica enviada" },
   { type: "RESIDENCIA", status: "AGUARDANDO_DECISAO", passo: "Aguardar decisão liminar" },
   { type: "RESIDENCIA", status: "AGUARDANDO_DECISAO", passo: "Embargos opostos" },
-  { type: "CFM_CRM", status: "IMPLANTADO", passo: "Implantação confirmada" },
-  { type: "FIES_ESF", status: "IMPLANTACAO_PARCIAL", passo: "Falta 1 parcela" },
+  // Implantados — bifurcação automática vai pra ELABORANDO; override pra cenários ricos
+  {
+    type: "CFM_CRM",
+    status: "IMPLANTADO",
+    passo: "Implantação confirmada",
+    fin: "ATIVO",
+    valor_centavos: 1_500_000,
+  },
+  {
+    type: "FIES_ESF",
+    status: "IMPLANTACAO_PARCIAL",
+    passo: "Falta 1 parcela",
+    fin: "PARCIAL",
+    valor_centavos: 800_000,
+  },
+  {
+    type: "FIES_ESF",
+    status: "IMPLANTADO",
+    passo: "Quitação em curso",
+    fin: "QUITANDO",
+    valor_centavos: 2_400_000,
+  },
+  {
+    type: "FIES_DGM",
+    status: "IMPLANTADO",
+    passo: "Cobrar parcela #4",
+    fin: "INADIMPLENTE",
+    valor_centavos: 1_200_000,
+  },
+  {
+    type: "MAIS_MEDICOS",
+    status: "IMPLANTADO",
+    passo: "Cliente em atraso há 60d",
+    fin: "INADIMPLENTE",
+    valor_centavos: 950_000,
+  },
+  {
+    type: "FIES_ESF",
+    status: "IMPLANTADO",
+    passo: "Tudo quitado",
+    fin: "QUITADO",
+    valor_centavos: 1_800_000,
+  },
   { type: "FIES_DGM", status: "ENCERRADO", passo: "Caso encerrado por acordo" },
   { type: "MAIS_MEDICOS", status: "CANCELADO", passo: "Cliente desistiu" },
 ];
@@ -106,11 +159,20 @@ async function main() {
       proximo_passo: spec.passo,
       responsavel: "Hyago",
       municipio: "Maceió/AL",
+      valor_centavos: spec.valor_centavos ?? null,
     });
+    // Move macrostatus_op se não for ONBOARDING. Se for IMPLANTADO/PARCIAL,
+    // a bifurcação automática (trigger) seta fin = ELABORANDO.
     if (spec.status !== "ONBOARDING") {
       await sb.from("system_cases").update({ macrostatus_op: spec.status }).eq("id", created.id);
     }
-    console.log(`  ✓  ${created.case_code} → ${spec.status}`);
+    // Override do macrostatus_fin pra ter cenários variados na demo
+    if (spec.fin) {
+      await sb.from("system_cases").update({ macrostatus_fin: spec.fin }).eq("id", created.id);
+    }
+    console.log(
+      `  ✓  ${created.case_code} → op=${spec.status}${spec.fin ? ` · fin=${spec.fin}` : ""}`,
+    );
   }
   console.log(`\n🎉 ${CASOS.length} casos criados pra ${createdClients.length} clientes DEMO.`);
 }
