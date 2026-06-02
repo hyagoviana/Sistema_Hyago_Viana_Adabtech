@@ -97,7 +97,10 @@
       "Bash(node -e \"console.log\\('node ok'\\)\")",
       "Bash(npx --no-install sharp --version)",
       "Bash(node -e \"try{require\\('sharp'\\);console.log\\('sharp INSTALLED'\\)}catch\\(e\\){console.log\\('sharp NOT installed'\\)}\")",
-      "Bash(node scripts/gen-favicon.mjs)"
+      "Bash(node scripts/gen-favicon.mjs)",
+      "Bash(python -c \"import playwright; print\\('playwright OK'\\)\")",
+      "Bash(python -c \"from playwright.sync_api import sync_playwright; p=sync_playwright\\(\\).start\\(\\); b=p.chromium.launch\\(headless=True\\); print\\('chromium OK'\\); b.close\\(\\); p.stop\\(\\)\")",
+      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots.py\")"
     ]
   }
 }
