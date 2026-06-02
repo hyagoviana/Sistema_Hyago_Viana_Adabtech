@@ -100,7 +100,8 @@
       "Bash(node scripts/gen-favicon.mjs)",
       "Bash(python -c \"import playwright; print\\('playwright OK'\\)\")",
       "Bash(python -c \"from playwright.sync_api import sync_playwright; p=sync_playwright\\(\\).start\\(\\); b=p.chromium.launch\\(headless=True\\); print\\('chromium OK'\\); b.close\\(\\); p.stop\\(\\)\")",
-      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots.py\")"
+      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots.py\")",
+      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots2.py\" 8082)"
     ]
   }
 }
