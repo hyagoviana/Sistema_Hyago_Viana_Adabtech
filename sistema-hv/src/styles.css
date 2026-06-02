@@ -193,23 +193,6 @@
     -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
 
-  /* Dark Mode Premium — superfícies para o painel "Hoje" */
-  .premium-dark {
-    background-color: var(--navy-900);
-    background-image:
-      radial-gradient(ellipse at 12% -10%, rgba(152, 120, 20, 0.18), transparent 45%),
-      radial-gradient(ellipse at 100% 0%, rgba(40, 44, 100, 0.45), transparent 50%),
-      radial-gradient(ellipse at 50% 120%, rgba(152, 120, 20, 0.08), transparent 55%);
-  }
-  .glass-card {
-    background: linear-gradient(160deg, rgba(42, 44, 84, 0.55), rgba(20, 22, 46, 0.55));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px -20px rgba(0, 0, 0, 0.7);
-    backdrop-filter: saturate(160%) blur(16px);
-    -webkit-backdrop-filter: saturate(160%) blur(16px);
-  }
-
   .page-container {
     max-width: 1440px;
     margin: 0 auto;

@@ -38,48 +38,11 @@ function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-white">
       {/* Painel de marca (esquerda) — só cor, sem texturas nem grid */}
       <div
-        className="relative hidden lg:flex flex-col justify-between p-14 text-white overflow-hidden"
+        className="relative hidden lg:flex flex-col justify-between p-14 text-white"
         style={{
-          background:
-            "radial-gradient(ellipse at top right, rgba(152,120,20,0.20), transparent 55%), linear-gradient(160deg, #1e2044 0%, #14162e 55%, #0b0c1d 100%)",
+          background: "linear-gradient(155deg, #2a2c54 0%, #1e2044 40%, #14162e 75%, #0b0c1d 100%)",
         }}
       >
-        {/* Campo de estrelas — textura cósmica sutil */}
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: [
-              "radial-gradient(1.2px 1.2px at 24px 36px, rgba(255,255,255,0.85), transparent)",
-              "radial-gradient(1px 1px at 130px 90px, rgba(255,255,255,0.55), transparent)",
-              "radial-gradient(1px 1px at 210px 160px, rgba(255,255,255,0.5), transparent)",
-              "radial-gradient(1.5px 1.5px at 80px 210px, rgba(201,166,52,0.7), transparent)",
-              "radial-gradient(1px 1px at 290px 60px, rgba(255,255,255,0.6), transparent)",
-              "radial-gradient(1px 1px at 340px 250px, rgba(255,255,255,0.45), transparent)",
-              "radial-gradient(1px 1px at 60px 300px, rgba(255,255,255,0.5), transparent)",
-              "radial-gradient(1.4px 1.4px at 370px 330px, rgba(201,166,52,0.6), transparent)",
-              "radial-gradient(1px 1px at 180px 350px, rgba(255,255,255,0.5), transparent)",
-            ].join(", "),
-            backgroundSize: "400px 400px",
-            backgroundRepeat: "repeat",
-            maskImage: "radial-gradient(ellipse at 30% 40%, black 30%, transparent 85%)",
-            WebkitMaskImage: "radial-gradient(ellipse at 30% 40%, black 30%, transparent 85%)",
-          }}
-        />
-        {/* Halo dourado difuso ao redor da estrela-símbolo */}
-        <div
-          aria-hidden
-          className="absolute pointer-events-none"
-          style={{
-            left: "12%",
-            top: "44%",
-            width: 320,
-            height: 320,
-            background: "radial-gradient(circle, rgba(201,166,52,0.16), transparent 65%)",
-            filter: "blur(8px)",
-          }}
-        />
-
         <div className="relative flex items-center gap-3">
           <img src={symbolHV} alt="" className="h-11 w-auto object-contain" />
           <div>
@@ -208,13 +171,21 @@ function Field({
       <span className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[var(--gold-700)] mb-2">
         {label}
       </span>
-      <div className="flex items-center gap-2.5 px-3.5 rounded-md border border-[var(--border)] transition-colors focus-within:border-[var(--gold)]">
-        {icon && <span className="text-muted-foreground">{icon}</span>}
+      <div
+        className="flex items-center gap-2.5 px-3.5 rounded-lg transition-all focus-within:border-[var(--gold)]"
+        style={{
+          background: "#fcfbf8",
+          border: "1px solid rgba(120,96,30,0.16)",
+          boxShadow: "inset 0 1px 2px rgba(60,50,20,0.03)",
+        }}
+      >
+        {icon && <span className="text-[var(--ink-400)]">{icon}</span>}
         <input
           name={name}
           type={type}
           placeholder={placeholder}
-          className="flex-1 bg-transparent py-3 text-[15px] focus:outline-none"
+          className="flex-1 bg-transparent py-3 text-[15px] focus:outline-none placeholder:text-[var(--ink-400)]"
+          style={{ appearance: "none" }}
         />
       </div>
     </label>
