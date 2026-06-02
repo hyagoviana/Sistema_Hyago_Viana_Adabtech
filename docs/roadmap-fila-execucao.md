@@ -19,6 +19,11 @@
 - **RBAC + LGPD (item 1)** — `system_users` (1 papel/usuário), `rbac.ts` (matriz central),
   papel no `useAuth`, gates na Sidebar, tela de gestão de usuários (convite/papel/suspender),
   `system_consent_records` (base LGPD). Commit `a07f688`.
+- **Repaginação visual premium** — login, paleta creme monocromática medida do exemplo,
+  faixa branca, degradê horizontal, cards marfim. (vários commits até `88dc5b3`)
+- **Remoção de TODOS os mocks** (`940ed7b`) — sistema mostra só dados do Supabase; `fixtures.ts`
+  sem faker; Hoje 100% real; Controladoria/Dashboard Admin viram estado vazio; sidebar com
+  contadores reais. Sem números fictícios em lugar nenhum.
 
 ---
 
