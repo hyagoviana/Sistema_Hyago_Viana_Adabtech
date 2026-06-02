@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Inter", "Geist", system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
   --font-sans: "Inter", "Geist", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
@@ -131,8 +131,13 @@
     letter-spacing: -0.005em;
   }
   h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  /* Números/horas em títulos não devem usar serif — mantêm Inter tabular */
+  .font-display.tabular,
+  .kpi-number {
     font-family: var(--font-sans);
-    letter-spacing: -0.022em;
   }
   .tabular {
     font-variant-numeric: tabular-nums lining-nums;
