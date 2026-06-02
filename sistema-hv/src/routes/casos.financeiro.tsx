@@ -101,7 +101,7 @@ function CasosFinanceiro() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por código ou próximo passo…"
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+            className="w-full pl-9 pr-4 py-2.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
           />
         </div>
       </div>

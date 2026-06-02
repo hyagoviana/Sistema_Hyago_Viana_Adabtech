@@ -133,7 +133,7 @@ function ClientesList() {
           <select
             value={tipoFilter}
             onChange={(e) => setTipoFilter(e.target.value)}
-            className="px-4 py-2 bg-white border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+            className="px-4 py-2 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
           >
             {tipos.map((t) => (
               <option key={t}>{t}</option>

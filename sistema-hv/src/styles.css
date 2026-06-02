@@ -66,32 +66,33 @@
   --ink-500: #6b6b73;
   --ink-400: #8e8e98;
   --ink-300: #b8b8c0;
-  --ink-200: #e6e7eb;
-  --ink-100: #eff0f3;
-  --ink-50:  #f3eede;
+  --ink-200: #ddd3bf;
+  --ink-100: #e5ddc9;
+  --ink-50:  #e6ddc8;
 
-  /* Creme boutique — fundo quente, cards brancos "flutuam" por cima */
-  --bg-page: #f6f1e6;
-  --bg-subtle: #f1ebdc;
-  --bg-paper: #ffffff;
-  --cream: #f6f1e6;
-  --cream-deep: #efe8d7;
+  /* Creme boutique monocromático (medido do exemplo): fundo areia + cards marfim
+     levemente mais claros, separados por sombra — NÃO brancos. */
+  --bg-page: #eae1cb;
+  --bg-subtle: #e3dac4;
+  --bg-paper: #f0ebde;
+  --cream: #eae1cb;
+  --cream-deep: #e0d6bf;
 
   --success: #1f7a4d;
   --warning: #a25a08;
   --danger: #b42432;
 
-  --background: #f6f1e6;
+  --background: #eae1cb;
   --foreground: #1a1a1f;
-  --card: #ffffff;
+  --card: #f0ebde;
   --card-foreground: #1a1a1f;
-  --popover: #ffffff;
+  --popover: #f0ebde;
   --popover-foreground: #1a1a1f;
-  --secondary: #f1ebdc;
+  --secondary: #e3dac4;
   --secondary-foreground: #1e2044;
-  --muted: #f1ebdc;
+  --muted: #e3dac4;
   --muted-foreground: #6b6b73;
-  --accent: #f1ebdc;
+  --accent: #e3dac4;
   --accent-foreground: #1e2044;
   --destructive: #b42432;
   --destructive-foreground: #ffffff;
@@ -166,28 +167,28 @@
   }
 
   .card-editorial {
-    background: #ffffff;
-    border: 1px solid rgba(120, 96, 30, 0.10);
+    background: var(--card);
+    border: 1px solid rgba(120, 96, 30, 0.12);
     border-radius: 14px;
-    /* Cards brancos flutuando sobre o creme — sombra quente em duas camadas */
-    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.05), 0 10px 26px -12px rgba(60, 50, 20, 0.16);
+    /* Cards marfim sobre fundo areia — sombra quente em duas camadas */
+    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.06), 0 12px 28px -12px rgba(60, 50, 20, 0.20);
     transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
   }
   .card-editorial:hover {
-    border-color: rgba(152, 120, 20, 0.22);
-    box-shadow: 0 2px 4px rgba(60, 50, 20, 0.06), 0 16px 36px -14px rgba(60, 50, 20, 0.22);
+    border-color: rgba(152, 120, 20, 0.26);
+    box-shadow: 0 2px 4px rgba(60, 50, 20, 0.07), 0 18px 38px -14px rgba(60, 50, 20, 0.26);
     transform: translateY(-1px);
   }
 
   .card-hero {
-    background: #ffffff;
-    border: 1px solid rgba(120, 96, 30, 0.10);
+    background: var(--card);
+    border: 1px solid rgba(120, 96, 30, 0.12);
     border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.05), 0 10px 26px -12px rgba(60, 50, 20, 0.16);
+    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.06), 0 12px 28px -12px rgba(60, 50, 20, 0.20);
   }
 
   .glass-panel {
-    background: rgba(246, 241, 230, 0.72);
+    background: rgba(240, 235, 222, 0.78);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
