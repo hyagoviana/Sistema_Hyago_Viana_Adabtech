@@ -16,17 +16,21 @@
 - **Repaginação premium** (Lora, login split-screen, sidebar navy, favicon, botões dourados)
 - Remoção dos mocks de identidade ("Maria" → usuário logado)
 - **Fluxo n8n #1 — Onboarding ZapSign** (automático): e-mail assinado → Cliente + Caso + Doc
+- **RBAC + LGPD (item 1)** — `system_users` (1 papel/usuário), `rbac.ts` (matriz central),
+  papel no `useAuth`, gates na Sidebar, tela de gestão de usuários (convite/papel/suspender),
+  `system_consent_records` (base LGPD). Commit `a07f688`.
 
 ---
 
 ## 🔜 Fila (em ordem)
 
-### 1. RBAC (7 papéis) + LGPD  ⟵ **EM ANDAMENTO**
-- **1a — LGPD bootstrap:** `consent_records`, registro/revogação, export do titular, retenção.
-- **1b — RBAC:** tabela `system_users` (id=auth.uid, role, nome, ativo); matriz de permissões;
-  gates de UI + RLS por papel; tela de gestão de usuários + convite por e-mail.
-  - Papéis: administrador, advogado titular, advogado associado, prestador externo,
-    controladoria, comercial, financeiro.
+### ~~1. RBAC + LGPD~~ ✅ CONCLUÍDO (2026-06-02)
+Modelo pragmático (1 papel por usuário) — espinha do PRD, escalável para multi-papel.
+Papéis: admin, advogado_titular, advogado_associado, prestador_externo, controladoria,
+comercial, financeiro, operacional, marketing.
+**Pendências LGPD para retomar quando necessário:** export do titular (portabilidade),
+política de retenção/expurgo, tela de consentimento na ficha do cliente, registro de
+consentimento no fluxo n8n de onboarding. Segregação elaborador≠conferidor entra na frente do Termo.
 
 ### 2. Termo de Acerto
 Wizard de elaboração (cálculos automáticos) → conferência cruzada (segregação) →
