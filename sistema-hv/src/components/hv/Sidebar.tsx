@@ -1,9 +1,10 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Home, Briefcase, DollarSign, Users, CheckSquare, Scale, FileText,
-  TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings,
+  TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings, LogOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { signOut, useAuth } from "@/lib/auth";
 import symbolHV from "@/assets/symbol-hv.png";
 
 type BadgeTone = "neutral" | "gold" | "danger";
@@ -75,6 +76,17 @@ export function Sidebar() {
     .flatMap((g) => g.items)
     .filter((it) => path === it.to || path.startsWith(it.to + "/"))
     .sort((a, b) => b.to.length - a.to.length)[0]?.to;
+
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const email = session?.user?.email ?? "";
+  const displayName = email ? email.split("@")[0] : "Usuário";
+  const initial = (email[0] ?? "?").toUpperCase();
+
+  async function handleLogout() {
+    await signOut();
+    navigate({ to: "/login" });
+  }
 
   return (
     <aside
@@ -190,20 +202,28 @@ export function Sidebar() {
         style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
       >
         <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[11.5px] font-medium text-white"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-[11.5px] font-medium text-white shrink-0"
           style={{
             background: "linear-gradient(135deg, #2a2c54, #14162e)",
             border: "1px solid rgba(152,120,20,0.4)",
           }}
         >
-          M
+          {initial}
         </div>
         <div className="flex-1 leading-tight min-w-0">
-          <div className="text-[12.5px] text-white font-medium truncate">Maria Souza</div>
-          <div className="text-[10px]" style={{ color: "rgba(232,232,232,0.45)" }}>
-            Administradora
+          <div className="text-[12.5px] text-white font-medium truncate">{displayName}</div>
+          <div className="text-[10px] truncate" style={{ color: "rgba(232,232,232,0.45)" }}>
+            {email || "Administrador"}
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          title="Sair"
+          className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-colors hover:bg-white/10"
+          style={{ color: "rgba(232,232,232,0.6)" }}
+        >
+          <LogOut size={15} strokeWidth={1.7} />
+        </button>
       </div>
     </aside>
   );
