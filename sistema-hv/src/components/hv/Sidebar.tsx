@@ -68,6 +68,14 @@ function Badge({ count, tone = "neutral" }: { count: number; tone?: BadgeTone })
 export function Sidebar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
+  // Apenas o item MAIS específico fica ativo: entre os que casam com o path,
+  // vence o de maior comprimento (ex.: /casos/financeiro vence /casos), evitando
+  // que Pipeline Operacional e Financeira acendam juntas.
+  const activeTo = groups
+    .flatMap((g) => g.items)
+    .filter((it) => path === it.to || path.startsWith(it.to + "/"))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
+
   return (
     <aside
       className="hidden lg:flex flex-col w-[228px] shrink-0 sticky top-0 h-screen text-white"
@@ -114,7 +122,7 @@ export function Sidebar() {
             </div>
             <ul className="space-y-[2px]">
               {g.items.map((item) => {
-                const active = path === item.to || path.startsWith(item.to + "/");
+                const active = item.to === activeTo;
                 const Icon = item.icon;
                 return (
                   <li key={item.to}>
