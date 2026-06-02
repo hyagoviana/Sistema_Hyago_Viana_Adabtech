@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle, Clock, Briefcase, CheckSquare, DollarSign, FileText, MoreHorizontal, ChevronRight } from "lucide-react";
 import { PageHeader, SectionHeader, Card, StatCard, Btn, StatusDot } from "@/components/hv/primitives";
+import { useCasesList } from "@/hooks/useCases";
+import { useAuth } from "@/lib/auth";
 import { tarefas, casos, fmtBRL } from "@/mocks/fixtures";
 
 export const Route = createFileRoute("/hoje")({
@@ -13,6 +15,14 @@ const spark = (seed: number) =>
   );
 
 function HojePage() {
+  const { session } = useAuth();
+  const { data: casosReais } = useCasesList();
+  const meta = session?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
+  const nome = meta?.full_name || meta?.name || "";
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const casosAtivos = (casosReais ?? []).length;
+
   const urgentes = tarefas.filter((t) => t.prioridade === "urgente").slice(0, 3);
   const proximos = tarefas.slice(0, 5);
   const parados = casos.filter((c) => c.diasNoEstado > 30).slice(0, 5);
@@ -20,13 +30,13 @@ function HojePage() {
   return (
     <div className="page-container">
       <PageHeader
-        title="Bom dia, Maria"
-        subtitle="Você tem 3 urgências, 8 prioridade alta e 5 próximas no radar."
+        title={nome ? `${saudacao}, ${nome}` : saudacao}
+        subtitle={`${casosAtivos} ${casosAtivos === 1 ? "caso ativo" : "casos ativos"} no sistema.`}
       />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Casos ativos" value="487" delta={{ value: "↑ 12 vs abril", up: true }} spark={spark(1)} />
+        <StatCard label="Casos ativos" value={casosAtivos} spark={spark(1)} />
         <StatCard label="Tarefas hoje" value="23" delta={{ value: "↓ 5 vs ontem", up: false }} spark={spark(3)} />
         <StatCard label="Prazos críticos" value="06" delta={{ value: "↑ 2 vs ontem", up: false }} spark={spark(5)} />
         <StatCard label="Faturamento mês" value="R$ 312k" delta={{ value: "↑ 8% vs abril", up: true }} spark={spark(7)} />
