@@ -1,140 +1,142 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  AlertCircle,
-  Clock,
-  Briefcase,
-  CheckSquare,
-  CalendarClock,
-  DollarSign,
-  ChevronRight,
-} from "lucide-react";
+import { Briefcase, DollarSign, AlertCircle, Clock, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import { PageHeader } from "@/components/hv/primitives";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useAuth } from "@/lib/auth";
-import { tarefas, casos } from "@/mocks/fixtures";
+import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/hoje")({
   component: HojePage,
 });
 
-const spark = (seed: number) =>
-  Array.from({ length: 30 }, (_, i) =>
-    Math.round(50 + 20 * Math.sin((i + seed) / 3) + ((i * seed) % 17)),
-  );
-
 const NAVY = "#1e2044";
 const GOLD = "#987814";
 
+function daysSince(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function HojePage() {
   const { session } = useAuth();
-  const { data: casosReais } = useCasesList();
+  const { data: casos, isLoading } = useCasesList();
   const meta = session?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
   const nome = meta?.full_name || meta?.name || "";
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
-  const casosAtivos = (casosReais ?? []).length;
 
-  const urgentes = tarefas.filter((t) => t.prioridade === "urgente").slice(0, 3);
-  const proximos = tarefas.slice(0, 5);
-  const parados = casos.filter((c) => c.diasNoEstado > 30).slice(0, 5);
+  const lista = useMemo(() => casos ?? [], [casos]);
+
+  const totalAtivos = lista.length;
+  const bifurcados = lista.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
+  const inadimplentes = lista.filter(
+    (c) => c.macrostatus_fin === "INADIMPLENTE" || c.inadimplente,
+  ).length;
+
+  const parados = useMemo(
+    () =>
+      lista
+        .map((c) => ({ ...c, dias: daysSince(c.status_changed_at) }))
+        .filter((c) => c.dias > 30)
+        .sort((a, b) => b.dias - a.dias)
+        .slice(0, 6),
+    [lista],
+  );
+
+  const recentes = useMemo(
+    () =>
+      [...lista]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 6),
+    [lista],
+  );
 
   return (
     <div className="page-container">
       <PageHeader
         eyebrow="Painel executivo"
         title={nome ? `${saudacao}, ${nome}` : saudacao}
-        subtitle={`${casosAtivos} ${casosAtivos === 1 ? "caso ativo" : "casos ativos"} no sistema.`}
+        subtitle={
+          isLoading
+            ? "Carregando…"
+            : `${totalAtivos} ${totalAtivos === 1 ? "caso ativo" : "casos ativos"} no sistema.`
+        }
       />
 
-      {/* KPIs — cards brancos flutuantes */}
+      {/* KPIs — todos derivados de dados reais do Supabase */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Kpi label="Casos ativos" value={String(casosAtivos)} icon={Briefcase} data={spark(1)} color={NAVY} id="k1" />
-        <Kpi label="Tarefas hoje" value="23" delta="↓ 5 vs ontem" icon={CheckSquare} data={spark(3)} color={NAVY} id="k2" />
-        <Kpi label="Prazos críticos" value="06" delta="↑ 2 vs ontem" deltaDanger icon={CalendarClock} data={spark(5)} color={NAVY} id="k3" />
-        <Kpi label="Faturamento mês" value="R$ 312k" delta="↑ 8% vs abril" deltaUp icon={DollarSign} data={spark(7)} color={GOLD} id="k4" featured />
+        <Kpi label="Casos ativos" value={totalAtivos} icon={Briefcase} loading={isLoading} />
+        <Kpi label="Na pipeline financeira" value={bifurcados} icon={DollarSign} loading={isLoading} />
+        <Kpi
+          label="Inadimplentes"
+          value={inadimplentes}
+          icon={AlertCircle}
+          loading={isLoading}
+          danger={inadimplentes > 0}
+        />
+        <Kpi
+          label="Parados > 30 dias"
+          value={parados.length}
+          icon={Clock}
+          loading={isLoading}
+          danger={parados.length > 0}
+          featured
+        />
       </div>
 
-      {/* Urgente */}
-      <SectionHead title="Urgente" count={urgentes.length} to="/tarefas" cta="Ver todas" />
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        {urgentes.map((t) => (
-          <div key={t.id} className="card-editorial !p-4">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle size={15} className="text-[var(--danger)] mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-semibold text-[var(--navy)] leading-snug">
-                  {t.titulo}
-                </div>
-                <div className="text-[11.5px] font-mono text-muted-foreground mt-0.5">{t.caso}</div>
-              </div>
-            </div>
-            <div
-              className="mt-3 pt-3 flex items-center justify-between"
-              style={{ borderTop: "1px solid var(--border)" }}
-            >
-              <div className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
-                <Clock size={11} />
-                {t.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                <span className="text-[var(--ink-300)]">·</span>
-                {t.responsavel}
-              </div>
-              <button className="text-[12px] font-medium text-[var(--gold-700)] hover:text-[var(--gold)]">
-                Abrir
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Próximos 7 dias + Sem movimentação */}
       <div className="grid lg:grid-cols-2 gap-5">
+        {/* Sem movimentação — real (status_changed_at > 30d) */}
         <div>
-          <SectionHead title="Próximos 7 dias" count={proximos.length} to="/tarefas" cta="Agenda" />
+          <SectionHead title="Sem movimentação > 30 dias" count={parados.length} />
           <div className="card-editorial !p-0 overflow-hidden">
-            {proximos.map((t, i) => (
-              <Link
-                key={t.id}
-                to="/tarefas"
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
-                style={i < proximos.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-medium text-[var(--navy)] truncate">{t.titulo}</div>
-                  <div className="text-[11.5px] font-mono text-muted-foreground">{t.caso}</div>
-                </div>
-                <div className="text-[12px] tabular text-muted-foreground shrink-0">
-                  {t.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                </div>
-                <ChevronRight size={15} className="text-[var(--ink-300)] shrink-0" />
-              </Link>
-            ))}
+            {isLoading ? (
+              <ListSkeleton />
+            ) : parados.length === 0 ? (
+              <Empty>Nenhum caso parado há mais de 30 dias. 🎉</Empty>
+            ) : (
+              parados.map((c, i) => (
+                <CaseRow
+                  key={c.id}
+                  id={c.id}
+                  primary={c.client_name}
+                  secondary={c.case_code}
+                  trailing={`${c.dias}d`}
+                  trailingColor={c.dias > 45 ? "var(--danger)" : "var(--warning)"}
+                  last={i === parados.length - 1}
+                />
+              ))
+            )}
           </div>
         </div>
 
+        {/* Casos recentes — real (created_at desc) */}
         <div>
-          <SectionHead title="Sem movimentação > 30d" count={parados.length} />
+          <SectionHead title="Casos recentes" count={recentes.length} to="/casos" cta="Ver pipeline" />
           <div className="card-editorial !p-0 overflow-hidden">
-            {parados.map((c, i) => (
-              <div
-                key={c.id}
-                className="flex items-center gap-3 px-4 py-3"
-                style={i < parados.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-[var(--navy)] truncate">{c.clienteNome}</div>
-                  <div className="text-[11.5px] font-mono text-muted-foreground">{c.codigo}</div>
-                </div>
-                <div
-                  className="text-[12.5px] tabular font-semibold shrink-0"
-                  style={{ color: c.diasNoEstado > 45 ? "var(--danger)" : "var(--warning)" }}
-                >
-                  {c.diasNoEstado}d
-                </div>
-                <ChevronRight size={15} className="text-[var(--ink-300)] shrink-0" />
-              </div>
-            ))}
+            {isLoading ? (
+              <ListSkeleton />
+            ) : recentes.length === 0 ? (
+              <Empty>Nenhum caso cadastrado ainda.</Empty>
+            ) : (
+              recentes.map((c, i) => (
+                <CaseRow
+                  key={c.id}
+                  id={c.id}
+                  primary={c.client_name}
+                  secondary={`${c.case_code} · ${CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}`}
+                  trailing={new Date(c.created_at).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                  trailingColor="var(--muted-foreground)"
+                  last={i === recentes.length - 1}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -145,27 +147,18 @@ function HojePage() {
 function Kpi({
   label,
   value,
-  delta,
-  deltaUp,
-  deltaDanger,
   icon: Icon,
-  data,
-  color,
-  id,
+  loading,
+  danger,
   featured,
 }: {
   label: string;
-  value: string;
-  delta?: string;
-  deltaUp?: boolean;
-  deltaDanger?: boolean;
+  value: number;
   icon: LucideIcon;
-  data: number[];
-  color: string;
-  id: string;
+  loading?: boolean;
+  danger?: boolean;
   featured?: boolean;
 }) {
-  const deltaColor = deltaUp ? "var(--success)" : deltaDanger ? "var(--danger)" : "var(--muted-foreground)";
   return (
     <div
       className="card-editorial !p-5"
@@ -175,54 +168,54 @@ function Kpi({
         <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-500)]">{label}</span>
         <Icon size={15} style={{ color: featured ? GOLD : "var(--ink-400)" }} />
       </div>
-      <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <div
-            className="kpi-number"
-            style={{ color: featured ? "var(--gold-700)" : NAVY, fontSize: featured ? 32 : 28 }}
-          >
-            {value}
-          </div>
-          {delta && (
-            <div className="text-[11.5px] mt-1" style={{ color: deltaColor }}>
-              {delta}
-            </div>
-          )}
+      {loading ? (
+        <Skeleton className="h-8 w-16 rounded" />
+      ) : (
+        <div
+          className="kpi-number"
+          style={{
+            color: danger ? "var(--danger)" : featured ? "var(--gold-700)" : NAVY,
+            fontSize: 30,
+          }}
+        >
+          {value}
         </div>
-        <Spark data={data} color={color} id={id} />
-      </div>
+      )}
     </div>
   );
 }
 
-function Spark({ data, color, id }: { data: number[]; color: string; id: string }) {
-  const w = 110;
-  const h = 36;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => [(i / (data.length - 1)) * w, h - ((v - min) / range) * h] as const);
-  const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `0,${h} ${line} ${w},${h}`;
+function CaseRow({
+  id,
+  primary,
+  secondary,
+  trailing,
+  trailingColor,
+  last,
+}: {
+  id: string;
+  primary: string;
+  secondary: string;
+  trailing: string;
+  trailingColor: string;
+  last: boolean;
+}) {
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0">
-      <defs>
-        <linearGradient id={`grad-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={area} fill={`url(#grad-${id})`} />
-      <polyline
-        points={line}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity={0.85}
-      />
-    </svg>
+    <Link
+      to="/casos/$id"
+      params={{ id }}
+      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
+      style={last ? undefined : { borderBottom: "1px solid var(--border)" }}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="text-[13.5px] font-medium text-[var(--navy)] truncate">{primary}</div>
+        <div className="text-[11.5px] font-mono text-muted-foreground truncate">{secondary}</div>
+      </div>
+      <div className="text-[12.5px] tabular font-semibold shrink-0" style={{ color: trailingColor }}>
+        {trailing}
+      </div>
+      <ChevronRight size={15} className="text-[var(--ink-300)] shrink-0" />
+    </Link>
   );
 }
 
@@ -255,6 +248,20 @@ function SectionHead({
           {cta} <ChevronRight size={12} />
         </Link>
       )}
+    </div>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">{children}</div>;
+}
+
+function ListSkeleton() {
+  return (
+    <div className="p-4 space-y-2">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 rounded-md" />
+      ))}
     </div>
   );
 }

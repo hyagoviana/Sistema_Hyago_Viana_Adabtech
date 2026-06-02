@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOut, useAuth } from "@/lib/auth";
+import { useCasesList } from "@/hooks/useCases";
 import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
 import symbolHV from "@/assets/symbol-hv.png";
 
@@ -16,20 +17,20 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Operação",
     items: [
       { to: "/hoje", label: "Hoje", icon: Home },
-      { to: "/casos", label: "Pipeline Operacional", icon: Briefcase, count: 487, tone: "neutral" },
-      { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign, count: 156, tone: "neutral" },
+      { to: "/casos", label: "Pipeline Operacional", icon: Briefcase },
+      { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign },
       { to: "/clientes", label: "Clientes", icon: Users },
-      { to: "/tarefas", label: "Tarefas", icon: CheckSquare, count: 23, tone: "danger" },
+      { to: "/tarefas", label: "Tarefas", icon: CheckSquare },
     ],
   },
   {
     label: "Inteligência",
     items: [
-      { to: "/controladoria", label: "Controladoria", icon: Scale, count: 6, tone: "danger" },
+      { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
-      { to: "/comercial", label: "Comercial", icon: TrendingUp, count: 4, tone: "neutral" },
+      { to: "/comercial", label: "Comercial", icon: TrendingUp },
       { to: "/marketing", label: "Marketing", icon: Megaphone },
-      { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle, count: 12, tone: "gold" },
+      { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
       { to: "/dashboards", label: "Dashboards", icon: BarChart3 },
     ],
   },
@@ -79,6 +80,15 @@ export function Sidebar() {
     .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
   const { session, role } = useAuth();
+  const { data: casos } = useCasesList();
+
+  // Contadores REAIS (Supabase): total de casos e casos já bifurcados na financeira.
+  const realCounts: Record<string, number> = {};
+  if (casos) {
+    realCounts["/casos"] = casos.length;
+    realCounts["/casos/financeiro"] = casos.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
+  }
+
   const navigate = useNavigate();
   const email = session?.user?.email ?? "";
   const displayName = email ? email.split("@")[0] : "Usuário";
@@ -195,7 +205,9 @@ export function Sidebar() {
                       <span className={`flex-1 ${active ? "font-medium" : "font-normal"}`}>
                         {item.label}
                       </span>
-                      {item.count !== undefined && <Badge count={item.count} tone={item.tone} />}
+                      {realCounts[item.to] !== undefined && realCounts[item.to] > 0 && (
+                        <Badge count={realCounts[item.to]} tone="neutral" />
+                      )}
                     </Link>
                   </li>
                 );
