@@ -3,13 +3,17 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
   useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
+
 import { AppLayout } from "@/components/hv/AppLayout";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider, useAuth } from "@/lib/auth";
 
 import appCss from "../styles.css?url";
 
@@ -144,7 +148,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <RootLayout />
+      <AuthProvider>
+        <RootLayout />
+      </AuthProvider>
       <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );
@@ -152,6 +158,26 @@ function RootComponent() {
 
 function RootLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  if (path === "/entrar" || path === "/login") return <Outlet />;
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+  const isPublic = path === "/entrar" || path === "/login";
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && !isPublic) navigate({ to: "/login" });
+    if (session && isPublic) navigate({ to: "/hoje" });
+  }, [loading, session, isPublic, navigate]);
+
+  if (isPublic) return <Outlet />;
+  if (loading || !session) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{ background: "var(--bg-page)" }}
+      >
+        <div className="text-sm text-[var(--ink-400)]">Carregando…</div>
+      </div>
+    );
+  }
   return <AppLayout />;
 }

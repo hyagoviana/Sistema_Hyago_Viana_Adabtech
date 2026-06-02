@@ -3,6 +3,7 @@ import { Lock, Mail } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 
 import { Eyebrow } from "@/components/hv/primitives";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import symbolHV from "@/assets/symbol-hv.png";
 
 export const Route = createFileRoute("/login")({
@@ -12,13 +13,24 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    // TODO (V3 — Auth real): autenticar no Supabase antes de navegar.
-    //   const fd = new FormData(e.currentTarget);
-    //   await signIn(String(fd.get("email")), String(fd.get("password")));
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
+    const password = String(fd.get("password") ?? "");
+    const { error: authError } = await getSupabaseBrowserClient().auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+    if (authError) {
+      setError("E-mail ou senha inválidos.");
+      return;
+    }
     navigate({ to: "/hoje" });
   }
 
@@ -103,6 +115,12 @@ function LoginPage() {
               Manter sessão ativa neste dispositivo
             </span>
           </label>
+
+          {error && (
+            <p className="mt-5 text-sm" role="alert" style={{ color: "var(--danger)" }}>
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
