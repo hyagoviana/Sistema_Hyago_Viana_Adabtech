@@ -213,7 +213,14 @@ export function Btn({
     outline: "border border-[var(--border)] text-[#1a1a1f] bg-white hover:bg-[var(--ink-50)] hover:border-[rgba(15,17,35,0.12)]",
     danger: "border border-[rgba(180,36,50,0.25)] text-[var(--danger)] bg-white hover:bg-[rgba(180,36,50,0.04)]",
   };
-  const goldStyle = variant === "gold" ? { background: "#987814" } : undefined;
+  const goldStyle =
+    variant === "gold"
+      ? {
+          background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
+        }
+      : undefined;
   return (
     <button
       {...props}

@@ -127,13 +127,12 @@
   }
   body {
     color: var(--foreground);
-    /* Creme texturizado: base quente + vinheta dourada/navy sutil + grão finíssimo */
+    /* Creme quente com vinheta suave (sem grão — evita aspecto pixelizado) */
     background-color: var(--bg-page);
     background-image:
-      radial-gradient(ellipse at 100% 0%, rgba(152, 120, 20, 0.05), transparent 42%),
-      radial-gradient(ellipse at 0% 100%, rgba(30, 32, 68, 0.035), transparent 45%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-    background-attachment: fixed, fixed, fixed;
+      radial-gradient(ellipse at 100% 0%, rgba(152, 120, 20, 0.045), transparent 45%),
+      radial-gradient(ellipse at 0% 100%, rgba(30, 32, 68, 0.03), transparent 48%);
+    background-attachment: fixed;
     min-height: 100vh;
     letter-spacing: 0;
     line-height: 1.55;

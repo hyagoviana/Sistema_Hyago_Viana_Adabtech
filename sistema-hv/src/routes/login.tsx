@@ -40,7 +40,8 @@ function LoginPage() {
       <div
         className="relative hidden lg:flex flex-col justify-between p-14 text-white"
         style={{
-          background: "linear-gradient(155deg, #2a2c54 0%, #1e2044 40%, #14162e 75%, #0b0c1d 100%)",
+          background:
+            "radial-gradient(ellipse 80% 60% at 24% 72%, rgba(58,62,116,0.32), transparent 60%), linear-gradient(160deg, #1c1e40 0%, #16182f 46%, #0e0f24 78%, #090a1a 100%)",
         }}
       >
         <div className="relative flex items-center gap-3">
@@ -57,7 +58,7 @@ function LoginPage() {
           <div className="text-2xl mb-5" style={{ color: "#c9a634" }}>
             ✦
           </div>
-          <p className="font-display italic text-[34px] leading-[1.22] text-white/95">
+          <p className="font-display italic text-[29px] leading-[1.28] text-white/95">
             A excelência jurídica começa pela disciplina dos detalhes.
           </p>
           <footer
@@ -84,7 +85,7 @@ function LoginPage() {
           />
 
           <Eyebrow>Acesso restrito</Eyebrow>
-          <h1 className="font-display text-[40px] font-bold text-[var(--navy)] mt-4 mb-2 leading-tight">
+          <h1 className="font-display text-[34px] font-semibold text-[var(--navy)] mt-4 mb-2 leading-tight">
             Bem-vindo de volta
           </h1>
           <p className="text-muted-foreground mb-10">
