@@ -3,6 +3,7 @@ import { ArrowRightLeft, CheckCircle2, Pencil, Phone, Trash2 } from "lucide-reac
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { CaseDossie } from "@/components/cases/CaseDossie";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import {
@@ -240,6 +241,10 @@ function CasoDetalhe() {
           </div>
         </div>
       </div>
+
+      <OrnamentalDivider />
+
+      <CaseDossie caseId={caso.id} />
 
       <OrnamentalDivider />
 

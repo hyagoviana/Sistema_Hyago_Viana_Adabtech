@@ -243,6 +243,110 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_audit_log"]["Insert"]>;
         Relationships: [];
       };
+      system_case_tasks: {
+        Row: {
+          id: string;
+          case_id: string;
+          organization_id: string;
+          title: string;
+          description: string | null;
+          status: string;
+          priority: string;
+          assignee: string | null;
+          due_date: string | null;
+          completed_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          organization_id: string;
+          title: string;
+          description?: string | null;
+          status?: string;
+          priority?: string;
+          assignee?: string | null;
+          due_date?: string | null;
+          completed_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_tasks"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_deadlines: {
+        Row: {
+          id: string;
+          case_id: string;
+          organization_id: string;
+          title: string;
+          tipo: string | null;
+          fatal_date: string;
+          recommended_date: string | null;
+          status: string;
+          responsible: string | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          organization_id: string;
+          title: string;
+          tipo?: string | null;
+          fatal_date: string;
+          recommended_date?: string | null;
+          status?: string;
+          responsible?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_deadlines"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_communications: {
+        Row: {
+          id: string;
+          case_id: string;
+          organization_id: string;
+          channel: string;
+          direction: string;
+          summary: string;
+          content: string | null;
+          contact: string | null;
+          occurred_at: string;
+          created_by: string | null;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          organization_id: string;
+          channel?: string;
+          direction?: string;
+          summary: string;
+          content?: string | null;
+          contact?: string | null;
+          occurred_at?: string;
+          created_by?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_communications"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       system_clients_active: {
@@ -258,6 +362,18 @@ export type Database = {
           client_name: string;
           client_cpf_cnpj: string;
         };
+        Relationships: [];
+      };
+      system_case_tasks_active: {
+        Row: Database["public"]["Tables"]["system_case_tasks"]["Row"];
+        Relationships: [];
+      };
+      system_case_deadlines_active: {
+        Row: Database["public"]["Tables"]["system_case_deadlines"]["Row"];
+        Relationships: [];
+      };
+      system_case_communications_active: {
+        Row: Database["public"]["Tables"]["system_case_communications"]["Row"];
         Relationships: [];
       };
     };

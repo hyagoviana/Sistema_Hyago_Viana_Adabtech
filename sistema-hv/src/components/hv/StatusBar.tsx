@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Keyboard } from "lucide-react";
 
+import { useAuth } from "@/lib/auth";
+
 export function StatusBar() {
+  const { session } = useAuth();
+  const email = session?.user?.email ?? "";
   const [time, setTime] = useState<string>("");
   useEffect(() => {
     const tick = () =>
@@ -25,11 +29,9 @@ export function StatusBar() {
         Sistema online
       </span>
       <span className="text-[var(--ink-300)]">·</span>
-      <span className="tabular">487 casos ativos</span>
+      <span>Hyago Viana Advocacia</span>
       <span className="text-[var(--ink-300)]">·</span>
-      <span>Última sync: há 2min</span>
-      <span className="text-[var(--ink-300)]">·</span>
-      <span>Sessão: Maria Souza</span>
+      <span className="truncate max-w-[220px]">Sessão: {email || "—"}</span>
       <span className="text-[var(--ink-300)]">·</span>
       <span className="tabular" suppressHydrationWarning>
         {time || "--:--:--"}

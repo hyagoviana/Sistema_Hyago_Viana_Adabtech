@@ -2,6 +2,8 @@ import { useRouterState } from "@tanstack/react-router";
 import { Search, Plus, Filter, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
+import { useAuth } from "@/lib/auth";
+
 const labelMap: Record<string, string> = {
   hoje: "Hoje",
   casos: "Casos",
@@ -25,6 +27,9 @@ export function Topbar() {
   const segs = path.split("/").filter(Boolean);
   const crumbs = ["Painel", ...segs.map((s) => labelMap[s] ?? s)];
   const [openNew, setOpenNew] = useState(false);
+  const { session } = useAuth();
+  const email = session?.user?.email ?? "";
+  const initial = (email[0] ?? "?").toUpperCase();
 
   return (
     <header
@@ -113,9 +118,9 @@ export function Topbar() {
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium text-white"
           style={{ background: "#1e2044" }}
-          title="Maria Souza"
+          title={email || "Usuário"}
         >
-          M
+          {initial}
         </div>
       </div>
     </header>
