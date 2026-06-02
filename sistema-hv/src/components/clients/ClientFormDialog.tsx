@@ -382,7 +382,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               </div>
 
               <div>
-                <FormLabel>Programas governamentais</FormLabel>
+                <p className="text-sm font-medium leading-none">Programas governamentais</p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {PROGRAMAS_GOVERNAMENTAIS.map((p) => {
                     const selected = form.watch("professional_data.programas") ?? [];
