@@ -3,7 +3,23 @@ import { Heart, Star, Bell, ChevronRight, Plus, Download } from "lucide-react";
 import { Breadcrumb, PageHeader, OrnamentalDivider, Card, CardHero, Eyebrow, HeroStatCard, StatCard, Btn, Badge, AlertStrip, SectionHeader } from "@/components/hv/primitives";
 import { CaseCard } from "@/components/hv/CaseCard";
 import { MacrostatusFin, MacrostatusOp } from "@/components/hv/MacrostatusBadge";
-import { casos } from "@/mocks/fixtures";
+import type { CaseType } from "@/mocks/fixtures";
+
+// Amostras fixas só para o showcase de componentes (não são dados do sistema).
+const sampleCases: {
+  id: string;
+  codigo: string;
+  clienteNome: string;
+  tipo: CaseType;
+  diasNoEstado: number;
+  valor: number;
+  inadimplente?: boolean;
+  proximoPasso?: string;
+}[] = [
+  { id: "demo-1", codigo: "HV-FIES-2026-0001", clienteNome: "Cliente de Exemplo A", tipo: "FIES_ESF", diasNoEstado: 8, valor: 12000, proximoPasso: "Conferência documental" },
+  { id: "demo-2", codigo: "HV-MM-2026-0002", clienteNome: "Cliente de Exemplo B", tipo: "MAIS_MEDICOS", diasNoEstado: 22, valor: 9800, proximoPasso: "Protocolar petição" },
+  { id: "demo-3", codigo: "HV-CFM-2026-0003", clienteNome: "Cliente de Exemplo C", tipo: "CFM_CRM", diasNoEstado: 41, valor: 15600, inadimplente: true, proximoPasso: "Cobrança" },
+];
 
 export const Route = createFileRoute("/design-system")({
   component: DesignSystem,
@@ -109,7 +125,7 @@ function DesignSystem() {
 
       <Section title="Case Cards">
         <div className="grid md:grid-cols-3 gap-3">
-          {casos.slice(0, 3).map((c) => <CaseCard key={c.id} caso={c} compact={false} />)}
+          {sampleCases.map((c) => <CaseCard key={c.id} caso={c} compact={false} />)}
         </div>
       </Section>
 

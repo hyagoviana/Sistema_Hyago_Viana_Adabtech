@@ -106,7 +106,6 @@ export function Topbar() {
           title="Filtros"
         >
           <Filter size={14} strokeWidth={1.6} />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
         </button>
 
         <button
@@ -114,12 +113,6 @@ export function Topbar() {
           title="Notificações"
         >
           <Bell size={14} strokeWidth={1.6} />
-          <span
-            className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] px-1 rounded-full text-[9.5px] font-semibold text-white flex items-center justify-center"
-            style={{ background: "var(--danger)" }}
-          >
-            3
-          </span>
         </button>
 
         <div className="w-px h-5 mx-1 bg-[var(--border)]" />
