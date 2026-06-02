@@ -122,7 +122,13 @@
       "Bash(git reset *)",
       "Bash(rm -f sistema-hv/.tmp_verify.sql)",
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8087)",
-      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8081)"
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8081)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_polish.py\" 8082)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8082)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_polish.py\" 8083)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8083)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8084)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8085)"
     ]
   }
 }
