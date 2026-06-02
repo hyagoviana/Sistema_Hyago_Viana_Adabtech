@@ -58,6 +58,7 @@ import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as CasosListaRouteImport } from './routes/casos.lista'
 import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
 import { Route as CasosIdRouteImport } from './routes/casos.$id'
+import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
@@ -313,6 +314,11 @@ const CasosIdRoute = CasosIdRouteImport.update({
   path: '/casos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CasosFinanceiroRoute,
+} as any)
 const WhatsappConversasIdRoute = WhatsappConversasIdRouteImport.update({
   id: '/whatsapp/conversas/$id',
   path: '/whatsapp/conversas/$id',
@@ -412,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
@@ -426,7 +433,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
-  '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
@@ -471,6 +477,7 @@ export interface FileRoutesByTo {
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/financeiro': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents': typeof ApiClientsIdDocumentsIndexRoute
@@ -531,6 +538,7 @@ export interface FileRoutesById {
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
@@ -592,6 +600,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/financeiro/'
     | '/casos/$id/termo/elaborar'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents/'
@@ -606,7 +615,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/tarefas'
     | '/casos/$id'
-    | '/casos/financeiro'
     | '/casos/lista'
     | '/clientes/$id'
     | '/comercial/email-marketing'
@@ -651,6 +659,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/financeiro'
     | '/casos/$id/termo/elaborar'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents'
@@ -710,6 +719,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/financeiro/'
     | '/casos/$id/termo/elaborar'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents/'
@@ -1117,6 +1127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/casos/financeiro/': {
+      id: '/casos/financeiro/'
+      path: '/'
+      fullPath: '/casos/financeiro/'
+      preLoaderRoute: typeof CasosFinanceiroIndexRouteImport
+      parentRoute: typeof CasosFinanceiroRoute
+    }
     '/whatsapp/conversas/$id': {
       id: '/whatsapp/conversas/$id'
       path: '/whatsapp/conversas/$id'
@@ -1201,10 +1218,12 @@ const CasosIdRouteWithChildren =
 
 interface CasosFinanceiroRouteChildren {
   CasosFinanceiroInadimplenciaRoute: typeof CasosFinanceiroInadimplenciaRoute
+  CasosFinanceiroIndexRoute: typeof CasosFinanceiroIndexRoute
 }
 
 const CasosFinanceiroRouteChildren: CasosFinanceiroRouteChildren = {
   CasosFinanceiroInadimplenciaRoute: CasosFinanceiroInadimplenciaRoute,
+  CasosFinanceiroIndexRoute: CasosFinanceiroIndexRoute,
 }
 
 const CasosFinanceiroRouteWithChildren = CasosFinanceiroRoute._addFileChildren(
