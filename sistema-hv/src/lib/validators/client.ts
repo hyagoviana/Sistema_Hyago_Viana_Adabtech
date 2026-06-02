@@ -91,10 +91,62 @@ export const addressSchema = z.object({
     .nullable(),
 });
 
+// ----------------------------------------------------------------------------
+// Atributos profissionais estruturados (P1 — item 1 do escopo)
+// ----------------------------------------------------------------------------
+// Programas governamentais que o escritório atende. Alinhado aos tipos de caso.
+export const PROGRAMAS_GOVERNAMENTAIS = [
+  "FIES",
+  "MAIS_MEDICOS",
+  "MEDICOS_BRASIL_FORMACAO",
+  "RESIDENCIA_MEDICA",
+] as const;
+
+export const PROGRAMA_LABELS: Record<(typeof PROGRAMAS_GOVERNAMENTAIS)[number], string> = {
+  FIES: "FIES",
+  MAIS_MEDICOS: "Programa Mais Médicos",
+  MEDICOS_BRASIL_FORMACAO: "Médicos pelo Brasil — Formação",
+  RESIDENCIA_MEDICA: "Residência Médica",
+};
+
+// UF opcional: aceita "" (vira null) ou sigla de 2 letras.
+const ufOptional = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .length(2, "UF deve ter 2 letras")
+  .optional()
+  .nullable()
+  .or(z.literal("").transform(() => null));
+
+const textOptional = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null));
+
+export const professionalDataSchema = z
+  .object({
+    crm_numero: textOptional(20),
+    crm_uf: ufOptional,
+    oab_numero: textOptional(20),
+    oab_uf: ufOptional,
+    vinculo_institucional: textOptional(100), // ex.: ANMR, AMPB
+    especialidade: textOptional(100),
+    programas: z.array(z.enum(PROGRAMAS_GOVERNAMENTAIS)).optional().nullable(),
+    observacoes: textOptional(1000),
+  })
+  .optional()
+  .nullable();
+
 export const clientCreateSchema = z.object({
   full_name: z.string().trim().min(3, "Nome muito curto").max(200),
   cpf_cnpj: cpfCnpjSchema,
   tipo: z.string().trim().max(50).optional().nullable(),
+  professional_data: professionalDataSchema,
   email: z
     .string()
     .trim()

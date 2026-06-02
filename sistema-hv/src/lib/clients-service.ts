@@ -42,9 +42,11 @@ export async function createClient(input: ClientCreateOutput) {
   const sb = getSupabaseAdmin();
 
   // 1) INSERT cliente (cpf_cnpj já vem canônico do Zod transform)
+  //    person_type é derivado do tamanho do CPF/CNPJ (11 = PF, 14 = PJ).
+  const person_type = input.cpf_cnpj.length === 14 ? "PJ" : "PF";
   const { data: client, error } = await sb
     .from("system_clients")
-    .insert({ ...input, organization_id: DEFAULT_ORG_ID })
+    .insert({ ...input, organization_id: DEFAULT_ORG_ID, person_type })
     .select()
     .single();
 
