@@ -1,7 +1,7 @@
 // Server-only — CRUD de casos + timeline + audit.
 // NUNCA importe no browser.
 
-import { type MacroOp } from "./cases/constants";
+import { type MacroFin, type MacroOp } from "./cases/constants";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { CaseCreateOutput, CaseUpdateOutput } from "./validators/case";
 
@@ -151,10 +151,55 @@ export async function softDeleteCase(id: string) {
 }
 
 // ----------------------------------------------------------------------------
-// MOVE STATUS (atalho usado pelo dialog Mover do Kanban)
+// MOVE STATUS (atalho usado pelo dialog Mover do Kanban operacional)
 // ----------------------------------------------------------------------------
 export async function moveCaseStatus(id: string, to: MacroOp) {
   return updateCase(id, { macrostatus_op: to });
+}
+
+// ----------------------------------------------------------------------------
+// MOVE STATUS FIN (Kanban financeiro)
+// ----------------------------------------------------------------------------
+// Regra de negócio: voltar pra NAO_APLICAVEL é bloqueado — depois que o caso
+// bifurcou, o rastro financeiro vive sua vida. Cancelar fin se necessário.
+export async function moveCaseStatusFin(id: string, to: MacroFin) {
+  const sb = getSupabaseAdmin();
+  const { data: before } = await sb
+    .from("system_cases")
+    .select("macrostatus_fin")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (!before) throw new CaseServiceError("Caso não encontrado", 404);
+
+  if (to === "NAO_APLICAVEL" && before.macrostatus_fin !== "NAO_APLICAVEL") {
+    throw new CaseServiceError(
+      "Não é permitido voltar status financeiro pra 'Não aplicável'. Use 'Cancelado' se for o caso.",
+      400,
+    );
+  }
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ macrostatus_fin: to })
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data) {
+    throw new CaseServiceError(error?.message ?? "Falha ao mover status fin", 500);
+  }
+
+  if (before.macrostatus_fin !== to) {
+    await sb.from("system_case_events").insert({
+      case_id: id,
+      organization_id: data.organization_id,
+      action: "fin_status_changed",
+      diff: { from: before.macrostatus_fin, to },
+    });
+  }
+
+  return data;
 }
 
 // ----------------------------------------------------------------------------
@@ -163,6 +208,7 @@ export async function moveCaseStatus(id: string, to: MacroOp) {
 export async function listCases(filters?: {
   search?: string;
   macrostatus_op?: MacroOp;
+  macrostatus_fin?: MacroFin;
   client_id?: string;
 }) {
   const sb = getSupabaseAdmin();
@@ -170,6 +216,9 @@ export async function listCases(filters?: {
 
   if (filters?.macrostatus_op) {
     query = query.eq("macrostatus_op", filters.macrostatus_op);
+  }
+  if (filters?.macrostatus_fin) {
+    query = query.eq("macrostatus_fin", filters.macrostatus_fin);
   }
   if (filters?.client_id) {
     query = query.eq("client_id", filters.client_id);

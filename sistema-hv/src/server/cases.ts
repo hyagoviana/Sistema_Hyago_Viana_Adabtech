@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { MACRO_OP } from "@/lib/cases/constants";
+import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
   CaseServiceError,
   createCase,
@@ -10,6 +10,7 @@ import {
   listCaseEvents,
   listCases,
   moveCaseStatus,
+  moveCaseStatusFin,
   softDeleteCase,
   updateCase,
 } from "@/lib/cases-service";
@@ -36,6 +37,7 @@ const listFiltersSchema = z
   .object({
     search: z.string().optional(),
     macrostatus_op: z.enum(MACRO_OP).optional(),
+    macrostatus_fin: z.enum(MACRO_FIN).optional(),
     client_id: z.string().uuid().optional(),
   })
   .optional()
@@ -75,6 +77,12 @@ const moveSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_OP) });
 export const moveCaseStatusFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveSchema.parse(data))
   .handler(async ({ data }) => handle(() => moveCaseStatus(data.id, data.to)));
+
+const moveFinSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_FIN) });
+
+export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => moveFinSchema.parse(data))
+  .handler(async ({ data }) => handle(() => moveCaseStatusFin(data.id, data.to)));
 
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))

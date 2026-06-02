@@ -13,6 +13,7 @@ import {
   listCaseEvents,
   listCases,
   moveCaseStatus,
+  moveCaseStatusFin,
   softDeleteCase,
   updateCase,
 } from "../src/lib/cases-service";
@@ -106,17 +107,69 @@ async function main() {
   const got = await getCase(caso.id);
   assert("get retorna case_code", got.case_code === caso.case_code);
 
-  // ─── 10. Soft-delete ─────────────────────────────────────────────────────
-  console.log("\n10) Soft-delete...");
+  // ─── 10. Bifurcação automática (op → fin) ────────────────────────────────
+  console.log("\n10) Bifurcação automática IMPLANTADO → ELABORANDO...");
+  const caso2 = await createCase({
+    client_id: cli.id,
+    case_type: "FIES_DGM",
+    proximo_passo: "Vai pra implantado direto",
+  });
+  assert("caso2 inicia com fin=NAO_APLICAVEL", caso2.macrostatus_fin === "NAO_APLICAVEL");
+  const bifurcated = await moveCaseStatus(caso2.id, "IMPLANTADO");
+  assert("op = IMPLANTADO", bifurcated.macrostatus_op === "IMPLANTADO");
+  assert(
+    "fin bifurcou automaticamente pra ELABORANDO",
+    bifurcated.macrostatus_fin === "ELABORANDO",
+  );
+  assert(
+    "status_fin_changed_at atualizou pelo trigger",
+    bifurcated.status_fin_changed_at !== caso2.status_fin_changed_at,
+  );
+
+  // ─── 11. Idempotência: mover op pra IMPLANTACAO_PARCIAL não re-bifurca ──
+  console.log("\n11) Idempotência: IMPLANTADO → IMPLANTACAO_PARCIAL não reseta fin...");
+  await moveCaseStatusFin(caso2.id, "ATIVO");
+  const idem = await moveCaseStatus(caso2.id, "IMPLANTACAO_PARCIAL");
+  assert("fin permaneceu ATIVO (não voltou pra ELABORANDO)", idem.macrostatus_fin === "ATIVO");
+
+  // ─── 12. Mover op pra trás (ANALISE) não afeta fin ──────────────────────
+  console.log("\n12) Mover op pra ANALISE não toca no fin...");
+  const back = await moveCaseStatus(caso2.id, "ANALISE");
+  assert("fin segue ATIVO após op voltar", back.macrostatus_fin === "ATIVO");
+
+  // ─── 13. CANCELADO no op não bifurca ─────────────────────────────────────
+  console.log("\n13) CANCELADO no op não dispara bifurcação...");
+  const caso3 = await createCase({
+    client_id: cli.id,
+    case_type: "COVID",
+    proximo_passo: "Cliente desistiu",
+  });
+  const cancelled = await moveCaseStatus(caso3.id, "CANCELADO");
+  assert("CANCELADO no op mantém fin=NAO_APLICAVEL", cancelled.macrostatus_fin === "NAO_APLICAVEL");
+
+  // ─── 14. Bloqueio de revert pra NAO_APLICAVEL ────────────────────────────
+  console.log("\n14) moveCaseStatusFin pra NAO_APLICAVEL é bloqueado...");
+  let blocked = false;
+  try {
+    await moveCaseStatusFin(caso2.id, "NAO_APLICAVEL");
+  } catch (err) {
+    blocked = err instanceof Error && err.message.toLowerCase().includes("não aplicável");
+  }
+  assert("revert pra NAO_APLICAVEL rejeitado", blocked);
+
+  // ─── 15. Soft-delete do caso original ────────────────────────────────────
+  console.log("\n15) Soft-delete...");
   await softDeleteCase(caso.id);
+  await softDeleteCase(caso2.id);
+  await softDeleteCase(caso3.id);
   const after = await listCases({ client_id: cli.id });
-  assert("caso some da view active", after.length === 0);
+  assert("casos somem da view active", after.length === 0);
 
   const eventsAfter = await listCaseEvents(caso.id);
   assert("evento soft_deleted registrado", eventsAfter[0].action === "soft_deleted");
 
-  // ─── 11. Cleanup ─────────────────────────────────────────────────────────
-  console.log("\n11) Cleanup cliente...");
+  // ─── 16. Cleanup ─────────────────────────────────────────────────────────
+  console.log("\n16) Cleanup cliente...");
   await softDeleteClient(cli.id);
   console.log("   ✓ ok\n");
 

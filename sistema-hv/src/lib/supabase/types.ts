@@ -136,6 +136,7 @@ export type Database = {
           valor_centavos: number | null;
           inadimplente: boolean;
           status_changed_at: string;
+          status_fin_changed_at: string;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -155,6 +156,7 @@ export type Database = {
           valor_centavos?: number | null;
           inadimplente?: boolean;
           status_changed_at?: string;
+          status_fin_changed_at?: string;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
