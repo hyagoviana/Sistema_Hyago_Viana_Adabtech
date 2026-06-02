@@ -13,7 +13,20 @@ import {
   listCaseCommunicationsFn,
   createCaseCommunicationFn,
   deleteCaseCommunicationFn,
+  listAllTasksFn,
+  listAllDeadlinesFn,
 } from "@/rpc/dossie";
+
+// ----------------------------------------------- Agregação global (Tarefas) ----
+export function useAllTasks() {
+  const fn = useServerFn(listAllTasksFn);
+  return useQuery({ queryKey: ["all-tasks"], queryFn: () => fn() });
+}
+
+export function useAllDeadlines() {
+  const fn = useServerFn(listAllDeadlinesFn);
+  return useQuery({ queryKey: ["all-deadlines"], queryFn: () => fn() });
+}
 
 // ---------------------------------------------------------------- Tarefas ----
 export function useCaseTasks(caseId: string) {

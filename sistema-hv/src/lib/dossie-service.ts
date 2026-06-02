@@ -166,3 +166,45 @@ export async function deleteCaseCommunication(id: string) {
   check(error);
   return { ok: true as const, id };
 }
+
+// ----------------------------------------------------------------------------
+// Agregação global (visão "Tarefas" e painel "Hoje") — enriquece com o caso
+// ----------------------------------------------------------------------------
+async function caseLookup(sb: ReturnType<typeof getSupabaseAdmin>) {
+  const { data } = await sb.from("system_cases_active").select("id, case_code, client_name");
+  const map = new Map<string, { case_code: string; client_name: string }>();
+  (data ?? []).forEach((c) =>
+    map.set(c.id, { case_code: c.case_code, client_name: c.client_name }),
+  );
+  return map;
+}
+
+export async function listAllTasks() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_tasks_active")
+    .select("id, case_id, title, status, priority, assignee, due_date, created_at")
+    .order("due_date", { ascending: true, nullsFirst: false });
+  check(error);
+  const map = await caseLookup(sb);
+  return (data ?? []).map((t) => ({
+    ...t,
+    case_code: map.get(t.case_id)?.case_code ?? "—",
+    client_name: map.get(t.case_id)?.client_name ?? "—",
+  }));
+}
+
+export async function listAllDeadlines() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_deadlines_active")
+    .select("id, case_id, title, tipo, fatal_date, recommended_date, status, responsible")
+    .order("fatal_date", { ascending: true });
+  check(error);
+  const map = await caseLookup(sb);
+  return (data ?? []).map((d) => ({
+    ...d,
+    case_code: map.get(d.case_id)?.case_code ?? "—",
+    client_name: map.get(d.case_id)?.client_name ?? "—",
+  }));
+}
