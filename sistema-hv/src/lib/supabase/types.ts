@@ -347,6 +347,64 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_case_communications"]["Insert"]>;
         Relationships: [];
       };
+      system_users: {
+        Row: {
+          id: string;
+          organization_id: string;
+          email: string;
+          full_name: string | null;
+          role: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id: string;
+          organization_id: string;
+          email: string;
+          full_name?: string | null;
+          role?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_users"]["Insert"]>;
+        Relationships: [];
+      };
+      system_consent_records: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string | null;
+          cpf_cnpj: string | null;
+          finalidade: string;
+          policy_version: string;
+          channel: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          granted_at: string;
+          revoked_at: string | null;
+          revoke_reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id?: string | null;
+          cpf_cnpj?: string | null;
+          finalidade: string;
+          policy_version?: string;
+          channel?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          granted_at?: string;
+          revoked_at?: string | null;
+          revoke_reason?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_consent_records"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       system_clients_active: {
@@ -376,9 +434,17 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_case_communications"]["Row"];
         Relationships: [];
       };
+      system_users_active: {
+        Row: Database["public"]["Tables"]["system_users"]["Row"];
+        Relationships: [];
+      };
     };
     Functions: {
       system_current_organization_id: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      system_current_user_role: {
         Args: Record<string, never>;
         Returns: string;
       };

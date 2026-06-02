@@ -103,7 +103,24 @@
       "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots.py\")",
       "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_shots2.py\" 8082)",
       "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_auth.py\" 8083)",
-      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_f3.py\" 8084)"
+      "Bash(python \"C:/Users/mathe/AppData/Local/Temp/hv_f3.py\" 8084)",
+      "Bash(curl -s -m 30 -H 'X-N8N-API-KEY: __TRACKED_VAR__' __TRACKED_VAR__/api/v1/workflows?limit=20 -w '\\\\nHTTP %{http_code}\\\\n' -o /c/Users/mathe/AppData/Local/Temp/wf_list.json)",
+      "Bash(node -e \"const d=require\\('/c/Users/mathe/AppData/Local/Temp/wf_list.json'\\); \\(d.data||[]\\).forEach\\(w=>console.log\\(w.id, '|', w.name, '| active:', w.active\\)\\);\")",
+      "Bash(tr -d '\\\\r\\\\n')",
+      "Bash(echo \"=== workflows no n8n ===\")",
+      "Bash(node -e 'const d=JSON.parse\\(require\\('\\\\''fs'\\\\''\\).readFileSync\\('\\\\''__TRACKED_VAR__/wf_list.json'\\\\'','\\\\''utf8'\\\\''\\)\\); \\(d.data||[]\\).forEach\\(w=>console.log\\(w.id,'\\\\''|'\\\\'',w.name,'\\\\''| active:'\\\\'',w.active\\)\\);')",
+      "Bash(echo \"=== baixando o fluxo SizyKzXRq14mzzWZ \\(backup\\) ===\")",
+      "Bash(curl -s -m 30 -H 'X-N8N-API-KEY: __TRACKED_VAR__' __TRACKED_VAR__/api/v1/workflows/SizyKzXRq14mzzWZ -o __TRACKED_VAR__/wf_dossie_backup.json -w 'HTTP %{http_code}\\\\n')",
+      "Bash(node *)",
+      "Bash(curl -s -m 30 -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ -o /c/Users/mathe/AppData/Local/Temp/wf_now.json)",
+      "Bash(curl -s -m 30 -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ -o C:/Users/mathe/AppData/Local/Temp/wf_check.json)",
+      "Bash(set NITRO_PRESET=vercel)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\.claude\\\\plugins\\\\cache\\\\anthropic-agent-skills\\\\example-skills\\\\da20c92503b2\\\\skills\\\\webapp-testing\\\\scripts\\\\with_server.py\" --server \"npm run dev\" --port 5173 -- python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\test_rbac.py\")",
+      "Bash(powershell -Command \"\\(Get-Content 'C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\test_rbac.py'\\) -replace '5173','8086' | Set-Content 'C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\test_rbac.py'\")",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\test_rbac.py\")",
+      "Bash(git rm *)",
+      "Bash(git reset *)",
+      "Bash(rm -f sistema-hv/.tmp_verify.sql)"
     ]
   }
 }
