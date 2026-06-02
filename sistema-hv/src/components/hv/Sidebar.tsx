@@ -73,7 +73,7 @@ export function Sidebar() {
       className="hidden lg:flex flex-col w-[228px] shrink-0 sticky top-0 h-screen text-white"
       style={{
         background:
-          "linear-gradient(180deg, #1e2044 0%, #14162e 55%, #000000 100%)",
+          "linear-gradient(180deg, #1e2044 0%, #181a33 60%, #14162e 100%)",
         borderRight: "1px solid rgba(255,255,255,0.04)",
         boxShadow:
           "1px 0 0 rgba(0,0,0,0.4), 6px 0 24px -8px rgba(0,0,0,0.35)",
@@ -124,11 +124,11 @@ export function Sidebar() {
                       style={
                         active
                           ? {
-                              background: "rgba(255,255,255,0.06)",
-                              border: "1px solid rgba(255,255,255,0.08)",
+                              background: "rgba(152,120,20,0.12)",
+                              border: "1px solid rgba(152,120,20,0.22)",
                               color: "#ffffff",
                               boxShadow:
-                                "inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px -6px rgba(0,0,0,0.5)",
+                                "inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px -8px rgba(0,0,0,0.5)",
                             }
                           : {
                               color: "rgba(232,232,232,0.7)",
