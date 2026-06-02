@@ -13,7 +13,7 @@ import {
   moveCaseStatusFn,
   softDeleteCaseFn,
   updateCaseFn,
-} from "@/server/cases";
+} from "@/rpc/cases";
 
 type Filters = {
   search?: string;
