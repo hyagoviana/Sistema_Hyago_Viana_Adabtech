@@ -36,8 +36,8 @@ export function Topbar() {
       className="sticky top-0 z-30 flex items-center gap-4 px-6"
       style={{
         height: 56,
-        background: "#f2f0e8",
-        borderBottom: "1px solid rgba(120,96,30,0.12)",
+        background: "#f8f7f3",
+        borderBottom: "1px solid rgba(120,96,30,0.10)",
         boxShadow: "0 1px 2px rgba(60,50,20,0.04)",
       }}
     >
