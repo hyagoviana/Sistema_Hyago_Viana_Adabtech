@@ -10,7 +10,7 @@ import {
   resyncDriveFn,
   softDeleteClientFn,
   updateClientFn,
-} from "@/server/clients";
+} from "@/rpc/clients";
 
 // ----------------------------------------------------------------------------
 // Queries
