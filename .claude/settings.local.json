@@ -89,7 +89,8 @@
       "Bash(git fetch *)",
       "Bash(git ls-tree *)",
       "Bash(git commit *)",
-      "Bash(grep -rn \"PRIVATE_KEY\\\\|private_key\\\\|replace.*\\\\\\\\\\\\\\\\n\\\\|replace\\(/\" src/lib/google/ src/lib/validate-env.ts)"
+      "Bash(grep -rn \"PRIVATE_KEY\\\\|private_key\\\\|replace.*\\\\\\\\\\\\\\\\n\\\\|replace\\(/\" src/lib/google/ src/lib/validate-env.ts)",
+      "Bash(git push *)"
     ]
   }
 }
