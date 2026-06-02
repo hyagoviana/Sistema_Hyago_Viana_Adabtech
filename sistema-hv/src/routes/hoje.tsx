@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Briefcase, DollarSign, AlertCircle, Clock, ChevronRight } from "lucide-react";
+import { Briefcase, DollarSign, AlertCircle, Clock, CalendarClock, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { PageHeader } from "@/components/hv/primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
+import { useAllTasks, useAllDeadlines } from "@/hooks/useDossie";
 import { useAuth } from "@/lib/auth";
-import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/hoje")({
   component: HojePage,
@@ -20,17 +20,22 @@ function daysSince(iso: string | null | undefined): number {
   if (!iso) return 0;
   return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
 }
+function daysUntil(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
 
 function HojePage() {
   const { session } = useAuth();
   const { data: casos, isLoading } = useCasesList();
+  const { data: tasks } = useAllTasks();
+  const { data: deadlines } = useAllDeadlines();
+
   const meta = session?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
   const nome = meta?.full_name || meta?.name || "";
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
   const lista = useMemo(() => casos ?? [], [casos]);
-
   const totalAtivos = lista.length;
   const bifurcados = lista.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
   const inadimplentes = lista.filter(
@@ -47,12 +52,23 @@ function HojePage() {
     [lista],
   );
 
-  const recentes = useMemo(
+  // Urgente: tarefas abertas urgentes/altas
+  const urgentes = useMemo(
     () =>
-      [...lista]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      (tasks ?? [])
+        .filter((t) => t.status !== "CONCLUIDA" && (t.priority === "URGENTE" || t.priority === "ALTA"))
+        .slice(0, 3),
+    [tasks],
+  );
+
+  // Próximos 7 dias: prazos abertos com vencimento em ≤7 dias (inclui atrasados)
+  const proximosPrazos = useMemo(
+    () =>
+      (deadlines ?? [])
+        .filter((d) => d.status === "ABERTO" && daysUntil(d.fatal_date) <= 7)
+        .sort((a, b) => new Date(a.fatal_date).getTime() - new Date(b.fatal_date).getTime())
         .slice(0, 6),
-    [lista],
+    [deadlines],
   );
 
   return (
@@ -67,7 +83,6 @@ function HojePage() {
         }
       />
 
-      {/* KPIs — todos derivados de dados reais do Supabase */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Kpi label="Casos ativos" value={totalAtivos} icon={Briefcase} loading={isLoading} />
         <Kpi label="Na pipeline financeira" value={bifurcados} icon={DollarSign} loading={isLoading} />
@@ -88,10 +103,70 @@ function HojePage() {
         />
       </div>
 
+      {/* Urgente — tarefas reais */}
+      <SectionHead title="Urgente" count={urgentes.length} to="/tarefas" cta="Ver tarefas" />
+      <div className="grid md:grid-cols-3 gap-4 mb-8">
+        {urgentes.length === 0 ? (
+          <div className="card-editorial !p-6 text-center text-[13px] text-muted-foreground md:col-span-3">
+            Nenhuma tarefa urgente em aberto.
+          </div>
+        ) : (
+          urgentes.map((t) => (
+            <Link
+              key={t.id}
+              to="/casos/$id"
+              params={{ id: t.case_id }}
+              className="card-editorial !p-4 block"
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertCircle
+                  size={15}
+                  className="mt-0.5 shrink-0"
+                  style={{ color: t.priority === "URGENTE" ? "var(--danger)" : "var(--warning)" }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-[var(--navy)] leading-snug">
+                    {t.title}
+                  </div>
+                  <div className="text-[11.5px] text-muted-foreground mt-0.5 truncate">
+                    {t.client_name} · {t.case_code}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-5">
-        {/* Sem movimentação — real (status_changed_at > 30d) */}
+        {/* Próximos 7 dias — prazos reais */}
         <div>
-          <SectionHead title="Sem movimentação > 30 dias" count={parados.length} />
+          <SectionHead title="Próximos 7 dias" count={proximosPrazos.length} to="/tarefas" cta="Agenda" />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {proximosPrazos.length === 0 ? (
+              <Empty>Nenhum prazo nos próximos 7 dias.</Empty>
+            ) : (
+              proximosPrazos.map((d, i) => {
+                const dias = daysUntil(d.fatal_date);
+                return (
+                  <Row
+                    key={d.id}
+                    caseId={d.case_id}
+                    primary={d.title}
+                    secondary={`${d.client_name} · ${d.case_code}`}
+                    trailing={dias < 0 ? `${Math.abs(dias)}d atraso` : `${dias}d`}
+                    trailingColor={dias < 0 ? "var(--danger)" : "var(--warning)"}
+                    last={i === proximosPrazos.length - 1}
+                  />
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Sem movimentação — casos reais */}
+        <div>
+          <SectionHead title="Sem movimentação > 30 dias" count={parados.length} to="/casos" cta="Ver pipeline" />
           <div className="card-editorial !p-0 overflow-hidden">
             {isLoading ? (
               <ListSkeleton />
@@ -99,41 +174,14 @@ function HojePage() {
               <Empty>Nenhum caso parado há mais de 30 dias. 🎉</Empty>
             ) : (
               parados.map((c, i) => (
-                <CaseRow
+                <Row
                   key={c.id}
-                  id={c.id}
+                  caseId={c.id}
                   primary={c.client_name}
                   secondary={c.case_code}
                   trailing={`${c.dias}d`}
                   trailingColor={c.dias > 45 ? "var(--danger)" : "var(--warning)"}
                   last={i === parados.length - 1}
-                />
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Casos recentes — real (created_at desc) */}
-        <div>
-          <SectionHead title="Casos recentes" count={recentes.length} to="/casos" cta="Ver pipeline" />
-          <div className="card-editorial !p-0 overflow-hidden">
-            {isLoading ? (
-              <ListSkeleton />
-            ) : recentes.length === 0 ? (
-              <Empty>Nenhum caso cadastrado ainda.</Empty>
-            ) : (
-              recentes.map((c, i) => (
-                <CaseRow
-                  key={c.id}
-                  id={c.id}
-                  primary={c.client_name}
-                  secondary={`${c.case_code} · ${CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}`}
-                  trailing={new Date(c.created_at).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "short",
-                  })}
-                  trailingColor="var(--muted-foreground)"
-                  last={i === recentes.length - 1}
                 />
               ))
             )}
@@ -173,10 +221,7 @@ function Kpi({
       ) : (
         <div
           className="kpi-number"
-          style={{
-            color: danger ? "var(--danger)" : featured ? "var(--gold-700)" : NAVY,
-            fontSize: 30,
-          }}
+          style={{ color: danger ? "var(--danger)" : featured ? "var(--gold-700)" : NAVY, fontSize: 30 }}
         >
           {value}
         </div>
@@ -185,15 +230,15 @@ function Kpi({
   );
 }
 
-function CaseRow({
-  id,
+function Row({
+  caseId,
   primary,
   secondary,
   trailing,
   trailingColor,
   last,
 }: {
-  id: string;
+  caseId: string;
   primary: string;
   secondary: string;
   trailing: string;
@@ -203,7 +248,7 @@ function CaseRow({
   return (
     <Link
       to="/casos/$id"
-      params={{ id }}
+      params={{ id: caseId }}
       className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
       style={last ? undefined : { borderBottom: "1px solid var(--border)" }}
     >

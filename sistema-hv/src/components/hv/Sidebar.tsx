@@ -6,6 +6,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { signOut, useAuth } from "@/lib/auth";
 import { useCasesList } from "@/hooks/useCases";
+import { useAllTasks } from "@/hooks/useDossie";
 import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
 import symbolHV from "@/assets/symbol-hv.png";
 
@@ -81,12 +82,16 @@ export function Sidebar() {
 
   const { session, role } = useAuth();
   const { data: casos } = useCasesList();
+  const { data: tasks } = useAllTasks();
 
-  // Contadores REAIS (Supabase): total de casos e casos já bifurcados na financeira.
+  // Contadores REAIS (Supabase): casos, bifurcados na financeira e tarefas abertas.
   const realCounts: Record<string, number> = {};
   if (casos) {
     realCounts["/casos"] = casos.length;
     realCounts["/casos/financeiro"] = casos.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
+  }
+  if (tasks) {
+    realCounts["/tarefas"] = tasks.filter((t) => t.status !== "CONCLUIDA").length;
   }
 
   const navigate = useNavigate();

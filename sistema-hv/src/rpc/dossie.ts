@@ -14,6 +14,8 @@ import {
   listCaseCommunications,
   createCaseCommunication,
   deleteCaseCommunication,
+  listAllTasks,
+  listAllDeadlines,
 } from "@/lib/dossie-service";
 
 function handle<T>(fn: () => Promise<T>): Promise<T> {
@@ -98,3 +100,12 @@ export const createCaseCommunicationFn = createServerFn({ method: "POST" })
 export const deleteCaseCommunicationFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data }) => handle(() => deleteCaseCommunication(data.id)));
+
+// ----------------------------------------------------- Agregação global ----
+export const listAllTasksFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listAllTasks()),
+);
+
+export const listAllDeadlinesFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listAllDeadlines()),
+);
