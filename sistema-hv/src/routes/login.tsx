@@ -107,8 +107,12 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 rounded-md bg-[var(--navy)] text-white font-medium transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[rgba(30,32,68,0.25)] disabled:opacity-60"
-            style={{ border: "1px solid rgba(152,120,20,0.5)" }}
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 text-white font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+            style={{
+              background: "#987814",
+              borderRadius: 6,
+              boxShadow: "0 10px 28px -10px rgba(152,120,20,0.55)",
+            }}
           >
             {loading ? "Entrando…" : "Entrar no sistema"}
           </button>
