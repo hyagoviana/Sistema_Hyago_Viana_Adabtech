@@ -66,33 +66,34 @@
   --ink-500: #6b6b73;
   --ink-400: #8e8e98;
   --ink-300: #b8b8c0;
-  --ink-200: #ddd3bf;
-  --ink-100: #e5ddc9;
-  --ink-50:  #e6ddc8;
+  --ink-200: #e0d7c3;
+  --ink-100: #eae2d0;
+  --ink-50:  #efe8d6;
 
-  /* Creme boutique monocromático (medido do exemplo): fundo areia + cards marfim
-     levemente mais claros, separados por sombra — NÃO brancos. */
-  --bg-page: #eae1cb;
-  --bg-subtle: #e3dac4;
-  --bg-paper: #f0ebde;
-  --cream: #eae1cb;
-  --cream-deep: #e0d6bf;
+  /* Creme boutique monocromático (medido do exemplo): fundo creme CLARO com
+     degradê sutil + cards marfim levemente mais claros; faixa do topo
+     branco-acinzentada. Cards NUNCA brancos puros. */
+  --bg-page: #f1ead9;
+  --bg-subtle: #ece4d1;
+  --bg-paper: #f7f2e9;
+  --cream: #f1ead9;
+  --cream-deep: #e8dfc9;
 
   --success: #1f7a4d;
   --warning: #a25a08;
   --danger: #b42432;
 
-  --background: #eae1cb;
+  --background: #f1ead9;
   --foreground: #1a1a1f;
-  --card: #f0ebde;
+  --card: #f7f2e9;
   --card-foreground: #1a1a1f;
-  --popover: #f0ebde;
+  --popover: #f7f2e9;
   --popover-foreground: #1a1a1f;
-  --secondary: #e3dac4;
+  --secondary: #ece4d1;
   --secondary-foreground: #1e2044;
-  --muted: #e3dac4;
+  --muted: #ece4d1;
   --muted-foreground: #6b6b73;
-  --accent: #e3dac4;
+  --accent: #ece4d1;
   --accent-foreground: #1e2044;
   --destructive: #b42432;
   --destructive-foreground: #ffffff;
@@ -128,11 +129,10 @@
   }
   body {
     color: var(--foreground);
-    /* Creme quente com vinheta suave (sem grão — evita aspecto pixelizado) */
+    /* Degradê creme suave: levemente mais quente em cima → creme mais claro
+       embaixo (sem grão, sem vinheta forte). */
     background-color: var(--bg-page);
-    background-image:
-      radial-gradient(ellipse at 100% 0%, rgba(152, 120, 20, 0.045), transparent 45%),
-      radial-gradient(ellipse at 0% 100%, rgba(30, 32, 68, 0.03), transparent 48%);
+    background-image: linear-gradient(180deg, #ede5d2 0%, #f3eee3 55%, #f6f1e8 100%);
     background-attachment: fixed;
     min-height: 100vh;
     letter-spacing: 0;
