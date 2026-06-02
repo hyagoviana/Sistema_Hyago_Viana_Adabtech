@@ -4,7 +4,7 @@ import {
   TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import logoHV from "@/assets/logo-hv.png";
+import symbolHV from "@/assets/symbol-hv.png";
 
 type BadgeTone = "neutral" | "gold" | "danger";
 type Item = { to: string; label: string; icon: LucideIcon; count?: number; tone?: BadgeTone };
@@ -82,16 +82,11 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-4 pt-5 pb-4">
         <Link to="/hoje" className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(152,120,20,0.25), rgba(152,120,20,0.05))",
-              border: "1px solid rgba(152,120,20,0.4)",
-            }}
-          >
-            <img src={logoHV} alt="" className="w-4 h-4 object-contain opacity-95" />
-          </div>
+          <img
+            src={symbolHV}
+            alt=""
+            className="h-7 w-auto object-contain shrink-0"
+          />
           <div className="leading-tight">
             <div className="text-[13px] font-semibold text-white tracking-tight">Hyago Viana</div>
             <div
