@@ -130,7 +130,11 @@
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8084)",
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8085)",
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_nomock.py\" 8086)",
-      "Bash(dir \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\docs\" -Recurse)"
+      "Bash(dir \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\docs\" -Recurse)",
+      "Bash(curl -s -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ -o n8n_wf.json)",
+      "Bash(curl -s --max-time 90 -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ -o n8n_wf.json)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(curl -s --max-time 60 -o n8n_wf.json -w 'http=%{http_code} time=%{time_total}\\\\n' -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ)"
     ]
   }
 }
