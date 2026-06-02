@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOut, useAuth } from "@/lib/auth";
+import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
 import symbolHV from "@/assets/symbol-hv.png";
 
 type BadgeTone = "neutral" | "gold" | "danger";
@@ -77,11 +78,19 @@ export function Sidebar() {
     .filter((it) => path === it.to || path.startsWith(it.to + "/"))
     .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
-  const { session } = useAuth();
+  const { session, role } = useAuth();
   const navigate = useNavigate();
   const email = session?.user?.email ?? "";
   const displayName = email ? email.split("@")[0] : "Usuário";
   const initial = (email[0] ?? "?").toUpperCase();
+
+  // Filtra grupos/itens pelo papel. Enquanto o papel não carregou (null),
+  // mostra tudo para não "piscar" o menu — os gates de ação seguram o resto.
+  const visibleGroups = role
+    ? groups
+        .map((g) => ({ ...g, items: g.items.filter((it) => canSeeRoute(role, it.to)) }))
+        .filter((g) => g.items.length > 0)
+    : groups;
 
   async function handleLogout() {
     await signOut();
@@ -120,7 +129,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pt-1 pb-4">
-        {groups.map((g, idx) => (
+        {visibleGroups.map((g, idx) => (
           <div
             key={g.label}
             className={idx === 0 ? "" : "mt-4 pt-4"}
@@ -213,7 +222,7 @@ export function Sidebar() {
         <div className="flex-1 leading-tight min-w-0">
           <div className="text-[12.5px] text-white font-medium truncate">{displayName}</div>
           <div className="text-[10px] truncate" style={{ color: "rgba(232,232,232,0.45)" }}>
-            {email || "Administrador"}
+            {role ? ROLE_LABELS[role] : email || "Administrador"}
           </div>
         </div>
         <button
