@@ -128,7 +128,9 @@
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_polish.py\" 8083)",
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8083)",
       "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8084)",
-      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8085)"
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_repaginacao.py\" 8085)",
+      "Bash(python \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\shot_nomock.py\" 8086)",
+      "Bash(dir \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\docs\" -Recurse)"
     ]
   }
 }
