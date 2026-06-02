@@ -90,7 +90,14 @@
       "Bash(git ls-tree *)",
       "Bash(git commit *)",
       "Bash(grep -rn \"PRIVATE_KEY\\\\|private_key\\\\|replace.*\\\\\\\\\\\\\\\\n\\\\|replace\\(/\" src/lib/google/ src/lib/validate-env.ts)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\" -Recurse -Force)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Format-Table FullName, PSIsContainer)",
+      "Bash(node -e \"console.log\\('node ok'\\)\")",
+      "Bash(npx --no-install sharp --version)",
+      "Bash(node -e \"try{require\\('sharp'\\);console.log\\('sharp INSTALLED'\\)}catch\\(e\\){console.log\\('sharp NOT installed'\\)}\")",
+      "Bash(node scripts/gen-favicon.mjs)"
     ]
   }
 }
