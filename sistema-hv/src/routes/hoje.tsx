@@ -1,9 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertCircle, Clock, Briefcase, CheckSquare, DollarSign, FileText, MoreHorizontal, ChevronRight } from "lucide-react";
-import { PageHeader, SectionHeader, Card, StatCard, Btn, StatusDot } from "@/components/hv/primitives";
+import {
+  AlertCircle,
+  Clock,
+  Briefcase,
+  CheckSquare,
+  CalendarClock,
+  DollarSign,
+  ChevronRight,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
 import { useCasesList } from "@/hooks/useCases";
 import { useAuth } from "@/lib/auth";
-import { tarefas, casos, fmtBRL } from "@/mocks/fixtures";
+import { tarefas, casos } from "@/mocks/fixtures";
 
 export const Route = createFileRoute("/hoje")({
   component: HojePage,
@@ -11,7 +20,7 @@ export const Route = createFileRoute("/hoje")({
 
 const spark = (seed: number) =>
   Array.from({ length: 30 }, (_, i) =>
-    Math.round(50 + 20 * Math.sin((i + seed) / 3) + (i * seed) % 17),
+    Math.round(50 + 20 * Math.sin((i + seed) / 3) + ((i * seed) % 17)),
   );
 
 function HojePage() {
@@ -28,174 +37,271 @@ function HojePage() {
   const parados = casos.filter((c) => c.diasNoEstado > 30).slice(0, 5);
 
   return (
-    <div className="page-container">
-      <PageHeader
-        title={nome ? `${saudacao}, ${nome}` : saudacao}
-        subtitle={`${casosAtivos} ${casosAtivos === 1 ? "caso ativo" : "casos ativos"} no sistema.`}
-      />
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Casos ativos" value={casosAtivos} spark={spark(1)} />
-        <StatCard label="Tarefas hoje" value="23" delta={{ value: "↓ 5 vs ontem", up: false }} spark={spark(3)} />
-        <StatCard label="Prazos críticos" value="06" delta={{ value: "↑ 2 vs ontem", up: false }} spark={spark(5)} />
-        <StatCard label="Faturamento mês" value="R$ 312k" delta={{ value: "↑ 8% vs abril", up: true }} spark={spark(7)} />
-      </div>
-
-      {/* Urgente */}
-      <SectionHeader
-        title="Urgente"
-        count={urgentes.length}
-        action={
-          <Link to="/tarefas" className="text-[12px] text-[#525252] hover:text-[var(--navy)] flex items-center gap-1">
-            Ver todas <ChevronRight size={12} />
-          </Link>
-        }
-      />
-      <div className="grid md:grid-cols-3 gap-3 mb-6">
-        {urgentes.map((t) => (
-          <UrgentCard key={t.id} task={t} />
-        ))}
-      </div>
-
-      {/* Próximos prazos */}
-      <SectionHeader
-        title="Próximos 7 dias"
-        count={proximos.length}
-        action={
-          <Link to="/tarefas" className="text-[12px] text-[#525252] hover:text-[var(--navy)] flex items-center gap-1">
-            Ver agenda <ChevronRight size={12} />
-          </Link>
-        }
-      />
-      <Card className="!p-0 mb-6 overflow-hidden">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th style={{ width: 32 }}></th>
-              <th>Tarefa</th>
-              <th>Caso</th>
-              <th>Vencimento</th>
-              <th>Responsável</th>
-              <th style={{ width: 32 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {proximos.map((t) => (
-              <tr key={t.id}>
-                <td>
-                  <FileText size={14} className="text-[#a3a3a3]" />
-                </td>
-                <td className="font-medium text-[var(--navy)]">{t.titulo}</td>
-                <td className="font-mono text-[12px] text-[#525252]">{t.caso}</td>
-                <td className="tabular text-[#525252]">
-                  {t.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                </td>
-                <td className="text-[#525252]">{t.responsavel}</td>
-                <td>
-                  <button className="text-[#a3a3a3] hover:text-[var(--navy)]">
-                    <MoreHorizontal size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-
-      {/* Two columns: Atividade + Sem movimentação */}
-      <div className="grid lg:grid-cols-2 gap-4 mb-6">
-        <div>
-          <SectionHeader title="Atividade recente" />
-          <Card className="!p-4">
-            <ul className="space-y-3">
-              {[
-                { who: "Maria", action: "aprovou termo", target: "FIES-2026-0042", when: "há 2h" },
-                { who: "João", action: "protocolou recurso", target: "MM-2026-0118", when: "há 3h" },
-                { who: "Ana", action: "criou tarefa", target: "RES-2026-0009", when: "há 5h" },
-                { who: "Carlos", action: "comentou no caso", target: "FIES-2026-0033", when: "há 6h" },
-                { who: "Maria", action: "ativou cliente", target: "CFM-2026-0021", when: "há 8h" },
-                { who: "Sistema", action: "sincronizou MEC", target: "12 casos", when: "ontem" },
-              ].map((e, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-[13px]">
-                  <div
-                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-semibold text-[#1e2044]"
-                    style={{ background: "#f5f5f5" }}
-                  >
-                    {e.who[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-[var(--navy)]">{e.who}</span>{" "}
-                    <span className="text-[#525252]">{e.action}</span>{" "}
-                    <span className="font-mono text-[12px] text-[var(--navy)]">{e.target}</span>
-                  </div>
-                  <span className="text-[11px] text-[#a3a3a3] shrink-0">{e.when}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+    <div className="premium-dark min-h-screen text-white">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-10 py-9">
+        {/* Saudação */}
+        <div className="mb-8">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-[#c9a634] mb-2">
+            Painel executivo
+          </div>
+          <h1 className="font-display text-[34px] leading-tight text-white">
+            {nome ? `${saudacao}, ${nome}` : saudacao}
+          </h1>
+          <p className="text-white/55 mt-1.5 text-[14px]">
+            {casosAtivos} {casosAtivos === 1 ? "caso ativo" : "casos ativos"} no sistema.
+          </p>
         </div>
 
-        <div>
-          <SectionHeader title="Casos sem movimentação > 30d" count={parados.length} />
-          <Card className="!p-0 overflow-hidden">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Parado</th>
-                  <th>Responsável</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {parados.map((c) => (
-                  <tr key={c.id}>
-                    <td className="font-mono text-[12px]">{c.codigo}</td>
-                    <td className="truncate max-w-[140px]">{c.clienteNome}</td>
-                    <td
-                      className="tabular font-semibold"
-                      style={{ color: c.diasNoEstado > 45 ? "var(--danger)" : "var(--warning)" }}
-                    >
-                      {c.diasNoEstado}d
-                    </td>
-                    <td className="text-[#525252]">{c.responsavel}</td>
-                    <td>
-                      <Btn variant="outline" size="sm">Ver</Btn>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
+        {/* KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Kpi
+            label="Casos ativos"
+            value={String(casosAtivos)}
+            icon={Briefcase}
+            data={spark(1)}
+            color="#c9a634"
+            id="k1"
+          />
+          <Kpi
+            label="Tarefas hoje"
+            value="23"
+            delta="↓ 5 vs ontem"
+            deltaUp
+            icon={CheckSquare}
+            data={spark(3)}
+            color="#6fa8ff"
+            id="k2"
+          />
+          <Kpi
+            label="Prazos críticos"
+            value="06"
+            delta="↑ 2 vs ontem"
+            icon={CalendarClock}
+            data={spark(5)}
+            color="#ff8a92"
+            id="k3"
+          />
+          <Kpi
+            label="Faturamento mês"
+            value="R$ 312k"
+            delta="↑ 8% vs abril"
+            deltaUp
+            icon={DollarSign}
+            data={spark(7)}
+            color="#c9a634"
+            id="k4"
+            featured
+          />
+        </div>
+
+        {/* Urgente */}
+        <SectionHead title="Urgente" count={urgentes.length} to="/tarefas" cta="Ver todas" />
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          {urgentes.map((t) => (
+            <div key={t.id} className="glass-card p-4">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle size={15} className="text-[#ff8a92] mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-white leading-snug">{t.titulo}</div>
+                  <div className="text-[11.5px] font-mono text-white/45 mt-0.5">{t.caso}</div>
+                </div>
+              </div>
+              <div
+                className="mt-3 pt-3 flex items-center justify-between"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <div className="flex items-center gap-1.5 text-[11.5px] text-white/55">
+                  <Clock size={11} />
+                  {t.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                  <span className="text-white/25">·</span>
+                  {t.responsavel}
+                </div>
+                <button className="text-[12px] font-medium text-[#c9a634] hover:text-[#e0c45a]">
+                  Abrir
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Próximos 7 dias + Sem movimentação */}
+        <div className="grid lg:grid-cols-2 gap-5">
+          <div>
+            <SectionHead title="Próximos 7 dias" count={proximos.length} to="/tarefas" cta="Agenda" />
+            <div className="glass-card overflow-hidden">
+              {proximos.map((t, i) => (
+                <Link
+                  key={t.id}
+                  to="/tarefas"
+                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.04]"
+                  style={
+                    i < proximos.length - 1
+                      ? { borderBottom: "1px solid rgba(255,255,255,0.06)" }
+                      : undefined
+                  }
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-medium text-white truncate">{t.titulo}</div>
+                    <div className="text-[11.5px] font-mono text-white/40">{t.caso}</div>
+                  </div>
+                  <div className="text-[12px] tabular text-white/55 shrink-0">
+                    {t.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <SectionHead title="Sem movimentação > 30d" count={parados.length} />
+            <div className="glass-card overflow-hidden">
+              {parados.map((c, i) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 px-4 py-3"
+                  style={
+                    i < parados.length - 1
+                      ? { borderBottom: "1px solid rgba(255,255,255,0.06)" }
+                      : undefined
+                  }
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium text-white truncate">{c.clienteNome}</div>
+                    <div className="text-[11.5px] font-mono text-white/40">{c.codigo}</div>
+                  </div>
+                  <div
+                    className="text-[12.5px] tabular font-semibold shrink-0"
+                    style={{ color: c.diasNoEstado > 45 ? "#ff8a92" : "#e0b84a" }}
+                  >
+                    {c.diasNoEstado}d
+                  </div>
+                  <ChevronRight size={15} className="text-white/30 shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function UrgentCard({ task }: { task: typeof tarefas[number] }) {
+function Kpi({
+  label,
+  value,
+  delta,
+  deltaUp,
+  icon: Icon,
+  data,
+  color,
+  id,
+  featured,
+}: {
+  label: string;
+  value: string;
+  delta?: string;
+  deltaUp?: boolean;
+  icon: LucideIcon;
+  data: number[];
+  color: string;
+  id: string;
+  featured?: boolean;
+}) {
   return (
-    <Card className="!p-4">
-      <div className="flex items-start gap-2.5">
-        <AlertCircle size={14} className="text-[var(--danger)] mt-0.5 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <div className="text-[13.5px] font-semibold text-[var(--navy)] leading-snug">
-            {task.titulo}
+    <div
+      className="glass-card p-5 relative overflow-hidden"
+      style={
+        featured
+          ? { borderColor: "rgba(201,166,52,0.3)", boxShadow: "0 18px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(201,166,52,0.18)" }
+          : undefined
+      }
+    >
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] uppercase tracking-[0.12em] text-white/50">{label}</span>
+        <Icon size={15} style={{ color }} />
+      </div>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <div
+            className="kpi-number"
+            style={{ color: featured ? "#e7c45a" : "#ffffff", fontSize: featured ? 32 : 28 }}
+          >
+            {value}
           </div>
-          <div className="text-[11.5px] font-mono text-[#525252] mt-0.5">{task.caso}</div>
+          {delta && (
+            <div className="text-[11.5px] mt-1" style={{ color: deltaUp ? "#5fd0a0" : "#ff8a92" }}>
+              {delta}
+            </div>
+          )}
         </div>
+        <Spark data={data} color={color} id={id} />
       </div>
-      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #f5f5f5" }}>
-        <div className="flex items-center gap-1.5 text-[11.5px] text-[#525252]">
-          <Clock size={11} />
-          {task.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-          <span className="text-[#d4d4d4]">·</span>
-          {task.responsavel}
-        </div>
-        <Btn variant="outline" size="sm">Abrir</Btn>
+    </div>
+  );
+}
+
+function Spark({ data, color, id }: { data: number[]; color: string; id: string }) {
+  const w = 110;
+  const h = 36;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const pts = data.map(
+    (v, i) => [(i / (data.length - 1)) * w, h - ((v - min) / range) * h] as const,
+  );
+  const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `0,${h} ${line} ${w},${h}`;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0">
+      <defs>
+        <linearGradient id={`grad-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill={`url(#grad-${id})`} />
+      <polyline
+        points={line}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+      />
+    </svg>
+  );
+}
+
+function SectionHead({
+  title,
+  count,
+  to,
+  cta,
+}: {
+  title: string;
+  count?: number;
+  to?: string;
+  cta?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-3.5">
+      <div className="flex items-center gap-2.5">
+        <h2 className="font-display text-[18px] text-white">{title}</h2>
+        {count !== undefined && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+            {count}
+          </span>
+        )}
       </div>
-    </Card>
+      {to && cta && (
+        <Link
+          to={to}
+          className="text-[12px] text-white/55 hover:text-[#c9a634] flex items-center gap-1 transition-colors"
+        >
+          {cta} <ChevronRight size={12} />
+        </Link>
+      )}
+    </div>
   );
 }

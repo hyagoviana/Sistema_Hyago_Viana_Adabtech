@@ -38,12 +38,48 @@ function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-white">
       {/* Painel de marca (esquerda) — só cor, sem texturas nem grid */}
       <div
-        className="relative hidden lg:flex flex-col justify-between p-14 text-white"
+        className="relative hidden lg:flex flex-col justify-between p-14 text-white overflow-hidden"
         style={{
           background:
             "radial-gradient(ellipse at top right, rgba(152,120,20,0.20), transparent 55%), linear-gradient(160deg, #1e2044 0%, #14162e 55%, #0b0c1d 100%)",
         }}
       >
+        {/* Campo de estrelas — textura cósmica sutil */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: [
+              "radial-gradient(1.2px 1.2px at 24px 36px, rgba(255,255,255,0.85), transparent)",
+              "radial-gradient(1px 1px at 130px 90px, rgba(255,255,255,0.55), transparent)",
+              "radial-gradient(1px 1px at 210px 160px, rgba(255,255,255,0.5), transparent)",
+              "radial-gradient(1.5px 1.5px at 80px 210px, rgba(201,166,52,0.7), transparent)",
+              "radial-gradient(1px 1px at 290px 60px, rgba(255,255,255,0.6), transparent)",
+              "radial-gradient(1px 1px at 340px 250px, rgba(255,255,255,0.45), transparent)",
+              "radial-gradient(1px 1px at 60px 300px, rgba(255,255,255,0.5), transparent)",
+              "radial-gradient(1.4px 1.4px at 370px 330px, rgba(201,166,52,0.6), transparent)",
+              "radial-gradient(1px 1px at 180px 350px, rgba(255,255,255,0.5), transparent)",
+            ].join(", "),
+            backgroundSize: "400px 400px",
+            backgroundRepeat: "repeat",
+            maskImage: "radial-gradient(ellipse at 30% 40%, black 30%, transparent 85%)",
+            WebkitMaskImage: "radial-gradient(ellipse at 30% 40%, black 30%, transparent 85%)",
+          }}
+        />
+        {/* Halo dourado difuso ao redor da estrela-símbolo */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            left: "12%",
+            top: "44%",
+            width: 320,
+            height: 320,
+            background: "radial-gradient(circle, rgba(201,166,52,0.16), transparent 65%)",
+            filter: "blur(8px)",
+          }}
+        />
+
         <div className="relative flex items-center gap-3">
           <img src={symbolHV} alt="" className="h-11 w-auto object-contain" />
           <div>
@@ -125,11 +161,12 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 text-white font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3.5 text-white font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
             style={{
-              background: "#987814",
-              borderRadius: 6,
-              boxShadow: "0 10px 28px -10px rgba(152,120,20,0.55)",
+              background: "linear-gradient(180deg, #b1902a 0%, #987814 55%, #856611 100%)",
+              borderRadius: 8,
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.28), 0 12px 30px -10px rgba(152,120,20,0.6)",
             }}
           >
             {loading ? "Entrando…" : "Entrar no sistema"}

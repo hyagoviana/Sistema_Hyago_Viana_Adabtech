@@ -68,29 +68,30 @@
   --ink-300: #b8b8c0;
   --ink-200: #e6e7eb;
   --ink-100: #eff0f3;
-  --ink-50:  #f7f7f9;
+  --ink-50:  #f3eede;
 
-  --bg-page: #f9f9fb;
-  --bg-subtle: #f5f5f7;
+  /* Creme boutique — fundo quente, cards brancos "flutuam" por cima */
+  --bg-page: #f6f1e6;
+  --bg-subtle: #f1ebdc;
   --bg-paper: #ffffff;
+  --cream: #f6f1e6;
+  --cream-deep: #efe8d7;
 
   --success: #1f7a4d;
   --warning: #a25a08;
   --danger: #b42432;
 
-  --background: #f9f9fb;
+  --background: #f6f1e6;
   --foreground: #1a1a1f;
   --card: #ffffff;
   --card-foreground: #1a1a1f;
   --popover: #ffffff;
   --popover-foreground: #1a1a1f;
-  --primary: #1e2044;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f5f7;
+  --secondary: #f1ebdc;
   --secondary-foreground: #1e2044;
-  --muted: #f5f5f7;
+  --muted: #f1ebdc;
   --muted-foreground: #6b6b73;
-  --accent: #f5f5f7;
+  --accent: #f1ebdc;
   --accent-foreground: #1e2044;
   --destructive: #b42432;
   --destructive-foreground: #ffffff;
@@ -126,7 +127,13 @@
   }
   body {
     color: var(--foreground);
-    background: var(--bg-page);
+    /* Creme texturizado: base quente + vinheta dourada/navy sutil + grão finíssimo */
+    background-color: var(--bg-page);
+    background-image:
+      radial-gradient(ellipse at 100% 0%, rgba(152, 120, 20, 0.05), transparent 42%),
+      radial-gradient(ellipse at 0% 100%, rgba(30, 32, 68, 0.035), transparent 45%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    background-attachment: fixed, fixed, fixed;
     min-height: 100vh;
     letter-spacing: 0;
     line-height: 1.55;
@@ -161,27 +168,46 @@
 
   .card-editorial {
     background: #ffffff;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(120, 96, 30, 0.10);
     border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(15, 17, 35, 0.05);
+    /* Cards brancos flutuando sobre o creme — sombra quente em duas camadas */
+    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.05), 0 10px 26px -12px rgba(60, 50, 20, 0.16);
     transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
   }
   .card-editorial:hover {
-    border-color: rgba(15, 17, 35, 0.09);
-    box-shadow: 0 8px 24px -6px rgba(15, 17, 35, 0.09);
+    border-color: rgba(152, 120, 20, 0.22);
+    box-shadow: 0 2px 4px rgba(60, 50, 20, 0.06), 0 16px 36px -14px rgba(60, 50, 20, 0.22);
+    transform: translateY(-1px);
   }
 
   .card-hero {
     background: #ffffff;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(120, 96, 30, 0.10);
     border-radius: 16px;
-    box-shadow: 0 2px 10px rgba(15, 17, 35, 0.05);
+    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.05), 0 10px 26px -12px rgba(60, 50, 20, 0.16);
   }
 
   .glass-panel {
-    background: rgba(251, 251, 251, 0.72);
+    background: rgba(246, 241, 230, 0.72);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  /* Dark Mode Premium — superfícies para o painel "Hoje" */
+  .premium-dark {
+    background-color: var(--navy-900);
+    background-image:
+      radial-gradient(ellipse at 12% -10%, rgba(152, 120, 20, 0.18), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(40, 44, 100, 0.45), transparent 50%),
+      radial-gradient(ellipse at 50% 120%, rgba(152, 120, 20, 0.08), transparent 55%);
+  }
+  .glass-card {
+    background: linear-gradient(160deg, rgba(42, 44, 84, 0.55), rgba(20, 22, 46, 0.55));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
   }
 
   .page-container {
