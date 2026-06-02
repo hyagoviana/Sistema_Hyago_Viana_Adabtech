@@ -36,9 +36,9 @@ export function Topbar() {
       className="sticky top-0 z-30 flex items-center gap-4 px-6"
       style={{
         height: 56,
-        background: "#efe9db",
-        borderBottom: "1px solid rgba(120,96,30,0.14)",
-        boxShadow: "0 1px 2px rgba(60,50,20,0.05)",
+        background: "#f2f0e8",
+        borderBottom: "1px solid rgba(120,96,30,0.12)",
+        boxShadow: "0 1px 2px rgba(60,50,20,0.04)",
       }}
     >
       <nav className="flex items-center gap-1.5 text-[12px] text-[var(--ink-400)] min-w-0">
@@ -55,7 +55,7 @@ export function Topbar() {
       <div className="flex-1 flex justify-center">
         <div
           className="flex items-center gap-2 w-full max-w-md h-9 px-3 rounded-lg"
-          style={{ background: "var(--ink-50)", border: "1px solid rgba(120,96,30,0.10)" }}
+          style={{ background: "#edece8", border: "1px solid rgba(80,70,45,0.12)" }}
         >
           <Search size={14} className="text-[var(--ink-400)]" strokeWidth={1.6} />
           <input
