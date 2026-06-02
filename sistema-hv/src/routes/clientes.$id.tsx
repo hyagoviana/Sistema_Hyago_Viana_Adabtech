@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
+import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
 export const Route = createFileRoute("/clientes/$id")({
   component: ClienteDetalhe,
@@ -195,6 +196,8 @@ function ClienteDetalhe() {
         </Card>
       </div>
 
+      <ProfessionalCard data={cliente.professional_data} personType={cliente.person_type} />
+
       <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
         Documentos do cliente
       </h2>
@@ -246,5 +249,57 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <Eyebrow>{label}</Eyebrow>
       <div className="kpi-number text-[36px] mt-3">{value}</div>
     </Card>
+  );
+}
+
+function ProfessionalCard({ data, personType }: { data: unknown; personType: string | null }) {
+  const p =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+  const s = (k: string) => (typeof p[k] === "string" && p[k] ? (p[k] as string) : null);
+  const crm = s("crm_numero") ? `${s("crm_numero")}${s("crm_uf") ? `/${s("crm_uf")}` : ""}` : null;
+  const oab = s("oab_numero") ? `${s("oab_numero")}${s("oab_uf") ? `/${s("oab_uf")}` : ""}` : null;
+  const programas = Array.isArray(p.programas) ? (p.programas as string[]) : [];
+
+  const rows: Array<[string, string]> = [];
+  if (personType) rows.push(["Pessoa", personType === "PJ" ? "Pessoa jurídica" : "Pessoa física"]);
+  if (crm) rows.push(["CRM", crm]);
+  if (oab) rows.push(["OAB", oab]);
+  if (s("vinculo_institucional")) rows.push(["Vínculo institucional", s("vinculo_institucional")!]);
+  if (s("especialidade")) rows.push(["Especialidade", s("especialidade")!]);
+
+  return (
+    <div className="mb-8">
+      <Card>
+        <Eyebrow>Dados profissionais</Eyebrow>
+        {rows.length === 0 && programas.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground italic">
+            Nenhum dado profissional cadastrado. Use “Editar” para preencher.
+          </p>
+        ) : (
+          <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            {rows.map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">{k}</dt>
+                <dd className="text-[var(--navy)] font-medium">{v}</dd>
+              </div>
+            ))}
+            {programas.length > 0 && (
+              <div className="sm:col-span-2 flex flex-wrap gap-2 mt-1">
+                {programas.map((pr) => (
+                  <span
+                    key={pr}
+                    className="px-2.5 py-0.5 rounded-full bg-[var(--navy)]/5 text-xs font-medium text-[var(--navy)]"
+                  >
+                    {PROGRAMA_LABELS[pr as keyof typeof PROGRAMA_LABELS] ?? pr}
+                  </span>
+                ))}
+              </div>
+            )}
+          </dl>
+        )}
+      </Card>
+    </div>
   );
 }
