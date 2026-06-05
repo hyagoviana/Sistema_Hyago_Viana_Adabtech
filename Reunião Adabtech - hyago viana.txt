@@ -1,0 +1,451 @@
+Adavio Tittoni [00:00]: o Drive, certo? Então a gente criou uma pasta chamada Sistema HV dentro do Drive de vocês, e tudo que for relacionado ao nosso sistema vai cair dentro dessa pasta. Vai cair aqui dentro dessa pasta. Então, como a gente tinha conversado, como é que vai funcionar a pasta? Vai ter uma pasta chamada clientes, por exemplo. Então eles vão cair aqui dentro, automaticamente essa pasta vai ser criada pelo sistema. Já já eu mostro ali o fluxo, só para você ver como é que tá funcionando. Aqui tem alguns demos, é porque a gente tava em processo de teste, mas alguns já estão caindo de verdade porque eu coloquei agora para já começar a fazer uns testes para nós internamente. Então Maria de Jesus, João Pedro, esses já são clientes de vocês mesmo que estão começando a cair aqui dentro do nosso processo, tá? Foi aquela integração que eu já fiz nos e-mails. Então quando cai o cliente lá dentro daquele e-mail de recebimento do Zap A gente tá pegando a documentação, criando dentro da pasta do cliente, vinculando ao caso, certo? Essa parte do caso eu tô tentando de fazer a parte de OCR aqui para que ele vincule automaticamente ao caso, mas já já eu te mostro como é que ele tá pegando aqui. Vou aceitar aqui, o Dr. Tiago entrou. Então aqui é o próprio documento que vem no e-mail de vocês do Zap.
+
+Hyago Viana [01:19]: Então essas são as procurações, são as assinaturas, que é aquele processo que a gente falou que a gente ia pegar do Zap direto do cliente e adicionar Aí fechou lá no ZapSign, aí já cai naquela pasta do Drive, a pasta do cliente, já abre a pasta do caso do cliente, já tem aquela situação, a procuração já vai para pasta do caso. Do caso, exatamente.
+
+Adavio Tittoni [01:47]: Isso, ele vai criar a pasta do cliente automaticamente, dentro da pasta do cliente vai ter o caso, É que essa parte do OCR eu tô terminando de montar, mas ele já vai cair dentro do caso já vinculado àquele cliente. Vão ser bases separadas no Drive, né?
+
+Hyago Viana [02:05]: No Drive, certo.
+
+Adavio Tittoni [02:06]: Isso, dentro do Drive fica desse jeito. Já na parte do sistema, como é que vai funcionar? É do mesmo jeito, né? Aqui a gente tem um pipeline operacional. Então, por exemplo, Jerusa, Helene Gomes, Mariana Saem Azevedo. Esses já são clientes de vocês mesmos que caíram aqui, porque eu já iniciei alguns testes. Então ele vai cair aqui dentro desse processo. Aqui é o próprio caso, né? A gente tá dentro do caso do FIES, não tá dentro do cliente em si, porque aqui é o pipeline operacional. Vou entrar dentro do cliente para você ver aqui. Então eu clico em cliente, vou pesquisar aqui essa Jerusa para a gente pegar aqui. Aqui, ó, Jerusa Helena. Então aqui dentro tem algumas coisas que é isso que a gente precisa ver com vocês, né? Porque são essas partes de O que que vocês querem que mostre dentro do painel do cliente? Quais são os dados importantes para a gente ter nessas visualizações aqui? Que o que eu consigo pegar por enquanto dentro dos documentos que eu baixei, né, é telefone, cadastramento. Então algumas coisas a gente vai poder editar dentro do cliente, mas eu também vou poder subir algumas coisas. Por isso que a gente fala de algo que eu entendendo como é que funciona o contrato, eu consigo puxar informações no OCR. Eu já te mostro aqui no fluxo. E você vai entender um pouco mais do que eu tô falando, que é mais a parte visual mesmo. Então a gente tem aqui a parte de cliente, e aqui já sobe automaticamente os documentos do cliente, certo? Só que aqui, como eu falei, devido ao OCR, ele vai subir direto no caso do cliente. Aqui tá subindo diretamente aqui, por exemplo, que são os documentos do próprio cliente, que essa divisão que eu quero fazer, que por exemplo for CPF, carteira de de motorista, parte das documentações do cliente que não sejam relacionados ao caso vão cair na parte de documentos do cliente. O que seja relacionado ao caso cai dentro do caso do cliente, que fica aqui numa parte separada onde tem a linha do tempo do caso, por exemplo. Sim, você me disse que o mesmo cliente pode ter vários casos, né?
+
+Hyago Viana [04:05]: Isso, isso.
+
+Adavio Tittoni [04:07]: A gente separou dentro do cliente. Este é o cliente vai ter as situações dele, os documentos do cliente. E aqui são os casos desse cliente separados ali pelas pastas do Drive, por exemplo. É só a visualização dessa separação, certo? Tá conseguindo interpretar aqui?
+
+Hyago Viana [04:28]: Acredito que sim. Acredito. Esse documento do cliente aí, eles foram já baixados aí, não estão na pasta.
+
+Adavio Tittoni [04:37]: Isso, já estão na pasta, por exemplo, Jerusa.
+
+Hyago Viana [04:40]: Mas foram feitos por nós?
+
+Adavio Tittoni [04:43]: Sim, são os documentos de vocês, porque já tá, já tá caindo automaticamente.
+
+Hyago Viana [04:47]: Ó, Jerusa, Eleni Gomes, tudo que, tudo que a gente criou e colocar lá na pasta aparece aí já no sistema.
+
+Adavio Tittoni [04:54]: Isso, na realidade, nessa pasta não, porque essa pasta aqui é a pasta do sistema, ainda não foi vincular. Isso aqui tá acontecendo nos seus e-mails, o que a gente recebe de e-mail relacionado à contratação lá daquele Iago cai aqui. Tudo que é do ZapSign, lembra que a gente falou? Ó, Dávio, eu preciso fazer uma outra.
+
+Hyago Viana [05:12]: Entendi, entendi. Então assim, aí eu vi lá uma declaração de pós-suficiência, a gente produziu o documento, assinou lá no ZapSign, aí cai aqui, vinculado ao cliente, para ser algo, o processo automático, né?
+
+Adavio Tittoni [05:26]: Que o nosso ponto de entrada era as assinaturas do ZapSign. Então assinam esses documentos, esses documentos vêm para cá, caem na pasta do cliente dentro do caso específico.
+
+Hyago Viana [05:39]: Eu entendi, eu entendi.
+
+Adavio Tittoni [05:42]: Se torna uma cadeia ali, né, e vai seguindo aquele determinado processo. Então ele vem aí, quando eu mostrar automação, eu acho que você vai entender um pouco mais assim.
+
+Hyago Viana [05:51]: Mostra aí, eu entendi, eu entendi essa parte, mas mostra aí da criação.
+
+Adavio Tittoni [05:55]: É o seguinte, Então aqui, ó, ele tem um gatilho de Gmail, de trigger, que a gente fala, né? Então todas as vezes, aqui, ó, hoje, hoje às 9:11, por exemplo, ocorreu um e-mail, foi recebido um e-mail aqui, só que esse e-mail ele não tratava de documentação vindo do ZapSign. Então é: paralelamente do próximo passo, peço gentileza confirmar o acompanhamento da solicitação. Não vem do ZapSign, certo? Tá vindo desse limalogisticajuridica.com.br. Então não é relacionado ao ZapSign, então eu não faço nada com esse determinado documento. Aí por isso que eu digo que a gente precisa entender o que que eu preciso colocar dentro do sistema, porque nesse momento eu fico baseado no ZapSign. Então, por exemplo, esse daqui, 17 segundos, esse aqui provavelmente já tem algo relacionado ao ZapSign. Já, então eu recebi o e-mail pegar aqui como um esquema. Contato @iagoviana. Deixa eu ver o que que ele tem dentro. Documento público transação.org. Maria de Jesus assinou o documento contrato Maria de Jesus.pdf. Então a gente sabe que vem do Zap Sign porque ele tem uma assinatura de documento. Quando eu recebo essa assinatura de documento, eu extraio os dados do e-mail. Aí aqui que começa essa parte que eu falei do que que eu preciso extrair, que eu ainda não sei muito bem. Cliente. O que que eu já consigo extrair? Eu consigo extrair o tipo de processo, que é FIES, ESF, dessa Maria de Jesus, o nome do cliente, o contrato, que é o documento, né, que tá vindo dentro daquele processo, e qual é o sujeito, né, que é o título do e-mail. Então, Maria de Jesus assinou o documento contrato Maria de Jesus.pdf, foi o documento que foi enviado naquele processo.
+
+Hyago Viana [07:48]: Certo, entendi, entendi.
+
+Adavio Tittoni [07:51]: Que cai nesse meio aqui dos do Iago, contato lá. A gente tem ele aqui também.
+
+Hyago Viana [08:00]: Mas eu, eu te faço uma pergunta, Davi. Por exemplo, aí você perguntou aí das informações que são importantes. Quando você abre aí, por exemplo, um contrato desse, uma procuração, tem lá os dados, né, nome, CPF, endereço, tem todos esses dados, são preenchidos lá no contrato, em procuração, e são dados que a gente vai utilizar para preencher no sistema e para preencher em outros documentos que a gente vai gerar pelo sistema. Esses dados, aí vem a pergunta, né, aí eu vou decifrar lá para você quais são os dados, praticamente todos que forem, né, possíveis a gente poder colocar ali, melhor Mas esses dados, eles não seriam melhor? A pergunta, né? Se já ficasse lá na hora que a pessoa digita no ZapSign para poder preencher os dados, olha, Adávio e tal, país Índia, aí coloca lá tipo isso, e aí já não ficaria já no sistema porque já preencheu?
+
+Adavio Tittoni [09:01]: Isso, é isso, é isso. Já tem aqui também, ó, nome do cliente, CPF, telefone, o documento do contrato, eu extraio o contrato, tá vendo? Ó, desempregada, escrito na cédula de identidade número tal, portadora do CPF número tal, domiciliada na PS Joana Barbosa SN Apartamento. Eu consigo extrair todos os dados do documento, eu faço a extração do OCR. Eu só não sei ainda quais são os dados que eu preciso incluir para vocês dentro do sistema, porque dentro do sistema aqui vocês vão ter o documento Deixa eu pegar ela.
+
+Hyago Viana [09:37]: Isso, exato.
+
+Adavio Tittoni [09:40]: Aí, quais são os dados que vocês desejam que eu armazene? Tipo, é os dados aqui, pegar só o nome dela aqui. Maria de Jesus, pegar aqui clientes, Maria de Jesus. Então esse é o contrato que a gente tá vendo lá. Aqui a gente tem o contrato, que é o documento que não é legal a gente baixar, né, porque exatamente isso que a gente não quer.
+
+Hyago Viana [10:04]: Isso, mas trazer para cá, por exemplo, se eu quiser pegar os dados dela aí, aí dados profissionais, é, tem ali, ó, e-mail, telefone, tem aí, eu botei aqui, né, e-mail, telefone, CRM, OAB, né, vínculo institucional, especialidade, que é o que a gente viu mais ou menos que tem lá dentro dos documentos.
+
+Adavio Tittoni [10:28]: Aí é isso que Eu vou pegar desse documento, é que é isso que eu não consigo às vezes identificar, onde é que tá isso no documento. Que, por exemplo, eu fiz alguns OCRs e ele puxava o seu e-mail, iago.adv. Aí eu preciso conseguir identificar qual documento eu consigo puxar os e-mails, por exemplo.
+
+Hyago Viana [10:46]: Entendi, mas assim, deixa eu só tirar uma dúvida contigo. OCR é como se fosse um print, né, que a pessoa faz o print, puxa lá as informações, você fala, né?
+
+Adavio Tittoni [10:54]: É, na realidade aqui eu tô extraindo mesmo, né? Eu recebo aqui o documento Aqui eu tenho o documento extraído, além do documento, e isso eu peguei, eu peguei o documento, abri esse documento, tá vendo? Aqui eu tenho ortogante, ortogário, todo esse processo aqui, né, que é onde tem aqueles dados administrativos, tal, tal. Então eu consigo buscar nesse documento e extrair dados desse documento. Aí, para a gente não ficar usando o IA o tempo todo e gastando crédito, a gente nem pegou nenhuma IA ainda, eu faço essa extração diretamente por JavaScript. Então eu vou lá e busco, busco o nome, telefone, busco e-mail. Aí é esses dados que, por exemplo, quando a gente identificar que é um contrato de fiéis, vamos tentar extrair nome, e-mail, telefone, endereço.
+
+Hyago Viana [11:42]: O que eu ia te perguntar, que eu falei, foi exatamente isso. Aí não é mais fácil pegar na hora que tá preenchendo, que a pessoa, por exemplo, preencheu lá no ZapSign, por exemplo, você tem lá o ZapSign para a gente, então pegou lá para poder abrir lá o ZapSign, que a pessoa é manual, né? A gente vai colocar lá nome da pessoa, CPF da pessoa, endereço da pessoa, vai colocar esses dados lá no contrato ZapSign. Vamos pensar, preencheu lá, é o nome, aí já sei lá, já vai para o sistema Aí não tem como, aí não tem como fazer esse sistema aí. Mas não tem, não tem muita margem de erro, não? Tem margem de erro?
+
+Adavio Tittoni [12:28]: Não, não tem margem nenhuma de erro, porque eu só busco exatamente o dado que eu quero obter. Por exemplo, tá vendo que eu que tô datando aqui CPF e CNPJ? Então eu tô buscando onde contém o termo CPF e CNPJ dentro do documento. Obrigando ele a trazer. Então telefone, ele vai lá e busca só pelo telefone. Então ele vai buscar dentro do sistema onde tem, por exemplo, telefone barra número. Eu posso criar essas determinadas lacunas. Por isso que aí essa puxagem ela não tem erro. Então é o e-mail, o attachment file, né, que é o ID do documento, qual é o tipo de processo. Ele identifica isso no próprio documento.
+
+Hyago Viana [13:11]: Certo, certo, eu entendi essa parte aí. Então muito importante a gente identificar o nome do contrato direito lá, né. Porque se também se colocar um contrato sem nome lá, não vai saber identificar qual tipo de serviço, né, que tá sendo feito.
+
+Adavio Tittoni [13:26]: Não, até vai, porque eu consigo, eu extraio o dado do PDF.
+
+Matheus Torquato [13:32]: Pensa assim, o sistema, ele como se fosse um Word, ele tem todo um texto lá, ele pega esse texto e em vez dele jogar numa IA para ler, que não precisa, ele só vai lendo o texto mesmo e fala, ó, aqui é a parte que eu preciso, aqui é a parte que eu preciso, aqui é a parte que eu preciso, tá?
+
+Hyago Viana [13:47]: Aí vincula na pessoa, todo documento que vier aparecer fica vinculado à pessoa e ao caso, se for, né? E como é que vai saber qual que é o caso?
+
+Adavio Tittoni [13:57]: Pelo documento. Porque quando você faz o preenchimento do documento, por exemplo, você não vai trazer sobre o que que se retrata esse documento?
+
+Hyago Viana [14:06]: Sim.
+
+Adavio Tittoni [14:07]: Aí eu consigo puxar isso, eu puxo aquele dado, e aí a gente vai conseguir identificar.
+
+Hyago Viana [14:13]: Mas o que eu tô falando é o seguinte, olha só, a gente tava falando aqui que um cliente tem vários casos.
+
+Matheus Torquato [14:18]: Sim.
+
+Hyago Viana [14:18]: Então como é que a gente tá aí, por exemplo, chegou agora um documento lá utilizando essa forma que você tá falando aí, como é que a gente sabe qual dos casos é esse documento?
+
+Matheus Torquato [14:30]: Ele tem um número de identificação do caso?
+
+Hyago Viana [14:33]: Ah, então é isso aí, você me mostrou.
+
+Adavio Tittoni [14:36]: Pronto, boa, isso é um processo que eu ainda não sei como identificar. Hoje a gente tava identificando pelo conteúdo do documento. Então, se às vezes no conteúdo do documento não vier o nome FIES, por exemplo, aí realmente a gente vai ter que ter algum, algum ID de documento, alguma coisa do tipo, que talvez saia no documento.
+
+Hyago Viana [14:59]: Que como eu consigo ler o documento, a partir do momento que eu pensei aí assim, seria isso. Se não tinha como, a gente, beleza, quando a gente tá pensando aqui, por exemplo, essa declaração que gerou, né, esse documento aí, essa declaração, aí possa ser que vai gerar lá, tem que identificar o caso e tudo. Será que a gente não consegue, por exemplo, gerar isso daí pelo sistema?
+
+Adavio Tittoni [15:28]: É, então eu tô dando uma olhada aqui agora, eu quero ver o seguinte, ficaria muito mais fácil assim, tô pensando aqui até para fazer. Dentro do ZapSign, eu tô vendo se tem uma API, porque se tiver uma API, como é que a gente faz? Em vez de preencher os dados no ZapSign, a gente vai preencher os dados no sistema e o sistema manda para o ZapSign.
+
+Hyago Viana [15:48]: Aí você abre o caso no sistema, o documento abre pelo sistema, tipo assim, ah, eu quero gerar tal documento daquele caso, tá dentro do caso, tá lá no sistema, no cliente, no caso você abre lá, gera por lá. Então assim, não vai ter margem de erro em relação a isso, né?
+
+Adavio Tittoni [16:04]: É isso, exatamente. Deixa eu só ter certeza aqui. Ele tem um momento assim de box. Deixa eu ver aqui a parte da documentação. Documentos, aqui, ó, criar documentos via upload. Então dá para a gente fazer, porque aí ele só vai pedir o nome do documento e o e-mail da pessoa. Então aqui no sistema vamos fazer assim, dentro de casos de cliente, deixa eu entrar num cliente com o cara, por exemplo, aí vai colocar lá os dados do caso, né?
+
+Hyago Viana [16:31]: Tudo pelo sistema. Qual que é o negócio? Essa declaração aí é uma declaração que usa dentro do— quando a gente fala, gente, para quem tá acompanhando aqui, caso a gente tá falando processo, entendeu? Que o cliente pode ter vários processos. Então vamos gerar um documento para aquele processo, você entra lá dentro do caso, gera o documento lá, então já vai para pasta do cliente no caso lá. Então não tem, não tem como, que o e-mail pode acontecer algumas coisas, né?
+
+Adavio Tittoni [16:56]: Sim, exato.
+
+Hyago Viana [16:57]: Pode ficar até mais tranquilo dessa forma aí, mas você pode falar.
+
+Adavio Tittoni [17:02]: Não, pode ser. Deixa eu até ver uma coisa. Pronto, então a gente vai fazer o seguinte, dá para fazer, ó. A gente tanto tem um, só que eu só vou ter que ver com você se a sua conta do ZapSign já tem API liberado, você tem que talvez, talvez tenha que pagar alguma coisa para usar API, né. Que a gente não tava nesse pensamento, mas eu tenho como tanto pegar se o documento foi assinado ou não e enviar o documento para o ZapSign. Então a gente consegue fazer os dois padrões, receber e enviar.
+
+Hyago Viana [17:40]: É, eu acredito que se tiver como preencher pelo Zap, ou pelo menos pode deixar até as duas portas abertas, vamos colocar assim, né? Porque, porque eu acredito que é, ou então deixa tudo no sistema, a pessoa preencheu no sistema, levou, aí faz lá, né, um webhook lá, leva para o Zap, sai, não sei como é que é. Na verdade, a gente vai, pode fazer os dois, é uma integração direta, não sei.
+
+Adavio Tittoni [18:09]: É, ou a gente pode fazer o seguinte, tem duas formas da gente fazer, ou a gente consegue criar do nosso sistema, aí por isso que é importante as pessoas que vão utilizar ali, né, trazerem para gente, porque é facilitado. Então a gente pode criar direto do sistema, como a gente falou. Eu vou entrar aqui, ó, vou entrar no novo caso, vou escolher o tipo de caso, vou botar aqui, é só próximos passos, quem é o responsável. Isso tudo vai ser selecionado, né, porque a gente ainda não tem esses usuários aqui. Mas criou o caso, dentro do caso a gente pode ter aqui criar documento.
+
+Hyago Viana [18:41]: Eu acho que dessa forma que eu falei é melhor, sabe por quê? Porque tudo que a gente for criar de documento, igual vai ter os modelos Patrícia aqui, ó, tá com a gente aqui, vai disponibilizar os modelos aí para vocês.
+
+Adavio Tittoni [18:52]: Legal, legal.
+
+Hyago Viana [18:53]: Aí você vai passar, vai explicar para ela qual é a forma que tem que ser. Mas, por exemplo, a gente produziu o modelo, aí o modelo também pelo sistema, não sei se vai ter lá, apertou um botão lá, saiu o modelo, já sai na pasta.
+
+Adavio Tittoni [19:04]: Isso aí, exatamente isso. Então vai ficar, então vamos fazer por dentro do sistema, né? A gente vai entrar aqui, ó, entrei no caso da cliente Cleusa Nanes, protocolo O caso é fiéis, vai ter um botão aqui criar documento, vai abrir, vai preencher, vai ter modelos de documento pré-definidos que é os que a Patrícia vai nos enviar. Ela vai escolher um modelo, quem tiver utilizando, escolher o modelo, vai preencher, vai ver os dados ali do modelo, ver se tá tudo certinho, o nome do cliente que já vai, já vai ser preenchido automaticamente, nome, e-mail, telefone, que todos esses dados já estão no nosso sistema. Preencheu o documento, ele bota enviar, vai enviar para o ZapSign.
+
+Hyago Viana [19:39]: Aí já vai gerar o link lá para mandar, por exemplo, cliente, essas coisas.
+
+Adavio Tittoni [19:44]: Ela já vai escolher o e-mail e vai, quando ele botar enviar, já traz para ele o link para ela enviar para o cliente. Quando o cliente assinar, a gente tem um próprio evento dentro do ZapSign que é aqui, ó, documento assinado.
+
+Hyago Viana [20:00]: Aí vai validar lá no sistema, já vai, foi assinado o documento.
+
+Adavio Tittoni [20:05]: Exatamente isso.
+
+Hyago Viana [20:06]: Aí a gente controla só por lá.
+
+Adavio Tittoni [20:09]: Aí eu vou saber qual é o documento que foi criado, porque na hora que a gente criar aquele documento vai ter uma numeração. E aí eu sei quando, com base na assinatura, veio a numeração do documento. Aí eu vou conseguir ver. Então a gente vai fazer isso.
+
+Hyago Viana [20:22]: Se você falar para mim que é possível, eu acho que é mais prático. Eu também acho que é melhor, mais fácil mesmo. O que você tá fazendo é mais difícil assim, sentido do documento. Volta lá no sistema nosso lá para eu ver outras coisas assim. Então, por exemplo, aí tem pipeline operacional que você colocou aí, é igual a gente conversou, tem, a gente tá falando que muita questão do FIES, que eu passei para você a documentação relacionada à questão do FIES, mas tem vários processos, né, que a gente faz, que dentro dos processos tem situações distintas, né. O que eu passei para você lá Já resolveria para a gente assim uns 50% das coisas. Lá dentro do— tem aqui, aí tem uns clientes, né? Isso aí, por exemplo, pipeline operacional, igual você colocou aqui, né? A gente, no meu entendimento, faz sentido a gente colocar essa situação aqui, tem uma pipeline, possa ser um filtro, possa ser que seja pipeline diferente, mas por serviços. Aí, porque aí, por exemplo, a gente tá falando do FIES, mas tem aquele, aquela situação que eu te falei, casos de FIES, né, que vão ter lá. Então a gente poder ter uma pipeline do FIES, aí beleza.
+
+Adavio Tittoni [21:41]: Aqui dentro, né, a gente pode fazer isso. Se você ver, por exemplo, dentro do cliente, aqui não é o cliente, aqui é o caso.
+
+Hyago Viana [21:48]: Essa pipeline é o caso.
+
+Adavio Tittoni [21:49]: Isso aí vai ter um, aqui já tem, ó, mais médicos, COVID, FIES, ESF. O que eu vou fazer é colocar um filtro mais detalhado que vocês possam escolher aqui. Qual só o caso que você quer ver. Então quero ver só FIES, aí ele vai cair só nos FIES, tá vendo? Ele já faz isso por pesquisa, só que eu acho que não tá tão específico, né?
+
+Hyago Viana [22:07]: É porque assim, é igual tava, tem lá na documentação lá que eu mostrei lá para você do FIES, né? E aí lá, por exemplo, a gente pegou aqui FIES ESF, dentro do FIES, é o caso do FIES ESF. Se você clicar aí dentro do caso do FIES ESF, por exemplo, Certo. Aí tem um roteiro lá dentro, né, que é uma pipeline para aquela condição daquele serviço. Lembra lá do, do, acho que foi você que me perguntou, foi o Mateus, do quais são as etapas, né? Sim, isso que tem ali dentro. Então, por exemplo, se for COVID é uma, se for o ESF da forma que a gente tá aqui é outra. Então assim, se colocar, por exemplo, a pipeline, né, dessa forma que a gente tá conversando aqui dentro do caso, o que que você acha?
+
+Adavio Tittoni [22:59]: Acho que seria melhor aqui, por exemplo, fica o pipeline de todos os casos, onde é que se encontra os clientes. Ele abrindo o cliente, aqui dentro vai ter uma outra pipeline deste caso em específico.
+
+Hyago Viana [23:11]: Por exemplo, deixa eu te mostrar aqui para você entender como é que, como é que a gente faz. Aí você vai Vai pegar o que, de onde é que a gente tá tirando isso assim? Você vai falar para mim melhor que eu, tá bom? Ó, a gente usa o Trello, igual tu fala, né? A gente quer extinguir o Trello. E aí no Trello, compartilhando a tela aí, tá compartilhando aí não.
+
+Adavio Tittoni [23:42]: Não, agora compartilhou.
+
+Hyago Viana [23:45]: Então, se eu quiser colocar aqui, por exemplo, administrativo inicial, né, que é quando começa lá o administrativo. Aqui, ó, pipeline, só para É um quadro, né, que a gente coloca aqui no Trello, mas é só para questão do administrativo, não é judicial. Aí cada um aqui vai ter um acompanhamento do caso, né, tem um tipo de serviço e tal e tal. Então aqui é só disso. Aí, por exemplo, do COVID aqui, do COVID tem as etapas do COVID, né. Então tem lá etapa de mandar mensagem para o cliente, que aí é uma etapa manual, de gerar uma declaração. Então dentro do COVID, pensando aqui no caso, no processo, é isso que eu queria que você me ajudasse. A gente vai ter essas etapas a serem cumpridas, que aí são importantes a gente poder identificar, como se fosse uma pipeline mesmo, porque fica mais visual mesmo.
+
+Matheus Torquato [25:02]: Deixa eu pegar um aqui do A gente pode colocar todos aí, conforme você escolheu o que você quer ver, que nem tá acontecendo agora.
+
+Hyago Viana [25:11]: Mas é isso que eu tô falando para você, cada serviço é diferente.
+
+Adavio Tittoni [25:14]: Eu entendi, não é igual. A esteira é diferente, Matheus.
+
+Matheus Torquato [25:21]: Aí muda pipeline.
+
+Hyago Viana [25:23]: Você consegue ver aí? Você consegue ver aí? Consegue. A minha tela, ó, aqui, ó, só para você ter ideia. Esse aqui é o do 1%. Então o cara fechou lá, aí tem um roteiro aqui para ser seguido pelo pessoal que tá cuidando, ó. É retorno, organizando a pasta aqui, que boa parte a gente vai conseguir finalizar, né? Pasta finalizada. Agora lembra lá que eu te falei declaração? Vai enviar declaração. Aí tem todo um negócio que serve para os casos de abatimento da SF lá, entendeu? Acompanhamento das declarações. Aí voltou a declaração, tem que reconhecer firma, volta para cá. "Não conseguiu, fica aqui." Aí algumas coisas disso aqui eu coloquei lá na documentação como tag, entendeu? Teve outras situações dessa aqui que eu coloquei dessa forma mesmo, que aí tem o andamento. E aí é para que dê certo, né, a gente precisa ter essa situação. Aí que é o que eu ia perguntar, é assim, lá no centro que é o mais complexo assim, no sentido de tem vários andamentos, algumas documentações a serem preenchidas. É, eu pensei como se fosse um, deixasse o sistema da forma que a gente tá colocando lá. Foi até uma situação que eu perguntei lá no WhatsApp. Então vamos deixar assim da forma que a documentação colocou, e aí a gente, para os outros serviços, a gente só cria como se fosse uma equiparação ali, um antes do FIES, assim, ó. Então vamos lá, pensando aqui em pasta, né, subpasta. Então lá na documentação só existe uma pasta, que é a pasta FIES, tá? Aqui a pasta. Então vamos pensar que fosse existir acima do, dentro da pasta FIES tem as subpastas, né, COVID, Covid até aqui também, mas vamos pensar aqui que a gente vai fazer agora um outro serviço, um outro serviço lá, colocar ele ao lado, né, no sentido dessa situação. Só que os andamentos dos demais é muito simples assim, é só esses aqui que são que dá mais trabalho assim, em termos de quantidade, de várias situações. Os outros às vezes é muito simples assim. O que que você acha de em duas fases aqui?
+
+Adavio Tittoni [27:50]: O que que você acha de quando a gente fazer assim, ó, Quando você entra, vai entrar em hoje, né? Aí quando você entrar em pipeline operacional, em vez de cair aqui, vai cair assim: qual é o caso que você quer ver a pipeline? Então vai ter, por exemplo, caso, e aí vai ser a pipeline de fechar cada um deles. Isso, vai vir os quadradinhos com ele, clicou, aí aparece a pipeline para aquele caso em específico.
+
+Hyago Viana [28:18]: Perfeito, perfeito.
+
+Adavio Tittoni [28:19]: E aí vocês vão poder editar a pipeline para cada caso.
+
+Hyago Viana [28:23]: Então esse caso, essa pipeline, esse caso, na questão do vai ficar vinculado a pasta do mesmo jeito, não sei o quê, o cliente pode ter vários casos de processos diferentes, mas quando a gente chegar no ponto de tem que produzir tal documento, aí vai ter que ser específico para aquele serviço, entendi, e para aquele momento também, né?
+
+Adavio Tittoni [28:46]: Então assim você consegue ver o momento que os clientes se encontram dentro daquele tipo de serviço, que é o que você faz no Trello hoje.
+
+Hyago Viana [28:52]: Isso, isso, exatamente, exatamente. Que vai ser mais, até mais fácil para o pessoal se adaptar, porque já é o que já é feito.
+
+Adavio Tittoni [28:58]: Sim, sim, legal, legal, bom. Então isso dá para a gente fazer tranquilo, não tem problema.
+
+Hyago Viana [29:04]: Aí lá na documentação tá bem estabelecido assim essa questão para ficar mais fácil, porque tem 3 tipos de abatimento, né, renovação e SF. Aí eu coloquei lá como se fosse tudo igual, o que que já aproveita, o que que não aproveita. Aí o COVID é um pouquinho diferente. Aí o militar também tem 4, né? O militar também é tudo igual, é a mesma coisa do outro, não precisa fazer, repetir toda a documentação, tá tudo igual. O COVID é o único que é mais diferente, que aí tem um processo mais próprio, né? E aí eu até coloquei um destaque lá, que é uma das dúvidas que você perguntou, que é a bifurcação. A documentação lá chamou de bifurcação para o financeiro. Quando caso acaba, ou seja, né, ganhamos o caso, agora ele vai entrar na pipeline financeira, por exemplo. Aí você já tem ela aí, né?
+
+Adavio Tittoni [29:53]: Isso. Que aí esse aqui é assim, na nossa visão o processo seria esse: ele vai entrar aqui nesse pipeline, agora vai mudar, vai ser aqueles cards, só quando ele bater no final, e por exemplo, ele vai ter um botão aqui escrito caso encerrado, caso enviado para financeiro, enviar para financeiro, algo do tipo assim. Quando ele fizer isso, ele cai nessa pipeline financeiro dentro do primeiro processo, e aí o financeiro assume isso. Até uma das dúvidas que a gente deixou aqui, eu até anotei aqui, que era: a gente precisa identificar quais são os tipos de usuários, né? Então a gente já tem lá, você já me mandou isso, que eu sei: admin, advogado, financeiro, operacional, comercial. A gente já tá aqui dentro desse processo. E quem vai ser os donos, né, que a gente fala donos, é visualizar essas partes do sistema. Por exemplo, financeiro vê pipeline operacional, sim ou não? Só alguns pontos que aí eu vou tratar com você mais para frente. Eu trouxe aqui, né, mas isso são pontos importantes que eu já vi que tem lá dentro da estrutura dos nossos documentos. Eu já segui, que tá até aqui na parte de configurações. Quando você vai convidar, ele já tem aqui os papéis dele. Eu só não tenho muito mapeado que cada um vai olhar. Aí depois eu, mas depois eu vou tirando essa dúvida com para você. Sim, sim, sim, dentro desse processo.
+
+Hyago Viana [31:06]: Então ele vai cair na pipeline financeira aí, por exemplo, tá faltando etapas aqui, não tá?
+
+Adavio Tittoni [31:12]: Tá tudo aqui, suspenso, renegociado, cancelado. E tudo isso vai ser editável, tá? É que isso daqui é realmente uma visão zero, isso era só porque assim iniciamos a integração, aí eu tô fazendo a parte de documentação, era mais para ser a nossa primeira reunião para a gente bater e ver se é mais ou menos o que a gente tá seguindo.
+
+Hyago Viana [31:32]: Tá no caminho, mas acho que esses ajustes aí são importantes.
+
+Adavio Tittoni [31:36]: É, ajuste, eu sempre vou, a gente sempre bota para vocês poderem editar essas, esses templates do Kanban. Vocês que vão movimentar e colocar, não quero mais cancelado, quero que seja fim, vai lá e edita toda a pipeline, né, a pipeline inteira. Vocês que vão editar e selecionar o que quer mudar dentro de quem for o dono daquele determinado processo.
+
+Hyago Viana [31:53]: O do financeiro, por exemplo, financeiro, o interessante, quando eu falei lá da bifurcação, é porque Todos os casos, todos os casos, a gente tá falando aqui dos casos de abatimento que tá ali e tal, mas todos os casos em tese é para chegar no financeiro.
+
+Adavio Tittoni [32:08]: Sim.
+
+Hyago Viana [32:08]: Se ganharmos o processo ou mesmo se tiver alguma situação lá, é pra chegar lá no financeiro, né? Então quando chegou no financeiro, aí sim, aí é, vai seguir o rito, né, do financeiro, mas aí não tem mais essa situação de que é tal serviço, é tal serviço, não, é dinheiro, né? Aí o pessoal vai tocar lá.
+
+Adavio Tittoni [32:28]: Mas você acha que fica bom assim, por exemplo, quando eles baterem aqui no final vai ter um botão aqui, caso ganho, ganhei o caso?
+
+Hyago Viana [32:35]: É, eu coloco, é por aí mesmo, é exatamente isso mesmo, só que tem algumas situações que é o tipo, a situação é a seguinte, a gente ganha o caso no sentido de que pode ir para o financeiro, mas ele continua em aberto porque a gente não ganhou ele todo, por exemplo, a gente ganhou lá uma sentença lá, E aí a gente ganhou R$10 mil, só que a gente pediu R$20 mil. A gente entrou, ganhou R$10 mil, já recebeu os R$10 mil, dá para seguir com acerto de R$10 mil. Mas a gente recorreu, aquele caso não pode ser fechado por isso, entendeu? E aí a gente vai ficar discutindo os outros R$10 mil. Posso ser que daquele mesmo caso, que é o mesmo processo, uma parte já recebeu o dinheiro, mas a outra parte vai ficar discutindo o processo judicial. A gente chama de termo de acerto parcial. Então lá no sistema, como é que eu pensei isso? Eu pensei o seguinte: a gente deixar isso como se fosse uma, como se fosse uma marcação. Sim, é o caso, se ele não, se ele tiver judicial, ele pode ir para o financeiro eventualmente porque teve algum deferimento, mas ele fica com a marcação, essa marcação acompanha ele, né?
+
+Adavio Tittoni [33:49]: A gente pode fazer isso. Comunicação.
+
+Hyago Viana [33:52]: Isso eu coloquei lá assim, eu acho que foi basicamente isso. Porque aí você, esse caso ele não se encerra no sentido do outro lá, porque possa ser que tem trabalho a ser feito lá ainda, possa ser que tenha, entendeu? Tem até uma etapa lá que é tipo um judicial, alguma coisa que fica a marcação judicial. E aí vai lá com essa marcação, porque a pessoa que tá fazendo o acerto lá na frente, ela em tese ela também sabe, né? Ela tem acesso que possa ser que tem mais coisas, né, lá para trás para ser discutido. Então ele não encerra 100%. Tem casos que vão, 90% dos casos vão encerrar 100%, é só apertar o botão e tchau. Mas tem casos que vai acontecer isso que eu tô te falando, entendeu?
+
+Adavio Tittoni [34:32]: Tá legal. Mas aí a gente pode colocar, eu boto alguma coisa na especificação na hora da passagem que informe isso. Ah, esse contrato é analisado 100%, quer adicionar alguma coisa, esse contrato ele vai manter, vai Cara, a gente pensa em uma estrutura.
+
+Hyago Viana [34:46]: Dá uma olhada na documentação, eu coloquei uma estrutura.
+
+Adavio Tittoni [34:49]: Assim, desculpa tá falando assim, é porque a gente tá focando nessa parte da construção inicial, aí pode ser que tem alguma parte lá da forma que você tá falando, às vezes você tem uma solução melhor.
+
+Hyago Viana [35:02]: Não tô falando que eu coloquei lá, é uma situação, mas aí se corresponde, a ideia é essa, o problema é isso, é só isso. Esse caso não pode ser encerrado 100% porque tem ainda essa discussão.
+
+Adavio Tittoni [35:14]: Beleza. Aí tinha uma outra parte aqui.
+
+Hyago Viana [35:17]: Fala aí suas dúvidas aí.
+
+Adavio Tittoni [35:20]: O modelo de contrato, né, que eu ia pedir, mas aí já tá tudo certo, eu já tinha falado com você.
+
+Hyago Viana [35:24]: Os modelos, fala aí para Patrícia como é que você quer os modelos.
+
+Adavio Tittoni [35:28]: Patrícia, então seria o seguinte, como você conseguiu visualizar aqui mais ou menos como é que a gente vai trabalhar, né, a ideia é aquela que eu falei com o Iago, a gente vai entrar aqui, a gente vai ter os casos aqui dentro da pipeline. Eu vou clicar no caso, entrei no caso. Como antes a gente tava fazendo pelo ZapSign, agora não vai ser mais, vai ser por aqui. Quando a pessoa vai clicar assim, vai clicar criar documento, por exemplo. Aí vai ter os modelos de documento para esse tipo de caso, porque eu consigo fazer essa determinada camada, né? Então quais são os modelos de documento que a gente usa no FIES ESF? Ah, esse modelo, esse modelo, esse modelo, esse modelo. Certo, dentro desse modelo do documento Word, onde é que eu altero dados do cliente? Ah, nome, e-mail, telefone, endereço, tipo de caso, por exemplo, o que ser preenchido pelo nosso usuário.
+
+Hyago Viana [36:19]: Aí coloca o quê no nome disso aí para colocar esse placeholder?
+
+Adavio Tittoni [36:25]: Isso, sempre com essas duas, com esse maior e menor aqui que eu consigo identificar que é uma mudança.
+
+Hyago Viana [36:33]: Então CPF, É, e-mail aí, por exemplo, Paty, para a gente, a gente vai fazer lá uma declaração SF, uma declaração COVID, modelo para fazer pelo sistema, já tem um modelo lá. Aí só identifica onde é que vai ser mudado e aí disponibiliza no Drive para ele, porque já fica lá sempre no Drive. A hora que ele precisar, ele pega lá e aí o sistema gera conforme. Aí a pessoa só tem um trabalho de conferir, né, no sentido de pré-aprovar o que o sistema tá gerando, aparece lá na tela. Aí o período trabalhado, por exemplo, vai ter as informações do caso, né? Isso, informações do caso a gente coloca lá, qual é o período dela trabalhada, o nome da ECF, essas coisas, entendeu? Da forma que a gente, aquelas informações importantes da declaração que o pessoal erra na hora de fazer o modelo, a gente coloca lá porque ele não vai ter como errar.
+
+Adavio Tittoni [37:26]: Isso. E por exemplo também, Patrícia, é dados que você quer que o usuário que está fazendo naquele momento preencha sem parar. Assim, não pode não preencher aqui o nome completo, ou por exemplo, qual é o tipo de declaração, quantos por cento dessa declaração. Eu não sei muito sobre o contrato, né, mas assim, precisa que ele preenche. Por exemplo, ó, tem vezes que eu vou pegar aqui a declaração e tá faltando a porcentagem de quanto tempo foi. Por exemplo, você já vai dizer para mim assim, ó, é porcentagem. Aí você pode colocar, né, aí você pode falar comigo isso, tá? Você é aberto para a gente entender. Você vai dizer, ó, nessa parte porcentagem porcentagem é um número de porcentagem, e eu preciso que quem tá preenchendo coloque esse número obrigatoriamente, senão o contrato não pode ser salvo. E aí, na nossa parte do geração de contrato, eu vou botar lá obrigatório. Então ele só consegue enviar para o Zap Signing, para o contrato, se ele preencher aquele determinado campo. Então ele traz uma segurança para nós que todos os campos foram preenchidos, por exemplo.
+
+Patricia Cruz [38:32]: Deixa eu perguntar uma coisa, é porque nesse caso, Doc, as declarações elas são assinadas por outra pessoa, não seria assinada ali pelo ZapSign, né?
+
+Hyago Viana [38:42]: Então queria ver como que vai funcionar, porque vai gerar, mas é isso, é só gerar o documento, porque lembra que aí não vai ser assinado pelo ZapSign, não, é só para gerar o documento para não ter erro na hora da pessoa gerar o documento.
+
+Patricia Cruz [39:00]: Exato. Por exemplo, quando tiver informação que quem vai preencher, que vai gerar um Word, né, então eu posso mesmo deixar esses dados para que a pessoa preencha normalmente.
+
+Hyago Viana [39:12]: O sistema vai preencher.
+
+Patricia Cruz [39:13]: Por exemplo, mas tem informações, Doc, que eles encaminham para o secretário de saúde e que é preenchido por eles, por exemplo. Se nesse caso tem como deixar um lugar em branco lá.
+
+Hyago Viana [39:28]: Só isso.
+
+Adavio Tittoni [39:29]: Beleza, pode deixar. E o que for preenchido, por exemplo, por vocês, se quiser, em vez da gente fazer por Word mesmo, mostrar o documento Word, vai ser o final mais ou menos. A gente preenche como se fosse assim, ó, é dados, sabe? Aqui, ó, por exemplo, vou criar uma tarefa, a gente preenche meio que com, deixa eu botar aqui no tarefa, com cardizinhos de preenchimento aqui na hora de criar o caso. Fica mais fácil da gente identificar aqui, ó. Na hora de criar o caso, na hora de criar o documento, vai ter aqui, ó, quais são os campos que precisam ser preenchidos para este modelo, por exemplo, que a gente não tem por padrão. Porque, ó, o nome já tá fixo, que a gente já tem. Ah, o e-mail eu já tenho, telefone eu já tenho, nome do carro.
+
+Hyago Viana [40:13]: Mas aí, aí eu pensei assim, como a gente pegar as informações, igual você falou aí, informação do caso, mas tem as informações lá que, por exemplo, informações do contrato do FIES, são informações do contrato FIES, não sei o quê, não sei o quê. A gente preenche no caso, na pessoa, porque são informações que não vão ser mudadas, não vão ser alteradas. Então assim, vão ficar registradas, e aí toda vez a pessoa não precisa gerar tudo novamente, né?
+
+Adavio Tittoni [40:37]: É, não, não vai gerar tudo novamente.
+
+Hyago Viana [40:39]: É só, por exemplo, esse alterável, né?
+
+Adavio Tittoni [40:42]: Ou por exemplo, esse cliente aqui, a gente tem os dados dele, mas por algum motivo não foi preenchido o número do caso do FIES, por exemplo.
+
+Hyago Viana [40:52]: Ô Adávio, beleza, essa parte aí deu para entender a questão dos dados, é só por causa do tempo. Aí se tiver qualquer dúvida lá, você vai falando lá, a Patrícia vai passando para você. Quais são as outras dúvidas aí que eu tenho que te mostrar uma coisa ainda?
+
+Adavio Tittoni [41:05]: Tá, beleza. A parte de fazer o cálculo, que eu não sei se vai entrar agora, vai entrar no próximo módulo, que aí eu fiquei meio com dúvida nesse processo, que a gente tem que fazer o cálculo de honorários, parcelas, descontos, vai entrar nesse módulo, entra no módulo financeiro que a gente vai fazer na próxima. Eu acredito que assim, porque não vai ter mais a conferência cruzada que a gente tinha tirado.
+
+Hyago Viana [41:34]: Não, não precisa não, vai dar.
+
+Adavio Tittoni [41:35]: Só que teria esse tipo de cálculo, né?
+
+Hyago Viana [41:38]: É uma calculadorazinha no sentido assim de que tem as condições lá do contrato, né, principalmente esses de abatimento de dívida aí. Aí, quanto que tava o saldo devedor? Quanto é que ficou? E aí faz uma conta que hoje é feita de forma manual para que o sistema faça e a pessoa só aprove, porque aí diminui a margem de erro. Então isso daí é uma coisa, é uma etapa. Sim, é financeiro, né, que exige essa situação, mas é uma etapa do pipeline operacional. É como se não é do pipeline financeiro, é do pipeline financeiro. Então o melhor deixar para um segundo momento.
+
+Adavio Tittoni [42:15]: É que eu acho que vai ser quando a gente enviar para essa pipeline financeira.
+
+Hyago Viana [42:21]: Isso, com certeza, com certeza.
+
+Adavio Tittoni [42:22]: Então tá, então porque agora o que que a gente— eu vou fazer a parte do esforço aqui, vou trocar aquele caminho que a gente tava de receber o documento pelo e-mail do ZapSign. Agora a gente que vai enviar e consultar, porque aí, Patrícia, que eu vou fazer, por exemplo, declaração não é para ser enviado pelo ZapSign, não tem problema. Quando gerar o modelo vai ter lá para mim já assim, ó, esse você pode gerar para mim dizer, ó, Dávio, esse aqui é um documento que vai para ZapSign, esse não vai. Aí eu sei que quando gerar um modelo vai ter um botão lá enviar para ZapSign ou só download, por exemplo, para ele poder só baixar.
+
+Hyago Viana [42:54]: E a pessoa pode digitar, Dávio, assim, por exemplo, colocar assim, por exemplo, gerou o documento assim como se fosse um texto aqui assim, a pessoa, não, tem um cliente sugeriu para alterar uma situação, ela vai lá e altera.
+
+Adavio Tittoni [43:07]: Ele vai ser só a base Como depois ele vai ter o Word, aí ele pode editar. A gente deixou um campo de edição.
+
+Hyago Viana [43:15]: Beleza, beleza.
+
+Adavio Tittoni [43:16]: Ele não vai editar o modelo, ele vai editar só o documento daquele cliente em específico.
+
+Hyago Viana [43:21]: Isso mesmo, é isso mesmo.
+
+Adavio Tittoni [43:22]: Então beleza, tá certo, pode fazer.
+
+Hyago Viana [43:24]: Mas que mais você tem de dúvida? Da integração do financeiro, a gente— eu não sei se foi essa. Qual mais que você tem de dúvida? Fala aí.
+
+Adavio Tittoni [43:32]: Era só mais a pipeline financeira ter o conflito com a parte administrativa, judiciais, que é essa diferença que a gente tá fazendo, né? Era só para eu conseguir entender nesse processo. Mas aí o resto é mais relacionado a financeira, a parte de dúvida, né? Porque agora era o modelo do contrato. Essa parte do e-mail, do ZapSign, a gente tinha conversado, mas agora eu entendi como é que a gente vai fazer. Porque aí você que tinha conversado, lembra, de receber o e-mail, tal, tal, tal. Só que aí não ficou legal. Eu também achei que não ficou muito bom. Como agora tem integração, é melhor. É que a gente vai criar o documento, dispara para lá e a gente já vê se ele foi assinado ou não assinado.
+
+Hyago Viana [44:09]: Deixa eu te mostrar. Beleza, então deixa eu te mostrar uma coisa aqui, que é o próximo ainda, né? Tem essa parte que a gente vai resolver, vai apurando, mas é o daquela parte de controladoria, né? Sim, que é o que eu tenho estudado hoje para ver a melhor forma.
+
+Adavio Tittoni [44:26]: Até te perguntei que segunda-feira a gente vai ter uma reunião com o pessoal para a gente poder pegar algumas questões da documentação, mas a documentação deles é bem completa. Eu precisava só depois ver com você a parte de como é que vocês querem fazer a controladoria para eu entender, mas a documentação dele é bem tranquila. Eu consigo ver processo cliente, cadastrar cliente, buscar cliente, verificar todos os processos. Eu consigo fazer qualquer coisa, é bem tranquila a API deles, é uma documentação muito rica. Então não acho que se correr dúvidas vai ser no meio do processo. Agora é bem tranquilo.
+
+Hyago Viana [44:58]: Essa parte judicial a gente vai continuar seguindo aqui sendo principal. Vai ter um espelhamento lá, mas aí tem alguns pontos que a gente sofre aqui que eu separei, no sentido de que são dores nossas e talvez vocês consigam, né, a ideia que a gente não precisa passar por essas dores, né, de duplicação de informação e tal. Você acha que a gente deixa isso para quando finalizar lá?
+
+Adavio Tittoni [45:27]: É, eu acho que é porque essa parte vai ser já na parte 2, né, aqui a gente tá meio que agora, 3, é que tem um online do financeiro e a parte 1 e 2. Então seria a parte 3, porque seria quando ele entrasse naquele processo jurídico, né? Por exemplo, seria a terceira parte, né, que já é no processo mesmo, né?
+
+Hyago Viana [45:46]: Porque aí o pró-juris é só quando ele vai para a parte judicial, aí vai ter o processo judicial e tal e tal. Então deixa isso aqui para reunião futura, né?
+
+Adavio Tittoni [45:56]: É, pode ser, pode. Como eu já li a documentação, eu já sei o que que a gente pode utilizar E aí eu montando essa primeira estrutura, porque como eu tinha te falado, se eu não, se a gente não montar logo essa, fica muito ruim da gente seguir nos últimos passos.
+
+Hyago Viana [46:11]: Tem que ir por partes mesmo.
+
+Adavio Tittoni [46:13]: Beleza, porque tudo depende do cliente, né? Aí agora é a criação do cliente, a base do cliente, como ele vai criar o cliente. Agora, por exemplo, só uma dúvida também, tá, nesse processo que a gente fez, que como o nosso ponto zero de criação do cliente estava sendo a assinatura lá no e-mail nesse momento que eu tinha pensado, como agora será o ponto zero do cliente?
+
+Hyago Viana [46:36]: Vocês vão criar, alguém vai criar essa iniciação antes de você criar a primeira criação, né? Isso, ao invés de preencher as informações, essa que é a ideia, né? Que foi agora essa ideia, lá não tá escrito dessa forma não, lá na documentação. Ao invés da gente, e aí tem até opção, né, de preencher em texto manual, manual. Ao invés da gente preencher as informações lá para poder gerar o contrato, né, e já vai preencher aqui, já preencheria aqui. Então é na hora de criar. Então é uma atividade que ia ser feita de qualquer forma. Então só que agora a gente faz ela aqui, e aí o ZapSign vai ser usado mais pela questão da avaliação digital e tal.
+
+Adavio Tittoni [47:23]: Isso, exato.
+
+Hyago Viana [47:24]: Mas vai gerar o documento aqui, já sai o link aqui, tudo, você vai acompanhar.
+
+Adavio Tittoni [47:29]: Quando o cara assinar, vai voltar o documento assinado, que eu já vou ter acesso ao documento assinado. Então ele vai voltar assinado, vai ficar em pendente, vai ficar igual ZapSign. A visualização do ZapSign vai ser hoje aqui. Então você vai criar o cliente aqui, vai acompanhar por aqui, tudo vai ser gerado por aqui. O ZapSign ainda vai estar lá por conta da validação, que a gente não vai conseguir construir no sistema aqui como é o ZapSign.
+
+Hyago Viana [47:51]: Só coloca uma, alguma forma de, pode ser uma tag também para filtrar. No sentido de que o cara que eventualmente depois não fechou, que tem, né, uns 20% que a gente gera lá, não fecha. Aí a gente possa saber que ele não fechou para depois.
+
+Adavio Tittoni [48:08]: É o que a gente pode fazer, por exemplo, é a cada 7 dias, por exemplo, verificar quem foi enviado um contrato e não assinou dentro dos 7 dias, para dar um alerta para o seu time.
+
+Hyago Viana [48:25]: Não, beleza, vai ser outra lá na frente, mas já fica, a gente pode conferir essa situação lá na frente também.
+
+Adavio Tittoni [48:34]: É, porque como eu já vou fazer a documentação do Zap Sign, a gente já vai, eu já vou ter toda essa criação, aí é só eu montar essa estrutura, ó, eu quero que retorne desse jeito, daqui a 7 dias me retorne assim, é mais tranquilo da gente fazer.
+
+Hyago Viana [48:47]: Beleza, a gente tem 10 minutos aí, vocês têm mais alguma dúvida assim, Thiago? Observação que você acha que é necessário, que é importante dentro desse contexto inicial?
+
+Adavio Tittoni [48:57]: Vocês que utilizam assim, é importante passar para a gente, que a gente quer fazer de uma forma que fique bem usual, né, mas essa questão de usabilidade, a ideia é replicar, né, o que a gente faz com menos trabalho assim, sem ter um impacto tão grande, né.
+
+Hyago Viana [49:15]: Por enquanto não?
+
+Dr. Thiago Correia [49:17]: É só perguntar, pessoal, eu tô com câmera fechada, resolvendo outra questão aqui. A formatação, esse arquivo, ele é, quando ele é gerado, ele, a gente consegue padronizar a formatação dele ou como ficaria? Eu pergunto porque a gente testou algumas outras automações aqui anteriormente e quando o contrato era gerado, por exemplo, por automação, a gente não conseguia formatar de determinada forma. E aí facilitaria muito, porque alguns arquivos a gente tem formas específicas ou até imagens que vão, esse tipo de situação, né? E aí se a gente tivesse a possibilidade de sair no formato lá no—
+
+Adavio Tittoni [50:02]: a gente pode fazer, a gente pode fazer o seguinte: quando você gerar a documentação e for fazer a avaliação, a gente vai fazer essa avaliação em um doc, né, em Word. Aí você vai poder editar, adicionar imagem, trocar tipografia caso você queira, texto, que eu vou criar como se fosse uma caixinha de Word ali para vocês modificarem.
+
+Dr. Thiago Correia [50:21]: Só quando você salvar, que você tá falando, na hora de salvar, é porque até esse ponto, por exemplo, se essa caixinha, se essa situação a gente conseguir já deixar mais próximo da metodologia do próprio Google Docs, porque quando a gente usa o Word para Google Docs, ele muda total o arquivo.
+
+Adavio Tittoni [50:46]: É, mas a gente vai usar o— vai ter que usar do Google Docs mesmo, porque o Word ele não roda na web, só o Google Docs.
+
+Dr. Thiago Correia [50:53]: Já sai mais próximo da nossa formatação específica.
+
+Adavio Tittoni [50:57]: Show! Pode ser, eu já faço ele pelo formato que sai no Google Docs para poder gerar na web.
+
+Dr. Thiago Correia [51:03]: Então acho que a gente vai ter esse mesmo problema que teve com essas outras, então, que lá eles usavam alguma, alguma um programa diferente, né?
+
+Adavio Tittoni [51:09]: E aí quebrava o texto no meio às vezes, né? Ou bullet point sai errado. É isso que acontecia, né?
+
+Dr. Thiago Correia [51:15]: Também, também.
+
+Adavio Tittoni [51:17]: E aí, na hora de salvar, é que aí vem um ponto importante aqui para eu entender. Quando salvar para vocês aqui, ó, por exemplo, entrei no cliente, salvei o documento, ele vai ser salvo em PDF? Vocês querem que ele fique salvo como um docx editável?
+
+Dr. Thiago Correia [51:34]: Eu acho que como Docx ficava mais prático, porque às vezes com PDF vai precisar mudar alguma coisa e só vai ter que retrabalho de ajustar.
+
+Hyago Viana [51:41]: Pode deixar para pessoa apertar lá no— se gera PDF, para evitar que a pessoa tenha assinatura.
+
+Adavio Tittoni [51:50]: Quando ele tá assinado, por exemplo, aí ele vai me retornar em PDF.
+
+Hyago Viana [51:54]: Ah não, aí tem que retornar em PDF, porque é documento para protocolo, né? Já é documento Protocolo, esses documentos, essa pasta aí principal é protocolo. Eu falo no sentido assim, você vai gerar um documento lá, uma declaração. Aí a versão para aprovação, sim, né? Mas já depois que aprovou, já gera no PDF. A pessoa não tem que converter o PDF depois?
+
+Adavio Tittoni [52:22]: Boa, boa, pode ser. Eu vou deixar as duas opções, porque aí exatamente como a Patrícia falou, ah, "Vocês preencheram alguma coisa errada, eu quero editar." E baixa em Word, só altera, gera em PDF de novo, envia para alguém assinar, o cliente assinar, ou algo do tipo, né? Aí então a gente faz isso. Vamos fazer dessa.
+
+Dr. Thiago Correia [52:37]: Esse de assinar, só deixar uma observação, que esse, que assim, quando vem assinado já, por exemplo, o contrato do Zap Sign, eu sei que tem opções diferentes de fazer isso, né? E algumas delas é tipo copiar o arquivo. Seu sistema pega aquele arquivo e copia para pasta Seria muito importante se tivesse o arquivo original meio que baixado e adicionado, porque quando copia, a certificação digital ela quebra a cadeia. Então aquele arquivo perde a certificação, aí vai ter um retrabalho de ter que ir no sistema todas as vezes pegar isso para manter. Então teria que ser baixado, realmente lançado no Drive, ao invés de copiado no sistema.
+
+Adavio Tittoni [53:13]: Não, vai ser lançado no Drive. Eu vou baixar quando for assinado. Eu baixo o documento por uma automação e insiro dentro da pasta do cliente específico o documento assinado, como se fosse o PDF que você recebe no e-mail mesmo.
+
+Hyago Viana [53:27]: É a mesma coisa, ele só faz automação mesmo para chegar na pasta, assim, ele não copia o documento não.
+
+Dr. Thiago Correia [53:34]: É, eu imaginava, mas eu deixei a opção para tirar dúvida mesmo. É importante, chega lá no final, a gente descobre que tá desse jeito, tem que, tem que não, não, não.
+
+Adavio Tittoni [53:43]: Beleza, beleza, tranquilo, que aí eu monto toda essa estrutura. Então a gente vai montar dessa forma, Thiago. Vou botar com essa nova parte de cliente. Thiago, eu falei, desculpa, Thiago, que ele tá Thiago e Iago, aí eu me confundi aqui.
+
+Dr. Thiago Correia [53:55]: Thiago é o mais bonito, é porque ele tá na câmera.
+
+Adavio Tittoni [53:59]: Pois é. Aí, mas tanto Iago quanto Thiago, né? A gente vai montar assim. Então eu vou botar agora para— pontos que a gente vai fazer agora de mudança. Primeira coisa é o cadastro vai ser feito por aqui. Eu vou ver a parte do ZapSign ali se a gente tem abertura já com API ou não, Iago. Aí eu vou falar diretamente com você ali para a gente ver se você contratar alguma coisa. Mas já poder criar o cliente por aqui na mão, como se fosse criando no ZapSign. Depois, se puder, Patrícia, só me enviar, por exemplo, hoje, como vocês criam um cliente. Por exemplo, quando a gente vai criar um cliente aqui, a gente coloca nome, e-mail, telefone e já faz o contrato do cliente. Eu preciso dessa base que antes eu tava puxando do e-mail do ZapSign, né?
+
+Patricia Cruz [54:38]: Nesse caso Que nesse caso quem cria é o comercial, né?
+
+Hyago Viana [54:43]: Mas tem uns modelos, né? É o nome, os dados iniciais ali, uns modelos ali dos dados. É mais para ele ter uma noção do que que ele precisa colocar lá.
+
+Patricia Cruz [54:55]: É porque é só que eu acho que ele, ele, o que eu tenho, que eu vou te mandar, são as declarações que a gente utiliza. Os contratos, sim, é de quem mexe, é outra pessoa, entendeu?
+
+Hyago Viana [55:04]: Mas a gente passa lá, mafia, mafia, para mafia organizar. Mas aí os dados principais são esses daí mesmo, que já tava sendo feito, né? Qualquer modelo é que são essas. Cada contrato vai ter um modelo e tal, um tipo ali, em regra, né? Sempre em regra. Mas uma forma da gente poder até colocar assim, um contrato novo, tudo novo, e aí como é que a gente faz aqui agora? E tem uma forma da gente poder fazer isso sim, se tiver sem ter que passar lá pelo ZapSign, que já fica uma forma só, né?
+
+Adavio Tittoni [55:37]: Isso é exatamente, é uma forma só. O ZapSign, a partir de agora, ele vai virar um botão, que quando eu preciso enviar esse documento para o ZapSign, eu clico no botão e ele vai para o ZapSign. Senão é tudo local. Nossa, perfeito, perfeito! Boa, show de bola! Então ótimo, vamos seguindo nesse processo. E aí eu consigo te mandar direitinho assim que fizer. Vou só estudar o ZapSign e te mando sobre a documentação ali.
+
+Hyago Viana [56:00]: De segunda-feira da reunião precisa de alguma informação?
+
+Adavio Tittoni [56:04]: Não, agora inicialmente não, né?
+
+Hyago Viana [56:06]: Beleza.
+
+Adavio Tittoni [56:06]: Se no decorrer do processo a gente tiver, aí eu vou ter que falar lá com eles. Eu peço para você me passar uma, normalmente eles sempre me mandam um contato de algum desenvolvedor, algo do tipo lá, aí eu consigo ter esse assunto mais específico sobre isso.
+
+Hyago Viana [56:18]: Combinado então, abraço, Adávio, até mais.
+
+Adavio Tittoni [56:20]: Abraço, tchau tchau, gente. Beleza, qualquer coisa estamos à disposição, tchau tchau. Mateus, puder ficar aí comigo para a gente Poxa, né? Tu tá mutado. E aí, tchau!
+
+Matheus Torquato [56:40]: Eu achei que tava falando.
+
+Adavio Tittoni [56:42]: E aí, conseguiu entender? Sim. Vai mudar um pouco a ideia do que a gente tava fazendo ali, mas eu acho que até melhor, porque tipo assim, é aquela ideia. Agora com isso a gente meio que tira a nossa responsabilidade de pôr tá tendo que pegar nome de cliente errado, nome de contato, porque quem vai construir é eles, tá ligado? Eles constroem o nosso sistema só.
+
+Matheus Torquato [57:01]: Colocar API das apps aí, pô. É, mas assim, pelo que eu vi aqui da documentação, viado, dependendo da API, talvez a gente consegue até cortar o e-mail, que se o cara assinou, API já joga.
+
+Adavio Tittoni [57:15]: É, mas é isso mesmo, tipo assim, a ideia vai ser toda a integração ali, mas vai ficar bom. Mas tipo assim, pelo visto eles gostaram da pipeline. Como eu falei, pipeline financeira, vamos deixar ela um pouquinho parada agora, vamos focar nessa construção. Então o que que a gente vai fazer agora?
+
+Matheus Torquato [57:31]: Essa ideia dele, quando clicar, preparar no profissional, escolher qual campanha ele quer ver, aí você, ele vai cada um, como cada um diferente do outro, é melhor. Sim, sim, é que nem funciona hoje já no que ele usa ali no Trello.
+
+Adavio Tittoni [57:45]: É, daí dá para a gente seguir essa proporção. Mas se eu conseguir entender ali, acho que vai ser de boa. Que a gente vai ter que fazer agora, só para a gente ter em mente, vamos trocar, né, as coisas, como funciona. Então aqui já não vai dar para ser desse jeito, vai ter que ser casos, né? Se você quiser, eu posso pegar lá o PRD e montar alguma coisa em cima, mas serei assim, aqui vai ser casos, né? Em vez de ser o cliente direto, ele vai escolher o caso, vai ficar Uns cardizinhos assim, né, porque escolheu o caso. Cada caso, mas assim, a gente constrói esses daqui padrão e deixa lá para tipo na configuração ele poder criar novos casos, criar novas paradas e botar os nomes.
+
+Matheus Torquato [58:30]: Eu tô falando tipo CFS, COVID.
+
+Adavio Tittoni [58:33]: Então isso aí, entendeu? Ele vai poder criar categorias de casa, a gente bota aqui criar categorias de casa até para ele poder, por exemplo, vincular quais são os modelos de contrato para cada categoria de caso, entendeu? Porque aí você ligou mais ou menos como vai ser a dependência do banco. Dependência, sim. Porque no banco vai ser assim, vão ser duas coisas diferentes. Uma coisa é o cliente que eu vinculo ao caso, outra coisa é o caso. Então, tipo assim, o caso é um caso FIES, beleza, caso é um processo, aí o outro é o cliente que tem vários. Vincula esse caso, mas tipo assim, o caso ele tem um Vai lá. Alô, opa, beleza, bom, pode assumir, valeu.
+
+Matheus Torquato [59:26]: Voltei.
+
+Adavio Tittoni [59:31]: Patrícia, sistema escritório, tá, ela mandou aqui. Vamos lá, então no caso é assim, ó, são Imagina, dois, duas, dois corpos diferentes aqui. Um é o caso, um é o cliente, são separados aqui. O caso, ele tem um ID, que é o ID FIES, e dentro do caso eu tenho os modelos de contratos e declarações que eu vou utilizar. Então ele tá para cá, tá ligado? Então o caso é um ponto zero, eu tenho os modelos e contratos que eu vou utilizar para esse tipo de caso. E vai ter aquilo daquele lado. Aqui eu tenho um cliente, no cliente eu vinculo um caso, tá ligado? Porque aí o caso já vai vir com os modelos pré-datados, tá, tá, tá, tá, tá, tá, tá, tá. Então essas duas frentes que a gente tem que fazer agora. E aí aqui dentro da configuração eu acho que a gente vai colocar caso, que dentro do caso tem o quê? Pipeline, modelos, clientes vinculados a esse caso, vai ser meio que assim, né? Neste processo aqui do lado de cá. E desse outro lado a gente vai ter clientes. E aí clientes, a gente vai criar o cliente, vincular o contrato àquele cliente. Então quando criar o cliente, não tem como o cara botar um novo cliente aqui e não vincular um caso, tá ligado? Sim, obrigatório. Não, não, pelo contrário, o cliente vai ser criado do zero. Quando entrar no cliente, aí sim, aqui embaixo eu venho aqui, casos, e vinculo um novo caso. Só que tipo, novo caso, quando eu vincular, ele já tem que vir, pô, o modelo de contrato, tá, tá, tá, lá, lá, lá, e cair na pipeline. Vai ter que ser assim.
+
+Matheus Torquato [01:01:01]: Ela vai mandar os modelos ali, boa, a gente já coloca.
+
+Adavio Tittoni [01:01:04]: É, vamos trampar hoje à noite.
+
+Matheus Torquato [01:01:07]: Hoje eu não posso.
+
+Adavio Tittoni [01:01:08]: Não, vamos trampar domingo à noite.
+
+Matheus Torquato [01:01:12]: Pode ser sábado, domingo, dia que você quiser.
+
+Adavio Tittoni [01:01:14]: Tá, domingo à noite eu acho. E aí a gente já mata isso.
+
+Matheus Torquato [01:01:17]: Hoje à noite eu não consigo, mas é, a gente precisa pegar as informações, né?
+
+Adavio Tittoni [01:01:23]: Ela Ela passou essa parte de começar a construir, já dá para gente fazer. Agora já dá para a gente ir fazendo, tá ligado? Sim, sim, acho que sim.
+
+Matheus Torquato [01:01:36]: Eu posso começar a fazer hoje também já.
+
+Adavio Tittoni [01:01:38]: É, pode ser. Mas aí vamos estruturar isso, vamos tentar conversar com o Claudê para a gente ver como é que a gente inicia isso agora, a gente não perder o que a gente já fez, né? Porque assim muda muito a lógica do que a gente tinha. É praticamente uma nova, uma nova construção, né, do comparador que a gente tinha. Porque a gente tava fazendo o caso depende do cliente, agora o caso é isolado de cliente, tá ligado? Sim.
+
+Matheus Torquato [01:02:03]: Se você quiser, a gente começa a fazer agora. Você vai fazer o quê agora? Eu tenho só reunião, eu tenho uma reunião com o Gabriel, com cliente lá novo dele.
+
+Adavio Tittoni [01:02:13]: Vou olhar aqui algumas coisas, mas não vai adiantar a gente fazer agora que a gente não tem um modelo É, até vai dar.
+
+Matheus Torquato [01:02:19]: Pelo menos mudar, pelo menos começar a mudar essa estrutura por trás, né? Depois a gente já sabe que tem que passar o caso, já sabe que tem não sei o quê, daí a gente só imputa depois. Eu posso, a gente pode encerrar essa reunião aqui, porque daí ele vai gerar esse arquivo do TeleDV. Aí eu já posso pegar, jogar aqui no cursor e pedir para ele explicar se ele entendeu, e a gente vai corrigindo ele.
+
+Adavio Tittoni [01:02:44]: Pode ser. Pera aí, então vamos desligar aqui. Só que acho que agora, agora eu não vou conseguir, viado, porque eu tenho uma reunião daqui.
+
+Matheus Torquato [01:02:50]: Então eu faço isso aqui primeiro.
+
+Adavio Tittoni [01:02:53]: Manda isso aí para mim também, eu vou tentar pensar. A gente pensa junto. Não manda ele implementar, vamos pensar junto e aí a gente vê como é que a gente implementa. Tá bom, pode ser, pode ser. Aí a gente começa a implementar. Mas assim, vai ficar bom. E eu acho que ele, tipo assim, ele entende ali, você vê que ele não é muito agoniado, ele tá vendo que a gente tá construindo, tá ligado? Ah, a gente fez bastante coisa, pô, tá doido! Já dá para a gente ir montando um processo. Aí tenta terminar isso ainda esse mês para a gente poder ganhar um outro dinheiro, mas acho que dá para a gente terminar.
+
+Hyago Viana [01:03:23]: Agora vai ficar mais fácil.
+
+Matheus Torquato [01:03:24]: Ele falou que essa primeira entrega é 20 mil, né?
+
+Adavio Tittoni [01:03:29]: É, beleza, já matou. Mas é porque a gente já matou a primeira entrega, né? A gente tem que matar a primeira e a segunda, que é a pipeline financeira, e essa daí é os dois. A gente vê como é que a gente constrói. Vamos pegar essa estrutura, vamos primeiro montar isso, porque aí sem o ponto zero a gente não consegue fazer porra nenhuma. Porque eu acho que também, depois que agora que eu entendi como é que eles querem, depois dessa parte aqui é mais fácil.
+
+Matheus Torquato [01:03:50]: Por isso que era bom ter o negócio, o design, porque daí ele vê, ele fala, ó, aqui não é, não é assim.
+
+Adavio Tittoni [01:03:57]: Então assim, já dá um norte melhor para a gente. Também acho que é a melhor coisa aí montar isso primeiro. Era o quê? A primeira coisa era a gente montar isso mesmo.
+
+Matheus Torquato [01:04:04]: É assim, sim. Que daí agora, tipo, não adianta a gente acelerar o processo, aí chega ali na frente, pô, não era assim, aí tem que fazer de novo. Então, mano, beleza. Eu vou terminar de fazer só o negócio do Kanban de arrastar aqui mesmo, e daí depois eu vou jogar o TL;DV aqui no documento TL;DV para ele organizar.
+
+Adavio Tittoni [01:04:27]: Beleza, fechou, fechou. Tamo junto.
+
+Matheus Torquato [01:04:30]: Fechou, valeu.
+
+Adavio Tittoni [01:04:32]: Valeu, a gente se fala.
+
+Hyago Viana [01:04:33]: Falou.
