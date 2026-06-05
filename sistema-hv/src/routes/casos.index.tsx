@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Filter, List, Plus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
-import { Breadcrumb, Btn, Eyebrow, PageHeader } from "@/components/hv/primitives";
+import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
+import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useCasesList } from "@/hooks/useCases";
+import { useCasesList, useMoveCaseStatus } from "@/hooks/useCases";
 import { MACRO_OP, MACRO_OP_LABELS, type MacroOp } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/casos/")({
@@ -36,22 +37,29 @@ const TONE_COLOR: Record<string, string> = {
   danger: "var(--danger)",
 };
 
+const COLUMNS: KanbanColumn<MacroOp>[] = MACRO_OP.map((col) => ({
+  id: col,
+  label: MACRO_OP_LABELS[col],
+  toneColor: TONE_COLOR[COLUMN_TONE[col]],
+}));
+
 function CasosKanban() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading, isError, error } = useCasesList(search ? { search } : undefined);
-
-  const grouped = useMemo(() => {
-    const map = new Map<MacroOp, NonNullable<typeof data>>();
-    for (const s of MACRO_OP) map.set(s, []);
-    (data ?? []).forEach((c) => {
-      const col = c.macrostatus_op as MacroOp;
-      if (map.has(col)) map.get(col)!.push(c);
-    });
-    return map;
-  }, [data]);
+  const move = useMoveCaseStatus();
 
   const total = data?.length ?? 0;
+
+  function handleMove(id: string, to: MacroOp) {
+    move.mutate(
+      { id, to },
+      {
+        onSuccess: () => toast.success(`Movido pra ${MACRO_OP_LABELS[to]}`),
+        onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao mover o caso"),
+      },
+    );
+  }
 
   return (
     <div className="page-container !pb-10">
@@ -107,43 +115,15 @@ function CasosKanban() {
         </Alert>
       )}
 
-      <div className="overflow-x-auto -mx-2 pb-4">
-        <div className="flex gap-3 px-2 min-w-max">
-          {MACRO_OP.map((col) => {
-            const items = grouped.get(col) ?? [];
-            const tone = COLUMN_TONE[col];
-            return (
-              <div key={col} className="w-[280px] shrink-0 flex flex-col">
-                <div
-                  className="flex items-center justify-between px-2 py-3 border-b-2 mb-3"
-                  style={{ borderColor: TONE_COLOR[tone] }}
-                >
-                  <Eyebrow>{MACRO_OP_LABELS[col]}</Eyebrow>
-                  <span
-                    className="font-display text-[20px] font-semibold"
-                    style={{ color: TONE_COLOR[tone] }}
-                  >
-                    {String(items.length).padStart(2, "0")}
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  {isLoading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <Skeleton key={i} className="h-24 rounded-lg" />
-                    ))
-                  ) : items.length === 0 ? (
-                    <div className="text-[12px] text-muted-foreground text-center py-8 italic">
-                      vazio
-                    </div>
-                  ) : (
-                    items.map((c) => <CaseCardReal key={c.id} caso={c} />)
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <KanbanBoard
+        columns={COLUMNS}
+        items={data ?? []}
+        isLoading={isLoading}
+        getId={(c) => c.id}
+        getColumn={(c) => c.macrostatus_op as MacroOp}
+        renderCard={(c) => <CaseCardReal caso={c} />}
+        onMove={handleMove}
+      />
 
       <CaseFormDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
