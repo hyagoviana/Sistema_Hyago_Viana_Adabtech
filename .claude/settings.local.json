@@ -136,7 +136,8 @@
       "Bash(echo \"exit=$?\")",
       "Bash(curl -s --max-time 60 -o n8n_wf.json -w 'http=%{http_code} time=%{time_total}\\\\n' -H 'X-N8N-API-KEY: __TRACKED_VAR__' https://n8n.sistemahyagoviana.com.br/api/v1/workflows/SizyKzXRq14mzzWZ)",
       "Bash(echo \"EXIT_TSC=$?\")",
-      "Bash(echo \"EXIT_LINT=$?\")"
+      "Bash(echo \"EXIT_LINT=$?\")",
+      "Bash(git ls-remote *)"
     ]
   }
 }
