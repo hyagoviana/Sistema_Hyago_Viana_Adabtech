@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { CaseCardFin } from "@/components/cases/CaseCardFin";
-import { Breadcrumb, Btn, Eyebrow, PageHeader } from "@/components/hv/primitives";
+import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
+import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useCasesList } from "@/hooks/useCases";
+import { useCasesList, useMoveCaseStatusFin } from "@/hooks/useCases";
 import { MACRO_FIN, MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/casos/financeiro/")({
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/casos/financeiro/")({
 });
 
 // NAO_APLICAVEL não aparece como coluna — esse estado é "ainda não bifurcado"
-const COLUMNS: MacroFin[] = MACRO_FIN.filter((s) => s !== "NAO_APLICAVEL");
+const FIN_COLUMNS: MacroFin[] = MACRO_FIN.filter((s) => s !== "NAO_APLICAVEL");
 
 const COLUMN_TONE: Record<MacroFin, string> = {
   NAO_APLICAVEL: "neutral",
@@ -40,9 +41,16 @@ const TONE_COLOR: Record<string, string> = {
   danger: "var(--danger)",
 };
 
+const COLUMNS: KanbanColumn<MacroFin>[] = FIN_COLUMNS.map((col) => ({
+  id: col,
+  label: MACRO_FIN_LABELS[col],
+  toneColor: TONE_COLOR[COLUMN_TONE[col]],
+}));
+
 function CasosFinanceiro() {
   const [search, setSearch] = useState("");
   const { data, isLoading, isError, error } = useCasesList(search ? { search } : undefined);
+  const move = useMoveCaseStatusFin();
 
   // Só casos já bifurcados aparecem (macrostatus_fin != NAO_APLICAVEL)
   const bifurcated = useMemo(
@@ -50,18 +58,19 @@ function CasosFinanceiro() {
     [data],
   );
 
-  const grouped = useMemo(() => {
-    const map = new Map<MacroFin, typeof bifurcated>();
-    for (const s of COLUMNS) map.set(s, []);
-    bifurcated.forEach((c) => {
-      const col = c.macrostatus_fin as MacroFin;
-      if (map.has(col)) map.get(col)!.push(c);
-    });
-    return map;
-  }, [bifurcated]);
-
   const total = bifurcated.length;
   const naoBifurcados = (data ?? []).length - total;
+
+  function handleMove(id: string, to: MacroFin) {
+    move.mutate(
+      { id, to },
+      {
+        onSuccess: () => toast.success(`Financeiro movido pra ${MACRO_FIN_LABELS[to]}`),
+        onError: (err) =>
+          toast.error(err instanceof Error ? err.message : "Falha ao mover o financeiro"),
+      },
+    );
+  }
 
   return (
     <div className="page-container !pb-10">
@@ -114,43 +123,15 @@ function CasosFinanceiro() {
         </Alert>
       )}
 
-      <div className="overflow-x-auto -mx-2 pb-4">
-        <div className="flex gap-3 px-2 min-w-max">
-          {COLUMNS.map((col) => {
-            const items = grouped.get(col) ?? [];
-            const tone = COLUMN_TONE[col];
-            return (
-              <div key={col} className="w-[280px] shrink-0 flex flex-col">
-                <div
-                  className="flex items-center justify-between px-2 py-3 border-b-2 mb-3"
-                  style={{ borderColor: TONE_COLOR[tone] }}
-                >
-                  <Eyebrow>{MACRO_FIN_LABELS[col]}</Eyebrow>
-                  <span
-                    className="font-display text-[20px] font-semibold"
-                    style={{ color: TONE_COLOR[tone] }}
-                  >
-                    {String(items.length).padStart(2, "0")}
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  {isLoading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <Skeleton key={i} className="h-24 rounded-lg" />
-                    ))
-                  ) : items.length === 0 ? (
-                    <div className="text-[12px] text-muted-foreground text-center py-8 italic">
-                      vazio
-                    </div>
-                  ) : (
-                    items.map((c) => <CaseCardFin key={c.id} caso={c} />)
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <KanbanBoard
+        columns={COLUMNS}
+        items={bifurcated}
+        isLoading={isLoading}
+        getId={(c) => c.id}
+        getColumn={(c) => c.macrostatus_fin as MacroFin}
+        renderCard={(c) => <CaseCardFin caso={c} />}
+        onMove={handleMove}
+      />
     </div>
   );
 }

@@ -70,12 +70,40 @@ export function useUpdateCase() {
   });
 }
 
+// Patcha otimisticamente o macrostatus de um caso em todas as listas em cache,
+// pra o card "pular" de coluna na hora do drop. Retorna snapshot pra rollback.
+function patchCaseInLists(
+  qc: ReturnType<typeof useQueryClient>,
+  id: string,
+  patch: Record<string, unknown>,
+) {
+  const snapshot = qc.getQueriesData({ queryKey: queryKeys.cases.lists() });
+  qc.setQueriesData<unknown>({ queryKey: queryKeys.cases.lists() }, (old: unknown) => {
+    if (!Array.isArray(old)) return old;
+    return old.map((c) =>
+      c && typeof c === "object" && (c as { id?: string }).id === id ? { ...c, ...patch } : c,
+    );
+  });
+  return snapshot;
+}
+
 export function useMoveCaseStatus() {
   const fn = useServerFn(moveCaseStatusFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; to: MacroOp }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: queryKeys.cases.lists() });
+      const snapshot = patchCaseInLists(qc, vars.id, {
+        macrostatus_op: vars.to,
+        status_changed_at: new Date().toISOString(),
+      });
+      return { snapshot };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });
 }
 
@@ -84,7 +112,18 @@ export function useMoveCaseStatusFin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; to: MacroFin }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: queryKeys.cases.lists() });
+      const snapshot = patchCaseInLists(qc, vars.id, {
+        macrostatus_fin: vars.to,
+        status_fin_changed_at: new Date().toISOString(),
+      });
+      return { snapshot };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });
 }
 
