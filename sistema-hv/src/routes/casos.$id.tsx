@@ -19,10 +19,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import { useClient } from "@/hooks/useClients";
 import { useCase, useCaseEvents, useDeleteCase, useUpdateCase } from "@/hooks/useCases";
+import { useBifurcarFinanceiro, useSetAcertoParcial } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
   MACRO_FIN_LABELS,
@@ -59,6 +62,8 @@ function CasoDetalhe() {
   const { data: events } = useCaseEvents(id);
   const update = useUpdateCase();
   const remove = useDeleteCase();
+  const bifurcar = useBifurcarFinanceiro();
+  const acerto = useSetAcertoParcial();
 
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveFinOpen, setMoveFinOpen] = useState(false);
@@ -235,10 +240,69 @@ function CasoDetalhe() {
               </span>
             )}
           </div>
-          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] text-[13px] text-muted-foreground italic">
-            {finBifurcated
-              ? "Pipeline financeira ativa. Parcelas e cobrança virão na Sprint F4-S09 (Conta Azul / Asaas)."
-              : "Será ativado automaticamente quando o caso for movido pra Implantado ou Implantação Parcial."}
+          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] space-y-4">
+            {!finBifurcated && (
+              <Button
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await bifurcar.mutateAsync(caso.id);
+                    toast.success("Caso enviado para o financeiro");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Falha");
+                  }
+                }}
+                disabled={bifurcar.isPending}
+              >
+                Enviar para o financeiro
+              </Button>
+            )}
+
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                Acerto
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-[13px]">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={caso.acerto_parcial}
+                    onCheckedChange={(v) =>
+                      acerto.mutate({
+                        caseId: caso.id,
+                        acerto_parcial: !!v,
+                        tem_pendencia_judicial: caso.tem_pendencia_judicial,
+                        obs: caso.acerto_parcial_obs,
+                      })
+                    }
+                  />
+                  Acerto parcial
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={caso.tem_pendencia_judicial}
+                    onCheckedChange={(v) =>
+                      acerto.mutate({
+                        caseId: caso.id,
+                        acerto_parcial: caso.acerto_parcial,
+                        tem_pendencia_judicial: !!v,
+                        obs: caso.acerto_parcial_obs,
+                      })
+                    }
+                  />
+                  Pendência judicial
+                </label>
+              </div>
+              {(caso.acerto_parcial || caso.tem_pendencia_judicial) && (
+                <div className="mt-2 flex gap-2">
+                  {caso.acerto_parcial && (
+                    <Badge className="bg-[var(--gold-700)] text-white">Acerto parcial</Badge>
+                  )}
+                  {caso.tem_pendencia_judicial && (
+                    <Badge className="bg-amber-100 text-amber-800">Judicial</Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

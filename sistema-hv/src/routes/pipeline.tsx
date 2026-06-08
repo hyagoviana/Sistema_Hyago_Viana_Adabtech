@@ -10,6 +10,7 @@ import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   useCasesByServiceType,
+  useMoveCaseStageFin,
   useMoveCaseStageOp,
   useServiceTypes,
   useStages,
@@ -97,21 +98,28 @@ function DynamicKanban({
   serviceType: { id: string; name: string };
   onBack: () => void;
 }) {
-  const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, "op");
-  const { data: cases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
-  const move = useMoveCaseStageOp(serviceType.id);
+  const [kind, setKind] = useState<"op" | "fin">("op");
+  const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
+  const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
+  const moveOp = useMoveCaseStageOp(serviceType.id);
+  const moveFin = useMoveCaseStageFin(serviceType.id);
   const [editorOpen, setEditorOpen] = useState(false);
 
-  const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
-    id: s.slug,
-    label: s.label,
-    toneColor: roleColor(s.stage_role),
-  }));
+  // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
+  const cases =
+    kind === "fin"
+      ? (allCases ?? []).filter((c) => c.macrostatus_fin && c.macrostatus_fin !== "NAO_APLICAVEL")
+      : (allCases ?? []);
+
+  const columns: KanbanColumn<string>[] = (stages ?? [])
+    .filter((s) => !(kind === "fin" && s.slug === "NAO_APLICAVEL"))
+    .map((s) => ({ id: s.slug, label: s.label, toneColor: roleColor(s.stage_role) }));
 
   function handleMove(id: string, toSlug: string) {
     const stage = (stages ?? []).find((s) => s.slug === toSlug);
     if (!stage) return;
-    move.mutate(
+    const mover = kind === "op" ? moveOp : moveFin;
+    mover.mutate(
       { caseId: id, stageId: stage.id },
       {
         onSuccess: () => toast.success(`Movido pra ${stage.label}`),
@@ -120,7 +128,7 @@ function DynamicKanban({
     );
   }
 
-  const total = cases?.length ?? 0;
+  const total = cases.length;
 
   return (
     <div className="page-container !pb-10">
@@ -141,6 +149,22 @@ function DynamicKanban({
         }
         aside={
           <div className="flex items-center gap-2">
+            <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
+              {(["op", "fin"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  className={
+                    kind === k
+                      ? "px-3 py-1.5 bg-[var(--navy)] text-white"
+                      : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
+                  }
+                >
+                  {k === "op" ? "Operacional" : "Financeiro"}
+                </button>
+              ))}
+            </div>
             <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
               <Settings2 size={14} />
               Editar etapas
@@ -156,7 +180,7 @@ function DynamicKanban({
       <StageEditor
         serviceTypeId={serviceType.id}
         serviceTypeName={serviceType.name}
-        kind="op"
+        kind={kind}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />
@@ -181,7 +205,7 @@ function DynamicKanban({
           items={cases ?? []}
           isLoading={isLoading || stagesLoading}
           getId={(c) => c.id}
-          getColumn={(c) => c.macrostatus_op}
+          getColumn={(c) => (kind === "op" ? c.macrostatus_op : c.macrostatus_fin)}
           renderCard={(c) => <CaseCardReal caso={c} />}
           onMove={handleMove}
         />
