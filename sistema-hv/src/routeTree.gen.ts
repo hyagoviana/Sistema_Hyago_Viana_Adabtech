@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TarefasRouteImport } from './routes/tarefas'
+import { Route as ModelosRouteImport } from './routes/modelos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HojeRouteImport } from './routes/hoje'
 import { Route as EntrarRouteImport } from './routes/entrar'
@@ -72,6 +73,11 @@ import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelosRoute = ModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
+  '/modelos': typeof ModelosRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
+  '/modelos': typeof ModelosRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -499,6 +507,7 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
+  '/modelos': typeof ModelosRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/hoje'
     | '/login'
+    | '/modelos'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/hoje'
     | '/login'
+    | '/modelos'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/lista'
@@ -683,6 +694,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/hoje'
     | '/login'
+    | '/modelos'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -745,6 +757,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   HojeRoute: typeof HojeRoute
   LoginRoute: typeof LoginRoute
+  ModelosRoute: typeof ModelosRoute
   TarefasRoute: typeof TarefasRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
@@ -802,6 +815,13 @@ declare module '@tanstack/react-router' {
       path: '/tarefas'
       fullPath: '/tarefas'
       preLoaderRoute: typeof TarefasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/modelos': {
+      id: '/modelos'
+      path: '/modelos'
+      fullPath: '/modelos'
+      preLoaderRoute: typeof ModelosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1272,6 +1292,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   HojeRoute: HojeRoute,
   LoginRoute: LoginRoute,
+  ModelosRoute: ModelosRoute,
   TarefasRoute: TarefasRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
