@@ -159,3 +159,56 @@ export async function moveCaseToStageOp(caseId: string, stageId: string) {
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
   return data;
 }
+
+// Move o caso para uma etapa financeira (dual-write via slug).
+export async function moveCaseToStageFin(caseId: string, stageId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: stage, error: sErr } = await sb
+    .from("system_pipeline_stages")
+    .select("slug, kind")
+    .eq("id", stageId)
+    .single();
+  if (sErr || !stage || stage.kind !== "fin") throw new PipelineServiceError("Etapa financeira inválida", 422);
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ macrostatus_fin: stage.slug })
+    .eq("id", caseId)
+    .select("id, stage_fin_id, macrostatus_fin")
+    .single();
+  if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
+  return data;
+}
+
+// Bifurcação por botão (ADR-009) — idempotente via função do banco.
+export async function bifurcarCaseToFinanceiro(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.rpc("system_fn_bifurcar_financeiro", { p_case_id: caseId });
+  if (error) throw new PipelineServiceError(error.message, 500);
+  await sb.from("system_audit_log").insert({
+    action: "case.bifurcar_financeiro",
+    entity_type: "case",
+    entity_id: caseId,
+  });
+  return { ok: true as const };
+}
+
+// Marcação "acerto parcial / judicial" (ADR-010) — acompanha o caso.
+export async function setAcertoParcial(
+  caseId: string,
+  input: { acerto_parcial: boolean; tem_pendencia_judicial: boolean; obs?: string | null },
+) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({
+      acerto_parcial: input.acerto_parcial,
+      tem_pendencia_judicial: input.tem_pendencia_judicial,
+      acerto_parcial_obs: input.obs ?? null,
+    })
+    .eq("id", caseId)
+    .select("id, acerto_parcial, tem_pendencia_judicial, acerto_parcial_obs")
+    .single();
+  if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao marcar acerto", 500);
+  return data;
+}

@@ -314,6 +314,9 @@ export type Database = {
           service_type_id: string | null;
           stage_op_id: string | null;
           stage_fin_id: string | null;
+          acerto_parcial: boolean;
+          tem_pendencia_judicial: boolean;
+          acerto_parcial_obs: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -341,6 +344,9 @@ export type Database = {
           service_type_id?: string | null;
           stage_op_id?: string | null;
           stage_fin_id?: string | null;
+          acerto_parcial?: boolean;
+          tem_pendencia_judicial?: boolean;
+          acerto_parcial_obs?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -636,6 +642,10 @@ export type Database = {
       };
     };
     Functions: {
+      system_fn_bifurcar_financeiro: {
+        Args: { p_case_id: string };
+        Returns: undefined;
+      };
       system_current_organization_id: {
         Args: Record<string, never>;
         Returns: string;

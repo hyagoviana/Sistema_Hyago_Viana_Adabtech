@@ -3,13 +3,16 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  bifurcarCaseToFinanceiro,
   createServiceType,
   createStage,
   listCasesByServiceType,
   listServiceTypes,
   listStages,
+  moveCaseToStageFin,
   moveCaseToStageOp,
   reorderStages,
+  setAcertoParcial,
   softDeleteStage,
   updateStage,
 } from "@/lib/pipeline-service";
@@ -43,6 +46,37 @@ export const moveCaseToStageOpFn = createServerFn({ method: "POST" })
     z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data }) => handle(() => moveCaseToStageOp(data.caseId, data.stageId)));
+
+export const moveCaseToStageFinFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => handle(() => moveCaseToStageFin(data.caseId, data.stageId)));
+
+export const bifurcarCaseFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => bifurcarCaseToFinanceiro(data.caseId)));
+
+export const setAcertoParcialFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        acerto_parcial: z.boolean(),
+        tem_pendencia_judicial: z.boolean(),
+        obs: z.string().nullish(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(() =>
+      setAcertoParcial(data.caseId, {
+        acerto_parcial: data.acerto_parcial,
+        tem_pendencia_judicial: data.tem_pendencia_judicial,
+        obs: data.obs,
+      }),
+    ),
+  );
 
 export const createServiceTypeFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>

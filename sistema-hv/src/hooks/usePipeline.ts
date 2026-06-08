@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  bifurcarCaseFn,
   createStageFn,
   listCasesByServiceTypeFn,
   listServiceTypesFn,
   listStagesFn,
+  moveCaseToStageFinFn,
   moveCaseToStageOpFn,
   reorderStagesFn,
+  setAcertoParcialFn,
   softDeleteStageFn,
   updateStageFn,
 } from "@/rpc/pipeline";
@@ -42,6 +45,47 @@ export function useMoveCaseStageOp(serviceTypeId: string) {
     mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cases-by-service", serviceTypeId] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+    },
+  });
+}
+
+export function useMoveCaseStageFin(serviceTypeId: string) {
+  const fn = useServerFn(moveCaseToStageFinFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cases-by-service", serviceTypeId] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+    },
+  });
+}
+
+export function useBifurcarFinanceiro() {
+  const fn = useServerFn(bifurcarCaseFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (caseId: string) => fn({ data: { caseId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+    },
+  });
+}
+
+export function useSetAcertoParcial() {
+  const fn = useServerFn(setAcertoParcialFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      caseId: string;
+      acerto_parcial: boolean;
+      tem_pendencia_judicial: boolean;
+      obs?: string | null;
+    }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["cases"] });
     },
   });
