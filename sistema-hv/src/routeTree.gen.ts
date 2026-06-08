@@ -63,6 +63,7 @@ import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conve
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
+import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
 import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
@@ -340,6 +341,11 @@ const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
   path: '/termo',
   getParentRoute: () => CasosIdRoute,
 } as any)
+const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
+  id: '/api/webhooks/zapsign',
+  path: '/api/webhooks/zapsign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
   id: '/elaborar',
   path: '/elaborar',
@@ -414,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/peticionamento': typeof PeticionamentoIndexRoute
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
+  '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
@@ -596,6 +605,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
@@ -655,6 +665,7 @@ export interface FileRouteTypes {
     | '/peticionamento'
     | '/portal'
     | '/whatsapp'
+    | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
@@ -776,6 +788,7 @@ export interface RootRouteChildren {
   PeticionamentoIndexRoute: typeof PeticionamentoIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
+  ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
   ApiClientsIdDocumentsDocIdRoute: typeof ApiClientsIdDocumentsDocIdRouteWithChildren
@@ -1162,6 +1175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdTermoRouteImport
       parentRoute: typeof CasosIdRoute
     }
+    '/api/webhooks/zapsign': {
+      id: '/api/webhooks/zapsign'
+      path: '/api/webhooks/zapsign'
+      fullPath: '/api/webhooks/zapsign'
+      preLoaderRoute: typeof ApiWebhooksZapsignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/$id/termo/elaborar': {
       id: '/casos/$id/termo/elaborar'
       path: '/elaborar'
@@ -1295,6 +1315,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeticionamentoIndexRoute: PeticionamentoIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
+  ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
   ApiClientsIdDocumentsDocIdRoute: ApiClientsIdDocumentsDocIdRouteWithChildren,
