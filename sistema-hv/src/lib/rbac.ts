@@ -98,6 +98,7 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
   advogado_associado: [
     "/hoje",
     "/casos",
+    "/pipeline",
     "/casos/financeiro",
     "/clientes",
     "/tarefas",
@@ -110,7 +111,7 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
   controladoria: ["/hoje", "/casos", "/controladoria", "/tarefas", "/dashboards", "/configuracoes"],
   comercial: ["/hoje", "/clientes", "/comercial", "/whatsapp", "/dashboards", "/configuracoes"],
   financeiro: ["/hoje", "/casos/financeiro", "/clientes", "/dashboards", "/configuracoes"],
-  operacional: ["/hoje", "/casos", "/clientes", "/tarefas", "/configuracoes"],
+  operacional: ["/hoje", "/casos", "/pipeline", "/clientes", "/tarefas", "/configuracoes"],
   marketing: ["/hoje", "/marketing", "/dashboards", "/configuracoes"],
 };
 
