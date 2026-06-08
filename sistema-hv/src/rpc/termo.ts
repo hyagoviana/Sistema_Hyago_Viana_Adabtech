@@ -3,12 +3,15 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  aceitarTermo,
+  apresentarTermo,
   aprovarTermoManual,
   calcularTermo,
   conferirTermo,
   createTermo,
   enviarParaConferencia,
   getTermo,
+  listParcelas,
   listTermos,
 } from "@/lib/termo-service";
 
@@ -68,3 +71,15 @@ export const aprovarTermoManualFn = createServerFn({ method: "POST" })
     z.object({ termoId: z.string().uuid(), aprovadoPorId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data }) => handle(() => aprovarTermoManual(data.termoId, data.aprovadoPorId)));
+
+export const apresentarTermoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => apresentarTermo(data.termoId)));
+
+export const aceitarTermoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => aceitarTermo(data.termoId)));
+
+export const listParcelasFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listParcelas(data.caseId)));

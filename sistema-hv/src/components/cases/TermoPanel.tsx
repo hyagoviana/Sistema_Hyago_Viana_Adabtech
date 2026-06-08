@@ -16,11 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import {
+  useAceitarTermo,
+  useApresentarTermo,
   useAprovarTermo,
   useCalcTermo,
   useConferirTermo,
   useCreateTermo,
   useEnviarConferencia,
+  useParcelas,
   useTermos,
 } from "@/hooks/useTermo";
 
@@ -49,6 +52,9 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const enviar = useEnviarConferencia(caseId);
   const conferir = useConferirTermo(caseId);
   const aprovar = useAprovarTermo(caseId);
+  const apresentar = useApresentarTermo(caseId);
+  const aceitar = useAceitarTermo(caseId);
+  const { data: parcelas } = useParcelas(caseId);
   const [open, setOpen] = useState(false);
 
   return (
@@ -136,6 +142,35 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       Aprovar (jurídico)
                     </Button>
                   )}
+                  {t.status === "APROVADO_JURIDICO" && (
+                    <Button
+                      size="sm"
+                      disabled={apresentar.isPending}
+                      onClick={() =>
+                        apresentar.mutate(t.id, {
+                          onSuccess: () => toast.success("Apresentado ao cliente"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                    >
+                      Apresentar
+                    </Button>
+                  )}
+                  {t.status === "APRESENTADO" && (
+                    <Button
+                      size="sm"
+                      disabled={aceitar.isPending}
+                      onClick={() =>
+                        aceitar.mutate(t.id, {
+                          onSuccess: (r) =>
+                            toast.success(`Aceito — ${r?.parcelas ?? 0} parcela(s) gerada(s)`),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                    >
+                      Registrar aceite
+                    </Button>
+                  )}
                   {t.drive_url && (
                     <a href={t.drive_url} target="_blank" rel="noreferrer">
                       <Button size="sm" variant="outline">
@@ -148,6 +183,39 @@ export function TermoPanel({ caseId }: { caseId: string }) {
             );
           })}
         </ul>
+      )}
+
+      {(parcelas ?? []).length > 0 && (
+        <div className="mt-4">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+            Parcelas
+          </div>
+          <ul className="space-y-1 text-[13px]">
+            {(parcelas ?? []).map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between border-b border-[var(--border)] pb-1"
+              >
+                <span>
+                  {String(p.numero).padStart(2, "0")} · vence{" "}
+                  {new Date(p.vencimento + "T00:00:00").toLocaleDateString("pt-BR")}
+                </span>
+                <span className="flex items-center gap-2">
+                  {brl(p.valor_centavos)}
+                  <Badge
+                    className={
+                      p.status === "PAGA"
+                        ? "bg-green-600 text-white"
+                        : "bg-muted text-muted-foreground"
+                    }
+                  >
+                    {p.status}
+                  </Badge>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <ElaborarDialog caseId={caseId} open={open} onOpenChange={setOpen} elaboradoPorId={profile?.id ?? null} />

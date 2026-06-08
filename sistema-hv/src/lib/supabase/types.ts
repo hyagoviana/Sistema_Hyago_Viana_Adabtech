@@ -291,6 +291,46 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_pipeline_stages"]["Insert"]>;
         Relationships: [];
       };
+      system_parcelas: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          termo_id: string;
+          numero: number;
+          valor_centavos: number;
+          vencimento: string;
+          status: string;
+          data_pagamento: string | null;
+          valor_pago_centavos: number | null;
+          metodo_pagamento: string | null;
+          provider: string | null;
+          provider_ext_id: string | null;
+          boleto_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          termo_id: string;
+          numero: number;
+          valor_centavos: number;
+          vencimento: string;
+          status?: string;
+          data_pagamento?: string | null;
+          valor_pago_centavos?: number | null;
+          metodo_pagamento?: string | null;
+          provider?: string | null;
+          provider_ext_id?: string | null;
+          boleto_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_parcelas"]["Insert"]>;
+        Relationships: [];
+      };
       system_termo_snapshots: {
         Row: {
           id: string;
@@ -704,6 +744,14 @@ export type Database = {
       };
       system_pipeline_stages_active: {
         Row: Database["public"]["Tables"]["system_pipeline_stages"]["Row"];
+        Relationships: [];
+      };
+      system_termo_snapshots_active: {
+        Row: Database["public"]["Tables"]["system_termo_snapshots"]["Row"];
+        Relationships: [];
+      };
+      system_parcelas_active: {
+        Row: Database["public"]["Tables"]["system_parcelas"]["Row"];
         Relationships: [];
       };
     };
