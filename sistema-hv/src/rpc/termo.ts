@@ -2,7 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { calcularTermo, createTermo, getTermo, listTermos } from "@/lib/termo-service";
+import {
+  aprovarTermoManual,
+  calcularTermo,
+  conferirTermo,
+  createTermo,
+  enviarParaConferencia,
+  getTermo,
+  listTermos,
+} from "@/lib/termo-service";
 
 function handle<T>(fn: () => Promise<T>): Promise<T> {
   return fn().catch((err: unknown) => {
@@ -44,3 +52,19 @@ const createSchema = calcSchema.extend({
 export const createTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
   .handler(async ({ data }) => handle(() => createTermo(data)));
+
+export const enviarParaConferenciaFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => enviarParaConferencia(data.termoId)));
+
+export const conferirTermoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ termoId: z.string().uuid(), conferidoPorId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => handle(() => conferirTermo(data.termoId, data.conferidoPorId)));
+
+export const aprovarTermoManualFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ termoId: z.string().uuid(), aprovadoPorId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => handle(() => aprovarTermoManual(data.termoId, data.aprovadoPorId)));

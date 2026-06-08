@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { calcularTermoFn, createTermoFn, listTermosFn } from "@/rpc/termo";
+import {
+  aprovarTermoManualFn,
+  calcularTermoFn,
+  conferirTermoFn,
+  createTermoFn,
+  enviarParaConferenciaFn,
+  listTermosFn,
+} from "@/rpc/termo";
 
 export type TermoCalcInput = {
   saldoAntesCentavos: number;
@@ -36,6 +43,33 @@ export function useCreateTermo(caseId: string) {
       tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
       elaboradoPorId?: string | null;
     }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useEnviarConferencia(caseId: string) {
+  const fn = useServerFn(enviarParaConferenciaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useConferirTermo(caseId: string) {
+  const fn = useServerFn(conferirTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { termoId: string; conferidoPorId: string }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useAprovarTermo(caseId: string) {
+  const fn = useServerFn(aprovarTermoManualFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { termoId: string; aprovadoPorId: string }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }
