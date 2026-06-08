@@ -1,0 +1,335 @@
+// Server-only — orquestra documentos do CASO: gerar (Google Docs) → editar
+// (embutido) → finalizar (PDF na pasta do caso) → enviar ao ZapSign.
+// Identidades: Google Docs/edição = conta-sistema OAuth (docs.ts);
+// storage da pasta do caso = Service Account (drive.ts). NUNCA no browser.
+
+import { createHash } from "node:crypto";
+
+import { createFolder, deleteFile as trashDriveFile, uploadFile, DriveError } from "./google/drive";
+import {
+  copyTemplate,
+  docUrl,
+  exportPdf,
+  lockDocument,
+  replacePlaceholders,
+  setLinkEditable,
+  DocsError,
+} from "./google/docs";
+import { getSupabaseAdmin } from "./supabase/server";
+import { createDocument, type ZapSignSignerInput } from "./zapsign/client";
+
+export class CaseDocumentServiceError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "CaseDocumentServiceError";
+  }
+}
+
+function sha256Hex(buf: Buffer) {
+  return createHash("sha256").update(buf).digest("hex");
+}
+
+// ----------------------------------------------------------------------------
+// LIST / GET
+// ----------------------------------------------------------------------------
+export async function listCaseDocuments(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_documents_active")
+    .select("*")
+    .eq("case_id", caseId)
+    .order("document_number", { ascending: true });
+  if (error) throw new CaseDocumentServiceError(error.message, 500);
+  return data ?? [];
+}
+
+export async function getCaseDocument(id: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_documents")
+    .select("*")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (error || !data) throw new CaseDocumentServiceError("Documento não encontrado", 404);
+  return data;
+}
+
+// ----------------------------------------------------------------------------
+// S12-2 — Pasta do caso no Drive (idempotente). Criada sob a pasta do cliente.
+// ----------------------------------------------------------------------------
+export async function ensureCaseFolder(caseId: string): Promise<{
+  folderId: string;
+  folderUrl: string | null;
+}> {
+  const sb = getSupabaseAdmin();
+  const { data: caso, error } = await sb
+    .from("system_cases")
+    .select("id, organization_id, client_id, case_code, drive_folder_id, drive_folder_url")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (error || !caso) throw new CaseDocumentServiceError("Caso não encontrado", 404);
+
+  if (caso.drive_folder_id) {
+    return { folderId: caso.drive_folder_id, folderUrl: caso.drive_folder_url };
+  }
+
+  const { data: client, error: cErr } = await sb
+    .from("system_clients")
+    .select("id, drive_folder_id")
+    .eq("id", caso.client_id)
+    .single();
+  if (cErr || !client?.drive_folder_id) {
+    throw new CaseDocumentServiceError(
+      "Cliente sem pasta no Drive — crie a pasta do cliente antes de gerar documentos do caso",
+      409,
+    );
+  }
+
+  try {
+    const folder = await createFolder(`Caso-${caso.case_code}`, client.drive_folder_id);
+    await sb
+      .from("system_cases")
+      .update({
+        drive_folder_id: folder.id,
+        drive_folder_url: folder.url,
+        drive_sync_failed: false,
+        drive_sync_error: null,
+      })
+      .eq("id", caso.id);
+    return { folderId: folder.id, folderUrl: folder.url };
+  } catch (err) {
+    const msg = err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
+    await sb
+      .from("system_cases")
+      .update({ drive_sync_failed: true, drive_sync_error: msg.slice(0, 2000) })
+      .eq("id", caso.id);
+    throw new CaseDocumentServiceError(`Falha ao criar pasta do caso no Drive: ${msg}`, 502);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// GENERATE — copia o modelo (Google Doc) → substitui placeholders → link-editável
+// ----------------------------------------------------------------------------
+export async function generateCaseDocumentFromTemplate(opts: {
+  caseId: string;
+  templateId: string;
+  title?: string;
+  values: Record<string, string>;
+}) {
+  const sb = getSupabaseAdmin();
+
+  const { data: caso, error: caseErr } = await sb
+    .from("system_cases")
+    .select("id, organization_id")
+    .eq("id", opts.caseId)
+    .is("deleted_at", null)
+    .single();
+  if (caseErr || !caso) throw new CaseDocumentServiceError("Caso não encontrado", 404);
+
+  const { data: tpl, error: tplErr } = await sb
+    .from("system_document_templates")
+    .select("id, name, google_doc_id, goes_to_zapsign, fields")
+    .eq("id", opts.templateId)
+    .is("deleted_at", null)
+    .single();
+  if (tplErr || !tpl) throw new CaseDocumentServiceError("Modelo não encontrado", 404);
+
+  // Valida campos obrigatórios não preenchidos (G-08).
+  const fields = (tpl.fields as Array<{ key: string; required?: boolean; source?: string }>) ?? [];
+  const faltando = fields
+    .filter((f) => f.required && f.source !== "blank" && !String(opts.values?.[f.key] ?? "").trim())
+    .map((f) => f.key);
+  if (faltando.length > 0) {
+    throw new CaseDocumentServiceError(
+      `Campos obrigatórios não preenchidos: ${faltando.join(", ")}`,
+      422,
+    );
+  }
+
+  const title = opts.title?.trim() || tpl.name;
+
+  let docId: string;
+  try {
+    const copy = await copyTemplate(tpl.google_doc_id, title);
+    docId = copy.id;
+    await replacePlaceholders(docId, opts.values ?? {});
+    await setLinkEditable(docId);
+  } catch (err) {
+    const msg = err instanceof DocsError ? err.message : String(err);
+    throw new CaseDocumentServiceError(`Falha ao gerar via Google Docs: ${msg}`, 502);
+  }
+
+  const { data: doc, error: insErr } = await sb
+    .from("system_case_documents")
+    .insert({
+      case_id: caso.id,
+      organization_id: caso.organization_id,
+      title,
+      status: "EM_EDICAO",
+      source: "GERADO",
+      template_id: tpl.id,
+      google_doc_id: docId,
+      goes_to_zapsign: tpl.goes_to_zapsign,
+    })
+    .select()
+    .single();
+  if (insErr || !doc) {
+    throw new CaseDocumentServiceError(`Falha ao gravar documento (${insErr?.message ?? "?"})`, 500);
+  }
+
+  await sb.from("system_audit_log").insert({
+    organization_id: caso.organization_id,
+    action: "case_document.generate",
+    entity_type: "case_document",
+    entity_id: doc.id,
+    diff: { template_id: tpl.id, google_doc_id: docId },
+  });
+
+  return { doc, editUrl: docUrl(docId) };
+}
+
+// ----------------------------------------------------------------------------
+// FINALIZE — exporta PDF → trava o doc → sobe na pasta do caso
+// ----------------------------------------------------------------------------
+export async function finalizeCaseDocument(docId: string) {
+  const sb = getSupabaseAdmin();
+  const doc = await getCaseDocument(docId);
+  if (!doc.google_doc_id) {
+    throw new CaseDocumentServiceError("Documento sem Google Doc para finalizar", 409);
+  }
+
+  const { folderId } = await ensureCaseFolder(doc.case_id);
+
+  let pdf: Buffer;
+  try {
+    pdf = await exportPdf(doc.google_doc_id);
+    await lockDocument(doc.google_doc_id);
+  } catch (err) {
+    const msg = err instanceof DocsError ? err.message : String(err);
+    throw new CaseDocumentServiceError(`Falha ao exportar/travar PDF: ${msg}`, 502);
+  }
+
+  const fileName = `${String(doc.document_number ?? 0).padStart(2, "0")}-${doc.title}.pdf`;
+  let drive;
+  try {
+    drive = await uploadFile({ parentId: folderId, name: fileName, mimeType: "application/pdf", body: pdf });
+  } catch (err) {
+    const msg = err instanceof DriveError ? err.message : String(err);
+    throw new CaseDocumentServiceError(`Falha ao subir PDF na pasta do caso: ${msg}`, 502);
+  }
+
+  const { data: updated, error: upErr } = await sb
+    .from("system_case_documents")
+    .update({
+      status: "FINALIZADO",
+      drive_file_id: drive.id,
+      drive_url: drive.url,
+      mime_type: "application/pdf",
+      size_bytes: pdf.byteLength,
+      sha256: sha256Hex(pdf),
+    })
+    .eq("id", doc.id)
+    .select()
+    .single();
+  if (upErr || !updated) throw new CaseDocumentServiceError("Falha ao atualizar documento", 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: doc.organization_id,
+    action: "case_document.finalize",
+    entity_type: "case_document",
+    entity_id: doc.id,
+    diff: { drive_file_id: drive.id, sha256: updated.sha256 },
+  });
+
+  return updated;
+}
+
+// ----------------------------------------------------------------------------
+// SEND TO ZAPSIGN — envia o PDF finalizado para assinatura
+// ----------------------------------------------------------------------------
+export async function sendCaseDocumentToZapsign(opts: {
+  docId: string;
+  signers: ZapSignSignerInput[];
+}) {
+  const sb = getSupabaseAdmin();
+  const doc = await getCaseDocument(opts.docId);
+  if (doc.status !== "FINALIZADO" || !doc.google_doc_id) {
+    throw new CaseDocumentServiceError("Finalize o documento antes de enviar ao ZapSign", 409);
+  }
+  if (!opts.signers?.length) {
+    throw new CaseDocumentServiceError("Informe ao menos um signatário", 422);
+  }
+
+  let base64Pdf: string;
+  try {
+    base64Pdf = (await exportPdf(doc.google_doc_id)).toString("base64");
+  } catch (err) {
+    const msg = err instanceof DocsError ? err.message : String(err);
+    throw new CaseDocumentServiceError(`Falha ao preparar PDF: ${msg}`, 502);
+  }
+
+  const zdoc = await createDocument({
+    name: doc.title,
+    base64Pdf,
+    externalId: doc.id,
+    signers: opts.signers,
+  });
+
+  const { data: updated, error } = await sb
+    .from("system_case_documents")
+    .update({
+      status: "ENVIADO_ZAPSIGN",
+      goes_to_zapsign: true,
+      zapsign_doc_token: zdoc.token,
+      zapsign_sign_url: zdoc.signers?.[0]?.sign_url ?? null,
+    })
+    .eq("id", doc.id)
+    .select()
+    .single();
+  if (error || !updated) throw new CaseDocumentServiceError("Falha ao atualizar documento", 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: doc.organization_id,
+    action: "case_document.send_zapsign",
+    entity_type: "case_document",
+    entity_id: doc.id,
+    diff: { zapsign_doc_token: zdoc.token },
+  });
+
+  return { doc: updated, signUrl: updated.zapsign_sign_url };
+}
+
+// ----------------------------------------------------------------------------
+// SOFT DELETE
+// ----------------------------------------------------------------------------
+export async function softDeleteCaseDocument(docId: string) {
+  const sb = getSupabaseAdmin();
+  const doc = await getCaseDocument(docId);
+
+  await sb
+    .from("system_case_documents")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", doc.id);
+
+  if (doc.drive_file_id) {
+    try {
+      await trashDriveFile(doc.drive_file_id);
+    } catch (err) {
+      console.error("case-documents-service: trash Drive falhou:", err);
+    }
+  }
+
+  await sb.from("system_audit_log").insert({
+    organization_id: doc.organization_id,
+    action: "case_document.delete",
+    entity_type: "case_document",
+    entity_id: doc.id,
+  });
+
+  return { ok: true as const, id: doc.id };
+}

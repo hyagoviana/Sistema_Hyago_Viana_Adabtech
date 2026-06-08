@@ -125,6 +125,110 @@ export type Database = {
           },
         ];
       };
+      system_case_documents: {
+        Row: {
+          id: string;
+          case_id: string;
+          organization_id: string;
+          document_number: number | null;
+          title: string;
+          description: string | null;
+          status: string;
+          source: string;
+          template_id: string | null;
+          google_doc_id: string | null;
+          drive_file_id: string | null;
+          drive_url: string | null;
+          mime_type: string | null;
+          size_bytes: number | null;
+          sha256: string | null;
+          goes_to_zapsign: boolean;
+          zapsign_doc_token: string | null;
+          zapsign_sign_url: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          organization_id: string;
+          document_number?: number | null;
+          title: string;
+          description?: string | null;
+          status?: string;
+          source?: string;
+          template_id?: string | null;
+          google_doc_id?: string | null;
+          drive_file_id?: string | null;
+          drive_url?: string | null;
+          mime_type?: string | null;
+          size_bytes?: number | null;
+          sha256?: string | null;
+          goes_to_zapsign?: boolean;
+          zapsign_doc_token?: string | null;
+          zapsign_sign_url?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_documents"]["Insert"]>;
+        Relationships: [];
+      };
+      system_document_templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          case_type: string | null;
+          google_doc_id: string;
+          fields: Json;
+          goes_to_zapsign: boolean;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          case_type?: string | null;
+          google_doc_id: string;
+          fields?: Json;
+          goes_to_zapsign?: boolean;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_document_templates"]["Insert"]>;
+        Relationships: [];
+      };
+      system_webhook_dedupe: {
+        Row: {
+          id: string;
+          provider: string;
+          external_id: string;
+          event_type: string | null;
+          payload: Json | null;
+          received_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider: string;
+          external_id: string;
+          event_type?: string | null;
+          payload?: Json | null;
+          received_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_webhook_dedupe"]["Insert"]>;
+        Relationships: [];
+      };
       system_cases: {
         Row: {
           id: string;
@@ -141,6 +245,10 @@ export type Database = {
           inadimplente: boolean;
           status_changed_at: string;
           status_fin_changed_at: string;
+          drive_folder_id: string | null;
+          drive_folder_url: string | null;
+          drive_sync_failed: boolean;
+          drive_sync_error: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -161,6 +269,10 @@ export type Database = {
           inadimplente?: boolean;
           status_changed_at?: string;
           status_fin_changed_at?: string;
+          drive_folder_id?: string | null;
+          drive_folder_url?: string | null;
+          drive_sync_failed?: boolean;
+          drive_sync_error?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -436,6 +548,14 @@ export type Database = {
       };
       system_users_active: {
         Row: Database["public"]["Tables"]["system_users"]["Row"];
+        Relationships: [];
+      };
+      system_case_documents_active: {
+        Row: Database["public"]["Tables"]["system_case_documents"]["Row"];
+        Relationships: [];
+      };
+      system_document_templates_active: {
+        Row: Database["public"]["Tables"]["system_document_templates"]["Row"];
         Relationships: [];
       };
     };
