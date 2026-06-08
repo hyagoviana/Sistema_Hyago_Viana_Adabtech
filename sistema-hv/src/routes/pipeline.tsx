@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, FolderKanban, Layers } from "lucide-react";
+import { ArrowLeft, FolderKanban, Layers, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
+import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -99,6 +100,7 @@ function DynamicKanban({
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, "op");
   const { data: cases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const move = useMoveCaseStageOp(serviceType.id);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
     id: s.slug,
@@ -138,11 +140,25 @@ function DynamicKanban({
             : `${total} caso${total === 1 ? "" : "s"} em ${columns.length} etapas.`
         }
         aside={
-          <Btn variant="ghost" onClick={onBack}>
-            <ArrowLeft size={14} />
-            Trocar tipo
-          </Btn>
+          <div className="flex items-center gap-2">
+            <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
+              <Settings2 size={14} />
+              Editar etapas
+            </Btn>
+            <Btn variant="ghost" onClick={onBack}>
+              <ArrowLeft size={14} />
+              Trocar tipo
+            </Btn>
+          </div>
         }
+      />
+
+      <StageEditor
+        serviceTypeId={serviceType.id}
+        serviceTypeName={serviceType.name}
+        kind="op"
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
       />
 
       {isError && (
