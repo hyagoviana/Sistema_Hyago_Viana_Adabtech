@@ -2,11 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  aceitarTermoFn,
+  apresentarTermoFn,
   aprovarTermoManualFn,
   calcularTermoFn,
   conferirTermoFn,
   createTermoFn,
   enviarParaConferenciaFn,
+  listParcelasFn,
   listTermosFn,
 } from "@/rpc/termo";
 
@@ -71,5 +74,36 @@ export function useAprovarTermo(caseId: string) {
   return useMutation({
     mutationFn: (vars: { termoId: string; aprovadoPorId: string }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useApresentarTermo(caseId: string) {
+  const fn = useServerFn(apresentarTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useAceitarTermo(caseId: string) {
+  const fn = useServerFn(aceitarTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["termos", caseId] });
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["case"] });
+    },
+  });
+}
+
+export function useParcelas(caseId: string) {
+  const fn = useServerFn(listParcelasFn);
+  return useQuery({
+    queryKey: ["parcelas", caseId],
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId,
   });
 }

@@ -306,3 +306,71 @@ export async function conferirTermo(termoId: string, conferidoPorId: string) {
 export async function aprovarTermoManual(termoId: string, aprovadoPorId: string) {
   return finalizarAprovacao(termoId, aprovadoPorId, false, { manual: true });
 }
+
+export async function apresentarTermo(termoId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_termo_snapshots")
+    .update({ status: "APRESENTADO" })
+    .eq("id", termoId)
+    .eq("status", "APROVADO_JURIDICO")
+    .select()
+    .single();
+  if (error || !data) throw new TermoServiceError("Só um termo aprovado pode ser apresentado", 409);
+  return data;
+}
+
+// Aceite do cliente → gera parcelas e ativa a cobrança (caso vai a ATIVO).
+export async function aceitarTermo(termoId: string) {
+  const sb = getSupabaseAdmin();
+  const termo = await getTermo(termoId);
+  if (termo.status !== "APRESENTADO") {
+    throw new TermoServiceError("O termo precisa estar apresentado para ser aceito", 409);
+  }
+
+  const { error: upErr } = await sb
+    .from("system_termo_snapshots")
+    .update({ status: "ACEITO" })
+    .eq("id", termoId);
+  if (upErr) throw new TermoServiceError(upErr.message, 500);
+
+  // Gera parcelas (idempotente via UNIQUE(termo_id, numero)).
+  if (termo.qtd_parcelas > 0) {
+    const base = new Date();
+    const rows = [];
+    for (let i = 1; i <= termo.qtd_parcelas; i++) {
+      const isLast = i === termo.qtd_parcelas;
+      const valor = isLast ? termo.valor_ultima_parcela_centavos : termo.valor_parcela_centavos;
+      const venc = new Date(base.getFullYear(), base.getMonth() + i, base.getDate());
+      rows.push({
+        organization_id: termo.organization_id,
+        case_id: termo.case_id,
+        termo_id: termo.id,
+        numero: i,
+        valor_centavos: valor,
+        vencimento: venc.toISOString().slice(0, 10),
+      });
+    }
+    const { error: pErr } = await sb.from("system_parcelas").upsert(rows, {
+      onConflict: "termo_id,numero",
+      ignoreDuplicates: true,
+    });
+    if (pErr) throw new TermoServiceError(`Falha ao gerar parcelas: ${pErr.message}`, 500);
+  }
+
+  // Move o caso para ATIVO (cobrança ativa).
+  await sb.from("system_cases").update({ macrostatus_fin: "ATIVO" }).eq("id", termo.case_id);
+
+  return { ok: true as const, parcelas: termo.qtd_parcelas };
+}
+
+export async function listParcelas(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_parcelas_active")
+    .select("*")
+    .eq("case_id", caseId)
+    .order("numero", { ascending: true });
+  if (error) throw new TermoServiceError(error.message, 500);
+  return data ?? [];
+}
