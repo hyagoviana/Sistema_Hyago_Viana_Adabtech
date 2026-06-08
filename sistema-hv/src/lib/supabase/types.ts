@@ -229,6 +229,68 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_webhook_dedupe"]["Insert"]>;
         Relationships: [];
       };
+      system_service_types: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          slug: string;
+          active: boolean;
+          ordem: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          slug: string;
+          active?: boolean;
+          ordem?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_service_types"]["Insert"]>;
+        Relationships: [];
+      };
+      system_pipeline_stages: {
+        Row: {
+          id: string;
+          organization_id: string;
+          service_type_id: string;
+          kind: string;
+          slug: string;
+          label: string;
+          stage_role: string;
+          color: string | null;
+          ordem: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          service_type_id: string;
+          kind: string;
+          slug: string;
+          label: string;
+          stage_role?: string;
+          color?: string | null;
+          ordem?: number;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_pipeline_stages"]["Insert"]>;
+        Relationships: [];
+      };
       system_cases: {
         Row: {
           id: string;
@@ -249,6 +311,9 @@ export type Database = {
           drive_folder_url: string | null;
           drive_sync_failed: boolean;
           drive_sync_error: string | null;
+          service_type_id: string | null;
+          stage_op_id: string | null;
+          stage_fin_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -273,6 +338,9 @@ export type Database = {
           drive_folder_url?: string | null;
           drive_sync_failed?: boolean;
           drive_sync_error?: string | null;
+          service_type_id?: string | null;
+          stage_op_id?: string | null;
+          stage_fin_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -556,6 +624,14 @@ export type Database = {
       };
       system_document_templates_active: {
         Row: Database["public"]["Tables"]["system_document_templates"]["Row"];
+        Relationships: [];
+      };
+      system_service_types_active: {
+        Row: Database["public"]["Tables"]["system_service_types"]["Row"];
+        Relationships: [];
+      };
+      system_pipeline_stages_active: {
+        Row: Database["public"]["Tables"]["system_pipeline_stages"]["Row"];
         Relationships: [];
       };
     };
