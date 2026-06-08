@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
+import { TermoPanel } from "@/components/cases/TermoPanel";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import {
@@ -303,6 +304,12 @@ function CasoDetalhe() {
                 </div>
               )}
             </div>
+
+            {finBifurcated && (
+              <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
+                <TermoPanel caseId={caso.id} />
+              </div>
+            )}
           </div>
         </div>
       </div>
