@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Home, Briefcase, DollarSign, Users, CheckSquare, Scale, FileText,
-  TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings, LogOut, Layers,
+  TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings, LogOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOut, useAuth } from "@/lib/auth";
@@ -18,8 +18,7 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Operação",
     items: [
       { to: "/hoje", label: "Hoje", icon: Home },
-      { to: "/casos", label: "Pipeline Operacional", icon: Briefcase },
-      { to: "/pipeline", label: "Pipeline por Serviço", icon: Layers },
+      { to: "/pipeline", label: "Pipeline Operacional", icon: Briefcase },
       { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/tarefas", label: "Tarefas", icon: CheckSquare },

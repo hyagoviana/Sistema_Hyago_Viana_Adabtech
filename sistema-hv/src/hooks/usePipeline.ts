@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   bifurcarCaseFn,
+  createServiceTypeFn,
   createStageFn,
   listCasesByServiceTypeFn,
   listServiceTypesFn,
@@ -18,6 +19,15 @@ import {
 export function useServiceTypes() {
   const fn = useServerFn(listServiceTypesFn);
   return useQuery({ queryKey: ["service-types"], queryFn: () => fn() });
+}
+
+export function useCreateServiceType() {
+  const fn = useServerFn(createServiceTypeFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; slug: string; ordem?: number }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["service-types"] }),
+  });
 }
 
 export function useStages(serviceTypeId: string, kind: "op" | "fin") {

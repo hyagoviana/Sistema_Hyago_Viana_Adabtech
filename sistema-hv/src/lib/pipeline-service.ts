@@ -39,6 +39,23 @@ export async function createServiceType(input: { name: string; slug: string; ord
     .select()
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao criar tipo", 500);
+
+  // Semeia etapas padrão (op + fin) para a categoria nascer usável; o dono edita depois.
+  const defaults = [
+    { kind: "op", slug: "NOVO", label: "Novo", ordem: 0, stage_role: "normal" },
+    { kind: "op", slug: "EM_ANDAMENTO", label: "Em andamento", ordem: 1, stage_role: "normal" },
+    { kind: "op", slug: "GANHO", label: "Ganho", ordem: 2, stage_role: "won" },
+    { kind: "op", slug: "ENCERRADO", label: "Encerrado", ordem: 3, stage_role: "closed" },
+    { kind: "op", slug: "CANCELADO", label: "Cancelado", ordem: 4, stage_role: "lost" },
+    { kind: "fin", slug: "ELABORANDO", label: "Elaborando", ordem: 0, stage_role: "normal" },
+    { kind: "fin", slug: "ATIVO", label: "Ativo", ordem: 1, stage_role: "normal" },
+    { kind: "fin", slug: "QUITADO", label: "Quitado", ordem: 2, stage_role: "closed" },
+    { kind: "fin", slug: "CANCELADO", label: "Cancelado", ordem: 3, stage_role: "lost" },
+  ];
+  await sb.from("system_pipeline_stages").insert(
+    defaults.map((d) => ({ organization_id: DEFAULT_ORG, service_type_id: data.id, ...d })),
+  );
+
   return data;
 }
 
