@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <title>Teste de embed do Google Docs dentro do sistema</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #0f1830; color: #eee; }
+      header { padding: 12px 16px; background: #16224a; }
+      .frame-wrap { height: calc(100vh - 50px); }
+      iframe { width: 100%; height: 100%; border: 0; }
+    </style>
+  </head>
+  <body>
+    <header>📝 Editor embutido (iframe) — Sistema HV (prova de conceito)</header>
+    <div class="frame-wrap">
+      <iframe
+        src="https://docs.google.com/document/d/17bV9CeH6OrKDKHyBoxLxm9i-5NiwYVFG59c7mmpFAOg/edit?rm=minimal&embedded=true"
+        allow="clipboard-read; clipboard-write"
+      ></iframe>
+    </div>
+  </body>
+</html>
