@@ -93,7 +93,7 @@ Entregar a jornada **"gerar documento dentro do caso → editar → enviar ao Za
 | Story | SM (draft) | Dev (impl) | QA (review) |
 |---|---|---|---|
 | DOC-2 | ✅ | ✅ `src/lib/zapsign/client.ts` | ✅ **CONCLUÍDA** — tsc limpo + sandbox 200 OK + criação de doc fim-a-fim (`scripts/zapsign-create-test.ts`) |
-| DOC-1 | ✅ | 📝 migration escrita (`supabase/migrations/20260608000001_case_documents.sql`) — **staged, não aplicada** (opção 1) | ⏳ aplicar + service + UI |
+| DOC-1 | ✅ | ✅ **APLICADA no Supabase** (commit `937b510`) — tabela+view+colunas Drive confirmadas | ⏳ service + UI |
 | DOC-3 | ✅ | ⏳ | ⏳ |
 | DOC-4 | ✅ | 🔬 **motor provado** (`src/lib/google/docs.ts`: copy/replace/exportPdf/exportDocx) — falta wiring c/ template+caso | ✅ teste fim-a-fim OK (`scripts/google-docs-test.ts`) |
 | DOC-5 | ✅ | 🔬 **núcleo provado** (`setLinkEditable`/`lockDocument`/`docUrl` — edição link-editável sem login) — falta aba UI no caso | ✅ doc editável gerado |
