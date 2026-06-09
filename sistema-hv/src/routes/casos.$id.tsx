@@ -171,7 +171,7 @@ function CasoDetalhe() {
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
           <div className="mt-4 flex items-center gap-3">
-            <span className="font-display text-[20px] font-semibold text-[var(--navy)]">
+            <span className="text-[17px] font-semibold text-[var(--navy)]">
               {opLabel}
             </span>
             <span className="text-[12px] text-muted-foreground">há {dias} dia(s) neste estado</span>
@@ -197,7 +197,7 @@ function CasoDetalhe() {
                 <textarea
                   value={passoDraft}
                   onChange={(e) => setPassoDraft(e.target.value)}
-                  className="w-full p-2 border border-[var(--border)] rounded-md text-[14px] font-display"
+                  className="w-full p-2 border border-[var(--border)] rounded-md text-[14px]"
                   rows={2}
                   autoFocus
                 />
@@ -211,7 +211,7 @@ function CasoDetalhe() {
                 </div>
               </div>
             ) : (
-              <div className="font-display text-[18px] text-[var(--navy)]">
+              <div className="text-[15px] text-[var(--navy)]">
                 {caso.proximo_passo ?? <span className="text-muted-foreground italic">—</span>}
               </div>
             )}
@@ -232,7 +232,7 @@ function CasoDetalhe() {
             )}
           </div>
           <div className="mt-4 flex items-center gap-3">
-            <span className="font-display text-[20px] font-semibold text-[var(--navy)]">
+            <span className="text-[17px] font-semibold text-[var(--navy)]">
               {finBifurcated ? finLabel : "Não bifurcado"}
             </span>
             {finBifurcated && (
@@ -375,7 +375,7 @@ function CasoDetalhe() {
           </div>
           <div>
             <Eyebrow>Próxima ação</Eyebrow>
-            <div className="font-display text-[15px] text-[var(--navy)] font-semibold mt-1">
+            <div className="text-[14px] text-[var(--navy)] font-semibold mt-1">
               {caso.proximo_passo ?? "—"}
             </div>
           </div>

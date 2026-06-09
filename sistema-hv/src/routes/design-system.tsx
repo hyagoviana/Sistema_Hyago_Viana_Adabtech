@@ -69,7 +69,7 @@ function DesignSystem() {
             <div key={n} className="card-editorial !p-0 overflow-hidden">
               <div className="h-24" style={{ background: c }} />
               <div className="p-4">
-                <div className="font-display text-[15px] text-[var(--navy)]">{n}</div>
+                <div className="text-[14px] font-semibold text-[var(--navy)]">{n}</div>
                 <div className="font-mono text-[11px] text-muted-foreground mt-0.5">{c}</div>
               </div>
             </div>

@@ -69,7 +69,7 @@ export function ClientCasesSection({ clientId }: Props) {
                       {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
                     </Badge>
                   </div>
-                  <div className="font-display text-[14px] text-[var(--navy)] font-semibold">
+                  <div className="text-[14px] text-[var(--navy)] font-semibold">
                     {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
                   </div>
                   {c.proximo_passo && (

@@ -95,7 +95,7 @@ export function ClientDocumentsSection({ clientId, clientHasDriveFolder }: Props
           <div className="flex items-center gap-3">
             <Upload size={18} className="text-[var(--gold)]" />
             <div>
-              <p className="font-display text-[15px] font-semibold text-[var(--navy)]">
+              <p className="text-[15px] font-semibold text-[var(--navy)]">
                 Arraste arquivos aqui ou clique pra selecionar
               </p>
               <p className="text-[11.5px] text-muted-foreground">

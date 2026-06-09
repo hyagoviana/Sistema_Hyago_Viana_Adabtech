@@ -141,7 +141,7 @@ function CasosLista() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-display font-semibold text-[var(--navy)]"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-[var(--navy)]"
                           style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}
                         >
                           {c.client_name[0]?.toUpperCase() ?? "?"}

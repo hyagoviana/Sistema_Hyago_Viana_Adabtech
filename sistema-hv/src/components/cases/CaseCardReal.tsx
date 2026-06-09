@@ -41,20 +41,22 @@ export function CaseCardReal({ caso, compact = true }: Props) {
       <Link
         to="/casos/$id"
         params={{ id: caso.id }}
-        className="block bg-[var(--card)] rounded-[10px] border border-[rgba(120,96,30,0.12)] p-3.5 hover:-translate-y-0.5 hover:border-[rgba(152,120,20,0.26)] hover:shadow-md transition-all"
+        className="block bg-[var(--card)] rounded-[10px] border border-[rgba(120,96,30,0.12)] p-3 hover:-translate-y-0.5 hover:border-[rgba(152,120,20,0.26)] hover:shadow-md transition-all"
       >
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <span className="font-mono text-[10.5px] text-muted-foreground tracking-tight">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-[var(--ink-500)] tabular tracking-tight truncate">
             {caso.case_code}
           </span>
-          {caso.inadimplente && <AlertCircle size={13} className="text-[var(--danger)]" />}
+          {caso.inadimplente && (
+            <AlertCircle size={12} className="text-[var(--danger)] shrink-0" />
+          )}
         </div>
-        <div className="font-display text-[15px] text-[var(--navy)] leading-tight font-semibold group-hover:text-[var(--gold-700)] transition-colors truncate">
+        <div className="mt-1 text-[14px] font-semibold text-[var(--navy)] leading-snug group-hover:text-[var(--gold-700)] transition-colors truncate">
           {caso.client_name}
         </div>
-        <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <Badge tone="gold">{tipoLabel}</Badge>
-          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+          <span className="text-[11px] text-[var(--ink-500)] inline-flex items-center gap-1 shrink-0 tabular">
             <StatusDot tone={tone} />
             {dias}d
           </span>

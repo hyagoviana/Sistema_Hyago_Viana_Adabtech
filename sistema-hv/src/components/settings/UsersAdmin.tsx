@@ -58,7 +58,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         <div className="flex items-center gap-2.5">
           <UserCog size={16} className="text-[var(--gold)]" />
           <div>
-            <h2 className="font-display text-[15px] font-semibold text-[var(--navy)]">
+            <h2 className="text-[15px] font-semibold text-[var(--navy)]">
               Usuários e permissões
             </h2>
             <p className="text-[11.5px] text-muted-foreground">

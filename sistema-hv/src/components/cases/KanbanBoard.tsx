@@ -33,12 +33,11 @@ type KanbanBoardProps<TItem, C extends string> = {
   onMove: (id: string, to: C) => void;
   isLoading?: boolean;
   /**
-   * Largura MÍNIMA de cada coluna em px (default 300). As colunas usam flex:1
-   * para distribuir o espaço e ocupar a largura total quando há poucas; quando
-   * há muitas (ex.: pipeline financeira), mantêm a largura mínima e o board
-   * rola horizontalmente.
+   * Largura FIXA de cada coluna em px (default 300, faixa confortável 280–320).
+   * As colunas NÃO esticam (sem flex:1) — ficam com largura constante, separadas
+   * por gap, e o board rola horizontalmente (overflow-x) quando há muitas.
    */
-  minColumnWidth?: number;
+  columnWidth?: number;
 };
 
 /**
@@ -57,7 +56,7 @@ export function KanbanBoard<TItem, C extends string>({
   renderCard,
   onMove,
   isLoading = false,
-  minColumnWidth = 300,
+  columnWidth = 300,
 }: KanbanBoardProps<TItem, C>) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -98,7 +97,7 @@ export function KanbanBoard<TItem, C extends string>({
       onDragCancel={() => setActiveId(null)}
     >
       <div className="overflow-x-auto -mx-1 pb-4">
-        <div className="flex gap-4 px-1 w-full">
+        <div className="flex items-start gap-4 px-1">
           {columns.map((col) => {
             const colItems = grouped.get(col.id) ?? [];
             return (
@@ -106,14 +105,14 @@ export function KanbanBoard<TItem, C extends string>({
                 key={col.id}
                 column={col}
                 count={colItems.length}
-                minWidth={minColumnWidth}
+                width={columnWidth}
               >
                 {isLoading ? (
                   Array.from({ length: 2 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-[10px]" />
+                    <Skeleton key={i} className="h-16 rounded-[10px]" />
                   ))
                 ) : colItems.length === 0 ? (
-                  <div className="flex items-center justify-center py-10 text-[11.5px] text-[var(--ink-400)] italic select-none">
+                  <div className="py-2.5 text-center text-[11px] text-[var(--ink-400)] italic select-none">
                     Vazio
                   </div>
                 ) : (
@@ -148,32 +147,25 @@ export function KanbanBoard<TItem, C extends string>({
 function DroppableColumn<C extends string>({
   column,
   count,
-  minWidth,
+  width,
   children,
 }: {
   column: KanbanColumn<C>;
   count: number;
-  minWidth: number;
+  width: number;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   return (
-    <div className="flex flex-col" style={{ flex: "1 1 0", minWidth }}>
+    <div className="flex flex-col shrink-0" style={{ width }}>
       <div
-        className="flex items-center justify-between gap-2 px-1.5 pb-2.5 mb-3"
+        className="flex items-center justify-between gap-2 px-0.5 pb-2 mb-2.5"
         style={{ borderBottom: "1px solid var(--border)" }}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            aria-hidden
-            className="h-3.5 w-[3px] rounded-full shrink-0"
-            style={{ background: column.toneColor }}
-          />
-          <Eyebrow>{column.label}</Eyebrow>
-        </div>
+        <Eyebrow>{column.label}</Eyebrow>
         <span
-          className="inline-flex items-center justify-center min-w-[22px] h-[20px] px-1.5 rounded-full text-[11px] font-semibold tabular shrink-0"
+          className="inline-flex items-center justify-center min-w-[20px] h-[18px] px-1.5 rounded-full text-[10.5px] font-semibold tabular shrink-0"
           style={{
             background: `color-mix(in srgb, ${column.toneColor} 12%, transparent)`,
             color: column.toneColor,
@@ -184,7 +176,7 @@ function DroppableColumn<C extends string>({
       </div>
       <div
         ref={setNodeRef}
-        className={`space-y-2.5 rounded-[10px] transition-colors min-h-[80px] ${
+        className={`space-y-2 rounded-[10px] transition-colors min-h-[48px] ${
           isOver
             ? "bg-[rgba(152,120,20,0.08)] outline-2 outline-dashed outline-[rgba(152,120,20,0.4)]"
             : ""

@@ -31,7 +31,7 @@ export function CaseCard({
         </span>
         {caso.inadimplente && <AlertCircle size={13} className="text-[var(--danger)]" />}
       </div>
-      <div className="font-display text-[15px] text-[var(--navy)] leading-tight font-semibold group-hover:text-[var(--gold-700)] transition-colors">
+      <div className="text-[14px] text-[var(--navy)] leading-snug font-semibold group-hover:text-[var(--gold-700)] transition-colors">
         {caso.clienteNome}
       </div>
       <div className="mt-2.5 flex items-center gap-2 flex-wrap">

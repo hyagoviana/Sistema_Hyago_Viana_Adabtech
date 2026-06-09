@@ -151,7 +151,7 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                   <FolderKanban size={20} />
                 </div>
                 <div>
-                  <div className="font-display text-[18px] font-semibold text-[var(--navy)]">
+                  <div className="text-[15px] font-semibold text-[var(--navy)]">
                     {t.name}
                   </div>
                   <div className="text-[12px] text-muted-foreground">Abrir esteira →</div>
