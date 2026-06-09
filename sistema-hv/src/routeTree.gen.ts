@@ -60,6 +60,7 @@ import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as CasosListaRouteImport } from './routes/casos.lista'
 import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
 import { Route as CasosIdRouteImport } from './routes/casos.$id'
+import { Route as ApiDiagEnvRouteImport } from './routes/api.diag-env'
 import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
@@ -327,6 +328,11 @@ const CasosIdRoute = CasosIdRouteImport.update({
   path: '/casos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDiagEnvRoute = ApiDiagEnvRouteImport.update({
+  id: '/api/diag-env',
+  path: '/api/diag-env',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
+  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -455,6 +462,7 @@ export interface FileRoutesByTo {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
+  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
@@ -518,6 +526,7 @@ export interface FileRoutesById {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
+  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -583,6 +592,7 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
+    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/financeiro'
     | '/casos/lista'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
+    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/lista'
     | '/clientes/$id'
@@ -708,6 +719,7 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
+    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/financeiro'
     | '/casos/lista'
@@ -772,6 +784,7 @@ export interface RootRouteChildren {
   ModelosRoute: typeof ModelosRoute
   PipelineRoute: typeof PipelineRoute
   TarefasRoute: typeof TarefasRoute
+  ApiDiagEnvRoute: typeof ApiDiagEnvRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
   CasosListaRoute: typeof CasosListaRoute
@@ -1180,6 +1193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/diag-env': {
+      id: '/api/diag-env'
+      path: '/api/diag-env'
+      fullPath: '/api/diag-env'
+      preLoaderRoute: typeof ApiDiagEnvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/financeiro/': {
       id: '/casos/financeiro/'
       path: '/'
@@ -1315,6 +1335,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModelosRoute: ModelosRoute,
   PipelineRoute: PipelineRoute,
   TarefasRoute: TarefasRoute,
+  ApiDiagEnvRoute: ApiDiagEnvRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
   CasosListaRoute: CasosListaRoute,
