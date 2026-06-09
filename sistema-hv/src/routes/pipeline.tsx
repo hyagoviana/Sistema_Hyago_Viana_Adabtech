@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
+import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
@@ -68,13 +69,17 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
   const { data: types, isLoading } = useServiceTypes();
   const createCat = useCreateServiceType();
   const [newOpen, setNewOpen] = useState(false);
+  const [createCaseOpen, setCreateCaseOpen] = useState(false);
   const [catName, setCatName] = useState("");
 
   async function criarCategoria() {
     const name = catName.trim();
     if (!name) return;
     try {
-      await createCat.mutateAsync({ name, slug: slugifyCat(name) || `CAT_${(types?.length ?? 0) + 1}` });
+      await createCat.mutateAsync({
+        name,
+        slug: slugifyCat(name) || `CAT_${(types?.length ?? 0) + 1}`,
+      });
       toast.success("Categoria criada (já com etapas padrão — edite como quiser)");
       setCatName("");
       setNewOpen(false);
@@ -91,12 +96,20 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
         title="Pipeline Operacional"
         subtitle="Escolha o tipo de serviço para abrir a esteira específica."
         aside={
-          <Btn variant="gold" onClick={() => setNewOpen(true)}>
-            <Plus size={14} />
-            Nova categoria
-          </Btn>
+          <div className="flex items-center gap-2">
+            <Btn variant="gold" onClick={() => setCreateCaseOpen(true)}>
+              <Plus size={14} />
+              Novo caso
+            </Btn>
+            <Btn variant="ghost" onClick={() => setNewOpen(true)}>
+              <Plus size={14} />
+              Nova categoria
+            </Btn>
+          </div>
         }
       />
+
+      <CaseFormDialog open={createCaseOpen} onOpenChange={setCreateCaseOpen} />
 
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent>
@@ -151,9 +164,7 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                   <FolderKanban size={20} />
                 </div>
                 <div>
-                  <div className="text-[15px] font-semibold text-[var(--navy)]">
-                    {t.name}
-                  </div>
+                  <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
                   <div className="text-[12px] text-muted-foreground">Abrir esteira →</div>
                 </div>
               </div>

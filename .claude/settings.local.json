@@ -159,7 +159,18 @@
       "Bash(tasklist)",
       "Bash(echo \"EXIT=$?\")",
       "Bash(rm -f eslint-out.txt)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(ls -la \"Docuemntos sobre o projeto/\")",
+      "Bash(python --version)",
+      "Bash(python3 --version)",
+      "Bash(Get-ChildItem -Path . -Directory)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\docs\\\\sprints-f4\" -File -Filter \"sprint-*.md\")",
+      "Bash(Sort-Object Name)",
+      "Bash(xargs grep -l \"CaseFormDialog\\\\|MoveCaseDialog\")",
+      "Bash(xargs grep -l \"useCreateCase\\\\|useCases\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Read(//c/Users/mathe/.claude/projects/C--Users-mathe-OneDrive--rea-de-Trabalho-Projeto-Hytalo-advogado-Sistema-Hyago-Viana-Adabtech/memory/**)",
+      "Bash(printf '%s\\\\n' '- [Sessão 2026-06-09: docs \\(502/CPF\\) + pipelines por tipo]\\(project_docs_pipeline_2026_06_09.md\\) — Corrigido 502 da geração \\(status 424\\) + máscara CPF/CNPJ; migration 0017 cria pipeline op por tipo \\(FIES/COVID/ESF-DGM\\). Pendente db:push + envs OAuth na Vercel.' '- [Vercel mascara 5xx de gateway]\\(reference_vercel_5xx_gateway.md\\) — server functions não devem retornar 502/503/504; use 4xx \\(424\\) em erro de dependência externa pra mensagem chegar ao front.')"
     ]
   }
 }
