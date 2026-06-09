@@ -180,13 +180,13 @@ function ClientesList() {
                 className="card-editorial !p-5 flex items-center gap-4 group"
               >
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center font-display text-[18px] font-semibold text-[var(--navy)] shrink-0"
+                  className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-semibold text-[var(--navy)] shrink-0"
                   style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}
                 >
                   {c.full_name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-display text-[16px] font-semibold text-[var(--navy)] group-hover:text-[var(--gold-700)] transition-colors truncate pr-8">
+                  <div className="text-[15px] font-semibold text-[var(--navy)] group-hover:text-[var(--gold-700)] transition-colors truncate pr-8">
                     {c.full_name}
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">

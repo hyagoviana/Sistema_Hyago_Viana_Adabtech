@@ -62,7 +62,7 @@ function ExceptionCard({ group }: { group: ExcGroup }) {
       <header className="flex items-center gap-2.5 px-5 py-4 border-b border-[var(--border)]">
         <AlertTriangle size={16} style={{ color: group.items.length > 0 ? color : "var(--ink-300)" }} />
         <div className="flex-1 min-w-0">
-          <h2 className="font-display text-[15px] font-semibold text-[var(--navy)]">{group.label}</h2>
+          <h2 className="text-[15px] font-semibold text-[var(--navy)]">{group.label}</h2>
           <p className="text-[11px] text-muted-foreground">{group.hint}</p>
         </div>
         <span

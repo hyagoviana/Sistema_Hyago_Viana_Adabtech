@@ -145,10 +145,19 @@
     letter-spacing: 0;
     line-height: 1.55;
   }
-  h1, h2, h3, .font-display {
-    font-family: var(--font-display);
+  /* Tipografia: Inter é a fonte padrão de TODA a interface (inclusive headings).
+     A serifada Fraunces é OPT-IN EXPLÍCITO via .font-display e fica reservada
+     a headings GRANDES de página (>= ~24px, ex.: "Bom dia", título da esteira).
+     Nunca aplicar serif por cascata em h1/h2/h3 — isso vazava para nomes de
+     cliente, títulos de card e labels, dando aspecto pixelado em tamanho pequeno. */
+  h1, h2, h3 {
     letter-spacing: -0.005em;
     line-height: 1.25;
+  }
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
   }
   /* Números/horas em títulos não devem usar serif — mantêm Inter tabular */
   .font-display.tabular,

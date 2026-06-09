@@ -294,7 +294,7 @@ function SectionHead({
   return (
     <div className="flex items-center justify-between mb-3.5">
       <div className="flex items-center gap-2.5">
-        <h2 className="font-display text-[18px] text-[var(--navy)]">{title}</h2>
+        <h2 className="text-[15px] font-semibold text-[var(--navy)]">{title}</h2>
         {count !== undefined && (
           <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--ink-100)] text-[var(--ink-700)]">
             {count}
