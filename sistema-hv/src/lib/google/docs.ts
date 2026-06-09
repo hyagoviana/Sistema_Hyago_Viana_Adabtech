@@ -35,13 +35,37 @@ function driveClient(): drive_v3.Drive {
   return (cachedDrive ??= google.drive({ version: "v3", auth: getAuth() }));
 }
 
+// Extrai status + razão legível de um erro da Google API (googleapis/gaxios).
+function googleErrorDetail(cause: unknown): { status?: number; reason?: string } {
+  const e = cause as
+    | {
+        code?: number | string;
+        status?: number;
+        message?: string;
+        response?: { status?: number; data?: { error?: { code?: number; message?: string } } };
+        errors?: Array<{ message?: string; reason?: string }>;
+      }
+    | undefined;
+  const status =
+    e?.response?.status ??
+    (typeof e?.status === "number" ? e.status : undefined) ??
+    e?.response?.data?.error?.code ??
+    (typeof e?.code === "number" ? e.code : undefined);
+  const reason =
+    e?.response?.data?.error?.message ?? e?.errors?.[0]?.message ?? e?.message ?? undefined;
+  return { status, reason };
+}
+
 export class DocsError extends Error {
   readonly status?: number;
   constructor(message: string, cause?: unknown) {
-    super(message);
+    const { status, reason } = cause ? googleErrorDetail(cause) : {};
+    // Anexa o motivo REAL do Google (ex.: "File not found" / "insufficient
+    // permission") + o código HTTP — senão o erro vira opaco em produção.
+    const full = reason ? `${message} → ${reason}${status ? ` (HTTP ${status})` : ""}` : message;
+    super(full);
     this.name = "DocsError";
-    const c = cause as { code?: number; status?: number } | undefined;
-    this.status = typeof c?.status === "number" ? c.status : typeof c?.code === "number" ? c.code : undefined;
+    this.status = status;
   }
 }
 
