@@ -149,7 +149,17 @@
       "Bash(npx vercel *)",
       "Bash(printf \"%s\\\\n\" \"SELECT c.id, c.case_code, cl.full_name, \\(cl.drive_folder_id IS NOT NULL\\) AS cliente_tem_pasta FROM system_cases c JOIN system_clients cl ON cl.id=c.client_id WHERE c.deleted_at IS NULL ORDER BY \\(cl.drive_folder_id IS NOT NULL\\) DESC LIMIT 5;\")",
       "Bash(rm -f scripts/_q.sql)",
-      "Bash(printf '%s\\\\n' ' *)"
+      "Bash(printf '%s\\\\n' ' *)",
+      "Bash(ls node_modules/@fontsource-variable/inter/*.css)",
+      "Bash(ls node_modules/@fontsource-variable/fraunces/*.css)",
+      "Bash(ls node_modules/@fontsource-variable/jetbrains-mono/*.css)",
+      "Bash(node -e \"const p=require\\('./node_modules/@fontsource-variable/fraunces/package.json'\\); console.log\\(JSON.stringify\\(p.exports['.'],null,1\\)\\); console.log\\('---axes? wght file:'\\); \")",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash([ -f \"$f\" ])",
+      "Bash(tasklist)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(rm -f eslint-out.txt)",
+      "Bash(git stash *)"
     ]
   }
 }
