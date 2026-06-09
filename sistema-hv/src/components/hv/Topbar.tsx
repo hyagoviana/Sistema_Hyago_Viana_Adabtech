@@ -41,11 +41,11 @@ export function Topbar() {
         boxShadow: "0 1px 2px rgba(60,50,20,0.04)",
       }}
     >
-      <nav className="flex items-center gap-1.5 text-[12px] text-[var(--ink-400)] min-w-0">
+      <nav className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--ink-500)] min-w-0">
         {crumbs.map((c, i) => (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-[var(--ink-300)]">/</span>}
-            <span className={i === crumbs.length - 1 ? "text-[#1a1a1f] font-medium" : ""}>
+            <span className={i === crumbs.length - 1 ? "text-[#1a1a1f] font-semibold" : ""}>
               {c}
             </span>
           </span>
@@ -58,7 +58,7 @@ export function Topbar() {
           <input
             type="text"
             placeholder="Buscar caso, cliente, documento…"
-            className="flex-1 bg-transparent outline-none text-[13px] placeholder:text-[var(--ink-400)]"
+            className="flex-1 bg-transparent outline-none text-[13px] font-medium text-[#1a1a1f] placeholder:text-[var(--ink-400)] placeholder:font-medium"
           />
           <kbd className="text-[10px] font-mono text-[var(--ink-400)] px-1.5 py-0.5 rounded border border-[var(--border)] bg-white">
             ⌘K
@@ -71,7 +71,7 @@ export function Topbar() {
           <button
             onClick={() => setOpenNew((v) => !v)}
             onBlur={() => setTimeout(() => setOpenNew(false), 150)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-medium transition-all hover:-translate-y-px"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px"
             style={{
               background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
