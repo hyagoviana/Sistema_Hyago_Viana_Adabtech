@@ -28,6 +28,12 @@ export class CaseDocumentServiceError extends Error {
   }
 }
 
+// Falhas de dependência externa (Google Docs/Drive/ZapSign) usam 424 (Failed
+// Dependency), NÃO 502/503/504: o gateway da Vercel intercepta 5xx de gateway
+// e devolve "Bad Gateway" genérico, escondendo a mensagem real do usuário.
+// Com 424 (4xx) a resposta passa intacta e o front mostra o erro de verdade.
+const EXTERNAL_DEP_FAILED = 424;
+
 function sha256Hex(buf: Buffer) {
   return createHash("sha256").update(buf).digest("hex");
 }
@@ -103,12 +109,16 @@ export async function ensureCaseFolder(caseId: string): Promise<{
       .eq("id", caso.id);
     return { folderId: folder.id, folderUrl: folder.url };
   } catch (err) {
-    const msg = err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
+    const msg =
+      err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
     await sb
       .from("system_cases")
       .update({ drive_sync_failed: true, drive_sync_error: msg.slice(0, 2000) })
       .eq("id", caso.id);
-    throw new CaseDocumentServiceError(`Falha ao criar pasta do caso no Drive: ${msg}`, 502);
+    throw new CaseDocumentServiceError(
+      `Falha ao criar pasta do caso no Drive: ${msg}`,
+      EXTERNAL_DEP_FAILED,
+    );
   }
 }
 
@@ -161,7 +171,10 @@ export async function generateCaseDocumentFromTemplate(opts: {
     await setLinkEditable(docId);
   } catch (err) {
     const msg = err instanceof DocsError ? err.message : String(err);
-    throw new CaseDocumentServiceError(`Falha ao gerar via Google Docs: ${msg}`, 502);
+    throw new CaseDocumentServiceError(
+      `Falha ao gerar via Google Docs: ${msg}`,
+      EXTERNAL_DEP_FAILED,
+    );
   }
 
   const { data: doc, error: insErr } = await sb
@@ -179,7 +192,10 @@ export async function generateCaseDocumentFromTemplate(opts: {
     .select()
     .single();
   if (insErr || !doc) {
-    throw new CaseDocumentServiceError(`Falha ao gravar documento (${insErr?.message ?? "?"})`, 500);
+    throw new CaseDocumentServiceError(
+      `Falha ao gravar documento (${insErr?.message ?? "?"})`,
+      500,
+    );
   }
 
   await sb.from("system_audit_log").insert({
@@ -211,16 +227,24 @@ export async function finalizeCaseDocument(docId: string) {
     await lockDocument(doc.google_doc_id);
   } catch (err) {
     const msg = err instanceof DocsError ? err.message : String(err);
-    throw new CaseDocumentServiceError(`Falha ao exportar/travar PDF: ${msg}`, 502);
+    throw new CaseDocumentServiceError(`Falha ao exportar/travar PDF: ${msg}`, EXTERNAL_DEP_FAILED);
   }
 
   const fileName = `${String(doc.document_number ?? 0).padStart(2, "0")}-${doc.title}.pdf`;
   let drive;
   try {
-    drive = await uploadFile({ parentId: folderId, name: fileName, mimeType: "application/pdf", body: pdf });
+    drive = await uploadFile({
+      parentId: folderId,
+      name: fileName,
+      mimeType: "application/pdf",
+      body: pdf,
+    });
   } catch (err) {
     const msg = err instanceof DriveError ? err.message : String(err);
-    throw new CaseDocumentServiceError(`Falha ao subir PDF na pasta do caso: ${msg}`, 502);
+    throw new CaseDocumentServiceError(
+      `Falha ao subir PDF na pasta do caso: ${msg}`,
+      EXTERNAL_DEP_FAILED,
+    );
   }
 
   const { data: updated, error: upErr } = await sb
@@ -270,7 +294,7 @@ export async function sendCaseDocumentToZapsign(opts: {
     base64Pdf = (await exportPdf(doc.google_doc_id)).toString("base64");
   } catch (err) {
     const msg = err instanceof DocsError ? err.message : String(err);
-    throw new CaseDocumentServiceError(`Falha ao preparar PDF: ${msg}`, 502);
+    throw new CaseDocumentServiceError(`Falha ao preparar PDF: ${msg}`, EXTERNAL_DEP_FAILED);
   }
 
   const zdoc = await createDocument({

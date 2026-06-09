@@ -30,6 +30,7 @@ import {
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
 import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
+import { formatCpfCnpj, isCpfCnpjField } from "@/lib/format";
 
 type TemplateField = {
   key: string;
@@ -137,7 +138,10 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
                           </a>
                         )}
                         {d.goes_to_zapsign && (
-                          <Button size="sm" onClick={() => setSendFor({ id: d.id, title: d.title })}>
+                          <Button
+                            size="sm"
+                            onClick={() => setSendFor({ id: d.id, title: d.title })}
+                          >
                             <Send size={13} className="mr-1" /> ZapSign
                           </Button>
                         )}
@@ -273,7 +277,13 @@ function GenerateDialog({
         <div className="space-y-4">
           <div>
             <Label>Modelo</Label>
-            <Select value={templateId} onValueChange={(v) => { setTemplateId(v); setValues({}); }}>
+            <Select
+              value={templateId}
+              onValueChange={(v) => {
+                setTemplateId(v);
+                setValues({});
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um modelo…" />
               </SelectTrigger>
@@ -293,19 +303,35 @@ function GenerateDialog({
             </Select>
           </div>
 
-          {fields.map((f) => (
-            <div key={f.key}>
-              <Label>
-                {f.label}
-                {f.required && <span className="text-destructive"> *</span>}
-              </Label>
-              <Input
-                value={values[f.key] ?? ""}
-                onChange={(e) => setValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                placeholder={f.source === "auto" ? "(auto — ajuste se precisar)" : ""}
-              />
-            </div>
-          ))}
+          {fields.map((f) => {
+            const isDoc = isCpfCnpjField(f.key, f.label);
+            return (
+              <div key={f.key}>
+                <Label>
+                  {f.label}
+                  {f.required && <span className="text-destructive"> *</span>}
+                </Label>
+                <Input
+                  value={values[f.key] ?? ""}
+                  inputMode={isDoc ? "numeric" : undefined}
+                  maxLength={isDoc ? 18 : undefined}
+                  onChange={(e) =>
+                    setValues((s) => ({
+                      ...s,
+                      [f.key]: isDoc ? formatCpfCnpj(e.target.value) : e.target.value,
+                    }))
+                  }
+                  placeholder={
+                    isDoc
+                      ? "000.000.000-00"
+                      : f.source === "auto"
+                        ? "(auto — ajuste se precisar)"
+                        : ""
+                  }
+                />
+              </div>
+            );
+          })}
         </div>
 
         <DialogFooter>
@@ -315,7 +341,9 @@ function GenerateDialog({
           <Button
             disabled={!templateId || pending}
             onClick={() => {
-              const faltando = fields.filter((f) => f.required && !String(values[f.key] ?? "").trim());
+              const faltando = fields.filter(
+                (f) => f.required && !String(values[f.key] ?? "").trim(),
+              );
               if (faltando.length) {
                 toast.error(`Preencha: ${faltando.map((f) => f.label).join(", ")}`);
                 return;

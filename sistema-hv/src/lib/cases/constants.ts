@@ -20,30 +20,34 @@ export const CASE_TYPE_LABELS: Record<CaseType, string> = {
   CFM_CRM: "CFM/CRM",
 };
 
+// Estados operacionais — UNIÃO dos slugs usados pelos fluxos por tipo (POPs).
+// As ETAPAS reais por tipo vivem em system_pipeline_stages (configuráveis); esta
+// lista serve p/ exibição de rótulos e validação na criação. Nem todo tipo usa
+// todos (ex.: DGM_ENVIADA só no FIES_DGM; COVID não usa TRIAGEM).
 export const MACRO_OP = [
   "ONBOARDING",
-  "ANALISE",
-  "CONFERENCIA",
-  "PRONTO_AJUIZAR",
-  "EM_ANDAMENTO",
-  "AGUARDANDO_DECISAO",
+  "TRIAGEM",
+  "DOCS_PENDENTES",
+  "DGM_ENVIADA",
+  "PRONTO_PROTOCOLO",
+  "ACOMPANHAMENTO_ADM",
+  "JUDICIAL_OPERACIONAL",
   "IMPLANTADO",
-  "IMPLANTACAO_PARCIAL",
-  "ENCERRADO",
+  "ENCERRADO_OPERACIONAL",
   "CANCELADO",
 ] as const;
 export type MacroOp = (typeof MACRO_OP)[number];
 
 export const MACRO_OP_LABELS: Record<MacroOp, string> = {
   ONBOARDING: "Onboarding",
-  ANALISE: "Análise",
-  CONFERENCIA: "Conferência",
-  PRONTO_AJUIZAR: "Pronto p/ ajuizar",
-  EM_ANDAMENTO: "Em andamento",
-  AGUARDANDO_DECISAO: "Aguardando decisão",
+  TRIAGEM: "Triagem",
+  DOCS_PENDENTES: "Documentos pendentes",
+  DGM_ENVIADA: "DGM enviada",
+  PRONTO_PROTOCOLO: "Pronto p/ protocolo",
+  ACOMPANHAMENTO_ADM: "Acompanhamento adm.",
+  JUDICIAL_OPERACIONAL: "Judicial",
   IMPLANTADO: "Implantado",
-  IMPLANTACAO_PARCIAL: "Implantação parcial",
-  ENCERRADO: "Encerrado",
+  ENCERRADO_OPERACIONAL: "Encerrado",
   CANCELADO: "Cancelado",
 };
 
