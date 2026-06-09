@@ -16,13 +16,15 @@ import symbolHV from "@/assets/symbol-hv.png";
 
 const COLLAPSE_KEY = "hv:sidebar-collapsed";
 
-// Paleta de leitura sobre o navy #1e2044 — gold claro/champanhe para o TEXTO
-// (contraste AA), reservando o #987814 escuro pra acentos/preenchimentos.
-const TEXT_IDLE = "#c8ad6e";
-const TEXT_HOVER = "#ecd9a6";
-const TEXT_ACTIVE = "#f2da95";
-const ICON_IDLE = "rgba(200,173,110,0.72)";
-const GROUP_LABEL = "rgba(200,173,110,0.5)";
+// Paleta de leitura sobre o navy #1e2044 — gold CLARO/luminoso (champanhe) p/ o
+// TEXTO e ícones, igual ao tom da topbar (contraste AA folgado, ~9:1). O gold
+// escuro #987814 fica reservado só pra preenchimentos/acentos sólidos.
+const GOLD_BRIGHT = "#e9cd84";
+const TEXT_IDLE = "rgba(233,205,132,0.85)";
+const TEXT_HOVER = "#f6e3ac";
+const TEXT_ACTIVE = GOLD_BRIGHT;
+const ICON_IDLE = "rgba(233,205,132,0.85)";
+const GROUP_LABEL = "rgba(233,205,132,0.5)";
 
 type BadgeTone = "neutral" | "gold" | "danger";
 type Item = { to: string; label: string; icon: LucideIcon; count?: number; tone?: BadgeTone };
@@ -177,7 +179,7 @@ export function Sidebar() {
                 <div className="text-[13px] font-semibold text-white tracking-tight">Hyago Viana</div>
                 <div
                   className="text-[9.5px] font-medium uppercase"
-                  style={{ color: "#987814", letterSpacing: "0.22em" }}
+                  style={{ color: "rgba(233,205,132,0.9)", letterSpacing: "0.22em" }}
                 >
                   Advocacia
                 </div>
@@ -345,8 +347,13 @@ export function Sidebar() {
                 {initial}
               </div>
               <div className="flex-1 leading-tight min-w-0">
-                <div className="text-[12.5px] text-white font-medium truncate">{displayName}</div>
-                <div className="text-[10px] truncate" style={{ color: "rgba(232,232,232,0.45)" }}>
+                <div
+                  className="text-[12.5px] font-medium truncate"
+                  style={{ color: GOLD_BRIGHT }}
+                >
+                  {displayName}
+                </div>
+                <div className="text-[10px] truncate" style={{ color: "rgba(233,205,132,0.6)" }}>
                   {role ? ROLE_LABELS[role] : email || "Administrador"}
                 </div>
               </div>
