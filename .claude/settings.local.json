@@ -173,7 +173,10 @@
       "Bash(printf '%s\\\\n' '- [Sessão 2026-06-09: docs \\(502/CPF\\) + pipelines por tipo]\\(project_docs_pipeline_2026_06_09.md\\) — Corrigido 502 da geração \\(status 424\\) + máscara CPF/CNPJ; migration 0017 cria pipeline op por tipo \\(FIES/COVID/ESF-DGM\\). Pendente db:push + envs OAuth na Vercel.' '- [Vercel mascara 5xx de gateway]\\(reference_vercel_5xx_gateway.md\\) — server functions não devem retornar 502/503/504; use 4xx \\(424\\) em erro de dependência externa pra mensagem chegar ao front.')",
       "Bash(curl -s -L https://www.sistemahyagoviana.com.br/)",
       "Bash(curl -s -L https://sistema-67zdyzg1q-hyagovianas-projects.vercel.app/)",
-      "Bash(curl -s -L --compressed https://www.sistemahyagoviana.com.br/)"
+      "Bash(curl -s -L --compressed https://www.sistemahyagoviana.com.br/)",
+      "Bash(curl -s \"https://www.sistemahyagoviana.com.br/api/diag-env?k=orion-diag-9x7q\")",
+      "Bash(curl -s \"https://sistema-beoqd1a7u-hyagovianas-projects.vercel.app/api/diag-env?k=orion-diag-9x7q\")",
+      "Bash(curl -s \"https://www.sistemahyagoviana.com.br/api/diag-env?k=orion-diag-9x7q&_=$\\(date +%s\\)\")"
     ]
   }
 }
