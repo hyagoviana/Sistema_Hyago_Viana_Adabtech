@@ -53,10 +53,7 @@ export function Topbar() {
       </nav>
 
       <div className="flex-1 flex justify-center">
-        <div
-          className="flex items-center gap-2 w-full max-w-md h-9 px-3 rounded-lg"
-          style={{ background: "#edece8", border: "1px solid rgba(80,70,45,0.12)" }}
-        >
+        <div className="flex items-center gap-2 w-full max-w-md h-9 px-3 rounded-lg bg-[#edece8] border border-[rgba(80,70,45,0.12)] transition-shadow focus-within:border-[var(--gold)] focus-within:shadow-[0_0_0_3px_var(--ring)]">
           <Search size={14} className="text-[var(--ink-400)]" strokeWidth={1.6} />
           <input
             type="text"
@@ -74,7 +71,7 @@ export function Topbar() {
           <button
             onClick={() => setOpenNew((v) => !v)}
             onBlur={() => setTimeout(() => setOpenNew(false), 150)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] text-white text-[12.5px] font-medium transition-all hover:-translate-y-px"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-medium transition-all hover:-translate-y-px"
             style={{
               background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",

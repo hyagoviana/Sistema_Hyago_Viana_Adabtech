@@ -71,7 +71,7 @@ export function StatCard({
   trend,
   spark,
   context,
-  icon: _icon,
+  icon: Icon,
   accent,
 }: {
   label: string;
@@ -86,10 +86,27 @@ export function StatCard({
   const d = delta ?? trend;
   return (
     <div className="card-editorial" style={{ padding: 20 }}>
-      <div className="eyebrow">{label}</div>
+      <div className="flex items-center justify-between">
+        <span className="eyebrow" style={{ color: "var(--gold-700)" }}>
+          {label}
+        </span>
+        {Icon && (
+          <span
+            className="grid place-items-center w-7 h-7 rounded-lg shrink-0"
+            style={{ background: "var(--gold-pale)" }}
+          >
+            <Icon size={14} strokeWidth={1.8} style={{ color: "var(--gold)" }} />
+          </span>
+        )}
+      </div>
       <div
         className="kpi-number mt-3"
-        style={{ fontSize: 28, lineHeight: 1, color: accent === "gold" ? "var(--gold-700)" : undefined }}
+        style={{
+          fontSize: 32,
+          fontWeight: 700,
+          lineHeight: 1,
+          color: accent === "gold" ? "var(--gold-700)" : undefined,
+        }}
       >
         {value}
       </div>

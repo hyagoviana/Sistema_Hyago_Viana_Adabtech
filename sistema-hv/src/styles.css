@@ -2,12 +2,18 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Fontes self-hosted (variable, sem dependência de CDN nem FOUT de rede).
+   Substituem o <link> do Google Fonts que causava o aspecto "pixelado". */
+@import "@fontsource-variable/inter/index.css";
+@import "@fontsource-variable/fraunces/index.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Lora", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", "Geist", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Fraunces Variable", "Lora", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -123,6 +129,7 @@
   html, body {
     font-family: var(--font-sans);
     font-feature-settings: "tnum", "cv11", "ss01";
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;

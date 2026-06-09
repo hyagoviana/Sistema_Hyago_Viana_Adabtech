@@ -207,21 +207,37 @@ function Kpi({
   danger?: boolean;
   featured?: boolean;
 }) {
+  const chipBg = danger ? "rgba(180,36,50,0.08)" : "var(--gold-pale)";
+  const chipColor = danger ? "var(--danger)" : GOLD;
   return (
     <div
       className="card-editorial !p-5"
       style={featured ? { borderColor: "rgba(152,120,20,0.28)" } : undefined}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-500)]">{label}</span>
-        <Icon size={15} style={{ color: featured ? GOLD : "var(--ink-400)" }} />
+      <div className="flex items-center justify-between mb-4">
+        <span
+          className="text-[11px] font-medium uppercase tracking-[0.08em]"
+          style={{ color: "var(--gold-700)" }}
+        >
+          {label}
+        </span>
+        <span
+          className="grid place-items-center w-7 h-7 rounded-lg shrink-0"
+          style={{ background: chipBg }}
+        >
+          <Icon size={14} strokeWidth={1.8} style={{ color: chipColor }} />
+        </span>
       </div>
       {loading ? (
-        <Skeleton className="h-8 w-16 rounded" />
+        <Skeleton className="h-9 w-16 rounded" />
       ) : (
         <div
           className="kpi-number"
-          style={{ color: danger ? "var(--danger)" : featured ? "var(--gold-700)" : NAVY, fontSize: 30 }}
+          style={{
+            color: danger ? "var(--danger)" : featured ? "var(--gold-700)" : NAVY,
+            fontSize: 36,
+            fontWeight: 700,
+          }}
         >
           {value}
         </div>
