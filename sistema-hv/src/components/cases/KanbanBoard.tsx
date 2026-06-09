@@ -32,8 +32,13 @@ type KanbanBoardProps<TItem, C extends string> = {
   /** Chamado quando um card é solto numa coluna diferente da de origem. */
   onMove: (id: string, to: C) => void;
   isLoading?: boolean;
-  /** Largura de cada coluna em px (default 280). */
-  columnWidth?: number;
+  /**
+   * Largura MÍNIMA de cada coluna em px (default 300). As colunas usam flex:1
+   * para distribuir o espaço e ocupar a largura total quando há poucas; quando
+   * há muitas (ex.: pipeline financeira), mantêm a largura mínima e o board
+   * rola horizontalmente.
+   */
+  minColumnWidth?: number;
 };
 
 /**
@@ -52,7 +57,7 @@ export function KanbanBoard<TItem, C extends string>({
   renderCard,
   onMove,
   isLoading = false,
-  columnWidth = 280,
+  minColumnWidth = 300,
 }: KanbanBoardProps<TItem, C>) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -92,8 +97,8 @@ export function KanbanBoard<TItem, C extends string>({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="overflow-x-auto -mx-2 pb-4">
-        <div className="flex gap-3 px-2 min-w-max">
+      <div className="overflow-x-auto -mx-1 pb-4">
+        <div className="flex gap-4 px-1 w-full">
           {columns.map((col) => {
             const colItems = grouped.get(col.id) ?? [];
             return (
@@ -101,15 +106,15 @@ export function KanbanBoard<TItem, C extends string>({
                 key={col.id}
                 column={col}
                 count={colItems.length}
-                width={columnWidth}
+                minWidth={minColumnWidth}
               >
                 {isLoading ? (
                   Array.from({ length: 2 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-lg" />
+                    <Skeleton key={i} className="h-24 rounded-[10px]" />
                   ))
                 ) : colItems.length === 0 ? (
-                  <div className="text-[12px] text-muted-foreground text-center py-8 italic">
-                    vazio
+                  <div className="flex items-center justify-center py-10 text-[11.5px] text-[var(--ink-400)] italic select-none">
+                    Vazio
                   </div>
                 ) : (
                   colItems.map((item) => (
@@ -143,33 +148,43 @@ export function KanbanBoard<TItem, C extends string>({
 function DroppableColumn<C extends string>({
   column,
   count,
-  width,
+  minWidth,
   children,
 }: {
   column: KanbanColumn<C>;
   count: number;
-  width: number;
+  minWidth: number;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   return (
-    <div className="shrink-0 flex flex-col" style={{ width }}>
+    <div className="flex flex-col" style={{ flex: "1 1 0", minWidth }}>
       <div
-        className="flex items-center justify-between px-2 py-3 border-b-2 mb-3"
-        style={{ borderColor: column.toneColor }}
+        className="flex items-center justify-between gap-2 px-1.5 pb-2.5 mb-3"
+        style={{ borderBottom: "1px solid var(--border)" }}
       >
-        <Eyebrow>{column.label}</Eyebrow>
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            aria-hidden
+            className="h-3.5 w-[3px] rounded-full shrink-0"
+            style={{ background: column.toneColor }}
+          />
+          <Eyebrow>{column.label}</Eyebrow>
+        </div>
         <span
-          className="font-display text-[20px] font-semibold"
-          style={{ color: column.toneColor }}
+          className="inline-flex items-center justify-center min-w-[22px] h-[20px] px-1.5 rounded-full text-[11px] font-semibold tabular shrink-0"
+          style={{
+            background: `color-mix(in srgb, ${column.toneColor} 12%, transparent)`,
+            color: column.toneColor,
+          }}
         >
-          {String(count).padStart(2, "0")}
+          {count}
         </span>
       </div>
       <div
         ref={setNodeRef}
-        className={`space-y-2.5 rounded-lg transition-colors min-h-[80px] ${
+        className={`space-y-2.5 rounded-[10px] transition-colors min-h-[80px] ${
           isOver
             ? "bg-[rgba(152,120,20,0.08)] outline-2 outline-dashed outline-[rgba(152,120,20,0.4)]"
             : ""

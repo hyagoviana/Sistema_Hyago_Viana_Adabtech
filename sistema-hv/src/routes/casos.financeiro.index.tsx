@@ -73,7 +73,7 @@ function CasosFinanceiro() {
   }
 
   return (
-    <div className="page-container !pb-10">
+    <div className="px-5 lg:px-7 pt-7 pb-10">
       <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: "Financeiro" }]} />
       <PageHeader
         eyebrow="Operação"
