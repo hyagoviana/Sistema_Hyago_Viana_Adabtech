@@ -9,7 +9,9 @@ import {
   calcularTermo,
   conferirTermo,
   createTermo,
+  darBaixaParcela,
   enviarParaConferencia,
+  estornarParcela,
   getTermo,
   listParcelas,
   listTermos,
@@ -88,3 +90,28 @@ export const recusarTermoFn = createServerFn({ method: "POST" })
 export const listParcelasFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => listParcelas(data.caseId)));
+
+export const darBaixaParcelaFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        parcelaId: z.string().uuid(),
+        valorPagoCentavos: z.number().int().nonnegative(),
+        dataPagamento: z.string().nullish(),
+        metodoPagamento: z.string().nullish(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(() =>
+      darBaixaParcela(data.parcelaId, {
+        valorPagoCentavos: data.valorPagoCentavos,
+        dataPagamento: data.dataPagamento,
+        metodoPagamento: data.metodoPagamento,
+      }),
+    ),
+  );
+
+export const estornarParcelaFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ parcelaId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => estornarParcela(data.parcelaId)));

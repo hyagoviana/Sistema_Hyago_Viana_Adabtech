@@ -1,5 +1,5 @@
 import { ExternalLink, Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,9 @@ import {
   useCalcTermo,
   useConferirTermo,
   useCreateTermo,
+  useDarBaixaParcela,
   useEnviarConferencia,
+  useEstornarParcela,
   useParcelas,
   useRecusarTermo,
   useTermos,
@@ -62,7 +64,12 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const aceitar = useAceitarTermo(caseId);
   const recusar = useRecusarTermo(caseId);
   const { data: parcelas } = useParcelas(caseId);
+  const darBaixa = useDarBaixaParcela(caseId);
+  const estornar = useEstornarParcela(caseId);
   const [open, setOpen] = useState(false);
+  const [baixaFor, setBaixaFor] = useState<{ id: string; valor: number; numero: number } | null>(
+    null,
+  );
 
   return (
     <div>
@@ -238,12 +245,56 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                   >
                     {p.status}
                   </Badge>
+                  {p.status !== "PAGA" ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBaixaFor({ id: p.id, valor: p.valor_centavos, numero: p.numero })
+                      }
+                      className="text-[var(--gold-700)] hover:underline text-[11px]"
+                    >
+                      pagar
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={estornar.isPending}
+                      onClick={() =>
+                        estornar.mutate(p.id, {
+                          onSuccess: () => toast.success("Baixa estornada"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                      className="text-muted-foreground hover:underline text-[11px]"
+                    >
+                      estornar
+                    </button>
+                  )}
                 </span>
               </li>
             ))}
           </ul>
         </div>
       )}
+
+      <BaixaParcelaDialog
+        parcela={baixaFor}
+        onOpenChange={(v) => !v && setBaixaFor(null)}
+        onConfirm={(valorPagoCentavos, metodoPagamento) => {
+          if (!baixaFor) return;
+          darBaixa.mutate(
+            { parcelaId: baixaFor.id, valorPagoCentavos, metodoPagamento },
+            {
+              onSuccess: () => {
+                toast.success("Pagamento registrado");
+                setBaixaFor(null);
+              },
+              onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+            },
+          );
+        }}
+        pending={darBaixa.isPending}
+      />
 
       <ElaborarDialog
         caseId={caseId}
@@ -404,6 +455,70 @@ function ElaborarDialog({
             }
           >
             Salvar termo
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BaixaParcelaDialog({
+  parcela,
+  onOpenChange,
+  onConfirm,
+  pending,
+}: {
+  parcela: { id: string; valor: number; numero: number } | null;
+  onOpenChange: (v: boolean) => void;
+  onConfirm: (valorPagoCentavos: number, metodoPagamento: string | null) => void;
+  pending: boolean;
+}) {
+  const [valor, setValor] = useState("");
+  const [metodo, setMetodo] = useState("");
+
+  useEffect(() => {
+    if (parcela) {
+      setValor(((parcela.valor ?? 0) / 100).toFixed(2).replace(".", ","));
+      setMetodo("");
+    }
+  }, [parcela]);
+
+  return (
+    <Dialog open={!!parcela} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Registrar pagamento
+            {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
+          </DialogTitle>
+          <DialogDescription>
+            Baixa manual da parcela (substitui a cobrança automática até a integração via n8n).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Valor pago (R$)</Label>
+            <Input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="500,00" />
+          </div>
+          <div>
+            <Label>Método (opcional)</Label>
+            <Input
+              value={metodo}
+              onChange={(e) => setMetodo(e.target.value)}
+              placeholder="PIX, boleto, transferência…"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+            Cancelar
+          </Button>
+          <Button
+            disabled={pending}
+            onClick={() => onConfirm(toCents(valor), metodo.trim() || null)}
+          >
+            {pending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
+            Confirmar pagamento
           </Button>
         </DialogFooter>
       </DialogContent>
