@@ -1,4 +1,15 @@
-import { ExternalLink, FileSignature, FileText, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import {
+  Download,
+  Edit3,
+  ExternalLink,
+  FileSignature,
+  FileText,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,11 +36,13 @@ import {
 import {
   useCaseDocuments,
   useDeleteCaseDocument,
+  useDownloadCaseDocument,
   useFinalizeCaseDocument,
   useGenerateCaseDocument,
+  useReopenCaseDocument,
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
-import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
+import { useDocumentTemplates, useSyncDocumentTemplates, useTemplatePlaceholders } from "@/hooks/useDocumentTemplates";
 import { formatCpfCnpj, isCpfCnpjField } from "@/lib/format";
 
 type TemplateField = {
@@ -37,6 +50,14 @@ type TemplateField = {
   label: string;
   source: "auto" | "manual" | "blank";
   required?: boolean;
+  auto_field?: string;
+};
+
+/** Map auto_field values to client/case data for pre-filling */
+type AutoFillData = {
+  clientName?: string;
+  clientCpf?: string;
+  municipio?: string;
 };
 
 function editUrl(googleDocId: string): string {
@@ -52,13 +73,16 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   CANCELADO: { label: "Cancelado", cls: "bg-muted text-muted-foreground line-through" },
 };
 
-export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseType: string }) {
+export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, municipio }: { caseId: string; caseType: string; clientName?: string; clientCpf?: string; municipio?: string }) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
   const { data: templates } = useDocumentTemplates(caseType);
   const generate = useGenerateCaseDocument(caseId);
   const finalize = useFinalizeCaseDocument(caseId);
+  const reopen = useReopenCaseDocument(caseId);
+  const download = useDownloadCaseDocument();
   const sendZap = useSendCaseDocumentToZapsign(caseId);
   const del = useDeleteCaseDocument(caseId);
+  const sync = useSyncDocumentTemplates();
 
   const [genOpen, setGenOpen] = useState(false);
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
@@ -69,9 +93,30 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
     <section>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display text-[24px] font-semibold text-[var(--navy)]">Documentos</h2>
-        <Button size="sm" onClick={() => setGenOpen(true)}>
-          <Plus size={14} className="mr-1.5" /> Gerar documento
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={sync.isPending}
+            onClick={async () => {
+              try {
+                const res = await sync.mutateAsync(undefined);
+                toast.success(
+                  `Sync: ${res.foldersScanned} pastas, ${res.filesFound} docs → ${res.created} novos, ${res.updated} atualizados, ${res.skipped} já existiam` +
+                    (res.errors.length ? ` | ${res.errors.length} erros` : ""),
+                );
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Falha ao sincronizar");
+              }
+            }}
+          >
+            <RefreshCw size={14} className={`mr-1.5 ${sync.isPending ? "animate-spin" : ""}`} />
+            Sincronizar modelos
+          </Button>
+          <Button size="sm" onClick={() => setGenOpen(true)}>
+            <Plus size={14} className="mr-1.5" /> Gerar documento
+          </Button>
+        </div>
       </div>
 
       <div className="card-editorial !p-0 overflow-hidden">
@@ -110,7 +155,35 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
                             setEditorUrl(editUrl(d.google_doc_id!));
                           }}
                         >
-                          Editar
+                          <Edit3 size={13} className="mr-1" /> Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={download.isPending}
+                          onClick={async () => {
+                            try {
+                              await download.mutateAsync({ id: d.id, format: "pdf" });
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha ao baixar");
+                            }
+                          }}
+                        >
+                          <Download size={13} className="mr-1" /> PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={download.isPending}
+                          onClick={async () => {
+                            try {
+                              await download.mutateAsync({ id: d.id, format: "docx" });
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha ao baixar");
+                            }
+                          }}
+                        >
+                          <Download size={13} className="mr-1" /> DOCX
                         </Button>
                         <Button
                           size="sm"
@@ -130,12 +203,50 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
                     )}
                     {d.status === "FINALIZADO" && (
                       <>
-                        {d.drive_url && (
-                          <a href={d.drive_url} target="_blank" rel="noreferrer">
-                            <Button variant="outline" size="sm">
-                              <ExternalLink size={13} className="mr-1" /> PDF
-                            </Button>
-                          </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={download.isPending}
+                          onClick={async () => {
+                            try {
+                              await download.mutateAsync({ id: d.id, format: "pdf" });
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha ao baixar PDF");
+                            }
+                          }}
+                        >
+                          <Download size={13} className="mr-1" /> PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={download.isPending}
+                          onClick={async () => {
+                            try {
+                              await download.mutateAsync({ id: d.id, format: "docx" });
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha ao baixar DOCX");
+                            }
+                          }}
+                        >
+                          <Download size={13} className="mr-1" /> DOCX
+                        </Button>
+                        {d.google_doc_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={reopen.isPending}
+                            onClick={async () => {
+                              try {
+                                await reopen.mutateAsync(d.id);
+                                toast.success("Documento reaberto para edição");
+                              } catch (err) {
+                                toast.error(err instanceof Error ? err.message : "Falha ao reabrir");
+                              }
+                            }}
+                          >
+                            <Edit3 size={13} className="mr-1" /> Editar
+                          </Button>
                         )}
                         {d.goes_to_zapsign && (
                           <Button
@@ -187,8 +298,9 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
       <GenerateDialog
         open={genOpen}
         onOpenChange={setGenOpen}
-        templates={(templates ?? []) as Array<{ id: string; name: string; fields: unknown }>}
+        templates={(templates ?? []) as Array<{ id: string; name: string; fields: unknown; google_doc_id?: string }>}
         pending={generate.isPending}
+        autoFill={{ clientName, clientCpf, municipio }}
         onGenerate={async (templateId, title, values) => {
           try {
             const res = await generate.mutateAsync({ caseId, templateId, title, values });
@@ -242,31 +354,78 @@ export function CaseDocumentsTab({ caseId, caseType }: { caseId: string; caseTyp
 }
 
 // ---------------------------------------------------------------- Gerar ----
+function resolveAutoValue(field: TemplateField, data: AutoFillData): string | undefined {
+  // Try auto_field first (set by sync), then fall back to key-based heuristics
+  const autoField = field.auto_field?.toLowerCase();
+  if (autoField) {
+    if (autoField === "client_name") return data.clientName;
+    if (autoField === "cpf") return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
+    if (autoField === "municipio") return data.municipio;
+    // "dados_pessoais" = nome + CPF combinado
+    if (autoField === "dados_pessoais") {
+      const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
+      return parts.length ? parts.join(", ") : undefined;
+    }
+  }
+
+  // Fallback: match by key content (for manually created templates)
+  const key = field.key.toLowerCase();
+  if (/\bdados pessoais\b/.test(key)) {
+    const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
+    return parts.length ? parts.join(", ") : undefined;
+  }
+  if (key === "client_name" || key === "nome_cliente" || key === "nome" || key === "nome_do_cliente") return data.clientName;
+  if (key === "cpf" || key === "cpf_cnpj" || key === "documento") return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
+  if (/\bmunic[ií]pio\b/.test(key)) return data.municipio;
+  return undefined;
+}
+
 function GenerateDialog({
   open,
   onOpenChange,
   templates,
   pending,
   onGenerate,
+  autoFill,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  templates: Array<{ id: string; name: string; fields: unknown }>;
+  templates: Array<{ id: string; name: string; fields: unknown; google_doc_id?: string }>;
   pending: boolean;
   onGenerate: (templateId: string, title: string, values: Record<string, string>) => void;
+  autoFill: AutoFillData;
 }) {
   const [templateId, setTemplateId] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
 
   const selected = templates.find((t) => t.id === templateId);
-  const fields = useMemo<TemplateField[]>(
-    () => ((selected?.fields as TemplateField[]) ?? []).filter((f) => f.source !== "blank"),
-    [selected],
+
+  // Busca placeholders ao vivo do Google Doc quando um template é selecionado
+  const { data: livePlaceholders, isLoading: loadingFields } = useTemplatePlaceholders(
+    selected?.google_doc_id ?? null,
   );
+
+  const fields = useMemo<TemplateField[]>(() => {
+    if (livePlaceholders?.length) return livePlaceholders as TemplateField[];
+    // Fallback: usa campos salvos no banco
+    return ((selected?.fields as TemplateField[]) ?? []).filter((f) => f.source !== "blank");
+  }, [livePlaceholders, selected]);
+
+  // Pre-fill auto fields when fields change
+  const fieldsKey = fields.map((f) => f.key).join(",");
+  useMemo(() => {
+    if (!fields.length) return;
+    const pre: Record<string, string> = {};
+    for (const f of fields) {
+      const val = resolveAutoValue(f, autoFill);
+      if (val) pre[f.key] = val;
+    }
+    setValues(pre);
+  }, [fieldsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerar documento</DialogTitle>
           <DialogDescription>
@@ -303,13 +462,35 @@ function GenerateDialog({
             </Select>
           </div>
 
+          {loadingFields && templateId && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 size={14} className="animate-spin" /> Lendo campos do modelo…
+            </div>
+          )}
+
+          {!loadingFields && templateId && fields.length === 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Nenhum campo encontrado neste modelo. O documento sera gerado sem substituicoes — preencha manualmente na edicao.
+            </div>
+          )}
+
+          {fields.length > 0 && (
+            <div className="text-xs text-muted-foreground">
+              Campos com <span className="text-emerald-600 font-medium">(preenchido)</span> foram detectados automaticamente. Caso nao saiba os dados, preencha com o nome do campo.
+            </div>
+          )}
+
           {fields.map((f) => {
             const isDoc = isCpfCnpjField(f.key, f.label);
+            const hasValue = !!String(values[f.key] ?? "").trim();
+            const autoFilled = hasValue && f.source === "auto";
             return (
               <div key={f.key}>
-                <Label>
-                  {f.label}
-                  {f.required && <span className="text-destructive"> *</span>}
+                <Label className="flex items-center gap-1.5">
+                  <span>{f.label}</span>
+                  {f.required && <span className="text-destructive">*</span>}
+                  {autoFilled && <span className="text-emerald-600 text-xs">(preenchido)</span>}
+                  {!hasValue && <span className="text-amber-600 text-xs">(preencha ou use o nome do campo)</span>}
                 </Label>
                 <Input
                   value={values[f.key] ?? ""}
@@ -324,9 +505,7 @@ function GenerateDialog({
                   placeholder={
                     isDoc
                       ? "000.000.000-00"
-                      : f.source === "auto"
-                        ? "(auto — ajuste se precisar)"
-                        : ""
+                      : f.key
                   }
                 />
               </div>
@@ -339,7 +518,7 @@ function GenerateDialog({
             Cancelar
           </Button>
           <Button
-            disabled={!templateId || pending}
+            disabled={!templateId || pending || loadingFields}
             onClick={() => {
               const faltando = fields.filter(
                 (f) => f.required && !String(values[f.key] ?? "").trim(),
