@@ -8,7 +8,9 @@ import {
   calcularTermoFn,
   conferirTermoFn,
   createTermoFn,
+  darBaixaParcelaFn,
   enviarParaConferenciaFn,
+  estornarParcelaFn,
   listParcelasFn,
   listTermosFn,
   recusarTermoFn,
@@ -117,5 +119,34 @@ export function useParcelas(caseId: string) {
     queryKey: ["parcelas", caseId],
     queryFn: () => fn({ data: { caseId } }),
     enabled: !!caseId,
+  });
+}
+
+export function useDarBaixaParcela(caseId: string) {
+  const fn = useServerFn(darBaixaParcelaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      parcelaId: string;
+      valorPagoCentavos: number;
+      dataPagamento?: string | null;
+      metodoPagamento?: string | null;
+    }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+export function useEstornarParcela(caseId: string) {
+  const fn = useServerFn(estornarParcelaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (parcelaId: string) => fn({ data: { parcelaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
   });
 }

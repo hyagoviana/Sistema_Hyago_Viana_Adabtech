@@ -418,3 +418,66 @@ export async function listParcelas(caseId: string) {
   if (error) throw new TermoServiceError(error.message, 500);
   return data ?? [];
 }
+
+// Baixa manual de parcela (S22) — substituto provisório da cobrança via n8n.
+// Idempotente: só dá baixa se a parcela ainda não está PAGA (senão 409).
+export async function darBaixaParcela(
+  parcelaId: string,
+  input: {
+    valorPagoCentavos: number;
+    dataPagamento?: string | null;
+    metodoPagamento?: string | null;
+  },
+) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_parcelas")
+    .update({
+      status: "PAGA",
+      valor_pago_centavos: input.valorPagoCentavos,
+      data_pagamento: input.dataPagamento ?? new Date().toISOString(),
+      metodo_pagamento: input.metodoPagamento ?? null,
+    })
+    .eq("id", parcelaId)
+    .neq("status", "PAGA")
+    .select()
+    .single();
+  if (error || !data) {
+    throw new TermoServiceError("Parcela já paga ou não encontrada", 409);
+  }
+  await sb.from("system_audit_log").insert({
+    organization_id: data.organization_id,
+    action: "parcela.baixa",
+    entity_type: "parcela",
+    entity_id: parcelaId,
+    diff: { valor_pago_centavos: input.valorPagoCentavos, metodo: input.metodoPagamento ?? null },
+  });
+  return data;
+}
+
+// Estorno da baixa (reverte PAGA → PENDENTE). Idempotente (só sobre PAGA).
+export async function estornarParcela(parcelaId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_parcelas")
+    .update({
+      status: "PENDENTE",
+      valor_pago_centavos: null,
+      data_pagamento: null,
+      metodo_pagamento: null,
+    })
+    .eq("id", parcelaId)
+    .eq("status", "PAGA")
+    .select()
+    .single();
+  if (error || !data) {
+    throw new TermoServiceError("Só uma parcela paga pode ser estornada", 409);
+  }
+  await sb.from("system_audit_log").insert({
+    organization_id: data.organization_id,
+    action: "parcela.estorno",
+    entity_type: "parcela",
+    entity_id: parcelaId,
+  });
+  return data;
+}
