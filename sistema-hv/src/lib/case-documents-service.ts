@@ -274,6 +274,60 @@ export async function finalizeCaseDocument(docId: string) {
 }
 
 // ----------------------------------------------------------------------------
+// DOWNLOAD — devolve a URL de exportação (PDF/DOCX). Os docs são link-editáveis,
+// então a exportação direta do Google Docs é pública; fallback no PDF do Drive.
+// ----------------------------------------------------------------------------
+export async function getCaseDocumentDownloadUrl(docId: string, format: "pdf" | "docx") {
+  const doc = await getCaseDocument(docId);
+  if (doc.google_doc_id) {
+    const fmt = format === "docx" ? "docx" : "pdf";
+    return {
+      url: `https://docs.google.com/document/d/${doc.google_doc_id}/export?format=${fmt}`,
+    };
+  }
+  // Sem Google Doc: só o PDF finalizado no Drive serve.
+  if (format === "pdf" && doc.drive_url) return { url: doc.drive_url };
+  throw new CaseDocumentServiceError("Documento sem arquivo para baixar neste formato", 409);
+}
+
+// ----------------------------------------------------------------------------
+// REOPEN — reabre um documento FINALIZADO para edição (reverte o lock do finalize)
+// ----------------------------------------------------------------------------
+export async function reopenCaseDocument(docId: string) {
+  const sb = getSupabaseAdmin();
+  const doc = await getCaseDocument(docId);
+  if (doc.status !== "FINALIZADO") {
+    throw new CaseDocumentServiceError("Só um documento finalizado pode ser reaberto", 409);
+  }
+  if (doc.google_doc_id) {
+    try {
+      await setLinkEditable(doc.google_doc_id);
+    } catch (err) {
+      const msg = err instanceof DocsError ? err.message : String(err);
+      throw new CaseDocumentServiceError(
+        `Falha ao reabrir edição no Google Docs: ${msg}`,
+        EXTERNAL_DEP_FAILED,
+      );
+    }
+  }
+  const { data, error } = await sb
+    .from("system_case_documents")
+    .update({ status: "EM_EDICAO" })
+    .eq("id", doc.id)
+    .select()
+    .single();
+  if (error || !data) throw new CaseDocumentServiceError("Falha ao reabrir documento", 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: doc.organization_id,
+    action: "case_document.reopen",
+    entity_type: "case_document",
+    entity_id: doc.id,
+  });
+  return data;
+}
+
+// ----------------------------------------------------------------------------
 // SEND TO ZAPSIGN — envia o PDF finalizado para assinatura
 // ----------------------------------------------------------------------------
 export async function sendCaseDocumentToZapsign(opts: {
