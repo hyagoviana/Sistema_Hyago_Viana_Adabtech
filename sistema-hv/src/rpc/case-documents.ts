@@ -6,7 +6,9 @@ import {
   ensureCaseFolder,
   finalizeCaseDocument,
   generateCaseDocumentFromTemplate,
+  getCaseDocumentDownloadUrl,
   listCaseDocuments,
+  reopenCaseDocument,
   sendCaseDocumentToZapsign,
   softDeleteCaseDocument,
 } from "@/lib/case-documents-service";
@@ -79,9 +81,22 @@ export const sendCaseDocumentToZapsignFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => sendSchema.parse(d))
   .handler(async ({ data }) =>
     handle(() =>
-      sendCaseDocumentToZapsign({ docId: data.docId, signers: data.signers as ZapSignSignerInput[] }),
+      sendCaseDocumentToZapsign({
+        docId: data.docId,
+        signers: data.signers as ZapSignSignerInput[],
+      }),
     ),
   );
+
+export const downloadCaseDocumentFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), format: z.enum(["pdf", "docx"]) }).parse(d),
+  )
+  .handler(async ({ data }) => handle(() => getCaseDocumentDownloadUrl(data.id, data.format)));
+
+export const reopenCaseDocumentFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => docIdSchema.parse(d))
+  .handler(async ({ data }) => handle(() => reopenCaseDocument(data.id)));
 
 export const ensureCaseFolderFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => caseIdSchema.parse(d))
