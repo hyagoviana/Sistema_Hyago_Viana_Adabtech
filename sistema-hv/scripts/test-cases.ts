@@ -18,6 +18,7 @@ import {
   updateCase,
 } from "../src/lib/cases-service";
 import { createClient, softDeleteClient } from "../src/lib/clients-service";
+import { entrarNoFinanceiro, voltarAoOperacional } from "../src/lib/pipeline-service";
 
 let failed = 0;
 function assert(label: string, cond: boolean) {
@@ -91,61 +92,73 @@ async function main() {
     byStatus.some((c) => c.id === caso.id),
   );
 
-  // ─── 8. CHECK constraint — macrostatus inválido ─────────────────────────
-  console.log("\n8) Macrostatus inválido deve falhar...");
-  let bad = false;
-  try {
-    // @ts-expect-error testando runtime
-    await updateCase(caso.id, { macrostatus_op: "INVENTADO" });
-  } catch (err) {
-    bad = err instanceof Error;
-  }
-  assert("update com macrostatus_op inválido rejeitado", bad);
+  // ─── 8. Pipelines configuráveis: macrostatus_op não tem mais CHECK fixo ──
+  //   A migration de pipelines por tipo (0021) removeu o CHECK de enum — o estado
+  //   passou a ser validado pela projeção stage_op_id, não por constraint. Aqui só
+  //   garantimos que mover para uma etapa configurada é aceito (e restaura o caso).
+  console.log("\n8) macrostatus_op livre (CHECK removido — pipelines configuráveis)...");
+  const livre = await updateCase(caso.id, { macrostatus_op: "ONBOARDING" });
+  assert("update para etapa configurada aceito", livre.macrostatus_op === "ONBOARDING");
 
   // ─── 9. Get ──────────────────────────────────────────────────────────────
   console.log("\n9) Get...");
   const got = await getCase(caso.id);
   assert("get retorna case_code", got.case_code === caso.case_code);
 
-  // ─── 10. Bifurcação automática (op → fin) ────────────────────────────────
-  console.log("\n10) Bifurcação automática IMPLANTADO → ELABORANDO...");
+  // ─── 10. S19/D2: bifurcação automática DESLIGADA ─────────────────────────
+  console.log("\n10) Trigger desligado: op → IMPLANTADO NÃO bifurca mais...");
   const caso2 = await createCase({
     client_id: cli.id,
     case_type: "FIES_DGM",
-    proximo_passo: "Vai pra implantado direto",
+    proximo_passo: "Entra no financeiro só pelo botão",
   });
   assert("caso2 inicia com fin=NAO_APLICAVEL", caso2.macrostatus_fin === "NAO_APLICAVEL");
-  const bifurcated = await moveCaseStatus(caso2.id, "IMPLANTADO");
-  assert("op = IMPLANTADO", bifurcated.macrostatus_op === "IMPLANTADO");
+  const naoBifurca = await moveCaseStatus(caso2.id, "IMPLANTADO");
+  assert("op = IMPLANTADO", naoBifurca.macrostatus_op === "IMPLANTADO");
   assert(
-    "fin bifurcou automaticamente pra ELABORANDO",
-    bifurcated.macrostatus_fin === "ELABORANDO",
-  );
-  assert(
-    "status_fin_changed_at atualizou pelo trigger",
-    bifurcated.status_fin_changed_at !== caso2.status_fin_changed_at,
+    "fin permanece NAO_APLICAVEL (entrada agora é manual)",
+    naoBifurca.macrostatus_fin === "NAO_APLICAVEL",
   );
 
-  // ─── 11. Idempotência: mover op pra IMPLANTACAO_PARCIAL não re-bifurca ──
-  console.log("\n11) Idempotência: IMPLANTADO → IMPLANTACAO_PARCIAL não reseta fin...");
-  await moveCaseStatusFin(caso2.id, "ATIVO");
-  const idem = await moveCaseStatus(caso2.id, "IMPLANTACAO_PARCIAL");
-  assert("fin permaneceu ATIVO (não voltou pra ELABORANDO)", idem.macrostatus_fin === "ATIVO");
+  // ─── 11. S19: entrada manual "Duplicar" → 1ª etapa fin, segue no op ──────
+  console.log("\n11) Entrada manual (Duplicar) leva à 1ª etapa fin...");
+  await entrarNoFinanceiro(caso2.id, false);
+  const dup = await getCase(caso2.id);
+  assert("fin saiu de NAO_APLICAVEL (1ª etapa fin)", dup.macrostatus_fin !== "NAO_APLICAVEL");
+  assert(
+    "duplicar NÃO remove do operacional",
+    !(dup as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+  );
 
-  // ─── 12. Mover op pra trás (ANALISE) não afeta fin ──────────────────────
-  console.log("\n12) Mover op pra ANALISE não toca no fin...");
-  const back = await moveCaseStatus(caso2.id, "ANALISE");
-  assert("fin segue ATIVO após op voltar", back.macrostatus_fin === "ATIVO");
+  // ─── 12. Idempotência: chamar entrar de novo não reseta nem duplica ─────
+  console.log("\n12) Entrada idempotente (2ª chamada não muda o estado fin)...");
+  const finAntes = dup.macrostatus_fin;
+  await entrarNoFinanceiro(caso2.id, false);
+  const idem = await getCase(caso2.id);
+  assert("fin inalterado na 2ª chamada", idem.macrostatus_fin === finAntes);
 
-  // ─── 13. CANCELADO no op não bifurca ─────────────────────────────────────
-  console.log("\n13) CANCELADO no op não dispara bifurcação...");
+  // ─── 13. S19: "Somente financeiro" + reverter ───────────────────────────
+  console.log("\n13) Somente financeiro remove do op; reverter devolve sem mexer no fin...");
   const caso3 = await createCase({
     client_id: cli.id,
     case_type: "COVID",
-    proximo_passo: "Cliente desistiu",
+    proximo_passo: "Vai direto pro financeiro",
   });
-  const cancelled = await moveCaseStatus(caso3.id, "CANCELADO");
-  assert("CANCELADO no op mantém fin=NAO_APLICAVEL", cancelled.macrostatus_fin === "NAO_APLICAVEL");
+  await entrarNoFinanceiro(caso3.id, true);
+  const so = await getCase(caso3.id);
+  assert("fin bifurcado", so.macrostatus_fin !== "NAO_APLICAVEL");
+  assert(
+    "removido_do_operacional_at setado",
+    !!(so as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+  );
+  const finSo = so.macrostatus_fin;
+  await voltarAoOperacional(caso3.id);
+  const rev = await getCase(caso3.id);
+  assert(
+    "reverter limpou a flag (volta ao operacional)",
+    !(rev as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+  );
+  assert("reverter NÃO mexeu no estado financeiro", rev.macrostatus_fin === finSo);
 
   // ─── 14. Bloqueio de revert pra NAO_APLICAVEL ────────────────────────────
   console.log("\n14) moveCaseStatusFin pra NAO_APLICAVEL é bloqueado...");
