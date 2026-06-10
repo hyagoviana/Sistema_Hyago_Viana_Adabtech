@@ -11,6 +11,7 @@ import {
   enviarParaConferenciaFn,
   listParcelasFn,
   listTermosFn,
+  recusarTermoFn,
 } from "@/rpc/termo";
 
 export type TermoCalcInput = {
@@ -40,12 +41,14 @@ export function useCreateTermo(caseId: string) {
   const fn = useServerFn(createTermoFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: TermoCalcInput & {
-      caseId: string;
-      formaPagamento?: "PARCELADO" | "A_VISTA";
-      tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
-      elaboradoPorId?: string | null;
-    }) => fn({ data: input }),
+    mutationFn: (
+      input: TermoCalcInput & {
+        caseId: string;
+        formaPagamento?: "PARCELADO" | "A_VISTA";
+        tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
+        elaboradoPorId?: string | null;
+      },
+    ) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }
@@ -96,6 +99,15 @@ export function useAceitarTermo(caseId: string) {
       qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
     },
+  });
+}
+
+export function useRecusarTermo(caseId: string) {
+  const fn = useServerFn(recusarTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }
 
