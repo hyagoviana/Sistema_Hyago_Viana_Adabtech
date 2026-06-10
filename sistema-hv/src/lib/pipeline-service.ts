@@ -35,7 +35,12 @@ export async function createServiceType(input: { name: string; slug: string; ord
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_service_types")
-    .insert({ organization_id: DEFAULT_ORG, name: input.name, slug: input.slug, ordem: input.ordem ?? 0 })
+    .insert({
+      organization_id: DEFAULT_ORG,
+      name: input.name,
+      slug: input.slug,
+      ordem: input.ordem ?? 0,
+    })
     .select()
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao criar tipo", 500);
@@ -52,9 +57,11 @@ export async function createServiceType(input: { name: string; slug: string; ord
     { kind: "fin", slug: "QUITADO", label: "Quitado", ordem: 2, stage_role: "closed" },
     { kind: "fin", slug: "CANCELADO", label: "Cancelado", ordem: 3, stage_role: "lost" },
   ];
-  await sb.from("system_pipeline_stages").insert(
-    defaults.map((d) => ({ organization_id: DEFAULT_ORG, service_type_id: data.id, ...d })),
-  );
+  await sb
+    .from("system_pipeline_stages")
+    .insert(
+      defaults.map((d) => ({ organization_id: DEFAULT_ORG, service_type_id: data.id, ...d })),
+    );
 
   return data;
 }
@@ -102,7 +109,13 @@ export async function createStage(input: {
 
 export async function updateStage(
   id: string,
-  patch: Partial<{ label: string; stage_role: string; color: string | null; ordem: number; active: boolean }>,
+  patch: Partial<{
+    label: string;
+    stage_role: string;
+    color: string | null;
+    ordem: number;
+    active: boolean;
+  }>,
 ) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
@@ -112,7 +125,8 @@ export async function updateStage(
     .is("deleted_at", null)
     .select()
     .single();
-  if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao atualizar etapa", 500);
+  if (error || !data)
+    throw new PipelineServiceError(error?.message ?? "Falha ao atualizar etapa", 500);
   return data;
 }
 
@@ -165,7 +179,8 @@ export async function moveCaseToStageOp(caseId: string, stageId: string) {
     .select("slug, kind")
     .eq("id", stageId)
     .single();
-  if (sErr || !stage || stage.kind !== "op") throw new PipelineServiceError("Etapa operacional inválida", 422);
+  if (sErr || !stage || stage.kind !== "op")
+    throw new PipelineServiceError("Etapa operacional inválida", 422);
 
   const { data, error } = await sb
     .from("system_cases")
@@ -185,7 +200,8 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
     .select("slug, kind")
     .eq("id", stageId)
     .single();
-  if (sErr || !stage || stage.kind !== "fin") throw new PipelineServiceError("Etapa financeira inválida", 422);
+  if (sErr || !stage || stage.kind !== "fin")
+    throw new PipelineServiceError("Etapa financeira inválida", 422);
 
   const { data, error } = await sb
     .from("system_cases")
@@ -198,12 +214,67 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
 }
 
 // Bifurcação por botão (ADR-009) — idempotente via função do banco.
+// DEPRECADA pela S19 (`entrarNoFinanceiro`); mantida como caminho de rollback de D2.
 export async function bifurcarCaseToFinanceiro(caseId: string) {
   const sb = getSupabaseAdmin();
   const { error } = await sb.rpc("system_fn_bifurcar_financeiro", { p_case_id: caseId });
   if (error) throw new PipelineServiceError(error.message, 500);
   await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
     action: "case.bifurcar_financeiro",
+    entity_type: "case",
+    entity_id: caseId,
+  });
+  return { ok: true as const };
+}
+
+// Entrada no financeiro pelo popup (S19 / ADR-012..014). Idempotente.
+// `removerOperacional=false` → Duplicar (fica nas 2 pipelines).
+// `removerOperacional=true`  → Somente financeiro (sai do Kanban op, reversível).
+export async function entrarNoFinanceiro(caseId: string, removerOperacional: boolean) {
+  const sb = getSupabaseAdmin();
+  // Cast: as funções entram no types.ts só após `db:push` + `db:types`.
+  const { error } = await sb.rpc(
+    "system_fn_entrar_financeiro" as never,
+    {
+      p_case_id: caseId,
+      p_remover_operacional: removerOperacional,
+    } as never,
+  );
+  if (error) {
+    // Pré-condição de negócio (caso sem tipo / tipo sem etapa fin) → 424 (a Vercel
+    // mascara 5xx; 424 deixa a mensagem chegar ao front).
+    const status = /no_data_found|check_violation|não encontrado|etapa financeira/i.test(
+      `${error.code ?? ""} ${error.message}`,
+    )
+      ? 424
+      : 500;
+    throw new PipelineServiceError(error.message, status);
+  }
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "case.entrar_financeiro",
+    entity_type: "case",
+    entity_id: caseId,
+    diff: { removerOperacional } as never,
+  });
+  return { ok: true as const, removerOperacional };
+}
+
+// Reverter "somente financeiro" — traz o caso de volta ao operacional (S19 / D1).
+// Não altera o estado financeiro do caso. Idempotente.
+export async function voltarAoOperacional(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.rpc(
+    "system_fn_voltar_ao_operacional" as never,
+    {
+      p_case_id: caseId,
+    } as never,
+  );
+  if (error) throw new PipelineServiceError(error.message, 500);
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "case.voltar_operacional",
     entity_type: "case",
     entity_id: caseId,
   });
@@ -226,6 +297,7 @@ export async function setAcertoParcial(
     .eq("id", caseId)
     .select("id, acerto_parcial, tem_pendencia_judicial, acerto_parcial_obs")
     .single();
-  if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao marcar acerto", 500);
+  if (error || !data)
+    throw new PipelineServiceError(error?.message ?? "Falha ao marcar acerto", 500);
   return data;
 }

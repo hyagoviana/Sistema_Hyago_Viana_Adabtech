@@ -5,6 +5,7 @@ import {
   bifurcarCaseFn,
   createServiceTypeFn,
   createStageFn,
+  entrarFinanceiroFn,
   listCasesByServiceTypeFn,
   listServiceTypesFn,
   listStagesFn,
@@ -14,6 +15,7 @@ import {
   setAcertoParcialFn,
   softDeleteStageFn,
   updateStageFn,
+  voltarOperacionalFn,
 } from "@/rpc/pipeline";
 
 export function useServiceTypes() {
@@ -84,6 +86,32 @@ export function useBifurcarFinanceiro() {
   });
 }
 
+export function useEntrarFinanceiro() {
+  const fn = useServerFn(entrarFinanceiroFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string; removerOperacional: boolean }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+    },
+  });
+}
+
+export function useVoltarOperacional() {
+  const fn = useServerFn(voltarOperacionalFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (caseId: string) => fn({ data: { caseId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+    },
+  });
+}
+
 export function useSetAcertoParcial() {
   const fn = useServerFn(setAcertoParcialFn);
   const qc = useQueryClient();
@@ -121,7 +149,8 @@ export function useUpdateStage(serviceTypeId: string, kind: "op" | "fin") {
   const fn = useServerFn(updateStageFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; patch: Record<string, unknown> }) => fn({ data: vars as never }),
+    mutationFn: (vars: { id: string; patch: Record<string, unknown> }) =>
+      fn({ data: vars as never }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pipeline-stages", serviceTypeId, kind] }),
   });
 }
