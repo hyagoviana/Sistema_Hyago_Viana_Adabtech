@@ -3,8 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   createDocumentTemplateFn,
+  deleteAllDocumentTemplatesFn,
+  getTemplatePlaceholdersFn,
   listDocumentTemplatesFn,
   softDeleteDocumentTemplateFn,
+  syncDocumentTemplatesFn,
   updateDocumentTemplateFn,
 } from "@/rpc/document-templates";
 
@@ -15,6 +18,15 @@ export type TemplateFieldInput = {
   required?: boolean;
   auto_field?: string;
 };
+
+export function useTemplatePlaceholders(googleDocId: string | null) {
+  const fn = useServerFn(getTemplatePlaceholdersFn);
+  return useQuery({
+    queryKey: ["template-placeholders", googleDocId],
+    queryFn: () => fn({ data: { googleDocId: googleDocId! } }),
+    enabled: !!googleDocId,
+  });
+}
 
 export function useDocumentTemplates(caseType?: string | null) {
   const fn = useServerFn(listDocumentTemplatesFn);
@@ -54,6 +66,20 @@ export function useDeleteDocumentTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
+  });
+}
+
+export function useSyncDocumentTemplates() {
+  const syncFn = useServerFn(syncDocumentTemplatesFn);
+  const deleteFn = useServerFn(deleteAllDocumentTemplatesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (folderId?: string) => {
+      // Limpa tudo antes de re-sincronizar (evita duplicatas)
+      await deleteFn({});
+      return syncFn({ data: { folderId } });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
   });
 }

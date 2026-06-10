@@ -71,7 +71,8 @@ export class DocsError extends Error {
 
 // ----------------------------------------------------------------------------
 
-/** Copia um modelo (Google Doc) para uma nova cópia (opcionalmente numa pasta). */
+/** Copia um modelo (Google Doc ou .docx) para uma nova cópia Google Doc nativa.
+ *  Se o original for .docx, converte automaticamente para Google Doc ao copiar. */
 export async function copyTemplate(
   templateId: string,
   name: string,
@@ -81,7 +82,12 @@ export async function copyTemplate(
     const res = await driveClient().files.copy({
       fileId: templateId,
       supportsAllDrives: true,
-      requestBody: { name, parents: parentFolderId ? [parentFolderId] : undefined },
+      requestBody: {
+        name,
+        parents: parentFolderId ? [parentFolderId] : undefined,
+        // Força conversão para Google Doc nativo (necessário para replacePlaceholders)
+        mimeType: "application/vnd.google-apps.document",
+      },
       fields: "id, webViewLink",
     });
     return { id: res.data.id!, url: res.data.webViewLink ?? docUrl(res.data.id!) };

@@ -105,3 +105,14 @@ export async function softDeleteDocumentTemplate(id: string) {
   if (error) throw new DocumentTemplateServiceError(error.message, 500);
   return { ok: true as const, id };
 }
+
+export async function softDeleteAllDocumentTemplates() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_document_templates")
+    .update({ deleted_at: new Date().toISOString() })
+    .is("deleted_at", null)
+    .select("id");
+  if (error) throw new DocumentTemplateServiceError(error.message, 500);
+  return { ok: true as const, count: data?.length ?? 0 };
+}

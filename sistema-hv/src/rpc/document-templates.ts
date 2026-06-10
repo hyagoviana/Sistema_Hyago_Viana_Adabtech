@@ -5,9 +5,11 @@ import { z } from "zod";
 import {
   createDocumentTemplate,
   listDocumentTemplates,
+  softDeleteAllDocumentTemplates,
   softDeleteDocumentTemplate,
   updateDocumentTemplate,
 } from "@/lib/document-templates-service";
+import { getTemplatePlaceholders, syncTemplatesFromDrive } from "@/lib/template-sync-service";
 
 function handle<T>(fn: () => Promise<T>): Promise<T> {
   return fn().catch((err: unknown) => {
@@ -72,3 +74,20 @@ export const updateDocumentTemplateFn = createServerFn({ method: "POST" })
 export const softDeleteDocumentTemplateFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => softDeleteDocumentTemplate(data.id)));
+
+export const deleteAllDocumentTemplatesFn = createServerFn({ method: "POST" })
+  .handler(async () => handle(() => softDeleteAllDocumentTemplates()));
+
+export const getTemplatePlaceholdersFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ googleDocId: z.string().min(1) }).parse(d))
+  .handler(async ({ data }) => handle(() => getTemplatePlaceholders(data.googleDocId)));
+
+const MODELS_FOLDER_ID = process.env.GOOGLE_DRIVE_TEMPLATES_FOLDER_ID ?? "";
+
+export const syncDocumentTemplatesFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ folderId: z.string().min(1).optional() }).default({}).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(() => syncTemplatesFromDrive(data.folderId || MODELS_FOLDER_ID)),
+  );

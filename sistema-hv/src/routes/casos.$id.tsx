@@ -320,7 +320,7 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
-      <CaseDocumentsTab caseId={caso.id} caseType={caso.case_type} />
+      <CaseDocumentsTab caseId={caso.id} caseType={caso.case_type} clientName={cliente?.full_name} clientCpf={cliente?.cpf_cnpj} municipio={caso.municipio ?? undefined} />
 
       <OrnamentalDivider />
 
