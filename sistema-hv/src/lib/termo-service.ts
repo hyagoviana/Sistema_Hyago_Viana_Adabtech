@@ -57,10 +57,7 @@ export function calcularTermo(input: TermoCalcInput): TermoCalcResult {
   const descontoAvista = input.descontoAvistaPct ?? TERMO_DEFAULTS.desconto_avista_pct;
   const parcelasPagas = input.parcelasPagasCentavos ?? 0;
 
-  const efetivo = Math.max(
-    0,
-    input.saldoAntesCentavos - input.saldoDepoisCentavos - parcelasPagas,
-  );
+  const efetivo = Math.max(0, input.saldoAntesCentavos - input.saldoDepoisCentavos - parcelasPagas);
   const total = Math.floor((efetivo * percentual) / 100);
 
   let qtd = Math.floor(total / valorParcela);
@@ -233,7 +230,11 @@ async function gerarPdfTermo(termo: Awaited<ReturnType<typeof getTermo>>) {
     mimeType: "application/pdf",
     body: pdf,
   });
-  return { driveFileId: file.id, url: file.url, hash: createHash("sha256").update(pdf).digest("hex") };
+  return {
+    driveFileId: file.id,
+    url: file.url,
+    hash: createHash("sha256").update(pdf).digest("hex"),
+  };
 }
 
 async function finalizarAprovacao(
@@ -272,7 +273,8 @@ export async function enviarParaConferencia(termoId: string) {
     .eq("status", "RASCUNHO")
     .select()
     .single();
-  if (error || !data) throw new TermoServiceError("Só é possível enviar um rascunho para conferência", 409);
+  if (error || !data)
+    throw new TermoServiceError("Só é possível enviar um rascunho para conferência", 409);
   return data;
 }
 
@@ -292,7 +294,11 @@ export async function conferirTermo(termoId: string, conferidoPorId: string) {
 
   const { auto, criterios } = avaliarAuto(termo);
   if (auto) {
-    return { termo: await finalizarAprovacao(termoId, conferidoPorId, true, criterios), auto: true, criterios };
+    return {
+      termo: await finalizarAprovacao(termoId, conferidoPorId, true, criterios),
+      auto: true,
+      criterios,
+    };
   }
   const { data } = await sb
     .from("system_termo_snapshots")
@@ -320,6 +326,22 @@ export async function apresentarTermo(termoId: string) {
   return data;
 }
 
+// Recusa do cliente (S20-4) — APRESENTADO → RECUSADO. NÃO gera parcelas.
+export async function recusarTermo(termoId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_termo_snapshots")
+    .update({ status: "RECUSADO" })
+    .eq("id", termoId)
+    .eq("status", "APRESENTADO")
+    .select()
+    .single();
+  if (error || !data) {
+    throw new TermoServiceError("Só um termo apresentado pode ser recusado", 409);
+  }
+  return data;
+}
+
 // Aceite do cliente → gera parcelas e ativa a cobrança (caso vai a ATIVO).
 export async function aceitarTermo(termoId: string) {
   const sb = getSupabaseAdmin();
@@ -335,9 +357,28 @@ export async function aceitarTermo(termoId: string) {
   if (upErr) throw new TermoServiceError(upErr.message, 500);
 
   // Gera parcelas (idempotente via UNIQUE(termo_id, numero)).
-  if (termo.qtd_parcelas > 0) {
-    const base = new Date();
-    const rows = [];
+  const base = new Date();
+  const rows: Array<{
+    organization_id: string;
+    case_id: string;
+    termo_id: string;
+    numero: number;
+    valor_centavos: number;
+    vencimento: string;
+  }> = [];
+
+  if (termo.forma_pagamento === "A_VISTA") {
+    // À vista: 1 única parcela com o valor já descontado, vencendo em ~7 dias.
+    const venc = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 7);
+    rows.push({
+      organization_id: termo.organization_id,
+      case_id: termo.case_id,
+      termo_id: termo.id,
+      numero: 1,
+      valor_centavos: termo.valor_avista_centavos,
+      vencimento: venc.toISOString().slice(0, 10),
+    });
+  } else {
     for (let i = 1; i <= termo.qtd_parcelas; i++) {
       const isLast = i === termo.qtd_parcelas;
       const valor = isLast ? termo.valor_ultima_parcela_centavos : termo.valor_parcela_centavos;
@@ -351,6 +392,9 @@ export async function aceitarTermo(termoId: string) {
         vencimento: venc.toISOString().slice(0, 10),
       });
     }
+  }
+
+  if (rows.length > 0) {
     const { error: pErr } = await sb.from("system_parcelas").upsert(rows, {
       onConflict: "termo_id,numero",
       ignoreDuplicates: true,
