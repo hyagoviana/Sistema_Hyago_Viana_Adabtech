@@ -405,7 +405,8 @@ export async function aceitarTermo(termoId: string) {
   // Move o caso para ATIVO (cobrança ativa).
   await sb.from("system_cases").update({ macrostatus_fin: "ATIVO" }).eq("id", termo.case_id);
 
-  return { ok: true as const, parcelas: termo.qtd_parcelas };
+  // Conta real de parcelas geradas (À VISTA = 1; PARCELADO = N).
+  return { ok: true as const, parcelas: rows.length };
 }
 
 export async function listParcelas(caseId: string) {
