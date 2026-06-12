@@ -12,6 +12,7 @@ import {
 import { useEffect } from "react";
 
 import { AppLayout } from "@/components/hv/AppLayout";
+import { initThemeOverrides } from "@/components/settings/AppearanceSettings";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
@@ -142,6 +143,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    initThemeOverrides();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
