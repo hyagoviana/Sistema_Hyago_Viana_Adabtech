@@ -3,6 +3,8 @@
 // mapeia subpastas → case_type, e para cada Google Doc encontrado faz upsert.
 // Placeholders (<campo>) são extraídos automaticamente do corpo do documento.
 
+import mammoth from "mammoth";
+
 import { getDriveClient, listFilesInFolder } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 
@@ -51,17 +53,28 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
     const drive = getDriveClient();
     let fullText = "";
     try {
-      // Export direto funciona para Google Docs nativos. Para .docx, falha e retorna vazio.
-      // Não criamos cópia (_temp_extract) — os Google Docs "(modelo)" já contêm os placeholders.
+      // Export direto funciona para Google Docs nativos.
       const res = await drive.files.export(
         { fileId: docId, mimeType: "text/plain" },
         { responseType: "text" },
       );
       fullText = typeof res.data === "string" ? res.data : String(res.data ?? "");
     } catch {
-      // .docx não exporta direto — campos serão vazios.
-      // O Google Doc nativo "(modelo)" é processado primeiro e já tem os placeholders.
-      console.log(`[template-sync] Export falhou para ${docId} (.docx?) — campos ficam vazios`);
+      // .docx: baixa o arquivo e extrai texto localmente com mammoth (sem criar cópia no Drive)
+      console.log(`[template-sync] Export falhou para ${docId}, baixando .docx para leitura local...`);
+      try {
+        const dl = await drive.files.get(
+          { fileId: docId, alt: "media", supportsAllDrives: true },
+          { responseType: "arraybuffer" },
+        );
+        const buf = Buffer.from(dl.data as ArrayBuffer);
+        const result = await mammoth.extractRawText({ buffer: buf });
+        fullText = result.value ?? "";
+        console.log(`[template-sync] mammoth extraiu ${fullText.length} chars de ${docId}`);
+      } catch (dlErr) {
+        console.warn(`[template-sync] Falha ao ler .docx ${docId}:`,
+          dlErr instanceof Error ? dlErr.message : dlErr);
+      }
     }
 
     // Log: procura qualquer variação de delimitadores de placeholder
