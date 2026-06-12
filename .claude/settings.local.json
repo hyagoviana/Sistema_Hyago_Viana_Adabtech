@@ -176,7 +176,16 @@
       "Bash(curl -s -L --compressed https://www.sistemahyagoviana.com.br/)",
       "Bash(curl -s \"https://www.sistemahyagoviana.com.br/api/diag-env?k=orion-diag-9x7q\")",
       "Bash(curl -s \"https://sistema-beoqd1a7u-hyagovianas-projects.vercel.app/api/diag-env?k=orion-diag-9x7q\")",
-      "Bash(curl -s \"https://www.sistemahyagoviana.com.br/api/diag-env?k=orion-diag-9x7q&_=$\\(date +%s\\)\")"
+      "Bash(curl -s \"https://www.sistemahyagoviana.com.br/api/diag-env?k=orion-diag-9x7q&_=$\\(date +%s\\)\")",
+      "Bash(cd \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\")",
+      "Bash(mv sistema-hv/docs/sprints-p1-p2/sprint-19-entrada-financeiro.md docs/sprints-p1-p2/sprint-19-entrada-financeiro.md)",
+      "Bash(mv sistema-hv/docs/sprints-p1-p2/_adrs/ADR-012-016-entrada-financeiro.md docs/sprints-p1-p2/_adrs/ADR-012-016-entrada-financeiro.md)",
+      "Bash(rm -rf sistema-hv/docs)",
+      "Bash(ls sistema-hv/docs)",
+      "Bash(echo \"EXIT_TYPES=$?\")",
+      "Bash(echo \"C1=$?\")",
+      "Bash(echo \"C2=$?\")",
+      "Bash(echo \"C3=$?\")"
     ]
   }
 }
