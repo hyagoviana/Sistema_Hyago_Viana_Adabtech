@@ -16,6 +16,7 @@
     "test:rls": "tsx scripts/test-rls.ts",
     "test:upload": "tsx scripts/test-upload.ts",
     "test:cases": "tsx scripts/test-cases.ts",
+    "test:financeiro": "tsx scripts/test-financeiro.ts",
     "seed:cases": "tsx scripts/seed-cases-demo.ts",
     "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts"
   },

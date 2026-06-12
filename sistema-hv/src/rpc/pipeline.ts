@@ -6,6 +6,7 @@ import {
   bifurcarCaseToFinanceiro,
   createServiceType,
   createStage,
+  entrarNoFinanceiro,
   listCasesByServiceType,
   listServiceTypes,
   listStages,
@@ -15,6 +16,7 @@ import {
   setAcertoParcial,
   softDeleteStage,
   updateStage,
+  voltarAoOperacional,
 } from "@/lib/pipeline-service";
 
 function handle<T>(fn: () => Promise<T>): Promise<T> {
@@ -57,6 +59,21 @@ export const bifurcarCaseFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => bifurcarCaseToFinanceiro(data.caseId)));
 
+// S19 — entrada no financeiro pelo popup (Duplicar / Somente-financeiro).
+// TODO(ADR-015): gate RBAC server-side (`financeiro.manage`) quando a fundação de
+// auth server-side (S20-0) existir; hoje o gate é só na UI, como nas demais mutations.
+export const entrarFinanceiroFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), removerOperacional: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(() => entrarNoFinanceiro(data.caseId, data.removerOperacional)),
+  );
+
+export const voltarOperacionalFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => voltarAoOperacional(data.caseId)));
+
 export const setAcertoParcialFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
@@ -80,7 +97,9 @@ export const setAcertoParcialFn = createServerFn({ method: "POST" })
 
 export const createServiceTypeFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ name: z.string().min(1), slug: z.string().min(1), ordem: z.number().optional() }).parse(d),
+    z
+      .object({ name: z.string().min(1), slug: z.string().min(1), ordem: z.number().optional() })
+      .parse(d),
   )
   .handler(async ({ data }) => handle(() => createServiceType(data)));
 

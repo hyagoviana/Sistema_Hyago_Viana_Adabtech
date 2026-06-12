@@ -8,9 +8,12 @@ import {
   calcularTermoFn,
   conferirTermoFn,
   createTermoFn,
+  darBaixaParcelaFn,
   enviarParaConferenciaFn,
+  estornarParcelaFn,
   listParcelasFn,
   listTermosFn,
+  recusarTermoFn,
 } from "@/rpc/termo";
 
 export type TermoCalcInput = {
@@ -40,12 +43,14 @@ export function useCreateTermo(caseId: string) {
   const fn = useServerFn(createTermoFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: TermoCalcInput & {
-      caseId: string;
-      formaPagamento?: "PARCELADO" | "A_VISTA";
-      tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
-      elaboradoPorId?: string | null;
-    }) => fn({ data: input }),
+    mutationFn: (
+      input: TermoCalcInput & {
+        caseId: string;
+        formaPagamento?: "PARCELADO" | "A_VISTA";
+        tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
+        elaboradoPorId?: string | null;
+      },
+    ) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }
@@ -99,11 +104,49 @@ export function useAceitarTermo(caseId: string) {
   });
 }
 
+export function useRecusarTermo(caseId: string) {
+  const fn = useServerFn(recusarTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
 export function useParcelas(caseId: string) {
   const fn = useServerFn(listParcelasFn);
   return useQuery({
     queryKey: ["parcelas", caseId],
     queryFn: () => fn({ data: { caseId } }),
     enabled: !!caseId,
+  });
+}
+
+export function useDarBaixaParcela(caseId: string) {
+  const fn = useServerFn(darBaixaParcelaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      parcelaId: string;
+      valorPagoCentavos: number;
+      dataPagamento?: string | null;
+      metodoPagamento?: string | null;
+    }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+export function useEstornarParcela(caseId: string) {
+  const fn = useServerFn(estornarParcelaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (parcelaId: string) => fn({ data: { parcelaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
   });
 }

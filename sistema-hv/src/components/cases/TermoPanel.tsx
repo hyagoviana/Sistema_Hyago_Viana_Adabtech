@@ -1,5 +1,5 @@
 import { ExternalLink, Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +22,11 @@ import {
   useCalcTermo,
   useConferirTermo,
   useCreateTermo,
+  useDarBaixaParcela,
   useEnviarConferencia,
+  useEstornarParcela,
   useParcelas,
+  useRecusarTermo,
   useTermos,
 } from "@/hooks/useTermo";
 
@@ -31,7 +34,12 @@ function brl(c: number | null | undefined) {
   return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
 }
 function toCents(v: string): number {
-  const n = Number(String(v).replace(/[^\d,.-]/g, "").replace(".", "").replace(",", "."));
+  const n = Number(
+    String(v)
+      .replace(/[^\d,.-]/g, "")
+      .replace(".", "")
+      .replace(",", "."),
+  );
   return Math.round((isNaN(n) ? 0 : n) * 100);
 }
 
@@ -54,8 +62,14 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const aprovar = useAprovarTermo(caseId);
   const apresentar = useApresentarTermo(caseId);
   const aceitar = useAceitarTermo(caseId);
+  const recusar = useRecusarTermo(caseId);
   const { data: parcelas } = useParcelas(caseId);
+  const darBaixa = useDarBaixaParcela(caseId);
+  const estornar = useEstornarParcela(caseId);
   const [open, setOpen] = useState(false);
+  const [baixaFor, setBaixaFor] = useState<{ id: string; valor: number; numero: number } | null>(
+    null,
+  );
 
   return (
     <div>
@@ -116,7 +130,11 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                           { termoId: t.id, conferidoPorId: profile!.id },
                           {
                             onSuccess: (res) =>
-                              toast.success(res?.auto ? "Conferido e auto-aprovado" : "Conferido — aguarda aprovação jurídica"),
+                              toast.success(
+                                res?.auto
+                                  ? "Conferido e auto-aprovado"
+                                  : "Conferido — aguarda aprovação jurídica",
+                              ),
                             onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
                           },
                         )
@@ -171,6 +189,22 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       Registrar aceite
                     </Button>
                   )}
+                  {t.status === "APRESENTADO" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
+                      disabled={recusar.isPending}
+                      onClick={() =>
+                        recusar.mutate(t.id, {
+                          onSuccess: () => toast.success("Recusa registrada"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                    >
+                      Registrar recusa
+                    </Button>
+                  )}
                   {t.drive_url && (
                     <a href={t.drive_url} target="_blank" rel="noreferrer">
                       <Button size="sm" variant="outline">
@@ -211,6 +245,31 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                   >
                     {p.status}
                   </Badge>
+                  {p.status !== "PAGA" ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBaixaFor({ id: p.id, valor: p.valor_centavos, numero: p.numero })
+                      }
+                      className="text-[var(--gold-700)] hover:underline text-[11px]"
+                    >
+                      pagar
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={estornar.isPending}
+                      onClick={() =>
+                        estornar.mutate(p.id, {
+                          onSuccess: () => toast.success("Baixa estornada"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                      className="text-muted-foreground hover:underline text-[11px]"
+                    >
+                      estornar
+                    </button>
+                  )}
                 </span>
               </li>
             ))}
@@ -218,7 +277,31 @@ export function TermoPanel({ caseId }: { caseId: string }) {
         </div>
       )}
 
-      <ElaborarDialog caseId={caseId} open={open} onOpenChange={setOpen} elaboradoPorId={profile?.id ?? null} />
+      <BaixaParcelaDialog
+        parcela={baixaFor}
+        onOpenChange={(v) => !v && setBaixaFor(null)}
+        onConfirm={(valorPagoCentavos, metodoPagamento) => {
+          if (!baixaFor) return;
+          darBaixa.mutate(
+            { parcelaId: baixaFor.id, valorPagoCentavos, metodoPagamento },
+            {
+              onSuccess: () => {
+                toast.success("Pagamento registrado");
+                setBaixaFor(null);
+              },
+              onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+            },
+          );
+        }}
+        pending={darBaixa.isPending}
+      />
+
+      <ElaborarDialog
+        caseId={caseId}
+        open={open}
+        onOpenChange={setOpen}
+        elaboradoPorId={profile?.id ?? null}
+      />
     </div>
   );
 }
@@ -239,6 +322,8 @@ function ElaborarDialog({
   const [antes, setAntes] = useState("");
   const [depois, setDepois] = useState("");
   const [pagas, setPagas] = useState("");
+  const [tipo, setTipo] = useState<"PARCIAL" | "COMPLEMENTAR">("PARCIAL");
+  const [forma, setForma] = useState<"PARCELADO" | "A_VISTA">("PARCELADO");
   const [preview, setPreview] = useState<{
     valor_total_centavos: number;
     qtd_parcelas: number;
@@ -248,8 +333,15 @@ function ElaborarDialog({
 
   function doCalc() {
     calc.mutate(
-      { saldoAntesCentavos: toCents(antes), saldoDepoisCentavos: toCents(depois), parcelasPagasCentavos: toCents(pagas) },
-      { onSuccess: (r) => setPreview(r), onError: (e) => toast.error(e instanceof Error ? e.message : "Falha") },
+      {
+        saldoAntesCentavos: toCents(antes),
+        saldoDepoisCentavos: toCents(depois),
+        parcelasPagasCentavos: toCents(pagas),
+      },
+      {
+        onSuccess: (r) => setPreview(r),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+      },
     );
   }
 
@@ -265,7 +357,11 @@ function ElaborarDialog({
         <div className="space-y-3">
           <div>
             <Label>Saldo antes (R$)</Label>
-            <Input value={antes} onChange={(e) => setAntes(e.target.value)} placeholder="20000,00" />
+            <Input
+              value={antes}
+              onChange={(e) => setAntes(e.target.value)}
+              placeholder="20000,00"
+            />
           </div>
           <div>
             <Label>Saldo depois (R$)</Label>
@@ -274,6 +370,46 @@ function ElaborarDialog({
           <div>
             <Label>Parcelas pagas no processo (R$)</Label>
             <Input value={pagas} onChange={(e) => setPagas(e.target.value)} placeholder="0,00" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tipo</Label>
+              <div className="mt-1 flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
+                {(["PARCIAL", "COMPLEMENTAR"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTipo(v)}
+                    className={
+                      tipo === v
+                        ? "flex-1 px-2 py-1.5 bg-[var(--navy)] text-white"
+                        : "flex-1 px-2 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
+                    }
+                  >
+                    {v === "PARCIAL" ? "Parcial" : "Complementar"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Forma</Label>
+              <div className="mt-1 flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
+                {(["PARCELADO", "A_VISTA"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForma(v)}
+                    className={
+                      forma === v
+                        ? "flex-1 px-2 py-1.5 bg-[var(--navy)] text-white"
+                        : "flex-1 px-2 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
+                    }
+                  >
+                    {v === "PARCELADO" ? "Parcelado" : "À vista"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={doCalc} disabled={calc.isPending}>
             {calc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
@@ -304,6 +440,8 @@ function ElaborarDialog({
                   saldoAntesCentavos: toCents(antes),
                   saldoDepoisCentavos: toCents(depois),
                   parcelasPagasCentavos: toCents(pagas),
+                  tipoTermo: tipo,
+                  formaPagamento: forma,
                   elaboradoPorId,
                 },
                 {
@@ -317,6 +455,70 @@ function ElaborarDialog({
             }
           >
             Salvar termo
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BaixaParcelaDialog({
+  parcela,
+  onOpenChange,
+  onConfirm,
+  pending,
+}: {
+  parcela: { id: string; valor: number; numero: number } | null;
+  onOpenChange: (v: boolean) => void;
+  onConfirm: (valorPagoCentavos: number, metodoPagamento: string | null) => void;
+  pending: boolean;
+}) {
+  const [valor, setValor] = useState("");
+  const [metodo, setMetodo] = useState("");
+
+  useEffect(() => {
+    if (parcela) {
+      setValor(((parcela.valor ?? 0) / 100).toFixed(2).replace(".", ","));
+      setMetodo("");
+    }
+  }, [parcela]);
+
+  return (
+    <Dialog open={!!parcela} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Registrar pagamento
+            {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
+          </DialogTitle>
+          <DialogDescription>
+            Baixa manual da parcela (substitui a cobrança automática até a integração via n8n).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Valor pago (R$)</Label>
+            <Input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="500,00" />
+          </div>
+          <div>
+            <Label>Método (opcional)</Label>
+            <Input
+              value={metodo}
+              onChange={(e) => setMetodo(e.target.value)}
+              placeholder="PIX, boleto, transferência…"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+            Cancelar
+          </Button>
+          <Button
+            disabled={pending}
+            onClick={() => onConfirm(toCents(valor), metodo.trim() || null)}
+          >
+            {pending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
+            Confirmar pagamento
           </Button>
         </DialogFooter>
       </DialogContent>

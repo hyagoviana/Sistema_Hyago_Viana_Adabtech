@@ -191,10 +191,14 @@ function DynamicKanban({
   const [editorOpen, setEditorOpen] = useState(false);
 
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
+  // Operacional esconde os casos "somente financeiro" (S19 / ADR-016) — filtro SÓ aqui,
+  // nunca na fonte/view, senão o caso sumiria das duas pipelines.
   const cases =
     kind === "fin"
       ? (allCases ?? []).filter((c) => c.macrostatus_fin && c.macrostatus_fin !== "NAO_APLICAVEL")
-      : (allCases ?? []);
+      : (allCases ?? []).filter(
+          (c) => !(c as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+        );
 
   const columns: KanbanColumn<string>[] = (stages ?? [])
     .filter((s) => !(kind === "fin" && s.slug === "NAO_APLICAVEL"))

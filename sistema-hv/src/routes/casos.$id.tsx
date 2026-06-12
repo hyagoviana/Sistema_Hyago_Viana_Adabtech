@@ -24,9 +24,23 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
+import { can } from "@/lib/rbac";
 import { useClient } from "@/hooks/useClients";
 import { useCase, useCaseEvents, useDeleteCase, useUpdateCase } from "@/hooks/useCases";
-import { useBifurcarFinanceiro, useSetAcertoParcial } from "@/hooks/usePipeline";
+import {
+  useEntrarFinanceiro,
+  useSetAcertoParcial,
+  useVoltarOperacional,
+} from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
   MACRO_FIN_LABELS,
@@ -63,12 +77,16 @@ function CasoDetalhe() {
   const { data: events } = useCaseEvents(id);
   const update = useUpdateCase();
   const remove = useDeleteCase();
-  const bifurcar = useBifurcarFinanceiro();
+  const entrar = useEntrarFinanceiro();
+  const voltar = useVoltarOperacional();
   const acerto = useSetAcertoParcial();
+  const { role } = useAuth();
+  const podeFinanceiro = can(role, "financeiro.manage");
 
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [entrarOpen, setEntrarOpen] = useState(false);
   const [editPasso, setEditPasso] = useState(false);
   const [passoDraft, setPassoDraft] = useState("");
 
@@ -108,6 +126,9 @@ function CasoDetalhe() {
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
+  // `removido_do_operacional_at` entra no types.ts só após db:push + db:types (S19).
+  const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
+    .removido_do_operacional_at;
 
   async function savePasso() {
     try {
@@ -171,9 +192,7 @@ function CasoDetalhe() {
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-[17px] font-semibold text-[var(--navy)]">
-              {opLabel}
-            </span>
+            <span className="text-[17px] font-semibold text-[var(--navy)]">{opLabel}</span>
             <span className="text-[12px] text-muted-foreground">há {dias} dia(s) neste estado</span>
           </div>
           <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
@@ -242,19 +261,33 @@ function CasoDetalhe() {
             )}
           </div>
           <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] space-y-4">
-            {!finBifurcated && (
-              <Button
-                size="sm"
-                onClick={async () => {
-                  try {
-                    await bifurcar.mutateAsync(caso.id);
-                    toast.success("Caso enviado para o financeiro");
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Falha");
-                  }
-                }}
-                disabled={bifurcar.isPending}
-              >
+            {removidoDoOp && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-[var(--muted)] text-muted-foreground">
+                  Fora do operacional
+                </Badge>
+                {podeFinanceiro && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={voltar.isPending}
+                    onClick={async () => {
+                      try {
+                        await voltar.mutateAsync(caso.id);
+                        toast.success("Caso devolvido ao operacional");
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Falha");
+                      }
+                    }}
+                  >
+                    Trazer de volta ao operacional
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {!finBifurcated && podeFinanceiro && (
+              <Button size="sm" onClick={() => setEntrarOpen(true)}>
                 Enviar para o financeiro
               </Button>
             )}
@@ -320,7 +353,13 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
-      <CaseDocumentsTab caseId={caso.id} caseType={caso.case_type} clientName={cliente?.full_name} clientCpf={cliente?.cpf_cnpj} municipio={caso.municipio ?? undefined} />
+      <CaseDocumentsTab
+        caseId={caso.id}
+        caseType={caso.case_type}
+        clientName={cliente?.full_name}
+        clientCpf={cliente?.cpf_cnpj}
+        municipio={caso.municipio ?? undefined}
+      />
 
       <OrnamentalDivider />
 
@@ -406,6 +445,67 @@ function CasoDetalhe() {
         caseCode={caso.case_code}
         currentStatus={caso.macrostatus_fin as MacroFin}
       />
+
+      <Dialog open={entrarOpen} onOpenChange={setEntrarOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar {caso.case_code} para o financeiro</DialogTitle>
+            <DialogDescription>
+              O caso entra na primeira etapa da pipeline financeira. Escolha se ele permanece também
+              no operacional ou se sai dele.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <button
+              type="button"
+              disabled={entrar.isPending}
+              onClick={async () => {
+                try {
+                  await entrar.mutateAsync({ caseId: caso.id, removerOperacional: false });
+                  toast.success("Caso duplicado para o financeiro");
+                  setEntrarOpen(false);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha");
+                }
+              }}
+              className="w-full text-left rounded-md border border-[var(--border)] p-4 hover:border-[var(--gold)] transition-colors disabled:opacity-50"
+            >
+              <div className="font-medium text-[var(--navy)]">Duplicar para o financeiro</div>
+              <div className="text-[13px] text-muted-foreground mt-0.5">
+                O caso fica nas duas pipelines (operacional + financeiro).
+              </div>
+            </button>
+            <button
+              type="button"
+              disabled={entrar.isPending}
+              onClick={async () => {
+                try {
+                  await entrar.mutateAsync({ caseId: caso.id, removerOperacional: true });
+                  toast.success("Caso movido somente para o financeiro");
+                  setEntrarOpen(false);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha");
+                }
+              }}
+              className="w-full text-left rounded-md border border-[var(--border)] p-4 hover:border-[var(--gold)] transition-colors disabled:opacity-50"
+            >
+              <div className="font-medium text-[var(--navy)]">Somente financeiro</div>
+              <div className="text-[13px] text-muted-foreground mt-0.5">
+                O caso entra no financeiro e sai da pipeline operacional (reversível depois).
+              </div>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEntrarOpen(false)}
+              disabled={entrar.isPending}
+            >
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
