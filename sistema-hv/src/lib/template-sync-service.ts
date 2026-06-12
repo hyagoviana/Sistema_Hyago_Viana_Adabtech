@@ -57,12 +57,13 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
       );
       fullText = typeof res.data === "string" ? res.data : String(res.data ?? "");
     } catch {
-      // .docx não-convertido: tenta copiar como Google Doc, exportar, e deletar a cópia
+      // .docx não-convertido: tenta copiar como Google Doc, exportar, e deletar a cópia.
+      // Cria no "My Drive" da Service Account (sem parents) para não poluir a pasta de modelos.
       console.log(`[template-sync] Export falhou para ${docId}, tentando converter...`);
       const copy = await drive.files.copy({
         fileId: docId,
         supportsAllDrives: true,
-        requestBody: { name: "_temp_extract", mimeType: GOOGLE_DOC_MIME },
+        requestBody: { name: "_temp_extract", mimeType: GOOGLE_DOC_MIME, parents: ["root"] },
         fields: "id",
       });
       const tmpId = copy.data.id!;
@@ -73,7 +74,9 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
         );
         fullText = typeof res2.data === "string" ? res2.data : String(res2.data ?? "");
       } finally {
-        await drive.files.delete({ fileId: tmpId, supportsAllDrives: true }).catch(() => {});
+        // Tenta trash primeiro (mais confiável que delete em Shared Drives), fallback em delete
+        await drive.files.update({ fileId: tmpId, requestBody: { trashed: true } })
+          .catch(() => drive.files.delete({ fileId: tmpId, supportsAllDrives: true }).catch(() => {}));
       }
     }
 
@@ -214,7 +217,12 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
     caseType: string | null,
   ) {
     if (!doc.id || !doc.name) return;
-    const docName = doc.name.replace(/\.(docx?|pdf|txt)$/i, "").trim();
+    // Normaliza: remove extensão e prefixo "Cópia de" que o Google Drive adiciona ao copiar
+    const docName = doc.name
+      .replace(/\.(docx?|pdf|txt)$/i, "")
+      .replace(/^c[oó]pia\s+de\s+/i, "")
+      .replace(/\s*-\s*modelo$/i, "")
+      .trim();
     result.filesFound++;
 
     try {
