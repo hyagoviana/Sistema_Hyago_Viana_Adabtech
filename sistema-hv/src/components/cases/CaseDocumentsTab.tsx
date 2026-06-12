@@ -61,7 +61,8 @@ type AutoFillData = {
 };
 
 function editUrl(googleDocId: string): string {
-  return `https://docs.google.com/document/d/${googleDocId}/edit?rm=minimal`;
+  // rm=embedded mantém toolbar completa (cores, fontes, formatação) dentro do iframe
+  return `https://docs.google.com/document/d/${googleDocId}/edit?rm=embedded`;
 }
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
@@ -553,12 +554,12 @@ function EditorDialog({
 }) {
   return (
     <Dialog open={!!url} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-5xl w-[92vw]">
+      <DialogContent className="max-w-6xl w-[95vw]">
         <DialogHeader>
           <DialogTitle>Editar documento</DialogTitle>
           <DialogDescription>
-            Edite aqui dentro. Se o editor não carregar, use “Abrir em nova aba”. Ao terminar,
-            clique em “Concluí a edição”.
+            Use a barra do Google Docs para mudar cores, fontes e formatação. Ao terminar,
+            clique em "Concluí a edição".
           </DialogDescription>
         </DialogHeader>
 
@@ -570,7 +571,7 @@ function EditorDialog({
               rel="noreferrer"
               className="text-[var(--gold-700)] hover:underline text-sm inline-flex items-center gap-1"
             >
-              <ExternalLink size={13} /> Abrir em nova aba
+              <ExternalLink size={13} /> Abrir em nova aba (tela cheia)
             </a>
           )}
         </div>
@@ -580,7 +581,7 @@ function EditorDialog({
             src={url}
             title="Editor de documento"
             className="w-full rounded-md border border-[var(--border)]"
-            style={{ height: "60vh" }}
+            style={{ height: "70vh" }}
             allow="clipboard-read; clipboard-write"
           />
         )}
