@@ -57,26 +57,40 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
       );
       fullText = typeof res.data === "string" ? res.data : String(res.data ?? "");
     } catch {
-      // .docx não-convertido: tenta copiar como Google Doc, exportar, e deletar a cópia.
-      // Cria no "My Drive" da Service Account (sem parents) para não poluir a pasta de modelos.
-      console.log(`[template-sync] Export falhou para ${docId}, tentando converter...`);
-      const copy = await drive.files.copy({
-        fileId: docId,
-        supportsAllDrives: true,
-        requestBody: { name: "_temp_extract", mimeType: GOOGLE_DOC_MIME, parents: ["root"] },
-        fields: "id",
-      });
-      const tmpId = copy.data.id!;
+      // .docx: tenta exportar via Google Docs API (OAuth) que converte automaticamente
+      console.log(`[template-sync] Export SA falhou para ${docId}, tentando via OAuth...`);
       try {
-        const res2 = await drive.files.export(
-          { fileId: tmpId, mimeType: "text/plain" },
-          { responseType: "text" },
-        );
-        fullText = typeof res2.data === "string" ? res2.data : String(res2.data ?? "");
-      } finally {
-        // Tenta trash primeiro (mais confiável que delete em Shared Drives), fallback em delete
-        await drive.files.update({ fileId: tmpId, requestBody: { trashed: true } })
-          .catch(() => drive.files.delete({ fileId: tmpId, supportsAllDrives: true }).catch(() => {}));
+        // Importa o driveClient OAuth (da conta-sistema) que é dona dos modelos
+        const { default: { google } } = await import("googleapis");
+        const { OAuth2Client } = await import("google-auth-library");
+        const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+        const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
+        if (clientId && clientSecret && refreshToken) {
+          const oauth = new OAuth2Client(clientId, clientSecret);
+          oauth.setCredentials({ refresh_token: refreshToken });
+          const oauthDrive = google.drive({ version: "v3", auth: oauth });
+          // Copia via OAuth (dona dos modelos), exporta, e deleta
+          const copy = await oauthDrive.files.copy({
+            fileId: docId,
+            supportsAllDrives: true,
+            requestBody: { name: "_temp_extract", mimeType: GOOGLE_DOC_MIME },
+            fields: "id",
+          });
+          const tmpId = copy.data.id!;
+          try {
+            const res2 = await oauthDrive.files.export(
+              { fileId: tmpId, mimeType: "text/plain" },
+              { responseType: "text" },
+            );
+            fullText = typeof res2.data === "string" ? res2.data : String(res2.data ?? "");
+          } finally {
+            await oauthDrive.files.delete({ fileId: tmpId }).catch(() => {});
+          }
+        }
+      } catch (oauthErr) {
+        console.warn(`[template-sync] OAuth fallback também falhou para ${docId}:`,
+          oauthErr instanceof Error ? oauthErr.message : oauthErr);
       }
     }
 
@@ -245,30 +259,34 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
       // Dedup by name (avoid creating "1ª Cobrança ADM" twice)
       const exByName = existingByName.get(docName.toLowerCase());
       if (exByName) {
-        // Prefere Google Doc nativo sobre .docx — o nativo extrai placeholders corretamente.
-        // Se o existente já é Google Doc e o novo é .docx, pula (não sobrescreve o bom).
         const isNewNativeDoc = doc.mimeType === GOOGLE_DOC_MIME;
-        const isExistingNativeDoc = exByName.google_doc_id && existingByDocId.has(exByName.google_doc_id);
-        if (!isNewNativeDoc && exByName.google_doc_id !== doc.id) {
-          // Novo é .docx mas já temos registro — só atualiza se o existente não for Google Doc nativo
-          if (isExistingNativeDoc) {
-            result.skipped++;
-            result.details.push({ name: docName, action: "skipped", caseType });
-            return;
-          }
-        }
-        // Update google_doc_id if different (user replaced the file or upgrading from .docx to native)
-        if (exByName.google_doc_id !== doc.id) {
-          await sb
-            .from("system_document_templates")
-            .update({ google_doc_id: doc.id, case_type: caseType })
-            .eq("id", exByName.id);
-          result.updated++;
-          result.details.push({ name: docName, action: "updated", caseType });
-        } else {
+        if (exByName.google_doc_id === doc.id) {
+          // Mesmo arquivo, pula
           result.skipped++;
           result.details.push({ name: docName, action: "skipped", caseType });
+          return;
         }
+        if (!isNewNativeDoc) {
+          // Novo é .docx mas já temos registro (provavelmente Google Doc nativo) — pula
+          result.skipped++;
+          result.details.push({ name: docName, action: "skipped", caseType });
+          return;
+        }
+        // Novo é Google Doc nativo e existente é diferente — atualiza (upgrade de .docx para nativo)
+        const newPlaceholders = await extractPlaceholders(doc.id);
+        const newFields = newPlaceholders.map((ph) => ({
+          key: ph, label: fieldLabel(ph), source: fieldSource(ph),
+          required: isFieldRequired(ph),
+          ...(detectAutoField(ph) ? { auto_field: detectAutoField(ph) } : {}),
+        }));
+        await sb
+          .from("system_document_templates")
+          .update({ google_doc_id: doc.id, case_type: caseType, fields: newFields as never })
+          .eq("id", exByName.id);
+        existingByDocId.set(doc.id, { ...exByName, google_doc_id: doc.id, fields: newFields });
+        existingByName.set(docName.toLowerCase(), { ...exByName, google_doc_id: doc.id, fields: newFields });
+        result.updated++;
+        result.details.push({ name: docName, action: "updated", caseType });
         return;
       }
 
@@ -319,6 +337,12 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
       console.log(`[template-sync]   └─ ${docsInFolder.length} itens:`, docsInFolder.map((d) => `${d.name} (${d.mimeType})`));
 
       const templateDocs = docsInFolder.filter((f) => isTemplateDoc(f.mimeType));
+      // Google Docs nativos primeiro — extraem placeholders melhor que .docx
+      templateDocs.sort((a, b) => {
+        const aIsNative = a.mimeType === GOOGLE_DOC_MIME ? 0 : 1;
+        const bIsNative = b.mimeType === GOOGLE_DOC_MIME ? 0 : 1;
+        return aIsNative - bIsNative;
+      });
 
       for (const doc of templateDocs) {
         await processDoc(doc, caseType);
