@@ -84,10 +84,16 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
     const angleBrackets = fullText.match(/<[^>]{2,}>/g) ?? [];
     const guillemets = fullText.match(/«[^»]{2,}»/g) ?? [];
     const doubleBrackets = fullText.match(/\{\{[^}]{2,}\}\}/g) ?? [];
-    const singleAngles = fullText.match(/‹[^›]{2,}›/g) ?? [];
+    const singleAngles = fullText.match(/\u2039[^\u203a]{2,}\u203a/g) ?? [];
+    const squareBrackets = fullText.match(/\[[^\]]{2,}\]/g) ?? [];
     console.log(`[template-sync] Doc ${docId}: ${fullText.length} chars | <>=` +
-      `${angleBrackets.length} «»=${guillemets.length} {{}}=${doubleBrackets.length} ‹›=${singleAngles.length}`);
+      `${angleBrackets.length} «»=${guillemets.length} {{}}=${doubleBrackets.length} ‹›=${singleAngles.length} []=${squareBrackets.length}`);
     if (angleBrackets.length) console.log(`[template-sync]   Encontrados <> :`, angleBrackets.slice(0, 5));
+    if (squareBrackets.length) console.log(`[template-sync]   Encontrados [] :`, squareBrackets.slice(0, 5));
+    // Primeiros 500 chars para debug quando nenhum placeholder é encontrado
+    if (!angleBrackets.length && !guillemets.length && !doubleBrackets.length && !singleAngles.length && !squareBrackets.length) {
+      console.log(`[template-sync]   Preview (sem placeholders): "${fullText.slice(0, 500).replace(/\n/g, "\\n")}"`);
+    }
 
     // Tenta múltiplos formatos de placeholder
     const allMatches = [
@@ -95,11 +101,12 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
       ...guillemets,           // «campo»
       ...doubleBrackets,       // {{campo}}
       ...singleAngles,         // ‹campo›
+      ...squareBrackets,       // [campo]
     ];
 
     const unique = [...new Set(allMatches.map((m) => {
       // Remove delimitadores externos
-      return m.replace(/^[<«‹{]+|[>»›}]+$/g, "").trim();
+      return m.replace(/^[<«\u2039{\[]+|[>»\u203a}\]]+$/g, "").trim();
     }))].filter((s) => s.length >= 2);
     return unique;
   } catch (err) {
@@ -217,11 +224,12 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
     caseType: string | null,
   ) {
     if (!doc.id || !doc.name) return;
-    // Normaliza: remove extensão e prefixo "Cópia de" que o Google Drive adiciona ao copiar
+    // Normaliza: remove extensão, prefixo "Cópia de", e sufixos de modelo
     const docName = doc.name
       .replace(/\.(docx?|pdf|txt)$/i, "")
       .replace(/^c[oó]pia\s+de\s+/i, "")
       .replace(/\s*-\s*modelo$/i, "")
+      .replace(/\s*\(modelo\)\s*/i, "")
       .trim();
     result.filesFound++;
 
@@ -237,7 +245,19 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
       // Dedup by name (avoid creating "1ª Cobrança ADM" twice)
       const exByName = existingByName.get(docName.toLowerCase());
       if (exByName) {
-        // Update google_doc_id if different (user replaced the file in Drive)
+        // Prefere Google Doc nativo sobre .docx — o nativo extrai placeholders corretamente.
+        // Se o existente já é Google Doc e o novo é .docx, pula (não sobrescreve o bom).
+        const isNewNativeDoc = doc.mimeType === GOOGLE_DOC_MIME;
+        const isExistingNativeDoc = exByName.google_doc_id && existingByDocId.has(exByName.google_doc_id);
+        if (!isNewNativeDoc && exByName.google_doc_id !== doc.id) {
+          // Novo é .docx mas já temos registro — só atualiza se o existente não for Google Doc nativo
+          if (isExistingNativeDoc) {
+            result.skipped++;
+            result.details.push({ name: docName, action: "skipped", caseType });
+            return;
+          }
+        }
+        // Update google_doc_id if different (user replaced the file or upgrading from .docx to native)
         if (exByName.google_doc_id !== doc.id) {
           await sb
             .from("system_document_templates")

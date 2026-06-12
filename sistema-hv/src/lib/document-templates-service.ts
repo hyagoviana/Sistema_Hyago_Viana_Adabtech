@@ -34,15 +34,22 @@ export async function listDocumentTemplates(opts?: { caseType?: string | null })
   if (opts?.caseType) q = q.or(`case_type.eq.${opts.caseType},case_type.is.null`);
   const { data, error } = await q;
   if (error) throw new DocumentTemplateServiceError(error.message, 500);
-  // Dedup por nome normalizado — mantém o mais recente (último no array, já ordenado)
+  // Dedup por nome normalizado — prefere o que TEM campos (Google Doc nativo)
   const seen = new Map<string, (typeof data)[number]>();
   for (const tpl of data ?? []) {
     const key = tpl.name
       .replace(/^c[oó]pia\s+de\s+/i, "")
       .replace(/\s*-\s*modelo$/i, "")
+      .replace(/\s*\(modelo\)\s*/i, "")
       .trim()
       .toLowerCase();
-    seen.set(key, tpl);
+    const existing = seen.get(key);
+    // Mantém o que tem mais campos (Google Doc nativo extrai melhor que .docx)
+    const existingFields = Array.isArray(existing?.fields) ? existing.fields.length : 0;
+    const newFields = Array.isArray(tpl.fields) ? tpl.fields.length : 0;
+    if (!existing || newFields > existingFields) {
+      seen.set(key, tpl);
+    }
   }
   return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
