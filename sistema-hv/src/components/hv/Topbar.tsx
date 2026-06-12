@@ -1,8 +1,10 @@
-import { useRouterState } from "@tanstack/react-router";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { Search, Plus, Filter, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
+import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
+import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 
 const labelMap: Record<string, string> = {
   hoje: "Hoje",
@@ -27,6 +29,9 @@ export function Topbar() {
   const segs = path.split("/").filter(Boolean);
   const crumbs = ["Painel", ...segs.map((s) => labelMap[s] ?? s)];
   const [openNew, setOpenNew] = useState(false);
+  const [caseDialogOpen, setCaseDialogOpen] = useState(false);
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { session } = useAuth();
   const email = session?.user?.email ?? "";
   const initial = (email[0] ?? "?").toUpperCase();
@@ -90,12 +95,19 @@ export function Topbar() {
                 boxShadow: "0 12px 28px -10px rgba(60,50,20,0.22)",
               }}
             >
-              {["Caso", "Cliente", "Tarefa", "Lead", "Documento"].map((it) => (
+              {[
+                { label: "Caso", action: () => setCaseDialogOpen(true) },
+                { label: "Cliente", action: () => setClientDialogOpen(true) },
+                { label: "Tarefa", action: () => navigate({ to: "/tarefas" }) },
+                { label: "Lead", action: () => navigate({ to: "/comercial/leads" }) },
+                { label: "Documento", action: () => navigate({ to: "/modelos" }) },
+              ].map((it) => (
                 <button
-                  key={it}
+                  key={it.label}
                   className="w-full text-left px-3 py-1.5 text-[13px] text-[#1a1a1f] hover:bg-[var(--ink-50)]"
+                  onMouseDown={(e) => { e.preventDefault(); it.action(); setOpenNew(false); }}
                 >
-                  {it}
+                  {it.label}
                 </button>
               ))}
             </div>
@@ -126,6 +138,9 @@ export function Topbar() {
           {initial}
         </div>
       </div>
+
+      <CaseFormDialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen} />
+      <ClientFormDialog open={clientDialogOpen} onOpenChange={setClientDialogOpen} mode="create" />
     </header>
   );
 }

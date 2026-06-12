@@ -163,9 +163,13 @@ export async function generateCaseDocumentFromTemplate(opts: {
 
   const title = opts.title?.trim() || tpl.name;
 
+  // Garante pasta do caso ANTES de copiar — senão o Google Drive cria a cópia
+  // dentro da pasta do modelo original (07-Modelos), não na pasta do caso.
+  const { folderId: caseFolderId } = await ensureCaseFolder(opts.caseId);
+
   let docId: string;
   try {
-    const copy = await copyTemplate(tpl.google_doc_id, title);
+    const copy = await copyTemplate(tpl.google_doc_id, title, caseFolderId);
     docId = copy.id;
     await replacePlaceholders(docId, opts.values ?? {});
     await setLinkEditable(docId);
