@@ -51,47 +51,17 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
     const drive = getDriveClient();
     let fullText = "";
     try {
+      // Export direto funciona para Google Docs nativos. Para .docx, falha e retorna vazio.
+      // Não criamos cópia (_temp_extract) — os Google Docs "(modelo)" já contêm os placeholders.
       const res = await drive.files.export(
         { fileId: docId, mimeType: "text/plain" },
         { responseType: "text" },
       );
       fullText = typeof res.data === "string" ? res.data : String(res.data ?? "");
     } catch {
-      // .docx: tenta exportar via Google Docs API (OAuth) que converte automaticamente
-      console.log(`[template-sync] Export SA falhou para ${docId}, tentando via OAuth...`);
-      try {
-        // Importa o driveClient OAuth (da conta-sistema) que é dona dos modelos
-        const { default: { google } } = await import("googleapis");
-        const { OAuth2Client } = await import("google-auth-library");
-        const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-        const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-        const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
-        if (clientId && clientSecret && refreshToken) {
-          const oauth = new OAuth2Client(clientId, clientSecret);
-          oauth.setCredentials({ refresh_token: refreshToken });
-          const oauthDrive = google.drive({ version: "v3", auth: oauth });
-          // Copia via OAuth (dona dos modelos), exporta, e deleta
-          const copy = await oauthDrive.files.copy({
-            fileId: docId,
-            supportsAllDrives: true,
-            requestBody: { name: "_temp_extract", mimeType: GOOGLE_DOC_MIME },
-            fields: "id",
-          });
-          const tmpId = copy.data.id!;
-          try {
-            const res2 = await oauthDrive.files.export(
-              { fileId: tmpId, mimeType: "text/plain" },
-              { responseType: "text" },
-            );
-            fullText = typeof res2.data === "string" ? res2.data : String(res2.data ?? "");
-          } finally {
-            await oauthDrive.files.delete({ fileId: tmpId }).catch(() => {});
-          }
-        }
-      } catch (oauthErr) {
-        console.warn(`[template-sync] OAuth fallback também falhou para ${docId}:`,
-          oauthErr instanceof Error ? oauthErr.message : oauthErr);
-      }
+      // .docx não exporta direto — campos serão vazios.
+      // O Google Doc nativo "(modelo)" é processado primeiro e já tem os placeholders.
+      console.log(`[template-sync] Export falhou para ${docId} (.docx?) — campos ficam vazios`);
     }
 
     // Log: procura qualquer variação de delimitadores de placeholder
