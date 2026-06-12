@@ -72,12 +72,10 @@ export function useDeleteDocumentTemplate() {
 
 export function useSyncDocumentTemplates() {
   const syncFn = useServerFn(syncDocumentTemplatesFn);
-  const deleteFn = useServerFn(deleteAllDocumentTemplatesFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (folderId?: string) => {
-      // Limpa tudo antes de re-sincronizar (evita duplicatas)
-      await deleteFn({});
+      // Incremental: só adiciona novos, dedup por google_doc_id e nome normalizado
       return syncFn({ data: { folderId } });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
