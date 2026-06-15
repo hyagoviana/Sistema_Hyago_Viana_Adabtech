@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowRightLeft, CheckCircle2, Pencil, Phone, Trash2 } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, ExternalLink, Pencil, Phone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -177,6 +177,19 @@ function CasoDetalhe() {
               >
                 Ver ficha do cliente →
               </Link>
+              {caso.drive_folder_url && (
+                <>
+                  <span className="text-[var(--gold)]">·</span>
+                  <a
+                    href={caso.drive_folder_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--gold-700)] hover:underline"
+                  >
+                    <ExternalLink size={12} /> Pasta no Drive
+                  </a>
+                </>
+              )}
             </div>
           )}
         </div>
