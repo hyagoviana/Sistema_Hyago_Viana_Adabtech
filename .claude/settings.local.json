@@ -185,7 +185,16 @@
       "Bash(echo \"EXIT_TYPES=$?\")",
       "Bash(echo \"C1=$?\")",
       "Bash(echo \"C2=$?\")",
-      "Bash(echo \"C3=$?\")"
+      "Bash(echo \"C3=$?\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)",
+      "Bash(Get-ChildItem *)",
+      "Bash(findstr \"financeiro\\\\|entrada\\\\|parcela\")",
+      "PowerShell(head *)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(xargs grep -l \"procur\\\\|projuris\\\\|tribunal\\\\|processo\\\\|judicial\")",
+      "Bash(xargs grep -l \"sugestao\\\\|suggest\\\\|automati\\\\|inteligencia\")"
     ]
   }
 }
