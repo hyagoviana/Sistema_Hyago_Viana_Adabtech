@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateClient, useUpdateClient } from "@/hooks/useClients";
+import { useCreateCase } from "@/hooks/useCases";
+import { useServiceTypes } from "@/hooks/usePipeline";
 import type { Database } from "@/lib/supabase/types";
 import {
   clientCreateSchema,
@@ -94,7 +96,10 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
 export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient();
-  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const createCaseMutation = useCreateCase();
+  const { data: serviceTypes } = useServiceTypes();
+  const [linkedCaseType, setLinkedCaseType] = useState("");
+  const isLoading = createMutation.isPending || updateMutation.isPending || createCaseMutation.isPending;
 
   const form = useForm<ClientCreateInput>({
     resolver: zodResolver(clientCreateSchema),
@@ -111,6 +116,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    setLinkedCaseType("");
     if (mode === "edit" && client) {
       const addr = pickAddress(client.address);
       form.reset({
@@ -148,6 +154,20 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
           );
         } else {
           toast.success("Cliente criado com pasta no Drive");
+        }
+        // Cria caso vinculado se um tipo foi selecionado
+        if (linkedCaseType) {
+          try {
+            const caso = await createCaseMutation.mutateAsync({
+              client_id: created.id,
+              case_type: linkedCaseType,
+            });
+            toast.success(`Caso ${caso.case_code} vinculado ao cliente`);
+          } catch (caseErr) {
+            toast.error(
+              `Cliente criado, mas falha ao criar caso: ${caseErr instanceof Error ? caseErr.message : "erro"}`,
+            );
+          }
         }
       }
       onOpenChange(false);
@@ -408,6 +428,30 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                 </div>
               </div>
             </div>
+
+            {mode === "create" && (serviceTypes ?? []).length > 0 && (
+              <div className="border-t pt-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Vincular a um caso (opcional)
+                </p>
+                <Select
+                  onValueChange={(v) => setLinkedCaseType(v === "__none__" ? "" : v)}
+                  value={linkedCaseType || "__none__"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nenhum — criar só o cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Nenhum — criar só o cliente</SelectItem>
+                    {(serviceTypes ?? []).map((t) => (
+                      <SelectItem key={t.id} value={t.slug}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <DialogFooter>
               <Button

@@ -61,22 +61,22 @@ export function ClientCasesSection({ clientId }: Props) {
                 className="card-editorial !p-4 flex items-center gap-4 hover:border-[rgba(30,32,68,0.18)] transition"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {c.case_code}
-                    </span>
+                  <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                    {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+                  </span>
+                  <div className="text-[15px] text-[var(--navy)] font-semibold mt-0.5">
+                    {c.case_code}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
                     <Badge tone="gold">
-                      {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+                      {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
                     </Badge>
+                    {c.proximo_passo && (
+                      <span className="text-[11.5px] text-muted-foreground line-clamp-1">
+                        {c.proximo_passo}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-[14px] text-[var(--navy)] font-semibold">
-                    {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
-                  </div>
-                  {c.proximo_passo && (
-                    <div className="text-[11.5px] text-muted-foreground mt-1 line-clamp-1">
-                      {c.proximo_passo}
-                    </div>
-                  )}
                 </div>
               </Link>
             </li>

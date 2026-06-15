@@ -52,13 +52,24 @@ function HojePage() {
     [lista],
   );
 
-  // Urgente: tarefas abertas urgentes/altas
+  const userId = session?.user?.id;
+
+  // Tarefas do usuário logado (atribuídas a ele ou sem dono)
+  const minhasTarefas = useMemo(
+    () =>
+      (tasks ?? []).filter(
+        (t) => t.status !== "CONCLUIDA" && (t.assignee_id === userId || !t.assignee_id),
+      ),
+    [tasks, userId],
+  );
+
+  // Urgente: tarefas abertas urgentes/altas do usuário
   const urgentes = useMemo(
     () =>
-      (tasks ?? [])
-        .filter((t) => t.status !== "CONCLUIDA" && (t.priority === "URGENTE" || t.priority === "ALTA"))
+      minhasTarefas
+        .filter((t) => t.priority === "URGENTE" || t.priority === "ALTA")
         .slice(0, 3),
-    [tasks],
+    [minhasTarefas],
   );
 
   // Próximos 7 dias: prazos abertos com vencimento em ≤7 dias (inclui atrasados)

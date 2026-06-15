@@ -47,9 +47,14 @@ export function useCreateCaseTask(caseId: string) {
       title: string;
       priority?: string;
       assignee?: string | null;
+      assignee_id?: string | null;
       due_date?: string | null;
     }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-tasks", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-tasks"] });
+      qc.invalidateQueries({ queryKey: ["case-events", caseId] });
+    },
   });
 }
 
@@ -58,7 +63,11 @@ export function useSetCaseTaskStatus(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; status: string }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-tasks", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-tasks"] });
+      qc.invalidateQueries({ queryKey: ["case-events", caseId] });
+    },
   });
 }
 

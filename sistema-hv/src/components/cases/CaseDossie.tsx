@@ -1,4 +1,4 @@
-import { Check, Clock, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { Check, Clock, MessageSquare, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import {
   useCreateCaseCommunication,
   useDeleteCaseCommunication,
 } from "@/hooks/useDossie";
+import { useUsers } from "@/hooks/useUsers";
 
 const PRIORITY_TONE: Record<string, "neutral" | "navy" | "warning" | "danger"> = {
   BAIXA: "neutral",
@@ -47,18 +48,30 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // ---------------------------------------------------------------- Tarefas ----
 function TasksSection({ caseId }: { caseId: string }) {
   const { data: tasks, isLoading } = useCaseTasks(caseId);
+  const { data: users } = useUsers();
   const create = useCreateCaseTask(caseId);
   const setStatus = useSetCaseTaskStatus(caseId);
   const del = useDeleteCaseTask(caseId);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("MEDIA");
+  const [assigneeId, setAssigneeId] = useState<string>("__none__");
+
+  const activeUsers = (users ?? []).filter(
+    (u: { status: string }) => u.status === "ACTIVE",
+  );
 
   async function add() {
     if (!title.trim()) return;
     try {
-      await create.mutateAsync({ case_id: caseId, title: title.trim(), priority });
+      await create.mutateAsync({
+        case_id: caseId,
+        title: title.trim(),
+        priority,
+        assignee_id: assigneeId !== "__none__" ? assigneeId : null,
+      });
       setTitle("");
       setPriority("MEDIA");
+      setAssigneeId("__none__");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar tarefa");
     }
@@ -68,12 +81,13 @@ function TasksSection({ caseId }: { caseId: string }) {
     <section>
       <SectionTitle>Tarefas</SectionTitle>
       <div className="card-editorial p-4">
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
           <Input
             placeholder="Nova tarefa…"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
+            className="flex-1 min-w-[200px]"
           />
           <Select value={priority} onValueChange={setPriority}>
             <SelectTrigger className="w-[130px] shrink-0">
@@ -83,6 +97,19 @@ function TasksSection({ caseId }: { caseId: string }) {
               {["BAIXA", "MEDIA", "ALTA", "URGENTE"].map((p) => (
                 <SelectItem key={p} value={p}>
                   {p.charAt(0) + p.slice(1).toLowerCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={assigneeId} onValueChange={setAssigneeId}>
+            <SelectTrigger className="w-[180px] shrink-0">
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sem responsável</SelectItem>
+              {activeUsers.map((u: { id: string; full_name: string | null; email: string }) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.full_name || u.email}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -121,11 +148,15 @@ function TasksSection({ caseId }: { caseId: string }) {
                     >
                       {t.title}
                     </div>
-                    {t.due_date && (
-                      <div className="text-[11.5px] text-muted-foreground">
-                        Vence {fmtDate(t.due_date)}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground">
+                      {t.assignee_name && (
+                        <span className="inline-flex items-center gap-1">
+                          <User size={10} /> {t.assignee_name}
+                        </span>
+                      )}
+                      {t.assignee_name && t.due_date && <span>·</span>}
+                      {t.due_date && <span>Vence {fmtDate(t.due_date)}</span>}
+                    </div>
                   </div>
                   <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
                     {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}

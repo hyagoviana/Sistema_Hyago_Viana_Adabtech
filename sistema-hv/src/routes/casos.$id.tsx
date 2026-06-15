@@ -70,6 +70,13 @@ function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
+/** Extrai string de um campo JSONB (address / professional_data). */
+function pickStr(obj: unknown, key: string): string | undefined {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return undefined;
+  const val = (obj as Record<string, unknown>)[key];
+  return typeof val === "string" && val ? val : undefined;
+}
+
 function CasoDetalhe() {
   const { id } = Route.useParams();
   const navigate = Route.useNavigate();
@@ -359,6 +366,20 @@ function CasoDetalhe() {
         clientName={cliente?.full_name}
         clientCpf={cliente?.cpf_cnpj}
         municipio={caso.municipio ?? undefined}
+        autoFillExtra={{
+          email: cliente?.email ?? undefined,
+          phone: cliente?.phone ?? undefined,
+          city: pickStr(cliente?.address, "city"),
+          state: pickStr(cliente?.address, "state"),
+          crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
+          crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
+          oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
+          oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
+          especialidade: pickStr(cliente?.professional_data, "especialidade"),
+          vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
+          caseCode: caso.case_code,
+          responsavel: caso.responsavel ?? undefined,
+        }}
       />
 
       <OrnamentalDivider />
@@ -388,6 +409,10 @@ function CasoDetalhe() {
                       `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
                     {e.action === "updated" && "Caso editado"}
                     {e.action === "soft_deleted" && "Caso excluído"}
+                    {e.action === "task_created" &&
+                      `Tarefa criada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
+                    {e.action === "task_completed" &&
+                      `Tarefa concluída: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
                     {fmtDateTime(e.created_at)}

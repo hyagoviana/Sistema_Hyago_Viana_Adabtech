@@ -19,10 +19,10 @@ import {
 } from "@/lib/dossie-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
-async function handle<T>(fn: () => Promise<T>): Promise<T> {
+async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
-    await requireAuth();
-    return await fn();
+    const { id } = await requireAuth();
+    return await fn(id);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
       setResponseStatus(err.status);
@@ -49,14 +49,15 @@ export const createCaseTaskFn = createServerFn({ method: "POST" })
       title: string;
       priority?: string;
       assignee?: string | null;
+      assignee_id?: string | null;
       due_date?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle(() => createCaseTask(data)));
+  .handler(async ({ data }) => handle((userId) => createCaseTask(data, userId)));
 
 export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
-  .handler(async ({ data }) => handle(() => setCaseTaskStatus(data.id, data.status)));
+  .handler(async ({ data }) => handle((userId) => setCaseTaskStatus(data.id, data.status, userId)));
 
 export const deleteCaseTaskFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)

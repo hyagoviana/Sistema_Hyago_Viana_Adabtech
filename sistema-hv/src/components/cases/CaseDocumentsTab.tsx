@@ -58,6 +58,18 @@ type AutoFillData = {
   clientName?: string;
   clientCpf?: string;
   municipio?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  crm_numero?: string;
+  crm_uf?: string;
+  oab_numero?: string;
+  oab_uf?: string;
+  especialidade?: string;
+  vinculo_institucional?: string;
+  caseCode?: string;
+  responsavel?: string;
 };
 
 function editUrl(googleDocId: string): string {
@@ -74,7 +86,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   CANCELADO: { label: "Cancelado", cls: "bg-muted text-muted-foreground line-through" },
 };
 
-export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, municipio }: { caseId: string; caseType: string; clientName?: string; clientCpf?: string; municipio?: string }) {
+export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, municipio, autoFillExtra }: { caseId: string; caseType: string; clientName?: string; clientCpf?: string; municipio?: string; autoFillExtra?: Omit<AutoFillData, 'clientName' | 'clientCpf' | 'municipio'> }) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
   const { data: templates } = useDocumentTemplates(caseType);
   const generate = useGenerateCaseDocument(caseId);
@@ -301,7 +313,7 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
         onOpenChange={setGenOpen}
         templates={(templates ?? []) as Array<{ id: string; name: string; fields: unknown; google_doc_id?: string }>}
         pending={generate.isPending}
-        autoFill={{ clientName, clientCpf, municipio }}
+        autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
         onGenerate={async (templateId, title, values) => {
           try {
             const res = await generate.mutateAsync({ caseId, templateId, title, values });
@@ -362,6 +374,18 @@ function resolveAutoValue(field: TemplateField, data: AutoFillData): string | un
     if (autoField === "client_name") return data.clientName;
     if (autoField === "cpf") return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
     if (autoField === "municipio") return data.municipio;
+    if (autoField === "email") return data.email;
+    if (autoField === "phone" || autoField === "telefone") return data.phone;
+    if (autoField === "crm" || autoField === "crm_numero") return data.crm_numero;
+    if (autoField === "crm_uf") return data.crm_uf;
+    if (autoField === "oab" || autoField === "oab_numero") return data.oab_numero;
+    if (autoField === "oab_uf") return data.oab_uf;
+    if (autoField === "especialidade") return data.especialidade;
+    if (autoField === "vinculo_institucional") return data.vinculo_institucional;
+    if (autoField === "case_code" || autoField === "codigo_caso") return data.caseCode;
+    if (autoField === "responsavel") return data.responsavel;
+    if (autoField === "cidade" || autoField === "city") return data.city;
+    if (autoField === "estado" || autoField === "uf" || autoField === "state") return data.state;
     // "dados_pessoais" = nome + CPF combinado
     if (autoField === "dados_pessoais") {
       const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
@@ -371,13 +395,29 @@ function resolveAutoValue(field: TemplateField, data: AutoFillData): string | un
 
   // Fallback: match by key content (for manually created templates)
   const key = field.key.toLowerCase();
+  const label = (field.label ?? "").toLowerCase();
+  const match = (patterns: RegExp) => patterns.test(key) || patterns.test(label);
+
   if (/\bdados pessoais\b/.test(key)) {
     const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
     return parts.length ? parts.join(", ") : undefined;
   }
-  if (key === "client_name" || key === "nome_cliente" || key === "nome" || key === "nome_do_cliente") return data.clientName;
-  if (key === "cpf" || key === "cpf_cnpj" || key === "documento") return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
-  if (/\bmunic[ií]pio\b/.test(key)) return data.municipio;
+  // Nome do cliente / médico / profissional → sempre é o nome do cliente
+  if (match(/\b(nome.*cliente|nome.*m[eé]dico|client.*name|nome.*profissional|nome_cliente|nome_do_cliente|nome_medico)\b/) || key === "nome" || key === "client_name") return data.clientName;
+  if (match(/\b(cpf|cpf_cnpj|documento)\b/)) return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
+  if (match(/\bmunic[ií]pio\b/)) return data.municipio;
+  if (match(/\be[-_]?mail\b/)) return data.email;
+  if (match(/\b(telefone|phone|celular|fone)\b/)) return data.phone;
+  if (match(/\b(crm_uf|uf.*crm)\b/)) return data.crm_uf;
+  if (match(/\bcrm\b/) && !match(/\buf\b/)) return data.crm_numero;
+  if (match(/\b(oab_uf|uf.*oab)\b/)) return data.oab_uf;
+  if (match(/\boab\b/) && !match(/\buf\b/)) return data.oab_numero;
+  if (match(/\bespecialidade\b/)) return data.especialidade;
+  if (match(/\bv[ií]nculo\b/)) return data.vinculo_institucional;
+  if (match(/\b(c[oó]digo.*caso|case.*code|numero.*caso)\b/)) return data.caseCode;
+  if (match(/\brespons[aá]vel\b/)) return data.responsavel;
+  if (match(/\b(cidade|city)\b/)) return data.city;
+  if (key === "uf" || key === "estado" || key === "state") return data.state;
   return undefined;
 }
 

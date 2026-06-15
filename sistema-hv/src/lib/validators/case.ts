@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-import { CASE_TYPES, MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
+import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 
 export const caseCreateSchema = z.object({
   client_id: z.string().uuid("Cliente obrigatório"),
-  case_type: z.enum(CASE_TYPES),
+  case_type: z.string().min(1, "Tipo obrigatório"),
   macrostatus_op: z.enum(MACRO_OP).optional(),
   macrostatus_fin: z.enum(MACRO_FIN).optional(),
   proximo_passo: z.string().trim().max(500).optional().nullable(),

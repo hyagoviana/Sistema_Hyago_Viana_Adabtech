@@ -26,22 +26,31 @@ const now = () => new Date().toISOString();
 export async function listCaseTasks(caseId: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
-    .from("system_case_tasks_active")
-    .select("*")
+    .from("system_case_tasks")
+    .select("*, assigned_user:system_users!assignee_id(id, full_name)")
     .eq("case_id", caseId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   check(error);
-  return data ?? [];
+  return (data ?? []).map((t) => ({
+    ...t,
+    assignee_name: (t.assigned_user as { id: string; full_name: string } | null)?.full_name ?? t.assignee ?? null,
+    assigned_user: undefined,
+  }));
 }
 
-export async function createCaseTask(input: {
-  case_id: string;
-  title: string;
-  priority?: string;
-  assignee?: string | null;
-  due_date?: string | null;
-  description?: string | null;
-}) {
+export async function createCaseTask(
+  input: {
+    case_id: string;
+    title: string;
+    priority?: string;
+    assignee?: string | null;
+    assignee_id?: string | null;
+    due_date?: string | null;
+    description?: string | null;
+  },
+  triggeredBy?: string,
+) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_tasks")
@@ -49,10 +58,22 @@ export async function createCaseTask(input: {
     .select()
     .single();
   check(error);
+
+  // Registra evento na timeline do caso
+  if (data) {
+    await sb.from("system_case_events").insert({
+      case_id: input.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "task_created",
+      diff: { task_title: input.title, assignee_id: input.assignee_id ?? null },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return data;
 }
 
-export async function setCaseTaskStatus(id: string, status: string) {
+export async function setCaseTaskStatus(id: string, status: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_tasks")
@@ -61,6 +82,18 @@ export async function setCaseTaskStatus(id: string, status: string) {
     .select()
     .single();
   check(error);
+
+  // Registra evento na timeline do caso quando tarefa é concluída
+  if (data && status === "CONCLUIDA") {
+    await sb.from("system_case_events").insert({
+      case_id: data.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "task_completed",
+      diff: { task_title: data.title, task_id: id },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return data;
 }
 
@@ -183,7 +216,7 @@ export async function listAllTasks() {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_tasks_active")
-    .select("id, case_id, title, status, priority, assignee, due_date, created_at")
+    .select("id, case_id, title, status, priority, assignee, assignee_id, due_date, created_at")
     .order("due_date", { ascending: true, nullsFirst: false });
   check(error);
   const map = await caseLookup(sb);

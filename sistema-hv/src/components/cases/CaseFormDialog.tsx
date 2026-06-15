@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
-import { CASE_TYPES, CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
+import { useServiceTypes } from "@/hooks/usePipeline";
 import { caseCreateSchema, type CaseCreateInput } from "@/lib/validators/case";
 
 type Props = {
@@ -41,13 +41,16 @@ type Props = {
 
 export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: clients } = useClientsList();
+  const { data: serviceTypes } = useServiceTypes();
   const create = useCreateCase();
+
+  const firstType = serviceTypes?.[0]?.slug ?? "";
 
   const form = useForm<CaseCreateInput>({
     resolver: zodResolver(caseCreateSchema),
     defaultValues: {
       client_id: presetClientId ?? "",
-      case_type: "FIES_ESF" as CaseType,
+      case_type: firstType,
       proximo_passo: "",
       responsavel: "",
       municipio: "",
@@ -58,13 +61,13 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     if (open) {
       form.reset({
         client_id: presetClientId ?? "",
-        case_type: "FIES_ESF" as CaseType,
+        case_type: serviceTypes?.[0]?.slug ?? "",
         proximo_passo: "",
         responsavel: "",
         municipio: "",
       });
     }
-  }, [open, presetClientId, form]);
+  }, [open, presetClientId, form, serviceTypes]);
 
   async function onSubmit(data: CaseCreateInput) {
     try {
@@ -126,13 +129,13 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CASE_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {CASE_TYPE_LABELS[t]}
+                      {(serviceTypes ?? []).map((t) => (
+                        <SelectItem key={t.id} value={t.slug}>
+                          {t.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
