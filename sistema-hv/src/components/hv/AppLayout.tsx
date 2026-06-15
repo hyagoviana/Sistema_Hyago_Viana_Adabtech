@@ -1,7 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { StatusBar } from "./StatusBar";
 
 export function AppLayout() {
   return (
@@ -10,7 +9,6 @@ export function AppLayout() {
       <div
         className="flex-1 min-w-0 flex flex-col"
         style={{
-          paddingBottom: 28,
           // Degradê horizontal: creme à esquerda → esbranquiçando à direita
           background: "linear-gradient(90deg, #ece4d1 0%, #f2ecdd 45%, #f8f4ec 100%)",
         }}
@@ -20,7 +18,6 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <StatusBar />
     </div>
   );
 }

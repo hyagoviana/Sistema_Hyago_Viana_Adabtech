@@ -1,4 +1,4 @@
-import { useRouterState, useNavigate } from "@tanstack/react-router";
+import { useRouterState, useNavigate, Link } from "@tanstack/react-router";
 import { Search, Plus, Filter, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
@@ -29,6 +29,7 @@ export function Topbar() {
   const segs = path.split("/").filter(Boolean);
   const crumbs = ["Painel", ...segs.map((s) => labelMap[s] ?? s)];
   const [openNew, setOpenNew] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -119,22 +120,44 @@ export function Topbar() {
           <Filter size={14} strokeWidth={1.6} />
         </button>
 
-        <button
-          className="relative w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-500)] hover:bg-[var(--ink-50)] hover:text-[#1a1a1f]"
-          title="Notificações"
-        >
-          <Bell size={14} strokeWidth={1.6} />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setNotifOpen((v) => !v)}
+            onBlur={() => setTimeout(() => setNotifOpen(false), 150)}
+            className="relative w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-500)] hover:bg-[var(--ink-50)] hover:text-[#1a1a1f]"
+            title="Notificações"
+          >
+            <Bell size={14} strokeWidth={1.6} />
+          </button>
+          {notifOpen && (
+            <div
+              className="absolute right-0 top-9 w-72 rounded-xl py-3 z-50"
+              style={{
+                background: "var(--card)",
+                border: "1px solid rgba(120,96,30,0.14)",
+                boxShadow: "0 12px 28px -10px rgba(60,50,20,0.22)",
+              }}
+            >
+              <div className="px-3 pb-2 text-[11px] uppercase tracking-wider text-[var(--ink-400)] font-semibold">
+                Notificações
+              </div>
+              <div className="px-3 py-4 text-center text-[13px] text-[var(--ink-400)]">
+                Nenhuma notificação no momento.
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="w-px h-5 mx-1 bg-[var(--border)]" />
 
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium text-white"
+        <Link
+          to="/configuracoes"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium text-white cursor-pointer hover:ring-2 hover:ring-[var(--gold)] transition-shadow"
           style={{ background: "#1e2044" }}
           title={email || "Usuário"}
         >
           {initial}
-        </div>
+        </Link>
       </div>
 
       <CaseFormDialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen} />
