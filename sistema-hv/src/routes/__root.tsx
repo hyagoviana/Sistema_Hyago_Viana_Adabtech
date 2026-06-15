@@ -164,9 +164,11 @@ function RootLayout() {
   const navigate = useNavigate();
   // Telas de autenticação: redirecionam para /hoje se já houver sessão.
   const isAuthPage = path === "/entrar" || path === "/login";
-  // /definir-senha é pública, MAS não redireciona usuário logado — o convidado
-  // entra com uma sessão (vinda do link) e precisa permanecer para criar a senha.
-  const isPublic = isAuthPage || path === "/definir-senha";
+  // Rotas públicas que NÃO redirecionam usuário logado (convidado/recovery entra com sessão).
+  const isPublic =
+    isAuthPage ||
+    path === "/recuperar-senha" ||
+    path === "/nova-senha";
 
   useEffect(() => {
     if (loading) return;

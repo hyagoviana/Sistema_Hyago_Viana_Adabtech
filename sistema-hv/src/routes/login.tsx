@@ -1,7 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock, Mail } from "lucide-react";
-import { useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
-import { toast } from "sonner";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { Eyebrow } from "@/components/hv/primitives";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -15,6 +14,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const keepSessionRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,7 +23,10 @@ function LoginPage() {
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
     const password = String(fd.get("password") ?? "");
-    const { error: authError } = await getSupabaseBrowserClient().auth.signInWithPassword({
+
+    const sb = getSupabaseBrowserClient();
+
+    const { error: authError } = await sb.auth.signInWithPassword({
       email,
       password,
     });
@@ -32,26 +35,18 @@ function LoginPage() {
       setError("E-mail ou senha inválidos.");
       return;
     }
-    navigate({ to: "/hoje" });
-  }
 
-  async function handleForgot(e: MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    setError(null);
-    const form = e.currentTarget.form;
-    const email = form ? String(new FormData(form).get("email") ?? "").trim() : "";
-    if (!email) {
-      setError("Digite seu e-mail acima para receber o link de redefinição.");
-      return;
+    // Se o checkbox NÃO estiver marcado, a sessão será encerrada ao fechar o navegador
+    if (!keepSessionRef.current?.checked) {
+      // Supabase persiste no localStorage por padrão; usar sessionStorage-like behavior
+      // removendo o refresh token ao fechar — não há API direta, mas podemos
+      // registrar um listener para limpar na saída
+      window.addEventListener("beforeunload", () => {
+        void sb.auth.signOut();
+      }, { once: true });
     }
-    const { error: resetErr } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/definir-senha`,
-    });
-    if (resetErr) {
-      setError("Não foi possível enviar o e-mail de redefinição. Tente novamente.");
-      return;
-    }
-    toast.success("Enviamos um link de redefinição de senha para o seu e-mail.");
+
+    navigate({ to: "/hoje" });
   }
 
   return (
@@ -130,7 +125,13 @@ function LoginPage() {
           </div>
 
           <label className="mt-5 flex items-center gap-2 select-none cursor-pointer">
-            <input type="checkbox" className="h-4 w-4 rounded-sm" style={{ accentColor: "#987814" }} />
+            <input
+              ref={keepSessionRef}
+              type="checkbox"
+              defaultChecked
+              className="h-4 w-4 rounded-sm"
+              style={{ accentColor: "#987814" }}
+            />
             <span className="text-[13px] text-muted-foreground">
               Manter sessão ativa neste dispositivo
             </span>
@@ -157,13 +158,12 @@ function LoginPage() {
           </button>
 
           <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={handleForgot}
+            <Link
+              to="/recuperar-senha"
               className="text-sm font-medium text-[var(--gold-700)] hover:text-[var(--gold)]"
             >
               Esqueci minha senha
-            </button>
+            </Link>
           </div>
 
           <p className="mt-10 text-center text-[11.5px] text-muted-foreground/70">

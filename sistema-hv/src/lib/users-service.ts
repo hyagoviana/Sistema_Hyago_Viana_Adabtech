@@ -48,14 +48,18 @@ export async function listUsers() {
  * Convida um usuário: cria a conta no Supabase Auth (envia e-mail de convite)
  * e registra o perfil em system_users com status INVITED.
  */
-export async function inviteUser(input: { email: string; full_name?: string; role: string }) {
+export async function inviteUser(input: {
+  email: string;
+  full_name?: string;
+  role: string;
+  redirectTo?: string;
+}) {
   assertRole(input.role);
   const sb = getSupabaseAdmin();
 
   const { data: invited, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(input.email, {
     data: { full_name: input.full_name ?? null },
-    // Para onde o link do e-mail leva: a tela onde o convidado cria a senha.
-    redirectTo: `${APP_URL}/definir-senha`,
+    redirectTo: input.redirectTo ?? `${APP_URL}/nova-senha`,
   });
   if (inviteErr || !invited?.user) {
     throw new UsersServiceError(inviteErr?.message ?? "Falha ao convidar usuário.", 400);
@@ -132,6 +136,46 @@ export async function removeUser(id: string) {
     .eq("id", id);
   check(error);
   return { ok: true as const, id };
+}
+
+// ----------------------------------------------------------------------------
+// Senha — reset e alteração
+// ----------------------------------------------------------------------------
+
+/**
+ * Envia e-mail de recuperação de senha via Supabase Auth.
+ * Não requer autenticação (endpoint público).
+ */
+export async function requestPasswordReset(email: string, redirectTo: string) {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) throw new UsersServiceError(error.message, 400);
+  return { ok: true as const };
+}
+
+/**
+ * Altera a senha de um usuário autenticado.
+ * Requer que o chamador passe o userId já validado pelo auth-guard.
+ */
+export async function updateUserPassword(userId: string, newPassword: string) {
+  if (!newPassword || newPassword.length < 6) {
+    throw new UsersServiceError("A senha deve ter no mínimo 6 caracteres.", 400);
+  }
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) throw new UsersServiceError(error.message, 400);
+
+  // Ativar usuário convidado que está definindo senha pela primeira vez
+  const { data: profile } = await sb
+    .from("system_users")
+    .select("status")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.status === "INVITED") {
+    await sb.from("system_users").update({ status: "ACTIVE" }).eq("id", userId);
+  }
+
+  return { ok: true as const };
 }
 
 // ----------------------------------------------------------------------------

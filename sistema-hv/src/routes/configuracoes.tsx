@@ -3,6 +3,7 @@ import { ShieldCheck } from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { ChangePasswordSection } from "@/components/settings/ChangePasswordSection";
 import { UsersAdmin } from "@/components/settings/UsersAdmin";
 import { useAuth } from "@/lib/auth";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/rbac";
@@ -53,6 +54,9 @@ function Configuracoes() {
           )}
         </div>
       </section>
+
+      {/* Alterar senha */}
+      <ChangePasswordSection />
 
       {/* Aparência — cores e fonte */}
       <AppearanceSettings />

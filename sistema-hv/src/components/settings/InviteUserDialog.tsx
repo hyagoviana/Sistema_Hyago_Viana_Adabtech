@@ -51,6 +51,7 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
         email: cleanEmail,
         full_name: fullName.trim() || undefined,
         role,
+        redirectTo: `${window.location.origin}/nova-senha`,
       });
       toast.success(`Convite enviado para ${cleanEmail}`);
       reset();

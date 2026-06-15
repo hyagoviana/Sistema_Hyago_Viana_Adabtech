@@ -10,12 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TarefasRouteImport } from './routes/tarefas'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as PipelineRouteImport } from './routes/pipeline'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as ModelosRouteImport } from './routes/modelos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HojeRouteImport } from './routes/hoje'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhatsappIndexRouteImport } from './routes/whatsapp.index'
@@ -77,9 +80,19 @@ const TarefasRoute = TarefasRouteImport.update({
   path: '/tarefas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PipelineRoute = PipelineRouteImport.update({
   id: '/pipeline',
   path: '/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModelosRoute = ModelosRouteImport.update({
@@ -105,6 +118,11 @@ const EntrarRoute = EntrarRouteImport.update({
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
+  id: '/definir-senha',
+  path: '/definir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -391,12 +409,15 @@ const ApiClientsIdDocumentsDocIdDownloadRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -455,12 +476,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -519,12 +543,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
   '/hoje': typeof HojeRoute
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -585,12 +612,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/configuracoes'
+    | '/definir-senha'
     | '/design-system'
     | '/entrar'
     | '/hoje'
     | '/login'
     | '/modelos'
+    | '/nova-senha'
     | '/pipeline'
+    | '/recuperar-senha'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -649,12 +679,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/configuracoes'
+    | '/definir-senha'
     | '/design-system'
     | '/entrar'
     | '/hoje'
     | '/login'
     | '/modelos'
+    | '/nova-senha'
     | '/pipeline'
+    | '/recuperar-senha'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/lista'
@@ -712,12 +745,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/configuracoes'
+    | '/definir-senha'
     | '/design-system'
     | '/entrar'
     | '/hoje'
     | '/login'
     | '/modelos'
+    | '/nova-senha'
     | '/pipeline'
+    | '/recuperar-senha'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -777,12 +813,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  DefinirSenhaRoute: typeof DefinirSenhaRoute
   DesignSystemRoute: typeof DesignSystemRoute
   EntrarRoute: typeof EntrarRoute
   HojeRoute: typeof HojeRoute
   LoginRoute: typeof LoginRoute
   ModelosRoute: typeof ModelosRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   PipelineRoute: typeof PipelineRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   TarefasRoute: typeof TarefasRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
@@ -843,11 +882,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TarefasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pipeline': {
       id: '/pipeline'
       path: '/pipeline'
       fullPath: '/pipeline'
       preLoaderRoute: typeof PipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/modelos': {
@@ -883,6 +936,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof DesignSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/definir-senha': {
+      id: '/definir-senha'
+      path: '/definir-senha'
+      fullPath: '/definir-senha'
+      preLoaderRoute: typeof DefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -1328,12 +1388,15 @@ const ApiClientsIdDocumentsDocIdRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  DefinirSenhaRoute: DefinirSenhaRoute,
   DesignSystemRoute: DesignSystemRoute,
   EntrarRoute: EntrarRoute,
   HojeRoute: HojeRoute,
   LoginRoute: LoginRoute,
   ModelosRoute: ModelosRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   PipelineRoute: PipelineRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
   TarefasRoute: TarefasRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,

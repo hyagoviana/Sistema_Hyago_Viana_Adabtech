@@ -9,6 +9,8 @@ import {
   setUserRole,
   setUserStatus,
   removeUser,
+  requestPasswordReset,
+  updateUserPassword,
   recordConsent,
   listConsents,
   revokeConsent,
@@ -33,13 +35,43 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Wrapper para endpoints públicos (sem requireAuth). */
+async function handlePublic<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err: unknown) {
+    if (err instanceof UsersServiceError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
+    setResponseStatus(500);
+    throw err;
+  }
+}
+
+// -------------------------------------------------------------- Senha ----
+export const requestPasswordResetFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { email: string; redirectTo: string }) => d)
+  .handler(async ({ data }) =>
+    handlePublic(() => requestPasswordReset(data.email, data.redirectTo)),
+  );
+
+export const updatePasswordFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { newPassword: string }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const user = await requireAuth();
+      return updateUserPassword(user.id, data.newPassword);
+    }),
+  );
+
 // -------------------------------------------------------------- Usuários ----
 export const listUsersFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listUsers()),
 );
 
 export const inviteUserFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { email: string; full_name?: string; role: string }) => d)
+  .inputValidator((d: { email: string; full_name?: string; role: string; redirectTo?: string }) => d)
   .handler(async ({ data }) => handle(() => inviteUser(data)));
 
 // Ativa o próprio usuário autenticado após ele definir a senha (convite aceito).

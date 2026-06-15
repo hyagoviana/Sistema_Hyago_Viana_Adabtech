@@ -18,7 +18,8 @@ export function useInviteUser() {
   const fn = useServerFn(inviteUserFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { email: string; full_name?: string; role: string }) => fn({ data: input }),
+    mutationFn: (input: { email: string; full_name?: string; role: string; redirectTo?: string }) =>
+      fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-users"] }),
   });
 }
