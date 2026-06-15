@@ -20,6 +20,7 @@ export function useClientsList(search?: string) {
   return useQuery({
     queryKey: queryKeys.clients.list(search),
     queryFn: () => fn({ data: search ? { search } : undefined }),
+    staleTime: 2 * 60 * 1000, // 2 min
   });
 }
 

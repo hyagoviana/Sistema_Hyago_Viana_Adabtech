@@ -75,9 +75,19 @@ function extractAccessToken(): string | null {
  * @returns `{ id, email }` do usuário autenticado.
  * @throws  `AuthError` (status 401) se não autenticado ou sessão expirada.
  */
+// Cache de validação de token — evita chamadas repetidas ao Supabase para o mesmo JWT
+const tokenCache = new Map<string, { user: { id: string; email: string }; expiresAt: number }>();
+const TOKEN_CACHE_TTL = 60 * 1000; // 1 min
+
 export async function requireAuth(): Promise<{ id: string; email: string }> {
   const token = extractAccessToken();
   if (!token) throw new AuthError("Não autenticado");
+
+  // Verifica cache para evitar revalidação do mesmo token
+  const cached = tokenCache.get(token);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.user;
+  }
 
   const url = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
@@ -94,5 +104,18 @@ export async function requireAuth(): Promise<{ id: string; email: string }> {
   } = await sb.auth.getUser();
   if (error || !user) throw new AuthError("Sessão inválida ou expirada");
 
-  return { id: user.id, email: user.email ?? "" };
+  const result = { id: user.id, email: user.email ?? "" };
+
+  // Cacheia resultado para evitar N chamadas getUser() no mesmo request batch
+  tokenCache.set(token, { user: result, expiresAt: Date.now() + TOKEN_CACHE_TTL });
+
+  // Limpa entradas antigas periodicamente
+  if (tokenCache.size > 50) {
+    const now = Date.now();
+    for (const [k, v] of tokenCache) {
+      if (v.expiresAt < now) tokenCache.delete(k);
+    }
+  }
+
+  return result;
 }

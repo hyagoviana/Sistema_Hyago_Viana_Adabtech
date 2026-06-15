@@ -20,12 +20,20 @@ import {
 // ----------------------------------------------- Agregação global (Tarefas) ----
 export function useAllTasks() {
   const fn = useServerFn(listAllTasksFn);
-  return useQuery({ queryKey: ["all-tasks"], queryFn: () => fn() });
+  return useQuery({
+    queryKey: ["all-tasks"],
+    queryFn: () => fn(),
+    staleTime: 3 * 60 * 1000, // 3 min — dados globais pesados
+  });
 }
 
 export function useAllDeadlines() {
   const fn = useServerFn(listAllDeadlinesFn);
-  return useQuery({ queryKey: ["all-deadlines"], queryFn: () => fn() });
+  return useQuery({
+    queryKey: ["all-deadlines"],
+    queryFn: () => fn(),
+    staleTime: 3 * 60 * 1000,
+  });
 }
 
 // ---------------------------------------------------------------- Tarefas ----

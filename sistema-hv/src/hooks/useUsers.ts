@@ -11,7 +11,11 @@ import {
 
 export function useUsers() {
   const fn = useServerFn(listUsersFn);
-  return useQuery({ queryKey: ["system-users"], queryFn: () => fn() });
+  return useQuery({
+    queryKey: ["system-users"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000, // 5 min — lista de usuários muda raramente
+  });
 }
 
 export function useInviteUser() {

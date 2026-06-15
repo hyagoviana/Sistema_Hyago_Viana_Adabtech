@@ -20,7 +20,11 @@ import {
 
 export function useServiceTypes() {
   const fn = useServerFn(listServiceTypesFn);
-  return useQuery({ queryKey: ["service-types"], queryFn: () => fn() });
+  return useQuery({
+    queryKey: ["service-types"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000, // 5 min — tipos de serviço mudam raramente
+  });
 }
 
 export function useCreateServiceType() {
@@ -38,6 +42,7 @@ export function useStages(serviceTypeId: string, kind: "op" | "fin") {
     queryKey: ["pipeline-stages", serviceTypeId, kind],
     queryFn: () => fn({ data: { serviceTypeId, kind } }),
     enabled: !!serviceTypeId,
+    staleTime: 5 * 60 * 1000, // 5 min — stages mudam raramente
   });
 }
 
@@ -47,6 +52,7 @@ export function useCasesByServiceType(serviceTypeId: string) {
     queryKey: ["cases-by-service", serviceTypeId],
     queryFn: () => fn({ data: { serviceTypeId } }),
     enabled: !!serviceTypeId,
+    staleTime: 2 * 60 * 1000,
   });
 }
 

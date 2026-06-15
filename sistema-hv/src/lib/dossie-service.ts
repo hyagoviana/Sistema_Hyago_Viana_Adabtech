@@ -215,8 +215,9 @@ async function caseLookup(sb: ReturnType<typeof getSupabaseAdmin>) {
 export async function listAllTasks() {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
-    .from("system_case_tasks_active")
+    .from("system_case_tasks")
     .select("id, case_id, title, status, priority, assignee, assignee_id, due_date, created_at")
+    .is("deleted_at", null)
     .order("due_date", { ascending: true, nullsFirst: false });
   check(error);
   const map = await caseLookup(sb);
@@ -230,8 +231,9 @@ export async function listAllTasks() {
 export async function listAllDeadlines() {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
-    .from("system_case_deadlines_active")
+    .from("system_case_deadlines")
     .select("id, case_id, title, tipo, fatal_date, recommended_date, status, responsible")
+    .is("deleted_at", null)
     .order("fatal_date", { ascending: true });
   check(error);
   const map = await caseLookup(sb);

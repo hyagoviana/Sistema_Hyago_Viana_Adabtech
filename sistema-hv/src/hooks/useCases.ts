@@ -27,6 +27,7 @@ export function useCasesList(filters?: Filters) {
   return useQuery({
     queryKey: queryKeys.cases.list(filters),
     queryFn: () => fn({ data: filters ?? {} }),
+    staleTime: 2 * 60 * 1000, // 2 min
   });
 }
 
