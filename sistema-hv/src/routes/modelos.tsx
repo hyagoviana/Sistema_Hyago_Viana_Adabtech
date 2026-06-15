@@ -30,7 +30,8 @@ import {
   useDocumentTemplates,
   type TemplateFieldInput,
 } from "@/hooks/useDocumentTemplates";
-import { CASE_TYPES, CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
+import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
+import { useServiceTypes } from "@/hooks/usePipeline";
 
 export const Route = createFileRoute("/modelos")({
   component: ModelosPage,
@@ -76,7 +77,7 @@ function ModelosPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-medium text-[var(--navy)]">{t.name}</div>
                   <div className="text-[12px] text-muted-foreground">
-                    {t.case_type ? CASE_TYPE_LABELS[t.case_type as CaseType] ?? t.case_type : "Sem tipo"}{" "}
+                    {t.case_type ? CASE_TYPE_LABELS[t.case_type as CaseType] ?? t.case_type : "Todos os casos"}{" "}
                     · {Array.isArray(t.fields) ? t.fields.length : 0} campo(s)
                   </div>
                 </div>
@@ -115,6 +116,7 @@ function CreateTemplateDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const create = useCreateDocumentTemplate();
+  const { data: serviceTypes } = useServiceTypes();
   const [name, setName] = useState("");
   const [googleDocId, setGoogleDocId] = useState("");
   const [caseType, setCaseType] = useState<string>("");
@@ -184,15 +186,19 @@ function CreateTemplateDialog({
             />
           </div>
           <div>
-            <Label>Tipo de serviço</Label>
-            <Select value={caseType} onValueChange={setCaseType}>
+            <Label>Tipo de caso</Label>
+            <Select
+              value={caseType || "__none__"}
+              onValueChange={(v) => setCaseType(v === "__none__" ? "" : v)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione (opcional)…" />
+                <SelectValue placeholder="Todos os casos (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                {CASE_TYPES.map((ct) => (
-                  <SelectItem key={ct} value={ct}>
-                    {CASE_TYPE_LABELS[ct]}
+                <SelectItem value="__none__">Todos os casos</SelectItem>
+                {(serviceTypes ?? []).map((st) => (
+                  <SelectItem key={st.id} value={st.slug}>
+                    {st.name}
                   </SelectItem>
                 ))}
               </SelectContent>

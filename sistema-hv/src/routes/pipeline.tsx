@@ -94,7 +94,7 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
       <PageHeader
         eyebrow="Operação"
         title="Pipeline Operacional"
-        subtitle="Escolha o tipo de serviço para abrir a esteira específica."
+        subtitle="Escolha o tipo de caso para abrir a esteira específica."
         aside={
           <div className="flex items-center gap-2">
             <Btn variant="gold" onClick={() => setCreateCaseOpen(true)}>
@@ -142,10 +142,10 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
       </Dialog>
 
       {isLoading ? (
-        <div className="text-muted-foreground text-sm">Carregando tipos…</div>
+        <div className="text-muted-foreground text-sm">Carregando casos…</div>
       ) : (types ?? []).length === 0 ? (
         <Alert>
-          <AlertDescription>Nenhum tipo de serviço cadastrado.</AlertDescription>
+          <AlertDescription>Nenhum tipo de caso cadastrado.</AlertDescription>
         </Alert>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
