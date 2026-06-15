@@ -473,7 +473,8 @@ function CasoDetalhe() {
         onOpenChange={setMoveFinOpen}
         caseId={caso.id}
         caseCode={caso.case_code}
-        currentStatus={caso.macrostatus_fin as MacroFin}
+        currentFinSlug={caso.macrostatus_fin}
+        serviceTypeId={caso.service_type_id}
       />
 
       <Dialog open={entrarOpen} onOpenChange={setEntrarOpen}>

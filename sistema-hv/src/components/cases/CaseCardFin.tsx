@@ -5,7 +5,7 @@ import { useState } from "react";
 import { MoveCaseFinDialog } from "./MoveCaseFinDialog";
 import { Badge, StatusDot } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
-import { CASE_TYPE_LABELS, type CaseType, type MacroFin } from "@/lib/cases/constants";
+import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 
 type Props = {
   caso: {
@@ -15,6 +15,7 @@ type Props = {
     macrostatus_fin: string;
     status_fin_changed_at: string;
     client_name: string;
+    service_type_id: string;
   };
 };
 
@@ -73,7 +74,8 @@ export function CaseCardFin({ caso }: Props) {
         onOpenChange={setMoveOpen}
         caseId={caso.id}
         caseCode={caso.case_code}
-        currentStatus={caso.macrostatus_fin as MacroFin}
+        currentFinSlug={caso.macrostatus_fin}
+        serviceTypeId={caso.service_type_id}
       />
     </div>
   );

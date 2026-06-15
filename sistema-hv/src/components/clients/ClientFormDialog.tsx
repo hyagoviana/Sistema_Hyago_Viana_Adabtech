@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -35,8 +34,6 @@ import { useServiceTypes } from "@/hooks/usePipeline";
 import type { Database } from "@/lib/supabase/types";
 import {
   clientCreateSchema,
-  PROGRAMA_LABELS,
-  PROGRAMAS_GOVERNAMENTAIS,
   type ClientCreateInput,
 } from "@/lib/validators/client";
 
@@ -60,8 +57,6 @@ function pickAddress(address: Client["address"]): { city?: string; state?: strin
   };
 }
 
-type Programa = (typeof PROGRAMAS_GOVERNAMENTAIS)[number];
-
 const EMPTY_PROFESSIONAL = {
   crm_numero: "",
   crm_uf: "",
@@ -69,7 +64,6 @@ const EMPTY_PROFESSIONAL = {
   oab_uf: "",
   vinculo_institucional: "",
   especialidade: "",
-  programas: [] as Programa[],
   observacoes: "",
 };
 
@@ -84,11 +78,6 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
     oab_uf: str("oab_uf"),
     vinculo_institucional: str("vinculo_institucional"),
     especialidade: str("especialidade"),
-    programas: Array.isArray(p.programas)
-      ? (p.programas.filter((x): x is Programa =>
-          (PROGRAMAS_GOVERNAMENTAIS as readonly string[]).includes(x as string),
-        ) as Programa[])
-      : [],
     observacoes: str("observacoes"),
   };
 }
@@ -401,32 +390,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                 />
               </div>
 
-              <div>
-                <p className="text-sm font-medium leading-none">Programas governamentais</p>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {PROGRAMAS_GOVERNAMENTAIS.map((p) => {
-                    const selected = form.watch("professional_data.programas") ?? [];
-                    return (
-                      <label
-                        key={p}
-                        className="flex items-center gap-2 text-sm text-[var(--navy)] cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={selected.includes(p)}
-                          onCheckedChange={(v) => {
-                            const cur = form.getValues("professional_data.programas") ?? [];
-                            const next = v ? [...cur, p] : cur.filter((x) => x !== p);
-                            form.setValue("professional_data.programas", next, {
-                              shouldDirty: true,
-                            });
-                          }}
-                        />
-                        {PROGRAMA_LABELS[p]}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
             {mode === "create" && (serviceTypes ?? []).length > 0 && (

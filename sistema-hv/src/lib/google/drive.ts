@@ -143,8 +143,19 @@ export async function createFolder(name: string, parentId?: string): Promise<Dri
       },
       fields: "id, name, webViewLink",
     });
+
+    const folderId = res.data.id!;
+
+    // Compartilha a pasta como "qualquer pessoa com o link pode visualizar"
+    // para que os usuários do sistema consigam ver e baixar arquivos.
+    await drive.permissions.create({
+      fileId: folderId,
+      ...writeParams(),
+      requestBody: { type: "anyone", role: "reader" },
+    });
+
     return {
-      id: res.data.id!,
+      id: folderId,
       url: res.data.webViewLink!,
       name: res.data.name ?? name,
     };

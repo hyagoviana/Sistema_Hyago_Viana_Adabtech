@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -17,33 +17,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMoveCaseStatusFin } from "@/hooks/useCases";
-import { MACRO_FIN, MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
+import { useMoveCaseStageFin, useStages } from "@/hooks/usePipeline";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   caseId: string;
   caseCode: string;
-  currentStatus: MacroFin;
+  currentFinSlug: string;
+  serviceTypeId: string;
 };
 
-// NAO_APLICAVEL não aparece como opção de destino — política de negócio.
-const ELIGIBLE_TARGETS = MACRO_FIN.filter((s) => s !== "NAO_APLICAVEL");
+export function MoveCaseFinDialog({
+  open,
+  onOpenChange,
+  caseId,
+  caseCode,
+  currentFinSlug,
+  serviceTypeId,
+}: Props) {
+  const { data: stages } = useStages(serviceTypeId, "fin");
+  const move = useMoveCaseStageFin(serviceTypeId);
 
-export function MoveCaseFinDialog({ open, onOpenChange, caseId, caseCode, currentStatus }: Props) {
-  const move = useMoveCaseStatusFin();
-  const initial = currentStatus === "NAO_APLICAVEL" ? "ELABORANDO" : currentStatus;
-  const [target, setTarget] = useState<MacroFin>(initial as MacroFin);
+  // Filter out NAO_APLICAVEL stages
+  const eligible = (stages ?? []).filter((s) => s.slug !== "NAO_APLICAVEL");
+
+  const currentStage = eligible.find((s) => s.slug === currentFinSlug);
+  const currentLabel = currentStage?.label ?? currentFinSlug;
+
+  const [targetId, setTargetId] = useState("");
+
+  // Reset selection when dialog opens
+  useEffect(() => {
+    if (open && currentStage) {
+      setTargetId(currentStage.id);
+    }
+  }, [open, currentStage]);
 
   async function handleConfirm() {
-    if (target === currentStatus) {
+    if (!targetId || targetId === currentStage?.id) {
       onOpenChange(false);
       return;
     }
+    const targetStage = eligible.find((s) => s.id === targetId);
     try {
-      await move.mutateAsync({ id: caseId, to: target });
-      toast.success(`${caseCode} — financeiro movido pra ${MACRO_FIN_LABELS[target]}`);
+      await move.mutateAsync({ caseId, stageId: targetId });
+      toast.success(`${caseCode} — financeiro movido pra ${targetStage?.label ?? "?"}`);
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao mover");
@@ -56,19 +75,19 @@ export function MoveCaseFinDialog({ open, onOpenChange, caseId, caseCode, curren
         <DialogHeader>
           <DialogTitle>Mover financeiro · {caseCode}</DialogTitle>
           <DialogDescription>
-            De <strong>{MACRO_FIN_LABELS[currentStatus]}</strong> para…
+            De <strong>{currentLabel}</strong> para…
           </DialogDescription>
         </DialogHeader>
 
-        <Select value={target} onValueChange={(v) => setTarget(v as MacroFin)}>
+        <Select value={targetId} onValueChange={setTargetId}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {ELIGIBLE_TARGETS.map((s) => (
-              <SelectItem key={s} value={s} disabled={s === currentStatus}>
-                {MACRO_FIN_LABELS[s]}
-                {s === currentStatus ? " (atual)" : ""}
+            {eligible.map((s) => (
+              <SelectItem key={s.id} value={s.id} disabled={s.id === currentStage?.id}>
+                {s.label}
+                {s.id === currentStage?.id ? " (atual)" : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -78,7 +97,10 @@ export function MoveCaseFinDialog({ open, onOpenChange, caseId, caseCode, curren
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={move.isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={move.isPending || target === currentStatus}>
+          <Button
+            onClick={handleConfirm}
+            disabled={move.isPending || !targetId || targetId === currentStage?.id}
+          >
             {move.isPending ? "Movendo…" : "Mover"}
           </Button>
         </DialogFooter>

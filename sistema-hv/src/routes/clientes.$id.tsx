@@ -20,6 +20,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCasesList } from "@/hooks/useCases";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
@@ -79,6 +80,16 @@ function ClienteDetalhe() {
   }
 
   if (!cliente) throw notFound();
+
+  const { data: casesData } = useCasesList({ client_id: id });
+  const cases = casesData ?? [];
+  const totalCasos = cases.length;
+  const receitaTotalCentavos = cases.reduce(
+    (sum, c) => sum + (typeof c.valor_centavos === "number" ? c.valor_centavos : 0),
+    0,
+  );
+  const formatBRL = (centavos: number) =>
+    (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="page-container">
@@ -146,9 +157,9 @@ function ClienteDetalhe() {
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
-        <Stat label="Total de casos" value="—" />
-        <Stat label="Receita total" value="—" />
-        <Stat label="LTV estimado" value="—" />
+        <Stat label="Total de casos" value={totalCasos} />
+        <Stat label="Receita total" value={formatBRL(receitaTotalCentavos)} />
+        <Stat label="LTV estimado" value={formatBRL(receitaTotalCentavos)} />
       </div>
 
       <OrnamentalDivider />
