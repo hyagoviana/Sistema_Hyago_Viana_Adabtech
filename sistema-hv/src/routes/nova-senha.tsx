@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 
 import { Eyebrow } from "@/components/hv/primitives";
+import { useAuth } from "@/lib/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { updatePasswordFn } from "@/rpc/users";
+import { activateUserFn } from "@/rpc/users";
 import symbolHV from "@/assets/symbol-hv.png";
 
 export const Route = createFileRoute("/nova-senha")({
@@ -14,47 +15,16 @@ export const Route = createFileRoute("/nova-senha")({
 
 function NovaSenhaPage() {
   const navigate = useNavigate();
-  const updatePassword = useServerFn(updatePasswordFn);
-  const [loading, setLoading] = useState(false);
-  const [verifying, setVerifying] = useState(true);
+  const { session, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
 
-  // O Supabase redireciona com fragmento hash contendo access_token + refresh_token.
-  // Precisamos trocar esse token por uma sessão válida antes de chamar updatePassword.
-  useEffect(() => {
-    const sb = getSupabaseBrowserClient();
-
-    // onAuthStateChange captura o evento PASSWORD_RECOVERY ou SIGNED_IN
-    // que o Supabase dispara ao processar o hash fragment
-    const { data: sub } = sb.auth.onAuthStateChange((event, session) => {
-      if (
-        (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") &&
-        session
-      ) {
-        setSessionReady(true);
-        setVerifying(false);
-      }
-    });
-
-    // Fallback: se já houver sessão (ex: usuário logado clicou no link)
-    sb.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setSessionReady(true);
-        setVerifying(false);
-      } else {
-        // Aguardar um pouco para o hash ser processado
-        setTimeout(() => setVerifying(false), 3000);
-      }
-    });
-
-    return () => {
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+  // O link do e-mail (convite/reset) estabelece a sessão automaticamente
+  // via detectSessionInUrl do @supabase/ssr. Sem sessão → link inválido.
+  const linkInvalido = !loading && !session;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,17 +43,26 @@ function NovaSenhaPage() {
       return;
     }
 
-    setLoading(true);
-    try {
-      await updatePassword({ data: { newPassword: password } });
-      setSuccess(true);
-      // Redirecionar após 3s
-      setTimeout(() => navigate({ to: "/hoje" }), 3000);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao alterar a senha.");
-    } finally {
-      setLoading(false);
+    setSubmitting(true);
+    const { error: updErr } = await getSupabaseBrowserClient().auth.updateUser({ password });
+    if (updErr) {
+      setSubmitting(false);
+      setError(
+        "Não foi possível salvar a senha. O link pode ter expirado — solicite um novo.",
+      );
+      return;
     }
+
+    // Ativa usuário convidado (INVITED → ACTIVE). Falha não bloqueia acesso.
+    try {
+      await activateUserFn();
+    } catch {
+      /* admin pode ajustar manualmente se necessário */
+    }
+
+    setSuccess(true);
+    toast.success("Senha definida com sucesso!");
+    setTimeout(() => navigate({ to: "/hoje" }), 2000);
   }
 
   return (
@@ -111,7 +90,7 @@ function NovaSenhaPage() {
             ✦
           </div>
           <p className="font-display italic text-[29px] leading-[1.28] text-white/95">
-            A excelência jurídica começa pela disciplina dos detalhes.
+            Seu acesso é pessoal, restrito e auditado. Defina uma senha forte.
           </p>
           <footer
             className="mt-6 text-sm tracking-[0.18em] uppercase"
@@ -135,22 +114,22 @@ function NovaSenhaPage() {
             className="h-10 w-auto object-contain mb-8 lg:hidden"
           />
 
-          {verifying ? (
+          {loading ? (
             <div className="text-center">
-              <div className="text-sm text-muted-foreground">Verificando link...</div>
+              <p className="text-muted-foreground">Validando o link...</p>
             </div>
-          ) : !sessionReady ? (
+          ) : linkInvalido ? (
             <div className="text-center">
               <Eyebrow>Link inválido</Eyebrow>
               <h1 className="font-display text-[28px] font-semibold text-[var(--navy)] mt-4 mb-3 leading-tight">
                 Link expirado ou inválido
               </h1>
               <p className="text-muted-foreground mb-8 text-[15px]">
-                O link de recuperação pode ter expirado ou já foi utilizado. Solicite um novo link.
+                Este link de acesso é inválido ou já expirou. Solicite um novo link de recuperação ou peça um novo convite ao administrador.
               </p>
               <Link
                 to="/recuperar-senha"
-                className="inline-flex items-center justify-center px-5 py-3 text-white font-semibold"
+                className="inline-flex items-center justify-center w-full px-5 py-3.5 text-white font-semibold transition-all hover:-translate-y-0.5"
                 style={{
                   background: "linear-gradient(180deg, #b1902a 0%, #987814 55%, #856611 100%)",
                   borderRadius: 8,
@@ -175,9 +154,9 @@ function NovaSenhaPage() {
               <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-6" style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}>
                 <CheckCircle size={28} className="text-[var(--navy)]" />
               </div>
-              <Eyebrow>Senha alterada</Eyebrow>
+              <Eyebrow>Senha definida</Eyebrow>
               <h1 className="font-display text-[28px] font-semibold text-[var(--navy)] mt-4 mb-3 leading-tight">
-                Senha redefinida com sucesso!
+                Senha definida com sucesso!
               </h1>
               <p className="text-muted-foreground mb-8 text-[15px]">
                 Você será redirecionado automaticamente em instantes...
@@ -191,9 +170,9 @@ function NovaSenhaPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <Eyebrow>Nova senha</Eyebrow>
+              <Eyebrow>Defina sua senha</Eyebrow>
               <h1 className="font-display text-[34px] font-semibold text-[var(--navy)] mt-4 mb-2 leading-tight">
-                Defina sua nova senha
+                Nova senha
               </h1>
               <p className="text-muted-foreground mb-10">
                 Escolha uma senha segura com no mínimo 6 caracteres.
@@ -224,7 +203,7 @@ function NovaSenhaPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={submitting}
                 className="mt-8 w-full inline-flex items-center justify-center px-5 py-3.5 text-white font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
                 style={{
                   background: "linear-gradient(180deg, #b1902a 0%, #987814 55%, #856611 100%)",
@@ -233,10 +212,14 @@ function NovaSenhaPage() {
                     "inset 0 1px 0 rgba(255,255,255,0.28), 0 12px 30px -10px rgba(152,120,20,0.6)",
                 }}
               >
-                {loading ? "Salvando…" : "Redefinir senha"}
+                {submitting ? "Salvando…" : "Salvar senha e entrar"}
               </button>
             </form>
           )}
+
+          <p className="mt-10 text-center text-[11.5px] text-muted-foreground/70">
+            Protegido por autenticação e auditoria de acesso.
+          </p>
         </div>
       </div>
     </div>
@@ -276,6 +259,8 @@ function PasswordField({
           name={name}
           type={show ? "text" : "password"}
           placeholder={placeholder}
+          minLength={6}
+          required
           className="flex-1 bg-transparent py-3 text-[15px] focus:outline-none placeholder:text-[var(--ink-400)]"
           style={{ appearance: "none" }}
         />

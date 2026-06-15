@@ -168,7 +168,8 @@ function RootLayout() {
   const isPublic =
     isAuthPage ||
     path === "/recuperar-senha" ||
-    path === "/nova-senha";
+    path === "/nova-senha" ||
+    path === "/definir-senha";
 
   useEffect(() => {
     if (loading) return;
