@@ -194,7 +194,8 @@
       "PowerShell(head *)",
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(xargs grep -l \"procur\\\\|projuris\\\\|tribunal\\\\|processo\\\\|judicial\")",
-      "Bash(xargs grep -l \"sugestao\\\\|suggest\\\\|automati\\\\|inteligencia\")"
+      "Bash(xargs grep -l \"sugestao\\\\|suggest\\\\|automati\\\\|inteligencia\")",
+      "Bash(git check-attr *)"
     ]
   }
 }

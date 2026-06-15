@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Lock, Mail } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { Eyebrow } from "@/components/hv/primitives";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -32,6 +33,25 @@ function LoginPage() {
       return;
     }
     navigate({ to: "/hoje" });
+  }
+
+  async function handleForgot(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    setError(null);
+    const form = e.currentTarget.form;
+    const email = form ? String(new FormData(form).get("email") ?? "").trim() : "";
+    if (!email) {
+      setError("Digite seu e-mail acima para receber o link de redefinição.");
+      return;
+    }
+    const { error: resetErr } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/definir-senha`,
+    });
+    if (resetErr) {
+      setError("Não foi possível enviar o e-mail de redefinição. Tente novamente.");
+      return;
+    }
+    toast.success("Enviamos um link de redefinição de senha para o seu e-mail.");
   }
 
   return (
@@ -137,12 +157,13 @@ function LoginPage() {
           </button>
 
           <div className="mt-6 text-center">
-            <a
-              href="#"
+            <button
+              type="button"
+              onClick={handleForgot}
               className="text-sm font-medium text-[var(--gold-700)] hover:text-[var(--gold)]"
             >
               Esqueci minha senha
-            </a>
+            </button>
           </div>
 
           <p className="mt-10 text-center text-[11.5px] text-muted-foreground/70">

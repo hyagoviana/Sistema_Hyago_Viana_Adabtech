@@ -5,6 +5,7 @@ import {
   UsersServiceError,
   listUsers,
   inviteUser,
+  activateUser,
   setUserRole,
   setUserStatus,
   removeUser,
@@ -40,6 +41,14 @@ export const listUsersFn = createServerFn({ method: "GET" }).handler(async () =>
 export const inviteUserFn = createServerFn({ method: "POST" })
   .inputValidator((d: { email: string; full_name?: string; role: string }) => d)
   .handler(async ({ data }) => handle(() => inviteUser(data)));
+
+// Ativa o próprio usuário autenticado após ele definir a senha (convite aceito).
+export const activateUserFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(async () => {
+    const me = await requireAuth();
+    return activateUser(me.id);
+  }),
+);
 
 export const setUserRoleFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; role: string }) => d)

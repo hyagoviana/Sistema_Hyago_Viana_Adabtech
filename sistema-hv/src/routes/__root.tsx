@@ -162,13 +162,17 @@ function RootLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { session, loading } = useAuth();
   const navigate = useNavigate();
-  const isPublic = path === "/entrar" || path === "/login";
+  // Telas de autenticação: redirecionam para /hoje se já houver sessão.
+  const isAuthPage = path === "/entrar" || path === "/login";
+  // /definir-senha é pública, MAS não redireciona usuário logado — o convidado
+  // entra com uma sessão (vinda do link) e precisa permanecer para criar a senha.
+  const isPublic = isAuthPage || path === "/definir-senha";
 
   useEffect(() => {
     if (loading) return;
     if (!session && !isPublic) navigate({ to: "/login" });
-    if (session && isPublic) navigate({ to: "/hoje" });
-  }, [loading, session, isPublic, navigate]);
+    if (session && isAuthPage) navigate({ to: "/hoje" });
+  }, [loading, session, isAuthPage, isPublic, navigate]);
 
   if (isPublic) return <Outlet />;
   if (loading || !session) {

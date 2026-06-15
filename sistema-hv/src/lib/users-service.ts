@@ -5,6 +5,10 @@ import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
+// URL pública do app — usada para montar o link dos e-mails de convite/reset.
+// Em produção (Vercel) configure APP_URL; o fallback é o domínio oficial.
+const APP_URL = (process.env.APP_URL ?? "https://www.sistemahyagoviana.com.br").replace(/\/+$/, "");
+
 export class UsersServiceError extends Error {
   constructor(
     message: string,
@@ -50,6 +54,8 @@ export async function inviteUser(input: { email: string; full_name?: string; rol
 
   const { data: invited, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(input.email, {
     data: { full_name: input.full_name ?? null },
+    // Para onde o link do e-mail leva: a tela onde o convidado cria a senha.
+    redirectTo: `${APP_URL}/definir-senha`,
   });
   if (inviteErr || !invited?.user) {
     throw new UsersServiceError(inviteErr?.message ?? "Falha ao convidar usuário.", 400);
@@ -69,6 +75,24 @@ export async function inviteUser(input: { email: string; full_name?: string; rol
     .single();
   check(error);
   return data;
+}
+
+/**
+ * Ativa o usuário recém-convidado depois que ele define a senha (INVITED → ACTIVE).
+ * O papel (admin/comercial/financeiro/…) já foi gravado no convite e é preservado.
+ * Idempotente: se já estiver ACTIVE (ex.: reset de senha), não altera nada.
+ */
+export async function activateUser(id: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_users")
+    .update({ status: "ACTIVE" })
+    .eq("id", id)
+    .eq("status", "INVITED")
+    .select("id, email, role, status")
+    .maybeSingle();
+  check(error);
+  return data ?? { id, status: "ACTIVE" as const };
 }
 
 export async function setUserRole(id: string, role: string) {
