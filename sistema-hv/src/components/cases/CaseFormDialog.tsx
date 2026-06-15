@@ -1,9 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -22,12 +31,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
@@ -43,6 +58,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: clients } = useClientsList();
   const { data: serviceTypes } = useServiceTypes();
   const create = useCreateCase();
+  const [clientPopOpen, setClientPopOpen] = useState(false);
 
   const firstType = serviceTypes?.[0]?.slug ?? "";
 
@@ -94,30 +110,62 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
             <FormField
               control={form.control}
               name="client_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cliente *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
-                    disabled={!!presetClientId}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o cliente" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-72">
-                      {(clients ?? []).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const selectedClient = (clients ?? []).find((c) => c.id === field.value);
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Cliente *</FormLabel>
+                    <Popover open={clientPopOpen} onOpenChange={setClientPopOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={clientPopOpen}
+                            disabled={!!presetClientId}
+                            className={cn(
+                              "w-full justify-between font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            {selectedClient?.full_name ?? "Buscar cliente…"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Digite o nome do cliente…" />
+                          <CommandList>
+                            <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {(clients ?? []).map((c) => (
+                                <CommandItem
+                                  key={c.id}
+                                  value={c.full_name}
+                                  onSelect={() => {
+                                    field.onChange(c.id);
+                                    setClientPopOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      c.id === field.value ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+                                  {c.full_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
