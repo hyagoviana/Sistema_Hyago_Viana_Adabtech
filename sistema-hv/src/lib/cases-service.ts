@@ -56,6 +56,31 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
 
   const code = await nextCaseCode(input.case_type);
 
+  // Busca a primeira etapa operacional do service_type para não usar slug hardcoded
+  let defaultOpStatus = input.macrostatus_op ?? "ONBOARDING";
+  if (!input.macrostatus_op) {
+    const { data: stType } = await sb
+      .from("system_service_types")
+      .select("id")
+      .eq("slug", input.case_type)
+      .is("deleted_at", null)
+      .single();
+    if (stType) {
+      const { data: firstOpStage } = await sb
+        .from("system_pipeline_stages")
+        .select("slug")
+        .eq("service_type_id", stType.id)
+        .eq("kind", "op")
+        .is("deleted_at", null)
+        .order("ordem", { ascending: true })
+        .limit(1)
+        .single();
+      if (firstOpStage) {
+        defaultOpStatus = firstOpStage.slug;
+      }
+    }
+  }
+
   const { data: created, error } = await sb
     .from("system_cases")
     .insert({
@@ -63,7 +88,7 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
       client_id: input.client_id,
       case_code: code,
       case_type: input.case_type,
-      macrostatus_op: input.macrostatus_op ?? "ONBOARDING",
+      macrostatus_op: defaultOpStatus,
       macrostatus_fin: input.macrostatus_fin ?? "NAO_APLICAVEL",
       proximo_passo: input.proximo_passo ?? null,
       responsavel: input.responsavel ?? null,
