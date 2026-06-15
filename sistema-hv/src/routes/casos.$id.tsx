@@ -384,11 +384,16 @@ function CasoDetalhe() {
                     {e.action === "created" && "Caso criado"}
                     {e.action === "status_changed" &&
                       `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`}
+                    {e.action === "fin_status_changed" &&
+                      `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
                     {e.action === "updated" && "Caso editado"}
                     {e.action === "soft_deleted" && "Caso excluído"}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
                     {fmtDateTime(e.created_at)}
+                    {e.triggered_by_name && (
+                      <span className="ml-2">por <strong>{e.triggered_by_name}</strong></span>
+                    )}
                   </div>
                 </div>
               </li>

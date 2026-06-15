@@ -2,6 +2,7 @@
 // NUNCA importe no browser.
 
 import { type MacroFin, type MacroOp } from "./cases/constants";
+import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { CaseCreateOutput, CaseUpdateOutput } from "./validators/case";
 
@@ -39,13 +40,13 @@ async function nextCaseCode(caseType: string): Promise<string> {
 // ----------------------------------------------------------------------------
 // CREATE
 // ----------------------------------------------------------------------------
-export async function createCase(input: CaseCreateOutput) {
+export async function createCase(input: CaseCreateOutput, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
 
-  // Validar cliente existe e está ativo
+  // Validar cliente existe e está ativo (já busca drive_folder_id para criar subpasta)
   const { data: client, error: clientErr } = await sb
     .from("system_clients")
-    .select("id")
+    .select("id, drive_folder_id")
     .eq("id", input.client_id)
     .is("deleted_at", null)
     .single();
@@ -82,7 +83,36 @@ export async function createCase(input: CaseCreateOutput) {
     action: "created",
     to_macrostatus_op: created.macrostatus_op,
     diff: { case_type: created.case_type, client_id: created.client_id },
+    triggered_by: triggeredBy ?? null,
   });
+
+  // Best-effort: criar subpasta do caso no Drive (dentro da pasta do cliente)
+  if (client.drive_folder_id) {
+    try {
+      const folder = await createFolder(
+        `Caso-${created.case_code}`,
+        client.drive_folder_id,
+      );
+      await sb
+        .from("system_cases")
+        .update({
+          drive_folder_id: folder.id,
+          drive_folder_url: folder.url,
+          drive_sync_failed: false,
+          drive_sync_error: null,
+        })
+        .eq("id", created.id);
+      return { ...created, drive_folder_id: folder.id, drive_folder_url: folder.url };
+    } catch (err) {
+      const msg =
+        err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
+      await sb
+        .from("system_cases")
+        .update({ drive_sync_failed: true, drive_sync_error: msg.slice(0, 2000) })
+        .eq("id", created.id);
+      console.error("cases-service: falha ao criar pasta do caso no Drive:", msg);
+    }
+  }
 
   return created;
 }
@@ -90,7 +120,7 @@ export async function createCase(input: CaseCreateOutput) {
 // ----------------------------------------------------------------------------
 // UPDATE
 // ----------------------------------------------------------------------------
-export async function updateCase(id: string, input: CaseUpdateOutput) {
+export async function updateCase(id: string, input: CaseUpdateOutput, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
 
   const { data: before } = await sb
@@ -123,6 +153,7 @@ export async function updateCase(id: string, input: CaseUpdateOutput) {
     from_macrostatus_op: statusChanged ? before.macrostatus_op : null,
     to_macrostatus_op: statusChanged ? data.macrostatus_op : null,
     diff: input,
+    triggered_by: triggeredBy ?? null,
   });
 
   return data;
@@ -131,7 +162,7 @@ export async function updateCase(id: string, input: CaseUpdateOutput) {
 // ----------------------------------------------------------------------------
 // SOFT-DELETE
 // ----------------------------------------------------------------------------
-export async function softDeleteCase(id: string) {
+export async function softDeleteCase(id: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_cases")
@@ -146,6 +177,7 @@ export async function softDeleteCase(id: string) {
     case_id: id,
     organization_id: data.organization_id,
     action: "soft_deleted",
+    triggered_by: triggeredBy ?? null,
   });
   return { ok: true as const, id };
 }
@@ -153,8 +185,8 @@ export async function softDeleteCase(id: string) {
 // ----------------------------------------------------------------------------
 // MOVE STATUS (atalho usado pelo dialog Mover do Kanban operacional)
 // ----------------------------------------------------------------------------
-export async function moveCaseStatus(id: string, to: MacroOp) {
-  return updateCase(id, { macrostatus_op: to });
+export async function moveCaseStatus(id: string, to: MacroOp, triggeredBy?: string) {
+  return updateCase(id, { macrostatus_op: to }, triggeredBy);
 }
 
 // ----------------------------------------------------------------------------
@@ -162,7 +194,7 @@ export async function moveCaseStatus(id: string, to: MacroOp) {
 // ----------------------------------------------------------------------------
 // Regra de negócio: voltar pra NAO_APLICAVEL é bloqueado — depois que o caso
 // bifurcou, o rastro financeiro vive sua vida. Cancelar fin se necessário.
-export async function moveCaseStatusFin(id: string, to: MacroFin) {
+export async function moveCaseStatusFin(id: string, to: MacroFin, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const { data: before } = await sb
     .from("system_cases")
@@ -196,6 +228,7 @@ export async function moveCaseStatusFin(id: string, to: MacroFin) {
       organization_id: data.organization_id,
       action: "fin_status_changed",
       diff: { from: before.macrostatus_fin, to },
+      triggered_by: triggeredBy ?? null,
     });
   }
 
@@ -244,10 +277,14 @@ export async function listCaseEvents(caseId: string, limit = 20) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_events")
-    .select("*")
+    .select("*, triggered_user:system_users!triggered_by(full_name)")
     .eq("case_id", caseId)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw new CaseServiceError(error.message, 500);
-  return data ?? [];
+  return (data ?? []).map((e) => ({
+    ...e,
+    triggered_by_name: (e.triggered_user as { full_name: string } | null)?.full_name ?? null,
+    triggered_user: undefined,
+  }));
 }

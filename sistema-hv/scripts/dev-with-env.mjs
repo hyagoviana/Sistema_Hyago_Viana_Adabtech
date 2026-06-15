@@ -2,7 +2,7 @@
 // garantindo que os server functions (Drive/Supabase/Docs/ZapSign) tenham as chaves.
 import { config } from "dotenv";
 
-config({ path: ".env.local" });
+config({ path: ".env" });
 
 import { spawn } from "node:child_process";
 

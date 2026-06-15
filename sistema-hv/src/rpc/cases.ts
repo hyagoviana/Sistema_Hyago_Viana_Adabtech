@@ -19,10 +19,10 @@ import { caseCreateSchema, caseUpdateSchema } from "@/lib/validators/case";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
-async function handle<T>(fn: () => Promise<T>): Promise<T> {
+async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
-    await requireAuth();
-    return await fn();
+    const { id: userId } = await requireAuth();
+    return await fn(userId);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
       setResponseStatus(err.status);
@@ -69,7 +69,7 @@ export const listCaseEventsFn = createServerFn({ method: "GET" })
 
 export const createCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => caseCreateSchema.parse(data))
-  .handler(async ({ data }) => handle(() => createCase(data)));
+  .handler(async ({ data }) => handle((userId) => createCase(data, userId)));
 
 const updateInputSchema = z.object({
   id: z.string().uuid(),
@@ -78,20 +78,21 @@ const updateInputSchema = z.object({
 
 export const updateCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
-  .handler(async ({ data }) => handle(() => updateCase(data.id, data.input)));
+  .handler(async ({ data }) => handle((userId) => updateCase(data.id, data.input, userId)));
 
 const moveSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_OP) });
 
 export const moveCaseStatusFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveSchema.parse(data))
-  .handler(async ({ data }) => handle(() => moveCaseStatus(data.id, data.to)));
+  .handler(async ({ data }) => handle((userId) => moveCaseStatus(data.id, data.to, userId)));
 
 const moveFinSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_FIN) });
 
 export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveFinSchema.parse(data))
-  .handler(async ({ data }) => handle(() => moveCaseStatusFin(data.id, data.to)));
+  .handler(async ({ data }) => handle((userId) => moveCaseStatusFin(data.id, data.to, userId)));
 
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
-  .handler(async ({ data }) => handle(() => softDeleteCase(data.id)));
+  .handler(async ({ data }) => handle((userId) => softDeleteCase(data.id, userId)));
+

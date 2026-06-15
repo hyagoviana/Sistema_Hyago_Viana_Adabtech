@@ -3,7 +3,7 @@
 // e valida o JWT via supabase.auth.getUser(). Lança AuthError(401) se inválido.
 
 import { createClient } from "@supabase/supabase-js";
-import { getRequest } from "@tanstack/react-start/server";
+import { getCookies, getRequestHeader } from "@tanstack/react-start/server";
 
 export class AuthError extends Error {
   constructor(
@@ -15,43 +15,56 @@ export class AuthError extends Error {
   }
 }
 
-const COOKIE_PREFIX = "sb-sptfmfeoikukrhbekitl-auth-token";
+const COOKIE_KEY = "sb-sptfmfeoikukrhbekitl-auth-token";
 
-function parseCookies(header: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const pair of header.split(";")) {
-    const idx = pair.indexOf("=");
-    if (idx < 1) continue;
-    out[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
-  }
-  return out;
-}
-
-function extractAccessToken(request: Request): string | null {
+function extractAccessToken(): string | null {
   // 1. Authorization header (usado por clientes externos / testes)
-  const authHeader = request.headers.get("authorization");
+  const authHeader = getRequestHeader("authorization");
   if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
 
-  // 2. Cookie Supabase SSR — pode ser único ou chunked (.0, .1, …)
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  const cookies = parseCookies(cookieHeader);
+  // 2. Cookie Supabase SSR via getCookies() do TanStack Start
+  let cookies: Record<string, string>;
+  try {
+    cookies = getCookies();
+  } catch {
+    cookies = {};
+  }
+  // Cookie único
+  let raw = cookies[COOKIE_KEY];
 
-  let raw = cookies[COOKIE_PREFIX];
+  // Chunked: sb-xxx-auth-token.0, sb-xxx-auth-token.1, …
   if (!raw) {
     let chunked = "";
-    for (let i = 0; cookies[`${COOKIE_PREFIX}.${i}`]; i++) {
-      chunked += cookies[`${COOKIE_PREFIX}.${i}`];
+    for (let i = 0; cookies[`${COOKIE_KEY}.${i}`]; i++) {
+      chunked += cookies[`${COOKIE_KEY}.${i}`];
     }
     if (chunked) raw = chunked;
   }
   if (!raw) return null;
 
-  // O @supabase/ssr armazena como JSON URL-encoded: {"access_token":"…",…}
+  // Supabase SSR codifica o cookie em vários formatos possíveis:
+  // - "base64-<base64 do JSON>"  (formato mais recente)
+  // - URL-encoded JSON direto
+  // - JSON puro
   try {
-    const parsed = JSON.parse(decodeURIComponent(raw));
+    let jsonStr: string;
+
+    if (raw.startsWith("base64-")) {
+      // Formato "base64-..." — decodificar base64 após o prefixo
+      jsonStr = atob(raw.slice(7));
+    } else {
+      jsonStr = decodeURIComponent(raw);
+      if (!jsonStr.startsWith("{")) {
+        try { jsonStr = atob(jsonStr); } catch { /* keep as-is */ }
+      }
+    }
+
+    const parsed = JSON.parse(jsonStr);
     return typeof parsed === "string" ? parsed : parsed.access_token ?? null;
   } catch {
-    return raw; // JWT puro (sem wrapper JSON)
+    // JWT puro (sem wrapper JSON)
+    if (raw.includes(".")) return raw;
+    return null;
   }
 }
 
@@ -63,8 +76,7 @@ function extractAccessToken(request: Request): string | null {
  * @throws  `AuthError` (status 401) se não autenticado ou sessão expirada.
  */
 export async function requireAuth(): Promise<{ id: string; email: string }> {
-  const request = getRequest();
-  const token = extractAccessToken(request);
+  const token = extractAccessToken();
   if (!token) throw new AuthError("Não autenticado");
 
   const url = process.env.VITE_SUPABASE_URL;

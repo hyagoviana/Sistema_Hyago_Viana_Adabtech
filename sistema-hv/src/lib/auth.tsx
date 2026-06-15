@@ -53,8 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) setProfile((data as UserProfile) ?? null);
     }
 
-    sb.auth.getSession().then(async ({ data }) => {
+    sb.auth.getSession().then(async ({ data, error: sessionErr }) => {
       if (!mounted) return;
+      if (sessionErr) {
+        // Refresh token inválido/expirado — limpar sessão e forçar re-login
+        console.warn("Sessão expirada, redirecionando para login:", sessionErr.message);
+        await sb.auth.signOut();
+        setSession(null);
+        setProfile(null);
+        if (mounted) setLoading(false);
+        return;
+      }
       setSession(data.session);
       await loadProfile(data.session);
       if (mounted) setLoading(false);
