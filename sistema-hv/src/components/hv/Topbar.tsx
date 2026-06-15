@@ -98,8 +98,6 @@ export function Topbar() {
               {[
                 { label: "Caso", action: () => setCaseDialogOpen(true) },
                 { label: "Cliente", action: () => setClientDialogOpen(true) },
-                { label: "Tarefa", action: () => navigate({ to: "/tarefas" }) },
-                { label: "Lead", action: () => navigate({ to: "/comercial/leads" }) },
                 { label: "Documento", action: () => navigate({ to: "/modelos" }) },
               ].map((it) => (
                 <button
