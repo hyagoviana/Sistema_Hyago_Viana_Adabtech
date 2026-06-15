@@ -502,7 +502,29 @@ export type Database = {
           {
             foreignKeyName: "system_case_events_case_id_fkey";
             columns: ["case_id"];
+            isOneToOne: false;
             referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_events_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "system_cases_active";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fk_case_events_triggered_by";
+            columns: ["triggered_by"];
+            isOneToOne: false;
+            referencedRelation: "system_users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fk_case_events_triggered_by";
+            columns: ["triggered_by"];
+            isOneToOne: false;
+            referencedRelation: "system_users_active";
             referencedColumns: ["id"];
           },
         ];
@@ -545,6 +567,7 @@ export type Database = {
           status: string;
           priority: string;
           assignee: string | null;
+          assignee_id: string | null;
           due_date: string | null;
           completed_at: string | null;
           created_by: string | null;
@@ -561,6 +584,7 @@ export type Database = {
           status?: string;
           priority?: string;
           assignee?: string | null;
+          assignee_id?: string | null;
           due_date?: string | null;
           completed_at?: string | null;
           created_by?: string | null;
@@ -569,7 +593,36 @@ export type Database = {
           deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_case_tasks"]["Insert"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "system_case_tasks_assignee_id_fkey";
+            columns: ["assignee_id"];
+            isOneToOne: false;
+            referencedRelation: "system_users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_tasks_assignee_id_fkey";
+            columns: ["assignee_id"];
+            isOneToOne: false;
+            referencedRelation: "system_users_active";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_tasks_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_tasks_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "system_cases_active";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       system_case_deadlines: {
         Row: {

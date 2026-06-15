@@ -261,14 +261,12 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
                             <Edit3 size={13} className="mr-1" /> Editar
                           </Button>
                         )}
-                        {d.goes_to_zapsign && (
-                          <Button
-                            size="sm"
-                            onClick={() => setSendFor({ id: d.id, title: d.title })}
-                          >
-                            <Send size={13} className="mr-1" /> ZapSign
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => setSendFor({ id: d.id, title: d.title })}
+                        >
+                          <Send size={13} className="mr-1" /> ZapSign
+                        </Button>
                       </>
                     )}
                     {d.status === "ENVIADO_ZAPSIGN" && d.zapsign_sign_url && (

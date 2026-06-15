@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { signOut, useAuth } from "@/lib/auth";
 import { useCasesList } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
+import { useExceptions } from "@/hooks/useExceptions";
 import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
 import symbolHV from "@/assets/symbol-hv.png";
 
@@ -121,15 +122,20 @@ export function Sidebar() {
   const { session, role } = useAuth();
   const { data: casos } = useCasesList();
   const { data: tasks } = useAllTasks();
+  const { total: excTotal } = useExceptions();
 
   // Contadores REAIS (Supabase): casos, bifurcados na financeira e tarefas abertas.
   const realCounts: Record<string, number> = {};
   if (casos) {
     realCounts["/casos"] = casos.length;
+    realCounts["/pipeline"] = casos.length;
     realCounts["/casos/financeiro"] = casos.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
   }
   if (tasks) {
     realCounts["/tarefas"] = tasks.filter((t) => t.status !== "CONCLUIDA").length;
+  }
+  if (excTotal > 0) {
+    realCounts["/controladoria"] = excTotal;
   }
 
   const navigate = useNavigate();
@@ -282,7 +288,12 @@ export function Sidebar() {
                           <span className={`flex-1 ${active ? "font-medium" : "font-normal"}`}>
                             {item.label}
                           </span>
-                          {hasCount && <Badge count={count} tone="neutral" />}
+                          {hasCount && (
+                            <Badge
+                              count={count}
+                              tone={item.to === "/controladoria" ? "danger" : "neutral"}
+                            />
+                          )}
                         </>
                       )}
                     </Link>

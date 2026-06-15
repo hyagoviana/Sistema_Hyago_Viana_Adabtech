@@ -95,12 +95,12 @@ async function nextCaseCode(caseType: string): Promise<string> {
   const { data, error } = await sb.rpc("nextval_seq_system_case_code");
   if (error) {
     const fallback = Date.now().toString().slice(-5);
-    return `HV-${caseType.split("_")[0]}-${new Date().getFullYear()}-${fallback}`;
+    return `${caseType.split("_")[0]}-${new Date().getFullYear()}-${fallback}`;
   }
   const n = typeof data === "number" ? data : Number(data ?? 0);
   const year = new Date().getFullYear();
   const tipoShort = caseType.split("_")[0];
-  return `HV-${tipoShort}-${year}-${String(n).padStart(4, "0")}`;
+  return `${tipoShort}-${year}-${String(n).padStart(4, "0")}`;
 }
 
 // ----------------------------------------------------------------------------

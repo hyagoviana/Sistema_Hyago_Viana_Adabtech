@@ -319,18 +319,39 @@ function TasksSection({ caseId }: { caseId: string }) {
 // ----------------------------------------------------------------- Prazos ----
 function DeadlinesSection({ caseId }: { caseId: string }) {
   const { data: deadlines, isLoading } = useCaseDeadlines(caseId);
+  const { data: users } = useUsers();
   const create = useCreateCaseDeadline(caseId);
   const setStatus = useSetCaseDeadlineStatus(caseId);
   const del = useDeleteCaseDeadline(caseId);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [fatal, setFatal] = useState("");
+  const [responsible, setResponsible] = useState<string>("__none__");
+
+  const activeUsers = (users ?? []).filter(
+    (u: { status: string }) => u.status === "ACTIVE",
+  );
+  const userMap = new Map((users ?? []).map((u) => [u.id, u.full_name ?? u.email]));
+
+  function resetForm() {
+    setTitle("");
+    setFatal("");
+    setResponsible("__none__");
+  }
 
   async function add() {
     if (!title.trim() || !fatal) return;
     try {
-      await create.mutateAsync({ case_id: caseId, title: title.trim(), fatal_date: fatal });
-      setTitle("");
-      setFatal("");
+      await create.mutateAsync({
+        case_id: caseId,
+        title: title.trim(),
+        fatal_date: fatal,
+        responsible: responsible !== "__none__" ? responsible : null,
+      });
+      resetForm();
+      setDialogOpen(false);
+      toast.success("Prazo criado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar prazo");
     }
@@ -338,29 +359,78 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
 
   return (
     <section>
-      <SectionTitle>Prazos</SectionTitle>
-      <div className="card-editorial p-4">
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder="Descrição do prazo…"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <Input
-            type="date"
-            value={fatal}
-            onChange={(e) => setFatal(e.target.value)}
-            className="w-[160px] shrink-0"
-          />
-          <Button
-            onClick={add}
-            disabled={create.isPending || !title.trim() || !fatal}
-            className="shrink-0"
-          >
-            <Plus size={15} className="mr-1" /> Adicionar
-          </Button>
-        </div>
+      <div className="flex items-center justify-between mb-3">
+        <SectionTitle>Prazos</SectionTitle>
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Plus size={14} className="mr-1" /> Novo prazo
+        </Button>
+      </div>
 
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Novo prazo</DialogTitle>
+            <DialogDescription>Preencha os detalhes do prazo para este caso.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Descrição</Label>
+              <Input
+                className="mt-1"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex.: Prazo para contestação"
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data fatal</Label>
+                <Input
+                  type="date"
+                  className="mt-1"
+                  value={fatal}
+                  onChange={(e) => setFatal(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Responsável</Label>
+                <Select value={responsible} onValueChange={setResponsible}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem responsável</SelectItem>
+                    {activeUsers.map(
+                      (u: { id: string; full_name: string | null; email: string }) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name || u.email}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetForm();
+                setDialogOpen(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={add} disabled={create.isPending || !title.trim() || !fatal}>
+              {create.isPending ? "Criando…" : "Criar prazo"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="card-editorial p-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : !deadlines || deadlines.length === 0 ? (
@@ -371,6 +441,7 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
               const fulfilled = d.status === "CUMPRIDO";
               const overdue =
                 !fulfilled && d.status !== "PERDIDO" && new Date(d.fatal_date) < new Date();
+              const ownerName = d.responsible ? userMap.get(d.responsible) : null;
               return (
                 <li key={d.id} className="flex items-center gap-3 py-2.5">
                   <Clock
@@ -388,9 +459,16 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
                     <div className={`text-[14px] text-[var(--navy)] truncate ${fulfilled ? "opacity-50" : ""}`}>
                       {d.title}
                     </div>
-                    <div className="text-[11.5px] text-muted-foreground">
-                      Data fatal: {fmtDate(d.fatal_date)}
-                      {overdue && <span className="text-[var(--danger)] font-medium"> · vencido</span>}
+                    <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground mt-0.5 flex-wrap">
+                      <span>
+                        Data fatal: {fmtDate(d.fatal_date)}
+                        {overdue && <span className="text-[var(--danger)] font-medium"> · vencido</span>}
+                      </span>
+                      {ownerName && (
+                        <span className="inline-flex items-center gap-1">
+                          <User size={10} /> {ownerName}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Badge tone={fulfilled ? "success" : overdue ? "danger" : "gold"}>
@@ -437,6 +515,7 @@ function CommsSection({ caseId }: { caseId: string }) {
     try {
       await create.mutateAsync({ case_id: caseId, summary: summary.trim(), channel });
       setSummary("");
+      toast.success("Comunicação registrada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao registrar comunicação");
     }

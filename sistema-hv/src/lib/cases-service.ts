@@ -19,22 +19,19 @@ export class CaseServiceError extends Error {
 }
 
 // ----------------------------------------------------------------------------
-// case_code generator: HV-{TIPO}-{YEAR}-{NNNN}
+// case_code generator: {TIPO}-{YEAR}-{NNNN}
 // ----------------------------------------------------------------------------
 async function nextCaseCode(caseType: string): Promise<string> {
   const sb = getSupabaseAdmin();
-  // Tenta via RPC genérico — se não tiver função, faz query bruta via PostgREST.
-  // Pra simplicidade: usa SQL inline via service_role.
   const { data, error } = await sb.rpc("nextval_seq_system_case_code");
   if (error) {
-    // Fallback: timestamp-based (raro — só se a função RPC não existir)
     const fallback = Date.now().toString().slice(-5);
-    return `HV-${caseType}-${new Date().getFullYear()}-${fallback}`;
+    return `${caseType.split("_")[0]}-${new Date().getFullYear()}-${fallback}`;
   }
   const n = typeof data === "number" ? data : Number(data ?? 0);
   const year = new Date().getFullYear();
   const tipoShort = caseType.split("_")[0];
-  return `HV-${tipoShort}-${year}-${String(n).padStart(4, "0")}`;
+  return `${tipoShort}-${year}-${String(n).padStart(4, "0")}`;
 }
 
 // ----------------------------------------------------------------------------

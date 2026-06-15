@@ -157,7 +157,7 @@ export async function setLinkEditable(documentId: string): Promise<void> {
   }
 }
 
-/** Trava o doc (remove a permissão pública de edição) ao finalizar. */
+/** Trava o doc (remove ou rebaixa a permissão pública de edição) ao finalizar. */
 export async function lockDocument(documentId: string): Promise<void> {
   try {
     const perms = await driveClient().permissions.list({
@@ -166,12 +166,26 @@ export async function lockDocument(documentId: string): Promise<void> {
       fields: "permissions(id,type,role)",
     });
     const anyone = perms.data.permissions?.find((p) => p.type === "anyone");
-    if (anyone?.id) {
+    if (!anyone?.id) return;
+
+    try {
       await driveClient().permissions.delete({
         fileId: documentId,
         permissionId: anyone.id,
         supportsAllDrives: true,
       });
+    } catch (delErr: unknown) {
+      // Permissão herdada da pasta (403) — rebaixa de writer → reader
+      const status = (delErr as { code?: number })?.code;
+      if (status === 403 && anyone.role === "writer") {
+        await driveClient().permissions.update({
+          fileId: documentId,
+          permissionId: anyone.id,
+          supportsAllDrives: true,
+          requestBody: { role: "reader" },
+        });
+      }
+      // Se já é reader ou outro caso, segue sem bloquear a finalização
     }
   } catch (err) {
     throw new DocsError(`Falha ao travar ${documentId}.`, err);

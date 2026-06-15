@@ -1,11 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Briefcase, DollarSign, AlertCircle, Clock, CalendarClock, ChevronRight } from "lucide-react";
+import {
+  Briefcase,
+  DollarSign,
+  AlertCircle,
+  Clock,
+  ChevronRight,
+  Users,
+  Scale,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { PageHeader } from "@/components/hv/primitives";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CASE_TYPE_LABELS, MACRO_OP_LABELS } from "@/lib/cases/constants";
+import type { CaseType, MacroOp } from "@/lib/cases/constants";
 import { useCasesList } from "@/hooks/useCases";
+import { useClientsList } from "@/hooks/useClients";
 import { useAllTasks, useAllDeadlines } from "@/hooks/useDossie";
 import { useAuth } from "@/lib/auth";
 
@@ -24,9 +36,14 @@ function daysUntil(iso: string): number {
   return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
 function HojePage() {
   const { session } = useAuth();
   const { data: casos, isLoading } = useCasesList();
+  const { data: clientes, isLoading: isLoadingClients } = useClientsList();
   const { data: tasks } = useAllTasks();
   const { data: deadlines } = useAllDeadlines();
 
@@ -37,6 +54,7 @@ function HojePage() {
 
   const lista = useMemo(() => casos ?? [], [casos]);
   const totalAtivos = lista.length;
+  const totalClientes = (clientes ?? []).length;
   const bifurcados = lista.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
   const inadimplentes = lista.filter(
     (c) => c.macrostatus_fin === "INADIMPLENTE" || c.inadimplente,
@@ -52,9 +70,57 @@ function HojePage() {
     [lista],
   );
 
+  // Casos por tipo
+  const casosPorTipo = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of lista) {
+      map[c.case_type] = (map[c.case_type] ?? 0) + 1;
+    }
+    return Object.entries(map)
+      .map(([tipo, qtd]) => ({
+        tipo,
+        label: CASE_TYPE_LABELS[tipo as CaseType] ?? tipo,
+        qtd,
+      }))
+      .sort((a, b) => b.qtd - a.qtd);
+  }, [lista]);
+
+  // Casos por status operacional (top 5)
+  const casosPorStatus = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of lista) {
+      map[c.macrostatus_op] = (map[c.macrostatus_op] ?? 0) + 1;
+    }
+    return Object.entries(map)
+      .map(([status, qtd]) => ({
+        status,
+        label: MACRO_OP_LABELS[status as MacroOp] ?? status,
+        qtd,
+      }))
+      .sort((a, b) => b.qtd - a.qtd)
+      .slice(0, 6);
+  }, [lista]);
+
+  // Últimos 5 casos criados
+  const casosRecentes = useMemo(
+    () =>
+      [...lista]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5),
+    [lista],
+  );
+
+  // Últimos 5 clientes criados
+  const clientesRecentes = useMemo(
+    () =>
+      [...(clientes ?? [])]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5),
+    [clientes],
+  );
+
   const userId = session?.user?.id;
 
-  // Tarefas do usuário logado (atribuídas a ele ou sem dono)
   const minhasTarefas = useMemo(
     () =>
       (tasks ?? []).filter(
@@ -63,7 +129,6 @@ function HojePage() {
     [tasks, userId],
   );
 
-  // Urgente: tarefas abertas urgentes/altas do usuário
   const urgentes = useMemo(
     () =>
       minhasTarefas
@@ -72,7 +137,6 @@ function HojePage() {
     [minhasTarefas],
   );
 
-  // Próximos 7 dias: prazos abertos com vencimento em ≤7 dias (inclui atrasados)
   const proximosPrazos = useMemo(
     () =>
       (deadlines ?? [])
@@ -94,15 +158,36 @@ function HojePage() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Kpi label="Casos ativos" value={totalAtivos} icon={Briefcase} loading={isLoading} />
-        <Kpi label="Na pipeline financeira" value={bifurcados} icon={DollarSign} loading={isLoading} />
+      {/* KPIs — clicáveis */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <Kpi
+          label="Casos ativos"
+          value={totalAtivos}
+          icon={Briefcase}
+          loading={isLoading}
+          to="/pipeline"
+        />
+        <Kpi
+          label="Clientes"
+          value={totalClientes}
+          icon={Users}
+          loading={isLoadingClients}
+          to="/clientes"
+        />
+        <Kpi
+          label="Na pipeline financeira"
+          value={bifurcados}
+          icon={DollarSign}
+          loading={isLoading}
+          to="/casos/financeiro"
+        />
         <Kpi
           label="Inadimplentes"
           value={inadimplentes}
           icon={AlertCircle}
           loading={isLoading}
           danger={inadimplentes > 0}
+          to="/casos/financeiro"
         />
         <Kpi
           label="Parados > 30 dias"
@@ -111,7 +196,62 @@ function HojePage() {
           loading={isLoading}
           danger={parados.length > 0}
           featured
+          to="/pipeline"
         />
+      </div>
+
+      {/* Distribuição: por tipo + por status operacional */}
+      <div className="grid lg:grid-cols-2 gap-5 mb-8">
+        <div>
+          <SectionHead title="Casos por tipo" count={casosPorTipo.length} to="/pipeline" cta="Ver pipeline" />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {isLoading ? (
+              <ListSkeleton />
+            ) : casosPorTipo.length === 0 ? (
+              <Empty>Nenhum caso cadastrado.</Empty>
+            ) : (
+              casosPorTipo.map((t, i) => (
+                <div
+                  key={t.tipo}
+                  className="flex items-center justify-between px-4 py-3"
+                  style={i < casosPorTipo.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Scale size={14} className="text-muted-foreground shrink-0" />
+                    <span className="text-[13.5px] font-medium text-[var(--navy)]">{t.label}</span>
+                  </div>
+                  <Badge variant="secondary" className="font-semibold text-[12px]">
+                    {t.qtd}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div>
+          <SectionHead title="Status operacional" count={casosPorStatus.length} to="/pipeline" cta="Ver pipeline" />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {isLoading ? (
+              <ListSkeleton />
+            ) : casosPorStatus.length === 0 ? (
+              <Empty>Nenhum caso cadastrado.</Empty>
+            ) : (
+              casosPorStatus.map((s, i) => (
+                <div
+                  key={s.status}
+                  className="flex items-center justify-between px-4 py-3"
+                  style={i < casosPorStatus.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
+                >
+                  <span className="text-[13.5px] text-[var(--navy)]">{s.label}</span>
+                  <Badge variant="outline" className="font-semibold text-[12px]">
+                    {s.qtd}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Urgente — tarefas reais */}
@@ -149,7 +289,8 @@ function HojePage() {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      {/* 2x2: Próximos 7 dias + Sem movimentação + Casos recentes + Clientes recentes */}
+      <div className="grid lg:grid-cols-2 gap-5 mb-8">
         {/* Próximos 7 dias — prazos reais */}
         <div>
           <SectionHead title="Próximos 7 dias" count={proximosPrazos.length} to="/tarefas" cta="Agenda" />
@@ -177,12 +318,12 @@ function HojePage() {
 
         {/* Sem movimentação — casos reais */}
         <div>
-          <SectionHead title="Sem movimentação > 30 dias" count={parados.length} to="/casos" cta="Ver pipeline" />
+          <SectionHead title="Sem movimentação > 30 dias" count={parados.length} to="/pipeline" cta="Ver pipeline" />
           <div className="card-editorial !p-0 overflow-hidden">
             {isLoading ? (
               <ListSkeleton />
             ) : parados.length === 0 ? (
-              <Empty>Nenhum caso parado há mais de 30 dias. 🎉</Empty>
+              <Empty>Nenhum caso parado há mais de 30 dias.</Empty>
             ) : (
               parados.map((c, i) => (
                 <Row
@@ -199,6 +340,80 @@ function HojePage() {
           </div>
         </div>
       </div>
+
+      {/* Recentes: casos e clientes */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div>
+          <SectionHead title="Casos recentes" count={casosRecentes.length} to="/pipeline" cta="Ver todos" />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {isLoading ? (
+              <ListSkeleton />
+            ) : casosRecentes.length === 0 ? (
+              <Empty>Nenhum caso ainda.</Empty>
+            ) : (
+              casosRecentes.map((c, i) => (
+                <Link
+                  key={c.id}
+                  to="/casos/$id"
+                  params={{ id: c.id }}
+                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
+                  style={i < casosRecentes.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-medium text-[var(--navy)] truncate">
+                      {c.case_code}
+                      <span className="text-muted-foreground font-normal"> · {c.client_name}</span>
+                    </div>
+                    <div className="text-[11.5px] text-muted-foreground mt-0.5">
+                      {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type} · {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
+                    </div>
+                  </div>
+                  <div className="text-[12px] text-muted-foreground shrink-0 tabular">
+                    {formatDate(c.created_at)}
+                  </div>
+                  <ChevronRight size={15} className="text-[var(--ink-300)] shrink-0" />
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div>
+          <SectionHead title="Clientes recentes" count={clientesRecentes.length} to="/clientes" cta="Ver todos" />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {isLoadingClients ? (
+              <ListSkeleton />
+            ) : clientesRecentes.length === 0 ? (
+              <Empty>Nenhum cliente ainda.</Empty>
+            ) : (
+              clientesRecentes.map((c, i) => (
+                <Link
+                  key={c.id}
+                  to="/clientes/$id"
+                  params={{ id: c.id }}
+                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
+                  style={i < clientesRecentes.length - 1 ? { borderBottom: "1px solid var(--border)" } : undefined}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-medium text-[var(--navy)] truncate">
+                      {c.full_name}
+                    </div>
+                    {c.cpf_cnpj && (
+                      <div className="text-[11.5px] text-muted-foreground mt-0.5 font-mono">
+                        {c.cpf_cnpj}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[12px] text-muted-foreground shrink-0 tabular">
+                    {formatDate(c.created_at)}
+                  </div>
+                  <ChevronRight size={15} className="text-[var(--ink-300)] shrink-0" />
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -210,6 +425,7 @@ function Kpi({
   loading,
   danger,
   featured,
+  to,
 }: {
   label: string;
   value: number;
@@ -217,12 +433,14 @@ function Kpi({
   loading?: boolean;
   danger?: boolean;
   featured?: boolean;
+  to?: string;
 }) {
   const chipBg = danger ? "rgba(180,36,50,0.08)" : "var(--gold-pale)";
   const chipColor = danger ? "var(--danger)" : GOLD;
-  return (
+
+  const content = (
     <div
-      className="card-editorial !p-5"
+      className="card-editorial !p-5 group"
       style={featured ? { borderColor: "rgba(152,120,20,0.28)" } : undefined}
     >
       <div className="flex items-center justify-between mb-4">
@@ -253,8 +471,22 @@ function Kpi({
           {value}
         </div>
       )}
+      {to && (
+        <div className="mt-2 text-[11px] text-muted-foreground group-hover:text-[var(--gold-700)] transition-colors flex items-center gap-1">
+          Ver detalhes <ChevronRight size={10} />
+        </div>
+      )}
     </div>
   );
+
+  if (to) {
+    return (
+      <Link to={to as any} className="block">
+        {content}
+      </Link>
+    );
+  }
+  return content;
 }
 
 function Row({
@@ -314,7 +546,7 @@ function SectionHead({
       </div>
       {to && cta && (
         <Link
-          to={to}
+          to={to as any}
           className="text-[12px] text-muted-foreground hover:text-[var(--gold-700)] flex items-center gap-1 transition-colors"
         >
           {cta} <ChevronRight size={12} />

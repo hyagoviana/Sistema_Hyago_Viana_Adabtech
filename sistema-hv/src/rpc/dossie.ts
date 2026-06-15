@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
+import { z } from "zod";
 
 import {
   DossieServiceError,
@@ -18,6 +19,9 @@ import {
   listAllDeadlines,
 } from "@/lib/dossie-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+
+const caseIdSchema = z.object({ caseId: z.string().uuid() });
+const idSchema = z.object({ id: z.string().uuid() });
 
 async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
@@ -39,7 +43,7 @@ async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
 
 // ---------------------------------------------------------------- Tarefas ----
 export const listCaseTasksFn = createServerFn({ method: "GET" })
-  .inputValidator((d: { caseId: string }) => d)
+  .inputValidator((data: unknown) => caseIdSchema.parse(data))
   .handler(async ({ data }) => handle(() => listCaseTasks(data.caseId)));
 
 export const createCaseTaskFn = createServerFn({ method: "POST" })
@@ -65,7 +69,7 @@ export const deleteCaseTaskFn = createServerFn({ method: "POST" })
 
 // ----------------------------------------------------------------- Prazos ----
 export const listCaseDeadlinesFn = createServerFn({ method: "GET" })
-  .inputValidator((d: { caseId: string }) => d)
+  .inputValidator((data: unknown) => caseIdSchema.parse(data))
   .handler(async ({ data }) => handle(() => listCaseDeadlines(data.caseId)));
 
 export const createCaseDeadlineFn = createServerFn({ method: "POST" })
@@ -91,7 +95,7 @@ export const deleteCaseDeadlineFn = createServerFn({ method: "POST" })
 
 // ------------------------------------------------------------ Comunicações ----
 export const listCaseCommunicationsFn = createServerFn({ method: "GET" })
-  .inputValidator((d: { caseId: string }) => d)
+  .inputValidator((data: unknown) => caseIdSchema.parse(data))
   .handler(async ({ data }) => handle(() => listCaseCommunications(data.caseId)));
 
 export const createCaseCommunicationFn = createServerFn({ method: "POST" })
