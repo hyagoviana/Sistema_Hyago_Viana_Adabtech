@@ -1,10 +1,19 @@
-import { Check, Clock, MessageSquare, Plus, Trash2, User } from "lucide-react";
+import { CalendarDays, Check, Clock, MessageSquare, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useCaseTasks,
   useCreateCaseTask,
@@ -46,79 +56,187 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 // ---------------------------------------------------------------- Tarefas ----
+const TASK_TYPES = [
+  { value: "GERAL", label: "Geral" },
+  { value: "DOCUMENTO", label: "Documento" },
+  { value: "CONTATO_CLIENTE", label: "Contato com cliente" },
+  { value: "PROTOCOLO", label: "Protocolo" },
+  { value: "AUDIENCIA", label: "Audiência" },
+  { value: "ANALISE", label: "Análise" },
+  { value: "FINANCEIRO", label: "Financeiro" },
+  { value: "JUDICIAL", label: "Judicial" },
+];
+
 function TasksSection({ caseId }: { caseId: string }) {
   const { data: tasks, isLoading } = useCaseTasks(caseId);
   const { data: users } = useUsers();
   const create = useCreateCaseTask(caseId);
   const setStatus = useSetCaseTaskStatus(caseId);
   const del = useDeleteCaseTask(caseId);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("MEDIA");
   const [assigneeId, setAssigneeId] = useState<string>("__none__");
+  const [dueDate, setDueDate] = useState("");
+  const [taskType, setTaskType] = useState("GERAL");
 
   const activeUsers = (users ?? []).filter(
     (u: { status: string }) => u.status === "ACTIVE",
   );
+
+  function resetForm() {
+    setTitle("");
+    setDescription("");
+    setPriority("MEDIA");
+    setAssigneeId("__none__");
+    setDueDate("");
+    setTaskType("GERAL");
+  }
 
   async function add() {
     if (!title.trim()) return;
     try {
       await create.mutateAsync({
         case_id: caseId,
-        title: title.trim(),
+        title: `[${TASK_TYPES.find((t) => t.value === taskType)?.label ?? taskType}] ${title.trim()}`,
         priority,
         assignee_id: assigneeId !== "__none__" ? assigneeId : null,
+        due_date: dueDate || null,
       });
-      setTitle("");
-      setPriority("MEDIA");
-      setAssigneeId("__none__");
+      resetForm();
+      setDialogOpen(false);
+      toast.success("Tarefa criada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar tarefa");
     }
   }
 
+  function daysUntilDue(d: string | null) {
+    if (!d) return null;
+    const diff = Math.ceil(
+      (new Date(d + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    );
+    return diff;
+  }
+
   return (
     <section>
-      <SectionTitle>Tarefas</SectionTitle>
-      <div className="card-editorial p-4">
-        <div className="flex gap-2 mb-4 flex-wrap">
-          <Input
-            placeholder="Nova tarefa…"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            className="flex-1 min-w-[200px]"
-          />
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger className="w-[130px] shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {["BAIXA", "MEDIA", "ALTA", "URGENTE"].map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p.charAt(0) + p.slice(1).toLowerCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={assigneeId} onValueChange={setAssigneeId}>
-            <SelectTrigger className="w-[180px] shrink-0">
-              <SelectValue placeholder="Responsável" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">Sem responsável</SelectItem>
-              {activeUsers.map((u: { id: string; full_name: string | null; email: string }) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.full_name || u.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={add} disabled={create.isPending || !title.trim()} className="shrink-0">
-            <Plus size={15} className="mr-1" /> Adicionar
-          </Button>
-        </div>
+      <div className="flex items-center justify-between mb-3">
+        <SectionTitle>Tarefas</SectionTitle>
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Plus size={14} className="mr-1" /> Nova tarefa
+        </Button>
+      </div>
 
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nova tarefa</DialogTitle>
+            <DialogDescription>Preencha os detalhes da tarefa para este caso.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Tipo</Label>
+                <Select value={taskType} onValueChange={setTaskType}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Prioridade</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["BAIXA", "MEDIA", "ALTA", "URGENTE"].map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p.charAt(0) + p.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Título</Label>
+              <Input
+                className="mt-1"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex.: Enviar documento para o cliente"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label>Descrição (opcional)</Label>
+              <Textarea
+                className="mt-1"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Detalhes adicionais sobre a tarefa…"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Responsável</Label>
+                <Select value={assigneeId} onValueChange={setAssigneeId}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem responsável</SelectItem>
+                    {activeUsers.map(
+                      (u: { id: string; full_name: string | null; email: string }) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name || u.email}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data de vencimento</Label>
+                <Input
+                  type="date"
+                  className="mt-1"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetForm();
+                setDialogOpen(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={add} disabled={create.isPending || !title.trim()}>
+              {create.isPending ? "Criando…" : "Criar tarefa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="card-editorial p-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : !tasks || tasks.length === 0 ? (
@@ -127,8 +245,11 @@ function TasksSection({ caseId }: { caseId: string }) {
           <ul className="divide-y divide-[var(--border)]">
             {tasks.map((t) => {
               const done = t.status === "CONCLUIDA";
+              const daysLeft = daysUntilDue(t.due_date);
+              const overdue = daysLeft !== null && daysLeft < 0 && !done;
+              const soon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3 && !done;
               return (
-                <li key={t.id} className="flex items-center gap-3 py-2.5">
+                <li key={t.id} className="flex items-center gap-3 py-3">
                   <button
                     title={done ? "Reabrir" : "Concluir"}
                     onClick={() =>
@@ -144,18 +265,35 @@ function TasksSection({ caseId }: { caseId: string }) {
                   </button>
                   <div className="flex-1 min-w-0">
                     <div
-                      className={`text-[14px] text-[var(--navy)] truncate ${done ? "line-through opacity-50" : ""}`}
+                      className={`text-[14px] text-[var(--navy)] ${done ? "line-through opacity-50" : ""}`}
                     >
                       {t.title}
                     </div>
-                    <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground">
+                    <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground mt-0.5 flex-wrap">
                       {t.assignee_name && (
                         <span className="inline-flex items-center gap-1">
                           <User size={10} /> {t.assignee_name}
                         </span>
                       )}
-                      {t.assignee_name && t.due_date && <span>·</span>}
-                      {t.due_date && <span>Vence {fmtDate(t.due_date)}</span>}
+                      {t.due_date && (
+                        <span
+                          className="inline-flex items-center gap-1"
+                          style={{
+                            color: overdue
+                              ? "var(--danger)"
+                              : soon
+                                ? "var(--warning)"
+                                : undefined,
+                            fontWeight: overdue || soon ? 600 : undefined,
+                          }}
+                        >
+                          <CalendarDays size={10} />
+                          {fmtDate(t.due_date)}
+                          {overdue && ` (${Math.abs(daysLeft!)}d atraso)`}
+                          {soon && daysLeft === 0 && " (hoje)"}
+                          {soon && daysLeft! > 0 && ` (${daysLeft}d)`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
