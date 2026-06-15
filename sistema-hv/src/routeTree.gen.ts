@@ -60,13 +60,13 @@ import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as CasosListaRouteImport } from './routes/casos.lista'
 import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
 import { Route as CasosIdRouteImport } from './routes/casos.$id'
-import { Route as ApiDiagEnvRouteImport } from './routes/api.diag-env'
 import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
+import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
 import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
@@ -328,11 +328,6 @@ const CasosIdRoute = CasosIdRouteImport.update({
   path: '/casos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiDiagEnvRoute = ApiDiagEnvRouteImport.update({
-  id: '/api/diag-env',
-  path: '/api/diag-env',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -362,6 +357,11 @@ const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
 const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
   id: '/api/webhooks/zapsign',
   path: '/api/webhooks/zapsign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
+  id: '/api/webhooks/n8n',
+  path: '/api/webhooks/n8n',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
@@ -398,7 +398,6 @@ export interface FileRoutesByFullPath {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
-  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -441,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -462,7 +462,6 @@ export interface FileRoutesByTo {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
-  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
@@ -504,6 +503,7 @@ export interface FileRoutesByTo {
   '/peticionamento': typeof PeticionamentoIndexRoute
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -526,7 +526,6 @@ export interface FileRoutesById {
   '/modelos': typeof ModelosRoute
   '/pipeline': typeof PipelineRoute
   '/tarefas': typeof TarefasRoute
-  '/api/diag-env': typeof ApiDiagEnvRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -569,6 +568,7 @@ export interface FileRoutesById {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -592,7 +592,6 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
-    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/financeiro'
     | '/casos/lista'
@@ -635,6 +634,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
@@ -656,7 +656,6 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
-    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/lista'
     | '/clientes/$id'
@@ -698,6 +697,7 @@ export interface FileRouteTypes {
     | '/peticionamento'
     | '/portal'
     | '/whatsapp'
+    | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
@@ -719,7 +719,6 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/pipeline'
     | '/tarefas'
-    | '/api/diag-env'
     | '/casos/$id'
     | '/casos/financeiro'
     | '/casos/lista'
@@ -762,6 +761,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
     | '/casos/financeiro/inadimplencia'
@@ -784,7 +784,6 @@ export interface RootRouteChildren {
   ModelosRoute: typeof ModelosRoute
   PipelineRoute: typeof PipelineRoute
   TarefasRoute: typeof TarefasRoute
-  ApiDiagEnvRoute: typeof ApiDiagEnvRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
   CasosListaRoute: typeof CasosListaRoute
@@ -827,6 +826,7 @@ export interface RootRouteChildren {
   PeticionamentoIndexRoute: typeof PeticionamentoIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
+  ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
@@ -1193,13 +1193,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/diag-env': {
-      id: '/api/diag-env'
-      path: '/api/diag-env'
-      fullPath: '/api/diag-env'
-      preLoaderRoute: typeof ApiDiagEnvRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/casos/financeiro/': {
       id: '/casos/financeiro/'
       path: '/'
@@ -1240,6 +1233,13 @@ declare module '@tanstack/react-router' {
       path: '/api/webhooks/zapsign'
       fullPath: '/api/webhooks/zapsign'
       preLoaderRoute: typeof ApiWebhooksZapsignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/n8n': {
+      id: '/api/webhooks/n8n'
+      path: '/api/webhooks/n8n'
+      fullPath: '/api/webhooks/n8n'
+      preLoaderRoute: typeof ApiWebhooksN8nRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/casos/$id/termo/elaborar': {
@@ -1335,7 +1335,6 @@ const rootRouteChildren: RootRouteChildren = {
   ModelosRoute: ModelosRoute,
   PipelineRoute: PipelineRoute,
   TarefasRoute: TarefasRoute,
-  ApiDiagEnvRoute: ApiDiagEnvRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
   CasosListaRoute: CasosListaRoute,
@@ -1378,6 +1377,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeticionamentoIndexRoute: PeticionamentoIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
+  ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,

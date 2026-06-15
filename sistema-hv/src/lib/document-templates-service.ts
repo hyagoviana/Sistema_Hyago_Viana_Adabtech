@@ -31,7 +31,10 @@ export async function listDocumentTemplates(opts?: { caseType?: string | null })
     .eq("active", true)
     .order("name", { ascending: true });
   // Modelos sem tipo (case_type NULL) valem para qualquer caso.
-  if (opts?.caseType) q = q.or(`case_type.eq.${opts.caseType},case_type.is.null`);
+  if (opts?.caseType) {
+    const ct = opts.caseType.replace(/[,()]/g, "");
+    if (ct) q = q.or(`case_type.eq.${ct},case_type.is.null`);
+  }
   const { data, error } = await q;
   if (error) throw new DocumentTemplateServiceError(error.message, 500);
   // Dedup por nome normalizado — prefere o que TEM campos (Google Doc nativo)

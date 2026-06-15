@@ -340,8 +340,11 @@ export async function sendCaseDocumentToZapsign(opts: {
 }) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(opts.docId);
-  if (doc.status !== "FINALIZADO" || !doc.google_doc_id) {
+  if (doc.status !== "FINALIZADO") {
     throw new CaseDocumentServiceError("Finalize o documento antes de enviar ao ZapSign", 409);
+  }
+  if (!doc.google_doc_id && !doc.drive_file_id) {
+    throw new CaseDocumentServiceError("Documento sem arquivo para enviar ao ZapSign", 409);
   }
   if (!opts.signers?.length) {
     throw new CaseDocumentServiceError("Informe ao menos um signatário", 422);
@@ -349,7 +352,16 @@ export async function sendCaseDocumentToZapsign(opts: {
 
   let base64Pdf: string;
   try {
-    base64Pdf = (await exportPdf(doc.google_doc_id)).toString("base64");
+    if (doc.google_doc_id) {
+      base64Pdf = (await exportPdf(doc.google_doc_id)).toString("base64");
+    } else {
+      // Documento finalizado via Drive (sem Google Doc nativo) — baixar PDF existente
+      const { downloadFile } = await import("./google/drive");
+      const stream = await downloadFile(doc.drive_file_id!);
+      const chunks: Buffer[] = [];
+      for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+      base64Pdf = Buffer.concat(chunks).toString("base64");
+    }
   } catch (err) {
     const msg = err instanceof DocsError ? err.message : String(err);
     throw new CaseDocumentServiceError(`Falha ao preparar PDF: ${msg}`, EXTERNAL_DEP_FAILED);

@@ -12,16 +12,24 @@ import {
   listConsents,
   revokeConsent,
 } from "@/lib/users-service";
+import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
-function handle<T>(fn: () => Promise<T>): Promise<T> {
-  return fn().catch((err: unknown) => {
+async function handle<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    await requireAuth();
+    return await fn();
+  } catch (err: unknown) {
+    if (err instanceof AuthError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
     if (err instanceof UsersServiceError) {
       setResponseStatus(err.status);
       throw new Error(err.message);
     }
     setResponseStatus(500);
     throw err;
-  });
+  }
 }
 
 // -------------------------------------------------------------- Usuários ----

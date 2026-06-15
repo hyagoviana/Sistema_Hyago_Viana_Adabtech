@@ -11,19 +11,27 @@ import {
   softDeleteClient,
   updateClient,
 } from "@/lib/clients-service";
+import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import { clientCreateSchema, clientUpdateSchema } from "@/lib/validators/client";
 
 const idSchema = z.object({ id: z.string().uuid("ID inválido") });
 
-function handle<T>(fn: () => Promise<T>): Promise<T> {
-  return fn().catch((err: unknown) => {
+async function handle<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    await requireAuth();
+    return await fn();
+  } catch (err: unknown) {
+    if (err instanceof AuthError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
     if (err instanceof ClientServiceError) {
       setResponseStatus(err.status);
       throw new Error(err.message);
     }
     setResponseStatus(500);
     throw err;
-  });
+  }
 }
 
 // ----------------------------------------------------------------------------

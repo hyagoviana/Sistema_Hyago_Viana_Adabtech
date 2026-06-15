@@ -224,8 +224,8 @@ export async function listCases(filters?: {
     query = query.eq("client_id", filters.client_id);
   }
   if (filters?.search?.trim()) {
-    const s = filters.search.trim();
-    query = query.or(`case_code.ilike.%${s}%,proximo_passo.ilike.%${s}%`);
+    const s = filters.search.trim().replace(/[,()]/g, "");
+    if (s) query = query.or(`case_code.ilike.%${s}%,proximo_passo.ilike.%${s}%`);
   }
 
   const { data, error } = await query;

@@ -62,13 +62,18 @@ export async function getDashboardFinanceiro(): Promise<DashboardFinanceiro> {
       const mes = (p.data_pagamento ?? "").slice(0, 7);
       if (mes) bump(mes).recebido_centavos += pago;
     } else if (p.status === "PENDENTE" || p.status === "VENCIDA") {
-      const atrasada = p.status === "VENCIDA" || (p.vencimento ?? "9999-12-31") < hoje;
+      // Parcela sem vencimento definido não pode ser avaliada como vencida
+      if (!p.vencimento) {
+        aReceber += valor;
+        continue;
+      }
+      const atrasada = p.status === "VENCIDA" || p.vencimento < hoje;
       if (atrasada) {
         vencido += valor;
         qtdVencidas += 1;
         const dias = Math.max(
           0,
-          Math.floor((Date.parse(hoje) - Date.parse(p.vencimento ?? hoje)) / (1000 * 60 * 60 * 24)),
+          Math.floor((Date.parse(hoje) - Date.parse(p.vencimento)) / (1000 * 60 * 60 * 24)),
         );
         vencidas.push({
           id: p.id,
@@ -81,7 +86,7 @@ export async function getDashboardFinanceiro(): Promise<DashboardFinanceiro> {
       } else {
         aReceber += valor;
       }
-      const mes = (p.vencimento ?? "").slice(0, 7);
+      const mes = p.vencimento.slice(0, 7);
       if (mes) bump(mes).a_receber_centavos += valor;
     }
   }

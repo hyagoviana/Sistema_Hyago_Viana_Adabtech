@@ -14,19 +14,27 @@ import {
   softDeleteCase,
   updateCase,
 } from "@/lib/cases-service";
+import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import { caseCreateSchema, caseUpdateSchema } from "@/lib/validators/case";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
-function handle<T>(fn: () => Promise<T>): Promise<T> {
-  return fn().catch((err: unknown) => {
+async function handle<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    await requireAuth();
+    return await fn();
+  } catch (err: unknown) {
+    if (err instanceof AuthError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
     if (err instanceof CaseServiceError) {
       setResponseStatus(err.status);
       throw new Error(err.message);
     }
     setResponseStatus(500);
     throw err;
-  });
+  }
 }
 
 // ----------------------------------------------------------------------------

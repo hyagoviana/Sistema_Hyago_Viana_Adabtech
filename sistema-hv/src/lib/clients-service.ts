@@ -246,8 +246,8 @@ export async function listClients(search?: string) {
   const sb = getSupabaseAdmin();
   let query = sb.from("system_clients_active").select("*").order("full_name");
   if (search && search.trim()) {
-    const s = search.trim();
-    query = query.or(`full_name.ilike.%${s}%,cpf_cnpj.ilike.%${s.replace(/\D/g, "")}%`);
+    const s = search.trim().replace(/[,()]/g, "");
+    if (s) query = query.or(`full_name.ilike.%${s}%,cpf_cnpj.ilike.%${s.replace(/\D/g, "")}%`);
   }
   const { data, error } = await query;
   if (error) throw new ClientServiceError(error.message, "DB_ERROR", 500);
