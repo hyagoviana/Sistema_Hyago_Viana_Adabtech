@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowRightLeft, CheckCircle2, ExternalLink, Pencil, Phone, Trash2 } from "lucide-react";
+import { ArrowRightLeft, ExternalLink, FolderOpen, Phone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { useClient } from "@/hooks/useClients";
-import { useCase, useCaseEvents, useDeleteCase, useUpdateCase } from "@/hooks/useCases";
+import { useCase, useCaseEvents, useDeleteCase } from "@/hooks/useCases";
 import {
   useEntrarFinanceiro,
   useSetAcertoParcial,
@@ -82,7 +82,6 @@ function CasoDetalhe() {
   const navigate = Route.useNavigate();
   const { data: caso, isLoading, isError, error } = useCase(id);
   const { data: events } = useCaseEvents(id);
-  const update = useUpdateCase();
   const remove = useDeleteCase();
   const entrar = useEntrarFinanceiro();
   const voltar = useVoltarOperacional();
@@ -94,8 +93,6 @@ function CasoDetalhe() {
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [entrarOpen, setEntrarOpen] = useState(false);
-  const [editPasso, setEditPasso] = useState(false);
-  const [passoDraft, setPassoDraft] = useState("");
 
   // Carrega cliente vinculado pra header
   const { data: cliente } = useClient(caso?.client_id ?? "");
@@ -137,18 +134,8 @@ function CasoDetalhe() {
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
 
-  async function savePasso() {
-    try {
-      await update.mutateAsync({ id, input: { proximo_passo: passoDraft || null } });
-      setEditPasso(false);
-      toast.success("Próximo passo atualizado");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar");
-    }
-  }
-
   return (
-    <div className="page-container !pb-32">
+    <div className="page-container">
       <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso.case_code }]} />
 
       <header className="flex items-start justify-between gap-8 mb-8">
@@ -177,19 +164,6 @@ function CasoDetalhe() {
               >
                 Ver ficha do cliente →
               </Link>
-              {caso.drive_folder_url && (
-                <>
-                  <span className="text-[var(--gold)]">·</span>
-                  <a
-                    href={caso.drive_folder_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[var(--gold-700)] hover:underline"
-                  >
-                    <ExternalLink size={12} /> Pasta no Drive
-                  </a>
-                </>
-              )}
             </div>
           )}
         </div>
@@ -208,52 +182,32 @@ function CasoDetalhe() {
         </div>
       </header>
 
+      {caso.drive_folder_url && (
+        <div className="card-hero p-5 mb-6 flex items-center justify-between">
+          <div>
+            <Eyebrow>Pasta no Drive</Eyebrow>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Arquivos do cliente ficam aqui — você pode subir/baixar pelo Drive direto.
+            </p>
+          </div>
+          <a
+            href={caso.drive_folder_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--border)] bg-white text-[var(--navy)] text-[13px] font-medium hover:border-[var(--gold)] hover:bg-[var(--cream)] transition-colors shrink-0"
+          >
+            <FolderOpen size={16} className="text-[var(--gold-700)]" /> Abrir no Drive
+            <ExternalLink size={12} className="text-muted-foreground" />
+          </a>
+        </div>
+      )}
+
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
           <div className="mt-4 flex items-center gap-3">
             <span className="text-[17px] font-semibold text-[var(--navy)]">{opLabel}</span>
             <span className="text-[12px] text-muted-foreground">há {dias} dia(s) neste estado</span>
-          </div>
-          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center justify-between">
-              <span>Próximo passo</span>
-              {!editPasso && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPassoDraft(caso.proximo_passo ?? "");
-                    setEditPasso(true);
-                  }}
-                  className="text-[var(--gold-700)] hover:underline inline-flex items-center gap-1 normal-case tracking-normal"
-                >
-                  <Pencil size={11} /> editar
-                </button>
-              )}
-            </div>
-            {editPasso ? (
-              <div className="space-y-2">
-                <textarea
-                  value={passoDraft}
-                  onChange={(e) => setPassoDraft(e.target.value)}
-                  className="w-full p-2 border border-[var(--border)] rounded-md text-[14px]"
-                  rows={2}
-                  autoFocus
-                />
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setEditPasso(false)}>
-                    Cancelar
-                  </Button>
-                  <Button size="sm" onClick={savePasso} disabled={update.isPending}>
-                    {update.isPending ? "Salvando…" : "Salvar"}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-[15px] text-[var(--navy)]">
-                {caso.proximo_passo ?? <span className="text-muted-foreground italic">—</span>}
-              </div>
-            )}
           </div>
         </div>
 
@@ -439,39 +393,6 @@ function CasoDetalhe() {
           </ul>
         )}
       </div>
-
-      <footer
-        className="fixed bottom-0 left-0 lg:left-[228px] right-0 backdrop-blur px-10 py-4 flex items-center justify-between z-30"
-        style={{
-          background: "rgba(247,242,233,0.92)",
-          borderTop: "1px solid rgba(120,96,30,0.14)",
-          boxShadow: "0 -8px 24px -12px rgba(60,50,20,0.18)",
-        }}
-      >
-        <div className="flex items-center gap-4">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-            style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}
-          >
-            <CheckCircle2 size={18} />
-          </div>
-          <div>
-            <Eyebrow>Próxima ação</Eyebrow>
-            <div className="text-[14px] text-[var(--navy)] font-semibold mt-1">
-              {caso.proximo_passo ?? "—"}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[12px] text-muted-foreground">
-            Responsável:{" "}
-            <span className="text-[var(--navy)] font-medium">{caso.responsavel ?? "—"}</span>
-          </span>
-          <Button onClick={() => setMoveOpen(true)} variant="default">
-            Mover status
-          </Button>
-        </div>
-      </footer>
 
       <MoveCaseDialog
         open={moveOpen}
