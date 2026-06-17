@@ -7,6 +7,7 @@ import {
   createServiceType,
   createStage,
   entrarNoFinanceiro,
+  listAllBifurcatedCases,
   listCasesByServiceType,
   listServiceTypes,
   listStages,
@@ -46,6 +47,10 @@ export const listStagesFn = createServerFn({ method: "GET" })
     z.object({ serviceTypeId: z.string().uuid(), kind: kindSchema }).parse(d),
   )
   .handler(async ({ data }) => handle(() => listStages(data.serviceTypeId, data.kind)));
+
+export const listAllBifurcatedCasesFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listAllBifurcatedCases()),
+);
 
 export const listCasesByServiceTypeFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))

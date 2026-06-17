@@ -6,6 +6,7 @@ import {
   createServiceTypeFn,
   createStageFn,
   entrarFinanceiroFn,
+  listAllBifurcatedCasesFn,
   listCasesByServiceTypeFn,
   listServiceTypesFn,
   listStagesFn,
@@ -43,6 +44,15 @@ export function useStages(serviceTypeId: string, kind: "op" | "fin") {
     queryFn: () => fn({ data: { serviceTypeId, kind } }),
     enabled: !!serviceTypeId,
     staleTime: 5 * 60 * 1000, // 5 min — stages mudam raramente
+  });
+}
+
+export function useAllBifurcatedCases() {
+  const fn = useServerFn(listAllBifurcatedCasesFn);
+  return useQuery({
+    queryKey: ["cases-all-bifurcated"],
+    queryFn: () => fn(),
+    staleTime: 2 * 60 * 1000,
   });
 }
 

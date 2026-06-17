@@ -29,8 +29,8 @@ type KanbanBoardProps<TItem, C extends string> = {
   getId: (item: TItem) => string;
   getColumn: (item: TItem) => C;
   renderCard: (item: TItem) => ReactNode;
-  /** Chamado quando um card é solto numa coluna diferente da de origem. */
-  onMove: (id: string, to: C) => void;
+  /** Chamado quando um card é solto numa coluna diferente da de origem. Opcional — sem onMove o drag fica desabilitado. */
+  onMove?: (id: string, to: C) => void;
   isLoading?: boolean;
   /**
    * Largura FIXA de cada coluna em px (default 300, faixa confortável 280–320).
@@ -84,7 +84,7 @@ export function KanbanBoard<TItem, C extends string>({
     if (!over) return;
     const from = active.data.current?.column as C | undefined;
     const to = over.id as C;
-    if (!to || from === to) return;
+    if (!to || from === to || !onMove) return;
     onMove(String(active.id), to);
   }
 

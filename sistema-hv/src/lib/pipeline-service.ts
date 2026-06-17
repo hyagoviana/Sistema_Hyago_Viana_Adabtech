@@ -159,6 +159,17 @@ export async function softDeleteStage(id: string) {
 }
 
 // ------------------------------------------------------------------- Casos
+export async function listAllBifurcatedCases() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases_active")
+    .select("*")
+    .neq("macrostatus_fin", "NAO_APLICAVEL")
+    .order("created_at", { ascending: false });
+  if (error) throw new PipelineServiceError(error.message, 500);
+  return data ?? [];
+}
+
 export async function listCasesByServiceType(serviceTypeId: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
