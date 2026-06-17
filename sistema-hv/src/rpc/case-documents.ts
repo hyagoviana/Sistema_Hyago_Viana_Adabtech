@@ -15,10 +15,10 @@ import {
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import type { ZapSignSignerInput } from "@/lib/zapsign/client";
 
-async function handle<T>(fn: () => Promise<T>): Promise<T> {
+async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
-    await requireAuth();
-    return await fn();
+    const { id } = await requireAuth();
+    return await fn(id);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
       setResponseStatus(err.status);
@@ -47,19 +47,20 @@ const generateSchema = z.object({
 export const generateCaseDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => generateSchema.parse(d))
   .handler(async ({ data }) =>
-    handle(() =>
+    handle((userId) =>
       generateCaseDocumentFromTemplate({
         caseId: data.caseId,
         templateId: data.templateId,
         title: data.title,
         values: data.values,
+        triggeredBy: userId,
       }),
     ),
   );
 
 export const finalizeCaseDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => docIdSchema.parse(d))
-  .handler(async ({ data }) => handle(() => finalizeCaseDocument(data.id)));
+  .handler(async ({ data }) => handle((userId) => finalizeCaseDocument(data.id, userId)));
 
 const signerSchema = z.object({
   name: z.string().min(1),
@@ -88,10 +89,11 @@ const sendSchema = z.object({
 export const sendCaseDocumentToZapsignFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => sendSchema.parse(d))
   .handler(async ({ data }) =>
-    handle(() =>
+    handle((userId) =>
       sendCaseDocumentToZapsign({
         docId: data.docId,
         signers: data.signers as ZapSignSignerInput[],
+        triggeredBy: userId,
       }),
     ),
   );
@@ -104,7 +106,7 @@ export const downloadCaseDocumentFn = createServerFn({ method: "POST" })
 
 export const reopenCaseDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => docIdSchema.parse(d))
-  .handler(async ({ data }) => handle(() => reopenCaseDocument(data.id)));
+  .handler(async ({ data }) => handle((userId) => reopenCaseDocument(data.id, userId)));
 
 export const ensureCaseFolderFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => caseIdSchema.parse(d))
@@ -112,4 +114,4 @@ export const ensureCaseFolderFn = createServerFn({ method: "POST" })
 
 export const softDeleteCaseDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => docIdSchema.parse(d))
-  .handler(async ({ data }) => handle(() => softDeleteCaseDocument(data.id)));
+  .handler(async ({ data }) => handle((userId) => softDeleteCaseDocument(data.id, userId)));

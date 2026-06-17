@@ -83,13 +83,19 @@ export async function setCaseTaskStatus(id: string, status: string, triggeredBy?
     .single();
   check(error);
 
-  // Registra evento na timeline do caso quando tarefa é concluída
-  if (data && status === "CONCLUIDA") {
+  // Registra evento na timeline do caso para qualquer mudança de status
+  if (data) {
+    const action =
+      status === "CONCLUIDA"
+        ? "task_completed"
+        : status === "EM_ANDAMENTO"
+          ? "task_started"
+          : "task_status_changed";
     await sb.from("system_case_events").insert({
       case_id: data.case_id,
       organization_id: DEFAULT_ORG_ID,
-      action: "task_completed",
-      diff: { task_title: data.title, task_id: id },
+      action,
+      diff: { task_title: data.title, task_id: id, status },
       triggered_by: triggeredBy ?? null,
     });
   }
@@ -97,10 +103,27 @@ export async function setCaseTaskStatus(id: string, status: string, triggeredBy?
   return data;
 }
 
-export async function deleteCaseTask(id: string) {
+export async function deleteCaseTask(id: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
+  // Busca dados antes de deletar para o evento
+  const { data: task } = await sb
+    .from("system_case_tasks")
+    .select("case_id, title")
+    .eq("id", id)
+    .single();
   const { error } = await sb.from("system_case_tasks").update({ deleted_at: now() }).eq("id", id);
   check(error);
+
+  if (task) {
+    await sb.from("system_case_events").insert({
+      case_id: task.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "task_deleted",
+      diff: { task_title: task.title, task_id: id },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return { ok: true as const, id };
 }
 
@@ -118,14 +141,17 @@ export async function listCaseDeadlines(caseId: string) {
   return data ?? [];
 }
 
-export async function createCaseDeadline(input: {
-  case_id: string;
-  title: string;
-  fatal_date: string;
-  recommended_date?: string | null;
-  tipo?: string | null;
-  responsible?: string | null;
-}) {
+export async function createCaseDeadline(
+  input: {
+    case_id: string;
+    title: string;
+    fatal_date: string;
+    recommended_date?: string | null;
+    tipo?: string | null;
+    responsible?: string | null;
+  },
+  triggeredBy?: string,
+) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_deadlines")
@@ -133,10 +159,21 @@ export async function createCaseDeadline(input: {
     .select()
     .single();
   check(error);
+
+  if (data) {
+    await sb.from("system_case_events").insert({
+      case_id: input.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "deadline_created",
+      diff: { deadline_title: input.title, fatal_date: input.fatal_date, tipo: input.tipo ?? null },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return data;
 }
 
-export async function setCaseDeadlineStatus(id: string, status: string) {
+export async function setCaseDeadlineStatus(id: string, status: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_deadlines")
@@ -145,16 +182,44 @@ export async function setCaseDeadlineStatus(id: string, status: string) {
     .select()
     .single();
   check(error);
+
+  if (data) {
+    const action = status === "CUMPRIDO" ? "deadline_completed" : status === "PERDIDO" ? "deadline_missed" : "deadline_status_changed";
+    await sb.from("system_case_events").insert({
+      case_id: data.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action,
+      diff: { deadline_title: data.title, status },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return data;
 }
 
-export async function deleteCaseDeadline(id: string) {
+export async function deleteCaseDeadline(id: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
+  const { data: dl } = await sb
+    .from("system_case_deadlines")
+    .select("case_id, title")
+    .eq("id", id)
+    .single();
   const { error } = await sb
     .from("system_case_deadlines")
     .update({ deleted_at: now() })
     .eq("id", id);
   check(error);
+
+  if (dl) {
+    await sb.from("system_case_events").insert({
+      case_id: dl.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "deadline_deleted",
+      diff: { deadline_title: dl.title },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return { ok: true as const, id };
 }
 
@@ -172,14 +237,17 @@ export async function listCaseCommunications(caseId: string) {
   return data ?? [];
 }
 
-export async function createCaseCommunication(input: {
-  case_id: string;
-  summary: string;
-  channel?: string;
-  direction?: string;
-  contact?: string | null;
-  content?: string | null;
-}) {
+export async function createCaseCommunication(
+  input: {
+    case_id: string;
+    summary: string;
+    channel?: string;
+    direction?: string;
+    contact?: string | null;
+    content?: string | null;
+  },
+  triggeredBy?: string,
+) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_communications")
@@ -187,16 +255,43 @@ export async function createCaseCommunication(input: {
     .select()
     .single();
   check(error);
+
+  if (data) {
+    await sb.from("system_case_events").insert({
+      case_id: input.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "communication_logged",
+      diff: { summary: input.summary, channel: input.channel ?? "OUTRO", direction: input.direction ?? "OUT" },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return data;
 }
 
-export async function deleteCaseCommunication(id: string) {
+export async function deleteCaseCommunication(id: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
+  const { data: comm } = await sb
+    .from("system_case_communications")
+    .select("case_id, summary, channel")
+    .eq("id", id)
+    .single();
   const { error } = await sb
     .from("system_case_communications")
     .update({ deleted_at: now() })
     .eq("id", id);
   check(error);
+
+  if (comm) {
+    await sb.from("system_case_events").insert({
+      case_id: comm.case_id,
+      organization_id: DEFAULT_ORG_ID,
+      action: "communication_deleted",
+      diff: { summary: comm.summary, channel: comm.channel },
+      triggered_by: triggeredBy ?? null,
+    });
+  }
+
   return { ok: true as const, id };
 }
 

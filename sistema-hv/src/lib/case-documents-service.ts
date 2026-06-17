@@ -130,6 +130,7 @@ export async function generateCaseDocumentFromTemplate(opts: {
   templateId: string;
   title?: string;
   values: Record<string, string>;
+  triggeredBy?: string;
 }) {
   const sb = getSupabaseAdmin();
 
@@ -210,13 +211,22 @@ export async function generateCaseDocumentFromTemplate(opts: {
     diff: { template_id: tpl.id, google_doc_id: docId },
   });
 
+  // Registra evento na timeline do caso
+  await sb.from("system_case_events").insert({
+    case_id: caso.id,
+    organization_id: caso.organization_id,
+    action: "doc_generated",
+    diff: { doc_title: title, template_name: tpl.name, doc_id: doc.id },
+    triggered_by: opts.triggeredBy ?? null,
+  });
+
   return { doc, editUrl: docUrl(docId) };
 }
 
 // ----------------------------------------------------------------------------
 // FINALIZE — exporta PDF → trava o doc → sobe na pasta do caso
 // ----------------------------------------------------------------------------
-export async function finalizeCaseDocument(docId: string) {
+export async function finalizeCaseDocument(docId: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(docId);
   if (!doc.google_doc_id) {
@@ -274,6 +284,15 @@ export async function finalizeCaseDocument(docId: string) {
     diff: { drive_file_id: drive.id, sha256: updated.sha256 },
   });
 
+  // Registra evento na timeline do caso
+  await sb.from("system_case_events").insert({
+    case_id: doc.case_id,
+    organization_id: doc.organization_id,
+    action: "doc_finalized",
+    diff: { doc_title: doc.title, doc_id: doc.id },
+    triggered_by: triggeredBy ?? null,
+  });
+
   return updated;
 }
 
@@ -297,7 +316,7 @@ export async function getCaseDocumentDownloadUrl(docId: string, format: "pdf" | 
 // ----------------------------------------------------------------------------
 // REOPEN — reabre um documento FINALIZADO para edição (reverte o lock do finalize)
 // ----------------------------------------------------------------------------
-export async function reopenCaseDocument(docId: string) {
+export async function reopenCaseDocument(docId: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(docId);
   if (doc.status !== "FINALIZADO") {
@@ -328,6 +347,16 @@ export async function reopenCaseDocument(docId: string) {
     entity_type: "case_document",
     entity_id: doc.id,
   });
+
+  // Registra evento na timeline do caso
+  await sb.from("system_case_events").insert({
+    case_id: doc.case_id,
+    organization_id: doc.organization_id,
+    action: "doc_reopened",
+    diff: { doc_title: doc.title, doc_id: doc.id },
+    triggered_by: triggeredBy ?? null,
+  });
+
   return data;
 }
 
@@ -337,6 +366,7 @@ export async function reopenCaseDocument(docId: string) {
 export async function sendCaseDocumentToZapsign(opts: {
   docId: string;
   signers: ZapSignSignerInput[];
+  triggeredBy?: string;
 }) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(opts.docId);
@@ -395,13 +425,22 @@ export async function sendCaseDocumentToZapsign(opts: {
     diff: { zapsign_doc_token: zdoc.token },
   });
 
+  // Registra evento na timeline do caso
+  await sb.from("system_case_events").insert({
+    case_id: doc.case_id,
+    organization_id: doc.organization_id,
+    action: "doc_sent_zapsign",
+    diff: { doc_title: doc.title, doc_id: doc.id },
+    triggered_by: opts.triggeredBy ?? null,
+  });
+
   return { doc: updated, signUrl: updated.zapsign_sign_url };
 }
 
 // ----------------------------------------------------------------------------
 // SOFT DELETE
 // ----------------------------------------------------------------------------
-export async function softDeleteCaseDocument(docId: string) {
+export async function softDeleteCaseDocument(docId: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(docId);
 
@@ -423,6 +462,15 @@ export async function softDeleteCaseDocument(docId: string) {
     action: "case_document.delete",
     entity_type: "case_document",
     entity_id: doc.id,
+  });
+
+  // Registra evento na timeline do caso
+  await sb.from("system_case_events").insert({
+    case_id: doc.case_id,
+    organization_id: doc.organization_id,
+    action: "doc_deleted",
+    diff: { doc_title: doc.title, doc_id: doc.id },
+    triggered_by: triggeredBy ?? null,
   });
 
   return { ok: true as const, id: doc.id };

@@ -37,7 +37,10 @@ export function useGenerateCaseDocument(caseId: string) {
       title?: string;
       values: Record<string, string>;
     }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-documents", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -46,7 +49,10 @@ export function useFinalizeCaseDocument(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-documents", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -55,7 +61,10 @@ export function useSendCaseDocumentToZapsign(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { docId: string; signers: ZapsignSigner[] }) => fn({ data: vars as never }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-documents", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -76,7 +85,10 @@ export function useReopenCaseDocument(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-documents", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -85,6 +97,9 @@ export function useDeleteCaseDocument(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-documents", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }

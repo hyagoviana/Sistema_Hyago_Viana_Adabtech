@@ -65,7 +65,7 @@ export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
 
 export const deleteCaseTaskFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle(() => deleteCaseTask(data.id)));
+  .handler(async ({ data }) => handle((userId) => deleteCaseTask(data.id, userId)));
 
 // ----------------------------------------------------------------- Prazos ----
 export const listCaseDeadlinesFn = createServerFn({ method: "GET" })
@@ -83,15 +83,15 @@ export const createCaseDeadlineFn = createServerFn({ method: "POST" })
       responsible?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle(() => createCaseDeadline(data)));
+  .handler(async ({ data }) => handle((userId) => createCaseDeadline(data, userId)));
 
 export const setCaseDeadlineStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
-  .handler(async ({ data }) => handle(() => setCaseDeadlineStatus(data.id, data.status)));
+  .handler(async ({ data }) => handle((userId) => setCaseDeadlineStatus(data.id, data.status, userId)));
 
 export const deleteCaseDeadlineFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle(() => deleteCaseDeadline(data.id)));
+  .handler(async ({ data }) => handle((userId) => deleteCaseDeadline(data.id, userId)));
 
 // ------------------------------------------------------------ Comunicações ----
 export const listCaseCommunicationsFn = createServerFn({ method: "GET" })
@@ -108,11 +108,11 @@ export const createCaseCommunicationFn = createServerFn({ method: "POST" })
       contact?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle(() => createCaseCommunication(data)));
+  .handler(async ({ data }) => handle((userId) => createCaseCommunication(data, userId)));
 
 export const deleteCaseCommunicationFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle(() => deleteCaseCommunication(data.id)));
+  .handler(async ({ data }) => handle((userId) => deleteCaseCommunication(data.id, userId)));
 
 // ----------------------------------------------------- Agregação global ----
 export const listAllTasksFn = createServerFn({ method: "GET" }).handler(async () =>

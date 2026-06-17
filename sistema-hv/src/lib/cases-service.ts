@@ -295,7 +295,7 @@ export async function getCase(id: string) {
   return data;
 }
 
-export async function listCaseEvents(caseId: string, limit = 20) {
+export async function listCaseEvents(caseId: string, limit = 50) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_events")

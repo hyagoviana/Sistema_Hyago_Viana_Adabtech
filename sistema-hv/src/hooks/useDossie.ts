@@ -61,7 +61,7 @@ export function useCreateCaseTask(caseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
       qc.invalidateQueries({ queryKey: ["all-tasks"] });
-      qc.invalidateQueries({ queryKey: ["case-events", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
     },
   });
 }
@@ -74,7 +74,7 @@ export function useSetCaseTaskStatus(caseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
       qc.invalidateQueries({ queryKey: ["all-tasks"] });
-      qc.invalidateQueries({ queryKey: ["case-events", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
     },
   });
 }
@@ -84,7 +84,11 @@ export function useDeleteCaseTask(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-tasks", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-tasks"] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -110,7 +114,11 @@ export function useCreateCaseDeadline(caseId: string) {
       tipo?: string | null;
       responsible?: string | null;
     }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-deadlines"] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -119,7 +127,11 @@ export function useSetCaseDeadlineStatus(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; status: string }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-deadlines"] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -128,7 +140,11 @@ export function useDeleteCaseDeadline(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] });
+      qc.invalidateQueries({ queryKey: ["all-deadlines"] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -153,7 +169,10 @@ export function useCreateCaseCommunication(caseId: string) {
       direction?: string;
       contact?: string | null;
     }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-comms", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-comms", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }
 
@@ -162,6 +181,9 @@ export function useDeleteCaseCommunication(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-comms", caseId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-comms", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
   });
 }

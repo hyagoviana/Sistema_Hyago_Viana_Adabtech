@@ -376,10 +376,44 @@ function CasoDetalhe() {
                       `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
                     {e.action === "updated" && "Caso editado"}
                     {e.action === "soft_deleted" && "Caso excluído"}
+                    {/* Tarefas */}
                     {e.action === "task_created" &&
                       `Tarefa criada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
+                    {e.action === "task_started" &&
+                      `Tarefa iniciada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
                     {e.action === "task_completed" &&
                       `Tarefa concluída: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
+                    {e.action === "task_status_changed" &&
+                      `Tarefa "${(e.diff as Record<string, string> | null)?.task_title ?? "—"}" → ${(e.diff as Record<string, string> | null)?.status ?? "—"}`}
+                    {e.action === "task_deleted" &&
+                      `Tarefa excluída: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
+                    {/* Documentos */}
+                    {e.action === "doc_generated" &&
+                      `Documento gerado: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {e.action === "doc_finalized" &&
+                      `Documento finalizado: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {e.action === "doc_reopened" &&
+                      `Documento reaberto: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {e.action === "doc_sent_zapsign" &&
+                      `Documento enviado para assinatura: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {e.action === "doc_deleted" &&
+                      `Documento excluído: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {/* Prazos */}
+                    {e.action === "deadline_created" &&
+                      `Prazo criado: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"} (${(e.diff as Record<string, string> | null)?.fatal_date ?? "—"})`}
+                    {e.action === "deadline_completed" &&
+                      `Prazo cumprido: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
+                    {e.action === "deadline_missed" &&
+                      `Prazo perdido: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
+                    {e.action === "deadline_status_changed" &&
+                      `Prazo "${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}" → ${(e.diff as Record<string, string> | null)?.status ?? "—"}`}
+                    {e.action === "deadline_deleted" &&
+                      `Prazo excluído: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
+                    {/* Comunicações */}
+                    {e.action === "communication_logged" &&
+                      `Comunicação registrada (${(e.diff as Record<string, string> | null)?.channel ?? "—"}): ${(e.diff as Record<string, string> | null)?.summary ?? "—"}`}
+                    {e.action === "communication_deleted" &&
+                      `Comunicação excluída: ${(e.diff as Record<string, string> | null)?.summary ?? "—"}`}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
                     {fmtDateTime(e.created_at)}
