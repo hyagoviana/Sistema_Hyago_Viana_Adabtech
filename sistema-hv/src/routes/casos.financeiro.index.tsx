@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, FolderKanban, Search, Settings2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { CaseCardFin } from "@/components/cases/CaseCardFin";
@@ -31,6 +31,14 @@ function roleColor(role: string): string {
 function CasosFinanceiro() {
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [showAll, setShowAll] = useState(false);
+
+  // Reset para a tela de seleção quando o usuário clica no link do sidebar
+  // (navega para /casos/financeiro sem search params estando já na rota).
+  const key = useRouterState({ select: (s) => s.location.state.key });
+  useEffect(() => {
+    setSelected(null);
+    setShowAll(false);
+  }, [key]);
 
   if (showAll) {
     return <FinanceiroKanbanTodos onBack={() => setShowAll(false)} />;
