@@ -1,6 +1,7 @@
-import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { ArrowLeft, FolderKanban, Search, Settings2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { CaseCardFin } from "@/components/cases/CaseCardFin";
@@ -11,8 +12,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
 import { useAllBifurcatedCases, useCasesByServiceType, useMoveCaseStageFin, useServiceTypes, useStages } from "@/hooks/usePipeline";
 
+const searchSchema = z.object({
+  view: z.enum(["todos"]).optional().catch(undefined),
+  type: z.string().uuid().optional().catch(undefined),
+  typeName: z.string().optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/casos/financeiro/")({
   component: CasosFinanceiro,
+  validateSearch: (search) => searchSchema.parse(search),
 });
 
 function roleColor(role: string): string {
@@ -29,24 +37,30 @@ function roleColor(role: string): string {
 }
 
 function CasosFinanceiro() {
-  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const { view, type, typeName } = Route.useSearch();
+  const navigate = useNavigate();
 
-  // Reset para a tela de seleção quando o usuário clica no link do sidebar
-  // (navega para /casos/financeiro sem search params estando já na rota).
-  const key = useRouterState({ select: (s) => s.location.state.key });
-  useEffect(() => {
-    setSelected(null);
-    setShowAll(false);
-  }, [key]);
+  const goBack = () => navigate({ to: "/casos/financeiro", search: {} });
 
-  if (showAll) {
-    return <FinanceiroKanbanTodos onBack={() => setShowAll(false)} />;
+  if (view === "todos") {
+    return <FinanceiroKanbanTodos onBack={goBack} />;
   }
-  if (selected) {
-    return <FinanceiroKanban serviceType={selected} onBack={() => setSelected(null)} />;
+  if (type) {
+    return (
+      <FinanceiroKanban
+        serviceType={{ id: type, name: typeName ?? "—" }}
+        onBack={goBack}
+      />
+    );
   }
-  return <ServiceTypeSelection onPick={setSelected} onPickAll={() => setShowAll(true)} />;
+  return (
+    <ServiceTypeSelection
+      onPick={(t) =>
+        navigate({ to: "/casos/financeiro", search: { type: t.id, typeName: t.name } })
+      }
+      onPickAll={() => navigate({ to: "/casos/financeiro", search: { view: "todos" } })}
+    />
+  );
 }
 
 /* ───── Tela de seleção de tipo de serviço (igual ao pipeline operacional) ───── */
