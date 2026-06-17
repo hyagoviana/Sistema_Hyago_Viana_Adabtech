@@ -48,6 +48,7 @@ function ClienteDetalhe() {
   const { id } = Route.useParams();
   const navigate = Route.useNavigate();
   const { data: cliente, isLoading, isError, error } = useClient(id);
+  const { data: casesData } = useCasesList({ client_id: id });
   const resyncMutation = useResyncDrive();
   const deleteMutation = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
@@ -81,7 +82,6 @@ function ClienteDetalhe() {
 
   if (!cliente) throw notFound();
 
-  const { data: casesData } = useCasesList({ client_id: id });
   const cases = casesData ?? [];
   const totalCasos = cases.length;
   const receitaTotalCentavos = cases.reduce(
