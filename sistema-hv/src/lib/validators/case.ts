@@ -11,11 +11,14 @@ export const caseCreateSchema = z.object({
   responsavel: z.string().trim().max(200).optional().nullable(),
   municipio: z.string().trim().max(200).optional().nullable(),
   valor_centavos: z.number().int().nonnegative().optional().nullable(),
+  // Melhoria 3: quando true, o caso nasce em fase comercial (aguardando
+  // assinatura da procuração) e não entra no Kanban operacional até liberar.
+  comercial: z.boolean().optional(),
 });
 
 export const caseUpdateSchema = caseCreateSchema
   .partial()
-  .omit({ client_id: true, case_type: true });
+  .omit({ client_id: true, case_type: true, comercial: true });
 
 export type CaseCreateInput = z.input<typeof caseCreateSchema>;
 export type CaseCreateOutput = z.output<typeof caseCreateSchema>;

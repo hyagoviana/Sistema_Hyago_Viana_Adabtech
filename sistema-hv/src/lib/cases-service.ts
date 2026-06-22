@@ -54,7 +54,7 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
   const code = await nextCaseCode(input.case_type);
 
   // Busca a primeira etapa operacional do service_type para não usar slug hardcoded
-  let defaultOpStatus = input.macrostatus_op ?? "ONBOARDING";
+  let defaultOpStatus: string = input.macrostatus_op ?? "ONBOARDING";
   if (!input.macrostatus_op) {
     const { data: stType } = await sb
       .from("system_service_types")
@@ -78,6 +78,10 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
     }
   }
 
+  // Fase comercial (Melhoria 3): caso nasce aguardando a assinatura da procuração
+  // e NÃO entra no Kanban operacional até ser liberado.
+  const comercial = input.comercial === true;
+
   const { data: created, error } = await sb
     .from("system_cases")
     .insert({
@@ -91,6 +95,7 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
       responsavel: input.responsavel ?? null,
       municipio: input.municipio ?? null,
       valor_centavos: input.valor_centavos ?? null,
+      aguardando_assinatura_at: comercial ? new Date().toISOString() : null,
     })
     .select()
     .single();
@@ -102,19 +107,17 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
   await sb.from("system_case_events").insert({
     case_id: created.id,
     organization_id: DEFAULT_ORG_ID,
-    action: "created",
+    action: comercial ? "created_comercial" : "created",
     to_macrostatus_op: created.macrostatus_op,
-    diff: { case_type: created.case_type, client_id: created.client_id },
+    diff: { case_type: created.case_type, client_id: created.client_id, comercial },
     triggered_by: triggeredBy ?? null,
   });
 
   // Best-effort: criar subpasta do caso no Drive (dentro da pasta do cliente)
+  let result = created;
   if (client.drive_folder_id) {
     try {
-      const folder = await createFolder(
-        `Caso-${created.case_code}`,
-        client.drive_folder_id,
-      );
+      const folder = await createFolder(`Caso-${created.case_code}`, client.drive_folder_id);
       await sb
         .from("system_cases")
         .update({
@@ -124,7 +127,7 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
           drive_sync_error: null,
         })
         .eq("id", created.id);
-      return { ...created, drive_folder_id: folder.id, drive_folder_url: folder.url };
+      result = { ...created, drive_folder_id: folder.id, drive_folder_url: folder.url };
     } catch (err) {
       const msg =
         err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
@@ -136,7 +139,142 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
     }
   }
 
-  return created;
+  // Fase comercial: garante o documento de procuração (best-effort).
+  if (comercial) {
+    try {
+      await ensureProcuracaoDocument(created.id, triggeredBy);
+    } catch (err) {
+      console.error("cases-service: falha ao preparar procuração:", err);
+    }
+  }
+
+  return result;
+}
+
+// ----------------------------------------------------------------------------
+// PROCURAÇÃO — garante um documento de procuração para o caso comercial.
+// Se houver um modelo (template) de procuração para o tipo, gera por ele; senão
+// cria um registro placeholder (doc_kind='procuracao') que fica na ficha do caso
+// com os botões de enviar ao ZapSign / baixar — pronto pra ativar quando o
+// modelo for anexado pelo escritório. (Decisão 2026-06-22.)
+// ----------------------------------------------------------------------------
+export async function ensureProcuracaoDocument(caseId: string, triggeredBy?: string) {
+  const sb = getSupabaseAdmin();
+
+  // Já existe procuração para este caso? (idempotente)
+  const { data: existing } = await sb
+    .from("system_case_documents")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("doc_kind", "procuracao")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (existing) return existing;
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id, case_type")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Procura um modelo de procuração para o tipo de serviço.
+  const { data: tpl } = await sb
+    .from("system_document_templates")
+    .select("id")
+    .eq("case_type", caso.case_type)
+    .is("deleted_at", null)
+    .ilike("name", "%procura%")
+    .limit(1)
+    .maybeSingle();
+
+  // Cria o registro do documento (placeholder enquanto não há modelo configurado).
+  const { data: doc, error } = await sb
+    .from("system_case_documents")
+    .insert({
+      case_id: caso.id,
+      organization_id: caso.organization_id,
+      title: "Procuração",
+      status: "RASCUNHO",
+      source: "GERADO",
+      doc_kind: "procuracao",
+      goes_to_zapsign: true,
+      template_id: tpl?.id ?? null,
+    })
+    .select()
+    .single();
+  if (error || !doc) throw new CaseServiceError(error?.message ?? "Falha ao criar procuração", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caso.id,
+    organization_id: caso.organization_id,
+    action: "procuracao_preparada",
+    diff: { doc_id: doc.id, template_id: tpl?.id ?? null },
+    triggered_by: triggeredBy ?? null,
+  });
+
+  return doc;
+}
+
+// ----------------------------------------------------------------------------
+// COMERCIAL — lista de casos aguardando assinatura da procuração.
+// ----------------------------------------------------------------------------
+export async function listComercialCases() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases_active")
+    .select("*")
+    .not("aguardando_assinatura_at", "is", null)
+    .order("aguardando_assinatura_at", { ascending: true });
+  if (error) throw new CaseServiceError(error.message, 500);
+  return data ?? [];
+}
+
+// ----------------------------------------------------------------------------
+// LIBERAR — procuração assinada (webhook) ou confirmação manual. Limpa a flag
+// comercial; o caso entra no funil operacional (já está na 1ª etapa).
+// ----------------------------------------------------------------------------
+export async function liberarCasoComercial(
+  caseId: string,
+  opts: { via: "webhook" | "manual"; userId?: string },
+) {
+  const sb = getSupabaseAdmin();
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id, aguardando_assinatura_at")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Idempotente: se já não está aguardando, no-op.
+  if (!caso.aguardando_assinatura_at) {
+    return { ok: true as const, id: caseId, alreadyLiberado: true };
+  }
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({
+      aguardando_assinatura_at: null,
+      assinatura_liberada_at: new Date().toISOString(),
+      assinatura_liberada_by: opts.userId ?? null,
+    })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao liberar caso", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "liberado_comercial",
+    diff: { via: opts.via },
+    triggered_by: opts.userId ?? null,
+  });
+
+  return { ok: true as const, id: caseId, case: data };
 }
 
 // ----------------------------------------------------------------------------

@@ -1,5 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowRightLeft, ExternalLink, FolderOpen, Phone, Trash2 } from "lucide-react";
+import {
+  ArrowRightLeft,
+  ExternalLink,
+  FileSignature,
+  FolderOpen,
+  Phone,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -35,7 +42,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { useClient } from "@/hooks/useClients";
-import { useCase, useCaseEvents, useDeleteCase } from "@/hooks/useCases";
+import { useCase, useCaseEvents, useDeleteCase, useLiberarCaso } from "@/hooks/useCases";
 import {
   useEntrarFinanceiro,
   useSetAcertoParcial,
@@ -86,8 +93,26 @@ function CasoDetalhe() {
   const entrar = useEntrarFinanceiro();
   const voltar = useVoltarOperacional();
   const acerto = useSetAcertoParcial();
+  const liberar = useLiberarCaso();
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
+  const podeGerirCaso = can(role, "casos.manage");
+
+  async function handleLiberar() {
+    if (
+      !confirm(
+        "Confirmar que a procuração foi assinada pelo cliente? O caso sai da fase comercial e entra no funil operacional.",
+      )
+    ) {
+      return;
+    }
+    try {
+      await liberar.mutateAsync(id);
+      toast.success("Caso liberado para o operacional");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao liberar caso");
+    }
+  }
 
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveFinOpen, setMoveFinOpen] = useState(false);
@@ -137,6 +162,36 @@ function CasoDetalhe() {
   return (
     <div className="page-container">
       <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso.case_code }]} />
+
+      {/* Melhoria 3: caso em fase comercial — aguardando assinatura da procuração */}
+      {caso.aguardando_assinatura_at && (
+        <div
+          className="rounded-xl px-4 py-3 mb-4 flex items-start gap-3"
+          style={{ background: "rgba(162, 90, 8, 0.05)", border: "1px solid rgba(162,90,8,0.25)" }}
+        >
+          <FileSignature size={18} className="text-[var(--warning)] mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-[13px] font-semibold text-[var(--warning)]">
+              Aguardando assinatura da procuração
+            </p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              Este caso está na aba Comercial e ainda não entrou no funil operacional. Envie a
+              procuração ao ZapSign pela aba <strong>Documentos</strong>. Quando o cliente assinar
+              (ou ao confirmar manualmente o upload do documento assinado), o caso é liberado.
+            </p>
+          </div>
+          {podeGerirCaso && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleLiberar}
+              disabled={liberar.isPending}
+            >
+              {liberar.isPending ? "Liberando…" : "Confirmar assinatura"}
+            </Button>
+          )}
+        </div>
+      )}
 
       <header className="flex items-start justify-between gap-8 mb-8">
         <div>
@@ -418,7 +473,9 @@ function CasoDetalhe() {
                   <div className="text-[11px] text-muted-foreground">
                     {fmtDateTime(e.created_at)}
                     {e.triggered_by_name && (
-                      <span className="ml-2">por <strong>{e.triggered_by_name}</strong></span>
+                      <span className="ml-2">
+                        por <strong>{e.triggered_by_name}</strong>
+                      </span>
                     )}
                   </div>
                 </div>

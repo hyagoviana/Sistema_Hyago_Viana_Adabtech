@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Phone, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, Phone, Plus, Search, Settings2, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ClientCardMenu } from "@/components/clients/ClientCardMenu";
+import { ClientFieldsManagerDialog } from "@/components/clients/ClientFieldsManagerDialog";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/lib/auth";
 import { useClientsList } from "@/hooks/useClients";
+import { can } from "@/lib/rbac";
 import type { Database } from "@/lib/supabase/types";
 
 type Client = Database["public"]["Tables"]["system_clients"]["Row"];
@@ -38,7 +41,11 @@ function ClientesList() {
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
   const [showFilters, setShowFilters] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
+
+  const { role } = useAuth();
+  const canManageFields = can(role, "config.manage");
 
   const { data, isLoading, isError, error } = useClientsList(search);
 
@@ -83,6 +90,12 @@ function ClientesList() {
                 <TooltipContent>Em breve</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            {canManageFields && (
+              <Btn variant="outline" onClick={() => setFieldsOpen(true)}>
+                <Settings2 size={14} />
+                Info/Cadastro
+              </Btn>
+            )}
             <Btn variant="gold" onClick={() => setCreateOpen(true)}>
               <Plus size={14} />
               Novo cliente
@@ -115,7 +128,10 @@ function ClientesList() {
         </button>
 
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gold)]" />
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gold)]"
+          />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -217,6 +233,9 @@ function ClientesList() {
         </div>
       )}
 
+      {canManageFields && (
+        <ClientFieldsManagerDialog open={fieldsOpen} onOpenChange={setFieldsOpen} />
+      )}
       <ClientFormDialog open={createOpen} onOpenChange={setCreateOpen} mode="create" />
       <ClientFormDialog
         open={!!editClient}

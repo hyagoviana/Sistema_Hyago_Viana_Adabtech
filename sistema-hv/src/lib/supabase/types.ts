@@ -31,9 +31,11 @@ export type Database = {
           organization_id: string;
           full_name: string;
           cpf_cnpj: string;
+          rg: string | null;
           tipo: string | null;
           person_type: string | null;
           professional_data: Json | null;
+          custom_fields: Json | null;
           email: string | null;
           phone: string | null;
           address: Json | null;
@@ -51,9 +53,11 @@ export type Database = {
           organization_id: string;
           full_name: string;
           cpf_cnpj: string;
+          rg?: string | null;
           tipo?: string | null;
           person_type?: string | null;
           professional_data?: Json | null;
+          custom_fields?: Json | null;
           email?: string | null;
           phone?: string | null;
           address?: Json | null;
@@ -70,6 +74,49 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "system_clients_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "system_organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      system_client_field_defs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          key: string;
+          label: string;
+          field_type: string;
+          options: Json | null;
+          required: boolean;
+          help_text: string | null;
+          ordem: number;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          key: string;
+          label: string;
+          field_type: string;
+          options?: Json | null;
+          required?: boolean;
+          help_text?: string | null;
+          ordem?: number;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_client_field_defs"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_client_field_defs_organization_id_fkey";
             columns: ["organization_id"];
             referencedRelation: "system_organizations";
             referencedColumns: ["id"];
@@ -145,6 +192,7 @@ export type Database = {
           goes_to_zapsign: boolean;
           zapsign_doc_token: string | null;
           zapsign_sign_url: string | null;
+          doc_kind: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -169,6 +217,7 @@ export type Database = {
           goes_to_zapsign?: boolean;
           zapsign_doc_token?: string | null;
           zapsign_sign_url?: string | null;
+          doc_kind?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -423,6 +472,10 @@ export type Database = {
           acerto_parcial: boolean;
           tem_pendencia_judicial: boolean;
           acerto_parcial_obs: string | null;
+          removido_do_operacional_at: string | null;
+          aguardando_assinatura_at: string | null;
+          assinatura_liberada_at: string | null;
+          assinatura_liberada_by: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -453,6 +506,10 @@ export type Database = {
           acerto_parcial?: boolean;
           tem_pendencia_judicial?: boolean;
           acerto_parcial_obs?: string | null;
+          removido_do_operacional_at?: string | null;
+          aguardando_assinatura_at?: string | null;
+          assinatura_liberada_at?: string | null;
+          assinatura_liberada_by?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -760,6 +817,10 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_client_documents"]["Row"];
         Relationships: [];
       };
+      system_client_field_defs_active: {
+        Row: Database["public"]["Tables"]["system_client_field_defs"]["Row"];
+        Relationships: [];
+      };
       system_cases_active: {
         Row: Database["public"]["Tables"]["system_cases"]["Row"] & {
           client_name: string;
@@ -824,6 +885,10 @@ export type Database = {
       nextval_seq_system_case_code: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      system_search_clients: {
+        Args: { p_term: string };
+        Returns: Database["public"]["Tables"]["system_clients"]["Row"][];
       };
     };
     Enums: Record<string, never>;

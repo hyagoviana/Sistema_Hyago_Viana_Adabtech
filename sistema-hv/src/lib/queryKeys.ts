@@ -12,6 +12,9 @@ export const queryKeys = {
     all: ["documents"] as const,
     byClient: (clientId: string) => [...queryKeys.documents.all, "client", clientId] as const,
   },
+  clientFieldDefs: {
+    all: ["clientFieldDefs"] as const,
+  },
   cases: {
     all: ["cases"] as const,
     lists: () => [...queryKeys.cases.all, "list"] as const,
@@ -21,5 +24,6 @@ export const queryKeys = {
     details: () => [...queryKeys.cases.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.cases.details(), id] as const,
     events: (caseId: string) => [...queryKeys.cases.all, "events", caseId] as const,
+    comercial: () => [...queryKeys.cases.all, "comercial"] as const,
   },
 } as const;

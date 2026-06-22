@@ -30,11 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -85,10 +81,16 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     }
   }, [open, presetClientId, form, serviceTypes]);
 
-  async function onSubmit(data: CaseCreateInput) {
+  async function onSubmit(data: CaseCreateInput, comercial: boolean) {
     try {
-      const created = await create.mutateAsync(data);
-      toast.success(`Caso ${created.case_code} criado`);
+      const created = await create.mutateAsync({ ...data, comercial });
+      if (comercial) {
+        toast.success(
+          `Caso ${created.case_code} criado na aba Comercial — procuração pronta para envio ao ZapSign`,
+        );
+      } else {
+        toast.success(`Caso ${created.case_code} criado`);
+      }
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
@@ -106,7 +108,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit((d) => onSubmit(d, true))} className="space-y-4">
             <FormField
               control={form.control}
               name="client_id"
@@ -133,7 +135,10 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                      >
                         <Command>
                           <CommandInput placeholder="Digite o nome do cliente…" />
                           <CommandList>
@@ -240,7 +245,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               />
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
               <Button
                 type="button"
                 variant="outline"
@@ -249,8 +254,17 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               >
                 Cancelar
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={form.handleSubmit((d) => onSubmit(d, false))}
+                disabled={create.isPending}
+                title="Cria o caso direto no funil operacional, sem procuração"
+              >
+                Só criar caso
+              </Button>
               <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Criando…" : "Criar caso"}
+                {create.isPending ? "Criando…" : "Criar caso / enviar ZapSign"}
               </Button>
             </DialogFooter>
           </form>

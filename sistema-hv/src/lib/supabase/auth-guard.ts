@@ -5,6 +5,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { getCookies, getRequestHeader } from "@tanstack/react-start/server";
 
+import { getSupabaseAdmin } from "./server";
+
 export class AuthError extends Error {
   constructor(
     message: string,
@@ -55,12 +57,16 @@ function extractAccessToken(): string | null {
     } else {
       jsonStr = decodeURIComponent(raw);
       if (!jsonStr.startsWith("{")) {
-        try { jsonStr = atob(jsonStr); } catch { /* keep as-is */ }
+        try {
+          jsonStr = atob(jsonStr);
+        } catch {
+          /* keep as-is */
+        }
       }
     }
 
     const parsed = JSON.parse(jsonStr);
-    return typeof parsed === "string" ? parsed : parsed.access_token ?? null;
+    return typeof parsed === "string" ? parsed : (parsed.access_token ?? null);
   } catch {
     // JWT puro (sem wrapper JSON)
     if (raw.includes(".")) return raw;
@@ -118,4 +124,29 @@ export async function requireAuth(): Promise<{ id: string; email: string }> {
   }
 
   return result;
+}
+
+/**
+ * Valida que o usuário autenticado tem um dos papéis permitidos.
+ * Busca o papel em system_users (via admin client). Lança AuthError(403) se não.
+ *
+ * @returns `{ id, email, role }` do usuário autenticado.
+ */
+export async function requireRole(
+  allowed: readonly string[],
+): Promise<{ id: string; email: string; role: string }> {
+  const user = await requireAuth();
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_users")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw new AuthError("Falha ao verificar permissões", 500);
+  if (!data || data.status !== "active") throw new AuthError("Usuário inativo ou sem perfil", 403);
+  if (!allowed.includes(data.role)) {
+    throw new AuthError("Você não tem permissão para esta ação", 403);
+  }
+  return { id: user.id, email: user.email, role: data.role };
 }

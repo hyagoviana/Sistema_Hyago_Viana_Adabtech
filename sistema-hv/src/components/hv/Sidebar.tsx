@@ -1,8 +1,22 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Home, Briefcase, DollarSign, Users, CheckSquare, Scale, FileText,
-  TrendingUp, Megaphone, MessageCircle, BarChart3, Palette, Settings, LogOut,
-  PanelLeftClose, PanelLeftOpen,
+  Home,
+  Briefcase,
+  DollarSign,
+  Users,
+  CheckSquare,
+  Scale,
+  FileText,
+  TrendingUp,
+  Megaphone,
+  MessageCircle,
+  BarChart3,
+  Palette,
+  Settings,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  FileSignature,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -47,6 +61,7 @@ const groups: { label: string; items: Item[] }[] = [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
       { to: "/comercial", label: "Comercial", icon: TrendingUp },
+      { to: "/comercial/assinaturas", label: "Assinaturas", icon: FileSignature, tone: "gold" },
       { to: "/marketing", label: "Marketing", icon: Megaphone },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
       { to: "/dashboards", label: "Dashboards", icon: BarChart3 },
@@ -129,7 +144,13 @@ export function Sidebar() {
   if (casos) {
     realCounts["/casos"] = casos.length;
     realCounts["/pipeline"] = casos.length;
-    realCounts["/casos/financeiro"] = casos.filter((c) => c.macrostatus_fin !== "NAO_APLICAVEL").length;
+    realCounts["/casos/financeiro"] = casos.filter(
+      (c) => c.macrostatus_fin !== "NAO_APLICAVEL",
+    ).length;
+    const aguardando = casos.filter(
+      (c) => (c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at,
+    ).length;
+    if (aguardando > 0) realCounts["/comercial/assinaturas"] = aguardando;
   }
   if (tasks) {
     realCounts["/tarefas"] = tasks.filter((t) => t.status !== "CONCLUIDA").length;
@@ -163,11 +184,9 @@ export function Sidebar() {
         style={{
           width: collapsed ? 64 : 256,
           transition: "width 200ms ease",
-          background:
-            "linear-gradient(180deg, #1e2044 0%, #181a33 60%, #14162e 100%)",
+          background: "linear-gradient(180deg, #1e2044 0%, #181a33 60%, #14162e 100%)",
           borderRight: "1px solid rgba(255,255,255,0.04)",
-          boxShadow:
-            "1px 0 0 rgba(0,0,0,0.4), 6px 0 24px -8px rgba(0,0,0,0.35)",
+          boxShadow: "1px 0 0 rgba(0,0,0,0.4), 6px 0 24px -8px rgba(0,0,0,0.35)",
         }}
       >
         {/* Brand + toggle */}
@@ -178,11 +197,17 @@ export function Sidebar() {
               : "flex items-center justify-between px-4 pt-5 pb-4"
           }
         >
-          <Link to="/hoje" className="flex items-center gap-2.5 min-w-0" aria-label="Hyago Viana Advocacia">
+          <Link
+            to="/hoje"
+            className="flex items-center gap-2.5 min-w-0"
+            aria-label="Hyago Viana Advocacia"
+          >
             <img src={symbolHV} alt="" className="h-7 w-auto object-contain shrink-0" />
             {!collapsed && (
               <div className="leading-tight">
-                <div className="text-[13px] font-semibold text-white tracking-tight">Hyago Viana</div>
+                <div className="text-[13px] font-semibold text-white tracking-tight">
+                  Hyago Viana
+                </div>
                 <div
                   className="text-[9.5px] font-medium uppercase"
                   style={{ color: "rgba(233,205,132,0.9)", letterSpacing: "0.22em" }}
@@ -265,7 +290,10 @@ export function Sidebar() {
                         <span
                           aria-hidden
                           className="absolute -left-[1px] top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r"
-                          style={{ background: "#d4b04a", boxShadow: "0 0 8px rgba(152,120,20,0.6)" }}
+                          style={{
+                            background: "#d4b04a",
+                            boxShadow: "0 0 8px rgba(152,120,20,0.6)",
+                          }}
                         />
                       )}
                       <span className="relative flex items-center justify-center shrink-0">
@@ -304,7 +332,10 @@ export function Sidebar() {
                       {collapsed ? (
                         <Tooltip>
                           <TooltipTrigger asChild>{linkInner}</TooltipTrigger>
-                          <TooltipContent side="right" className="bg-[#14162e] text-white border border-white/10">
+                          <TooltipContent
+                            side="right"
+                            className="bg-[#14162e] text-white border border-white/10"
+                          >
                             {item.label}
                             {hasCount ? ` · ${count}` : ""}
                           </TooltipContent>
@@ -342,7 +373,10 @@ export function Sidebar() {
                   {initial}
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-[#14162e] text-white border border-white/10">
+              <TooltipContent
+                side="right"
+                className="bg-[#14162e] text-white border border-white/10"
+              >
                 {displayName} · {role ? ROLE_LABELS[role] : email || "Administrador"}
               </TooltipContent>
             </Tooltip>
@@ -358,10 +392,7 @@ export function Sidebar() {
                 {initial}
               </div>
               <div className="flex-1 leading-tight min-w-0">
-                <div
-                  className="text-[12.5px] font-medium truncate"
-                  style={{ color: GOLD_BRIGHT }}
-                >
+                <div className="text-[12.5px] font-medium truncate" style={{ color: GOLD_BRIGHT }}>
                   {displayName}
                 </div>
                 <div className="text-[10px] truncate" style={{ color: "rgba(233,205,132,0.6)" }}>

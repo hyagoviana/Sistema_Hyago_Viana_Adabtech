@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { UF_SIGLAS } from "@/lib/br/estados";
+
 // ----------------------------------------------------------------------------
 // Algoritmo CPF (Receita Federal)
 // ----------------------------------------------------------------------------
@@ -75,20 +77,38 @@ export const phoneSchema = z
   .regex(/^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/, "Telefone inválido (formato esperado: (99) 99999-9999)")
   .transform((v) => v.replace(/\D/g, ""));
 
+// Endereço do cadastro (Melhoria 2): CEP, rua, número, UF e município são
+// obrigatórios; complemento e bairro são opcionais. UF e município são
+// escolhidos em selects (UF válida / município vindo do IBGE), nunca digitados.
 export const addressSchema = z.object({
-  street: z.string().trim().max(200).optional().nullable(),
-  number: z.string().trim().max(20).optional().nullable(),
-  complement: z.string().trim().max(100).optional().nullable(),
-  neighborhood: z.string().trim().max(100).optional().nullable(),
-  city: z.string().trim().max(100).optional().nullable(),
-  state: z.string().trim().length(2, "UF deve ter 2 letras").optional().nullable(),
+  street: z.string().trim().min(1, "Informe a rua").max(200),
+  number: z.string().trim().min(1, "Informe o número (use S/N se não houver)").max(20),
+  complement: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+  neighborhood: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
+  city: z.string().trim().min(1, "Selecione o município").max(100),
+  state: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .length(2, "Selecione a UF")
+    .refine((v) => UF_SIGLAS.includes(v), "UF inválida"),
   zipcode: z
     .string()
     .trim()
     .regex(/^\d{5}-?\d{3}$/, "CEP inválido")
-    .transform((v) => v.replace(/\D/g, ""))
-    .optional()
-    .nullable(),
+    .transform((v) => v.replace(/\D/g, "")),
 });
 
 // ----------------------------------------------------------------------------
@@ -142,27 +162,46 @@ export const professionalDataSchema = z
   .optional()
   .nullable();
 
-export const clientCreateSchema = z.object({
-  full_name: z.string().trim().min(3, "Nome muito curto").max(200),
-  cpf_cnpj: cpfCnpjSchema,
+export const clientCreateSchema = z
+  .object({
+    full_name: z.string().trim().min(3, "Nome muito curto").max(200),
+    cpf_cnpj: cpfCnpjSchema,
+    // RG — obrigatório apenas para pessoa física (validado no superRefine).
+    rg: textOptional(20),
+    tipo: z.string().trim().max(50).optional().nullable(),
+    professional_data: professionalDataSchema,
+    email: z.string().trim().email("E-mail inválido").max(200),
+    phone: phoneSchema,
+    address: addressSchema,
+    // Valores dos campos customizados (Melhoria 1). Validação fina contra as
+    // definições (obrigatoriedade/opções) acontece no service.
+    custom_fields: z.record(z.string(), z.unknown()).optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    // PF (CPF, 11 dígitos) exige RG. PJ (CNPJ) não.
+    const isPF = sanitizeCpfCnpj(data.cpf_cnpj).length === 11;
+    if (isPF && !data.rg) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rg"],
+        message: "RG é obrigatório para pessoa física",
+      });
+    }
+  });
+
+// No update os campos são parciais (edição futura campo a campo). Como o create
+// é um objeto com superRefine, derivamos o partial do shape interno.
+export const clientUpdateSchema = z.object({
+  full_name: z.string().trim().min(3, "Nome muito curto").max(200).optional(),
+  cpf_cnpj: cpfCnpjSchema.optional(),
+  rg: textOptional(20),
   tipo: z.string().trim().max(50).optional().nullable(),
   professional_data: professionalDataSchema,
-  email: z
-    .string()
-    .trim()
-    .email("E-mail inválido")
-    .max(200)
-    .optional()
-    .nullable()
-    .or(z.literal("").transform(() => null)),
-  phone: phoneSchema
-    .optional()
-    .nullable()
-    .or(z.literal("").transform(() => null)),
-  address: addressSchema.optional().nullable(),
+  email: z.string().trim().email("E-mail inválido").max(200).optional(),
+  phone: phoneSchema.optional(),
+  address: addressSchema.optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional().nullable(),
 });
-
-export const clientUpdateSchema = clientCreateSchema.partial();
 
 export type ClientCreateInput = z.input<typeof clientCreateSchema>;
 export type ClientCreateOutput = z.output<typeof clientCreateSchema>;

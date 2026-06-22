@@ -59,6 +59,7 @@ import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.o
 import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
 import { Route as ComercialFunilRouteImport } from './routes/comercial.funil'
 import { Route as ComercialEmailMarketingRouteImport } from './routes/comercial.email-marketing'
+import { Route as ComercialAssinaturasRouteImport } from './routes/comercial.assinaturas'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as CasosListaRouteImport } from './routes/casos.lista'
 import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
@@ -326,6 +327,11 @@ const ComercialEmailMarketingRoute = ComercialEmailMarketingRouteImport.update({
   path: '/comercial/email-marketing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComercialAssinaturasRoute = ComercialAssinaturasRouteImport.update({
+  id: '/comercial/assinaturas',
+  path: '/comercial/assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientesIdRoute = ClientesIdRouteImport.update({
   id: '/clientes/$id',
   path: '/clientes/$id',
@@ -423,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
@@ -626,6 +635,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
     | '/comercial/leads'
@@ -692,6 +702,7 @@ export interface FileRouteTypes {
     | '/casos/$id'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
     | '/comercial/leads'
@@ -759,6 +770,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
     | '/comercial/leads'
@@ -827,6 +839,7 @@ export interface RootRouteChildren {
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
   CasosListaRoute: typeof CasosListaRoute
   ClientesIdRoute: typeof ClientesIdRoute
+  ComercialAssinaturasRoute: typeof ComercialAssinaturasRoute
   ComercialEmailMarketingRoute: typeof ComercialEmailMarketingRoute
   ComercialFunilRoute: typeof ComercialFunilRoute
   ComercialLeadsRoute: typeof ComercialLeadsRoute
@@ -1225,6 +1238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComercialEmailMarketingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comercial/assinaturas': {
+      id: '/comercial/assinaturas'
+      path: '/comercial/assinaturas'
+      fullPath: '/comercial/assinaturas'
+      preLoaderRoute: typeof ComercialAssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clientes/$id': {
       id: '/clientes/$id'
       path: '/clientes/$id'
@@ -1402,6 +1422,7 @@ const rootRouteChildren: RootRouteChildren = {
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
   CasosListaRoute: CasosListaRoute,
   ClientesIdRoute: ClientesIdRoute,
+  ComercialAssinaturasRoute: ComercialAssinaturasRoute,
   ComercialEmailMarketingRoute: ComercialEmailMarketingRoute,
   ComercialFunilRoute: ComercialFunilRoute,
   ComercialLeadsRoute: ComercialLeadsRoute,

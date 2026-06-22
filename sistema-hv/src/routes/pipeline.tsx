@@ -197,7 +197,11 @@ function DynamicKanban({
     kind === "fin"
       ? (allCases ?? []).filter((c) => c.macrostatus_fin && c.macrostatus_fin !== "NAO_APLICAVEL")
       : (allCases ?? []).filter(
-          (c) => !(c as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+          (c) =>
+            !(c as { removido_do_operacional_at?: string | null }).removido_do_operacional_at &&
+            // Melhoria 3: casos em fase comercial (aguardando assinatura) não
+            // aparecem no Kanban operacional até serem liberados.
+            !(c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at,
         );
 
   const columns: KanbanColumn<string>[] = (stages ?? [])

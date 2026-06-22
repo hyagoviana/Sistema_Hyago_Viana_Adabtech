@@ -10,6 +10,7 @@
 // senão, na caixa "ZapSign - Recebidos".
 
 import { ensureCaseFolder } from "../case-documents-service";
+import { liberarCasoComercial } from "../cases-service";
 import { createFolder, getRootFolderId, listFilesInFolder, uploadFile } from "../google/drive";
 import { getSupabaseAdmin } from "../supabase/server";
 import type { Json } from "../supabase/types";
@@ -18,7 +19,14 @@ import { getDocument } from "./client";
 const INBOX_NAME = "ZapSign - Recebidos";
 
 export type ZapsignWebhookResult =
-  | { ok: true; action: "stored"; docToken: string; fileUrl: string; folderUrl: string; target: "case" | "inbox" }
+  | {
+      ok: true;
+      action: "stored";
+      docToken: string;
+      fileUrl: string;
+      folderUrl: string;
+      target: "case" | "inbox";
+    }
   | { ok: true; action: "ignored"; reason: string; docToken?: string };
 
 type AnyPayload = Record<string, unknown> & {
@@ -50,7 +58,8 @@ async function findOrCreateInbox(): Promise<{ id: string; url: string }> {
 }
 
 export async function processZapsignWebhook(payload: AnyPayload): Promise<ZapsignWebhookResult> {
-  let { token, status, signedFile } = pick(payload);
+  const { token } = pick(payload);
+  let { status, signedFile } = pick(payload);
 
   if (!token) {
     return { ok: true, action: "ignored", reason: "payload sem token de documento" };
@@ -64,18 +73,31 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
   }
 
   if (status !== "signed" || !signedFile) {
-    return { ok: true, action: "ignored", reason: `status=${status ?? "?"} (ainda não assinado)`, docToken: token };
+    return {
+      ok: true,
+      action: "ignored",
+      reason: `status=${status ?? "?"} (ainda não assinado)`,
+      docToken: token,
+    };
   }
 
   const sb = getSupabaseAdmin();
 
   // B4 — Idempotência: só processa o "assinado" deste token uma vez.
-  const { error: dupErr } = await sb
-    .from("system_webhook_dedupe")
-    .insert({ provider: "zapsign", external_id: token, event_type: "signed", payload: payload as unknown as Json });
+  const { error: dupErr } = await sb.from("system_webhook_dedupe").insert({
+    provider: "zapsign",
+    external_id: token,
+    event_type: "signed",
+    payload: payload as unknown as Json,
+  });
   if (dupErr) {
     if (dupErr.code === "23505") {
-      return { ok: true, action: "ignored", reason: "evento já processado (dedupe)", docToken: token };
+      return {
+        ok: true,
+        action: "ignored",
+        reason: "evento já processado (dedupe)",
+        docToken: token,
+      };
     }
     throw new Error(`dedupe falhou: ${dupErr.message}`);
   }
@@ -88,7 +110,7 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
   // Tenta achar o documento do caso pelo token → pasta do caso.
   const { data: caseDoc } = await sb
     .from("system_case_documents")
-    .select("id, case_id, organization_id, title")
+    .select("id, case_id, organization_id, title, doc_kind")
     .eq("zapsign_doc_token", token)
     .is("deleted_at", null)
     .maybeSingle();
@@ -112,6 +134,16 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
       entity_id: caseDoc.id,
       diff: { zapsign_doc_token: token, drive_file_id: file.id },
     });
+
+    // Melhoria 3: se a procuração foi assinada, libera o caso comercial → ele
+    // entra no funil operacional. Best-effort (não bloqueia o armazenamento).
+    if (caseDoc.doc_kind === "procuracao") {
+      try {
+        await liberarCasoComercial(caseDoc.case_id, { via: "webhook" });
+      } catch (err) {
+        console.error("zapsign/webhook: falha ao liberar caso comercial:", err);
+      }
+    }
     return {
       ok: true,
       action: "stored",
@@ -130,5 +162,12 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
     mimeType: "application/pdf",
     body: buffer,
   });
-  return { ok: true, action: "stored", docToken: token, fileUrl: file.url, folderUrl: inbox.url, target: "inbox" };
+  return {
+    ok: true,
+    action: "stored",
+    docToken: token,
+    fileUrl: file.url,
+    folderUrl: inbox.url,
+    target: "inbox",
+  };
 }

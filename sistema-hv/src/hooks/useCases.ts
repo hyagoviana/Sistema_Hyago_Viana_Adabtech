@@ -7,8 +7,10 @@ import type { CaseCreateInput, CaseUpdateInput } from "@/lib/validators/case";
 import {
   createCaseFn,
   getCaseFn,
+  liberarCasoFn,
   listCaseEventsFn,
   listCasesFn,
+  listComercialCasesFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
   softDeleteCaseFn,
@@ -134,5 +136,29 @@ export function useDeleteCase() {
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// Comercial (Melhoria 3) — casos aguardando assinatura da procuração
+// ----------------------------------------------------------------------------
+export function useComercialCases() {
+  const fn = useServerFn(listComercialCasesFn);
+  return useQuery({
+    queryKey: queryKeys.cases.comercial(),
+    queryFn: () => fn(),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useLiberarCaso() {
+  const fn = useServerFn(liberarCasoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(id) });
+    },
   });
 }

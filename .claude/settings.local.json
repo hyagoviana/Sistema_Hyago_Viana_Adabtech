@@ -195,7 +195,13 @@
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(xargs grep -l \"procur\\\\|projuris\\\\|tribunal\\\\|processo\\\\|judicial\")",
       "Bash(xargs grep -l \"sugestao\\\\|suggest\\\\|automati\\\\|inteligencia\")",
-      "Bash(git check-attr *)"
+      "Bash(git check-attr *)",
+      "Bash(gh pr *)",
+      "Bash(gh auth *)",
+      "Bash(git rev-list *)",
+      "Bash(Select-Object FullName)",
+      "Bash(grep -iE 'cases-service|case-documents|zapsign|CaseFormDialog|rpc/cases|useCases|queryKeys|pipeline.tsx|comercial.assinaturas|Sidebar|casos.\\\\$id|rbac|validators/case|supabase/types')",
+      "Bash(grep -iE 'cases-service|case-documents|zapsign|CaseFormDialog|rpc/cases|useCases|queryKeys|pipeline.tsx|comercial.assinaturas|Sidebar|casos.\\\\$id|rbac|validators/case')"
     ]
   }
 }

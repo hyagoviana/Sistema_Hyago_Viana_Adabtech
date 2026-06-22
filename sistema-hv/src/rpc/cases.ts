@@ -7,8 +7,10 @@ import {
   CaseServiceError,
   createCase,
   getCase,
+  liberarCasoComercial,
   listCaseEvents,
   listCases,
+  listComercialCases,
   moveCaseStatus,
   moveCaseStatusFin,
   softDeleteCase,
@@ -96,3 +98,16 @@ export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => softDeleteCase(data.id, userId)));
 
+// ----------------------------------------------------------------------------
+// Comercial (Melhoria 3)
+// ----------------------------------------------------------------------------
+export const listComercialCasesFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listComercialCases()),
+);
+
+// Liberação manual: usuário confirma que a procuração foi assinada.
+export const liberarCasoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle((userId) => liberarCasoComercial(data.id, { via: "manual", userId })),
+  );

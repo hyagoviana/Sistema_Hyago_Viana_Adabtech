@@ -5,7 +5,11 @@ import slugify from "slugify";
 
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
+import type { Database, Json } from "./supabase/types";
 import type { ClientCreateOutput, ClientUpdateOutput } from "./validators/client";
+
+type ClientInsert = Database["public"]["Tables"]["system_clients"]["Insert"];
+type ClientUpdate = Database["public"]["Tables"]["system_clients"]["Update"];
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -46,7 +50,7 @@ export async function createClient(input: ClientCreateOutput) {
   const person_type = input.cpf_cnpj.length === 14 ? "PJ" : "PF";
   const { data: client, error } = await sb
     .from("system_clients")
-    .insert({ ...input, organization_id: DEFAULT_ORG_ID, person_type })
+    .insert({ ...input, organization_id: DEFAULT_ORG_ID, person_type } as ClientInsert)
     .select()
     .single();
 
@@ -105,7 +109,7 @@ export async function createClient(input: ClientCreateOutput) {
     action: "client.create",
     entity_type: "client",
     entity_id: client.id,
-    diff: input,
+    diff: input as unknown as Json,
   });
 
   return finalClient;
@@ -119,7 +123,7 @@ export async function updateClient(id: string, input: ClientUpdateOutput) {
 
   const { data, error } = await sb
     .from("system_clients")
-    .update(input)
+    .update(input as ClientUpdate)
     .eq("id", id)
     .is("deleted_at", null)
     .select()
@@ -145,7 +149,7 @@ export async function updateClient(id: string, input: ClientUpdateOutput) {
     action: "client.update",
     entity_type: "client",
     entity_id: data.id,
-    diff: input,
+    diff: input as unknown as Json,
   });
 
   return data;
@@ -244,12 +248,17 @@ export async function resyncClientDriveFolder(id: string) {
 // ----------------------------------------------------------------------------
 export async function listClients(search?: string) {
   const sb = getSupabaseAdmin();
-  let query = sb.from("system_clients_active").select("*").order("full_name");
-  if (search && search.trim()) {
-    const s = search.trim().replace(/[,()]/g, "");
-    if (s) query = query.or(`full_name.ilike.%${s}%,cpf_cnpj.ilike.%${s.replace(/\D/g, "")}%`);
+  const term = search?.trim();
+
+  // Com termo de busca usamos a função SQL, que cobre nome, CPF, e-mail, dados
+  // profissionais E os campos customizados (Melhoria 1).
+  if (term) {
+    const { data, error } = await sb.rpc("system_search_clients", { p_term: term });
+    if (error) throw new ClientServiceError(error.message, "DB_ERROR", 500);
+    return data ?? [];
   }
-  const { data, error } = await query;
+
+  const { data, error } = await sb.from("system_clients_active").select("*").order("full_name");
   if (error) throw new ClientServiceError(error.message, "DB_ERROR", 500);
   return data ?? [];
 }

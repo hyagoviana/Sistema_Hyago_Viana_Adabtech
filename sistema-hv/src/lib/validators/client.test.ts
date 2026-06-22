@@ -40,14 +40,25 @@ assert("remove pontos/traços", sanitizeCpfCnpj("390.533.447-05") === "390533447
 assert("remove barra CNPJ", sanitizeCpfCnpj("11.222.333/0001-81") === "11222333000181");
 
 console.log("\nclientCreateSchema");
+// Endereço completo válido reutilizado nos casos de teste.
+const validAddress = {
+  street: "Rua das Flores",
+  number: "123",
+  city: "Maceió",
+  state: "AL",
+  zipcode: "57000-000",
+};
+
 const validInput = clientCreateSchema.safeParse({
   full_name: "Maria Silva",
   cpf_cnpj: "390.533.447-05",
+  rg: "1234567",
   tipo: "Médico",
   email: "maria@example.com",
   phone: "(82) 99999-9999",
+  address: validAddress,
 });
-assert("input válido aceito", validInput.success);
+assert("input válido (PF completo) aceito", validInput.success);
 assert(
   "cpf_cnpj transformado pra canônico",
   validInput.success && validInput.data.cpf_cnpj === "39053344705",
@@ -56,6 +67,30 @@ assert(
   "phone transformado pra canônico",
   validInput.success && validInput.data.phone === "82999999999",
 );
+assert(
+  "zipcode transformado pra canônico",
+  validInput.success && validInput.data.address?.zipcode === "57000000",
+);
+
+// PJ (CNPJ) não exige RG.
+const validPJ = clientCreateSchema.safeParse({
+  full_name: "Clínica Exemplo LTDA",
+  cpf_cnpj: "11.222.333/0001-81",
+  email: "contato@clinica.com",
+  phone: "(82) 3333-4444",
+  address: validAddress,
+});
+assert("PJ sem RG aceito", validPJ.success);
+
+// PF sem RG é rejeitado.
+const pfSemRg = clientCreateSchema.safeParse({
+  full_name: "Maria Silva",
+  cpf_cnpj: "390.533.447-05",
+  email: "maria@example.com",
+  phone: "(82) 99999-9999",
+  address: validAddress,
+});
+assert("PF sem RG rejeitado", !pfSemRg.success);
 
 const noName = clientCreateSchema.safeParse({ full_name: "Jo", cpf_cnpj: "39053344705" });
 assert("nome muito curto rejeitado", !noName.success);
@@ -66,12 +101,37 @@ const badCpf = clientCreateSchema.safeParse({
 });
 assert("CPF sequência igual rejeitado", !badCpf.success);
 
+// E-mail agora é obrigatório.
 const emptyEmail = clientCreateSchema.safeParse({
   full_name: "Ana Lima",
   cpf_cnpj: "39053344705",
+  rg: "999",
+  phone: "(82) 99999-9999",
+  address: validAddress,
   email: "",
 });
-assert("e-mail vazio vira null", emptyEmail.success && emptyEmail.data.email === null);
+assert("e-mail vazio rejeitado (obrigatório)", !emptyEmail.success);
+
+// Endereço incompleto (sem CEP/UF) é rejeitado.
+const noAddress = clientCreateSchema.safeParse({
+  full_name: "Ana Lima",
+  cpf_cnpj: "39053344705",
+  rg: "999",
+  email: "ana@example.com",
+  phone: "(82) 99999-9999",
+});
+assert("sem endereço rejeitado", !noAddress.success);
+
+// UF inválida é rejeitada.
+const badUf = clientCreateSchema.safeParse({
+  full_name: "Ana Lima",
+  cpf_cnpj: "39053344705",
+  rg: "999",
+  email: "ana@example.com",
+  phone: "(82) 99999-9999",
+  address: { ...validAddress, state: "XX" },
+});
+assert("UF inválida rejeitada", !badUf.success);
 
 console.log();
 if (failed > 0) {
