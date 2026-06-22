@@ -64,6 +64,31 @@ export async function getCaseDocument(id: string) {
   return data;
 }
 
+// Lista todos os documentos gerados nos CASOS de um cliente (procurações etc.),
+// para exibir na ficha do cliente. Read-only — a gestão continua no caso.
+export async function listCaseDocumentsByClient(clientId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: cases, error: cErr } = await sb
+    .from("system_cases")
+    .select("id, case_code")
+    .eq("client_id", clientId)
+    .is("deleted_at", null);
+  if (cErr) throw new CaseDocumentServiceError(cErr.message, 500);
+
+  const caseIds = (cases ?? []).map((c) => c.id);
+  if (caseIds.length === 0) return [];
+
+  const codeById = new Map((cases ?? []).map((c) => [c.id, c.case_code]));
+  const { data, error } = await sb
+    .from("system_case_documents_active")
+    .select("*")
+    .in("case_id", caseIds)
+    .order("created_at", { ascending: false });
+  if (error) throw new CaseDocumentServiceError(error.message, 500);
+
+  return (data ?? []).map((d) => ({ ...d, case_code: codeById.get(d.case_id) ?? null }));
+}
+
 // ----------------------------------------------------------------------------
 // S12-2 — Pasta do caso no Drive (idempotente). Criada sob a pasta do cliente.
 // ----------------------------------------------------------------------------

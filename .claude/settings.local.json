@@ -207,7 +207,9 @@
       "Bash(echo \"=== EXIT: $? ===\")",
       "Bash(perl -i -pe 's/\\\\{\\\\\\\\\\\\[/{[/' src/lib/template-sync-service.ts)",
       "Bash(sed -n '122p' src/lib/template-sync-service.ts)",
-      "Bash(grep -v 'mammoth\\\\|casos.$id\\\\|casos.financeiro\\\\|service_type_id\\\\|is not assignable\\\\|Type '\\\\''null'\\\\''\\\\|Type '\\\\''undefined'\\\\''\\\\|Types of property')"
+      "Bash(grep -v 'mammoth\\\\|casos.$id\\\\|casos.financeiro\\\\|service_type_id\\\\|is not assignable\\\\|Type '\\\\''null'\\\\''\\\\|Type '\\\\''undefined'\\\\''\\\\|Types of property')",
+      "Bash(grep -E \"^\\(pg|postgres\\)$\")",
+      "Bash(npm i *)"
     ]
   }
 }

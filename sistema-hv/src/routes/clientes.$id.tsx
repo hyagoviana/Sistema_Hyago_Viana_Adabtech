@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
+import { ClientCaseDocumentsSection } from "@/components/clients/ClientCaseDocumentsSection";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
@@ -216,6 +217,14 @@ function ClienteDetalhe() {
         clientId={cliente.id}
         clientHasDriveFolder={!!cliente.drive_folder_id}
       />
+
+      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3 mt-8">
+        Documentos dos casos
+      </h2>
+      <p className="text-[13px] text-muted-foreground mb-3 -mt-1">
+        Procurações e demais documentos gerados nos casos deste cliente.
+      </p>
+      <ClientCaseDocumentsSection clientId={cliente.id} />
 
       <OrnamentalDivider />
 

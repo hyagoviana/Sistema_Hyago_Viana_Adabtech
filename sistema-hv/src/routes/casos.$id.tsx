@@ -425,6 +425,8 @@ function CasoDetalhe() {
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] text-[var(--navy)] font-medium">
                     {e.action === "created" && "Caso criado"}
+                    {e.action === "created_comercial" &&
+                      "Caso criado (comercial — aguardando assinatura da procuração)"}
                     {e.action === "status_changed" &&
                       `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`}
                     {e.action === "fin_status_changed" &&
@@ -453,6 +455,14 @@ function CasoDetalhe() {
                       `Documento enviado para assinatura: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
                     {e.action === "doc_deleted" &&
                       `Documento excluído: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
+                    {/* Procuração / fase comercial */}
+                    {e.action === "procuracao_preparada" && "Procuração preparada"}
+                    {e.action === "liberado_comercial" &&
+                      `Procuração assinada — caso liberado para operação${
+                        (e.diff as Record<string, string> | null)?.via
+                          ? ` (${(e.diff as Record<string, string> | null)?.via})`
+                          : ""
+                      }`}
                     {/* Prazos */}
                     {e.action === "deadline_created" &&
                       `Prazo criado: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"} (${(e.diff as Record<string, string> | null)?.fatal_date ?? "—"})`}

@@ -6,6 +6,7 @@ import {
   finalizeCaseDocumentFn,
   generateCaseDocumentFn,
   listCaseDocumentsFn,
+  listClientCaseDocumentsFn,
   reopenCaseDocumentFn,
   sendCaseDocumentToZapsignFn,
   softDeleteCaseDocumentFn,
@@ -24,6 +25,16 @@ export function useCaseDocuments(caseId: string) {
     queryKey: ["case-documents", caseId],
     queryFn: () => fn({ data: { caseId } }),
     enabled: !!caseId,
+  });
+}
+
+// Documentos gerados em TODOS os casos de um cliente (exibidos na ficha do cliente).
+export function useClientCaseDocuments(clientId: string) {
+  const fn = useServerFn(listClientCaseDocumentsFn);
+  return useQuery({
+    queryKey: ["client-case-documents", clientId],
+    queryFn: () => fn({ data: { clientId } }),
+    enabled: !!clientId,
   });
 }
 

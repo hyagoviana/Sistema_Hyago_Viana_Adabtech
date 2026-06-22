@@ -8,6 +8,7 @@ import {
   generateCaseDocumentFromTemplate,
   getCaseDocumentDownloadUrl,
   listCaseDocuments,
+  listCaseDocumentsByClient,
   reopenCaseDocument,
   sendCaseDocumentToZapsign,
   softDeleteCaseDocument,
@@ -32,10 +33,15 @@ async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
 
 const caseIdSchema = z.object({ caseId: z.string().uuid() });
 const docIdSchema = z.object({ id: z.string().uuid() });
+const clientIdSchema = z.object({ clientId: z.string().uuid() });
 
 export const listCaseDocumentsFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => caseIdSchema.parse(d))
   .handler(async ({ data }) => handle(() => listCaseDocuments(data.caseId)));
+
+export const listClientCaseDocumentsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => clientIdSchema.parse(d))
+  .handler(async ({ data }) => handle(() => listCaseDocumentsByClient(data.clientId)));
 
 const generateSchema = z.object({
   caseId: z.string().uuid(),
