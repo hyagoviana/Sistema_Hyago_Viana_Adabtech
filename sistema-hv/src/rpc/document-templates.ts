@@ -10,7 +10,7 @@ import {
   updateDocumentTemplate,
 } from "@/lib/document-templates-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
-import { getTemplatePlaceholders, syncTemplatesFromDrive } from "@/lib/template-sync-service";
+import { getTemplatePlaceholders, syncTemplatesFromDrives } from "@/lib/template-sync-service";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -36,9 +36,7 @@ const fieldSchema = z.object({
 });
 
 export const listDocumentTemplatesFn = createServerFn({ method: "GET" })
-  .inputValidator((d: unknown) =>
-    z.object({ caseType: z.string().nullish() }).default({}).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ caseType: z.string().nullish() }).default({}).parse(d))
   .handler(async ({ data }) => handle(() => listDocumentTemplates({ caseType: data.caseType })));
 
 const createSchema = z.object({
@@ -83,19 +81,28 @@ export const softDeleteDocumentTemplateFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => softDeleteDocumentTemplate(data.id)));
 
-export const deleteAllDocumentTemplatesFn = createServerFn({ method: "POST" })
-  .handler(async () => handle(() => softDeleteAllDocumentTemplates()));
+export const deleteAllDocumentTemplatesFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(() => softDeleteAllDocumentTemplates()),
+);
 
 export const getTemplatePlaceholdersFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ googleDocId: z.string().min(1) }).parse(d))
   .handler(async ({ data }) => handle(() => getTemplatePlaceholders(data.googleDocId)));
 
-const MODELS_FOLDER_ID = process.env.GOOGLE_DRIVE_TEMPLATES_FOLDER_ID ?? "";
+// Aceita uma OU várias pastas, separadas por vírgula. Ex.: pasta "07- Modelos"
+// + pasta de procurações — o botão "Sincronizar modelos" varre todas no clique.
+const MODELS_FOLDER_IDS = (process.env.GOOGLE_DRIVE_TEMPLATES_FOLDER_ID ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 export const syncDocumentTemplatesFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ folderId: z.string().min(1).optional() }).default({}).parse(d),
+    z
+      .object({ folderId: z.string().min(1).optional() })
+      .default({})
+      .parse(d),
   )
   .handler(async ({ data }) =>
-    handle(() => syncTemplatesFromDrive(data.folderId || MODELS_FOLDER_ID)),
+    handle(() => syncTemplatesFromDrives(data.folderId ? [data.folderId] : MODELS_FOLDER_IDS)),
   );

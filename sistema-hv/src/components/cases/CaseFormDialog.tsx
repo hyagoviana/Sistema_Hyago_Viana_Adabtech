@@ -41,6 +41,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
+import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { caseCreateSchema, type CaseCreateInput } from "@/lib/validators/case";
 
@@ -55,6 +56,8 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: serviceTypes } = useServiceTypes();
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);
+  const [procPopOpen, setProcPopOpen] = useState(false);
+  const [procuracaoTemplateId, setProcuracaoTemplateId] = useState("");
 
   const firstType = serviceTypes?.[0]?.slug ?? "";
 
@@ -69,6 +72,12 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     },
   });
 
+  // Modelos de procuração disponíveis para o tipo selecionado (procurações
+  // soltas, sem tipo, valem para qualquer caso). Busca por nome no popover.
+  const caseType = form.watch("case_type");
+  const { data: templates } = useDocumentTemplates(caseType);
+  const selectedTemplate = (templates ?? []).find((t) => t.id === procuracaoTemplateId);
+
   useEffect(() => {
     if (open) {
       form.reset({
@@ -78,15 +87,22 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
         responsavel: "",
         municipio: "",
       });
+      setProcuracaoTemplateId("");
     }
   }, [open, presetClientId, form, serviceTypes]);
 
   async function onSubmit(data: CaseCreateInput, comercial: boolean) {
     try {
-      const created = await create.mutateAsync({ ...data, comercial });
+      const created = await create.mutateAsync({
+        ...data,
+        comercial,
+        procuracao_template_id: comercial ? procuracaoTemplateId || undefined : undefined,
+      });
       if (comercial) {
         toast.success(
-          `Caso ${created.case_code} criado na aba Comercial — procuração pronta para envio ao ZapSign`,
+          procuracaoTemplateId
+            ? `Caso ${created.case_code} criado — procuração preenchida com os dados do cliente. Revise e envie ao ZapSign na aba Comercial.`
+            : `Caso ${created.case_code} criado na aba Comercial — escolha a procuração na ficha do caso.`,
         );
       } else {
         toast.success(`Caso ${created.case_code} criado`);
@@ -198,6 +214,64 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               )}
             />
 
+            {/* Procuração — gera o documento preenchido ao criar como comercial */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium leading-none">
+                Procuração (enviada ao ZapSign)
+              </span>
+              <Popover open={procPopOpen} onOpenChange={setProcPopOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={procPopOpen}
+                    className={cn(
+                      "w-full justify-between font-normal",
+                      !procuracaoTemplateId && "text-muted-foreground",
+                    )}
+                  >
+                    {selectedTemplate?.name ?? "Buscar procuração…"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar pelo nome (ex.: covid)…" />
+                    <CommandList>
+                      <CommandEmpty>
+                        Nenhum modelo. Sincronize os modelos na aba Documentos primeiro.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {(templates ?? []).map((t) => (
+                          <CommandItem
+                            key={t.id}
+                            value={t.name}
+                            onSelect={() => {
+                              setProcuracaoTemplateId(t.id === procuracaoTemplateId ? "" : t.id);
+                              setProcPopOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                t.id === procuracaoTemplateId ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {t.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground">
+                Em "Criar caso / gerar procuração", o documento é preenchido com os dados do cliente
+                e fica para revisão antes do envio ao ZapSign. Opcional.
+              </p>
+            </div>
+
             <FormField
               control={form.control}
               name="proximo_passo"
@@ -265,7 +339,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                 Só criar caso
               </Button>
               <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Criando…" : "Criar caso / enviar ZapSign"}
+                {create.isPending ? "Criando…" : "Criar caso / gerar procuração"}
               </Button>
             </DialogFooter>
           </form>

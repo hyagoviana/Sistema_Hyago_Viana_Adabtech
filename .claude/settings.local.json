@@ -201,7 +201,13 @@
       "Bash(git rev-list *)",
       "Bash(Select-Object FullName)",
       "Bash(grep -iE 'cases-service|case-documents|zapsign|CaseFormDialog|rpc/cases|useCases|queryKeys|pipeline.tsx|comercial.assinaturas|Sidebar|casos.\\\\$id|rbac|validators/case|supabase/types')",
-      "Bash(grep -iE 'cases-service|case-documents|zapsign|CaseFormDialog|rpc/cases|useCases|queryKeys|pipeline.tsx|comercial.assinaturas|Sidebar|casos.\\\\$id|rbac|validators/case')"
+      "Bash(grep -iE 'cases-service|case-documents|zapsign|CaseFormDialog|rpc/cases|useCases|queryKeys|pipeline.tsx|comercial.assinaturas|Sidebar|casos.\\\\$id|rbac|validators/case')",
+      "mcp__claude_ai_Google_Drive__get_file_metadata",
+      "mcp__claude_ai_Google_Drive__search_files",
+      "Bash(echo \"=== EXIT: $? ===\")",
+      "Bash(perl -i -pe 's/\\\\{\\\\\\\\\\\\[/{[/' src/lib/template-sync-service.ts)",
+      "Bash(sed -n '122p' src/lib/template-sync-service.ts)",
+      "Bash(grep -v 'mammoth\\\\|casos.$id\\\\|casos.financeiro\\\\|service_type_id\\\\|is not assignable\\\\|Type '\\\\''null'\\\\''\\\\|Type '\\\\''undefined'\\\\''\\\\|Types of property')"
     ]
   }
 }

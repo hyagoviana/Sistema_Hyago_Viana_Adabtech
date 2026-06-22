@@ -34,9 +34,7 @@ const FOLDER_TO_CASE_TYPE: Record<string, string> = {
 
 function folderToCaseType(folderName: string): string | null {
   const lower = folderName.toLowerCase();
-  const sorted = Object.entries(FOLDER_TO_CASE_TYPE).sort(
-    (a, b) => b[0].length - a[0].length,
-  );
+  const sorted = Object.entries(FOLDER_TO_CASE_TYPE).sort((a, b) => b[0].length - a[0].length);
   for (const [keyword, caseType] of sorted) {
     if (lower.includes(keyword)) return caseType;
   }
@@ -61,7 +59,9 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
       fullText = typeof res.data === "string" ? res.data : String(res.data ?? "");
     } catch {
       // .docx: baixa o arquivo e extrai texto localmente com mammoth (sem criar cópia no Drive)
-      console.log(`[template-sync] Export falhou para ${docId}, baixando .docx para leitura local...`);
+      console.log(
+        `[template-sync] Export falhou para ${docId}, baixando .docx para leitura local...`,
+      );
       try {
         const dl = await drive.files.get(
           { fileId: docId, alt: "media", supportsAllDrives: true },
@@ -72,8 +72,10 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
         fullText = result.value ?? "";
         console.log(`[template-sync] mammoth extraiu ${fullText.length} chars de ${docId}`);
       } catch (dlErr) {
-        console.warn(`[template-sync] Falha ao ler .docx ${docId}:`,
-          dlErr instanceof Error ? dlErr.message : dlErr);
+        console.warn(
+          `[template-sync] Falha ao ler .docx ${docId}:`,
+          dlErr instanceof Error ? dlErr.message : dlErr,
+        );
       }
     }
 
@@ -83,28 +85,44 @@ async function extractPlaceholders(docId: string): Promise<string[]> {
     const doubleBrackets = fullText.match(/\{\{[^}]{2,}\}\}/g) ?? [];
     const singleAngles = fullText.match(/\u2039[^\u203a]{2,}\u203a/g) ?? [];
     const squareBrackets = fullText.match(/\[[^\]]{2,}\]/g) ?? [];
-    console.log(`[template-sync] Doc ${docId}: ${fullText.length} chars | <>=` +
-      `${angleBrackets.length} «»=${guillemets.length} {{}}=${doubleBrackets.length} ‹›=${singleAngles.length} []=${squareBrackets.length}`);
-    if (angleBrackets.length) console.log(`[template-sync]   Encontrados <> :`, angleBrackets.slice(0, 5));
-    if (squareBrackets.length) console.log(`[template-sync]   Encontrados [] :`, squareBrackets.slice(0, 5));
+    console.log(
+      `[template-sync] Doc ${docId}: ${fullText.length} chars | <>=` +
+        `${angleBrackets.length} «»=${guillemets.length} {{}}=${doubleBrackets.length} ‹›=${singleAngles.length} []=${squareBrackets.length}`,
+    );
+    if (angleBrackets.length)
+      console.log(`[template-sync]   Encontrados <> :`, angleBrackets.slice(0, 5));
+    if (squareBrackets.length)
+      console.log(`[template-sync]   Encontrados [] :`, squareBrackets.slice(0, 5));
     // Primeiros 500 chars para debug quando nenhum placeholder é encontrado
-    if (!angleBrackets.length && !guillemets.length && !doubleBrackets.length && !singleAngles.length && !squareBrackets.length) {
-      console.log(`[template-sync]   Preview (sem placeholders): "${fullText.slice(0, 500).replace(/\n/g, "\\n")}"`);
+    if (
+      !angleBrackets.length &&
+      !guillemets.length &&
+      !doubleBrackets.length &&
+      !singleAngles.length &&
+      !squareBrackets.length
+    ) {
+      console.log(
+        `[template-sync]   Preview (sem placeholders): "${fullText.slice(0, 500).replace(/\n/g, "\\n")}"`,
+      );
     }
 
     // Tenta múltiplos formatos de placeholder
     const allMatches = [
-      ...angleBrackets,        // <campo>
-      ...guillemets,           // «campo»
-      ...doubleBrackets,       // {{campo}}
-      ...singleAngles,         // ‹campo›
-      ...squareBrackets,       // [campo]
+      ...angleBrackets, // <campo>
+      ...guillemets, // «campo»
+      ...doubleBrackets, // {{campo}}
+      ...singleAngles, // ‹campo›
+      ...squareBrackets, // [campo]
     ];
 
-    const unique = [...new Set(allMatches.map((m) => {
-      // Remove delimitadores externos
-      return m.replace(/^[<«\u2039{\[]+|[>»\u203a}\]]+$/g, "").trim();
-    }))].filter((s) => s.length >= 2);
+    const unique = [
+      ...new Set(
+        allMatches.map((m) => {
+          // Remove delimitadores externos
+          return m.replace(/^[<«\u2039{[]+|[>»\u203a}\]]+$/g, "").trim();
+        }),
+      ),
+    ].filter((s) => s.length >= 2);
     return unique;
   } catch (err) {
     console.warn(`template-sync: falha ao ler ${docId}:`, err instanceof Error ? err.message : err);
@@ -122,8 +140,15 @@ function detectAutoField(placeholder: string): string | null {
   // "dados pessoais" → client full_name + cpf combo
   if (lower.includes("dados pessoais")) return "dados_pessoais";
   // nome / cliente
-  if (/\bnome\b.*\bcliente\b|\bcliente\b.*\bnome\b|\bnome completo\b/.test(lower)) return "client_name";
-  if (lower === "nome" || lower === "nome_cliente" || lower === "nome_do_cliente" || lower === "client_name") return "client_name";
+  if (/\bnome\b.*\bcliente\b|\bcliente\b.*\bnome\b|\bnome completo\b/.test(lower))
+    return "client_name";
+  if (
+    lower === "nome" ||
+    lower === "nome_cliente" ||
+    lower === "nome_do_cliente" ||
+    lower === "client_name"
+  )
+    return "client_name";
   // CPF
   if (/\bcpf\b|\bcnpj\b/.test(lower)) return "cpf";
   // Municipality
@@ -137,9 +162,7 @@ function fieldSource(key: string): "auto" | "manual" {
 
 function fieldLabel(placeholder: string): string {
   // For descriptive placeholders, strip " - obrigatório" suffix and capitalize
-  const clean = placeholder
-    .replace(/\s*-\s*obrigat[oó]rio\s*$/i, "")
-    .trim();
+  const clean = placeholder.replace(/\s*-\s*obrigat[oó]rio\s*$/i, "").trim();
   // Capitalize first letter
   return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
@@ -153,9 +176,11 @@ function isFieldRequired(placeholder: string): boolean {
 // ---------------------------------------------------------------------------
 function isTemplateDoc(mimeType: string | null | undefined): boolean {
   if (!mimeType) return false;
-  return mimeType === GOOGLE_DOC_MIME
-    || mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    || mimeType === "application/msword";
+  return (
+    mimeType === GOOGLE_DOC_MIME ||
+    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    mimeType === "application/msword"
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -182,14 +207,23 @@ export type SyncResult = {
   errors: string[];
   foldersScanned: number;
   filesFound: number;
-  details: Array<{ name: string; action: "created" | "updated" | "skipped"; caseType: string | null }>;
+  details: Array<{
+    name: string;
+    action: "created" | "updated" | "skipped";
+    caseType: string | null;
+  }>;
 };
 
 export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<SyncResult> {
   const sb = getSupabaseAdmin();
   const result: SyncResult = {
-    created: 0, updated: 0, skipped: 0,
-    errors: [], foldersScanned: 0, filesFound: 0, details: [],
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: [],
+    foldersScanned: 0,
+    filesFound: 0,
+    details: [],
   };
 
   if (!modelsFolderId) {
@@ -201,7 +235,10 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
 
   // 1. List everything in the models folder
   const items = await listFilesInFolder(modelsFolderId, 200);
-  console.log(`[template-sync] Itens na pasta raiz: ${items.length}`, items.map((i) => `${i.name} (${i.mimeType})`));
+  console.log(
+    `[template-sync] Itens na pasta raiz: ${items.length}`,
+    items.map((i) => `${i.name} (${i.mimeType})`),
+  );
 
   const folders = items.filter((f) => f.mimeType === FOLDER_MIME);
   const looseDocs = items.filter((f) => isTemplateDoc(f.mimeType));
@@ -258,7 +295,9 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
         // Novo é Google Doc nativo e existente é diferente — atualiza (upgrade de .docx para nativo)
         const newPlaceholders = await extractPlaceholders(doc.id);
         const newFields = newPlaceholders.map((ph) => ({
-          key: ph, label: fieldLabel(ph), source: fieldSource(ph),
+          key: ph,
+          label: fieldLabel(ph),
+          source: fieldSource(ph),
           required: isFieldRequired(ph),
           ...(detectAutoField(ph) ? { auto_field: detectAutoField(ph) } : {}),
         }));
@@ -267,7 +306,11 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
           .update({ google_doc_id: doc.id, case_type: caseType, fields: newFields as never })
           .eq("id", exByName.id);
         existingByDocId.set(doc.id, { ...exByName, google_doc_id: doc.id, fields: newFields });
-        existingByName.set(docName.toLowerCase(), { ...exByName, google_doc_id: doc.id, fields: newFields });
+        existingByName.set(docName.toLowerCase(), {
+          ...exByName,
+          google_doc_id: doc.id,
+          fields: newFields,
+        });
         result.updated++;
         result.details.push({ name: docName, action: "updated", caseType });
         return;
@@ -296,7 +339,12 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
 
       // Track for future dedup within this sync run
       existingByDocId.set(doc.id, { id: "", google_doc_id: doc.id, name: docName, fields: [] });
-      existingByName.set(docName.toLowerCase(), { id: "", google_doc_id: doc.id, name: docName, fields: [] });
+      existingByName.set(docName.toLowerCase(), {
+        id: "",
+        google_doc_id: doc.id,
+        name: docName,
+        fields: [],
+      });
 
       result.created++;
       result.details.push({ name: docName, action: "created", caseType });
@@ -313,11 +361,16 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
     const caseType = folderToCaseType(folder.name);
     result.foldersScanned++;
 
-    console.log(`[template-sync] Escaneando pasta "${folder.name}" → case_type=${caseType ?? "null"}`);
+    console.log(
+      `[template-sync] Escaneando pasta "${folder.name}" → case_type=${caseType ?? "null"}`,
+    );
 
     try {
       const docsInFolder = await listFilesInFolder(folder.id, 100);
-      console.log(`[template-sync]   └─ ${docsInFolder.length} itens:`, docsInFolder.map((d) => `${d.name} (${d.mimeType})`));
+      console.log(
+        `[template-sync]   └─ ${docsInFolder.length} itens:`,
+        docsInFolder.map((d) => `${d.name} (${d.mimeType})`),
+      );
 
       const templateDocs = docsInFolder.filter((f) => isTemplateDoc(f.mimeType));
       // Google Docs nativos primeiro — extraem placeholders melhor que .docx
@@ -342,7 +395,51 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
     await processDoc(doc, null);
   }
 
-  console.log(`[template-sync] Resultado: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} já existiam, ${result.errors.length} erros`);
+  console.log(
+    `[template-sync] Resultado: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} já existiam, ${result.errors.length} erros`,
+  );
 
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// SYNC (múltiplas pastas) — varre várias pastas-raiz de modelos no mesmo clique
+// do botão "Sincronizar modelos". Ex.: a pasta "07- Modelos" + a pasta de
+// procurações. A dedup por google_doc_id/nome é garantida porque cada chamada
+// de syncTemplatesFromDrive relê os templates já gravados no banco. Pastas
+// repetidas (mesmo id) são ignoradas.
+// ---------------------------------------------------------------------------
+export async function syncTemplatesFromDrives(folderIds: string[]): Promise<SyncResult> {
+  const agg: SyncResult = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: [],
+    foldersScanned: 0,
+    filesFound: 0,
+    details: [],
+  };
+
+  const seen = new Set<string>();
+  const ids = folderIds.map((id) => id.trim()).filter(Boolean);
+
+  if (ids.length === 0) {
+    agg.errors.push("GOOGLE_DRIVE_TEMPLATES_FOLDER_ID não configurado");
+    return agg;
+  }
+
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const r = await syncTemplatesFromDrive(id);
+    agg.created += r.created;
+    agg.updated += r.updated;
+    agg.skipped += r.skipped;
+    agg.foldersScanned += r.foldersScanned;
+    agg.filesFound += r.filesFound;
+    agg.errors.push(...r.errors);
+    agg.details.push(...r.details);
+  }
+
+  return agg;
 }

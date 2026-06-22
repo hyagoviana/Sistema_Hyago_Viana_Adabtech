@@ -1,4 +1,5 @@
 import {
+  Check,
   Download,
   Edit3,
   ExternalLink,
@@ -10,7 +11,7 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,15 +25,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   useCaseDocuments,
   useDeleteCaseDocument,
@@ -42,35 +44,17 @@ import {
   useReopenCaseDocument,
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
-import { useDocumentTemplates, useSyncDocumentTemplates, useTemplatePlaceholders } from "@/hooks/useDocumentTemplates";
+import {
+  useDocumentTemplates,
+  useSyncDocumentTemplates,
+  useTemplatePlaceholders,
+} from "@/hooks/useDocumentTemplates";
+import {
+  type AutoFillData,
+  type TemplateField,
+  resolveAutoValue,
+} from "@/lib/cases/document-autofill";
 import { formatCpfCnpj, isCpfCnpjField } from "@/lib/format";
-
-type TemplateField = {
-  key: string;
-  label: string;
-  source: "auto" | "manual" | "blank";
-  required?: boolean;
-  auto_field?: string;
-};
-
-/** Map auto_field values to client/case data for pre-filling */
-type AutoFillData = {
-  clientName?: string;
-  clientCpf?: string;
-  municipio?: string;
-  email?: string;
-  phone?: string;
-  city?: string;
-  state?: string;
-  crm_numero?: string;
-  crm_uf?: string;
-  oab_numero?: string;
-  oab_uf?: string;
-  especialidade?: string;
-  vinculo_institucional?: string;
-  caseCode?: string;
-  responsavel?: string;
-};
 
 function editUrl(googleDocId: string): string {
   // rm=embedded mantém toolbar completa (cores, fontes, formatação) dentro do iframe
@@ -86,7 +70,21 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   CANCELADO: { label: "Cancelado", cls: "bg-muted text-muted-foreground line-through" },
 };
 
-export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, municipio, autoFillExtra }: { caseId: string; caseType: string; clientName?: string; clientCpf?: string; municipio?: string; autoFillExtra?: Omit<AutoFillData, 'clientName' | 'clientCpf' | 'municipio'> }) {
+export function CaseDocumentsTab({
+  caseId,
+  caseType,
+  clientName,
+  clientCpf,
+  municipio,
+  autoFillExtra,
+}: {
+  caseId: string;
+  caseType: string;
+  clientName?: string;
+  clientCpf?: string;
+  municipio?: string;
+  autoFillExtra?: Omit<AutoFillData, "clientName" | "clientCpf" | "municipio">;
+}) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
   const { data: templates } = useDocumentTemplates(caseType);
   const generate = useGenerateCaseDocument(caseId);
@@ -224,7 +222,9 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
                             try {
                               await download.mutateAsync({ id: d.id, format: "pdf" });
                             } catch (err) {
-                              toast.error(err instanceof Error ? err.message : "Falha ao baixar PDF");
+                              toast.error(
+                                err instanceof Error ? err.message : "Falha ao baixar PDF",
+                              );
                             }
                           }}
                         >
@@ -238,7 +238,9 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
                             try {
                               await download.mutateAsync({ id: d.id, format: "docx" });
                             } catch (err) {
-                              toast.error(err instanceof Error ? err.message : "Falha ao baixar DOCX");
+                              toast.error(
+                                err instanceof Error ? err.message : "Falha ao baixar DOCX",
+                              );
                             }
                           }}
                         >
@@ -254,17 +256,16 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
                                 await reopen.mutateAsync(d.id);
                                 toast.success("Documento reaberto para edição");
                               } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Falha ao reabrir");
+                                toast.error(
+                                  err instanceof Error ? err.message : "Falha ao reabrir",
+                                );
                               }
                             }}
                           >
                             <Edit3 size={13} className="mr-1" /> Editar
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          onClick={() => setSendFor({ id: d.id, title: d.title })}
-                        >
+                        <Button size="sm" onClick={() => setSendFor({ id: d.id, title: d.title })}>
                           <Send size={13} className="mr-1" /> ZapSign
                         </Button>
                       </>
@@ -309,7 +310,14 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
       <GenerateDialog
         open={genOpen}
         onOpenChange={setGenOpen}
-        templates={(templates ?? []) as Array<{ id: string; name: string; fields: unknown; google_doc_id?: string }>}
+        templates={
+          (templates ?? []) as Array<{
+            id: string;
+            name: string;
+            fields: unknown;
+            google_doc_id?: string;
+          }>
+        }
         pending={generate.isPending}
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
         onGenerate={async (templateId, title, values) => {
@@ -347,6 +355,8 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
 
       <SendZapsignDialog
         target={sendFor}
+        defaultName={clientName}
+        defaultEmail={autoFillExtra?.email}
         onClose={() => setSendFor(null)}
         pending={sendZap.isPending}
         onSend={async (signer) => {
@@ -365,60 +375,6 @@ export function CaseDocumentsTab({ caseId, caseType, clientName, clientCpf, muni
 }
 
 // ---------------------------------------------------------------- Gerar ----
-function resolveAutoValue(field: TemplateField, data: AutoFillData): string | undefined {
-  // Try auto_field first (set by sync), then fall back to key-based heuristics
-  const autoField = field.auto_field?.toLowerCase();
-  if (autoField) {
-    if (autoField === "client_name") return data.clientName;
-    if (autoField === "cpf") return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
-    if (autoField === "municipio") return data.municipio;
-    if (autoField === "email") return data.email;
-    if (autoField === "phone" || autoField === "telefone") return data.phone;
-    if (autoField === "crm" || autoField === "crm_numero") return data.crm_numero;
-    if (autoField === "crm_uf") return data.crm_uf;
-    if (autoField === "oab" || autoField === "oab_numero") return data.oab_numero;
-    if (autoField === "oab_uf") return data.oab_uf;
-    if (autoField === "especialidade") return data.especialidade;
-    if (autoField === "vinculo_institucional") return data.vinculo_institucional;
-    if (autoField === "case_code" || autoField === "codigo_caso") return data.caseCode;
-    if (autoField === "responsavel") return data.responsavel;
-    if (autoField === "cidade" || autoField === "city") return data.city;
-    if (autoField === "estado" || autoField === "uf" || autoField === "state") return data.state;
-    // "dados_pessoais" = nome + CPF combinado
-    if (autoField === "dados_pessoais") {
-      const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
-      return parts.length ? parts.join(", ") : undefined;
-    }
-  }
-
-  // Fallback: match by key content (for manually created templates)
-  const key = field.key.toLowerCase();
-  const label = (field.label ?? "").toLowerCase();
-  const match = (patterns: RegExp) => patterns.test(key) || patterns.test(label);
-
-  if (/\bdados pessoais\b/.test(key)) {
-    const parts = [data.clientName, data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : ""].filter(Boolean);
-    return parts.length ? parts.join(", ") : undefined;
-  }
-  // Nome do cliente / médico / profissional → sempre é o nome do cliente
-  if (match(/\b(nome.*cliente|nome.*m[eé]dico|client.*name|nome.*profissional|nome_cliente|nome_do_cliente|nome_medico)\b/) || key === "nome" || key === "client_name") return data.clientName;
-  if (match(/\b(cpf|cpf_cnpj|documento)\b/)) return data.clientCpf ? formatCpfCnpj(data.clientCpf) : undefined;
-  if (match(/\bmunic[ií]pio\b/)) return data.municipio;
-  if (match(/\be[-_]?mail\b/)) return data.email;
-  if (match(/\b(telefone|phone|celular|fone)\b/)) return data.phone;
-  if (match(/\b(crm_uf|uf.*crm)\b/)) return data.crm_uf;
-  if (match(/\bcrm\b/) && !match(/\buf\b/)) return data.crm_numero;
-  if (match(/\b(oab_uf|uf.*oab)\b/)) return data.oab_uf;
-  if (match(/\boab\b/) && !match(/\buf\b/)) return data.oab_numero;
-  if (match(/\bespecialidade\b/)) return data.especialidade;
-  if (match(/\bv[ií]nculo\b/)) return data.vinculo_institucional;
-  if (match(/\b(c[oó]digo.*caso|case.*code|numero.*caso)\b/)) return data.caseCode;
-  if (match(/\brespons[aá]vel\b/)) return data.responsavel;
-  if (match(/\b(cidade|city)\b/)) return data.city;
-  if (key === "uf" || key === "estado" || key === "state") return data.state;
-  return undefined;
-}
-
 function GenerateDialog({
   open,
   onOpenChange,
@@ -474,31 +430,45 @@ function GenerateDialog({
 
         <div className="space-y-4">
           <div>
-            <Label>Modelo</Label>
-            <Select
-              value={templateId}
-              onValueChange={(v) => {
-                setTemplateId(v);
-                setValues({});
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um modelo…" />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Nenhum modelo cadastrado para este tipo.
-                  </div>
-                ) : (
-                  templates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Label>Procuração / modelo</Label>
+            {templates.length === 0 ? (
+              <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
+                Nenhum modelo sincronizado. Use o botão "Sincronizar modelos" para puxar do Drive.
+              </div>
+            ) : (
+              <Command className="mt-1 rounded-md border border-[var(--border)]">
+                <CommandInput placeholder="Buscar pelo nome (ex.: covid, procuração)…" />
+                <CommandList className="max-h-56">
+                  <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                  <CommandGroup>
+                    {templates.map((t) => (
+                      <CommandItem
+                        key={t.id}
+                        value={t.name}
+                        onSelect={() => {
+                          setTemplateId(t.id);
+                          setValues({});
+                        }}
+                      >
+                        <Check
+                          className={
+                            templateId === t.id
+                              ? "mr-2 h-4 w-4 opacity-100"
+                              : "mr-2 h-4 w-4 opacity-0"
+                          }
+                        />
+                        {t.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            )}
+            {selected && (
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Selecionado: <span className="font-medium text-[var(--navy)]">{selected.name}</span>
+              </p>
+            )}
           </div>
 
           {loadingFields && templateId && (
@@ -509,13 +479,15 @@ function GenerateDialog({
 
           {!loadingFields && templateId && fields.length === 0 && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Nenhum campo encontrado neste modelo. O documento sera gerado sem substituicoes — preencha manualmente na edicao.
+              Nenhum campo encontrado neste modelo. O documento sera gerado sem substituicoes —
+              preencha manualmente na edicao.
             </div>
           )}
 
           {fields.length > 0 && (
             <div className="text-xs text-muted-foreground">
-              Campos com <span className="text-emerald-600 font-medium">(preenchido)</span> foram detectados automaticamente. Caso nao saiba os dados, preencha com o nome do campo.
+              Campos com <span className="text-emerald-600 font-medium">(preenchido)</span> foram
+              detectados automaticamente. Caso nao saiba os dados, preencha com o nome do campo.
             </div>
           )}
 
@@ -529,7 +501,11 @@ function GenerateDialog({
                   <span>{f.label}</span>
                   {f.required && <span className="text-destructive">*</span>}
                   {autoFilled && <span className="text-emerald-600 text-xs">(preenchido)</span>}
-                  {!hasValue && <span className="text-amber-600 text-xs">(preencha ou use o nome do campo)</span>}
+                  {!hasValue && (
+                    <span className="text-amber-600 text-xs">
+                      (preencha ou use o nome do campo)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   value={values[f.key] ?? ""}
@@ -541,11 +517,7 @@ function GenerateDialog({
                       [f.key]: isDoc ? formatCpfCnpj(e.target.value) : e.target.value,
                     }))
                   }
-                  placeholder={
-                    isDoc
-                      ? "000.000.000-00"
-                      : f.key
-                  }
+                  placeholder={isDoc ? "000.000.000-00" : f.key}
                 />
               </div>
             );
@@ -596,8 +568,8 @@ function EditorDialog({
         <DialogHeader>
           <DialogTitle>Editar documento</DialogTitle>
           <DialogDescription>
-            Use a barra do Google Docs para mudar cores, fontes e formatação. Ao terminar,
-            clique em "Concluí a edição".
+            Use a barra do Google Docs para mudar cores, fontes e formatação. Ao terminar, clique em
+            "Concluí a edição".
           </DialogDescription>
         </DialogHeader>
 
@@ -641,11 +613,15 @@ function EditorDialog({
 // ------------------------------------------------------------- ZapSign ----
 function SendZapsignDialog({
   target,
+  defaultName,
+  defaultEmail,
   onClose,
   pending,
   onSend,
 }: {
   target: { id: string; title: string } | null;
+  defaultName?: string;
+  defaultEmail?: string;
   onClose: () => void;
   pending: boolean;
   onSend: (signer: {
@@ -658,6 +634,14 @@ function SendZapsignDialog({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [autoEmail, setAutoEmail] = useState(true);
+
+  // Ao abrir, pré-preenche com os dados do cliente do caso (editável).
+  useEffect(() => {
+    if (target) {
+      setName(defaultName ?? "");
+      setEmail(defaultEmail ?? "");
+    }
+  }, [target, defaultName, defaultEmail]);
 
   return (
     <Dialog open={!!target} onOpenChange={(v) => !v && onClose()}>

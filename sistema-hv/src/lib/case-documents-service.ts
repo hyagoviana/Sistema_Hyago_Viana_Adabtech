@@ -130,6 +130,7 @@ export async function generateCaseDocumentFromTemplate(opts: {
   templateId: string;
   title?: string;
   values: Record<string, string>;
+  docKind?: string;
   triggeredBy?: string;
 }) {
   const sb = getSupabaseAdmin();
@@ -193,6 +194,7 @@ export async function generateCaseDocumentFromTemplate(opts: {
       template_id: tpl.id,
       google_doc_id: docId,
       goes_to_zapsign: tpl.goes_to_zapsign,
+      ...(opts.docKind ? { doc_kind: opts.docKind } : {}),
     })
     .select()
     .single();

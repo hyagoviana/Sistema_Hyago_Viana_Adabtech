@@ -14,11 +14,14 @@ export const caseCreateSchema = z.object({
   // Melhoria 3: quando true, o caso nasce em fase comercial (aguardando
   // assinatura da procuração) e não entra no Kanban operacional até liberar.
   comercial: z.boolean().optional(),
+  // Procuração escolhida no ato da criação comercial. Quando presente, o sistema
+  // gera o documento já preenchido com os dados do cliente (em vez do placeholder).
+  procuracao_template_id: z.string().uuid().optional().nullable(),
 });
 
 export const caseUpdateSchema = caseCreateSchema
   .partial()
-  .omit({ client_id: true, case_type: true, comercial: true });
+  .omit({ client_id: true, case_type: true, comercial: true, procuracao_template_id: true });
 
 export type CaseCreateInput = z.input<typeof caseCreateSchema>;
 export type CaseCreateOutput = z.output<typeof caseCreateSchema>;

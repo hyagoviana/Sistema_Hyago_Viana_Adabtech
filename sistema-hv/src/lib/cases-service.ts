@@ -1,6 +1,11 @@
 // Server-only — CRUD de casos + timeline + audit.
 // NUNCA importe no browser.
 
+import {
+  buildAutoFillFromClient,
+  buildAutoFillValues,
+  type TemplateField,
+} from "./cases/document-autofill";
 import { type MacroFin, type MacroOp } from "./cases/constants";
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
@@ -139,10 +144,21 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
     }
   }
 
-  // Fase comercial: garante o documento de procuração (best-effort).
+  // Fase comercial: prepara o documento de procuração (best-effort).
+  // Se o usuário escolheu um modelo no ato, gera a procuração já preenchida com
+  // os dados do cliente; senão cai no placeholder (modelo definido depois).
   if (comercial) {
     try {
-      await ensureProcuracaoDocument(created.id, triggeredBy);
+      if (input.procuracao_template_id) {
+        await generateProcuracaoFromTemplate(
+          created.id,
+          input.procuracao_template_id,
+          input.client_id,
+          triggeredBy,
+        );
+      } else {
+        await ensureProcuracaoDocument(created.id, triggeredBy);
+      }
     } catch (err) {
       console.error("cases-service: falha ao preparar procuração:", err);
     }
@@ -215,6 +231,65 @@ export async function ensureProcuracaoDocument(caseId: string, triggeredBy?: str
   });
 
   return doc;
+}
+
+// ----------------------------------------------------------------------------
+// PROCURAÇÃO (com modelo) — gera a procuração já preenchida com os dados do
+// cliente, a partir de um modelo escolhido no ato da criação do caso comercial.
+// NÃO envia ao ZapSign: o documento nasce em edição, para revisão antes do
+// disparo. (Decisão 2026-06-22: gerar e revisar antes.)
+// ----------------------------------------------------------------------------
+export async function generateProcuracaoFromTemplate(
+  caseId: string,
+  templateId: string,
+  clientId: string,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  // Idempotente: se já existe procuração no caso, não duplica.
+  const { data: existing } = await sb
+    .from("system_case_documents")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("doc_kind", "procuracao")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (existing) return existing;
+
+  // Dados do caso (para município / código / responsável) e do cliente completo.
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, case_code, municipio, responsavel")
+    .eq("id", caseId)
+    .single();
+
+  const { data: client } = await sb
+    .from("system_clients")
+    .select("full_name, cpf_cnpj, email, phone, address, professional_data")
+    .eq("id", clientId)
+    .single();
+
+  const { data: tpl } = await sb
+    .from("system_document_templates")
+    .select("fields")
+    .eq("id", templateId)
+    .is("deleted_at", null)
+    .single();
+
+  const fields = ((tpl?.fields ?? []) as TemplateField[]) ?? [];
+  const data = buildAutoFillFromClient(client ?? {}, caso ?? {});
+  const values = buildAutoFillValues(fields, data);
+
+  // Import dinâmico evita ciclo entre cases-service e case-documents-service.
+  const { generateCaseDocumentFromTemplate } = await import("./case-documents-service");
+  return generateCaseDocumentFromTemplate({
+    caseId,
+    templateId,
+    values,
+    docKind: "procuracao",
+    triggeredBy,
+  });
 }
 
 // ----------------------------------------------------------------------------
