@@ -256,7 +256,8 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               </Button>
               <Button
                 type="button"
-                variant="ghost"
+                variant="secondary"
+                className="border border-input shadow-sm font-medium"
                 onClick={form.handleSubmit((d) => onSubmit(d, false))}
                 disabled={create.isPending}
                 title="Cria o caso direto no funil operacional, sem procuração"

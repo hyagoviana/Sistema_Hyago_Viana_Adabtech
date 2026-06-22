@@ -8,6 +8,7 @@ import {
   FieldDefServiceError,
   listFieldDefs,
   reorderFieldDefs,
+  setFieldActive,
   updateFieldDef,
 } from "@/lib/client-fields-service";
 import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
@@ -81,6 +82,17 @@ export const deleteClientFieldDefFn = createServerFn({ method: "POST" })
     handle(async () => {
       await requireRole(ADMIN_ONLY);
       return deleteFieldDef(data.id);
+    }),
+  );
+
+const setActiveSchema = z.object({ id: z.string().uuid("ID inválido"), active: z.boolean() });
+
+export const setClientFieldActiveFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => setActiveSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireRole(ADMIN_ONLY);
+      return setFieldActive(data.id, data.active);
     }),
   );
 

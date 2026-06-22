@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Lock, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ import {
   useCreateClientFieldDef,
   useDeleteClientFieldDef,
   useReorderClientFieldDefs,
+  useSetClientFieldActive,
   useUpdateClientFieldDef,
 } from "@/hooks/useClientFields";
 import {
@@ -56,12 +57,29 @@ const EMPTY_DRAFT: Draft = {
   options: [],
 };
 
+// Espelho dos campos FIXOS do cadastro (não editáveis aqui) — só para o usuário
+// ver "como está o formulário" antes de acrescentar informações.
+const FIXED_FIELDS: { label: string; hint: string }[] = [
+  { label: "Nome completo", hint: "Obrigatório · imutável" },
+  { label: "CPF / CNPJ", hint: "Obrigatório · imutável" },
+  { label: "RG", hint: "Obrigatório p/ pessoa física · imutável" },
+  { label: "E-mail", hint: "Obrigatório" },
+  { label: "Telefone", hint: "Obrigatório" },
+  { label: "CEP", hint: "Obrigatório · busca o endereço" },
+  { label: "Rua / Número / Complemento", hint: "Rua e número obrigatórios" },
+  { label: "UF", hint: "Obrigatório · seleção" },
+  { label: "Município", hint: "Obrigatório · seleção (depende da UF)" },
+  { label: "Tipo", hint: "Opcional" },
+  { label: "Dados profissionais (CRM, OAB, vínculo, especialidade)", hint: "Opcionais" },
+];
+
 export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
   const { data: defs, isLoading } = useClientFieldDefs();
   const createMut = useCreateClientFieldDef();
   const updateMut = useUpdateClientFieldDef();
   const deleteMut = useDeleteClientFieldDef();
   const reorderMut = useReorderClientFieldDefs();
+  const activeMut = useSetClientFieldActive();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
@@ -76,7 +94,11 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
   }, [open]);
 
   const busy =
-    createMut.isPending || updateMut.isPending || deleteMut.isPending || reorderMut.isPending;
+    createMut.isPending ||
+    updateMut.isPending ||
+    deleteMut.isPending ||
+    reorderMut.isPending ||
+    activeMut.isPending;
   const needsOptions = FIELD_TYPES_WITH_OPTIONS.includes(draft.field_type);
 
   const startEdit = (id: string) => {
@@ -145,20 +167,29 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const toggleActive = async (id: string, current: boolean) => {
+    try {
+      await activeMut.mutateAsync({ id, active: !current });
+      toast.success(current ? "Campo ocultado do cadastro" : "Campo reexibido no cadastro");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao alterar visibilidade");
+    }
+  };
+
   const remove = async (id: string, label: string) => {
     if (
       !confirm(
-        `Remover o campo "${label}"? Os valores já cadastrados nos clientes são mantidos, mas o campo deixa de aparecer.`,
+        `EXCLUIR o campo "${label}"?\n\nIsto apaga as informações desse campo de TODOS os clientes — não tem como desfazer.\n\nSe a intenção é só tirar do formulário sem perder dados, use "Ocultar".`,
       )
     ) {
       return;
     }
     try {
       await deleteMut.mutateAsync(id);
-      toast.success("Campo removido");
+      toast.success("Campo e seus dados foram excluídos");
       if (editingId === id) resetDraft();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao remover");
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir");
     }
   };
 
@@ -176,19 +207,40 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px] max-h-[88vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[680px] max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Informações de cadastro de clientes</DialogTitle>
           <DialogDescription>
-            Crie campos adicionais para o cadastro do cliente. Eles servem para enriquecer o
-            cadastro e pesquisar. Os campos fixos do formulário não são afetados.
+            Veja como está o formulário de cadastro e acrescente campos próprios. Os campos fixos
+            não podem ser alterados; os que você cria podem ser editados, ocultados ou excluídos.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Lista de campos existentes */}
+        {/* Campos fixos do formulário (referência, somente leitura) */}
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Campos atuais
+            Formulário atual (campos fixos)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {FIXED_FIELDS.map((f) => (
+              <div
+                key={f.label}
+                className="flex items-start gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm"
+              >
+                <Lock size={12} className="mt-1 shrink-0 text-muted-foreground" />
+                <div>
+                  <span className="font-medium">{f.label}</span>
+                  <span className="block text-[11px] text-muted-foreground">{f.hint}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Campos adicionais criados no sistema */}
+        <div className="space-y-2 border-t pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Campos adicionais (criados aqui)
           </p>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Carregando…</p>
@@ -199,7 +251,9 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
               {(defs ?? []).map((d, i) => (
                 <li
                   key={d.id}
-                  className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                    d.active ? "" : "opacity-60"
+                  }`}
                 >
                   <div className="flex flex-col">
                     <button
@@ -226,8 +280,19 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
                     </span>
                   </div>
                   {d.required && <Badge tone="navy">Obrigatório</Badge>}
+                  {!d.active && <Badge tone="neutral">Oculto</Badge>}
                   <button
                     type="button"
+                    title={d.active ? "Ocultar do cadastro" : "Reexibir no cadastro"}
+                    onClick={() => toggleActive(d.id, d.active)}
+                    disabled={busy}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {d.active ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    title="Editar"
                     onClick={() => startEdit(d.id)}
                     className="text-muted-foreground hover:text-foreground"
                   >
@@ -235,7 +300,9 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
                   </button>
                   <button
                     type="button"
+                    title="Excluir (apaga dados de todos os clientes)"
                     onClick={() => remove(d.id, d.label)}
+                    disabled={busy}
                     className="text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 size={14} />

@@ -890,6 +890,10 @@ export type Database = {
         Args: { p_term: string };
         Returns: Database["public"]["Tables"]["system_clients"]["Row"][];
       };
+      system_fn_purge_client_field: {
+        Args: { p_org: string; p_key: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

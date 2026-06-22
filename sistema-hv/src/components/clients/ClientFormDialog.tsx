@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -160,6 +160,8 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   const createCaseMutation = useCreateCase();
   const { data: serviceTypes } = useServiceTypes();
   const { data: fieldDefs } = useClientFieldDefs();
+  // Campos ocultos (active=false) não aparecem no cadastro.
+  const activeFieldDefs = (fieldDefs ?? []).filter((d) => d.active);
   const [linkedCaseType, setLinkedCaseType] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const isLoading =
@@ -170,11 +172,13 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
     defaultValues: emptyDefaults(),
   });
 
-  // CPF (11) → pessoa física → mostra/exige RG. CNPJ (14) → PJ → sem RG.
-  const cpfDigits = sanitizeCpfCnpj(form.watch("cpf_cnpj") || "");
+  // useWatch (não form.watch) garante re-render confiável de campos aninhados —
+  // sem isso a UF "trava" e o município selecionado não reflete na tela.
+  const cpfValue = useWatch({ control: form.control, name: "cpf_cnpj" }) || "";
+  const cpfDigits = sanitizeCpfCnpj(cpfValue);
   const isPF = cpfDigits.length !== 14;
   // UF selecionada governa a lista de municípios.
-  const selectedUf = form.watch("address.state") || "";
+  const selectedUf = (useWatch({ control: form.control, name: "address.state" }) || "") as string;
   const { data: municipios, isLoading: loadingMunicipios } = useMunicipios(selectedUf);
 
   useEffect(() => {
@@ -220,7 +224,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   const onSubmit = async (data: ClientCreateInput) => {
     // Valida campos customizados obrigatórios (fora do alcance do zodResolver).
     const missing = missingRequiredCustom(
-      fieldDefs ?? [],
+      activeFieldDefs,
       data.custom_fields as Record<string, unknown> | undefined,
     );
     if (missing.length > 0) {
@@ -267,7 +271,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   };
 
   // Município: garante que o valor atual apareça mesmo antes da lista carregar.
-  const cityValue = form.watch("address.city") || "";
+  const cityValue = (useWatch({ control: form.control, name: "address.city" }) || "") as string;
   const municipioOptions =
     municipios && municipios.length > 0
       ? cityValue && !municipios.includes(cityValue)
@@ -616,7 +620,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
             {/* Campos customizados (Melhoria 1) — definidos pelo admin */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <CustomFieldsSection defs={fieldDefs ?? []} control={form.control as any} />
+            <CustomFieldsSection defs={activeFieldDefs} control={form.control as any} />
 
             {mode === "create" && (serviceTypes ?? []).length > 0 && (
               <div className="border-t pt-4 space-y-2">

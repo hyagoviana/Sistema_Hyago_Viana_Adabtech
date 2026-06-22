@@ -36,9 +36,57 @@ function maskPhone(phone: string | null): string {
   return phone;
 }
 
+// ----------------------------------------------------------------------------
+// Filtros avançados de busca — restringe a quais campos o termo é comparado.
+// Sem nenhum campo marcado, vale a busca ampla do servidor (todos os campos).
+// ----------------------------------------------------------------------------
+type SearchField = {
+  key: string;
+  label: string;
+  digitsOnly?: boolean;
+  extract: (c: Client) => string;
+};
+
+function addrStr(address: Client["address"], key: string): string {
+  if (!address || typeof address !== "object" || Array.isArray(address)) return "";
+  const a = address as Record<string, unknown>;
+  return typeof a[key] === "string" ? (a[key] as string) : "";
+}
+
+function jsonStr(v: unknown): string {
+  if (!v || typeof v !== "object") return "";
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return "";
+  }
+}
+
+const SEARCH_FIELDS: SearchField[] = [
+  { key: "nome", label: "Nome", extract: (c) => c.full_name ?? "" },
+  { key: "cpf", label: "CPF/CNPJ", digitsOnly: true, extract: (c) => c.cpf_cnpj ?? "" },
+  { key: "municipio", label: "Município", extract: (c) => addrStr(c.address, "city") },
+  { key: "uf", label: "UF", extract: (c) => addrStr(c.address, "state") },
+  { key: "email", label: "E-mail", extract: (c) => c.email ?? "" },
+  { key: "telefone", label: "Telefone", digitsOnly: true, extract: (c) => c.phone ?? "" },
+  { key: "profissional", label: "Profissional", extract: (c) => jsonStr(c.professional_data) },
+  { key: "adicionais", label: "Campos adicionais", extract: (c) => jsonStr(c.custom_fields) },
+];
+
+function matchField(c: Client, term: string, f: SearchField): boolean {
+  const val = f.extract(c);
+  if (f.digitsOnly) {
+    const td = term.replace(/\D/g, "");
+    if (!td) return false;
+    return val.replace(/\D/g, "").includes(td);
+  }
+  return val.toLowerCase().includes(term.toLowerCase());
+}
+
 function ClientesList() {
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
+  const [searchFields, setSearchFields] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [fieldsOpen, setFieldsOpen] = useState(false);
@@ -57,11 +105,23 @@ function ClientesList() {
     return ["Todos os tipos", ...Array.from(set).sort()];
   }, [data]);
 
+  const toggleSearchField = (key: string) =>
+    setSearchFields((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
   const filtered = useMemo(() => {
     if (!data) return [];
-    if (tipoFilter === "Todos os tipos") return data;
-    return data.filter((c) => c.tipo === tipoFilter);
-  }, [data, tipoFilter]);
+    let res = data;
+    if (tipoFilter !== "Todos os tipos") res = res.filter((c) => c.tipo === tipoFilter);
+    const term = search.trim();
+    // Refino por campo: só quando há termo E campos específicos marcados.
+    if (term && searchFields.length > 0) {
+      const fields = SEARCH_FIELDS.filter((f) => searchFields.includes(f.key));
+      res = res.filter((c) => fields.some((f) => matchField(c, term, f)));
+    }
+    return res;
+  }, [data, tipoFilter, search, searchFields]);
 
   const total = data?.length ?? 0;
 
@@ -135,34 +195,90 @@ function ClientesList() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou CPF…"
+            placeholder="Buscar por nome, CPF, município, e-mail…"
             className="w-full pl-9 pr-4 py-2 bg-transparent text-[13px] outline-none"
           />
         </div>
       </div>
 
       {showFilters && (
-        <div className="card-editorial !p-4 mb-6 flex items-center gap-3">
-          <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[var(--ink-500)]">
-            Tipo
-          </span>
-          <select
-            value={tipoFilter}
-            onChange={(e) => setTipoFilter(e.target.value)}
-            className="px-4 py-2 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
-          >
-            {tipos.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-          {tipoFilter !== "Todos os tipos" && (
-            <button
-              onClick={() => setTipoFilter("Todos os tipos")}
-              className="text-[12px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
+        <div className="card-editorial !p-4 mb-6 space-y-4">
+          {/* Campos de busca: restringe o termo a um ou mais campos */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[var(--ink-500)]">
+                Buscar em
+              </span>
+              {searchFields.length > 0 && (
+                <button
+                  onClick={() => setSearchFields([])}
+                  className="text-[12px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
+                >
+                  Todos os campos
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SEARCH_FIELDS.map((f) => {
+                const active = searchFields.includes(f.key);
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => toggleSearchField(f.key)}
+                    className="px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors"
+                    style={
+                      active
+                        ? {
+                            background: "var(--gold-pale)",
+                            color: "var(--gold-700)",
+                            border: "1px solid rgba(152,120,20,0.4)",
+                          }
+                        : {
+                            background: "transparent",
+                            color: "var(--ink-700)",
+                            border: "1px solid var(--border)",
+                          }
+                    }
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              {searchFields.length === 0
+                ? "Sem seleção, a busca cobre todos os campos (nome, CPF, município, e-mail, profissional e adicionais)."
+                : `A busca será restrita a: ${SEARCH_FIELDS.filter((f) =>
+                    searchFields.includes(f.key),
+                  )
+                    .map((f) => f.label)
+                    .join(", ")}.`}
+            </p>
+          </div>
+
+          {/* Filtro por tipo */}
+          <div className="flex items-center gap-3 border-t pt-3">
+            <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[var(--ink-500)]">
+              Tipo
+            </span>
+            <select
+              value={tipoFilter}
+              onChange={(e) => setTipoFilter(e.target.value)}
+              className="px-4 py-2 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
             >
-              Limpar
-            </button>
-          )}
+              {tipos.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+            {tipoFilter !== "Todos os tipos" && (
+              <button
+                onClick={() => setTipoFilter("Todos os tipos")}
+                className="text-[12px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
       )}
 

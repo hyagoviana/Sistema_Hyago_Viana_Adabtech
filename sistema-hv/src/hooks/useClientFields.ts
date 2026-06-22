@@ -8,6 +8,7 @@ import {
   deleteClientFieldDefFn,
   listClientFieldDefsFn,
   reorderClientFieldDefsFn,
+  setClientFieldActiveFn,
   updateClientFieldDefFn,
 } from "@/rpc/clientFields";
 
@@ -55,6 +56,15 @@ export function useReorderClientFieldDefs() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) => fn({ data: { ids } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientFieldDefs.all }),
+  });
+}
+
+export function useSetClientFieldActive() {
+  const fn = useServerFn(setClientFieldActiveFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; active: boolean }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientFieldDefs.all }),
   });
 }

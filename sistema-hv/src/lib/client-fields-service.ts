@@ -150,21 +150,42 @@ export async function updateFieldDef(id: string, input: FieldDefUpdateOutput) {
 }
 
 // ----------------------------------------------------------------------------
-// DELETE (soft) — os valores já gravados nos clientes permanecem no JSONB,
-// apenas deixam de ser exibidos/pesquisados como campo ativo.
+// OCULTAR / MOSTRAR — esconde o campo do formulário SEM apagar dados (active).
+// ----------------------------------------------------------------------------
+export async function setFieldActive(id: string, active: boolean) {
+  return updateFieldDef(id, { active });
+}
+
+// ----------------------------------------------------------------------------
+// DELETE (definitivo dos VALORES) — soft-delete da definição E purga a "coluna"
+// custom_fields de TODOS os clientes da organização. Diferente de ocultar.
 // ----------------------------------------------------------------------------
 export async function deleteFieldDef(id: string) {
   const sb = getSupabaseAdmin();
+
+  const { data: def } = await sb
+    .from("system_client_field_defs")
+    .select("id, key, organization_id")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!def) throw new FieldDefServiceError("Campo não encontrado", "NOT_FOUND", 404);
+
+  // Purga os valores daquele campo em todos os clientes (JSONB key removal).
+  const { error: purgeErr } = await sb.rpc("system_fn_purge_client_field", {
+    p_org: def.organization_id,
+    p_key: def.key,
+  });
+  if (purgeErr) throw new FieldDefServiceError(purgeErr.message, "DB_ERROR", 500);
+
   const now = new Date().toISOString();
-  const { data, error } = await sb
+  const { error } = await sb
     .from("system_client_field_defs")
     .update({ deleted_at: now, active: false })
     .eq("id", id)
-    .is("deleted_at", null)
-    .select()
-    .single();
+    .is("deleted_at", null);
   if (error) throw new FieldDefServiceError(error.message, "DB_ERROR", 500);
-  if (!data) throw new FieldDefServiceError("Campo não encontrado", "NOT_FOUND", 404);
+
   return { ok: true as const, id };
 }
 
