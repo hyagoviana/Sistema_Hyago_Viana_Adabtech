@@ -209,7 +209,9 @@
       "Bash(sed -n '122p' src/lib/template-sync-service.ts)",
       "Bash(grep -v 'mammoth\\\\|casos.$id\\\\|casos.financeiro\\\\|service_type_id\\\\|is not assignable\\\\|Type '\\\\''null'\\\\''\\\\|Type '\\\\''undefined'\\\\''\\\\|Types of property')",
       "Bash(grep -E \"^\\(pg|postgres\\)$\")",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "Bash(echo \"=== eslint exit: $? ===\")",
+      "Bash(grep -vE 'casos\\\\.\\\\$id\\\\.tsx|casos\\\\.financeiro\\\\.index\\\\.tsx')"
     ]
   }
 }

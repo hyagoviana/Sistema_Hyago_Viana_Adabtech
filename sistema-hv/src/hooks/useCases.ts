@@ -93,8 +93,9 @@ export function usePreviewProcuracao(input: {
   });
 }
 
-// Procuração comercial — cria o caso, gera a procuração com os valores
-// revisados, finaliza e envia ao ZapSign (dispara o e-mail) em um único passo.
+// Procuração comercial — cria o caso e gera a procuração com os valores
+// revisados (finaliza o PDF na pasta do caso). NÃO envia ao ZapSign: o
+// documento fica na ficha do caso para baixar e/ou enviar ao ZapSign depois.
 export function useCreateComercialProcuracao() {
   const fn = useServerFn(createComercialProcuracaoFn);
   const qc = useQueryClient();
@@ -103,7 +104,6 @@ export function useCreateComercialProcuracao() {
       case: CaseCreateInput;
       template_id: string;
       values: Record<string, string>;
-      signer: { name: string; email?: string; sendAutomaticEmail?: boolean };
     }) => fn({ data: input as never }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });

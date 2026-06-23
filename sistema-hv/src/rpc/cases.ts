@@ -6,7 +6,7 @@ import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
   CaseServiceError,
   createCase,
-  createComercialCaseAndSendProcuracao,
+  createComercialCaseAndGenerateProcuracao,
   getCase,
   liberarCasoComercial,
   listCaseEvents,
@@ -94,17 +94,16 @@ export const previewProcuracaoFn = createServerFn({ method: "GET" })
     ),
   );
 
-// Procuração comercial — cria o caso + gera + finaliza + envia ao ZapSign.
+// Procuração comercial — cria o caso + gera + finaliza (sem enviar ao ZapSign).
 export const createComercialProcuracaoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createComercialProcuracaoSchema.parse(data))
   .handler(async ({ data }) =>
     handle((userId) =>
-      createComercialCaseAndSendProcuracao(
+      createComercialCaseAndGenerateProcuracao(
         {
           case: data.case,
           templateId: data.template_id,
           values: data.values,
-          signer: data.signer,
         },
         userId,
       ),

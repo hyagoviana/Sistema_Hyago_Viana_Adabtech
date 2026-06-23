@@ -241,11 +241,9 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                   )}
                 />
 
-                {/* Procuração — abre a revisão de campos antes do envio ao ZapSign */}
+                {/* Procuração — abre o popup de campos; o documento fica na ficha do caso */}
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium leading-none">
-                    Procuração (enviada ao ZapSign)
-                  </span>
+                  <span className="text-sm font-medium leading-none">Procuração</span>
                   <Popover open={procPopOpen} onOpenChange={setProcPopOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -296,9 +294,9 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                     </PopoverContent>
                   </Popover>
                   <p className="text-xs text-muted-foreground">
-                    Ao criar com a procuração escolhida, você revisa os campos preenchidos com os
-                    dados do cliente e confirma — então a procuração é enviada ao ZapSign e o
-                    cliente recebe o e-mail de assinatura. Opcional.
+                    Ao criar com a procuração escolhida, abre o preenchimento dos campos com os
+                    dados do cliente. A procuração é gerada e fica na ficha do caso para baixar ou
+                    enviar ao ZapSign quando quiser. Opcional.
                   </p>
                 </div>
 
@@ -372,7 +370,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                     {create.isPending
                       ? "Criando…"
                       : procuracaoTemplateId
-                        ? "Revisar procuração"
+                        ? "Preencher procuração"
                         : "Criar caso / gerar procuração"}
                   </Button>
                 </DialogFooter>
@@ -409,19 +407,15 @@ function ProcuracaoReviewStep({
     municipio: caseData.municipio,
     responsavel: caseData.responsavel,
   });
-  const send = useCreateComercialProcuracao();
+  const gerar = useCreateComercialProcuracao();
 
   const [values, setValues] = useState<Record<string, string>>({});
-  const [signerName, setSignerName] = useState("");
-  const [signerEmail, setSignerEmail] = useState("");
   const [initialized, setInitialized] = useState(false);
 
   // Inicializa os campos uma vez, quando o preview chega.
   useEffect(() => {
     if (preview.data && !initialized) {
       setValues(preview.data.values ?? {});
-      setSignerName(preview.data.signer?.name ?? "");
-      setSignerEmail(preview.data.signer?.email ?? "");
       setInitialized(true);
     }
   }, [preview.data, initialized]);
@@ -434,45 +428,34 @@ function ProcuracaoReviewStep({
       toast.error(`Preencha os campos obrigatórios: ${faltando.map((f) => f.label).join(", ")}`);
       return;
     }
-    if (!signerName.trim()) {
-      toast.error("Informe o nome do signatário.");
-      return;
-    }
     // Envia só os campos com valor (o servidor completa o resto pelo cadastro).
     const nonEmpty: Record<string, string> = {};
     for (const [k, v] of Object.entries(values)) {
       if (String(v).trim()) nonEmpty[k] = v;
     }
     try {
-      const res = await send.mutateAsync({
+      const res = await gerar.mutateAsync({
         case: caseData,
         template_id: templateId,
         values: nonEmpty,
-        signer: {
-          name: signerName.trim(),
-          email: signerEmail.trim() || undefined,
-          sendAutomaticEmail: true,
-        },
       });
       toast.success(
-        res.emailSent
-          ? `Procuração enviada — e-mail de assinatura disparado para ${signerEmail.trim()}.`
-          : "Procuração enviada ao ZapSign — link de assinatura gerado (sem e-mail: informe um e-mail para o cliente receber o link).",
+        `Caso ${res.case.case_code} criado — procuração gerada e disponível na ficha do caso para baixar ou enviar ao ZapSign.`,
       );
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao enviar a procuração");
+      toast.error(err instanceof Error ? err.message : "Falha ao gerar a procuração");
     }
   }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Revisar procuração</DialogTitle>
+        <DialogTitle>Preencher procuração</DialogTitle>
         <DialogDescription>
           {templateName} — confira os campos preenchidos com os dados do cliente. Edite o que
-          precisar; os vazios você completa à mão. Ao confirmar, a procuração é enviada ao ZapSign e
-          o cliente recebe o e-mail de assinatura.
+          precisar; os vazios você completa à mão. Ao confirmar, o caso é criado e a procuração fica
+          na ficha do caso para baixar ou enviar ao ZapSign quando quiser.
         </DialogDescription>
       </DialogHeader>
 
@@ -491,7 +474,7 @@ function ProcuracaoReviewStep({
           <>
             {fields.length === 0 ? (
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                Nenhum campo &lt;…&gt; detectado neste modelo. A procuração será enviada como está.
+                Nenhum campo &lt;…&gt; detectado neste modelo. A procuração será gerada como está.
               </div>
             ) : (
               <div className="text-xs text-muted-foreground">
@@ -530,44 +513,21 @@ function ProcuracaoReviewStep({
                 </div>
               );
             })}
-
-            <div className="border-t border-[var(--border)] pt-4 space-y-3">
-              <p className="text-sm font-medium text-[var(--navy)]">Signatário</p>
-              <div>
-                <Label>Nome *</Label>
-                <Input value={signerName} onChange={(e) => setSignerName(e.target.value)} />
-              </div>
-              <div>
-                <Label>E-mail (recebe o link de assinatura)</Label>
-                <Input
-                  type="email"
-                  value={signerEmail}
-                  onChange={(e) => setSignerEmail(e.target.value)}
-                  placeholder="cliente@email.com"
-                />
-                {!signerEmail.trim() && (
-                  <p className="mt-1 text-xs text-amber-600">
-                    Sem e-mail, o cliente não recebe o link automaticamente (só ficará disponível o
-                    link manual).
-                  </p>
-                )}
-              </div>
-            </div>
           </>
         )}
       </div>
 
       <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
-        <Button type="button" variant="outline" onClick={onBack} disabled={send.isPending}>
+        <Button type="button" variant="outline" onClick={onBack} disabled={gerar.isPending}>
           Voltar
         </Button>
         <Button
           type="button"
           onClick={confirmar}
-          disabled={preview.isLoading || preview.isError || send.isPending || faltando.length > 0}
+          disabled={preview.isLoading || preview.isError || gerar.isPending || faltando.length > 0}
         >
-          {send.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
-          {send.isPending ? "Enviando…" : "Confirmar e enviar ao ZapSign"}
+          {gerar.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
+          {gerar.isPending ? "Gerando…" : "Criar caso e gerar procuração"}
         </Button>
       </DialogFooter>
     </>

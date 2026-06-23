@@ -152,7 +152,7 @@ export async function createCase(
   // Fase comercial: prepara o documento de procuração (best-effort).
   // Se o usuário escolheu um modelo no ato, gera a procuração já preenchida com
   // os dados do cliente; senão cai no placeholder (modelo definido depois).
-  // skipProcuracaoPrep: o fluxo de revisão+envio (createComercialCaseAndSend
+  // skipProcuracaoPrep: o fluxo de revisão (createComercialCaseAndGenerate
   // Procuracao) cuida da geração com os valores revisados — não duplicar aqui.
   if (comercial && !opts?.skipProcuracaoPrep) {
     try {
@@ -367,17 +367,17 @@ export async function previewProcuracao(input: {
 }
 
 // ----------------------------------------------------------------------------
-// PROCURAÇÃO — CRIAR + ENVIAR (fluxo de revisão). Cria o caso comercial, gera a
-// procuração com os valores REVISADOS pelo usuário, finaliza (PDF) e envia ao
-// ZapSign de uma vez — disparando o e-mail de assinatura. O caso fica criado
-// mesmo se um passo externo (Docs/Drive/ZapSign) falhar, recuperável na ficha.
+// PROCURAÇÃO — CRIAR + GERAR (fluxo de revisão). Cria o caso comercial e gera a
+// procuração com os valores REVISADOS pelo usuário, finalizando o PDF na pasta
+// do caso. NÃO envia ao ZapSign — o documento fica na ficha do caso pronto para
+// BAIXAR e para ENVIAR ao ZapSign quando o escritório quiser (botões na aba
+// Documentos). O caso fica criado mesmo se um passo externo (Docs/Drive) falhar.
 // ----------------------------------------------------------------------------
-export async function createComercialCaseAndSendProcuracao(
+export async function createComercialCaseAndGenerateProcuracao(
   input: {
     case: CaseCreateOutput;
     templateId: string;
     values: Record<string, string>;
-    signer: { name: string; email?: string; sendAutomaticEmail?: boolean };
   },
   triggeredBy?: string,
 ) {
@@ -416,8 +416,9 @@ export async function createComercialCaseAndSendProcuracao(
   );
   const finalValues: Record<string, string> = { ...serverAuto, ...input.values };
 
-  // 3) Gera → finaliza → envia ao ZapSign. Import dinâmico evita ciclo.
-  const { generateCaseDocumentFromTemplate, finalizeCaseDocument, sendCaseDocumentToZapsign } =
+  // 3) Gera → finaliza (PDF na pasta do caso). Import dinâmico evita ciclo.
+  //    O envio ao ZapSign é uma ação separada na ficha do caso.
+  const { generateCaseDocumentFromTemplate, finalizeCaseDocument } =
     await import("./case-documents-service");
 
   const gen = await generateCaseDocumentFromTemplate({
@@ -428,27 +429,9 @@ export async function createComercialCaseAndSendProcuracao(
     triggeredBy,
   });
 
-  await finalizeCaseDocument(gen.doc.id, triggeredBy);
+  const doc = await finalizeCaseDocument(gen.doc.id, triggeredBy);
 
-  const sent = await sendCaseDocumentToZapsign({
-    docId: gen.doc.id,
-    signers: [
-      {
-        name: input.signer.name,
-        email: input.signer.email,
-        authMode: "assinaturaTela-tokenEmail",
-        sendAutomaticEmail: input.signer.sendAutomaticEmail ?? true,
-      },
-    ],
-    triggeredBy,
-  });
-
-  return {
-    case: created,
-    doc: sent.doc,
-    signUrl: sent.signUrl,
-    emailSent: !!input.signer.email && (input.signer.sendAutomaticEmail ?? true),
-  };
+  return { case: created, doc };
 }
 
 // ----------------------------------------------------------------------------

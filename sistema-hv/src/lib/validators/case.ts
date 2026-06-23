@@ -45,20 +45,14 @@ export const previewProcuracaoSchema = z.object({
   responsavel: z.string().trim().max(200).optional().nullable(),
 });
 
-export const procuracaoSignerSchema = z.object({
-  name: z.string().trim().min(1, "Nome do signatário obrigatório"),
-  email: z.string().trim().email("E-mail inválido").optional(),
-  sendAutomaticEmail: z.boolean().optional(),
-});
-
-// Confirmação final: cria o caso comercial + gera + finaliza + envia ao ZapSign.
+// Confirmação: cria o caso comercial + gera + finaliza a procuração. NÃO envia
+// ao ZapSign — o envio é uma ação separada na ficha do caso (com signatário).
 export const createComercialProcuracaoSchema = z.object({
   case: caseCreateSchema,
   template_id: z.string().uuid("Modelo obrigatório"),
   // Valores revisados pelo usuário (key do placeholder → valor). O servidor
   // complementa com o autofill do caso recém-criado (ex.: código do caso).
   values: z.record(z.string(), z.string()).default({}),
-  signer: procuracaoSignerSchema,
 });
 
 export type PreviewProcuracaoInput = z.input<typeof previewProcuracaoSchema>;
