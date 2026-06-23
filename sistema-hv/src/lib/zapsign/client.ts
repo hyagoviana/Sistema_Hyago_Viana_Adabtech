@@ -46,11 +46,7 @@ function sanitize(msg: string): string {
 // ----------------------------------------------------------------------------
 // HTTP helper
 // ----------------------------------------------------------------------------
-async function request<T>(
-  method: "GET" | "POST",
-  path: string,
-  body?: unknown,
-): Promise<T> {
+async function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
   const { token, baseUrl } = getEnv();
   const url = `${baseUrl}/${path.replace(/^\/+/, "")}`;
 
@@ -163,7 +159,9 @@ export async function createDocument(input: ZapSignCreateInput): Promise<ZapSign
       phone_country: s.phoneCountry,
       phone_number: s.phoneNumber,
       auth_mode: s.authMode ?? "assinaturaTela-tokenEmail",
-      send_automatic_email: s.sendAutomaticEmail ?? false,
+      // Default true: no fluxo jurídico, o signatário precisa receber o e-mail
+      // com o link de assinatura. Quem não quiser passa sendAutomaticEmail:false.
+      send_automatic_email: s.sendAutomaticEmail ?? true,
       send_automatic_whatsapp: s.sendAutomaticWhatsapp ?? false,
       cpf: s.cpf,
     })),

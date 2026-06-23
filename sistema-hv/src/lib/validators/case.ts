@@ -27,3 +27,40 @@ export type CaseCreateInput = z.input<typeof caseCreateSchema>;
 export type CaseCreateOutput = z.output<typeof caseCreateSchema>;
 export type CaseUpdateInput = z.input<typeof caseUpdateSchema>;
 export type CaseUpdateOutput = z.output<typeof caseUpdateSchema>;
+
+// ----------------------------------------------------------------------------
+// Procuração comercial: revisão de campos + envio direto ao ZapSign.
+// Fluxo: o usuário escolhe a procuração ao criar o caso, revê os campos <...>
+// preenchidos com os dados do cliente (editáveis) e confirma. O sistema cria
+// o caso, gera o documento com os valores revisados, finaliza e envia ao
+// ZapSign de uma vez — disparando o e-mail de assinatura ao signatário.
+// ----------------------------------------------------------------------------
+
+// Preview: lê os campos do modelo e os valores auto-preenchidos do cadastro,
+// para o usuário revisar ANTES de criar o caso (nenhum dado é gravado aqui).
+export const previewProcuracaoSchema = z.object({
+  client_id: z.string().uuid("Cliente obrigatório"),
+  template_id: z.string().uuid("Modelo obrigatório"),
+  municipio: z.string().trim().max(200).optional().nullable(),
+  responsavel: z.string().trim().max(200).optional().nullable(),
+});
+
+export const procuracaoSignerSchema = z.object({
+  name: z.string().trim().min(1, "Nome do signatário obrigatório"),
+  email: z.string().trim().email("E-mail inválido").optional(),
+  sendAutomaticEmail: z.boolean().optional(),
+});
+
+// Confirmação final: cria o caso comercial + gera + finaliza + envia ao ZapSign.
+export const createComercialProcuracaoSchema = z.object({
+  case: caseCreateSchema,
+  template_id: z.string().uuid("Modelo obrigatório"),
+  // Valores revisados pelo usuário (key do placeholder → valor). O servidor
+  // complementa com o autofill do caso recém-criado (ex.: código do caso).
+  values: z.record(z.string(), z.string()).default({}),
+  signer: procuracaoSignerSchema,
+});
+
+export type PreviewProcuracaoInput = z.input<typeof previewProcuracaoSchema>;
+export type CreateComercialProcuracaoInput = z.input<typeof createComercialProcuracaoSchema>;
+export type CreateComercialProcuracaoOutput = z.output<typeof createComercialProcuracaoSchema>;

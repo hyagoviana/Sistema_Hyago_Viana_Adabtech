@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { CaseCreateInput, CaseUpdateInput } from "@/lib/validators/case";
 import {
   createCaseFn,
+  createComercialProcuracaoFn,
   getCaseFn,
   liberarCasoFn,
   listCaseEventsFn,
@@ -13,6 +14,7 @@ import {
   listComercialCasesFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
+  previewProcuracaoFn,
   softDeleteCaseFn,
   updateCaseFn,
 } from "@/rpc/cases";
@@ -56,6 +58,53 @@ export function useCreateCase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CaseCreateInput) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+// Procuração comercial — preview dos campos <...> + valores do cadastro do
+// cliente, para revisão antes de criar o caso. enabled só quando há os 2 ids.
+export function usePreviewProcuracao(input: {
+  clientId: string;
+  templateId: string;
+  municipio?: string | null;
+  responsavel?: string | null;
+}) {
+  const fn = useServerFn(previewProcuracaoFn);
+  return useQuery({
+    queryKey: [
+      "procuracao-preview",
+      input.clientId,
+      input.templateId,
+      input.municipio ?? "",
+      input.responsavel ?? "",
+    ],
+    queryFn: () =>
+      fn({
+        data: {
+          client_id: input.clientId,
+          template_id: input.templateId,
+          municipio: input.municipio ?? undefined,
+          responsavel: input.responsavel ?? undefined,
+        },
+      }),
+    enabled: !!input.clientId && !!input.templateId,
+    staleTime: 30 * 1000,
+  });
+}
+
+// Procuração comercial — cria o caso, gera a procuração com os valores
+// revisados, finaliza e envia ao ZapSign (dispara o e-mail) em um único passo.
+export function useCreateComercialProcuracao() {
+  const fn = useServerFn(createComercialProcuracaoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      case: CaseCreateInput;
+      template_id: string;
+      values: Record<string, string>;
+      signer: { name: string; email?: string; sendAutomaticEmail?: boolean };
+    }) => fn({ data: input as never }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });
 }

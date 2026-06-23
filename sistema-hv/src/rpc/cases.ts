@@ -6,6 +6,7 @@ import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
   CaseServiceError,
   createCase,
+  createComercialCaseAndSendProcuracao,
   getCase,
   liberarCasoComercial,
   listCaseEvents,
@@ -13,11 +14,17 @@ import {
   listComercialCases,
   moveCaseStatus,
   moveCaseStatusFin,
+  previewProcuracao,
   softDeleteCase,
   updateCase,
 } from "@/lib/cases-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
-import { caseCreateSchema, caseUpdateSchema } from "@/lib/validators/case";
+import {
+  caseCreateSchema,
+  caseUpdateSchema,
+  createComercialProcuracaoSchema,
+  previewProcuracaoSchema,
+} from "@/lib/validators/case";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
@@ -72,6 +79,37 @@ export const listCaseEventsFn = createServerFn({ method: "GET" })
 export const createCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => caseCreateSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => createCase(data, userId)));
+
+// Procuração comercial — preview dos campos <...> + valores do cadastro.
+export const previewProcuracaoFn = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => previewProcuracaoSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle(() =>
+      previewProcuracao({
+        clientId: data.client_id,
+        templateId: data.template_id,
+        municipio: data.municipio,
+        responsavel: data.responsavel,
+      }),
+    ),
+  );
+
+// Procuração comercial — cria o caso + gera + finaliza + envia ao ZapSign.
+export const createComercialProcuracaoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => createComercialProcuracaoSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle((userId) =>
+      createComercialCaseAndSendProcuracao(
+        {
+          case: data.case,
+          templateId: data.template_id,
+          values: data.values,
+          signer: data.signer,
+        },
+        userId,
+      ),
+    ),
+  );
 
 const updateInputSchema = z.object({
   id: z.string().uuid(),

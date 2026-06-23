@@ -4,6 +4,7 @@
 import {
   buildAutoFillFromClient,
   buildAutoFillValues,
+  resolveAutoValue,
   type TemplateField,
 } from "./cases/document-autofill";
 import { type MacroFin, type MacroOp } from "./cases/constants";
@@ -42,7 +43,11 @@ async function nextCaseCode(caseType: string): Promise<string> {
 // ----------------------------------------------------------------------------
 // CREATE
 // ----------------------------------------------------------------------------
-export async function createCase(input: CaseCreateOutput, triggeredBy?: string) {
+export async function createCase(
+  input: CaseCreateOutput,
+  triggeredBy?: string,
+  opts?: { skipProcuracaoPrep?: boolean },
+) {
   const sb = getSupabaseAdmin();
 
   // Validar cliente existe e está ativo (já busca drive_folder_id para criar subpasta)
@@ -147,7 +152,9 @@ export async function createCase(input: CaseCreateOutput, triggeredBy?: string) 
   // Fase comercial: prepara o documento de procuração (best-effort).
   // Se o usuário escolheu um modelo no ato, gera a procuração já preenchida com
   // os dados do cliente; senão cai no placeholder (modelo definido depois).
-  if (comercial) {
+  // skipProcuracaoPrep: o fluxo de revisão+envio (createComercialCaseAndSend
+  // Procuracao) cuida da geração com os valores revisados — não duplicar aqui.
+  if (comercial && !opts?.skipProcuracaoPrep) {
     try {
       if (input.procuracao_template_id) {
         await generateProcuracaoFromTemplate(
@@ -290,6 +297,158 @@ export async function generateProcuracaoFromTemplate(
     docKind: "procuracao",
     triggeredBy,
   });
+}
+
+// ----------------------------------------------------------------------------
+// PROCURAÇÃO — PREVIEW (revisão antes de criar o caso). Lê os campos <...> do
+// modelo (ao vivo do Google Doc) e resolve os valores a partir do cadastro do
+// cliente. NÃO grava nada — é só para o usuário revisar/editar antes de enviar.
+// ----------------------------------------------------------------------------
+export async function previewProcuracao(input: {
+  clientId: string;
+  templateId: string;
+  municipio?: string | null;
+  responsavel?: string | null;
+}): Promise<{
+  fields: TemplateField[];
+  values: Record<string, string>;
+  signer: { name: string; email: string | null };
+}> {
+  const sb = getSupabaseAdmin();
+
+  const { data: tpl } = await sb
+    .from("system_document_templates")
+    .select("google_doc_id, fields")
+    .eq("id", input.templateId)
+    .is("deleted_at", null)
+    .single();
+  if (!tpl) throw new CaseServiceError("Modelo de procuração não encontrado", 404);
+
+  const { data: client } = await sb
+    .from("system_clients")
+    .select("full_name, cpf_cnpj, email, phone, address, professional_data")
+    .eq("id", input.clientId)
+    .is("deleted_at", null)
+    .single();
+  if (!client) throw new CaseServiceError("Cliente não encontrado", 404);
+
+  // Campos ao vivo do Google Doc (autoritativo); fallback nos campos salvos.
+  let fields: TemplateField[] = ((tpl.fields ?? []) as TemplateField[]) ?? [];
+  if (tpl.google_doc_id) {
+    try {
+      const { getTemplatePlaceholders } = await import("./template-sync-service");
+      const live = await getTemplatePlaceholders(tpl.google_doc_id);
+      if (live.length) fields = live as TemplateField[];
+    } catch (err) {
+      // Sem acesso ao Doc agora? Cai nos campos salvos no banco.
+      console.error("previewProcuracao: falha ao ler placeholders ao vivo:", err);
+    }
+  }
+  // Não exibe campos "em branco" (preenchidos depois, na edição).
+  fields = fields.filter((f) => f.source !== "blank");
+
+  const data = buildAutoFillFromClient(client, {
+    municipio: input.municipio ?? undefined,
+    responsavel: input.responsavel ?? undefined,
+    // case_code ainda não existe (caso não criado) — resolvido no envio real.
+  });
+
+  const values: Record<string, string> = {};
+  for (const f of fields) {
+    const v = resolveAutoValue(f, data);
+    if (v) values[f.key] = v;
+  }
+
+  return {
+    fields,
+    values,
+    signer: { name: client.full_name ?? "", email: client.email ?? null },
+  };
+}
+
+// ----------------------------------------------------------------------------
+// PROCURAÇÃO — CRIAR + ENVIAR (fluxo de revisão). Cria o caso comercial, gera a
+// procuração com os valores REVISADOS pelo usuário, finaliza (PDF) e envia ao
+// ZapSign de uma vez — disparando o e-mail de assinatura. O caso fica criado
+// mesmo se um passo externo (Docs/Drive/ZapSign) falhar, recuperável na ficha.
+// ----------------------------------------------------------------------------
+export async function createComercialCaseAndSendProcuracao(
+  input: {
+    case: CaseCreateOutput;
+    templateId: string;
+    values: Record<string, string>;
+    signer: { name: string; email?: string; sendAutomaticEmail?: boolean };
+  },
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  // 1) Cria o caso comercial SEM preparar a procuração (faremos abaixo com os
+  //    valores revisados, evitando a geração automática duplicada).
+  const created = await createCase(
+    { ...input.case, comercial: true, procuracao_template_id: input.templateId },
+    triggeredBy,
+    { skipProcuracaoPrep: true },
+  );
+
+  // 2) Complementa os valores revisados com o autofill do caso já criado
+  //    (ex.: código do caso, que só passa a existir agora). Os valores do
+  //    usuário têm prioridade — só preenchemos o que ficou vazio.
+  const { data: client } = await sb
+    .from("system_clients")
+    .select("full_name, cpf_cnpj, email, phone, address, professional_data")
+    .eq("id", input.case.client_id)
+    .single();
+  const { data: tpl } = await sb
+    .from("system_document_templates")
+    .select("fields")
+    .eq("id", input.templateId)
+    .single();
+
+  const serverData = buildAutoFillFromClient(client ?? {}, {
+    municipio: created.municipio,
+    case_code: created.case_code,
+    responsavel: created.responsavel,
+  });
+  const serverAuto = buildAutoFillValues(
+    ((tpl?.fields ?? []) as TemplateField[]) ?? [],
+    serverData,
+  );
+  const finalValues: Record<string, string> = { ...serverAuto, ...input.values };
+
+  // 3) Gera → finaliza → envia ao ZapSign. Import dinâmico evita ciclo.
+  const { generateCaseDocumentFromTemplate, finalizeCaseDocument, sendCaseDocumentToZapsign } =
+    await import("./case-documents-service");
+
+  const gen = await generateCaseDocumentFromTemplate({
+    caseId: created.id,
+    templateId: input.templateId,
+    values: finalValues,
+    docKind: "procuracao",
+    triggeredBy,
+  });
+
+  await finalizeCaseDocument(gen.doc.id, triggeredBy);
+
+  const sent = await sendCaseDocumentToZapsign({
+    docId: gen.doc.id,
+    signers: [
+      {
+        name: input.signer.name,
+        email: input.signer.email,
+        authMode: "assinaturaTela-tokenEmail",
+        sendAutomaticEmail: input.signer.sendAutomaticEmail ?? true,
+      },
+    ],
+    triggeredBy,
+  });
+
+  return {
+    case: created,
+    doc: sent.doc,
+    signUrl: sent.signUrl,
+    emailSent: !!input.signer.email && (input.signer.sendAutomaticEmail ?? true),
+  };
 }
 
 // ----------------------------------------------------------------------------
