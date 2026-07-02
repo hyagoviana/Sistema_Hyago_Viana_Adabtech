@@ -780,9 +780,123 @@ export async function moveCaseStatusFin(id: string, to: MacroFin, triggeredBy?: 
       diff: { from: before.macrostatus_fin, to },
       triggered_by: triggeredBy ?? null,
     });
+    // S3-02 — instancia o checklist da etapa fin de destino (idempotente,
+    // server-side) para o gate fin ter os itens da nova etapa.
+    if (to !== "NAO_APLICAVEL") {
+      await instanciarChecklist(id, to).catch(() => {});
+    }
   }
 
   return data;
+}
+
+// ----------------------------------------------------------------------------
+// CONFERÊNCIA FIN — gate manual "enviar para conferência" (S3-03)
+// ----------------------------------------------------------------------------
+// Move o card fin de fromSlug→toSlug (ex.: ELABORANDO→APROVACAO) e abre um estado
+// de "pendente de aprovação" — a segunda pessoa aprova. DEFAULT = por EVENTO
+// (sem coluna/tabela nova): o "pendente" é derivado do último evento
+// 'fin_enviado_conferencia' sem 'fin_conferencia_aprovada' correspondente depois.
+//
+// Decisão do owner: SEM trava de cargo — qualquer usuário autenticado envia e
+// aprova; a única restrição é segregação por ATOR (aprovador <> enviador),
+// auditada em system_case_events. Preserva a trava NAO_APLICAVEL (via moveCaseStatusFin).
+
+// Lê o estado de conferência derivado dos eventos (por evento, sem materializar).
+// Retorna o último envio ainda pendente de aprovação (ou null).
+export async function getConferenciaFinPendente(caseId: string): Promise<{
+  from: string | null;
+  to: string | null;
+  enviado_por: string | null;
+  enviado_at: string;
+} | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_case_events")
+    .select("action, diff, triggered_by, created_at")
+    .eq("case_id", caseId)
+    .in("action", ["fin_enviado_conferencia", "fin_conferencia_aprovada"])
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const last = data?.[0];
+  if (!last || last.action !== "fin_enviado_conferencia") return null;
+  const diff = (last.diff ?? {}) as { from?: string | null; to?: string | null };
+  return {
+    from: diff.from ?? null,
+    to: diff.to ?? null,
+    enviado_por: last.triggered_by ?? null,
+    enviado_at: last.created_at,
+  };
+}
+
+// Enviar para conferência: move fromSlug→toSlug e registra o envio (ator=enviador).
+// Reusa moveCaseStatusFin (dual-write + trava NAO_APLICAVEL + evento fin_status_changed),
+// e grava adicionalmente o evento de conferência.
+export async function enviarConferenciaFin(caseId: string, toSlug: MacroFin, triggeredBy?: string) {
+  if (!triggeredBy) throw new CaseServiceError("Não autenticado", 401);
+  const sb = getSupabaseAdmin();
+
+  const { data: before } = await sb
+    .from("system_cases")
+    .select("macrostatus_fin, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!before) throw new CaseServiceError("Caso não encontrado", 404);
+  if (before.macrostatus_fin === "NAO_APLICAVEL") {
+    throw new CaseServiceError("Caso ainda não está no financeiro", 400);
+  }
+  const fromSlug = before.macrostatus_fin;
+
+  // Move (respeita trava NAO_APLICAVEL e projeção via dual-write).
+  await moveCaseStatusFin(caseId, toSlug, triggeredBy);
+
+  // Evento de envio para conferência (ator = enviador). "Pendente" derivado deste.
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: before.organization_id,
+    action: "fin_enviado_conferencia",
+    diff: { from: fromSlug, to: toSlug },
+    triggered_by: triggeredBy,
+  });
+
+  return { ok: true as const, from: fromSlug, to: toSlug };
+}
+
+// Aprovar conferência: segunda pessoa confirma. Rejeita se aprovador == enviador
+// (segregação por ator). Sem checagem de cargo.
+export async function aprovarConferenciaFin(caseId: string, triggeredBy?: string) {
+  if (!triggeredBy) throw new CaseServiceError("Não autenticado", 401);
+  const sb = getSupabaseAdmin();
+
+  const pendente = await getConferenciaFinPendente(caseId);
+  if (!pendente) {
+    throw new CaseServiceError("Não há conferência pendente para aprovar", 409);
+  }
+  if (pendente.enviado_por && pendente.enviado_por === triggeredBy) {
+    throw new CaseServiceError(
+      "A aprovação exige uma segunda pessoa — quem enviou para conferência não pode aprovar.",
+      409,
+    );
+  }
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "fin_conferencia_aprovada",
+    diff: { from: pendente.from, to: pendente.to, enviado_por: pendente.enviado_por },
+    triggered_by: triggeredBy,
+  });
+
+  return { ok: true as const };
 }
 
 // ----------------------------------------------------------------------------

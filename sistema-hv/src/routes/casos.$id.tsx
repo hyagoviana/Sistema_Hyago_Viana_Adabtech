@@ -17,6 +17,7 @@ import {
   ChecklistInconsistencyAlert,
 } from "@/components/cases/CaseChecklistPanel";
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
+import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { TermoPanel } from "@/components/cases/TermoPanel";
@@ -454,6 +455,16 @@ function CasoDetalhe() {
               )}
             </div>
 
+            {finBifurcated && caso.service_type_id && (
+              <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
+                <CaseConferenciaFinPanel
+                  caseId={caso.id}
+                  serviceTypeId={caso.service_type_id}
+                  currentFinSlug={caso.macrostatus_fin}
+                />
+              </div>
+            )}
+
             {finBifurcated && (
               <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
                 <TermoPanel caseId={caso.id} />
@@ -531,6 +542,12 @@ function CasoDetalhe() {
                       `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`}
                     {e.action === "fin_status_changed" &&
                       `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
+                    {e.action === "fin_stage_auto_advanced" &&
+                      `Avanço automático (financeiro) por checklist: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
+                    {e.action === "fin_enviado_conferencia" &&
+                      `Enviado para conferência (financeiro): ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
+                    {e.action === "fin_conferencia_aprovada" &&
+                      "Conferência financeira aprovada (segunda pessoa)"}
                     {e.action === "updated" && "Caso editado"}
                     {e.action === "soft_deleted" && "Caso excluído"}
                     {/* Checklist (Sprint 2) */}

@@ -245,6 +245,11 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
     .select("id, stage_fin_id, macrostatus_fin")
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
+
+  // S3-02 — instancia os itens de checklist da etapa fin de destino (idempotente,
+  // server-side, dentro da transição — cobre o DnD do Kanban financeiro).
+  await instanciarChecklist(caseId, stage.slug).catch(() => {});
+
   return data;
 }
 
@@ -293,6 +298,18 @@ export async function entrarNoFinanceiro(caseId: string, removerOperacional: boo
     entity_id: caseId,
     diff: { removerOperacional } as never,
   });
+
+  // S3-02 — ao bifurcar, o caso entrou na 1ª etapa fin real. Instancia o checklist
+  // dessa etapa (idempotente, server-side) para o gate fin ter o que avaliar.
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("macrostatus_fin")
+    .eq("id", caseId)
+    .single();
+  if (caso?.macrostatus_fin && caso.macrostatus_fin !== "NAO_APLICAVEL") {
+    await instanciarChecklist(caseId, caso.macrostatus_fin).catch(() => {});
+  }
+
   return { ok: true as const, removerOperacional };
 }
 

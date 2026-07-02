@@ -5,9 +5,12 @@ import type { MacroFin, MacroOp } from "@/lib/cases/constants";
 import { queryKeys } from "@/lib/queryKeys";
 import type { CaseCreateInput, CaseUpdateInput } from "@/lib/validators/case";
 import {
+  aprovarConferenciaFinFn,
   createCaseFn,
   createComercialProcuracaoFn,
+  enviarConferenciaFinFn,
   getCaseFn,
+  getConferenciaFinPendenteFn,
   liberarCasoFn,
   listCaseEventsFn,
   listCasesFn,
@@ -203,6 +206,43 @@ export function useDeleteCase() {
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// S3-03 — Conferência financeira (dupla checagem). Auth-only.
+// ----------------------------------------------------------------------------
+export function useConferenciaFinPendente(caseId: string) {
+  const fn = useServerFn(getConferenciaFinPendenteFn);
+  return useQuery({
+    queryKey: queryKeys.cases.conferenciaFin(caseId),
+    queryFn: () => fn({ data: { id: caseId } }),
+    enabled: !!caseId,
+  });
+}
+
+function invalidateConferencia(qc: ReturnType<typeof useQueryClient>, id: string) {
+  qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.detail(id) });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.events(id) });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.conferenciaFin(id) });
+}
+
+export function useEnviarConferenciaFin() {
+  const fn = useServerFn(enviarConferenciaFinFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; to: MacroFin }) => fn({ data: vars }),
+    onSuccess: (_, vars) => invalidateConferencia(qc, vars.id),
+  });
+}
+
+export function useAprovarConferenciaFin() {
+  const fn = useServerFn(aprovarConferenciaFinFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: (_, id) => invalidateConferencia(qc, id),
   });
 }
 

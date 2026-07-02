@@ -4,10 +4,13 @@ import { z } from "zod";
 
 import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
+  aprovarConferenciaFin,
   CaseServiceError,
   createCase,
   createComercialCaseAndGenerateProcuracao,
+  enviarConferenciaFin,
   getCase,
+  getConferenciaFinPendente,
   liberarCasoComercial,
   listCaseEvents,
   listCases,
@@ -149,6 +152,27 @@ export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => softDeleteCase(data.id, userId)));
+
+// ----------------------------------------------------------------------------
+// S3-03 — Conferência financeira (dupla checagem). Auth-only, sem requireRole.
+// Segregação por ATOR (aprovador <> enviador) é validada no serviço.
+// ----------------------------------------------------------------------------
+export const getConferenciaFinPendenteFn = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => handle(() => getConferenciaFinPendente(data.id)));
+
+const enviarConferenciaFinSchema = z.object({
+  id: z.string().uuid(),
+  to: z.enum(MACRO_FIN),
+});
+
+export const enviarConferenciaFinFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => enviarConferenciaFinSchema.parse(data))
+  .handler(async ({ data }) => handle((userId) => enviarConferenciaFin(data.id, data.to, userId)));
+
+export const aprovarConferenciaFinFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => handle((userId) => aprovarConferenciaFin(data.id, userId)));
 
 // ----------------------------------------------------------------------------
 // Comercial (Melhoria 3)

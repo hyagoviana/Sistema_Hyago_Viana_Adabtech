@@ -34,5 +34,6 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.cases.details(), id] as const,
     events: (caseId: string) => [...queryKeys.cases.all, "events", caseId] as const,
     comercial: () => [...queryKeys.cases.all, "comercial"] as const,
+    conferenciaFin: (caseId: string) => [...queryKeys.cases.all, "conferenciaFin", caseId] as const,
   },
 } as const;

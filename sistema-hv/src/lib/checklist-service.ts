@@ -217,7 +217,7 @@ export async function instanciarChecklist(caseId: string, stageSlug: string) {
 }
 
 // ----------------------------------------------------------------------------
-// GATE (S2-04) — dispara a função idempotente de avanço por checklist.
+// GATE (S2-04) — dispara a função idempotente de avanço por checklist (OP).
 // ----------------------------------------------------------------------------
 export async function avancarSeChecklistOk(caseId: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
@@ -227,6 +227,41 @@ export async function avancarSeChecklistOk(caseId: string, triggeredBy?: string)
   });
   if (error) throw new ChecklistServiceError(error.message, 500);
   return { ok: true as const };
+}
+
+// ----------------------------------------------------------------------------
+// GATE FIN (S3-02) — dispara a função idempotente de avanço por checklist na
+// esteira FINANCEIRA. Molde do gate op; guarda WHERE macrostatus_fin = esperado.
+// ----------------------------------------------------------------------------
+export async function avancarFinSeOk(caseId: string, triggeredBy?: string) {
+  const sb = getSupabaseAdmin();
+  // Cast: a função entra no types.ts só após db:types.
+  const { error } = await sb.rpc(
+    "system_fn_avancar_fin_se_ok" as never,
+    {
+      p_case_id: caseId,
+      p_triggered_by: triggeredBy ?? null,
+    } as never,
+  );
+  if (error) throw new ChecklistServiceError(error.message, 500);
+  return { ok: true as const };
+}
+
+// Descobre se um stage_slug é etapa 'op' ou 'fin' de um tipo de serviço.
+// Um mesmo slug pode existir nos dois kinds (ex.: 'CANCELADO'); por isso
+// consultamos por (service_type_id, slug) e devolvemos os kinds encontrados.
+async function stageKindsForSlug(
+  serviceTypeId: string,
+  stageSlug: string,
+): Promise<Set<"op" | "fin">> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_pipeline_stages")
+    .select("kind")
+    .eq("service_type_id", serviceTypeId)
+    .eq("slug", stageSlug)
+    .is("deleted_at", null);
+  return new Set((data ?? []).map((r) => r.kind as "op" | "fin"));
 }
 
 // ----------------------------------------------------------------------------
@@ -250,7 +285,7 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
 
   const { data: caso } = await sb
     .from("system_cases")
-    .select("id, macrostatus_op, service_type_id, organization_id")
+    .select("id, macrostatus_op, macrostatus_fin, service_type_id, organization_id")
     .eq("id", item.case_id)
     .is("deleted_at", null)
     .single();
@@ -271,25 +306,40 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
   if (uErr || !updated)
     throw new ChecklistServiceError(uErr?.message ?? "Falha ao marcar item", 500);
 
+  // Descobre a que esteira(s) a etapa do item pertence (op e/ou fin). Um slug
+  // pode existir nos dois kinds; disparamos o gate correspondente a cada um.
+  const kinds = caso.service_type_id
+    ? await stageKindsForSlug(caso.service_type_id, item.stage_slug)
+    : new Set<"op" | "fin">();
+
   if (done) {
     // done=true → tenta avançar (o gate só promove a partir da etapa esperada;
     // se o card já foi movido à frente por DnD, a guarda não casa → no-op).
-    await avancarSeChecklistOk(item.case_id, userId);
+    // Roteia para op e/ou fin conforme o kind da etapa do item.
+    if (kinds.size === 0 || kinds.has("op")) await avancarSeChecklistOk(item.case_id, userId);
+    if (kinds.has("fin")) await avancarFinSeOk(item.case_id, userId);
     return updated;
   }
 
-  // done=false → checar se o item é required de uma etapa JÁ ULTRAPASSADA.
-  if (caso.service_type_id && caso.macrostatus_op && item.stage_slug !== caso.macrostatus_op) {
-    // ordem da etapa do item e da etapa atual do caso.
+  // done=false → checar se o item é required de uma etapa JÁ ULTRAPASSADA (S2-05).
+  // Avalia por esteira: op contra macrostatus_op, fin contra macrostatus_fin.
+  const checks: { kind: "op" | "fin"; current: string | null | undefined }[] = [];
+  if (kinds.has("op") || kinds.size === 0)
+    checks.push({ kind: "op", current: caso.macrostatus_op });
+  if (kinds.has("fin")) checks.push({ kind: "fin", current: caso.macrostatus_fin });
+
+  for (const { kind, current } of checks) {
+    if (!caso.service_type_id || !current || item.stage_slug === current) continue;
+    // ordem da etapa do item e da etapa atual do caso (na esteira certa).
     const { data: stages } = await sb
       .from("system_pipeline_stages")
       .select("slug, ordem")
       .eq("service_type_id", caso.service_type_id)
-      .eq("kind", "op")
-      .in("slug", [item.stage_slug, caso.macrostatus_op])
+      .eq("kind", kind)
+      .in("slug", [item.stage_slug, current])
       .is("deleted_at", null);
     const itemOrdem = stages?.find((s) => s.slug === item.stage_slug)?.ordem;
-    const currentOrdem = stages?.find((s) => s.slug === caso.macrostatus_op)?.ordem;
+    const currentOrdem = stages?.find((s) => s.slug === current)?.ordem;
 
     // etapa do item é anterior à atual → ultrapassada.
     if (itemOrdem !== undefined && currentOrdem !== undefined && itemOrdem < currentOrdem) {
@@ -307,11 +357,13 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
           diff: {
             def_key: def.key,
             stage_slug: item.stage_slug,
-            etapa_atual: caso.macrostatus_op,
+            etapa_atual: current,
+            kind,
           },
           triggered_by: userId ?? null,
         });
       }
+      break; // um alerta basta
     }
   }
 
