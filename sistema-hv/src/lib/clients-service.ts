@@ -116,6 +116,116 @@ export async function createClient(input: ClientCreateOutput) {
 }
 
 // ----------------------------------------------------------------------------
+// S1-04 — FIND-OR-CREATE por CPF na entrada comercial.
+// ----------------------------------------------------------------------------
+// Impede o erro "seco" de unicidade quando um CPF já cadastrado entra como lead
+// de um NOVO caso. Padrão upsert sob concorrência (R-ARCH-4):
+//   find → não achou → tenta INSERT → colidiu 23505 → re-SELECT → retorna existente.
+// NUNCA estoura 500 por unique_violation. Merge apenas em campos VAZIOS (nunca
+// sobrescreve valor existente); divergências viram `conflitos[]` para o front.
+export type FindOrCreateResult = {
+  client: Awaited<ReturnType<typeof createClient>>;
+  created: boolean;
+  conflitos: Array<{ campo: string; valor_atual: string; valor_novo: string }>;
+};
+
+type ClientRow = Database["public"]["Tables"]["system_clients"]["Row"];
+
+// Campos escalares simples elegíveis a merge-em-vazio + detecção de conflito.
+const MERGEABLE_SCALAR_FIELDS = ["full_name", "email", "phone", "rg", "tipo"] as const;
+
+async function selectActiveByCpf(cpf: string): Promise<ClientRow | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_clients")
+    .select("*")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .eq("cpf_cnpj", cpf)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return (data as ClientRow | null) ?? null;
+}
+
+export async function findOrCreateClient(input: ClientCreateOutput): Promise<FindOrCreateResult> {
+  const sb = getSupabaseAdmin();
+  const cpf = input.cpf_cnpj;
+
+  // 1) FIND — pessoa ativa com o mesmo CPF nesta org?
+  const existing = await selectActiveByCpf(cpf);
+  if (existing) {
+    return await reconcileExisting(existing, input);
+  }
+
+  // 2) CREATE — não achou; tenta criar. Se colidir (23505 sob concorrência),
+  //    re-SELECIONA o existente em vez de estourar 500.
+  try {
+    const client = await createClient(input);
+    return { client, created: true, conflitos: [] };
+  } catch (err) {
+    if (err instanceof ClientServiceError && err.code === "DUPLICATE_CPF") {
+      const raced = await selectActiveByCpf(cpf);
+      if (raced) return await reconcileExisting(raced, input);
+    }
+    throw err;
+  }
+}
+
+// Reconcilia um cadastro já existente com os novos dados: coleta conflitos
+// (valor existente ≠ novo, ambos não-vazios) e faz merge só nos campos vazios.
+async function reconcileExisting(
+  existing: ClientRow,
+  input: ClientCreateOutput,
+): Promise<FindOrCreateResult> {
+  const sb = getSupabaseAdmin();
+  const conflitos: FindOrCreateResult["conflitos"] = [];
+  const patch: Record<string, unknown> = {};
+
+  const rec = existing as unknown as Record<string, unknown>;
+  const inp = input as unknown as Record<string, unknown>;
+
+  for (const campo of MERGEABLE_SCALAR_FIELDS) {
+    const atual = rec[campo];
+    const novo = inp[campo];
+    const atualStr = typeof atual === "string" ? atual.trim() : "";
+    const novoStr = typeof novo === "string" ? novo.trim() : "";
+    if (!novoStr) continue;
+    if (!atualStr) {
+      // Campo vazio no cadastro → merge (preenche).
+      patch[campo] = novoStr;
+    } else if (atualStr !== novoStr) {
+      // Ambos preenchidos e divergentes → NÃO sobrescreve; reporta conflito.
+      conflitos.push({ campo, valor_atual: atualStr, valor_novo: novoStr });
+    }
+  }
+
+  let client: ClientRow = existing;
+  if (Object.keys(patch).length > 0) {
+    const { data: updated } = await sb
+      .from("system_clients")
+      .update(patch as ClientUpdate)
+      .eq("id", existing.id)
+      .is("deleted_at", null)
+      .select()
+      .single();
+    if (updated) client = updated as ClientRow;
+
+    await sb.from("system_audit_log").insert({
+      organization_id: existing.organization_id,
+      action: "client.merge_empty_fields",
+      entity_type: "client",
+      entity_id: existing.id,
+      diff: patch as unknown as Json,
+    });
+  }
+
+  return {
+    client: client as Awaited<ReturnType<typeof createClient>>,
+    created: false,
+    conflitos,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // UPDATE
 // ----------------------------------------------------------------------------
 export async function updateClient(id: string, input: ClientUpdateOutput) {
@@ -261,6 +371,76 @@ export async function listClients(search?: string) {
   const { data, error } = await sb.from("system_clients_active").select("*").order("full_name");
   if (error) throw new ClientServiceError(error.message, "DB_ERROR", 500);
   return data ?? [];
+}
+
+// ----------------------------------------------------------------------------
+// S1-05 — LISTAGENS por lifecycle (abas Leads / Clientes / Perdidos).
+// ----------------------------------------------------------------------------
+// Cada aba lista PESSOAS DISTINTAS com >=1 caso naquele lifecycle (views da
+// mig. 0031). Uma pessoa pode aparecer em mais de uma aba (LEAD num caso,
+// CLIENTE em outro), mas nunca duplica linha dentro da mesma aba.
+export type LifecycleTab = "lead" | "cliente" | "perdido";
+
+export type ClientWithLifecycleMeta = ClientRow & {
+  casos_no_lifecycle: number;
+  dias_parado: number;
+  ultimo_movimento: string | null;
+};
+
+// Deriva a aba pela base tipada (system_cases_active expõe lifecycle/perdido_at
+// após S1-01). Agrupa por pessoa (distinct) e calcula dias_parado sem persistir
+// valor stale. Evita depender das views não tipadas (mig. 0031) no client tipado.
+export async function listClientsByLifecycle(
+  tab: LifecycleTab,
+): Promise<ClientWithLifecycleMeta[]> {
+  const sb = getSupabaseAdmin();
+  const lifecycle = tab === "lead" ? "LEAD" : tab === "cliente" ? "CLIENTE" : "PERDIDO";
+
+  // Casos no lifecycle pedido. Para LEAD, excluímos perdidos (perdido_at IS NULL).
+  const { data: cases, error } = await sb
+    .from("system_cases_active")
+    .select("client_id, status_changed_at, perdido_at, lifecycle")
+    .eq("lifecycle", lifecycle);
+  if (error) throw new ClientServiceError(error.message, "DB_ERROR", 500);
+
+  const rows = (cases ?? []).filter((c) => tab !== "lead" || !c.perdido_at);
+
+  // Agrupa por pessoa: conta casos + último movimento (max de status/ perdido).
+  const byClient = new Map<string, { count: number; ultimo: number }>();
+  for (const c of rows) {
+    const ref = tab === "perdido" ? c.perdido_at : c.status_changed_at;
+    const ts = ref ? new Date(ref).getTime() : 0;
+    const prev = byClient.get(c.client_id);
+    if (prev) {
+      prev.count += 1;
+      if (ts > prev.ultimo) prev.ultimo = ts;
+    } else {
+      byClient.set(c.client_id, { count: 1, ultimo: ts });
+    }
+  }
+  if (byClient.size === 0) return [];
+
+  const { data: clients, error: cErr } = await sb
+    .from("system_clients")
+    .select("*")
+    .in("id", Array.from(byClient.keys()))
+    .is("deleted_at", null);
+  if (cErr) throw new ClientServiceError(cErr.message, "DB_ERROR", 500);
+
+  const now = Date.now();
+  const out: ClientWithLifecycleMeta[] = (clients ?? []).map((cli) => {
+    const meta = byClient.get(cli.id)!;
+    const dias = meta.ultimo ? Math.max(0, Math.floor((now - meta.ultimo) / 86_400_000)) : 0;
+    return {
+      ...(cli as ClientRow),
+      casos_no_lifecycle: meta.count,
+      dias_parado: dias,
+      ultimo_movimento: meta.ultimo ? new Date(meta.ultimo).toISOString() : null,
+    };
+  });
+  // Mais parados primeiro.
+  out.sort((a, b) => b.dias_parado - a.dias_parado);
+  return out;
 }
 
 export async function getClient(id: string) {

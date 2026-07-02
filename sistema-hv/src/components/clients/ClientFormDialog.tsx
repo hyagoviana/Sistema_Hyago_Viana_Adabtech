@@ -35,7 +35,7 @@ import {
 } from "@/components/clients/CustomFieldsSection";
 import { ESTADOS_BR } from "@/lib/br/estados";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
-import { useCreateClient, useUpdateClient } from "@/hooks/useClients";
+import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { CepError, lookupCep, useMunicipios } from "@/hooks/useLocalidades";
 import { useServiceTypes } from "@/hooks/usePipeline";
@@ -155,7 +155,7 @@ function UfSelect({
 }
 
 export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
-  const createMutation = useCreateClient();
+  const createMutation = useFindOrCreateClient();
   const updateMutation = useUpdateClient();
   const createCaseMutation = useCreateCase();
   const { data: serviceTypes } = useServiceTypes();
@@ -214,8 +214,13 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
       if (r.localidade) form.setValue("address.city", r.localidade, { shouldValidate: true });
       toast.success("Endereço preenchido pelo CEP");
     } catch (err) {
-      const msg = err instanceof CepError ? err.message : "Falha ao buscar CEP";
-      toast.error(msg);
+      // S1-08: falha/timeout do lookup de CEP NÃO trava o cadastro. Degradar para
+      // preenchimento manual com aviso não-fatal — os campos de endereço seguem
+      // editáveis e o save conclui normalmente.
+      const detalhe = err instanceof CepError ? ` (${err.message})` : "";
+      toast.warning(
+        `Não foi possível buscar o endereço pelo CEP — preencha manualmente${detalhe}.`,
+      );
     } finally {
       setCepLoading(false);
     }
@@ -241,13 +246,25 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         await updateMutation.mutateAsync({ id: client.id, input: data });
         toast.success("Cliente atualizado");
       } else {
-        const created = await createMutation.mutateAsync(data);
-        if (created.drive_sync_failed) {
+        // S1-04: find-or-create — reutiliza a pessoa se o CPF já existir (ativo)
+        // em vez de estourar erro de unicidade; nunca sobrescreve dados existentes.
+        const res = await createMutation.mutateAsync(data);
+        const created = res.client;
+        if (!res.created) {
+          toast.info("CPF já cadastrado — reutilizando o cadastro existente.");
+        } else if (created.drive_sync_failed) {
           toast.warning(
             "Cliente criado, mas a pasta no Drive falhou — tente sincronizar na ficha.",
           );
         } else {
           toast.success("Cliente criado com pasta no Drive");
+        }
+        if (res.conflitos.length > 0) {
+          toast.warning(
+            `Dados divergentes mantidos do cadastro existente: ${res.conflitos
+              .map((c) => c.campo)
+              .join(", ")}. Edite na ficha se precisar corrigir.`,
+          );
         }
         if (linkedCaseType) {
           try {

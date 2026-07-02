@@ -12,9 +12,11 @@ import {
   listCaseEvents,
   listCases,
   listComercialCases,
+  marcarCasoPerdido,
   moveCaseStatus,
   moveCaseStatusFin,
   previewProcuracao,
+  promoverCasoManual,
   softDeleteCase,
   updateCase,
 } from "@/lib/cases-service";
@@ -148,3 +150,20 @@ export const liberarCasoFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handle((userId) => liberarCasoComercial(data.id, { via: "manual", userId })),
   );
+
+// ----------------------------------------------------------------------------
+// S1-03 / S1-01b — Botões manuais lead→cliente e lead/cliente→perdido.
+// Qualquer usuário autenticado pode (sem gate por cargo); auditoria obrigatória.
+// ----------------------------------------------------------------------------
+export const promoverCasoManualFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => handle((userId) => promoverCasoManual(data.id, userId)));
+
+const marcarPerdidoSchema = z.object({
+  id: z.string().uuid(),
+  motivo: z.string().trim().min(1, "Informe o motivo da perda"),
+});
+
+export const marcarCasoPerdidoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => marcarPerdidoSchema.parse(data))
+  .handler(async ({ data }) => handle((userId) => marcarCasoPerdido(data.id, data.motivo, userId)));

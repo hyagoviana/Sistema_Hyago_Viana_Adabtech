@@ -26,11 +26,20 @@ export async function lookupCep(rawCep: string): Promise<CepResult> {
   const cep = rawCep.replace(/\D/g, "");
   if (cep.length !== 8) throw new CepError("CEP deve ter 8 dígitos");
 
+  // S1-08: timeout curto — uma dependência externa lenta não pode travar o
+  // cadastro. Em timeout/erro de rede lançamos CepError (tratado como aviso
+  // não-fatal no form; o save do cliente segue com preenchimento manual).
   let res: Response;
   try {
-    res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: ctrl.signal });
+    } finally {
+      clearTimeout(t);
+    }
   } catch {
-    throw new CepError("Não foi possível consultar o CEP (sem conexão?)");
+    throw new CepError("Não foi possível consultar o CEP (sem conexão ou tempo esgotado?)");
   }
   if (!res.ok) throw new CepError("Falha ao consultar o CEP");
 

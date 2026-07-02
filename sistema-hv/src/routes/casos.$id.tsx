@@ -6,6 +6,8 @@ import {
   FolderOpen,
   Phone,
   Trash2,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +31,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
@@ -42,7 +45,14 @@ import {
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { useClient } from "@/hooks/useClients";
-import { useCase, useCaseEvents, useDeleteCase, useLiberarCaso } from "@/hooks/useCases";
+import {
+  useCase,
+  useCaseEvents,
+  useDeleteCase,
+  useLiberarCaso,
+  useMarcarCasoPerdido,
+  usePromoverCasoManual,
+} from "@/hooks/useCases";
 import {
   useEntrarFinanceiro,
   useSetAcertoParcial,
@@ -94,6 +104,8 @@ function CasoDetalhe() {
   const voltar = useVoltarOperacional();
   const acerto = useSetAcertoParcial();
   const liberar = useLiberarCaso();
+  const promover = usePromoverCasoManual();
+  const marcarPerdido = useMarcarCasoPerdido();
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = can(role, "casos.manage");
@@ -118,6 +130,35 @@ function CasoDetalhe() {
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [entrarOpen, setEntrarOpen] = useState(false);
+  const [perdidoOpen, setPerdidoOpen] = useState(false);
+  const [perdidoMotivo, setPerdidoMotivo] = useState("");
+
+  // S1-03 — promover manualmente lead→cliente (independe da flag comercial).
+  async function handlePromover() {
+    try {
+      await promover.mutateAsync(id);
+      toast.success("Caso promovido para CLIENTE");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao promover caso");
+    }
+  }
+
+  // S1-03 / S1-01b — marcar como perdido (LEAD ou CLIENTE → PERDIDO), com motivo.
+  async function handleMarcarPerdido() {
+    const motivo = perdidoMotivo.trim();
+    if (!motivo) {
+      toast.error("Informe o motivo da perda");
+      return;
+    }
+    try {
+      await marcarPerdido.mutateAsync({ id, motivo });
+      toast.success("Caso marcado como perdido");
+      setPerdidoOpen(false);
+      setPerdidoMotivo("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao marcar perdido");
+    }
+  }
 
   // Carrega cliente vinculado pra header
   const { data: cliente } = useClient(caso?.client_id ?? "");
@@ -155,6 +196,16 @@ function CasoDetalhe() {
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
+  // S1-01/S1-03: lifecycle do caso (LEAD | CLIENTE | PERDIDO). A coluna entra no
+  // types.ts só após db:types; lemos defensivamente.
+  const lifecycle =
+    (caso as { lifecycle?: "LEAD" | "CLIENTE" | "PERDIDO" | null }).lifecycle ?? "LEAD";
+  const lifecycleMeta: Record<string, { label: string; cls: string }> = {
+    LEAD: { label: "Lead", cls: "bg-[var(--muted)] text-muted-foreground" },
+    CLIENTE: { label: "Cliente", cls: "bg-green-600 text-white" },
+    PERDIDO: { label: "Perdido", cls: "bg-red-600 text-white" },
+  };
+  const lcMeta = lifecycleMeta[lifecycle] ?? lifecycleMeta.LEAD;
   // `removido_do_operacional_at` entra no types.ts só após db:push + db:types (S19).
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
@@ -222,7 +273,35 @@ function CasoDetalhe() {
             </div>
           )}
         </div>
-        <div className="flex gap-2 self-start">
+        <div className="flex gap-2 self-start flex-wrap justify-end">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold self-center ${lcMeta.cls}`}
+            title="Ciclo de vida do caso"
+          >
+            {lcMeta.label}
+          </span>
+          {/* S1-03 — qualquer usuário autenticado promove/marca perdido (sem gate por cargo) */}
+          {lifecycle !== "CLIENTE" && lifecycle !== "PERDIDO" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePromover}
+              disabled={promover.isPending}
+            >
+              <UserCheck size={14} className="mr-1.5" />
+              {promover.isPending ? "Promovendo…" : "Marcar como cliente"}
+            </Button>
+          )}
+          {lifecycle !== "PERDIDO" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setPerdidoOpen(true)}
+            >
+              <UserX size={14} className="mr-1.5" /> Marcar como perdido
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
             <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
           </Button>
@@ -458,9 +537,17 @@ function CasoDetalhe() {
                     {/* Procuração / fase comercial */}
                     {e.action === "procuracao_preparada" && "Procuração preparada"}
                     {e.action === "liberado_comercial" &&
-                      `Procuração assinada — caso liberado para operação${
-                        (e.diff as Record<string, string> | null)?.via
-                          ? ` (${(e.diff as Record<string, string> | null)?.via})`
+                      ((e.diff as Record<string, string> | null)?.via === "manual"
+                        ? "Promovido para cliente (manual)"
+                        : `Procuração assinada — caso liberado para operação${
+                            (e.diff as Record<string, string> | null)?.via
+                              ? ` (${(e.diff as Record<string, string> | null)?.via})`
+                              : ""
+                          }`)}
+                    {e.action === "perdido" &&
+                      `Caso marcado como perdido${
+                        (e.diff as Record<string, string> | null)?.motivo
+                          ? ` — ${(e.diff as Record<string, string> | null)?.motivo}`
                           : ""
                       }`}
                     {/* Prazos */}
@@ -568,6 +655,49 @@ function CasoDetalhe() {
               disabled={entrar.isPending}
             >
               Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={perdidoOpen}
+        onOpenChange={(v) => {
+          setPerdidoOpen(v);
+          if (!v) setPerdidoMotivo("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Marcar {caso.case_code} como perdido</DialogTitle>
+            <DialogDescription>
+              Informe o motivo. O caso sai das listas de Leads/Clientes ativos e passa a estado
+              terminal PERDIDO (reversível registrando de volta manualmente).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Motivo *</label>
+            <Input
+              value={perdidoMotivo}
+              onChange={(e) => setPerdidoMotivo(e.target.value)}
+              placeholder="Ex.: cliente desistiu, sem interesse, distrato…"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPerdidoOpen(false)}
+              disabled={marcarPerdido.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleMarcarPerdido}
+              disabled={marcarPerdido.isPending || !perdidoMotivo.trim()}
+            >
+              {marcarPerdido.isPending ? "Marcando…" : "Marcar como perdido"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,0 +1,19 @@
+-- ============================================================================
+-- ROLLBACK — Migration 0032 (S1-06: classificação inicial dos legados)
+-- ----------------------------------------------------------------------------
+-- Esta migration é um UPDATE de dados determinístico (LEAD→CLIENTE por regra
+-- objetiva). Não há rollback seguro automático que distinga um CLIENTE-por-regra
+-- de um CLIENTE-por-assinatura ou por correção manual — reverter em massa
+-- poderia rebaixar clientes reais. Por isso este rollback é NO-OP intencional.
+--
+-- Se for estritamente necessário desfazer, rebaixe manualmente os casos que
+-- TÊM doc procuração ASSINADO mas NÃO têm assinatura_liberada_at (o delta que
+-- esta migration introduziu), e SOMENTE se não houver correção manual posterior.
+-- Exemplo (NÃO executado automaticamente):
+--   UPDATE system_cases c SET lifecycle='LEAD'
+--    WHERE c.lifecycle='CLIENTE' AND c.assinatura_liberada_at IS NULL AND c.perdido_at IS NULL
+--      AND EXISTS (SELECT 1 FROM system_case_documents d
+--                   WHERE d.case_id=c.id AND d.doc_kind='procuracao'
+--                     AND d.status='ASSINADO' AND d.deleted_at IS NULL);
+-- ============================================================================
+SELECT 1;

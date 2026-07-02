@@ -476,6 +476,9 @@ export type Database = {
           aguardando_assinatura_at: string | null;
           assinatura_liberada_at: string | null;
           assinatura_liberada_by: string | null;
+          lifecycle: string;
+          perdido_at: string | null;
+          perdido_motivo: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -510,6 +513,9 @@ export type Database = {
           aguardando_assinatura_at?: string | null;
           assinatura_liberada_at?: string | null;
           assinatura_liberada_by?: string | null;
+          lifecycle?: string;
+          perdido_at?: string | null;
+          perdido_motivo?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

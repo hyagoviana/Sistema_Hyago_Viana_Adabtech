@@ -18,7 +18,8 @@
     "test:cases": "tsx scripts/test-cases.ts",
     "test:financeiro": "tsx scripts/test-financeiro.ts",
     "seed:cases": "tsx scripts/seed-cases-demo.ts",
-    "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts"
+    "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts",
+    "test:webhook-replay": "tsx scripts/zapsign-webhook-replay.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

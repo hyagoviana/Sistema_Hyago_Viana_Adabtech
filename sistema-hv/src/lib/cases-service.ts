@@ -10,7 +10,10 @@ import {
 import { type MacroFin, type MacroOp } from "./cases/constants";
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
+import type { Database } from "./supabase/types";
 import type { CaseCreateOutput, CaseUpdateOutput } from "./validators/case";
+
+type CaseUpdateRow = Database["public"]["Tables"]["system_cases"]["Update"];
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -88,8 +91,12 @@ export async function createCase(
     }
   }
 
-  // Fase comercial (Melhoria 3): caso nasce aguardando a assinatura da procuração
-  // e NÃO entra no Kanban operacional até ser liberado.
+  // S1-02: DESACOPLAR criação de caso do envio de procuração. Criar o caso NÃO
+  // seta mais `aguardando_assinatura_at` — o caso nasce lifecycle='LEAD' (default
+  // da coluna, S1-01) e a flag comercial só é setada no ATO explícito de enviar a
+  // procuração ao ZapSign (sendCaseDocumentToZapsign, quando doc_kind='procuracao').
+  // `comercial` continua governando apenas se preparamos o DOC de procuração
+  // (placeholder/geração), não a flag de "aguardando assinatura".
   const comercial = input.comercial === true;
 
   const { data: created, error } = await sb
@@ -105,7 +112,8 @@ export async function createCase(
       responsavel: input.responsavel ?? null,
       municipio: input.municipio ?? null,
       valor_centavos: input.valor_centavos ?? null,
-      aguardando_assinatura_at: comercial ? new Date().toISOString() : null,
+      // S1-02: a flag comercial passa a ser setada no envio da procuração, não aqui.
+      aguardando_assinatura_at: null,
     })
     .select()
     .single();
@@ -476,6 +484,9 @@ export async function liberarCasoComercial(
       aguardando_assinatura_at: null,
       assinatura_liberada_at: new Date().toISOString(),
       assinatura_liberada_by: opts.userId ?? null,
+      // S1-01: procuração assinada ⇒ o caso vira CLIENTE (estado de 1ª classe).
+      // Escrita de lifecycle centralizada aqui (RPC-only, regra de ouro 7).
+      lifecycle: "CLIENTE",
     })
     .eq("id", caseId)
     .is("deleted_at", null)
@@ -489,6 +500,114 @@ export async function liberarCasoComercial(
     action: "liberado_comercial",
     diff: { via: opts.via },
     triggered_by: opts.userId ?? null,
+  });
+
+  return { ok: true as const, id: caseId, case: data };
+}
+
+// ----------------------------------------------------------------------------
+// S1-03 — PROMOÇÃO MANUAL lead→cliente (POR CASO).
+// ----------------------------------------------------------------------------
+// BUG CRÍTICO (R-ARCH-3): liberarCasoComercial faz NO-OP se aguardando_assinatura_at
+// é NULL. Portanto NÃO reusamos a função crua — um LEAD sem procuração ZapSign
+// nunca viraria CLIENTE. Aqui setamos lifecycle='CLIENTE' INDEPENDENTE da flag
+// comercial. Escrita de lifecycle centralizada (RPC-only, regra de ouro 7).
+//
+// Auditoria (v2.2): qualquer usuário AUTENTICADO promove — só exigimos userId
+// não-null (sem gate por cargo). Grava ator + timestamp em system_case_events.
+export async function promoverCasoManual(caseId: string, userId: string) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id, lifecycle, aguardando_assinatura_at, assinatura_liberada_at")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Idempotente: já CLIENTE → não faz novo UPDATE nem novo evento.
+  if (caso.lifecycle === "CLIENTE") {
+    return { ok: true as const, id: caseId, alreadyCliente: true };
+  }
+
+  // Respeita a invariante de S1-01 (assinatura_liberada_at NOT NULL ⇒ NOT LEAD):
+  // ao promover, se o caso estava aguardando assinatura, limpamos a flag e
+  // carimbamos assinatura_liberada_at; se não estava, só setamos lifecycle.
+  const patch: CaseUpdateRow = { lifecycle: "CLIENTE" };
+  if (caso.aguardando_assinatura_at) {
+    patch.aguardando_assinatura_at = null;
+    patch.assinatura_liberada_at = caso.assinatura_liberada_at ?? new Date().toISOString();
+    patch.assinatura_liberada_by = userId;
+  }
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update(patch)
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao promover caso", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "liberado_comercial",
+    diff: { via: "manual" },
+    triggered_by: userId,
+  });
+
+  return { ok: true as const, id: caseId, case: data };
+}
+
+// ----------------------------------------------------------------------------
+// S1-03 / S1-01b — MARCAR CASO PERDIDO (LEAD→PERDIDO ou reversão CLIENTE→PERDIDO).
+// ----------------------------------------------------------------------------
+// Aceita origem LEAD e CLIENTE (S1-01b reversão pós-assinatura). Motivo é
+// obrigatório. assinatura_liberada_at PERMANECE registrado (histórico) — o CHECK
+// de S1-01 (assinatura_liberada_at NOT NULL ⇒ lifecycle <> 'LEAD') permite PERDIDO.
+export async function marcarCasoPerdido(caseId: string, motivo: string, userId: string) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  const motivoTrim = (motivo ?? "").trim();
+  if (!motivoTrim) throw new CaseServiceError("Informe o motivo da perda", 422);
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id, lifecycle")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Idempotente: já PERDIDO → não duplica.
+  if (caso.lifecycle === "PERDIDO") {
+    return { ok: true as const, id: caseId, alreadyPerdido: true };
+  }
+
+  const from = caso.lifecycle;
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({
+      lifecycle: "PERDIDO",
+      perdido_at: new Date().toISOString(),
+      perdido_motivo: motivoTrim,
+    })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao marcar perdido", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "perdido",
+    diff: { motivo: motivoTrim, from },
+    triggered_by: userId,
   });
 
   return { ok: true as const, id: caseId, case: data };

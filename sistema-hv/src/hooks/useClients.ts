@@ -5,12 +5,16 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { ClientCreateInput, ClientUpdateInput } from "@/lib/validators/client";
 import {
   createClientFn,
+  findOrCreateClientFn,
   getClientFn,
+  listClientsByLifecycleFn,
   listClientsFn,
   resyncDriveFn,
   softDeleteClientFn,
   updateClientFn,
 } from "@/rpc/clients";
+
+export type LifecycleTab = "lead" | "cliente" | "perdido";
 
 // ----------------------------------------------------------------------------
 // Queries
@@ -21,6 +25,16 @@ export function useClientsList(search?: string) {
     queryKey: queryKeys.clients.list(search),
     queryFn: () => fn({ data: search ? { search } : undefined }),
     staleTime: 2 * 60 * 1000, // 2 min
+  });
+}
+
+// S1-05 — lista de pessoas por lifecycle (abas Leads / Clientes / Perdidos).
+export function useClientsByLifecycle(tab: LifecycleTab) {
+  const fn = useServerFn(listClientsByLifecycleFn);
+  return useQuery({
+    queryKey: [...queryKeys.clients.all, "lifecycle", tab],
+    queryFn: () => fn({ data: { tab } }),
+    staleTime: 60 * 1000,
   });
 }
 
@@ -38,6 +52,19 @@ export function useClient(id: string) {
 // ----------------------------------------------------------------------------
 export function useCreateClient() {
   const fn = useServerFn(createClientFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ClientCreateInput) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.lists() });
+    },
+  });
+}
+
+// S1-04 — find-or-create por CPF (entrada comercial). Reutiliza pessoa existente
+// em vez de estourar erro de unicidade; retorna { client, created, conflitos }.
+export function useFindOrCreateClient() {
+  const fn = useServerFn(findOrCreateClientFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: ClientCreateInput) => fn({ data: input }),

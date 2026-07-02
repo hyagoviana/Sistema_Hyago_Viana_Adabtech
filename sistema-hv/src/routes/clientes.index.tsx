@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
-import { useClientsList } from "@/hooks/useClients";
+import { useClientsByLifecycle, useClientsList, type LifecycleTab } from "@/hooks/useClients";
 import { can } from "@/lib/rbac";
 import type { Database } from "@/lib/supabase/types";
 
@@ -83,6 +83,15 @@ function matchField(c: Client, term: string, f: SearchField): boolean {
   return val.toLowerCase().includes(term.toLowerCase());
 }
 
+// S1-05 — abas por ciclo de vida (derivado do lifecycle dos casos da pessoa).
+type LifecycleView = "todos" | LifecycleTab;
+const LIFECYCLE_TABS: Array<{ key: LifecycleView; label: string }> = [
+  { key: "todos", label: "Todos" },
+  { key: "lead", label: "Leads" },
+  { key: "cliente", label: "Clientes" },
+  { key: "perdido", label: "Perdidos" },
+];
+
 function ClientesList() {
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
@@ -91,11 +100,17 @@ function ClientesList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
+  const [lifecycleTab, setLifecycleTab] = useState<LifecycleView>("todos");
 
   const { role } = useAuth();
   const canManageFields = can(role, "config.manage");
 
-  const { data, isLoading, isError, error } = useClientsList(search);
+  const allQuery = useClientsList(search);
+  const lifecycleQuery = useClientsByLifecycle(
+    (lifecycleTab === "todos" ? "lead" : lifecycleTab) as LifecycleTab,
+  );
+  const usingLifecycle = lifecycleTab !== "todos";
+  const { data, isLoading, isError, error } = usingLifecycle ? lifecycleQuery : allQuery;
 
   const tipos = useMemo(() => {
     const set = new Set<string>();
@@ -163,6 +178,27 @@ function ClientesList() {
           </div>
         }
       />
+
+      {/* S1-05 — abas por ciclo de vida (Leads / Clientes / Perdidos) */}
+      <div className="flex items-center gap-1 mb-4 border-b border-[var(--border)]">
+        {LIFECYCLE_TABS.map((t) => {
+          const active = lifecycleTab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setLifecycleTab(t.key)}
+              className="px-4 py-2 text-[13px] font-medium -mb-px border-b-2 transition-colors"
+              style={
+                active
+                  ? { color: "var(--gold-700)", borderColor: "var(--gold)" }
+                  : { color: "var(--ink-700)", borderColor: "transparent" }
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Barra de busca + filtros integrados, num painel único elevado */}
       <div className="card-editorial !p-2 mb-6 flex items-center gap-2">
@@ -328,8 +364,17 @@ function ClientesList() {
                     </span>
                   </div>
                   <div className="text-[11.5px] text-muted-foreground mt-1.5">
-                    {pickCity(c.address) ?? "—"} ·{" "}
-                    <span className="text-[var(--navy)] font-medium">— casos</span>
+                    {pickCity(c.address) ?? "—"}
+                    {usingLifecycle &&
+                      typeof (c as { dias_parado?: number }).dias_parado === "number" && (
+                        <>
+                          {" · "}
+                          <span className="text-[var(--navy)] font-medium">
+                            {(c as { casos_no_lifecycle?: number }).casos_no_lifecycle ?? 0} caso(s)
+                            · parado há {(c as { dias_parado?: number }).dias_parado} dia(s)
+                          </span>
+                        </>
+                      )}
                   </div>
                 </div>
                 <ChevronRight

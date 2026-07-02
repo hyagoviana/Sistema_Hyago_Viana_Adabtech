@@ -12,9 +12,11 @@ import {
   listCaseEventsFn,
   listCasesFn,
   listComercialCasesFn,
+  marcarCasoPerdidoFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
   previewProcuracaoFn,
+  promoverCasoManualFn,
   softDeleteCaseFn,
   updateCaseFn,
 } from "@/rpc/cases";
@@ -208,6 +210,35 @@ export function useLiberarCaso() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.cases.all });
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(id) });
+    },
+  });
+}
+
+// ----------------------------------------------------------------------------
+// S1-03 / S1-01b — promover lead→cliente e marcar (lead|cliente)→perdido
+// ----------------------------------------------------------------------------
+export function usePromoverCasoManual() {
+  const fn = useServerFn(promoverCasoManualFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(id) });
+    },
+  });
+}
+
+export function useMarcarCasoPerdido() {
+  const fn = useServerFn(marcarCasoPerdidoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; motivo: string }) => fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
     },
   });
 }

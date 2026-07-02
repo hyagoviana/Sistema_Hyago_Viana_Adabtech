@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   ClientServiceError,
   createClient,
+  findOrCreateClient,
   getClient,
   listClients,
+  listClientsByLifecycle,
   resyncClientDriveFolder,
   softDeleteClient,
   updateClient,
@@ -45,12 +47,25 @@ export const getClientFn = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) => handle(() => getClient(data.id)));
 
+// S1-05 — abas Leads / Clientes / Perdidos (filtros por lifecycle do caso).
+const lifecycleTabSchema = z.object({ tab: z.enum(["lead", "cliente", "perdido"]) });
+
+export const listClientsByLifecycleFn = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => lifecycleTabSchema.parse(data))
+  .handler(async ({ data }) => handle(() => listClientsByLifecycle(data.tab)));
+
 // ----------------------------------------------------------------------------
 // Mutations
 // ----------------------------------------------------------------------------
 export const createClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => clientCreateSchema.parse(data))
   .handler(async ({ data }) => handle(() => createClient(data)));
+
+// S1-04 — find-or-create por CPF: reutiliza a pessoa ativa existente (nunca 500
+// por unique_violation), merge só de campos vazios, retorna conflitos ao front.
+export const findOrCreateClientFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => clientCreateSchema.parse(data))
+  .handler(async ({ data }) => handle(() => findOrCreateClient(data)));
 
 const updateInputSchema = z.object({
   id: z.string().uuid("ID inválido"),

@@ -444,6 +444,27 @@ export async function sendCaseDocumentToZapsign(opts: {
     .single();
   if (error || !updated) throw new CaseDocumentServiceError("Falha ao atualizar documento", 500);
 
+  // S1-02/S1-07: o envio da PROCURAÇÃO ao ZapSign é o ATO que coloca o caso na
+  // fase comercial. Aqui — e não na criação do caso — setamos `aguardando_
+  // assinatura_at`, para que ao assinar o webhook consiga liberar o caso
+  // (liberarCasoComercial faz no-op se a flag estiver NULL). Só para procuração;
+  // idempotente (não sobrescreve se já estava setado nem se já foi liberado).
+  if (doc.doc_kind === "procuracao" && doc.case_id) {
+    const { data: caso } = await sb
+      .from("system_cases")
+      .select("aguardando_assinatura_at, assinatura_liberada_at")
+      .eq("id", doc.case_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (caso && !caso.aguardando_assinatura_at && !caso.assinatura_liberada_at) {
+      await sb
+        .from("system_cases")
+        .update({ aguardando_assinatura_at: new Date().toISOString() })
+        .eq("id", doc.case_id)
+        .is("deleted_at", null);
+    }
+  }
+
   await sb.from("system_audit_log").insert({
     organization_id: doc.organization_id,
     action: "case_document.send_zapsign",
