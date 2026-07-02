@@ -677,6 +677,74 @@ export type Database = {
           },
         ];
       };
+      system_case_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          body: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          body: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_notes"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_case_notes_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      system_client_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          body: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          body: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_client_notes"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_client_notes_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "system_clients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_audit_log: {
         Row: {
           id: string;
@@ -918,6 +986,14 @@ export type Database = {
       };
       system_case_checklist_items_active: {
         Row: Database["public"]["Tables"]["system_case_checklist_items"]["Row"];
+        Relationships: [];
+      };
+      system_case_notes_active: {
+        Row: Database["public"]["Tables"]["system_case_notes"]["Row"];
+        Relationships: [];
+      };
+      system_client_notes_active: {
+        Row: Database["public"]["Tables"]["system_client_notes"]["Row"];
         Relationships: [];
       };
       system_cases_active: {

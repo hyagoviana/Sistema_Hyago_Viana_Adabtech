@@ -4,10 +4,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
-import { ClientCaseDocumentsSection } from "@/components/clients/ClientCaseDocumentsSection";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
+import { NotesBlock } from "@/components/notes/NotesBlock";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
+import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
 export const Route = createFileRoute("/clientes/$id")({
@@ -54,6 +55,15 @@ function ClienteDetalhe() {
   const deleteMutation = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // S4-06 — título da aba por NOME (full_name), nunca UUID.
+  useDocumentTitle(
+    resolveEntityLabel(cliente?.full_name, {
+      loading: isLoading,
+      notFound: isError,
+      notFoundLabel: "Cliente não encontrado",
+    }),
+  );
 
   if (isLoading) {
     return (
@@ -218,17 +228,19 @@ function ClienteDetalhe() {
         clientHasDriveFolder={!!cliente.drive_folder_id}
       />
 
-      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3 mt-8">
-        Documentos dos casos
-      </h2>
-      <p className="text-[13px] text-muted-foreground mb-3 -mt-1">
-        Procurações e demais documentos gerados nos casos deste cliente.
-      </p>
-      <ClientCaseDocumentsSection clientId={cliente.id} />
+      {/* S4-02 — a lista agregada de documentos de casos (ClientCaseDocumentsSection)
+          foi REMOVIDA: documentos de caso vivem DENTRO do caso (CaseDocumentsTab),
+          para não misturar docs de casos diferentes na ficha do cliente. Os docs
+          pessoais do cliente (acima) permanecem. */}
 
       <OrnamentalDivider />
 
       <ClientCasesSection clientId={cliente.id} />
+
+      <OrnamentalDivider />
+
+      {/* S4-03 — bloco de notas do cliente (auth-only, soft-delete). */}
+      <NotesBlock target="client" entityId={cliente.id} />
 
       <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
 

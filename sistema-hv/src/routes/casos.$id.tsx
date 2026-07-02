@@ -20,7 +20,9 @@ import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
+import { CaseTimeline } from "@/components/cases/CaseTimeline";
 import { TermoPanel } from "@/components/cases/TermoPanel";
+import { NotesBlock } from "@/components/notes/NotesBlock";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import {
@@ -50,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
+import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { useClient } from "@/hooks/useClients";
 import {
   useCase,
@@ -89,10 +92,6 @@ function maskPhone(phone: string | null): string {
   return phone;
 }
 
-function fmtDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-}
-
 /** Extrai string de um campo JSONB (address / professional_data). */
 function pickStr(obj: unknown, key: string): string | undefined {
   if (!obj || typeof obj !== "object" || Array.isArray(obj)) return undefined;
@@ -115,6 +114,15 @@ function CasoDetalhe() {
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = can(role, "casos.manage");
+
+  // S4-06 — título da aba por NOME (case_code), nunca UUID.
+  useDocumentTitle(
+    resolveEntityLabel(caso?.case_code, {
+      loading: isLoading,
+      notFound: isError,
+      notFoundLabel: "Caso não encontrado",
+    }),
+  );
 
   async function handleLiberar() {
     if (
@@ -517,114 +525,13 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
-      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
-        Linha do tempo
-      </h2>
-      <div className="card-editorial !p-0 overflow-hidden">
-        {(events ?? []).length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground italic text-sm">
-            Sem eventos registrados.
-          </div>
-        ) : (
-          <ul>
-            {(events ?? []).map((e) => (
-              <li
-                key={e.id}
-                className="flex items-start gap-3 px-5 py-3 border-b border-[var(--border)] last:border-0"
-              >
-                <div className="w-2 h-2 rounded-full bg-[var(--gold)] mt-2 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-[var(--navy)] font-medium">
-                    {e.action === "created" && "Caso criado"}
-                    {e.action === "created_comercial" &&
-                      "Caso criado (comercial — aguardando assinatura da procuração)"}
-                    {e.action === "status_changed" &&
-                      `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`}
-                    {e.action === "fin_status_changed" &&
-                      `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
-                    {e.action === "fin_stage_auto_advanced" &&
-                      `Avanço automático (financeiro) por checklist: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
-                    {e.action === "fin_enviado_conferencia" &&
-                      `Enviado para conferência (financeiro): ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
-                    {e.action === "fin_conferencia_aprovada" &&
-                      "Conferência financeira aprovada (segunda pessoa)"}
-                    {e.action === "updated" && "Caso editado"}
-                    {e.action === "soft_deleted" && "Caso excluído"}
-                    {/* Checklist (Sprint 2) */}
-                    {e.action === "stage_auto_advanced" &&
-                      `Avanço automático por checklist: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
-                    {e.action === "checklist_inconsistente" &&
-                      `Checklist inconsistente: item obrigatório "${(e.diff as Record<string, string> | null)?.def_key ?? "—"}" da etapa ${(e.diff as Record<string, string> | null)?.stage_slug ?? "—"} foi desmarcado após avanço`}
-                    {e.action === "canonical_fields_updated" && "Dados do serviço atualizados"}
-                    {/* Tarefas */}
-                    {e.action === "task_created" &&
-                      `Tarefa criada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
-                    {e.action === "task_started" &&
-                      `Tarefa iniciada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
-                    {e.action === "task_completed" &&
-                      `Tarefa concluída: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
-                    {e.action === "task_status_changed" &&
-                      `Tarefa "${(e.diff as Record<string, string> | null)?.task_title ?? "—"}" → ${(e.diff as Record<string, string> | null)?.status ?? "—"}`}
-                    {e.action === "task_deleted" &&
-                      `Tarefa excluída: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}
-                    {/* Documentos */}
-                    {e.action === "doc_generated" &&
-                      `Documento gerado: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
-                    {e.action === "doc_finalized" &&
-                      `Documento finalizado: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
-                    {e.action === "doc_reopened" &&
-                      `Documento reaberto: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
-                    {e.action === "doc_sent_zapsign" &&
-                      `Documento enviado para assinatura: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
-                    {e.action === "doc_deleted" &&
-                      `Documento excluído: ${(e.diff as Record<string, string> | null)?.doc_title ?? "—"}`}
-                    {/* Procuração / fase comercial */}
-                    {e.action === "procuracao_preparada" && "Procuração preparada"}
-                    {e.action === "liberado_comercial" &&
-                      ((e.diff as Record<string, string> | null)?.via === "manual"
-                        ? "Promovido para cliente (manual)"
-                        : `Procuração assinada — caso liberado para operação${
-                            (e.diff as Record<string, string> | null)?.via
-                              ? ` (${(e.diff as Record<string, string> | null)?.via})`
-                              : ""
-                          }`)}
-                    {e.action === "perdido" &&
-                      `Caso marcado como perdido${
-                        (e.diff as Record<string, string> | null)?.motivo
-                          ? ` — ${(e.diff as Record<string, string> | null)?.motivo}`
-                          : ""
-                      }`}
-                    {/* Prazos */}
-                    {e.action === "deadline_created" &&
-                      `Prazo criado: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"} (${(e.diff as Record<string, string> | null)?.fatal_date ?? "—"})`}
-                    {e.action === "deadline_completed" &&
-                      `Prazo cumprido: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
-                    {e.action === "deadline_missed" &&
-                      `Prazo perdido: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
-                    {e.action === "deadline_status_changed" &&
-                      `Prazo "${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}" → ${(e.diff as Record<string, string> | null)?.status ?? "—"}`}
-                    {e.action === "deadline_deleted" &&
-                      `Prazo excluído: ${(e.diff as Record<string, string> | null)?.deadline_title ?? "—"}`}
-                    {/* Comunicações */}
-                    {e.action === "communication_logged" &&
-                      `Comunicação registrada (${(e.diff as Record<string, string> | null)?.channel ?? "—"}): ${(e.diff as Record<string, string> | null)?.summary ?? "—"}`}
-                    {e.action === "communication_deleted" &&
-                      `Comunicação excluída: ${(e.diff as Record<string, string> | null)?.summary ?? "—"}`}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {fmtDateTime(e.created_at)}
-                    {e.triggered_by_name && (
-                      <span className="ml-2">
-                        por <strong>{e.triggered_by_name}</strong>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* S4-03 — bloco de notas do caso (auth-only, soft-delete). */}
+      <NotesBlock target="case" entityId={caso.id} />
+
+      <OrnamentalDivider />
+
+      {/* S4-04 — timeline read-only (eventos automáticos) + entrada manual. */}
+      <CaseTimeline caseId={caso.id} />
 
       <MoveCaseDialog
         open={moveOpen}

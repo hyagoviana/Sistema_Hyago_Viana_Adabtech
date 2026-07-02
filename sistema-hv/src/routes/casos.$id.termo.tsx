@@ -11,7 +11,9 @@ import { ExternalLink, FileText, Lock } from "lucide-react";
 import { Breadcrumb, Eyebrow } from "@/components/hv/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useCase } from "@/hooks/useCases";
 import { useTermos } from "@/hooks/useTermo";
+import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 
 export const Route = createFileRoute("/casos/$id/termo")({
   component: TermoPreview,
@@ -40,6 +42,15 @@ const FORMA_LABELS: Record<string, string> = {
 function TermoPreview() {
   const { id } = useParams({ from: "/casos/$id/termo" });
   const { data: termos, isLoading } = useTermos(id);
+  const { data: caso, isLoading: casoLoading, isError: casoError } = useCase(id);
+
+  // S4-06 — nome do caso resolvido para breadcrumb e título (nunca UUID).
+  const casoLabel = resolveEntityLabel(caso?.case_code, {
+    loading: casoLoading,
+    notFound: casoError,
+    notFoundLabel: "Caso não encontrado",
+  });
+  useDocumentTitle(`${casoLabel} · Termo`);
 
   // Snapshot vigente = maior version (listTermos já ordena version desc).
   const vigente = (termos ?? [])[0] as
@@ -61,7 +72,13 @@ function TermoPreview() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: "Termo" }]} />
+      <Breadcrumb
+        items={[
+          { label: "Casos", to: "/casos" },
+          { label: casoLabel, to: `/casos/${id}` },
+          { label: "Termo" },
+        ]}
+      />
       <header className="mb-6">
         <Eyebrow>Caso</Eyebrow>
         <h1 className="font-display text-[32px] font-bold text-[var(--navy)] mt-1">

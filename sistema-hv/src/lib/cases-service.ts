@@ -973,3 +973,106 @@ export async function listCaseEvents(caseId: string, limit = 50) {
     triggered_user: undefined,
   }));
 }
+
+// ----------------------------------------------------------------------------
+// S4-04 — TIMELINE: entrada manual + read-only real dos eventos automáticos.
+// ----------------------------------------------------------------------------
+// Únicas `action` que a UI/RPC podem editar/apagar. Todo o resto (created,
+// status_changed, liberado_comercial, avanços de etapa, docs, prazos, etc.) é
+// evento AUTOMÁTICO do sistema → read-only real (bloqueio no servidor).
+export const MANUAL_EVENT_ACTIONS = ["nota_manual", "marco"] as const;
+export type ManualEventAction = (typeof MANUAL_EVENT_ACTIONS)[number];
+
+function isManualAction(action: string): action is ManualEventAction {
+  return (MANUAL_EVENT_ACTIONS as readonly string[]).includes(action);
+}
+
+// Adiciona um marco/nota manual à timeline do caso. Auth-only (ator não-null).
+// `action` é livre no schema (sem CHECK) → sem migration.
+export async function addManualCaseEvent(
+  caseId: string,
+  input: { action: ManualEventAction; body: string },
+  userId: string,
+) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  const body = (input.body ?? "").trim();
+  if (!body) throw new CaseServiceError("Informe o texto do marco/nota", 422);
+  if (!isManualAction(input.action)) {
+    throw new CaseServiceError("Tipo de evento manual inválido", 422);
+  }
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  const { data, error } = await sb
+    .from("system_case_events")
+    .insert({
+      case_id: caseId,
+      organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
+      action: input.action,
+      diff: { body, manual: true },
+      triggered_by: userId,
+    })
+    .select()
+    .single();
+  if (error || !data) {
+    throw new CaseServiceError(error?.message ?? "Falha ao registrar evento manual", 500);
+  }
+  return data;
+}
+
+// Soft-guard: um evento só é editável/apagável se for MANUAL e do usuário. Os
+// eventos automáticos do sistema são READ-ONLY reais — nunca podem ser tocados.
+async function loadEditableManualEvent(eventId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: event } = await sb
+    .from("system_case_events")
+    .select("id, case_id, action, triggered_by, diff")
+    .eq("id", eventId)
+    .single();
+  if (!event) throw new CaseServiceError("Evento não encontrado", 404);
+  if (!isManualAction(event.action) || !(event.diff as { manual?: boolean } | null)?.manual) {
+    throw new CaseServiceError(
+      "Eventos automáticos do sistema são somente-leitura e não podem ser editados ou removidos",
+      403,
+    );
+  }
+  return event;
+}
+
+// Edita um evento MANUAL (nunca automático). Read-only real no servidor.
+export async function updateManualCaseEvent(eventId: string, body: string, userId: string) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  const text = (body ?? "").trim();
+  if (!text) throw new CaseServiceError("Informe o texto do marco/nota", 422);
+  const event = await loadEditableManualEvent(eventId);
+
+  const sb = getSupabaseAdmin();
+  const prevDiff = (event.diff as Record<string, unknown> | null) ?? {};
+  const { data, error } = await sb
+    .from("system_case_events")
+    .update({ diff: { ...prevDiff, body: text, manual: true } })
+    .eq("id", eventId)
+    .select()
+    .single();
+  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao editar evento", 500);
+  return data;
+}
+
+// Remove (hard) um evento MANUAL — nunca um automático (read-only real). Eventos
+// automáticos são histórico de auditoria e permanecem intocados.
+export async function deleteManualCaseEvent(eventId: string, userId: string) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  await loadEditableManualEvent(eventId);
+
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.from("system_case_events").delete().eq("id", eventId);
+  if (error) throw new CaseServiceError(error.message, 500);
+  return { ok: true as const, id: eventId };
+}
