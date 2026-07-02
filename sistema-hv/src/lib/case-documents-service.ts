@@ -5,6 +5,7 @@
 
 import { createHash } from "node:crypto";
 
+import { sugerirChecklistPorUpload } from "./checklist-service";
 import { createFolder, deleteFile as trashDriveFile, uploadFile, DriveError } from "./google/drive";
 import {
   copyTemplate,
@@ -319,6 +320,12 @@ export async function finalizeCaseDocument(docId: string, triggeredBy?: string) 
     diff: { doc_title: doc.title, doc_id: doc.id },
     triggered_by: triggeredBy ?? null,
   });
+
+  // S2-06 — gancho de auto-check por upload (modo SUGESTÃO). No momento em que o
+  // arquivo ganha drive_file_id, avalia o matcher parametrizável e cria sugestões
+  // (source='drive_suggest', done=false). DESLIGADO por default (AUTO_CHECK_DRIVE_ENABLED);
+  // enquanto desligado é no-op. Nunca marca done sozinho, nunca fecha o gate.
+  await sugerirChecklistPorUpload(doc.case_id, fileName, drive.id).catch(() => {});
 
   return updated;
 }

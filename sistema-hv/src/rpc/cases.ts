@@ -19,6 +19,7 @@ import {
   promoverCasoManual,
   softDeleteCase,
   updateCase,
+  updateCaseCanonicalFields,
 } from "@/lib/cases-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import {
@@ -120,6 +121,18 @@ const updateInputSchema = z.object({
 export const updateCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => updateCase(data.id, data.input, userId)));
+
+// S2-07 — campos canônicos do CASO (merge no JSONB canonical_fields).
+const canonicalFieldsSchema = z.object({
+  id: z.string().uuid(),
+  patch: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+});
+
+export const updateCaseCanonicalFieldsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => canonicalFieldsSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle((userId) => updateCaseCanonicalFields(data.id, data.patch, userId)),
+  );
 
 const moveSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_OP) });
 

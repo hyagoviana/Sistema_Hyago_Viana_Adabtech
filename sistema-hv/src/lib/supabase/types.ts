@@ -123,6 +123,89 @@ export type Database = {
           },
         ];
       };
+      system_stage_checklist_defs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          service_type_id: string;
+          stage_slug: string;
+          key: string;
+          label: string;
+          ordem: number;
+          required: boolean;
+          expected_doc_pattern: string | null;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          service_type_id: string;
+          stage_slug: string;
+          key: string;
+          label: string;
+          ordem?: number;
+          required?: boolean;
+          expected_doc_pattern?: string | null;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_stage_checklist_defs"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_checklist_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          def_id: string;
+          stage_slug: string;
+          done: boolean;
+          done_at: string | null;
+          done_by: string | null;
+          source: string;
+          drive_file_id: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          def_id: string;
+          stage_slug: string;
+          done?: boolean;
+          done_at?: string | null;
+          done_by?: string | null;
+          source?: string;
+          drive_file_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_checklist_items"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_case_checklist_items_def_id_fkey";
+            columns: ["def_id"];
+            referencedRelation: "system_stage_checklist_defs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_checklist_items_case_id_fkey";
+            columns: ["case_id"];
+            referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_client_documents: {
         Row: {
           id: string;
@@ -479,6 +562,7 @@ export type Database = {
           lifecycle: string;
           perdido_at: string | null;
           perdido_motivo: string | null;
+          canonical_fields: Json | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -516,6 +600,7 @@ export type Database = {
           lifecycle?: string;
           perdido_at?: string | null;
           perdido_motivo?: string | null;
+          canonical_fields?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -827,6 +912,14 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_client_field_defs"]["Row"];
         Relationships: [];
       };
+      system_stage_checklist_defs_active: {
+        Row: Database["public"]["Tables"]["system_stage_checklist_defs"]["Row"];
+        Relationships: [];
+      };
+      system_case_checklist_items_active: {
+        Row: Database["public"]["Tables"]["system_case_checklist_items"]["Row"];
+        Relationships: [];
+      };
       system_cases_active: {
         Row: Database["public"]["Tables"]["system_cases"]["Row"] & {
           client_name: string;
@@ -898,6 +991,14 @@ export type Database = {
       };
       system_fn_purge_client_field: {
         Args: { p_org: string; p_key: string };
+        Returns: undefined;
+      };
+      system_fn_instanciar_checklist: {
+        Args: { p_case_id: string; p_stage_slug: string };
+        Returns: undefined;
+      };
+      system_fn_avancar_se_checklist_ok: {
+        Args: { p_case_id: string; p_triggered_by?: string | null };
         Returns: undefined;
       };
     };

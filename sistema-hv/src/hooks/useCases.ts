@@ -18,6 +18,7 @@ import {
   previewProcuracaoFn,
   promoverCasoManualFn,
   softDeleteCaseFn,
+  updateCaseCanonicalFieldsFn,
   updateCaseFn,
 } from "@/rpc/cases";
 
@@ -119,6 +120,21 @@ export function useUpdateCase() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
+    },
+  });
+}
+
+// S2-07 — campos canônicos do CASO (merge no JSONB canonical_fields).
+export function useUpdateCaseCanonicalFields() {
+  const fn = useServerFn(updateCaseCanonicalFieldsFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; patch: Record<string, string | number | boolean | null> }) =>
+      fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
       qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
     },
   });

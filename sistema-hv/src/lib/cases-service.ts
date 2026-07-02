@@ -1,6 +1,7 @@
 // Server-only — CRUD de casos + timeline + audit.
 // NUNCA importe no browser.
 
+import { instanciarChecklist } from "./checklist-service";
 import {
   buildAutoFillFromClient,
   buildAutoFillValues,
@@ -652,6 +653,59 @@ export async function updateCase(id: string, input: CaseUpdateOutput, triggeredB
     triggered_by: triggeredBy ?? null,
   });
 
+  // S2-03 — instancia os itens de checklist da etapa de destino (idempotente,
+  // server-side, dentro da transição). Falha aqui não deve derrubar o move.
+  if (statusChanged && data.macrostatus_op) {
+    await instanciarChecklist(id, data.macrostatus_op).catch(() => {});
+  }
+
+  return data;
+}
+
+// ----------------------------------------------------------------------------
+// S2-07 — CAMPOS CANÔNICOS DO CASO (JSONB) — merge no canonical_fields.
+// Distinto dos custom_fields de CLIENTE. Grava só em system_cases.
+// ----------------------------------------------------------------------------
+export async function updateCaseCanonicalFields(
+  caseId: string,
+  patch: Record<string, unknown>,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+  const { data: before } = await sb
+    .from("system_cases")
+    .select("canonical_fields, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!before) throw new CaseServiceError("Caso não encontrado", 404);
+
+  const current = (before.canonical_fields as Record<string, unknown> | null) ?? {};
+  const merged = { ...current, ...patch };
+  // Remove chaves com valor vazio/null para não poluir o JSONB.
+  for (const k of Object.keys(merged)) {
+    const v = merged[k];
+    if (v === null || v === undefined || v === "") delete merged[k];
+  }
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ canonical_fields: merged as never })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select("id, canonical_fields")
+    .single();
+  if (error || !data)
+    throw new CaseServiceError(error?.message ?? "Falha ao salvar campos do serviço", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: before.organization_id,
+    action: "canonical_fields_updated",
+    diff: patch as never,
+    triggered_by: triggeredBy ?? null,
+  });
+
   return data;
 }
 
@@ -752,14 +806,35 @@ export async function listCases(filters?: {
   if (filters?.client_id) {
     query = query.eq("client_id", filters.client_id);
   }
-  if (filters?.search?.trim()) {
-    const s = filters.search.trim().replace(/[,()]/g, "");
-    if (s) query = query.or(`case_code.ilike.%${s}%,proximo_passo.ilike.%${s}%`);
+  const searchTerm = filters?.search?.trim().replace(/[,()]/g, "") ?? "";
+  if (searchTerm) {
+    query = query.or(`case_code.ilike.%${searchTerm}%,proximo_passo.ilike.%${searchTerm}%`);
   }
 
   const { data, error } = await query;
   if (error) throw new CaseServiceError(error.message, 500);
-  return data ?? [];
+  const rows = data ?? [];
+
+  // S2-07 — a busca por texto também cobre os campos canônicos do caso (JSONB).
+  // PostgREST não faz ilike direto em jsonb, então buscamos os casos que têm
+  // canonical_fields e filtramos por substring (case-insensitive) no servidor,
+  // mesclando com o resultado do ilike em case_code/proximo_passo.
+  if (searchTerm) {
+    const needle = searchTerm.toLowerCase();
+    const { data: withCanon } = await sb
+      .from("system_cases_active")
+      .select("*")
+      .not("canonical_fields", "is", null)
+      .order("created_at", { ascending: false });
+    const seen = new Set(rows.map((r) => r.id));
+    for (const r of withCanon ?? []) {
+      if (seen.has(r.id)) continue;
+      const text = JSON.stringify(r.canonical_fields ?? {}).toLowerCase();
+      if (text.includes(needle)) rows.push(r);
+    }
+  }
+
+  return rows;
 }
 
 export async function getCase(id: string) {

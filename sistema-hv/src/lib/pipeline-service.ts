@@ -3,6 +3,7 @@
 // gravamos macrostatus_* = slug da etapa (o trigger projeta stage_*), mantendo
 // a bifurcação atual intacta (ADR-007).
 
+import { countChecklistItemsForStage, instanciarChecklist } from "./checklist-service";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -150,6 +151,24 @@ export async function softDeleteStage(id: string) {
   if ((count ?? 0) > 0) {
     throw new PipelineServiceError("Há casos nesta etapa — remaneje antes de excluir", 409);
   }
+
+  // S2-02 (R-ARCH-7) — bloqueia também se houver checklist items ancorados por
+  // (service_type_id, stage_slug) — a ancoragem do checklist é por slug.
+  const { data: stage } = await sb
+    .from("system_pipeline_stages")
+    .select("service_type_id, slug")
+    .eq("id", id)
+    .single();
+  if (stage) {
+    const itemCount = await countChecklistItemsForStage(stage.service_type_id, stage.slug);
+    if (itemCount > 0) {
+      throw new PipelineServiceError(
+        "Há itens de checklist de casos nesta etapa — remaneje antes de excluir",
+        409,
+      );
+    }
+  }
+
   const { error } = await sb
     .from("system_pipeline_stages")
     .update({ deleted_at: new Date().toISOString() })
@@ -200,6 +219,11 @@ export async function moveCaseToStageOp(caseId: string, stageId: string) {
     .select("id, stage_op_id, macrostatus_op")
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
+
+  // S2-03 — instancia os itens de checklist da etapa de destino (idempotente,
+  // server-side, dentro da transição — cobre o caminho do DnD do Kanban).
+  await instanciarChecklist(caseId, stage.slug).catch(() => {});
+
   return data;
 }
 

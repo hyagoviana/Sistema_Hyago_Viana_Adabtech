@@ -12,6 +12,11 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  CaseChecklistPanel,
+  ChecklistInconsistencyAlert,
+} from "@/components/cases/CaseChecklistPanel";
+import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { TermoPanel } from "@/components/cases/TermoPanel";
@@ -213,6 +218,9 @@ function CasoDetalhe() {
   return (
     <div className="page-container">
       <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso.case_code }]} />
+
+      {/* S2-05 — alerta de checklist inconsistente (item required desmarcado após avanço) */}
+      <ChecklistInconsistencyAlert events={events} />
 
       {/* Melhoria 3: caso em fase comercial — aguardando assinatura da procuração */}
       {caso.aguardando_assinatura_at && (
@@ -457,6 +465,19 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
+      <div className="grid lg:grid-cols-2 gap-6">
+        <CaseChecklistPanel caseId={caso.id} />
+        <CaseCanonicalFields
+          caseId={caso.id}
+          canonicalFields={
+            (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
+          }
+          canEdit={podeGerirCaso}
+        />
+      </div>
+
+      <OrnamentalDivider />
+
       <CaseDossie caseId={caso.id} />
 
       <OrnamentalDivider />
@@ -512,6 +533,12 @@ function CasoDetalhe() {
                       `Status financeiro mudou: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
                     {e.action === "updated" && "Caso editado"}
                     {e.action === "soft_deleted" && "Caso excluído"}
+                    {/* Checklist (Sprint 2) */}
+                    {e.action === "stage_auto_advanced" &&
+                      `Avanço automático por checklist: ${(e.diff as Record<string, string> | null)?.from ?? "—"} → ${(e.diff as Record<string, string> | null)?.to ?? "—"}`}
+                    {e.action === "checklist_inconsistente" &&
+                      `Checklist inconsistente: item obrigatório "${(e.diff as Record<string, string> | null)?.def_key ?? "—"}" da etapa ${(e.diff as Record<string, string> | null)?.stage_slug ?? "—"} foi desmarcado após avanço`}
+                    {e.action === "canonical_fields_updated" && "Dados do serviço atualizados"}
                     {/* Tarefas */}
                     {e.action === "task_created" &&
                       `Tarefa criada: ${(e.diff as Record<string, string> | null)?.task_title ?? "—"}`}

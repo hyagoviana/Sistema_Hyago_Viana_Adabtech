@@ -15,6 +15,15 @@ export const queryKeys = {
   clientFieldDefs: {
     all: ["clientFieldDefs"] as const,
   },
+  checklistDefs: {
+    all: ["checklistDefs"] as const,
+    byStage: (serviceTypeId: string, stageSlug: string) =>
+      [...queryKeys.checklistDefs.all, serviceTypeId, stageSlug] as const,
+  },
+  checklistItems: {
+    all: ["checklistItems"] as const,
+    byCase: (caseId: string) => [...queryKeys.checklistItems.all, "case", caseId] as const,
+  },
   cases: {
     all: ["cases"] as const,
     lists: () => [...queryKeys.cases.all, "list"] as const,
