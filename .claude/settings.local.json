@@ -250,7 +250,25 @@
       "Bash(find . -name \"CaseCardFin*\")",
       "Bash(find . -name \"CaseChecklistPanel*\")",
       "Read(//c/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/Sistema_Hyago_Viana_Adabtech/routes/**)",
-      "Bash(grep -oE \"[a-z-]+/[a-z-]+$|@typescript-eslint/[a-z-]+\")"
+      "Bash(grep -oE \"[a-z-]+/[a-z-]+$|@typescript-eslint/[a-z-]+\")",
+      "Bash(ls sistema-hv/src/lib/)",
+      "Bash(find sistema-hv *)",
+      "Bash(find sistema-hv/src/lib -name \"*document*\" -o -name \"*case-doc*\")",
+      "Bash(python -m pip show python-docx)",
+      "Bash(python -c \"print\\(\\)\")",
+      "Bash(python _build_termo_templates.py)",
+      "Bash(python _add_cpf_line.py)",
+      "Read(//c/tmp/**)",
+      "Bash(unzip -p 'C:/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/Sistema_Hyago_Viana_Adabtech/docs/modelos-termo/TERMO ACERTO __TRACKED_VAR__.docx' word/document.xml)",
+      "Bash(unzip -p \"C:/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/Sistema_Hyago_Viana_Adabtech/docs/modelos-termo/TERMO ACERTO PARCIAL.docx\" word/document.xml)",
+      "Bash(unzip -p \"C:/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/Sistema_Hyago_Viana_Adabtech/docs/modelos-termo/TERMO ACERTO COMPLEMENTAR.docx\" word/document.xml)",
+      "Bash(grep -oE \"[a-z@-]+/[a-z-]+$\")",
+      "Bash(cp /tmp/base-route-lf.tsx /tmp/fmt-base-route.tsx)",
+      "Bash(cp /tmp/lf-route.tsx /tmp/fmt-cur-route.tsx)",
+      "Bash(grep -vE \"^[<>] *$\")",
+      "Bash(grep -vE 'service_type_id|casos.\\\\$id.tsx\\\\\\(562|Type '\\\\''string \\\\| null'\\\\''|Type '\\\\''null'\\\\''|Types of property|assignable to type|30 more')",
+      "PowerShell(git -C $repo log --oneline -8)",
+      "PowerShell(git -C $repo show --stat --oneline 923185b)"
     ]
   }
 }
