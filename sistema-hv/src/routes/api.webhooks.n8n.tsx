@@ -28,7 +28,9 @@ export const Route = createFileRoute("/api/webhooks/n8n")({
           );
         }
 
-        // Parse body
+        // Parse body. O payload é validado dentro de processN8nWebhook (campos
+        // obrigatórios) e aceita os campos opcionais de documento assinado
+        // (`assinado`, `documento_assinado`) — ver N8nIncomingPayload.
         let payload: N8nIncomingPayload;
         try {
           payload = await request.json();
