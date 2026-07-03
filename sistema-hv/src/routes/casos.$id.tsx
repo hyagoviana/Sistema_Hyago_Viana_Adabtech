@@ -53,6 +53,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
+import { usePublishRouteTitle } from "@/lib/route-title";
 import { useClient } from "@/hooks/useClients";
 import {
   useCase,
@@ -176,6 +177,17 @@ function CasoDetalhe() {
 
   // Carrega cliente vinculado pra header
   const { data: cliente } = useClient(caso?.client_id ?? "");
+
+  // fix breadcrumb Topbar (2026-07-03) — publica o NOME DO CLIENTE (não o UUID)
+  // para o breadcrumb automático do Topbar. Enquanto o caso/cliente carregam,
+  // mostra "Carregando…"; em 404, rótulo genérico.
+  usePublishRouteTitle(
+    resolveEntityLabel(cliente?.full_name, {
+      loading: isLoading || (!!caso?.client_id && cliente === undefined),
+      notFound: isError,
+      notFoundLabel: "Caso não encontrado",
+    }),
+  );
 
   if (isLoading) {
     return (

@@ -3,6 +3,7 @@ import { Search, Plus, Filter, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
+import { getRouteTitle, useRouteTitle } from "@/lib/route-title";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 
@@ -22,12 +23,36 @@ const labelMap: Record<string, string> = {
   "design-system": "Design System",
   inadimplencia: "Inadimplência",
   lista: "Lista",
+  conversas: "Conversas",
+  portal: "Portal",
+  modelos: "Modelos",
+  termo: "Termo",
 };
+
+// Detecta segmentos que são identificadores (UUID ou id numérico), para nunca
+// exibi-los crus no breadcrumb quando não houver rótulo publicado.
+const isId = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || /^\d+$/.test(s);
 
 export function Topbar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  // Assina o store de rótulos: re-renderiza quando a página publica/atualiza o
+  // nome resolvido do pathname atual (ex.: "Carregando…" → "teste 123").
+  useRouteTitle(path);
+
   const segs = path.split("/").filter(Boolean);
-  const crumbs = ["Painel", ...segs.map((s) => labelMap[s] ?? s)];
+  const crumbs = [
+    "Painel",
+    ...segs.map((s, i) => {
+      // pathname acumulado até este segmento (mesma chave usada na publicação).
+      const acc = "/" + segs.slice(0, i + 1).join("/");
+      const published = getRouteTitle(acc);
+      if (published) return published;
+      // Safety net: id sem rótulo publicado nunca aparece cru.
+      if (isId(s)) return "Detalhe";
+      return labelMap[s] ?? s;
+    }),
+  ];
   const [openNew, setOpenNew] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);

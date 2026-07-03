@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
+import { usePublishRouteTitle } from "@/lib/route-title";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
 export const Route = createFileRoute("/clientes/$id")({
@@ -57,13 +58,14 @@ function ClienteDetalhe() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
-  useDocumentTitle(
-    resolveEntityLabel(cliente?.full_name, {
-      loading: isLoading,
-      notFound: isError,
-      notFoundLabel: "Cliente não encontrado",
-    }),
-  );
+  const clienteLabel = resolveEntityLabel(cliente?.full_name, {
+    loading: isLoading,
+    notFound: isError,
+    notFoundLabel: "Cliente não encontrado",
+  });
+  useDocumentTitle(clienteLabel);
+  // fix breadcrumb Topbar (2026-07-03) — publica o nome para o Topbar.
+  usePublishRouteTitle(clienteLabel);
 
   if (isLoading) {
     return (

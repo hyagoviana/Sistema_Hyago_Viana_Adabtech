@@ -65,6 +65,7 @@
 - [x] **Rotas de API** (AC: 4) — `api.clients.$id.documents.$docId(.download).tsx`: sem UI/breadcrumb; a aba de docs renderiza `doc.name`, não `$docId` (verificado).
 - [x] **Varredura rota a rota** (AC: 4) — cobertas todas as rotas da tabela; nenhuma renderiza UUID (loading → "Carregando…", 404 → rótulo genérico).
 - [x] **Testes** (AC: 1-5) — `tsc --noEmit` sem novos erros (só os 3 pré-existentes de `service_type_id`); lint verde nos arquivos alterados.
+- [x] **Fix do breadcrumb automático do Topbar (2026-07-03)** (AC: 1,3,4) — o breadcrumb do `Topbar.tsx` era montado dos segmentos crus da URL (`labelMap[s] ?? s`), então em `/casos/<uuid>` imprimia o UUID. Corrigido em 2 camadas: (1) store leve `src/lib/route-title.ts` (`usePublishRouteTitle` nas páginas de detalhe + `useRouteTitle`/`getRouteTitle` no Topbar) publicando o nome já resolvido (caso = **nome do cliente** via `cliente.full_name`; cliente = `full_name`; termo/portal = `case_code`; peticionamento/whatsapp = rótulo genérico); (2) safety net `isId()` no Topbar → qualquer segmento UUID/id-numérico sem rótulo publicado vira "Detalhe", nunca o valor cru. Loading mostra "Carregando…".
 
 ---
 
@@ -120,6 +121,17 @@
 - `sistema-hv/src/routes/whatsapp.conversas.$id.tsx` (breadcrumb + título genérico — stub sem dados)
 - `sistema-hv/src/routes/portal.casos.$id.tsx` (resolve `case_code`, breadcrumb + título)
 
+**Fix breadcrumb Topbar (2026-07-03):**
+- `sistema-hv/src/lib/route-title.ts` (NOVO — store leve `usePublishRouteTitle`/`useRouteTitle`/`getRouteTitle`/`setRouteTitle` chaveado por pathname)
+- `sistema-hv/src/components/hv/Topbar.tsx` (consome rótulos publicados + safety net `isId()`; `labelMap` ganhou `conversas`/`portal`/`modelos`/`termo`)
+- `sistema-hv/src/routes/casos.$id.tsx` (publica **nome do cliente** — `cliente.full_name`)
+- `sistema-hv/src/routes/clientes.$id.tsx` (publica `full_name`)
+- `sistema-hv/src/routes/casos.$id.termo.tsx` (publica `case_code` p/ `$id` + "Termo")
+- `sistema-hv/src/routes/casos.$id.termo.elaborar.tsx` (publica `case_code` + "Termo" + "Elaborar")
+- `sistema-hv/src/routes/portal.casos.$id.tsx` (publica `case_code`)
+- `sistema-hv/src/routes/peticionamento.$id.tsx` (publica "Editor de Minuta")
+- `sistema-hv/src/routes/whatsapp.conversas.$id.tsx` (publica "Conversa")
+
 > Nota: o resolver ficou em `use-document-title.ts` (não `use-entity-label.ts`), unificando label + título da aba num único util. `__root.tsx` não precisou de mudança (o `head` estático serve como fallback SSR e é sobrescrito no cliente).
 
 ## Change Log
@@ -128,3 +140,4 @@
 |------|---------|-------------|--------|
 | 2026-07-02 | 0.1 | Draft inicial fatiado do PLANO-SPRINTS v2.3 (Sprint 4, S4-06 — UX transversal) | @sm |
 | 2026-07-02 | 1.0 | Implementado: resolver genérico + título dinâmico + breadcrumbs por nome nas rotas de detalhe. Ready for Review. | @dev |
+| 2026-07-03 | 1.1 | Fix do breadcrumb **automático do Topbar**: store `route-title.ts` (publica nome resolvido) + safety net `isId()` → nunca exibe UUID. Caso publica o **nome do cliente**. | @dev |

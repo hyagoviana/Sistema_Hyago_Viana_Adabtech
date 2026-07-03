@@ -1,9 +1,11 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { Breadcrumb } from "@/components/hv/primitives";
 import { StubPage } from "@/components/hv/StubPage";
 import { useCase } from "@/hooks/useCases";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
+import { setRouteTitle, usePublishRouteTitle } from "@/lib/route-title";
 
 export const Route = createFileRoute("/casos/$id/termo/elaborar")({
   component: ElaborarTermo,
@@ -20,6 +22,18 @@ function ElaborarTermo() {
     notFoundLabel: "Caso não encontrado",
   });
   useDocumentTitle(`${casoLabel} · Elaborar termo`);
+
+  // fix breadcrumb Topbar (2026-07-03) — publica rótulos p/ o Topbar:
+  // $id = nome do caso, termo = "Termo", segmento final = "Elaborar".
+  usePublishRouteTitle("Elaborar");
+  useEffect(() => {
+    setRouteTitle(`/casos/${id}`, casoLabel);
+    setRouteTitle(`/casos/${id}/termo`, "Termo");
+    return () => {
+      setRouteTitle(`/casos/${id}`, null);
+      setRouteTitle(`/casos/${id}/termo`, null);
+    };
+  }, [id, casoLabel]);
 
   return (
     <div className="page-container">

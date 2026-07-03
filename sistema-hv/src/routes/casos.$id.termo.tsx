@@ -7,6 +7,7 @@
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { ExternalLink, FileText, Lock } from "lucide-react";
+import { useEffect } from "react";
 
 import { Breadcrumb, Eyebrow } from "@/components/hv/primitives";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/useCases";
 import { useTermos } from "@/hooks/useTermo";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
+import { setRouteTitle, usePublishRouteTitle } from "@/lib/route-title";
 
 export const Route = createFileRoute("/casos/$id/termo")({
   component: TermoPreview,
@@ -51,6 +53,15 @@ function TermoPreview() {
     notFoundLabel: "Caso não encontrado",
   });
   useDocumentTitle(`${casoLabel} · Termo`);
+
+  // fix breadcrumb Topbar (2026-07-03) — publica rótulos p/ o Topbar:
+  // segmento $id (`/casos/<id>`) = nome do caso; segmento final = "Termo".
+  usePublishRouteTitle("Termo");
+  useEffect(() => {
+    const casePath = `/casos/${id}`;
+    setRouteTitle(casePath, casoLabel);
+    return () => setRouteTitle(casePath, null);
+  }, [id, casoLabel]);
 
   // Snapshot vigente = maior version (listTermos já ordena version desc).
   const vigente = (termos ?? [])[0] as
