@@ -8,9 +8,11 @@
 //   3. Busca cliente por CPF/CNPJ → se não existe, cria + pasta no Drive
 //   4. Busca caso pelo tipo + cliente → se não existe, cria na 1ª etapa op do tipo
 //   5. Cria subpasta do caso dentro da pasta do cliente no Drive
-//   6. Se veio documento assinado:
+//   6. Se veio documento assinado (PROCURAÇÃO):
 //        a. grava system_case_documents (doc_kind='procuracao', status='ASSINADO')
-//        b. PROMOVE o caso a CLIENTE (promoverCasoManual — lifecycle centralizado)
+//        b. REGISTRA a procuração assinada (registrarProcuracaoAssinada — evento
+//           COMERCIAL). O caso SEGUE LEAD (S9-06). A promoção a CLIENTE agora é
+//           SÓ por CONTRATO assinado (promoverCasoOperacional / webhook ZapSign).
 //        c. registra o consentimento LGPD (system_consent_records)
 //   7. Retorna IDs para o n8n continuar o fluxo
 //
@@ -22,7 +24,7 @@
 
 import slugify from "slugify";
 
-import { promoverCasoManual } from "./cases-service";
+import { registrarProcuracaoAssinada } from "./cases-service";
 import { createFolder, DriveError, uploadFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import { recordConsent } from "./users-service";
@@ -321,8 +323,9 @@ export async function processN8nWebhook(payload: N8nIncomingPayload): Promise<N8
         proximo_passo: payload.proximo_passo?.trim() || null,
         responsavel: payload.responsavel?.trim() || null,
         municipio: payload.municipio?.trim() || null,
-        // lifecycle NÃO é setado aqui — nasce 'LEAD' (default da coluna). A
-        // promoção a CLIENTE é feita via promoverCasoManual quando assinado=true.
+        // lifecycle NÃO é setado aqui — nasce 'LEAD' (default da coluna). Na
+        // procuração assinada o caso SEGUE LEAD (S9-06); a promoção a CLIENTE é
+        // só por CONTRATO assinado (promoverCasoOperacional / webhook ZapSign).
       })
       .select()
       .single();
@@ -501,22 +504,21 @@ export async function processN8nWebhook(payload: N8nIncomingPayload): Promise<N8
       });
     }
 
-    // 5.b) PROMOVER o caso a CLIENTE (lifecycle centralizado, auditado). Idempotente:
-    // promoverCasoManual faz no-op se já é CLIENTE.
+    // 5.b) S9-06: procuração assinada = evento COMERCIAL (registra, NÃO promove).
+    // O caso SEGUE LEAD; a promoção a CLIENTE agora é SÓ por contrato assinado.
+    // Auditado (registrarProcuracaoAssinada grava evento). Best-effort/idempotente.
     try {
       const actorId = await resolveSystemActorId();
-      if (actorId) {
-        const promo = await promoverCasoManual(caso.id, actorId);
-        casoPromovido = !("alreadyCliente" in promo && promo.alreadyCliente);
-        casoLifecycle = "CLIENTE";
-      } else {
-        console.error(
-          "n8n-webhook: sem usuário admin na org para promover o caso — promoção pulada.",
-        );
-      }
+      await registrarProcuracaoAssinada(caso.id, {
+        via: "webhook",
+        userId: actorId ?? undefined,
+      });
+      // caso_promovido permanece false (procuração não promove); lifecycle segue LEAD.
+      casoPromovido = false;
+      casoLifecycle = "LEAD";
     } catch (err) {
-      // Best-effort: falha ao promover não deve perder o doc já gravado. Loga e segue.
-      console.error("n8n-webhook: falha ao promover caso a CLIENTE:", err);
+      // Best-effort: falha ao registrar não deve perder o doc já gravado. Loga e segue.
+      console.error("n8n-webhook: falha ao registrar procuração assinada:", err);
     }
 
     // 5.c) Registrar consentimento LGPD (best-effort). Idempotência simples: só

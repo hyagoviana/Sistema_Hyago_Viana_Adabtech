@@ -9,6 +9,7 @@ import {
   createCase,
   createComercialCaseAndGenerateProcuracao,
   enviarConferenciaFin,
+  generateContratoFromTemplate,
   getCase,
   getConferenciaFinPendente,
   liberarCasoComercial,
@@ -114,6 +115,23 @@ export const createComercialProcuracaoFn = createServerFn({ method: "POST" })
         },
         userId,
       ),
+    ),
+  );
+
+// S9-02 — gera o CONTRATO do caso (doc_kind='contrato') a partir de um modelo.
+// Idempotente por caso; degrada 424 se não houver modelo de contrato cadastrado.
+// A escolha do template na UI é da S9-09; aqui só recebemos o id (nullable).
+const generateContratoSchema = z.object({
+  case_id: z.string().uuid(),
+  client_id: z.string().uuid(),
+  template_id: z.string().uuid().nullable().optional(),
+});
+
+export const generateContratoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => generateContratoSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle((userId) =>
+      generateContratoFromTemplate(data.case_id, data.template_id ?? null, data.client_id, userId),
     ),
   );
 

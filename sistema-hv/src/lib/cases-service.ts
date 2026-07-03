@@ -336,6 +336,81 @@ export async function generateProcuracaoFromTemplate(
 }
 
 // ----------------------------------------------------------------------------
+// S9-02 — CONTRATO do caso (com modelo). Espelho de generateProcuracaoFromTemplate
+// com doc_kind='contrato'. É o documento OPERACIONAL (contrato assinado ⇒ CLIENTE
+// via webhook/gatilho S9-04/S9-05). NÃO envia ao ZapSign aqui — nasce em edição.
+//
+// Idempotência POR doc_kind='contrato' (procuração e contrato coexistem no mesmo
+// caso — não podem colidir na busca de "já existe doc").
+//
+// Degradação gracioso: sem templateId ou template inexistente/apagado ⇒ 424
+// (EXTERNAL_DEP_FAILED equivalente), mensagem clara ("Modelo de contrato ainda
+// não cadastrado") — igual ao termo (S6-04). Nunca 5xx (Vercel mascara gateway).
+// O caso NÃO é criado/alterado por essa falha.
+// ----------------------------------------------------------------------------
+export async function generateContratoFromTemplate(
+  caseId: string,
+  templateId: string | null | undefined,
+  clientId: string,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  // Idempotente: se já existe CONTRATO no caso, não duplica (filtra por doc_kind).
+  const { data: existing } = await sb
+    .from("system_case_documents")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("doc_kind", "contrato")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (existing) return existing;
+
+  // Sem template selecionado ⇒ degrada 424 (não 5xx).
+  if (!templateId) {
+    throw new CaseServiceError("Modelo de contrato ainda não cadastrado", 424);
+  }
+
+  const { data: tpl } = await sb
+    .from("system_document_templates")
+    .select("fields")
+    .eq("id", templateId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  // Template apagado/inexistente ⇒ degrada 424.
+  if (!tpl) {
+    throw new CaseServiceError("Modelo de contrato ainda não cadastrado", 424);
+  }
+
+  // Dados do caso (para município / código / responsável) e do cliente completo.
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, case_code, municipio, responsavel")
+    .eq("id", caseId)
+    .single();
+
+  const { data: client } = await sb
+    .from("system_clients")
+    .select("full_name, cpf_cnpj, email, phone, address, professional_data")
+    .eq("id", clientId)
+    .single();
+
+  const fields = ((tpl.fields ?? []) as TemplateField[]) ?? [];
+  const data = buildAutoFillFromClient(client ?? {}, caso ?? {});
+  const values = buildAutoFillValues(fields, data);
+
+  // Import dinâmico evita ciclo entre cases-service e case-documents-service.
+  const { generateCaseDocumentFromTemplate } = await import("./case-documents-service");
+  return generateCaseDocumentFromTemplate({
+    caseId,
+    templateId,
+    values,
+    docKind: "contrato",
+    triggeredBy,
+  });
+}
+
+// ----------------------------------------------------------------------------
 // PROCURAÇÃO — PREVIEW (revisão antes de criar o caso). Lê os campos <...> do
 // modelo (ao vivo do Google Doc) e resolve os valores a partir do cadastro do
 // cliente. NÃO grava nada — é só para o usuário revisar/editar antes de enviar.
@@ -593,24 +668,29 @@ export async function listComercialCases() {
 }
 
 // ----------------------------------------------------------------------------
-// LIBERAR — procuração assinada (webhook) ou confirmação manual. Limpa a flag
-// comercial; o caso entra no funil operacional (já está na 1ª etapa).
+// S9-03 — GATILHO COMERCIAL: procuração assinada (webhook ou manual).
 // ----------------------------------------------------------------------------
-export async function liberarCasoComercial(
+// MODELO NOVO (Sprint 9): procuração assinada = evento COMERCIAL. Carimba
+// `procuracao_assinada_at`, sai de `aguardando_assinatura_at`, marca a esteira
+// comercial como GANHO. NÃO muda `lifecycle` (o caso SEGUE LEAD) e NÃO carimba
+// `assinatura_liberada_at` (isso é do CONTRATO — promoverCasoOperacional, S9-04).
+// Isso permite 1 pessoa → N casos e a separação procuração/contrato.
+// Escrita centralizada (RPC-only, regra de ouro 7). Idempotente.
+export async function registrarProcuracaoAssinada(
   caseId: string,
   opts: { via: "webhook" | "manual"; userId?: string },
 ) {
   const sb = getSupabaseAdmin();
   const { data: caso } = await sb
     .from("system_cases")
-    .select("id, organization_id, aguardando_assinatura_at")
+    .select("id, organization_id, aguardando_assinatura_at, procuracao_assinada_at")
     .eq("id", caseId)
     .is("deleted_at", null)
     .single();
   if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
 
-  // Idempotente: se já não está aguardando, no-op.
-  if (!caso.aguardando_assinatura_at) {
+  // Idempotente: procuração já registrada e sem flag pendente → no-op (sem evento).
+  if (!caso.aguardando_assinatura_at && caso.procuracao_assinada_at) {
     return { ok: true as const, id: caseId, alreadyLiberado: true };
   }
 
@@ -618,25 +698,23 @@ export async function liberarCasoComercial(
     .from("system_cases")
     .update({
       aguardando_assinatura_at: null,
-      assinatura_liberada_at: new Date().toISOString(),
-      assinatura_liberada_by: opts.userId ?? null,
-      // S1-01: procuração assinada ⇒ o caso vira CLIENTE (estado de 1ª classe).
-      // Escrita de lifecycle centralizada aqui (RPC-only, regra de ouro 7).
-      lifecycle: "CLIENTE",
-      // S5-02: carimbo terminal da esteira comercial (histórico/visual). A saída
-      // real da pipeline de leads é por lifecycle; este carimbo é só instantâneo.
+      // Carimba só se ainda não estava (preserva o instante da 1ª assinatura).
+      procuracao_assinada_at: caso.procuracao_assinada_at ?? new Date().toISOString(),
+      // S5-02: carimbo terminal da esteira comercial (histórico/visual).
       macrostatus_comercial: "GANHO",
+      // NÃO toca lifecycle (segue LEAD) nem assinatura_liberada_at (contrato).
     })
     .eq("id", caseId)
     .is("deleted_at", null)
     .select()
     .single();
-  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao liberar caso", 500);
+  if (error || !data)
+    throw new CaseServiceError(error?.message ?? "Falha ao registrar procuração", 500);
 
   await sb.from("system_case_events").insert({
     case_id: caseId,
     organization_id: caso.organization_id,
-    action: "liberado_comercial",
+    action: "procuracao_assinada",
     diff: { via: opts.via },
     triggered_by: opts.userId ?? null,
   });
@@ -644,18 +722,28 @@ export async function liberarCasoComercial(
   return { ok: true as const, id: caseId, case: data };
 }
 
+// Compat: alguns chamadores/integrações ainda referenciam o nome antigo. No
+// modelo novo ele delega ao gatilho COMERCIAL (procuração ≠ promover a CLIENTE).
+export const liberarCasoComercial = registrarProcuracaoAssinada;
+
 // ----------------------------------------------------------------------------
-// S1-03 — PROMOÇÃO MANUAL lead→cliente (POR CASO).
+// S9-04 — GATILHO OPERACIONAL: contrato do caso assinado ⇒ CLIENTE.
 // ----------------------------------------------------------------------------
-// BUG CRÍTICO (R-ARCH-3): liberarCasoComercial faz NO-OP se aguardando_assinatura_at
-// é NULL. Portanto NÃO reusamos a função crua — um LEAD sem procuração ZapSign
-// nunca viraria CLIENTE. Aqui setamos lifecycle='CLIENTE' INDEPENDENTE da flag
-// comercial. Escrita de lifecycle centralizada (RPC-only, regra de ouro 7).
+// MODELO NOVO (Sprint 9): SÓ o CONTRATO assinado promove o caso a CLIENTE.
+// Carimba `assinatura_liberada_at` (= contrato, redefinido em S9-01) + `_by`,
+// seta `lifecycle='CLIENTE'` e `macrostatus_comercial='GANHO'` (terminal
+// comercial). A entrada operacional→financeira segue a máquina existente
+// (bifurcação/entrar_financeiro; o caso já nasce na 1ª etapa op no createCase) —
+// NÃO recria trigger de bifurcação (regra de ouro 6). Escrita centralizada
+// (RPC-only, regra de ouro 7). Idempotente (no-op se já CLIENTE).
 //
-// Auditoria (v2.2): qualquer usuário AUTENTICADO promove — só exigimos userId
-// não-null (sem gate por cargo). Grava ator + timestamp em system_case_events.
-export async function promoverCasoManual(caseId: string, userId: string) {
-  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+// CUIDADO com o CHECK de S9-01 (assinatura_liberada_at NOT NULL ⇒ NOT LEAD):
+// setamos lifecycle='CLIENTE' + assinatura_liberada_at no MESMO patch.
+export async function promoverCasoOperacional(
+  caseId: string,
+  opts: { via: "webhook" | "manual"; userId: string },
+) {
+  if (!opts.userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
   const sb = getSupabaseAdmin();
 
   const { data: caso } = await sb
@@ -671,16 +759,17 @@ export async function promoverCasoManual(caseId: string, userId: string) {
     return { ok: true as const, id: caseId, alreadyCliente: true };
   }
 
-  // Respeita a invariante de S1-01 (assinatura_liberada_at NOT NULL ⇒ NOT LEAD):
-  // ao promover, se o caso estava aguardando assinatura, limpamos a flag e
-  // carimbamos assinatura_liberada_at; se não estava, só setamos lifecycle.
-  // S5-02: carimba GANHO na esteira comercial (histórico/visual). A saída da
-  // pipeline de leads é por lifecycle; o carimbo é só o instantâneo terminal.
-  const patch: CaseUpdateRow = { lifecycle: "CLIENTE", macrostatus_comercial: "GANHO" };
+  // Contrato assinado ⇒ CLIENTE + assinatura_liberada_at (só se NULL) no MESMO
+  // patch (o CHECK de S9-01 exige NOT LEAD sempre que assinatura_liberada_at
+  // estiver setado). Limpa a flag comercial se ainda estiver pendente.
+  const patch: CaseUpdateRow = {
+    lifecycle: "CLIENTE",
+    macrostatus_comercial: "GANHO",
+    assinatura_liberada_at: caso.assinatura_liberada_at ?? new Date().toISOString(),
+    assinatura_liberada_by: opts.userId,
+  };
   if (caso.aguardando_assinatura_at) {
     patch.aguardando_assinatura_at = null;
-    patch.assinatura_liberada_at = caso.assinatura_liberada_at ?? new Date().toISOString();
-    patch.assinatura_liberada_by = userId;
   }
 
   const { data, error } = await sb
@@ -695,12 +784,23 @@ export async function promoverCasoManual(caseId: string, userId: string) {
   await sb.from("system_case_events").insert({
     case_id: caseId,
     organization_id: caso.organization_id,
-    action: "liberado_comercial",
-    diff: { via: "manual" },
-    triggered_by: userId,
+    action: "contrato_assinado",
+    diff: { via: opts.via },
+    triggered_by: opts.userId,
   });
 
   return { ok: true as const, id: caseId, case: data };
+}
+
+// ----------------------------------------------------------------------------
+// S1-03 — PROMOÇÃO MANUAL lead→cliente (POR CASO). Botão da ficha do caso.
+// ----------------------------------------------------------------------------
+// S9-04: delega ao gatilho operacional (promoverCasoOperacional). Mantém a
+// assinatura pública consumida por promoverCasoManualFn (src/rpc/cases.ts) e o
+// shape de retorno (`alreadyCliente`). Auditoria: exige userId não-null (401 sem).
+export async function promoverCasoManual(caseId: string, userId: string) {
+  if (!userId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  return promoverCasoOperacional(caseId, { via: "manual", userId });
 }
 
 // ----------------------------------------------------------------------------

@@ -2,6 +2,8 @@
 
 **Status:** Implementado (Fase 1 — lado app). Pendente: reescrever o fluxo n8n (Fase 2) para chamar este endpoint em vez de escrever cru no Supabase.
 
+> **ATUALIZAÇÃO S9-06 (2026-07-03):** o modelo mudou (Sprint 9). Procuração assinada = evento **COMERCIAL** e o caso **SEGUE LEAD** — o endpoint NÃO promove mais a CLIENTE na procuração. No ramo `assinado=true` ele agora chama `registrarProcuracaoAssinada` (em vez de `promoverCasoManual`); a resposta retorna `caso_promovido=false` e `caso_lifecycle='LEAD'`. A promoção a CLIENTE passou a ser **só por CONTRATO assinado** (`promoverCasoOperacional`, via botão manual ou webhook ZapSign roteando `doc_kind='contrato'`). O defeito (a) descrito abaixo ("cria como LEAD e nunca promove") deixa de ser defeito — LEAD após procuração é o comportamento CORRETO.
+
 **Contexto:** O onboarding automático do n8n (fluxo "disparar e cria leads") hoje
 escreve DIRETO no Supabase e apresenta 3 defeitos: (a) cria o caso como LEAD e
 nunca promove a CLIENTE; (b) salva o PDF assinado em `system_client_documents`

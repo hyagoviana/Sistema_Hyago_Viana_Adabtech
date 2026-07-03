@@ -606,6 +606,7 @@ export type Database = {
           canonical_fields: Json | null;
           macrostatus_comercial: string | null;
           stage_comercial_id: string | null;
+          procuracao_assinada_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -646,6 +647,7 @@ export type Database = {
           canonical_fields?: Json | null;
           macrostatus_comercial?: string | null;
           stage_comercial_id?: string | null;
+          procuracao_assinada_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

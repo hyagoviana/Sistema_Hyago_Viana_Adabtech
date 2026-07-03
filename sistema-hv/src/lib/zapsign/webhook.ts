@@ -10,13 +10,31 @@
 // senão, na caixa "ZapSign - Recebidos".
 
 import { ensureCaseFolder } from "../case-documents-service";
-import { liberarCasoComercial } from "../cases-service";
+import { promoverCasoOperacional, registrarProcuracaoAssinada } from "../cases-service";
 import { createFolder, getRootFolderId, listFilesInFolder, uploadFile } from "../google/drive";
 import { getSupabaseAdmin } from "../supabase/server";
 import type { Json } from "../supabase/types";
 import { getDocument } from "./client";
 
 const INBOX_NAME = "ZapSign - Recebidos";
+const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
+
+// Ator do sistema (admin da org) para promover o caso de forma auditada quando
+// o disparo vem do webhook (sem usuário humano no laço). promoverCasoOperacional
+// exige userId não-nulo; sem admin, a promoção é pulada com log (não perde o PDF).
+async function resolveSystemActorId(): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_users")
+    .select("id")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .eq("role", "admin")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
 
 export type ZapsignWebhookResult =
   | {
@@ -135,13 +153,29 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
       diff: { zapsign_doc_token: token, drive_file_id: file.id },
     });
 
-    // Melhoria 3: se a procuração foi assinada, libera o caso comercial → ele
-    // entra no funil operacional. Best-effort (não bloqueia o armazenamento).
+    // S9-05: roteia o efeito de negócio por doc_kind. Best-effort (não bloqueia
+    // o armazenamento do PDF nem o ASSINADO).
+    //   - procuracao → registrarProcuracaoAssinada (COMERCIAL — segue LEAD).
+    //   - contrato   → promoverCasoOperacional (OPERACIONAL — vira CLIENTE).
+    //   - NULL/outro → só armazena (sem efeito de negócio).
     if (caseDoc.doc_kind === "procuracao") {
       try {
-        await liberarCasoComercial(caseDoc.case_id, { via: "webhook" });
+        await registrarProcuracaoAssinada(caseDoc.case_id, { via: "webhook" });
       } catch (err) {
-        console.error("zapsign/webhook: falha ao liberar caso comercial:", err);
+        console.error("zapsign/webhook: falha ao registrar procuração assinada:", err);
+      }
+    } else if (caseDoc.doc_kind === "contrato") {
+      try {
+        const actorId = await resolveSystemActorId();
+        if (actorId) {
+          await promoverCasoOperacional(caseDoc.case_id, { via: "webhook", userId: actorId });
+        } else {
+          console.error(
+            "zapsign/webhook: sem admin na org p/ promover contrato assinado — promoção pulada.",
+          );
+        }
+      } catch (err) {
+        console.error("zapsign/webhook: falha ao promover caso (contrato):", err);
       }
     }
     return {

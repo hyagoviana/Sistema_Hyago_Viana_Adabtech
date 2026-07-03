@@ -453,9 +453,11 @@ export async function sendCaseDocumentToZapsign(opts: {
 
   // S1-02/S1-07: o envio da PROCURAÇÃO ao ZapSign é o ATO que coloca o caso na
   // fase comercial. Aqui — e não na criação do caso — setamos `aguardando_
-  // assinatura_at`, para que ao assinar o webhook consiga liberar o caso
-  // (liberarCasoComercial faz no-op se a flag estiver NULL). Só para procuração;
-  // idempotente (não sobrescreve se já estava setado nem se já foi liberado).
+  // assinatura_at`, para que ao assinar o webhook consiga registrar a procuração
+  // (registrarProcuracaoAssinada faz no-op se a flag estiver NULL e já houver
+  // procuracao_assinada_at). SÓ para procuração — o CONTRATO (doc_kind='contrato',
+  // S9-02) tem efeito operacional próprio (S9-04/S9-05) e NÃO passa por aqui.
+  // Idempotente (não sobrescreve se já estava setado nem se já foi liberado).
   if (doc.doc_kind === "procuracao" && doc.case_id) {
     const { data: caso } = await sb
       .from("system_cases")
