@@ -268,7 +268,13 @@
       "Bash(grep -vE \"^[<>] *$\")",
       "Bash(grep -vE 'service_type_id|casos.\\\\$id.tsx\\\\\\(562|Type '\\\\''string \\\\| null'\\\\''|Type '\\\\''null'\\\\''|Types of property|assignable to type|30 more')",
       "PowerShell(git -C $repo log --oneline -8)",
-      "PowerShell(git -C $repo show --stat --oneline 923185b)"
+      "PowerShell(git -C $repo show --stat --oneline 923185b)",
+      "Bash(Select-String -Pattern \"env\")",
+      "Bash(echo \"LINT_EXIT=$?\")",
+      "Bash(echo \"REPLAY_EXIT=$?\")",
+      "Bash(echo \"VAL_EXIT=$?\")",
+      "Bash(python3 *)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\"; $ErrorActionPreference='Continue'; npx eslint . 2>&1 | Out-String | ForEach-Object { if \\($_.Trim\\(\\)\\) { $_ } else { \"LINT CLEAN \\(no output\\)\" } }; \"EXIT=$LASTEXITCODE\")"
     ]
   }
 }
