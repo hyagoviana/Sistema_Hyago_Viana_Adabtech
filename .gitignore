@@ -1,2 +1,6 @@
 _legacy/
 sistema-hv/.tmp_verify.sql
+
+# Credenciais soltas / backups sensiveis (nao commitar)
+/env
+fluxo-n8n-LIVE.json

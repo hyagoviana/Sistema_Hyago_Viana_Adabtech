@@ -274,7 +274,14 @@
       "Bash(echo \"REPLAY_EXIT=$?\")",
       "Bash(echo \"VAL_EXIT=$?\")",
       "Bash(python3 *)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\"; $ErrorActionPreference='Continue'; npx eslint . 2>&1 | Out-String | ForEach-Object { if \\($_.Trim\\(\\)\\) { $_ } else { \"LINT CLEAN \\(no output\\)\" } }; \"EXIT=$LASTEXITCODE\")"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\mathe\\\\OneDrive\\\\Área de Trabalho\\\\Projeto Hytalo advogado\\\\Sistema_Hyago_Viana_Adabtech\\\\sistema-hv\"; $ErrorActionPreference='Continue'; npx eslint . 2>&1 | Out-String | ForEach-Object { if \\($_.Trim\\(\\)\\) { $_ } else { \"LINT CLEAN \\(no output\\)\" } }; \"EXIT=$LASTEXITCODE\")",
+      "Bash(sed -E \"s/=\\(.{4}\\).*/=\\\\1... \\(oculto\\)/\")",
+      "Bash(sed -n '100,320p' sistema-hv/src/lib/n8n-webhook-service.ts)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -sS -m 15 -o /dev/null -w \"HTTP %{http_code} | connect %{time_connect}s\\\\n\" https://n8n.sistemahyagoviana.com.br/)",
+      "Bash(curl -sS -m 15 -o /dev/null -w \"HTTP %{http_code} | connect %{time_connect}s\\\\n\" https://webhookn8n.sistemahyagoviana.com.br/)",
+      "Bash(curl -sS -m 15 -o /dev/null -w \"HTTP %{http_code}\\\\n\" https://sptfmfeoikukrhbekitl.supabase.co/)",
+      "Bash(curl -4 -sS -m 12 -o /dev/null -w \"n8n -> HTTP %{http_code} connect %{time_connect}s\\\\n\" https://n8n.sistemahyagoviana.com.br/)"
     ]
   }
 }

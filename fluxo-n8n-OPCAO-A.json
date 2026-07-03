@@ -1,0 +1,479 @@
+{
+  "name": "disparar e cria leads",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "maxResults": 30,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2112,
+        -432
+      ],
+      "id": "7cdbb55c-df64-4307-a931-af63736d293e",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "70SzrjHLXjW6KsHV",
+          "name": "Emailcontatohyago"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        64
+      ],
+      "id": "2ec53bd9-5ea0-47af-8d6b-ca0f47bf501c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        64
+      ],
+      "id": "f712b826-ba25-4da7-833b-71a5fb458448",
+      "name": "Buscar Email Completo1",
+      "webhookId": "72bb4e15-9457-44b5-aec4-61b1161450f6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "70SzrjHLXjW6KsHV",
+          "name": "Emailcontatohyago"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsear comprovante de assinatura do Zaping\n// Formato: \"Comprovante de assinatura NOME - TIPO assinou o documento NOME - CONTRATO - TIPO.pdf\"\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const subject = (item.json.subject || '').trim();\n  const body = (item.json.text || item.json.snippet || '').trim();\n  const fullText = subject + ' ' + body;\n  const messageId = item.json.id || item.json.messageId || '';\n\n  // --- EXTRAIR NOME DO CLIENTE ---\n  let nome_cliente = '';\n  // Tenta: \"Comprovante de assinatura NOME - TIPO\"\n  const compMatch = fullText.match(/[Cc]omprovante de assinatura\\s+([A-Z\\u00C0-\\u017F\\s]+?)\\s*-\\s*/i);\n  if (compMatch) {\n    nome_cliente = compMatch[1].trim();\n  }\n  // Fallback: \"NOME assinou o documento\"\n  if (!nome_cliente) {\n    const assMatch = fullText.match(/([A-Z\\u00C0-\\u017F][A-Z\\u00C0-\\u017F\\s]+?)\\s+assinou/i);\n    if (assMatch) nome_cliente = assMatch[1].trim();\n  }\n\n  // --- EXTRAIR NOME DO DOCUMENTO ---\n  let doc_nome = '';\n  const docMatch = fullText.match(/assinou o documento\\s+(.+?\\.pdf)/i);\n  if (docMatch) {\n    doc_nome = docMatch[1].trim();\n  }\n\n  // --- EXTRAIR TIPO DE PROCESSO ---\n  let tipo_processo = 'FIES_ESF'; // default\n  const tipoMap = {\n    'desenrola fies': 'FIES_ESF',\n    'fies esf': 'FIES_ESF',\n    'fies dgm': 'FIES_DGM',\n    'covid': 'COVID',\n    'mais medicos': 'MAIS_MEDICOS',\n    'mais m\\u00e9dicos': 'MAIS_MEDICOS',\n    'residencia': 'RESIDENCIA',\n    'resid\\u00eancia': 'RESIDENCIA',\n    'cfm': 'CFM_CRM',\n    'crm': 'CFM_CRM'\n  };\n  const textLower = fullText.toLowerCase();\n  for (const [key, val] of Object.entries(tipoMap)) {\n    if (textLower.includes(key)) {\n      tipo_processo = val;\n      break;\n    }\n  }\n\n  // --- EXTRAIR CPF/CNPJ (se presente no body) ---\n  const cpfMatch = fullText.match(/(\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2})|(\\d{2}\\.?\\d{3}\\.?\\d{3}\\/?\\d{4}-?\\d{2})/);\n  const cpf_cnpj = cpfMatch ? cpfMatch[0].replace(/[^\\d]/g, '') : '';\n\n  // --- EXTRAIR EMAIL ---\n  const emailMatch = fullText.match(/(?:e-?mail)[:\\s]*([\\w.+-]+@[\\w.-]+\\.[a-z]{2,})/i);\n  const email = emailMatch ? emailMatch[1] : '';\n\n  // --- EXTRAIR TELEFONE ---\n  const phoneMatch = fullText.match(/(?:tel|telefone|fone|whatsapp|celular)[:\\s]*(\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4})/i);\n  const telefone = phoneMatch ? phoneMatch[1].replace(/[^\\d]/g, '') : '';\n\n  // --- VERIFICAR SE TEM ANEXO ---\n  const payload = item.json.payload || {};\n  const parts = payload.parts || [];\n  let tem_anexo = false;\n  let attachment_id = '';\n  let attachment_filename = '';\n  let attachment_mime = '';\n\n  function findAttachment(partsList) {\n    for (const part of partsList) {\n      if (part.filename && part.filename.length > 0 && part.body && part.body.attachmentId) {\n        tem_anexo = true;\n        attachment_id = part.body.attachmentId;\n        attachment_filename = part.filename;\n        attachment_mime = part.mimeType || 'application/pdf';\n        return;\n      }\n      if (part.parts) findAttachment(part.parts);\n    }\n  }\n  findAttachment(parts);\n\n  // Tambem checar binary data do n8n\n  if (!tem_anexo && item.binary) {\n    const binKeys = Object.keys(item.binary);\n    if (binKeys.length > 0) {\n      tem_anexo = true;\n      attachment_filename = item.binary[binKeys[0]].fileName || doc_nome || 'documento.pdf';\n      attachment_mime = item.binary[binKeys[0]].mimeType || 'application/pdf';\n    }\n  }\n\n  results.push({\n    json: {\n      nome_cliente,\n      cpf_cnpj,\n      email,\n      telefone,\n      tipo_processo,\n      doc_nome,\n      tem_anexo,\n      attachment_id,\n      attachment_filename,\n      attachment_mime,\n      message_id: messageId,\n      email_subject: subject,\n      raw_body: body\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        64
+      ],
+      "id": "parse-email-data",
+      "name": "Extrair Dados do Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "check-nome-exists",
+              "leftValue": "={{ $json.nome_cliente }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1408,
+        64
+      ],
+      "id": "validate-data",
+      "name": "Dados Validos?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "check-attachment",
+              "leftValue": "={{ $json.tem_anexo }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1184,
+        64
+      ],
+      "id": "has-attachment",
+      "name": "Tem Anexo?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.message_id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -960,
+        128
+      ],
+      "id": "get-full-message",
+      "name": "Buscar Email Completo",
+      "webhookId": "72bb4e15-9457-44b5-aec4-61b1161450f6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "70SzrjHLXjW6KsHV",
+          "name": "Emailcontatohyago"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Unificar dados: pegar dados parseados + possivel anexo do Get Message\nconst emailData = $('Extrair Dados do Email').item.json;\nlet binary = null;\nlet attachment_filename = emailData.attachment_filename || emailData.doc_nome || 'documento.pdf';\n\n// Checar se veio binary do Gmail Trigger ou do Get Message\ntry {\n  const triggerItem = $('Gmail Trigger').item;\n  if (triggerItem.binary && Object.keys(triggerItem.binary).length > 0) {\n    binary = triggerItem.binary;\n    const key = Object.keys(binary)[0];\n    attachment_filename = binary[key].fileName || attachment_filename;\n  }\n} catch(e) {}\n\ntry {\n  const getMessage = $('Buscar Email Completo').item;\n  if (getMessage.binary && Object.keys(getMessage.binary).length > 0) {\n    binary = getMessage.binary;\n    const key = Object.keys(binary)[0];\n    attachment_filename = binary[key].fileName || attachment_filename;\n  }\n} catch(e) {}\n\nconst result = {\n  json: {\n    ...emailData,\n    attachment_filename,\n    has_binary: binary !== null\n  }\n};\n\nif (binary) result.binary = binary;\n\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        64
+      ],
+      "id": "merge-attachment",
+      "name": "Unificar Dados + Anexo"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "check-cpf-exists",
+              "leftValue": "={{ $json.cpf_cnpj }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -512,
+        64
+      ],
+      "id": "check-cpf",
+      "name": "Tem CPF?"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        176
+      ],
+      "id": "extract-pdf-text",
+      "name": "Extrair Texto do PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrair dados do cliente a partir do texto do PDF\nconst emailData = $('Unificar Dados + Anexo').item.json;\nconst pdfText = $input.item.json.data || $input.item.json.text || \"\";\n\n// --- CPF/CNPJ ---\nlet cpf_cnpj = emailData.cpf_cnpj || \"\";\nif (!cpf_cnpj) {\n  const cpfFmt = pdfText.match(/\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}/);\n  if (cpfFmt) {\n    cpf_cnpj = cpfFmt[0].replace(/[^\\d]/g, \"\");\n  }\n}\nif (!cpf_cnpj) {\n  const cnpjFmt = pdfText.match(/\\d{2}\\.\\d{3}\\.\\d{3}\\/\\d{4}-\\d{2}/);\n  if (cnpjFmt) {\n    cpf_cnpj = cnpjFmt[0].replace(/[^\\d]/g, \"\");\n  }\n}\nif (!cpf_cnpj) {\n  const seqs = pdfText.match(/\\b\\d{11}\\b/g) || [];\n  for (const seq of seqs) {\n    if (!/^(\\d)\\1{10}$/.test(seq)) {\n      cpf_cnpj = seq;\n      break;\n    }\n  }\n}\n\n// --- TELEFONE ---\nlet telefone = emailData.telefone || \"\";\nif (!telefone) {\n  const phonePatterns = [\n    /\\(?\\d{2}\\)?\\s?9\\d{4}[-.\\s]?\\d{4}/,\n    /\\(?\\d{2}\\)?\\s?\\d{4}[-.\\s]?\\d{4}/,\n    /\\b\\d{2}\\s?9\\d{8}\\b/,\n    /\\b\\d{2}\\s?\\d{8}\\b/\n  ];\n  for (const pattern of phonePatterns) {\n    const phoneMatch = pdfText.match(pattern);\n    if (phoneMatch) {\n      telefone = phoneMatch[0].replace(/[^\\d]/g, \"\");\n      if (telefone.length >= 10 && telefone.length <= 11) break;\n      telefone = \"\";\n    }\n  }\n}\n\n// --- NOME (fallback) ---\nlet nome_cliente = emailData.nome_cliente || \"\";\nif (!nome_cliente) {\n  const nomePatterns = [\n    /(?:nome|cliente|contratante|assinante|outorgante)[:\\s]+([A-Z\\u00C0-\\u017F][A-Z\\u00C0-\\u017Fa-z\\u00e0-\\u00ff\\s]{3,50})/i,\n    /(?:eu,?\\s+)([A-Z\\u00C0-\\u017F][A-Z\\u00C0-\\u017Fa-z\\u00e0-\\u00ff\\s]{3,50})(?:,|\\s+portador)/i\n  ];\n  for (const pattern of nomePatterns) {\n    const nomeMatch = pdfText.match(pattern);\n    if (nomeMatch) {\n      nome_cliente = nomeMatch[1].trim();\n      break;\n    }\n  }\n}\n\n// NAO extrai email do PDF - o email que aparece no contrato e do advogado, nao do cliente\n\nconst result = {\n  json: {\n    ...emailData,\n    cpf_cnpj,\n    telefone,\n    nome_cliente,\n    dados_extraidos_do_pdf: true,\n    pdf_text_preview: pdfText.substring(0, 500)\n  }\n};\n\ntry {\n  const unified = $('Unificar Dados + Anexo').item;\n  if (unified.binary) result.binary = unified.binary;\n} catch(e) {}\n\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        176
+      ],
+      "id": "search-cpf-in-pdf",
+      "name": "Extrair Dados do PDF"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment_0",
+        "name": "={{ $json.doc_nome || $json.attachment_filename || 'procuracao-assinada.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "0ABuLaortcXhMUk9PVA"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1Mb7P243I_5EZ3T8WQl_kq2seqcm3JMgx"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        64
+      ],
+      "id": "upload-doc",
+      "name": "Upload Documento",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BbP3D1YC5snAgDHM",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.sistemahyagoviana.com.br/api/webhooks/n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "de1cc5aae4d841df985f6d51e4168db22e9f57102f0041db9733912faa1326f7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        736,
+        64
+      ],
+      "id": "call-app-endpoint",
+      "name": "Chamar Endpoint do App"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Montar o payload para o endpoint do app (find-or-create + procuracao assinada).\n// Le os dados extraidos (email/PDF) + o resultado do upload ao Drive (nó anterior).\n// Usa try/catch para tolerar o branch em que 'Extrair Dados do PDF' NAO executou\n// (CPF ja veio do email), evitando erro de 'referenced node unexecuted'.\n\nconst uploaded = $input.item.json; // saida do 'Upload Documento' (Google Drive)\n\nconst unified = $('Unificar Dados + Anexo').item.json;\n\nlet pdf = {};\ntry {\n  pdf = $('Extrair Dados do PDF').item.json || {};\n} catch (e) {\n  pdf = {};\n}\n\nconst nome_cliente = pdf.nome_cliente || unified.nome_cliente || '';\nconst cpf_cnpj = (pdf.cpf_cnpj || unified.cpf_cnpj || '').replace(/[^\\d]/g, '');\nconst email = unified.email || null;\nconst telefone = unified.telefone || pdf.telefone || null;\nconst tipo_processo = unified.tipo_processo; // slug ja mapeado (FIES_ESF etc.)\nconst municipio = unified.municipio || null;\n\nconst payload = {\n  nome_cliente,\n  cpf_cnpj,\n  email,\n  telefone,\n  tipo_processo,\n  municipio,\n  responsavel: null,\n  proximo_passo: null,\n  assinado: true,\n  documento_assinado: {\n    drive_file_id: uploaded.id || null,\n    drive_url: uploaded.webViewLink || null,\n    name: 'Procuração',\n    zapsign_doc_token: null\n  }\n};\n\nreturn [{ json: { payload } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        64
+      ],
+      "id": "build-payload",
+      "name": "Montar Payload"
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extrair Dados do Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Buscar Email Completo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Email Completo1": {
+      "main": [
+        [
+          {
+            "node": "Extrair Dados do Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Dados do Email": {
+      "main": [
+        [
+          {
+            "node": "Dados Validos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados Validos?": {
+      "main": [
+        [
+          {
+            "node": "Tem Anexo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Anexo?": {
+      "main": [
+        [
+          {
+            "node": "Unificar Dados + Anexo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buscar Email Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Email Completo": {
+      "main": [
+        [
+          {
+            "node": "Unificar Dados + Anexo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unificar Dados + Anexo": {
+      "main": [
+        [
+          {
+            "node": "Tem CPF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem CPF?": {
+      "main": [
+        [
+          {
+            "node": "Upload Documento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extrair Texto do PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Texto do PDF": {
+      "main": [
+        [
+          {
+            "node": "Extrair Dados do PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Dados do PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload Documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Documento": {
+      "main": [
+        [
+          {
+            "node": "Montar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar Payload": {
+      "main": [
+        [
+          {
+            "node": "Chamar Endpoint do App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
