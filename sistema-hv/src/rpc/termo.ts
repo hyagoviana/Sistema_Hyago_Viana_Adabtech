@@ -13,6 +13,7 @@ import {
   enviarParaConferencia,
   estornarParcela,
   gerarDocumentoTermo,
+  getCaseHonorarios,
   getTermo,
   listParcelas,
   listTermos,
@@ -52,6 +53,11 @@ export const getTermoFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => getTermo(data.id)));
 
+// S7-02 — honorários persistidos da procuração (para pré-preencher a elaboração).
+export const getCaseHonorariosFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => getCaseHonorarios(data.caseId)));
+
 // Preview do cálculo (não salva) — calc autoritativo no servidor.
 export const calcularTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => calcSchema.parse(d))
@@ -62,6 +68,8 @@ const createSchema = calcSchema.extend({
   formaPagamento: z.enum(["PARCELADO", "A_VISTA"]).optional(),
   tipoTermo: z.enum(["PARCIAL", "COMPLEMENTAR"]).optional(),
   elaboradoPorId: z.string().uuid().nullish(),
+  // S7-02 — remanescente anterior (COMPLEMENTAR) persistido no snapshot.
+  remanescenteAnteriorCentavos: z.number().int().nonnegative().nullish(),
 });
 
 export const createTermoFn = createServerFn({ method: "POST" })
@@ -80,6 +88,11 @@ export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
       .object({
         termoId: z.string().uuid(),
         remanescenteAnteriorCentavos: z.number().int().nonnegative().optional(),
+        // S7-02 — inputs opcionais p/ placeholders sem fonte no cálculo.
+        saldoAtualCentavos: z.number().int().nonnegative().optional(),
+        percentualAbatimento: z.number().nonnegative().optional(),
+        saldoOriginarioCentavos: z.number().int().nonnegative().optional(),
+        saldoEpocaAbatimentoCentavos: z.number().int().nonnegative().optional(),
       })
       .parse(d),
   )
@@ -89,6 +102,10 @@ export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
       return gerarDocumentoTermo({
         termoId: data.termoId,
         remanescenteAnteriorCentavos: data.remanescenteAnteriorCentavos,
+        saldoAtualCentavos: data.saldoAtualCentavos,
+        percentualAbatimento: data.percentualAbatimento,
+        saldoOriginarioCentavos: data.saldoOriginarioCentavos,
+        saldoEpocaAbatimentoCentavos: data.saldoEpocaAbatimentoCentavos,
         triggeredBy: userId,
       });
     }),

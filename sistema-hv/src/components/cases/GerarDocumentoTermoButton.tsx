@@ -14,17 +14,33 @@ export function GerarDocumentoTermoButton({
   caseId,
   termoId,
   remanescenteAnteriorCentavos,
+  saldoAtualCentavos,
+  percentualAbatimento,
+  saldoOriginarioCentavos,
+  saldoEpocaAbatimentoCentavos,
 }: {
   caseId: string;
   termoId: string;
   remanescenteAnteriorCentavos?: number;
+  // S7-02 — inputs opcionais p/ placeholders sem fonte no cálculo.
+  saldoAtualCentavos?: number;
+  percentualAbatimento?: number;
+  saldoOriginarioCentavos?: number;
+  saldoEpocaAbatimentoCentavos?: number;
 }) {
   const gerar = useGerarDocumentoTermo(caseId);
   const [editUrl, setEditUrl] = useState<string | null>(null);
 
   function handle() {
     gerar.mutate(
-      { termoId, remanescenteAnteriorCentavos },
+      {
+        termoId,
+        remanescenteAnteriorCentavos,
+        saldoAtualCentavos,
+        percentualAbatimento,
+        saldoOriginarioCentavos,
+        saldoEpocaAbatimentoCentavos,
+      },
       {
         onSuccess: (r) => {
           setEditUrl(r.editUrl ?? null);

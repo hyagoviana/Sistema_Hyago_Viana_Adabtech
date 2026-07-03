@@ -53,6 +53,18 @@ export const createComercialProcuracaoSchema = z.object({
   // Valores revisados pelo usuário (key do placeholder → valor). O servidor
   // complementa com o autofill do caso recém-criado (ex.: código do caso).
   values: z.record(z.string(), z.string()).default({}),
+  // S7-01 (opção A): honorários ESTRUTURADOS da revisão (centavos/número), para
+  // persistir em system_case_honorarios. Todos opcionais/nullable — quando
+  // ausentes, o servidor faz fallback parseando os placeholders de `values`.
+  honorarios: z
+    .object({
+      percentualHonorarios: z.number().nullable().optional(),
+      valorParcelaCentavos: z.number().int().nullable().optional(),
+      descontoAvistaPct: z.number().nullable().optional(),
+      formaPagamento: z.string().nullable().optional(),
+      honorariosTotalCentavos: z.number().int().nullable().optional(),
+    })
+    .optional(),
 });
 
 export type PreviewProcuracaoInput = z.input<typeof previewProcuracaoSchema>;

@@ -206,6 +206,45 @@ export type Database = {
           },
         ];
       };
+      system_case_honorarios: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          percentual_honorarios: number | null;
+          valor_parcela_centavos: number | null;
+          desconto_avista_pct: number | null;
+          forma_pagamento: string | null;
+          honorarios_total_centavos: number | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          percentual_honorarios?: number | null;
+          valor_parcela_centavos?: number | null;
+          desconto_avista_pct?: number | null;
+          forma_pagamento?: string | null;
+          honorarios_total_centavos?: number | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_honorarios"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_case_honorarios_case_id_fkey";
+            columns: ["case_id"];
+            referencedRelation: "system_cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_client_documents: {
         Row: {
           id: string;
@@ -492,6 +531,7 @@ export type Database = {
           drive_file_id: string | null;
           drive_url: string | null;
           pdf_hash_sha256: string | null;
+          remanescente_anterior_centavos: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -523,6 +563,7 @@ export type Database = {
           drive_file_id?: string | null;
           drive_url?: string | null;
           pdf_hash_sha256?: string | null;
+          remanescente_anterior_centavos?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1045,6 +1086,10 @@ export type Database = {
       };
       system_parcelas_active: {
         Row: Database["public"]["Tables"]["system_parcelas"]["Row"];
+        Relationships: [];
+      };
+      system_case_honorarios_active: {
+        Row: Database["public"]["Tables"]["system_case_honorarios"]["Row"];
         Relationships: [];
       };
     };

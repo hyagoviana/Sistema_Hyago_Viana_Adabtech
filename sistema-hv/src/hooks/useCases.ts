@@ -110,6 +110,14 @@ export function useCreateComercialProcuracao() {
       case: CaseCreateInput;
       template_id: string;
       values: Record<string, string>;
+      // S7-01 — honorários estruturados da revisão (opcional).
+      honorarios?: {
+        percentualHonorarios?: number | null;
+        valorParcelaCentavos?: number | null;
+        descontoAvistaPct?: number | null;
+        formaPagamento?: string | null;
+        honorariosTotalCentavos?: number | null;
+      };
     }) => fn({ data: input as never }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
   });

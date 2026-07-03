@@ -403,6 +403,96 @@ export async function previewProcuracao(input: {
 }
 
 // ----------------------------------------------------------------------------
+// S7-01 — Honorários da procuração (valores estruturados p/ persistência).
+// A origem preferida (opção A da story) é o payload estruturado vindo da revisão
+// (ProcuracaoReviewStep). Quando não vier, fazemos um fallback best-effort
+// parseando os placeholders conhecidos do finalValues (BRL→centavos, "15%"→15).
+// ----------------------------------------------------------------------------
+export type CaseHonorariosInput = {
+  percentualHonorarios?: number | null;
+  valorParcelaCentavos?: number | null;
+  descontoAvistaPct?: number | null;
+  formaPagamento?: string | null;
+  honorariosTotalCentavos?: number | null;
+};
+
+// "R$ 1.234,56" / "1234,56" / "1.234" → centavos (int). null se não parseável.
+function brlToCentavos(v: string | undefined | null): number | null {
+  if (v == null) return null;
+  const cleaned = String(v).replace(/[^\d,.-]/g, "");
+  if (!cleaned) return null;
+  const n = Number(cleaned.replace(/\./g, "").replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 100);
+}
+
+// "15%" / "15" / "15,5" → número. null se não parseável.
+function pctToNumber(v: string | undefined | null): number | null {
+  if (v == null) return null;
+  const cleaned = String(v).replace(/[^\d,.-]/g, "").replace(",", ".");
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+// Extrai honorários estruturados do map de placeholders (fallback da opção A).
+function honorariosFromValues(values: Record<string, string>): CaseHonorariosInput {
+  return {
+    percentualHonorarios: pctToNumber(values.percentual_honorarios),
+    valorParcelaCentavos: brlToCentavos(values.valor_parcela),
+    descontoAvistaPct: pctToNumber(values.desconto_avista),
+    honorariosTotalCentavos:
+      brlToCentavos(values.honorarios_total) ?? brlToCentavos(values.honorarios_abatimento),
+    formaPagamento: null,
+  };
+}
+
+// Best-effort: grava/atualiza os honorários do caso. NUNCA derruba a criação.
+async function upsertCaseHonorarios(
+  caseId: string,
+  organizationId: string,
+  honorarios: CaseHonorariosInput,
+  createdBy?: string,
+) {
+  try {
+    const sb = getSupabaseAdmin();
+    // Só grava campos com valor (não sobrescreve com null o que já existir).
+    const payload: Database["public"]["Tables"]["system_case_honorarios"]["Insert"] = {
+      organization_id: organizationId,
+      case_id: caseId,
+      created_by: createdBy ?? null,
+    };
+    if (honorarios.percentualHonorarios != null)
+      payload.percentual_honorarios = honorarios.percentualHonorarios;
+    if (honorarios.valorParcelaCentavos != null)
+      payload.valor_parcela_centavos = honorarios.valorParcelaCentavos;
+    if (honorarios.descontoAvistaPct != null)
+      payload.desconto_avista_pct = honorarios.descontoAvistaPct;
+    if (honorarios.formaPagamento != null) payload.forma_pagamento = honorarios.formaPagamento;
+    if (honorarios.honorariosTotalCentavos != null)
+      payload.honorarios_total_centavos = honorarios.honorariosTotalCentavos;
+
+    // O índice único é PARCIAL (WHERE deleted_at IS NULL), então o Postgres não o
+    // aceita como árbitro de ON CONFLICT. Fazemos select-then-write manual pela
+    // linha vigente do caso (1 vigente por caso).
+    const { data: existing } = await sb
+      .from("system_case_honorarios")
+      .select("id")
+      .eq("case_id", caseId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    const { error } = existing
+      ? await sb.from("system_case_honorarios").update(payload).eq("id", existing.id)
+      : await sb.from("system_case_honorarios").insert(payload);
+    if (error) {
+      console.error("upsertCaseHonorarios: falha ao gravar honorários do caso:", error.message);
+    }
+  } catch (err) {
+    console.error("upsertCaseHonorarios: erro inesperado (ignorado):", err);
+  }
+}
+
+// ----------------------------------------------------------------------------
 // PROCURAÇÃO — CRIAR + GERAR (fluxo de revisão). Cria o caso comercial e gera a
 // procuração com os valores REVISADOS pelo usuário, finalizando o PDF na pasta
 // do caso. NÃO envia ao ZapSign — o documento fica na ficha do caso pronto para
@@ -414,6 +504,9 @@ export async function createComercialCaseAndGenerateProcuracao(
     case: CaseCreateOutput;
     templateId: string;
     values: Record<string, string>;
+    // S7-01 (opção A): valores estruturados da revisão. Quando ausentes, cai no
+    // fallback de parse dos placeholders (honorariosFromValues).
+    honorarios?: CaseHonorariosInput;
   },
   triggeredBy?: string,
 ) {
@@ -451,6 +544,21 @@ export async function createComercialCaseAndGenerateProcuracao(
     serverData,
   );
   const finalValues: Record<string, string> = { ...serverAuto, ...input.values };
+
+  // 2.1) S7-01 — persiste os honorários do caso (best-effort). Prioriza os
+  //      valores ESTRUTURADOS vindos da revisão (opção A); senão, faz fallback
+  //      parseando os placeholders do finalValues. Falha aqui NÃO derruba a
+  //      criação do caso nem a geração da procuração.
+  const structured = input.honorarios ?? {};
+  const parsed = honorariosFromValues(finalValues);
+  const honorarios: CaseHonorariosInput = {
+    percentualHonorarios: structured.percentualHonorarios ?? parsed.percentualHonorarios,
+    valorParcelaCentavos: structured.valorParcelaCentavos ?? parsed.valorParcelaCentavos,
+    descontoAvistaPct: structured.descontoAvistaPct ?? parsed.descontoAvistaPct,
+    formaPagamento: structured.formaPagamento ?? parsed.formaPagamento,
+    honorariosTotalCentavos: structured.honorariosTotalCentavos ?? parsed.honorariosTotalCentavos,
+  };
+  await upsertCaseHonorarios(created.id, created.organization_id, honorarios, triggeredBy);
 
   // 3) Gera → finaliza (PDF na pasta do caso). Import dinâmico evita ciclo.
   //    O envio ao ZapSign é uma ação separada na ficha do caso.

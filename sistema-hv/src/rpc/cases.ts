@@ -110,6 +110,7 @@ export const createComercialProcuracaoFn = createServerFn({ method: "POST" })
           case: data.case,
           templateId: data.template_id,
           values: data.values,
+          honorarios: data.honorarios,
         },
         userId,
       ),

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCase } from "@/hooks/useCases";
-import { useCalcTermo, useCreateTermo, useTermos } from "@/hooks/useTermo";
+import { useCalcTermo, useCaseHonorarios, useCreateTermo, useTermos } from "@/hooks/useTermo";
 import { useAuth } from "@/lib/auth";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { setRouteTitle, usePublishRouteTitle } from "@/lib/route-title";
@@ -59,6 +59,7 @@ function ElaborarTermo() {
   const { profile } = useAuth();
   const { data: caso, isLoading, isError } = useCase(id);
   const { data: termos } = useTermos(id);
+  const { data: honorarios } = useCaseHonorarios(id); // S7-02
 
   const calc = useCalcTermo();
   const create = useCreateTermo(id);
@@ -72,6 +73,58 @@ function ElaborarTermo() {
   const [desconto, setDesconto] = useState(DEFAULT_DESCONTO);
   const [remanescente, setRemanescente] = useState("");
   const [preview, setPreview] = useState<CalcResult | null>(null);
+
+  // S7-02 — inputs opcionais (mínimos) p/ placeholders sem fonte no cálculo.
+  // PARCIAL: saldo atual, % abatimento. COMPLEMENTAR: saldo originário, saldo à
+  // época do abatimento. Vazios → saem vazios no doc (nunca <placeholder>).
+  const [saldoAtual, setSaldoAtual] = useState("");
+  const [percAbatimento, setPercAbatimento] = useState("");
+  const [saldoOriginario, setSaldoOriginario] = useState("");
+  const [saldoEpoca, setSaldoEpoca] = useState("");
+
+  // S7-02 — marca quais campos vieram da procuração (badge) e sugere tipo/prefill
+  // uma única vez, quando os honorários chegarem.
+  const [pulled, setPulled] = useState<{ pct: boolean; parcela: boolean; desconto: boolean }>({
+    pct: false,
+    parcela: false,
+    desconto: false,
+  });
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled) return;
+    // Sugere COMPLEMENTAR quando já há histórico de termo no caso; senão PARCIAL.
+    if ((termos ?? []).length > 0) setTipo("COMPLEMENTAR");
+    if (honorarios) {
+      const next = { pct: false, parcela: false, desconto: false };
+      if (honorarios.percentual_honorarios != null) {
+        setPercentual(String(honorarios.percentual_honorarios));
+        next.pct = true;
+      }
+      if (honorarios.valor_parcela_centavos != null) {
+        setParcela(brl(honorarios.valor_parcela_centavos).replace("R$ ", ""));
+        next.parcela = true;
+      }
+      if (honorarios.desconto_avista_pct != null) {
+        setDesconto(String(honorarios.desconto_avista_pct));
+        next.desconto = true;
+      }
+      setPulled(next);
+    }
+    // Só marca como pré-preenchido depois de ter recebido os dois sinais
+    // (termos + honorarios), evitando travar antes das queries resolverem.
+    if (termos !== undefined && honorarios !== undefined) setPrefilled(true);
+  }, [termos, honorarios, prefilled]);
+
+  // Último snapshot (topo desc) — referência do último termo (S7-02).
+  const ultimoTermo = (termos ?? [])[0] as
+    | {
+        version?: number;
+        tipo_termo?: string;
+        valor_total_centavos?: number;
+        valor_avista_centavos?: number;
+        remanescente_anterior_centavos?: number | null;
+      }
+    | undefined;
 
   // S4-06 — nome do caso no breadcrumb e título, nunca UUID.
   const casoLabel = resolveEntityLabel(caso?.case_code, {
@@ -140,6 +193,9 @@ function ElaborarTermo() {
         tipoTermo: tipo,
         formaPagamento: "PARCELADO",
         elaboradoPorId: profile?.id ?? null,
+        // S7-02 — remanescente anterior (só COMPLEMENTAR) persistido no snapshot.
+        remanescenteAnteriorCentavos:
+          tipo === "COMPLEMENTAR" ? toCents(remanescente) : null,
       },
       {
         onSuccess: () => {
@@ -225,37 +281,117 @@ function ElaborarTermo() {
                   placeholder="0,00"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Informado manualmente — usado no documento (não altera o cálculo do snapshot).
+                  Informado manualmente — usado no documento (soma no honorário total do
+                  complementar; não altera o cálculo do abatimento).
                 </p>
+                {/* S7-02 — referência do último termo (apenas dica; não preenche). */}
+                {ultimoTermo && (
+                  <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 text-[11px] text-muted-foreground">
+                    <div className="font-medium text-[var(--navy)]">
+                      Referência do último termo (v{ultimoTermo.version ?? "?"} ·{" "}
+                      {ultimoTermo.tipo_termo ?? "—"})
+                    </div>
+                    <div>Honorários: {brl(ultimoTermo.valor_total_centavos)}</div>
+                    <div>À vista: {brl(ultimoTermo.valor_avista_centavos)}</div>
+                    {ultimoTermo.remanescente_anterior_centavos != null && (
+                      <div>
+                        Remanescente do anterior: {brl(ultimoTermo.remanescente_anterior_centavos)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3 pt-2 border-t border-[var(--border)]">
             <div>
-              <Label>% honorários</Label>
+              <Label className="flex items-center gap-1.5">
+                % honorários {pulled.pct && <PulledBadge />}
+              </Label>
               <Input
                 value={percentual}
-                onChange={(e) => setPercentual(e.target.value)}
+                onChange={(e) => {
+                  setPercentual(e.target.value);
+                  setPulled((p) => ({ ...p, pct: false }));
+                }}
                 placeholder="15"
               />
             </div>
             <div>
-              <Label>Valor da parcela (R$)</Label>
+              <Label className="flex items-center gap-1.5">
+                Valor da parcela (R$) {pulled.parcela && <PulledBadge />}
+              </Label>
               <Input
                 value={parcela}
-                onChange={(e) => setParcela(e.target.value)}
+                onChange={(e) => {
+                  setParcela(e.target.value);
+                  setPulled((p) => ({ ...p, parcela: false }));
+                }}
                 placeholder="500,00"
               />
             </div>
             <div>
-              <Label>% desconto à vista</Label>
+              <Label className="flex items-center gap-1.5">
+                % desconto à vista {pulled.desconto && <PulledBadge />}
+              </Label>
               <Input
                 value={desconto}
-                onChange={(e) => setDesconto(e.target.value)}
+                onChange={(e) => {
+                  setDesconto(e.target.value);
+                  setPulled((p) => ({ ...p, desconto: false }));
+                }}
                 placeholder="10"
               />
             </div>
+          </div>
+
+          {/* S7-02 — inputs opcionais (mínimos) p/ placeholders do documento sem
+              fonte no cálculo. Vazios saem vazios no doc (nunca <placeholder>). */}
+          <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-[var(--border)]">
+            {tipo === "PARCIAL" ? (
+              <>
+                <div>
+                  <Label>Saldo atual (R$) — opcional</Label>
+                  <Input
+                    value={saldoAtual}
+                    onChange={(e) => setSaldoAtual(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div>
+                  <Label>% abatimento — opcional</Label>
+                  <Input
+                    value={percAbatimento}
+                    onChange={(e) => setPercAbatimento(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label>Saldo originário (R$) — opcional</Label>
+                  <Input
+                    value={saldoOriginario}
+                    onChange={(e) => setSaldoOriginario(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div>
+                  <Label>Saldo à época do abatimento (R$) — opcional</Label>
+                  <Input
+                    value={saldoEpoca}
+                    onChange={(e) => setSaldoEpoca(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+              </>
+            )}
+            <p className="sm:col-span-2 text-[11px] text-muted-foreground">
+              Campos usados só no documento (não alteram o cálculo). Deixe em branco se não se
+              aplicarem — saem vazios no termo.
+            </p>
           </div>
         </div>
 
@@ -332,12 +468,41 @@ function ElaborarTermo() {
                 remanescenteAnteriorCentavos={
                   rascunhoVigente.tipo_termo === "COMPLEMENTAR" ? toCents(remanescente) : undefined
                 }
+                saldoAtualCentavos={
+                  rascunhoVigente.tipo_termo === "PARCIAL" && saldoAtual
+                    ? toCents(saldoAtual)
+                    : undefined
+                }
+                percentualAbatimento={
+                  rascunhoVigente.tipo_termo === "PARCIAL" && percAbatimento
+                    ? Number(percAbatimento.replace(",", ".")) || undefined
+                    : undefined
+                }
+                saldoOriginarioCentavos={
+                  rascunhoVigente.tipo_termo === "COMPLEMENTAR" && saldoOriginario
+                    ? toCents(saldoOriginario)
+                    : undefined
+                }
+                saldoEpocaAbatimentoCentavos={
+                  rascunhoVigente.tipo_termo === "COMPLEMENTAR" && saldoEpoca
+                    ? toCents(saldoEpoca)
+                    : undefined
+                }
               />
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+// S7-02 — sinaliza que o valor veio dos honorários persistidos da procuração.
+function PulledBadge() {
+  return (
+    <span className="inline-flex items-center rounded-full bg-[var(--gold-100,#faf3e0)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--gold-700)] border border-[var(--gold-700)]/20">
+      puxado da procuração
+    </span>
   );
 }
 

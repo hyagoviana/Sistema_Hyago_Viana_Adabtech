@@ -107,6 +107,22 @@ export async function listTermos(caseId: string) {
   return data ?? [];
 }
 
+// S7-02 — honorários persistidos da procuração (S7-01), para pré-preencher a
+// elaboração do termo. Retorna null quando o caso não tem registro (cai nos
+// defaults no front).
+export async function getCaseHonorarios(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_honorarios_active")
+    .select(
+      "percentual_honorarios, valor_parcela_centavos, desconto_avista_pct, forma_pagamento, honorarios_total_centavos",
+    )
+    .eq("case_id", caseId)
+    .maybeSingle();
+  if (error) throw new TermoServiceError(error.message, 500);
+  return data ?? null;
+}
+
 export async function getTermo(id: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb.from("system_termo_snapshots").select("*").eq("id", id).single();
@@ -126,6 +142,9 @@ export async function createTermo(input: {
   formaPagamento?: "PARCELADO" | "A_VISTA";
   tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
   elaboradoPorId?: string | null;
+  // S7-02 — remanescente anterior (só COMPLEMENTAR). Persistido no snapshot para
+  // o documento e para somar em honorarios_total.
+  remanescenteAnteriorCentavos?: number | null;
 }) {
   const sb = getSupabaseAdmin();
   const calc = calcularTermo(input);
@@ -160,6 +179,11 @@ export async function createTermo(input: {
       tipo_termo: input.tipoTermo ?? "PARCIAL",
       status: "RASCUNHO",
       elaborado_por_id: input.elaboradoPorId ?? null,
+      // Só COMPLEMENTAR usa remanescente; nos demais fica null.
+      remanescente_anterior_centavos:
+        (input.tipoTermo ?? "PARCIAL") === "COMPLEMENTAR"
+          ? (input.remanescenteAnteriorCentavos ?? null)
+          : null,
     })
     .select()
     .single();
@@ -579,14 +603,52 @@ async function resolveTermoTemplateId(tipo: "PARCIAL" | "COMPLEMENTAR"): Promise
   return match.id;
 }
 
-// Monta os placeholders <campo> do documento a partir do snapshot + cadastro.
+// Data por extenso em pt-BR (ex.: "3 de julho de 2026").
+function dataPorExtenso(d = new Date()): string {
+  const meses = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+  ];
+  return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+
+// Inputs OPCIONAIS coletados na tela elaborar para placeholders SEM fonte no
+// cálculo (S7-02). Ausentes → string vazia (NUNCA deixar o <placeholder> literal).
+export type TermoDocExtras = {
+  remanescenteAnteriorCentavos?: number | null; // COMPLEMENTAR
+  saldoAtualCentavos?: number | null; // PARCIAL
+  percentualAbatimento?: number | null; // PARCIAL (%)
+  saldoOriginarioCentavos?: number | null; // COMPLEMENTAR
+  saldoEpocaAbatimentoCentavos?: number | null; // COMPLEMENTAR
+};
+
+// Monta TODOS os placeholders <campo> dos 2 modelos (PARCIAL/COMPLEMENTAR) a
+// partir do snapshot + cadastro + inputs opcionais. Reconciliação S7-02:
+//   - COMPLEMENTAR: honorarios_total = valor_total (abatimento) + remanescente;
+//     honorarios_abatimento = só o abatimento novo; remanescente_anterior = o
+//     remanescente digitado.
+//   - PARCIAL: honorarios_total = honorarios_abatimento = valor_total.
+// Placeholders sem fonte no cálculo (saldo_atual, percentual_abatimento,
+// saldo_originario, saldo_epoca_abatimento) vêm dos inputs opcionais; se não
+// vierem, saem como string vazia — nunca o token literal.
 function buildTermoValues(
   termo: Awaited<ReturnType<typeof getTermo>>,
   cliente: { full_name: string | null; cpf_cnpj: string | null },
   tipoServico: string | null,
-  remanescenteAnteriorCentavos?: number,
+  extras: TermoDocExtras = {},
 ): Record<string, string> {
+  const isComplementar = termo.tipo_termo === "COMPLEMENTAR";
+  // Remanescente: prioriza o input desta geração; senão o persistido no snapshot.
+  const remanescenteCentavos = isComplementar
+    ? (extras.remanescenteAnteriorCentavos ?? termo.remanescente_anterior_centavos ?? 0)
+    : 0;
+  const honorariosTotalCentavos = termo.valor_total_centavos + remanescenteCentavos;
+
+  const optBrl = (c: number | null | undefined) => (c == null ? "" : brlDoc(c));
+  const optPct = (n: number | null | undefined) => (n == null ? "" : `${n}%`);
+
   const values: Record<string, string> = {
+    // ── Comuns aos 2 modelos ──────────────────────────────────────────────
     nome_cliente: cliente.full_name ?? "",
     cpf_cliente: cliente.cpf_cnpj ?? "",
     tipo_servico: tipoServico ?? "",
@@ -595,18 +657,30 @@ function buildTermoValues(
     parcelas_pagas: brlDoc(termo.parcelas_pagas_centavos),
     valor_abatimento: brlDoc(termo.valor_efetivo_centavos),
     percentual_honorarios: `${termo.percentual_honorarios}%`,
-    honorarios_abatimento: brlDoc(termo.valor_total_centavos),
-    honorarios_total: brlDoc(termo.valor_total_centavos),
-    honorarios_total_extenso: reaisPorExtenso(termo.valor_total_centavos),
+    honorarios_total: brlDoc(honorariosTotalCentavos),
+    honorarios_total_extenso: reaisPorExtenso(honorariosTotalCentavos),
     qtd_parcelas: String(termo.qtd_parcelas),
     valor_parcela: brlDoc(termo.valor_parcela_centavos),
     valor_ultima_parcela: brlDoc(termo.valor_ultima_parcela_centavos),
     desconto_avista: `${termo.desconto_avista_pct}%`,
     valor_avista: brlDoc(termo.valor_avista_centavos),
     valor_avista_extenso: reaisPorExtenso(termo.valor_avista_centavos),
-    // Só faz sentido no COMPLEMENTAR; nos demais fica string vazia.
-    remanescente_anterior:
-      termo.tipo_termo === "COMPLEMENTAR" ? brlDoc(remanescenteAnteriorCentavos ?? 0) : "",
+    data_extenso: dataPorExtenso(),
+
+    // ── Só PARCIAL ────────────────────────────────────────────────────────
+    // saldo_atual / percentual_abatimento: sem fonte no cálculo → input opcional.
+    saldo_atual: optBrl(extras.saldoAtualCentavos),
+    percentual_abatimento: optPct(extras.percentualAbatimento),
+    valor_ultima_parcela_extenso: reaisPorExtenso(termo.valor_ultima_parcela_centavos),
+
+    // ── Só COMPLEMENTAR ───────────────────────────────────────────────────
+    // honorarios_abatimento = só o abatimento novo (valor_total do cálculo).
+    honorarios_abatimento: brlDoc(termo.valor_total_centavos),
+    // remanescente_anterior = valor digitado (0 fora do COMPLEMENTAR → vazio).
+    remanescente_anterior: isComplementar ? brlDoc(remanescenteCentavos) : "",
+    // saldo_originario / saldo_epoca_abatimento: sem fonte → input opcional.
+    saldo_originario: optBrl(extras.saldoOriginarioCentavos),
+    saldo_epoca_abatimento: optBrl(extras.saldoEpocaAbatimentoCentavos),
   };
   return values;
 }
@@ -614,6 +688,11 @@ function buildTermoValues(
 export async function gerarDocumentoTermo(input: {
   termoId: string;
   remanescenteAnteriorCentavos?: number;
+  // S7-02 — inputs opcionais p/ placeholders sem fonte no cálculo.
+  saldoAtualCentavos?: number;
+  percentualAbatimento?: number;
+  saldoOriginarioCentavos?: number;
+  saldoEpocaAbatimentoCentavos?: number;
   triggeredBy?: string | null;
 }) {
   const sb = getSupabaseAdmin();
@@ -657,7 +736,13 @@ export async function gerarDocumentoTermo(input: {
     termo,
     { full_name: cliente?.full_name ?? null, cpf_cnpj: cliente?.cpf_cnpj ?? null },
     tipoServico,
-    input.remanescenteAnteriorCentavos,
+    {
+      remanescenteAnteriorCentavos: input.remanescenteAnteriorCentavos,
+      saldoAtualCentavos: input.saldoAtualCentavos,
+      percentualAbatimento: input.percentualAbatimento,
+      saldoOriginarioCentavos: input.saldoOriginarioCentavos,
+      saldoEpocaAbatimentoCentavos: input.saldoEpocaAbatimentoCentavos,
+    },
   );
 
   // Motor de docs: copia o modelo, substitui placeholders, torna link-editável,

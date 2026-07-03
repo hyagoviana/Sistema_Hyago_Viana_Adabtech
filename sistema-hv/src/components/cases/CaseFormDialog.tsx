@@ -388,6 +388,24 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
 // dados do cliente (editáveis), permite completar os que faltarem e confirma o
 // signatário. Ao enviar, cria o caso + gera + finaliza + envia ao ZapSign.
 // --------------------------------------------------------------------------
+// S7-01 — parse dos valores digitados (BRL/"%") para estruturados (centavos/número).
+function brlToCentavosUI(v: string | undefined): number | null {
+  if (!v) return null;
+  const cleaned = String(v).replace(/[^\d,.-]/g, "");
+  if (!cleaned) return null;
+  const n = Number(cleaned.replace(/\./g, "").replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+}
+function pctToNumberUI(v: string | undefined): number | null {
+  if (!v) return null;
+  const cleaned = String(v)
+    .replace(/[^\d,.-]/g, "")
+    .replace(",", ".");
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
 function ProcuracaoReviewStep({
   caseData,
   templateId,
@@ -433,11 +451,23 @@ function ProcuracaoReviewStep({
     for (const [k, v] of Object.entries(values)) {
       if (String(v).trim()) nonEmpty[k] = v;
     }
+    // S7-01 (opção A): deriva os honorários ESTRUTURADOS dos valores digitados
+    // (placeholders financeiros) para persistir em system_case_honorarios. O
+    // servidor prioriza estes valores; se ausentes, cai no fallback de parse.
+    const honorarios = {
+      percentualHonorarios: pctToNumberUI(nonEmpty.percentual_honorarios),
+      valorParcelaCentavos: brlToCentavosUI(nonEmpty.valor_parcela),
+      descontoAvistaPct: pctToNumberUI(nonEmpty.desconto_avista),
+      honorariosTotalCentavos:
+        brlToCentavosUI(nonEmpty.honorarios_total) ??
+        brlToCentavosUI(nonEmpty.honorarios_abatimento),
+    };
     try {
       const res = await gerar.mutateAsync({
         case: caseData,
         template_id: templateId,
         values: nonEmpty,
+        honorarios,
       });
       toast.success(
         `Caso ${res.case.case_code} criado — procuração gerada e disponível na ficha do caso para baixar ou enviar ao ZapSign.`,

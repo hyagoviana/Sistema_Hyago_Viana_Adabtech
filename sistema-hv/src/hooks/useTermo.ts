@@ -12,6 +12,7 @@ import {
   enviarParaConferenciaFn,
   estornarParcelaFn,
   gerarDocumentoTermoFn,
+  getCaseHonorariosFn,
   listParcelasFn,
   listTermosFn,
   recusarTermoFn,
@@ -35,6 +36,16 @@ export function useTermos(caseId: string) {
   });
 }
 
+// S7-02 — honorários persistidos da procuração (pré-preenche a elaboração).
+export function useCaseHonorarios(caseId: string) {
+  const fn = useServerFn(getCaseHonorariosFn);
+  return useQuery({
+    queryKey: ["case-honorarios", caseId],
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId,
+  });
+}
+
 export function useCalcTermo() {
   const fn = useServerFn(calcularTermoFn);
   return useMutation({ mutationFn: (input: TermoCalcInput) => fn({ data: input }) });
@@ -50,6 +61,7 @@ export function useCreateTermo(caseId: string) {
         formaPagamento?: "PARCELADO" | "A_VISTA";
         tipoTermo?: "PARCIAL" | "COMPLEMENTAR";
         elaboradoPorId?: string | null;
+        remanescenteAnteriorCentavos?: number | null;
       },
     ) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
@@ -61,8 +73,14 @@ export function useGerarDocumentoTermo(caseId: string) {
   const fn = useServerFn(gerarDocumentoTermoFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { termoId: string; remanescenteAnteriorCentavos?: number }) =>
-      fn({ data: vars }),
+    mutationFn: (vars: {
+      termoId: string;
+      remanescenteAnteriorCentavos?: number;
+      saldoAtualCentavos?: number;
+      percentualAbatimento?: number;
+      saldoOriginarioCentavos?: number;
+      saldoEpocaAbatimentoCentavos?: number;
+    }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }
