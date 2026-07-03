@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   FileSignature,
+  UserPlus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -61,6 +62,7 @@ const groups: { label: string; items: Item[] }[] = [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
       { to: "/comercial", label: "Comercial", icon: TrendingUp },
+      { to: "/comercial/leads", label: "Leads", icon: UserPlus },
       { to: "/comercial/assinaturas", label: "Assinaturas", icon: FileSignature, tone: "gold" },
       { to: "/marketing", label: "Marketing", icon: Megaphone },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },

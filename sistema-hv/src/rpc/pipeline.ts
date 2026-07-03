@@ -9,8 +9,11 @@ import {
   entrarNoFinanceiro,
   listAllBifurcatedCases,
   listCasesByServiceType,
+  listLeadsByServiceType,
+  listLeadsPipeline,
   listServiceTypes,
   listStages,
+  moveCaseToStageComercial,
   moveCaseToStageFin,
   moveCaseToStageOp,
   reorderStages,
@@ -36,7 +39,23 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-const kindSchema = z.enum(["op", "fin"]);
+// Igual a `handle`, mas repassa o id do usuário autenticado (ator) para o serviço.
+async function handleAuthed<T>(fn: (userId: string) => Promise<T>): Promise<T> {
+  try {
+    const user = await requireAuth();
+    return await fn(user.id);
+  } catch (err: unknown) {
+    if (err instanceof AuthError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
+    const status = (err as { status?: number })?.status;
+    setResponseStatus(typeof status === "number" ? status : 500);
+    throw err instanceof Error ? new Error(err.message) : err;
+  }
+}
+
+const kindSchema = z.enum(["op", "fin", "comercial"]);
 
 export const listServiceTypesFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listServiceTypes()),
@@ -67,6 +86,23 @@ export const moveCaseToStageFinFn = createServerFn({ method: "POST" })
     z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data }) => handle(() => moveCaseToStageFin(data.caseId, data.stageId)));
+
+// ------------------------------------------------------------- Leads (comercial)
+export const listLeadsByServiceTypeFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listLeadsByServiceType(data.serviceTypeId)));
+
+export const listLeadsPipelineFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listLeadsPipeline()),
+);
+
+export const moveCaseToStageComercialFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handleAuthed((userId) => moveCaseToStageComercial(data.caseId, data.stageId, userId)),
+  );
 
 export const bifurcarCaseFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))

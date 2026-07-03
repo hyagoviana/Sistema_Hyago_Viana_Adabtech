@@ -563,6 +563,8 @@ export type Database = {
           perdido_at: string | null;
           perdido_motivo: string | null;
           canonical_fields: Json | null;
+          macrostatus_comercial: string | null;
+          stage_comercial_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -601,6 +603,8 @@ export type Database = {
           perdido_at?: string | null;
           perdido_motivo?: string | null;
           canonical_fields?: Json | null;
+          macrostatus_comercial?: string | null;
+          stage_comercial_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

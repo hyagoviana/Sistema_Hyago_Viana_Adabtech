@@ -8,8 +8,11 @@ import {
   entrarFinanceiroFn,
   listAllBifurcatedCasesFn,
   listCasesByServiceTypeFn,
+  listLeadsByServiceTypeFn,
+  listLeadsPipelineFn,
   listServiceTypesFn,
   listStagesFn,
+  moveCaseToStageComercialFn,
   moveCaseToStageFinFn,
   moveCaseToStageOpFn,
   reorderStagesFn,
@@ -18,6 +21,10 @@ import {
   updateStageFn,
   voltarOperacionalFn,
 } from "@/rpc/pipeline";
+
+// Espelha StageKind do pipeline-service (op | fin | comercial). Aditivo: chamadas
+// existentes com "op"|"fin" continuam válidas.
+export type StageKind = "op" | "fin" | "comercial";
 
 export function useServiceTypes() {
   const fn = useServerFn(listServiceTypesFn);
@@ -37,7 +44,7 @@ export function useCreateServiceType() {
   });
 }
 
-export function useStages(serviceTypeId: string, kind: "op" | "fin") {
+export function useStages(serviceTypeId: string, kind: StageKind) {
   const fn = useServerFn(listStagesFn);
   return useQuery({
     queryKey: ["pipeline-stages", serviceTypeId, kind],
@@ -63,6 +70,39 @@ export function useCasesByServiceType(serviceTypeId: string) {
     queryFn: () => fn({ data: { serviceTypeId } }),
     enabled: !!serviceTypeId,
     staleTime: 2 * 60 * 1000,
+  });
+}
+
+// --------------------------------------------------------------- Leads (comercial)
+export function useLeadsByServiceType(serviceTypeId: string) {
+  const fn = useServerFn(listLeadsByServiceTypeFn);
+  return useQuery({
+    queryKey: ["leads-by-service", serviceTypeId],
+    queryFn: () => fn({ data: { serviceTypeId } }),
+    enabled: !!serviceTypeId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useLeadsPipeline() {
+  const fn = useServerFn(listLeadsPipelineFn);
+  return useQuery({
+    queryKey: ["leads-pipeline"],
+    queryFn: () => fn(),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useMoveCaseStageComercial(serviceTypeId: string) {
+  const fn = useServerFn(moveCaseToStageComercialFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["leads-by-service", serviceTypeId] });
+      qc.invalidateQueries({ queryKey: ["leads-pipeline"] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
+    },
   });
 }
 
@@ -145,13 +185,13 @@ export function useSetAcertoParcial() {
   });
 }
 
-export function useCreateStage(serviceTypeId: string, kind: "op" | "fin") {
+export function useCreateStage(serviceTypeId: string, kind: StageKind) {
   const fn = useServerFn(createStageFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: {
       service_type_id: string;
-      kind: "op" | "fin";
+      kind: StageKind;
       slug: string;
       label: string;
       stage_role?: string;
@@ -161,7 +201,7 @@ export function useCreateStage(serviceTypeId: string, kind: "op" | "fin") {
   });
 }
 
-export function useUpdateStage(serviceTypeId: string, kind: "op" | "fin") {
+export function useUpdateStage(serviceTypeId: string, kind: StageKind) {
   const fn = useServerFn(updateStageFn);
   const qc = useQueryClient();
   return useMutation({
@@ -171,7 +211,7 @@ export function useUpdateStage(serviceTypeId: string, kind: "op" | "fin") {
   });
 }
 
-export function useReorderStages(serviceTypeId: string, kind: "op" | "fin") {
+export function useReorderStages(serviceTypeId: string, kind: StageKind) {
   const fn = useServerFn(reorderStagesFn);
   const qc = useQueryClient();
   return useMutation({
@@ -180,7 +220,7 @@ export function useReorderStages(serviceTypeId: string, kind: "op" | "fin") {
   });
 }
 
-export function useDeleteStage(serviceTypeId: string, kind: "op" | "fin") {
+export function useDeleteStage(serviceTypeId: string, kind: StageKind) {
   const fn = useServerFn(softDeleteStageFn);
   const qc = useQueryClient();
   return useMutation({

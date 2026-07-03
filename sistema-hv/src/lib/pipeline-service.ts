@@ -18,7 +18,7 @@ export class PipelineServiceError extends Error {
   }
 }
 
-export type StageKind = "op" | "fin";
+export type StageKind = "op" | "fin" | "comercial";
 
 // ----------------------------------------------------------- Tipos de Serviço
 export async function listServiceTypes() {
@@ -57,6 +57,25 @@ export async function createServiceType(input: { name: string; slug: string; ord
     { kind: "fin", slug: "ATIVO", label: "Ativo", ordem: 1, stage_role: "normal" },
     { kind: "fin", slug: "QUITADO", label: "Quitado", ordem: 2, stage_role: "closed" },
     { kind: "fin", slug: "CANCELADO", label: "Cancelado", ordem: 3, stage_role: "lost" },
+    // S5-01 — esteira comercial (leads): novo tipo nasce com o funil de leads usável.
+    { kind: "comercial", slug: "NOVO", label: "Novo", ordem: 0, stage_role: "normal" },
+    { kind: "comercial", slug: "EM_CONTATO", label: "Em contato", ordem: 1, stage_role: "normal" },
+    {
+      kind: "comercial",
+      slug: "PROPOSTA_ENVIADA",
+      label: "Proposta enviada",
+      ordem: 2,
+      stage_role: "normal",
+    },
+    {
+      kind: "comercial",
+      slug: "AGUARDANDO_ASSINATURA",
+      label: "Aguardando assinatura",
+      ordem: 3,
+      stage_role: "normal",
+    },
+    { kind: "comercial", slug: "GANHO", label: "Ganho", ordem: 4, stage_role: "won" },
+    { kind: "comercial", slug: "PERDIDO", label: "Perdido", ordem: 5, stage_role: "lost" },
   ];
   await sb
     .from("system_pipeline_stages")
@@ -249,6 +268,86 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
   // S3-02 — instancia os itens de checklist da etapa fin de destino (idempotente,
   // server-side, dentro da transição — cobre o DnD do Kanban financeiro).
   await instanciarChecklist(caseId, stage.slug).catch(() => {});
+
+  return data;
+}
+
+// ----------------------------------------------------------- Leads (comercial)
+// Lista os leads (casos lifecycle='LEAD') de um tipo de serviço para o Kanban
+// comercial. A fonte de verdade da pipeline de leads é lifecycle='LEAD' (S5-02):
+// casos que viraram CLIENTE/PERDIDO saem daqui automaticamente.
+export async function listLeadsByServiceType(serviceTypeId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases_active")
+    .select("*")
+    .eq("service_type_id", serviceTypeId)
+    .eq("lifecycle", "LEAD")
+    .order("created_at", { ascending: false });
+  if (error) throw new PipelineServiceError(error.message, 500);
+  return data ?? [];
+}
+
+// Visão consolidada de todos os leads (para o índice/resumo do CRM).
+export async function listLeadsPipeline() {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases_active")
+    .select("*")
+    .eq("lifecycle", "LEAD")
+    .order("created_at", { ascending: false });
+  if (error) throw new PipelineServiceError(error.message, 500);
+  return data ?? [];
+}
+
+// Move o lead para uma etapa comercial. Dual-write: grava macrostatus_comercial =
+// slug (o trigger projeta stage_comercial_id). Idempotente (from === to → no-op) e
+// grava evento comercial_status_changed com o diff. Molde de moveCaseToStageOp.
+export async function moveCaseToStageComercial(
+  caseId: string,
+  stageId: string,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+  const { data: stage, error: sErr } = await sb
+    .from("system_pipeline_stages")
+    .select("slug, kind")
+    .eq("id", stageId)
+    .single();
+  if (sErr || !stage || stage.kind !== "comercial")
+    throw new PipelineServiceError("Etapa comercial inválida", 422);
+
+  const { data: caso, error: cErr } = await sb
+    .from("system_cases")
+    .select("id, organization_id, macrostatus_comercial")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (cErr || !caso) throw new PipelineServiceError("Caso não encontrado", 404);
+
+  const from = caso.macrostatus_comercial ?? null;
+
+  // Idempotente: mover para a mesma etapa não duplica evento nem UPDATE.
+  if (from === stage.slug) {
+    return { id: caseId, macrostatus_comercial: from, stage_comercial_id: null, noop: true };
+  }
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ macrostatus_comercial: stage.slug })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select("id, stage_comercial_id, macrostatus_comercial")
+    .single();
+  if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover lead", 500);
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "comercial_status_changed",
+    diff: { from, to: stage.slug },
+    triggered_by: triggeredBy ?? null,
+  });
 
   return data;
 }

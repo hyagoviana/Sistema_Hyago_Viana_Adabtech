@@ -100,6 +100,32 @@ export async function createCase(
   // (placeholder/geração), não a flag de "aguardando assinatura".
   const comercial = input.comercial === true;
 
+  // S5-02: caso comercial entra na pipeline de leads na 1ª etapa comercial
+  // (ordem 0) do seu tipo. Dual-write via macrostatus_comercial (a projeção
+  // system_fn_sync_stage_ids preenche stage_comercial_id). Best-effort: se o tipo
+  // não tiver esteira comercial semeada, o caso nasce sem etapa comercial.
+  let defaultComercialStatus: string | null = null;
+  if (comercial) {
+    const { data: stTypeCom } = await sb
+      .from("system_service_types")
+      .select("id")
+      .eq("slug", input.case_type)
+      .is("deleted_at", null)
+      .single();
+    if (stTypeCom) {
+      const { data: firstComStage } = await sb
+        .from("system_pipeline_stages")
+        .select("slug")
+        .eq("service_type_id", stTypeCom.id)
+        .eq("kind", "comercial")
+        .is("deleted_at", null)
+        .order("ordem", { ascending: true })
+        .limit(1)
+        .single();
+      if (firstComStage) defaultComercialStatus = firstComStage.slug;
+    }
+  }
+
   const { data: created, error } = await sb
     .from("system_cases")
     .insert({
@@ -109,6 +135,7 @@ export async function createCase(
       case_type: input.case_type,
       macrostatus_op: defaultOpStatus,
       macrostatus_fin: input.macrostatus_fin ?? "NAO_APLICAVEL",
+      macrostatus_comercial: defaultComercialStatus,
       proximo_passo: input.proximo_passo ?? null,
       responsavel: input.responsavel ?? null,
       municipio: input.municipio ?? null,
@@ -488,6 +515,9 @@ export async function liberarCasoComercial(
       // S1-01: procuração assinada ⇒ o caso vira CLIENTE (estado de 1ª classe).
       // Escrita de lifecycle centralizada aqui (RPC-only, regra de ouro 7).
       lifecycle: "CLIENTE",
+      // S5-02: carimbo terminal da esteira comercial (histórico/visual). A saída
+      // real da pipeline de leads é por lifecycle; este carimbo é só instantâneo.
+      macrostatus_comercial: "GANHO",
     })
     .eq("id", caseId)
     .is("deleted_at", null)
@@ -536,7 +566,9 @@ export async function promoverCasoManual(caseId: string, userId: string) {
   // Respeita a invariante de S1-01 (assinatura_liberada_at NOT NULL ⇒ NOT LEAD):
   // ao promover, se o caso estava aguardando assinatura, limpamos a flag e
   // carimbamos assinatura_liberada_at; se não estava, só setamos lifecycle.
-  const patch: CaseUpdateRow = { lifecycle: "CLIENTE" };
+  // S5-02: carimba GANHO na esteira comercial (histórico/visual). A saída da
+  // pipeline de leads é por lifecycle; o carimbo é só o instantâneo terminal.
+  const patch: CaseUpdateRow = { lifecycle: "CLIENTE", macrostatus_comercial: "GANHO" };
   if (caso.aguardando_assinatura_at) {
     patch.aguardando_assinatura_at = null;
     patch.assinatura_liberada_at = caso.assinatura_liberada_at ?? new Date().toISOString();
@@ -596,6 +628,9 @@ export async function marcarCasoPerdido(caseId: string, motivo: string, userId: 
       lifecycle: "PERDIDO",
       perdido_at: new Date().toISOString(),
       perdido_motivo: motivoTrim,
+      // S5-02: carimbo terminal PERDIDO na esteira comercial (histórico/visual).
+      // A saída da pipeline de leads é por lifecycle; este carimbo é só instantâneo.
+      macrostatus_comercial: "PERDIDO",
     })
     .eq("id", caseId)
     .is("deleted_at", null)

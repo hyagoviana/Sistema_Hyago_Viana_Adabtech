@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  type StageKind,
   useCreateStage,
   useDeleteStage,
   useReorderStages,
@@ -53,7 +54,7 @@ export function StageEditor({
 }: {
   serviceTypeId: string;
   serviceTypeName: string;
-  kind: "op" | "fin";
+  kind: StageKind;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -107,7 +108,8 @@ export function StageEditor({
         <DialogHeader>
           <DialogTitle>Etapas — {serviceTypeName}</DialogTitle>
           <DialogDescription>
-            Crie, renomeie, reordene ou remova as etapas {kind === "op" ? "operacionais" : "financeiras"}.
+            Crie, renomeie, reordene ou remova as etapas{" "}
+            {kind === "op" ? "operacionais" : kind === "fin" ? "financeiras" : "comerciais"}.
             “Ganho” marca a etapa que dispara o financeiro.
           </DialogDescription>
         </DialogHeader>
