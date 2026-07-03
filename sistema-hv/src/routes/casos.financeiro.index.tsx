@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { CaseCardFin } from "@/components/cases/CaseCardFin";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
+import { useAuth } from "@/lib/auth";
+import { can } from "@/lib/rbac";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
@@ -160,6 +162,8 @@ function FinanceiroKanban({
 }) {
   const [search, setSearch] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
+  const { role } = useAuth();
+  const canEditStages = can(role, "config.manage");
 
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, "fin");
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
@@ -256,6 +260,7 @@ function FinanceiroKanban({
         kind="fin"
         open={editorOpen}
         onOpenChange={setEditorOpen}
+        canEdit={canEditStages}
       />
 
       <div className="flex items-center gap-3 mb-6">

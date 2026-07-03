@@ -12,6 +12,7 @@ import {
   darBaixaParcela,
   enviarParaConferencia,
   estornarParcela,
+  gerarDocumentoTermo,
   getTermo,
   listParcelas,
   listTermos,
@@ -70,6 +71,28 @@ export const createTermoFn = createServerFn({ method: "POST" })
 export const enviarParaConferenciaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => enviarParaConferencia(data.termoId)));
+
+// S6-04 — gera o documento editável do termo (2 opções) e grava drive_url no
+// snapshot RASCUNHO. remanescenteAnteriorCentavos é input de tela (COMPLEMENTAR).
+export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        termoId: z.string().uuid(),
+        remanescenteAnteriorCentavos: z.number().int().nonnegative().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAuth();
+      return gerarDocumentoTermo({
+        termoId: data.termoId,
+        remanescenteAnteriorCentavos: data.remanescenteAnteriorCentavos,
+        triggeredBy: userId,
+      });
+    }),
+  );
 
 export const conferirTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>

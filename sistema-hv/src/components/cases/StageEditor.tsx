@@ -1,7 +1,8 @@
-import { ArrowDown, ArrowUp, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { StageChecklistEditor } from "@/components/pipeline/StageChecklistEditor";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,12 +52,14 @@ export function StageEditor({
   kind,
   open,
   onOpenChange,
+  canEdit = true,
 }: {
   serviceTypeId: string;
   serviceTypeName: string;
   kind: StageKind;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  canEdit?: boolean;
 }) {
   const { data: stages } = useStages(serviceTypeId, kind);
   const createStage = useCreateStage(serviceTypeId, kind);
@@ -65,6 +68,8 @@ export function StageEditor({
   const del = useDeleteStage(serviceTypeId, kind);
 
   const [newLabel, setNewLabel] = useState("");
+  // S6-01 — etapa com o checklist de critérios expandido (id da etapa aberta).
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const list = stages ?? [];
 
@@ -116,63 +121,82 @@ export function StageEditor({
 
         <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
           {list.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2 border border-[var(--border)] rounded-md p-2">
-              <div className="flex flex-col">
+            <div key={s.id} className="border border-[var(--border)] rounded-md">
+              <div className="flex items-center gap-2 p-2">
                 <button
                   type="button"
-                  className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
-                  disabled={i === 0}
-                  onClick={() => swap(i, i - 1)}
+                  className="text-muted-foreground hover:text-[var(--navy)]"
+                  title="Critérios (checklist) desta etapa"
+                  onClick={() => setExpanded(expanded === s.id ? null : s.id)}
                 >
-                  <ArrowUp size={13} />
+                  {expanded === s.id ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                 </button>
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
+                    disabled={i === 0}
+                    onClick={() => swap(i, i - 1)}
+                  >
+                    <ArrowUp size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
+                    disabled={i === list.length - 1}
+                    onClick={() => swap(i, i + 1)}
+                  >
+                    <ArrowDown size={13} />
+                  </button>
+                </div>
+                <Input
+                  className="flex-1"
+                  defaultValue={s.label}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && v !== s.label) updateStage.mutate({ id: s.id, patch: { label: v } });
+                  }}
+                />
+                <Select
+                  value={s.stage_role}
+                  onValueChange={(v) => updateStage.mutate({ id: s.id, patch: { stage_role: v } })}
+                >
+                  <SelectTrigger className="w-52">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ROLE_LABELS).map(([k, lbl]) => (
+                      <SelectItem key={k} value={k}>
+                        {lbl}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <button
                   type="button"
-                  className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
-                  disabled={i === list.length - 1}
-                  onClick={() => swap(i, i + 1)}
+                  className="text-muted-foreground hover:text-destructive p-1"
+                  title="Excluir"
+                  onClick={async () => {
+                    try {
+                      await del.mutateAsync(s.id);
+                      toast.success("Etapa removida");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Falha");
+                    }
+                  }}
                 >
-                  <ArrowDown size={13} />
+                  <Trash2 size={15} />
                 </button>
               </div>
-              <Input
-                className="flex-1"
-                defaultValue={s.label}
-                onBlur={(e) => {
-                  const v = e.target.value.trim();
-                  if (v && v !== s.label) updateStage.mutate({ id: s.id, patch: { label: v } });
-                }}
-              />
-              <Select
-                value={s.stage_role}
-                onValueChange={(v) => updateStage.mutate({ id: s.id, patch: { stage_role: v } })}
-              >
-                <SelectTrigger className="w-52">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(ROLE_LABELS).map(([k, lbl]) => (
-                    <SelectItem key={k} value={k}>
-                      {lbl}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-destructive p-1"
-                title="Excluir"
-                onClick={async () => {
-                  try {
-                    await del.mutateAsync(s.id);
-                    toast.success("Etapa removida");
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Falha");
-                  }
-                }}
-              >
-                <Trash2 size={15} />
-              </button>
+              {expanded === s.id && (
+                <div className="border-t border-[var(--border)] bg-muted/20 px-4 py-3">
+                  <StageChecklistEditor
+                    serviceTypeId={serviceTypeId}
+                    stageSlug={s.slug}
+                    canEdit={canEdit}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

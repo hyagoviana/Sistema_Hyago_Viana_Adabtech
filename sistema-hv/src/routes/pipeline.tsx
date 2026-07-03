@@ -3,6 +3,8 @@ import { ArrowLeft, FolderKanban, Layers, Plus, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useAuth } from "@/lib/auth";
+import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
@@ -188,6 +190,8 @@ function DynamicKanban({
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
   const moveFin = useMoveCaseStageFin(serviceType.id);
+  const { role } = useAuth();
+  const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
 
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
@@ -276,6 +280,7 @@ function DynamicKanban({
         kind={kind}
         open={editorOpen}
         onOpenChange={setEditorOpen}
+        canEdit={canEditStages}
       />
 
       {isError && (

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { LeadCard } from "@/components/comercial/LeadCard";
+import { useAuth } from "@/lib/auth";
+import { can } from "@/lib/rbac";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -106,6 +108,8 @@ function LeadsKanban({
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, "comercial");
   const { data: leads, isLoading, isError, error } = useLeadsByServiceType(serviceType.id);
   const move = useMoveCaseStageComercial(serviceType.id);
+  const { role } = useAuth();
+  const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
 
   useDocumentTitle(
@@ -195,6 +199,7 @@ function LeadsKanban({
         kind="comercial"
         open={editorOpen}
         onOpenChange={setEditorOpen}
+        canEdit={canEditStages}
       />
 
       {isError && (

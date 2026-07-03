@@ -1,26 +1,9 @@
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
+import { ChecklistItemsRows, type ChecklistItem as Item } from "./ChecklistItemsList";
 import { Eyebrow } from "@/components/hv/primitives";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useCaseChecklistItems, useMarcarItemChecklist } from "@/hooks/useChecklist";
-
-type Item = {
-  id: string;
-  stage_slug: string;
-  done: boolean;
-  source: string;
-  drive_file_id: string | null;
-  def: {
-    key: string;
-    label: string;
-    ordem: number;
-    required: boolean;
-    expected_doc_pattern: string | null;
-  } | null;
-};
 
 export function CaseChecklistPanel({ caseId }: { caseId: string }) {
   const { data: items, isLoading } = useCaseChecklistItems(caseId);
@@ -79,48 +62,7 @@ export function CaseChecklistPanel({ caseId }: { caseId: string }) {
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
               {slug}
             </div>
-            <ul className="space-y-1.5">
-              {arr.map((it) => {
-                const isSuggestion = it.source === "drive_suggest" && !it.done;
-                return (
-                  <li
-                    key={it.id}
-                    className={`flex items-center gap-2.5 rounded-md border px-3 py-2 text-sm ${
-                      isSuggestion ? "border-[var(--gold)] bg-[var(--cream)]" : ""
-                    }`}
-                  >
-                    <Checkbox
-                      checked={it.done}
-                      disabled={marcarMut.isPending}
-                      onCheckedChange={(v) => toggle(it, !!v)}
-                    />
-                    <span
-                      className={`flex-1 ${it.done ? "line-through text-muted-foreground" : ""}`}
-                    >
-                      {it.def?.label ?? it.def?.key ?? "—"}
-                    </span>
-                    {it.def?.required && (
-                      <Badge className="bg-[var(--navy)] text-white">Obrigatório</Badge>
-                    )}
-                    {isSuggestion && (
-                      <>
-                        <span className="inline-flex items-center gap-1 text-[11px] text-[var(--gold-700)]">
-                          <Sparkles size={12} /> Sugestão
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={marcarMut.isPending}
-                          onClick={() => toggle(it, true)}
-                        >
-                          Confirmar
-                        </Button>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            <ChecklistItemsRows items={arr} onToggle={toggle} pending={marcarMut.isPending} />
           </div>
         ))}
       </div>

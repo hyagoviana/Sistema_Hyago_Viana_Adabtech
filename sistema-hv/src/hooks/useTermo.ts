@@ -11,6 +11,7 @@ import {
   darBaixaParcelaFn,
   enviarParaConferenciaFn,
   estornarParcelaFn,
+  gerarDocumentoTermoFn,
   listParcelasFn,
   listTermosFn,
   recusarTermoFn,
@@ -51,6 +52,17 @@ export function useCreateTermo(caseId: string) {
         elaboradoPorId?: string | null;
       },
     ) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+// S6-04 — gera o documento editável do termo e grava o link no snapshot.
+export function useGerarDocumentoTermo(caseId: string) {
+  const fn = useServerFn(gerarDocumentoTermoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { termoId: string; remanescenteAnteriorCentavos?: number }) =>
+      fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });
 }

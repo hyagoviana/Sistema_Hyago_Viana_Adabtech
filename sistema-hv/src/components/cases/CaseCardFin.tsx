@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, ListChecks } from "lucide-react";
 import { useState } from "react";
 
+import { ChecklistItemsList } from "./ChecklistItemsList";
 import { MoveCaseFinDialog } from "./MoveCaseFinDialog";
 import { Badge, StatusDot } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 
 type Props = {
@@ -58,7 +60,34 @@ export function CaseCardFin({ caso }: Props) {
           </span>
         </div>
       </Link>
-      <div className="absolute top-2 right-2" onClick={stopAll} onPointerDown={stopAll}>
+      <div
+        className="absolute top-2 right-2 flex items-center gap-0.5"
+        onClick={stopAll}
+        onPointerDown={stopAll}
+      >
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity data-[state=open]:opacity-100"
+              title="Critérios da etapa"
+            >
+              <ListChecks size={13} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-80 p-3"
+            align="end"
+            onClick={stopAll}
+            onPointerDown={stopAll}
+          >
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+              Critérios da etapa atual
+            </p>
+            <ChecklistItemsList caseId={caso.id} stageSlug={caso.macrostatus_fin} compact />
+          </PopoverContent>
+        </Popover>
         <Button
           variant="ghost"
           size="sm"

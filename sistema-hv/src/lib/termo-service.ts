@@ -3,8 +3,11 @@
 
 import { createHash } from "node:crypto";
 
-import { ensureCaseFolder } from "./case-documents-service";
-import { createDocWithText, exportPdf } from "./google/docs";
+import {
+  ensureCaseFolder,
+  generateCaseDocumentFromTemplate,
+} from "./case-documents-service";
+import { createDocWithText, docUrl, exportPdf } from "./google/docs";
 import { uploadFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 
@@ -481,4 +484,205 @@ export async function estornarParcela(parcelaId: string) {
     entity_id: parcelaId,
   });
   return data;
+}
+
+// ------------------------------------------------------------------ S6-04 ----
+// Geração do DOCUMENTO editável do termo (2 opções: parcelado + à vista num
+// único doc, por tipo_termo) via generateCaseDocumentFromTemplate. Grava o link
+// editável (google_doc) em system_termo_snapshots.drive_url do RASCUNHO vigente.
+// Sem migration: usa colunas já existentes; UPDATE só sobre RASCUNHO (mutável).
+
+// Por-extenso simples (inteiros; usado só nos principais valores). Para reais
+// arredonda p/ o inteiro mais próximo — o valor exato em número já vai no doc.
+const _UNI = [
+  "zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove",
+  "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete",
+  "dezoito", "dezenove",
+];
+const _DEZ = [
+  "", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta",
+  "oitenta", "noventa",
+];
+const _CEM = [
+  "", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos",
+  "setecentos", "oitocentos", "novecentos",
+];
+
+function _ate999(n: number): string {
+  if (n === 0) return "";
+  if (n === 100) return "cem";
+  const c = Math.floor(n / 100);
+  const r = n % 100;
+  const parts: string[] = [];
+  if (c > 0) parts.push(_CEM[c]);
+  if (r > 0) {
+    if (r < 20) parts.push(_UNI[r]);
+    else {
+      const d = Math.floor(r / 10);
+      const u = r % 10;
+      parts.push(u > 0 ? `${_DEZ[d]} e ${_UNI[u]}` : _DEZ[d]);
+    }
+  }
+  return parts.join(" e ");
+}
+
+function inteiroPorExtenso(n: number): string {
+  if (n === 0) return "zero";
+  const milhoes = Math.floor(n / 1_000_000);
+  const milhares = Math.floor((n % 1_000_000) / 1000);
+  const resto = n % 1000;
+  const parts: string[] = [];
+  if (milhoes > 0)
+    parts.push(`${_ate999(milhoes)} ${milhoes === 1 ? "milhão" : "milhões"}`);
+  if (milhares > 0) parts.push(`${milhares === 1 ? "mil" : `${_ate999(milhares)} mil`}`);
+  if (resto > 0) parts.push(_ate999(resto));
+  return parts.join(", ").replace(/,([^,]*)$/, " e$1").trim() || "zero";
+}
+
+// Reais por extenso (arredonda centavos ao real). Ex.: 150000 → "mil e quinhentos reais".
+export function reaisPorExtenso(centavos: number): string {
+  const reais = Math.round((centavos ?? 0) / 100);
+  return `${inteiroPorExtenso(reais)} ${reais === 1 ? "real" : "reais"}`;
+}
+
+function brlDoc(c: number | null | undefined) {
+  return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
+}
+
+// Convenção de nome do modelo por tipo_termo. O modelo Google Doc deve ter, no
+// NOME, "TERMO ACERTO PARCIAL" ou "TERMO ACERTO COMPLEMENTAR" (case-insensitive,
+// acentos/hífen ignorados). Ajustar aqui se o owner mudar a convenção.
+function templateNameMatches(name: string, tipo: "PARCIAL" | "COMPLEMENTAR"): boolean {
+  const norm = name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toUpperCase();
+  return norm.includes("TERMO") && norm.includes("ACERTO") && norm.includes(tipo);
+}
+
+async function resolveTermoTemplateId(tipo: "PARCIAL" | "COMPLEMENTAR"): Promise<string> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_document_templates")
+    .select("id, name")
+    .is("deleted_at", null)
+    .eq("active", true);
+  if (error) throw new TermoServiceError(error.message, 500);
+  const match = (data ?? []).find((t) => templateNameMatches(t.name, tipo));
+  if (!match) {
+    // Degrada com mensagem clara (não quebra): setup dos 2 Google Docs pendente.
+    throw new TermoServiceError(
+      `Modelo de termo não configurado (${tipo}). Cadastre o modelo "TERMO ACERTO ${tipo}" na pasta de modelos e rode "Sincronizar modelos".`,
+      424,
+    );
+  }
+  return match.id;
+}
+
+// Monta os placeholders <campo> do documento a partir do snapshot + cadastro.
+function buildTermoValues(
+  termo: Awaited<ReturnType<typeof getTermo>>,
+  cliente: { full_name: string | null; cpf_cnpj: string | null },
+  tipoServico: string | null,
+  remanescenteAnteriorCentavos?: number,
+): Record<string, string> {
+  const values: Record<string, string> = {
+    nome_cliente: cliente.full_name ?? "",
+    cpf_cliente: cliente.cpf_cnpj ?? "",
+    tipo_servico: tipoServico ?? "",
+    saldo_antes: brlDoc(termo.saldo_antes_centavos),
+    saldo_depois: brlDoc(termo.saldo_depois_centavos),
+    parcelas_pagas: brlDoc(termo.parcelas_pagas_centavos),
+    valor_abatimento: brlDoc(termo.valor_efetivo_centavos),
+    percentual_honorarios: `${termo.percentual_honorarios}%`,
+    honorarios_abatimento: brlDoc(termo.valor_total_centavos),
+    honorarios_total: brlDoc(termo.valor_total_centavos),
+    honorarios_total_extenso: reaisPorExtenso(termo.valor_total_centavos),
+    qtd_parcelas: String(termo.qtd_parcelas),
+    valor_parcela: brlDoc(termo.valor_parcela_centavos),
+    valor_ultima_parcela: brlDoc(termo.valor_ultima_parcela_centavos),
+    desconto_avista: `${termo.desconto_avista_pct}%`,
+    valor_avista: brlDoc(termo.valor_avista_centavos),
+    valor_avista_extenso: reaisPorExtenso(termo.valor_avista_centavos),
+    // Só faz sentido no COMPLEMENTAR; nos demais fica string vazia.
+    remanescente_anterior:
+      termo.tipo_termo === "COMPLEMENTAR" ? brlDoc(remanescenteAnteriorCentavos ?? 0) : "",
+  };
+  return values;
+}
+
+export async function gerarDocumentoTermo(input: {
+  termoId: string;
+  remanescenteAnteriorCentavos?: number;
+  triggeredBy?: string | null;
+}) {
+  const sb = getSupabaseAdmin();
+  const termo = await getTermo(input.termoId);
+
+  // Imutabilidade: só gera/grava sobre RASCUNHO (o restante é travado por trigger).
+  if (termo.status !== "RASCUNHO") {
+    throw new TermoServiceError(
+      "Só é possível gerar o documento a partir de um termo em RASCUNHO",
+      409,
+    );
+  }
+
+  const tipo = (termo.tipo_termo === "COMPLEMENTAR" ? "COMPLEMENTAR" : "PARCIAL") as
+    | "PARCIAL"
+    | "COMPLEMENTAR";
+
+  // Cadastro do cliente + tipo de serviço (para os placeholders).
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("client_id, case_type, service_type_id")
+    .eq("id", termo.case_id)
+    .single();
+  const { data: cliente } = await sb
+    .from("system_clients")
+    .select("full_name, cpf_cnpj")
+    .eq("id", caso?.client_id ?? "")
+    .maybeSingle();
+  let tipoServico: string | null = caso?.case_type ?? null;
+  if (caso?.service_type_id) {
+    const { data: st } = await sb
+      .from("system_service_types")
+      .select("name")
+      .eq("id", caso.service_type_id)
+      .maybeSingle();
+    if (st?.name) tipoServico = st.name;
+  }
+
+  const templateId = await resolveTermoTemplateId(tipo);
+  const values = buildTermoValues(
+    termo,
+    { full_name: cliente?.full_name ?? null, cpf_cnpj: cliente?.cpf_cnpj ?? null },
+    tipoServico,
+    input.remanescenteAnteriorCentavos,
+  );
+
+  // Motor de docs: copia o modelo, substitui placeholders, torna link-editável,
+  // grava em system_case_documents e devolve o editUrl. Falha externa → 424.
+  const { doc, editUrl } = await generateCaseDocumentFromTemplate({
+    caseId: termo.case_id,
+    templateId,
+    title: `Termo de Acerto ${tipo} — v${termo.version}`,
+    values,
+    docKind: "TERMO_ACERTO",
+    triggeredBy: input.triggeredBy ?? undefined,
+  });
+
+  // Grava o link do doc editável no snapshot RASCUNHO (drive_url).
+  const editable = doc.google_doc_id ? docUrl(doc.google_doc_id) : editUrl;
+  const { data: updated, error: upErr } = await sb
+    .from("system_termo_snapshots")
+    .update({ drive_url: editable })
+    .eq("id", termo.id)
+    .eq("status", "RASCUNHO")
+    .select()
+    .single();
+  if (upErr || !updated) {
+    throw new TermoServiceError(upErr?.message ?? "Falha ao gravar link do documento no termo", 500);
+  }
+
+  return { termo: updated, docId: doc.id, editUrl: editable };
 }

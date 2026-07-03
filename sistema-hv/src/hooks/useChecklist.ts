@@ -99,6 +99,8 @@ export function useMarcarItemChecklist(caseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) });
       qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
       qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
+      // Kanban (op/fin/comercial) lê por tipo de serviço → invalida p/ o card pular de coluna.
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
     },
   });
 }

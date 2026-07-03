@@ -5,8 +5,8 @@
 // geração — isso é BACKLOG (B-01): botões desabilitados com marca "em breve".
 // Estado vazio amigável quando não há termo.
 
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { ExternalLink, FileText, Lock } from "lucide-react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { ExternalLink, FileText } from "lucide-react";
 import { useEffect } from "react";
 
 import { Breadcrumb, Eyebrow } from "@/components/hv/primitives";
@@ -142,13 +142,15 @@ function TermoPreview() {
             {vigente.drive_url && (
               <a href={vigente.drive_url} target="_blank" rel="noreferrer">
                 <Button size="sm" variant="outline">
-                  <ExternalLink size={13} className="mr-1" /> Abrir PDF
+                  <ExternalLink size={13} className="mr-1" /> Abrir documento
                 </Button>
               </a>
             )}
-            <Button size="sm" variant="outline" disabled title="Em breve (backlog)">
-              <Lock size={13} className="mr-1" /> Editar / recalcular (em breve)
-            </Button>
+            <Link to="/casos/$id/termo/elaborar" params={{ id }}>
+              <Button size="sm" variant="outline">
+                <FileText size={13} className="mr-1" /> Elaborar / recalcular
+              </Button>
+            </Link>
           </div>
         </div>
       )}
