@@ -62,7 +62,7 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
-      { to: "/inteligencia/leads", label: "Leads", icon: UserPlus },
+      { to: "/inteligencia/leads", label: "Cadastro", icon: UserPlus },
       { to: "/comercial", label: "Comercial", icon: TrendingUp },
       { to: "/comercial/leads", label: "Pipeline comercial", icon: LayoutGrid },
       { to: "/comercial/assinaturas", label: "Assinaturas", icon: FileSignature, tone: "gold" },

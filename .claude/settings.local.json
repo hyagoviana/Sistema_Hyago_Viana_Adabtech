@@ -284,7 +284,13 @@
       "Bash(curl -4 -sS -m 12 -o /dev/null -w \"n8n -> HTTP %{http_code} connect %{time_connect}s\\\\n\" https://n8n.sistemahyagoviana.com.br/)",
       "Read(//c/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/**)",
       "Read(//c/Users/mathe/OneDrive/Área de Trabalho/Projeto Hytalo advogado/docs/**)",
-      "Bash(grep -viE \"linebreak-style|␍|Delete .$|prettier/prettier\")"
+      "Bash(grep -viE \"linebreak-style|␍|Delete .$|prettier/prettier\")",
+      "Bash(git remote *)",
+      "Bash(cp __TRACKED_VAR__/env.hyago.backup env)",
+      "Bash(git check-ignore *)",
+      "Bash(xargs grep -l \"procuracao\\\\|ZapSign\")",
+      "Bash(xargs grep -l \"procuracao\")",
+      "Bash(xargs grep -l \"create.*procuracao\\\\|procuracao.*sem.*caso\")"
     ]
   }
 }

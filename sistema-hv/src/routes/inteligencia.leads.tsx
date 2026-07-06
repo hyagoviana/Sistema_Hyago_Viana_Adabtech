@@ -14,8 +14,8 @@ function LeadsRoster() {
   return (
     <ClientRoster
       eyebrow="Inteligência"
-      title="Leads"
-      breadcrumb={[{ label: "Inteligência", to: "/comercial" }, { label: "Leads" }]}
+      title="Cadastro"
+      breadcrumb={[{ label: "Inteligência", to: "/comercial" }, { label: "Cadastro" }]}
       showLifecycleTabs
       entityNoun="cadastro"
       entityNounPlural="cadastros"

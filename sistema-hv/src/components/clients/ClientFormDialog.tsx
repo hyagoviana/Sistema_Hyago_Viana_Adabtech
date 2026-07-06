@@ -36,9 +36,7 @@ import {
 import { ESTADOS_BR } from "@/lib/br/estados";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
 import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
-import { useCreateCase } from "@/hooks/useCases";
 import { CepError, lookupCep, useMunicipios } from "@/hooks/useLocalidades";
-import { useServiceTypes } from "@/hooks/usePipeline";
 import type { Database } from "@/lib/supabase/types";
 import {
   clientCreateSchema,
@@ -157,15 +155,11 @@ function UfSelect({
 export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   const createMutation = useFindOrCreateClient();
   const updateMutation = useUpdateClient();
-  const createCaseMutation = useCreateCase();
-  const { data: serviceTypes } = useServiceTypes();
   const { data: fieldDefs } = useClientFieldDefs();
   // Campos ocultos (active=false) não aparecem no cadastro.
   const activeFieldDefs = (fieldDefs ?? []).filter((d) => d.active);
-  const [linkedCaseType, setLinkedCaseType] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
-  const isLoading =
-    createMutation.isPending || updateMutation.isPending || createCaseMutation.isPending;
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<ClientCreateInput>({
     resolver: zodResolver(clientCreateSchema),
@@ -183,7 +177,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setLinkedCaseType("");
     if (mode === "edit" && client) {
       form.reset({
         full_name: client.full_name,
@@ -265,19 +258,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               .map((c) => c.campo)
               .join(", ")}. Edite na ficha se precisar corrigir.`,
           );
-        }
-        if (linkedCaseType) {
-          try {
-            const caso = await createCaseMutation.mutateAsync({
-              client_id: created.id,
-              case_type: linkedCaseType,
-            });
-            toast.success(`Caso ${caso.case_code} vinculado ao cliente`);
-          } catch (caseErr) {
-            toast.error(
-              `Cliente criado, mas falha ao criar caso: ${caseErr instanceof Error ? caseErr.message : "erro"}`,
-            );
-          }
         }
       }
       onOpenChange(false);
@@ -638,30 +618,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
             {/* Campos customizados (Melhoria 1) — definidos pelo admin */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <CustomFieldsSection defs={activeFieldDefs} control={form.control as any} />
-
-            {mode === "create" && (serviceTypes ?? []).length > 0 && (
-              <div className="border-t pt-4 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Vincular a um caso (opcional)
-                </p>
-                <Select
-                  onValueChange={(v) => setLinkedCaseType(v === "__none__" ? "" : v)}
-                  value={linkedCaseType || "__none__"}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Nenhum — criar só o cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Nenhum — criar só o cliente</SelectItem>
-                    {(serviceTypes ?? []).map((t) => (
-                      <SelectItem key={t.id} value={t.slug}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             <DialogFooter>
               <Button

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { getRouteTitle, useRouteTitle } from "@/lib/route-title";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
+import { ProcuracaoFormDialog } from "@/components/cases/ProcuracaoFormDialog";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 
 const labelMap: Record<string, string> = {
@@ -56,6 +57,7 @@ export function Topbar() {
   const [openNew, setOpenNew] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
+  const [procDialogOpen, setProcDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -123,6 +125,7 @@ export function Topbar() {
             >
               {[
                 { label: "Caso", action: () => setCaseDialogOpen(true) },
+                { label: "Procuração", action: () => setProcDialogOpen(true) },
                 { label: "Cliente", action: () => setClientDialogOpen(true) },
                 { label: "Documento", action: () => navigate({ to: "/modelos" }) },
               ].map((it) => (
@@ -186,6 +189,7 @@ export function Topbar() {
       </div>
 
       <CaseFormDialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen} />
+      <ProcuracaoFormDialog open={procDialogOpen} onOpenChange={setProcDialogOpen} />
       <ClientFormDialog open={clientDialogOpen} onOpenChange={setClientDialogOpen} mode="create" />
     </header>
   );
