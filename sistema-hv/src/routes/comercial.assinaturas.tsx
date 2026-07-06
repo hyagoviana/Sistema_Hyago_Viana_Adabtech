@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useComercialCases, useLiberarCaso } from "@/hooks/useCases";
+import { useComercialCases, usePromoverCasoManual } from "@/hooks/useCases";
 
 export const Route = createFileRoute("/comercial/assinaturas")({
   component: ComercialAssinaturas,
@@ -19,7 +19,10 @@ function formatDate(iso: string | null): string {
 
 function ComercialAssinaturas() {
   const { data, isLoading, isError, error } = useComercialCases();
-  const liberar = useLiberarCaso();
+  // S9-12 — documento COMBINADO: confirmar a assinatura promove o caso a CLIENTE
+  // (operacional), espelhando o efeito do webhook do contrato (S9-05). Fallback
+  // manual quando o webhook não chega.
+  const promover = usePromoverCasoManual();
 
   const cases = data ?? [];
   const total = cases.length;
@@ -27,16 +30,16 @@ function ComercialAssinaturas() {
   async function handleLiberar(id: string, code: string) {
     if (
       !confirm(
-        `Confirmar que a procuração do caso ${code} foi assinada? O caso entra no funil operacional.`,
+        `Confirmar que o contrato e procuração do caso ${code} foi assinado? O caso vira CLIENTE (funil operacional).`,
       )
     ) {
       return;
     }
     try {
-      await liberar.mutateAsync(id);
-      toast.success(`Caso ${code} liberado para o operacional`);
+      await promover.mutateAsync(id);
+      toast.success(`Caso ${code} promovido a cliente (operacional)`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao liberar caso");
+      toast.error(err instanceof Error ? err.message : "Falha ao promover caso");
     }
   }
 
@@ -49,7 +52,7 @@ function ComercialAssinaturas() {
         subtitle={
           isLoading
             ? "Carregando…"
-            : `${total} caso${total === 1 ? "" : "s"} aguardando a assinatura da procuração`
+            : `${total} caso${total === 1 ? "" : "s"} aguardando a assinatura do contrato e procuração`
         }
       />
 
@@ -69,8 +72,8 @@ function ComercialAssinaturas() {
         </div>
       ) : total === 0 ? (
         <div className="card-editorial !p-10 text-center text-muted-foreground">
-          Nenhum caso aguardando assinatura. Casos criados com “Criar caso / enviar ZapSign”
-          aparecem aqui até a procuração ser assinada.
+          Nenhum caso aguardando assinatura. Casos com o contrato e procuração enviado ao ZapSign
+          aparecem aqui até ser assinado (quando viram cliente).
         </div>
       ) : (
         <div className="grid gap-3">
@@ -99,7 +102,7 @@ function ComercialAssinaturas() {
                 <Btn
                   variant="outline"
                   onClick={() => handleLiberar(c.id, c.case_code)}
-                  disabled={liberar.isPending}
+                  disabled={promover.isPending}
                 >
                   <CheckCircle2 size={14} />
                   Confirmar assinatura

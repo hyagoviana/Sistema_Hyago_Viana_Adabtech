@@ -126,13 +126,21 @@ const generateContratoSchema = z.object({
   case_id: z.string().uuid(),
   client_id: z.string().uuid(),
   template_id: z.string().uuid().nullable().optional(),
+  // S9-12 — valores revisados no diálogo (documento COMBINADO). Opcional.
+  values: z.record(z.string(), z.string()).optional(),
 });
 
 export const generateContratoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => generateContratoSchema.parse(data))
   .handler(async ({ data }) =>
     handle((userId) =>
-      generateContratoFromTemplate(data.case_id, data.template_id ?? null, data.client_id, userId),
+      generateContratoFromTemplate(
+        data.case_id,
+        data.template_id ?? null,
+        data.client_id,
+        userId,
+        data.values,
+      ),
     ),
   );
 

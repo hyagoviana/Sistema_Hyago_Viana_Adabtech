@@ -38,11 +38,25 @@ import { formatCpfCnpj, isCpfCnpjField } from "@/lib/format";
 
 type Kind = "procuracao" | "contrato";
 
-// S9-09 — ações "Enviar procuração" (comercial) e "Enviar caso (contrato)"
-// (operacional) no detalhe do caso. Reusa a máquina de geração/finalização/envio
-// já existente (aba Documentos): escolher modelo → gerar (idempotente) →
-// finalizar (PDF na pasta) → enviar ao ZapSign. O efeito de lifecycle vem do
-// webhook (S9-05), nunca do envio. "Enviar caso" degrada 424 sem modelo.
+// S9-12 — Documento COMBINADO (decisão do owner 2026-07-06): cada modelo
+// "Contrato e procuração - [serviço]" traz procuração + contrato numa assinatura
+// só. É 1 documento por caso. Fluxo: cadastro (LEAD) → envia o combinado → entra
+// no Comercial (aguardando assinatura, ainda LEAD) → assinou → CLIENTE.
+//
+// NÃO existe procuração pura nem contrato puro separados. Por isso a UI expõe um
+// ÚNICO botão ("Enviar contrato e procuração") que envia o combinado como
+// doc_kind='contrato' (o gatilho operacional S9-04/S9-05 vira CLIENTE ao assinar).
+//
+// O botão "Enviar procuração" (procuração pura) fica ESCONDIDO atrás deste flag —
+// o backend (registrarProcuracaoAssinada / generateProcuracaoFromTemplate) segue
+// INTACTO caso o owner queira reativar procuração pura no futuro.
+const SEPARATE_PROCURACAO = false;
+
+// S9-09/S9-12 — ação de assinatura no detalhe do caso. Reusa a máquina de
+// geração/finalização/envio já existente (aba Documentos): escolher modelo →
+// revisar campos → gerar (idempotente) → finalizar (PDF na pasta) → enviar ao
+// ZapSign. O envio carimba `aguardando_assinatura_at` (entra no Comercial); o
+// efeito de lifecycle (→ CLIENTE) vem do webhook (S9-05), nunca do envio.
 export function CaseSignActions({
   caseId,
   clientId,
@@ -51,7 +65,6 @@ export function CaseSignActions({
   clientCpf,
   municipio,
   autoFillExtra,
-  procuracaoAssinada,
 }: {
   caseId: string;
   clientId: string;
@@ -60,19 +73,30 @@ export function CaseSignActions({
   clientCpf?: string;
   municipio?: string;
   autoFillExtra?: Omit<AutoFillData, "clientName" | "clientCpf" | "municipio">;
-  /** Aviso (não bloqueia) no "Enviar caso" quando a procuração ainda não foi assinada. */
+  /**
+   * S9-12 — mantido por compat (callers passam), mas NÃO é mais usado: o modelo
+   * combinado substituiu a procuração pura, então não há mais aviso de "procuração
+   * ainda não assinada". Aceito e ignorado.
+   */
   procuracaoAssinada?: boolean;
 }) {
   const [openKind, setOpenKind] = useState<Kind | null>(null);
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpenKind("procuracao")}>
-        <FileSignature size={14} className="mr-1.5" /> Enviar procuração
-      </Button>
+      {/* S9-12 — botão principal: envia o documento COMBINADO (contrato +
+          procuração numa assinatura só). Ao enviar, o caso entra no Comercial
+          (aguardando assinatura); ao assinar, vira CLIENTE. */}
       <Button variant="outline" size="sm" onClick={() => setOpenKind("contrato")}>
-        <Send size={14} className="mr-1.5" /> Enviar caso (contrato)
+        <Send size={14} className="mr-1.5" /> Enviar contrato e procuração
       </Button>
+      {/* Procuração PURA — desativada (não há doc de procuração separado). O flag
+          reexibe caso o owner reative procuração pura. */}
+      {SEPARATE_PROCURACAO && (
+        <Button variant="outline" size="sm" onClick={() => setOpenKind("procuracao")}>
+          <FileSignature size={14} className="mr-1.5" /> Enviar procuração
+        </Button>
+      )}
 
       <SendFlowDialog
         kind={openKind}
@@ -83,7 +107,6 @@ export function CaseSignActions({
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
         defaultSignerName={clientName}
         defaultSignerEmail={autoFillExtra?.email}
-        procuracaoAssinada={procuracaoAssinada}
       />
     </>
   );
@@ -100,7 +123,6 @@ function SendFlowDialog({
   autoFill,
   defaultSignerName,
   defaultSignerEmail,
-  procuracaoAssinada,
 }: {
   kind: Kind | null;
   onClose: () => void;
@@ -110,7 +132,6 @@ function SendFlowDialog({
   autoFill: AutoFillData;
   defaultSignerName?: string;
   defaultSignerEmail?: string;
-  procuracaoAssinada?: boolean;
 }) {
   const open = kind !== null;
   const isContrato = kind === "contrato";
@@ -193,10 +214,11 @@ function SendFlowDialog({
     }
     setBusy(true);
     try {
-      // 1) Gera o doc idempotente por doc_kind. Procuração via generateProcuracao
-      // (doc_kind='procuracao' → o envio carimba aguardando_assinatura_at e o caso
-      // entra no comercial); contrato via generateContrato (doc_kind='contrato',
-      // degrada 424 sem modelo).
+      // 1) Gera o doc idempotente por doc_kind. Documento COMBINADO (S9-12) via
+      // generateContrato (doc_kind='contrato'): o modelo escolhido é o "Contrato e
+      // procuração - [serviço]"; envia os `values` revisados. O envio ao ZapSign
+      // carimba aguardando_assinatura_at (entra no Comercial); ao assinar, vira
+      // CLIENTE (S9-05). Procuração pura (flag off) segue via generateProcuracao.
       let created;
       if (isContrato) {
         created = extractDoc(
@@ -204,6 +226,7 @@ function SendFlowDialog({
             case_id: caseId,
             client_id: clientId,
             template_id: templateId,
+            values,
           }),
         );
       } else {
@@ -268,7 +291,7 @@ function SendFlowDialog({
         ],
       });
       toast.success(
-        `${isContrato ? "Contrato" : "Procuração"} enviado ao ZapSign${
+        `${isContrato ? "Contrato e procuração" : "Procuração"} enviado ao ZapSign${
           (res as { signUrl?: string })?.signUrl ? " — link gerado" : ""
         }`,
       );
@@ -280,7 +303,7 @@ function SendFlowDialog({
     }
   }
 
-  const title = isContrato ? "Enviar caso (contrato)" : "Enviar procuração";
+  const title = isContrato ? "Enviar contrato e procuração" : "Enviar procuração";
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -290,23 +313,18 @@ function SendFlowDialog({
           <DialogDescription>
             {step === "pick"
               ? isContrato
-                ? "Escolha o modelo de contrato. Ao assinar, o caso vira CLIENTE."
+                ? "Escolha o modelo (Contrato e procuração - [serviço]). Ao enviar, o caso entra no Comercial; ao assinar, vira CLIENTE."
                 : "Escolha o modelo de procuração. Ao enviar, o caso entra no comercial."
               : "Confirme o signatário e envie para assinatura."}
           </DialogDescription>
         </DialogHeader>
 
-        {isContrato && !procuracaoAssinada && step === "pick" && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            A procuração deste caso ainda não consta como assinada. Você pode enviar o contrato
-            mesmo assim (uma pessoa pode ter vários casos), mas confira se é o momento certo.
-          </div>
-        )}
-
         {step === "pick" ? (
           <div className="space-y-4">
             <div>
-              <Label>{isContrato ? "Modelo de contrato" : "Modelo de procuração"}</Label>
+              <Label>
+                {isContrato ? "Modelo (contrato e procuração)" : "Modelo de procuração"}
+              </Label>
               {(templates ?? []).length === 0 ? (
                 <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
                   Nenhum modelo sincronizado. Sincronize os modelos na aba Documentos.

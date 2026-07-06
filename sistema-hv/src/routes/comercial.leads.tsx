@@ -123,15 +123,16 @@ function LeadsKanban({
 
   const items = leads ?? [];
 
-  // S9-08 — a etapa terminal comercial (stage_role='won', slug 'GANHO') é exibida
-  // como "Procuração assinada" no modelo novo. Preferimos o `label` da etapa
-  // (editável no funil); se ainda for o default "Ganho"/"GANHO", aplicamos o
-  // rótulo do modelo. NUNCA alteramos o slug (gatilhos S9-03/S9-05 dependem dele).
+  // S9-08 / S9-12 — a etapa terminal comercial (stage_role='won', slug 'GANHO') é
+  // exibida como "Contrato e procuração assinado" no modelo COMBINADO. Preferimos
+  // o `label` da etapa (editável no funil); se ainda for o default "Ganho"/"GANHO",
+  // aplicamos o rótulo do modelo. NUNCA alteramos o slug (gatilhos S9-03/S9-05
+  // dependem dele).
   const displayStageLabel = (stage: { slug: string; label: string; stage_role: string }): string => {
     if (stage.stage_role === "won") {
       const isDefault = ["ganho", "GANHO"].includes(stage.label.trim().toLowerCase())
         || stage.label.trim().toUpperCase() === "GANHO";
-      return isDefault ? "Procuração assinada" : stage.label;
+      return isDefault ? "Contrato e procuração assinado" : stage.label;
     }
     return stage.label;
   };
@@ -275,8 +276,8 @@ function LeadsList({
     return (
       <Alert>
         <AlertDescription>
-          Nenhum caso no comercial ainda. Casos entram aqui quando a procuração é enviada para
-          assinatura.
+          Nenhum caso no comercial ainda. Casos entram aqui quando o contrato e procuração é
+          enviado para assinatura.
         </AlertDescription>
       </Alert>
     );

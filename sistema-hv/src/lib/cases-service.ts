@@ -358,6 +358,11 @@ export async function generateContratoFromTemplate(
   templateId: string | null | undefined,
   clientId: string,
   triggeredBy?: string,
+  // S9-12 — valores revisados na UI sobrescrevem o autofill server-side (mesma
+  // semântica de generateProcuracaoFromTemplate). Necessário para o documento
+  // COMBINADO ("Contrato e procuração - [serviço]"), cujos campos são revisados
+  // no mesmo diálogo antes do envio.
+  overrideValues?: Record<string, string>,
 ) {
   const sb = getSupabaseAdmin();
 
@@ -402,7 +407,9 @@ export async function generateContratoFromTemplate(
 
   const fields = ((tpl.fields ?? []) as TemplateField[]) ?? [];
   const data = buildAutoFillFromClient(client ?? {}, caso ?? {});
-  const values = buildAutoFillValues(fields, data);
+  const autofill = buildAutoFillValues(fields, data);
+  // Valores revisados na UI têm prioridade sobre o autofill (só as chaves enviadas).
+  const values = { ...autofill, ...(overrideValues ?? {}) };
 
   // Import dinâmico evita ciclo entre cases-service e case-documents-service.
   const { generateCaseDocumentFromTemplate } = await import("./case-documents-service");

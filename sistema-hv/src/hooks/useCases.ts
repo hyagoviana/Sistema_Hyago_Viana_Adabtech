@@ -90,15 +90,20 @@ export function useGenerateProcuracao(caseId: string) {
   });
 }
 
-// S9-09 — gera (idempotente) o CONTRATO do caso (doc_kind='contrato'). Degrada
-// 424 no serviço quando não há modelo de contrato cadastrado. Invalida a lista de
-// documentos do caso para o novo doc aparecer.
+// S9-09 / S9-12 — gera (idempotente) o CONTRATO do caso (doc_kind='contrato').
+// No modelo COMBINADO (Sprint 9.12) o template escolhido é o "Contrato e
+// procuração - [serviço]"; aceita `values` revisados no diálogo. Degrada 424 no
+// serviço só quando NÃO há template selecionado. Invalida a lista de documentos.
 export function useGenerateContrato(caseId: string) {
   const fn = useServerFn(generateContratoFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { case_id: string; client_id: string; template_id?: string | null }) =>
-      fn({ data: input }),
+    mutationFn: (input: {
+      case_id: string;
+      client_id: string;
+      template_id?: string | null;
+      values?: Record<string, string>;
+    }) => fn({ data: input }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
       qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
