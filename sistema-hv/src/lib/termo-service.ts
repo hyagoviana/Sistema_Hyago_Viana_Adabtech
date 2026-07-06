@@ -570,7 +570,14 @@ export function reaisPorExtenso(centavos: number): string {
 }
 
 function brlDoc(c: number | null | undefined) {
-  return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
+  // Formato BR com separador de milhar (ex.: R$ 513.297,38).
+  return (
+    "R$ " +
+    ((c ?? 0) / 100).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 // Convenção de nome do modelo por tipo_termo. O modelo Google Doc deve ter, no
@@ -644,8 +651,32 @@ function buildTermoValues(
     : 0;
   const honorariosTotalCentavos = termo.valor_total_centavos + remanescenteCentavos;
 
-  const optBrl = (c: number | null | undefined) => (c == null ? "" : brlDoc(c));
-  const optPct = (n: number | null | undefined) => (n == null ? "" : `${n}%`);
+  // ── Derivados (calculados a partir do snapshot quando os extras não vierem) ──
+  // Base da conta do abatimento: saldo à época = saldo antes − parcelas pagas
+  // (referência histórica sobre a qual o percentual do abatimento é medido).
+  const saldoEpocaCalcCentavos = termo.saldo_antes_centavos - termo.parcelas_pagas_centavos;
+  // saldo à época: override do extra tem prioridade; senão calcula.
+  const saldoEpocaValue =
+    extras.saldoEpocaAbatimentoCentavos != null
+      ? brlDoc(extras.saldoEpocaAbatimentoCentavos)
+      : brlDoc(saldoEpocaCalcCentavos);
+  // saldo atual (PARCIAL) = saldo depois; override do extra tem prioridade.
+  const saldoAtualValue =
+    extras.saldoAtualCentavos != null ? brlDoc(extras.saldoAtualCentavos) : brlDoc(termo.saldo_depois_centavos);
+  // percentual do abatimento = efetivo / saldo à época × 100 (ex.: "31.82%").
+  // Denominador ≤ 0 → sem base p/ o cálculo → cai no override (ou vazio).
+  const percentualAbatimentoValue =
+    extras.percentualAbatimento != null
+      ? `${extras.percentualAbatimento}%`
+      : saldoEpocaCalcCentavos > 0
+        ? `${((termo.valor_efetivo_centavos / saldoEpocaCalcCentavos) * 100).toFixed(2)}%`
+        : "";
+  // saldo devedor originário = referência histórica; sem fonte no cálculo cai no
+  // saldo antes (override do extra tem prioridade).
+  const saldoOriginarioValue =
+    extras.saldoOriginarioCentavos != null
+      ? brlDoc(extras.saldoOriginarioCentavos)
+      : brlDoc(termo.saldo_antes_centavos);
 
   const values: Record<string, string> = {
     // ── Comuns aos 2 modelos ──────────────────────────────────────────────
@@ -659,7 +690,11 @@ function buildTermoValues(
     percentual_honorarios: `${termo.percentual_honorarios}%`,
     honorarios_total: brlDoc(honorariosTotalCentavos),
     honorarios_total_extenso: reaisPorExtenso(honorariosTotalCentavos),
-    qtd_parcelas: String(termo.qtd_parcelas),
+    // O modelo diz "<qtd_parcelas> parcelas de <valor_parcela> além de 1 parcela
+    // de <valor_ultima_parcela>": o N é a contagem das parcelas CHEIAS (a última
+    // irregular é a "1 parcela" à parte). Exibe qtd − 1; o snapshot mantém o total
+    // real para a geração das cobranças.
+    qtd_parcelas: String(Math.max(0, (termo.qtd_parcelas ?? 0) - 1)),
     valor_parcela: brlDoc(termo.valor_parcela_centavos),
     valor_ultima_parcela: brlDoc(termo.valor_ultima_parcela_centavos),
     desconto_avista: `${termo.desconto_avista_pct}%`,
@@ -668,9 +703,10 @@ function buildTermoValues(
     data_extenso: dataPorExtenso(),
 
     // ── Só PARCIAL ────────────────────────────────────────────────────────
-    // saldo_atual / percentual_abatimento: sem fonte no cálculo → input opcional.
-    saldo_atual: optBrl(extras.saldoAtualCentavos),
-    percentual_abatimento: optPct(extras.percentualAbatimento),
+    // saldo_atual = saldo depois; percentual_abatimento = efetivo/época×100.
+    // Ambos calculados do snapshot; override do extra (input da tela) tem prioridade.
+    saldo_atual: saldoAtualValue,
+    percentual_abatimento: percentualAbatimentoValue,
     valor_ultima_parcela_extenso: reaisPorExtenso(termo.valor_ultima_parcela_centavos),
 
     // ── Só COMPLEMENTAR ───────────────────────────────────────────────────
@@ -678,9 +714,10 @@ function buildTermoValues(
     honorarios_abatimento: brlDoc(termo.valor_total_centavos),
     // remanescente_anterior = valor digitado (0 fora do COMPLEMENTAR → vazio).
     remanescente_anterior: isComplementar ? brlDoc(remanescenteCentavos) : "",
-    // saldo_originario / saldo_epoca_abatimento: sem fonte → input opcional.
-    saldo_originario: optBrl(extras.saldoOriginarioCentavos),
-    saldo_epoca_abatimento: optBrl(extras.saldoEpocaAbatimentoCentavos),
+    // saldo_originario / saldo_epoca_abatimento: calculados do snapshot; override
+    // do extra tem prioridade (saldo_originario cai em saldo antes se não vier).
+    saldo_originario: saldoOriginarioValue,
+    saldo_epoca_abatimento: saldoEpocaValue,
   };
   return values;
 }
