@@ -25,10 +25,17 @@ import {
   useDarBaixaParcela,
   useEnviarConferencia,
   useEstornarParcela,
+  useGerarDocumentoTermo,
   useParcelas,
   useRecusarTermo,
   useTermos,
 } from "@/hooks/useTermo";
+
+// Garante a barra de ferramentas completa do Google Docs dentro do iframe.
+function toEmbedUrl(url: string): string {
+  if (url.includes("rm=embedded")) return url;
+  return url.includes("?") ? `${url}&rm=embedded` : `${url}?rm=embedded`;
+}
 
 function brl(c: number | null | undefined) {
   return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
@@ -319,11 +326,16 @@ function ElaborarDialog({
 }) {
   const calc = useCalcTermo();
   const create = useCreateTermo(caseId);
+  const gerarDoc = useGerarDocumentoTermo(caseId);
   const [antes, setAntes] = useState("");
   const [depois, setDepois] = useState("");
   const [pagas, setPagas] = useState("");
   const [tipo, setTipo] = useState<"PARCIAL" | "COMPLEMENTAR">("PARCIAL");
   const [forma, setForma] = useState<"PARCELADO" | "A_VISTA">("PARCELADO");
+  // #17 — desconto à vista (%), editável só quando Forma = À vista. Default 10%.
+  const [descontoAvista, setDescontoAvista] = useState("10");
+  // Word editável do termo gerado após salvar (aberto num Dialog aninhado).
+  const [docUrl, setDocUrl] = useState<string | null>(null);
   const [preview, setPreview] = useState<{
     valor_total_centavos: number;
     qtd_parcelas: number;
@@ -331,12 +343,19 @@ function ElaborarDialog({
     valor_avista_centavos: number;
   } | null>(null);
 
+  // Desconto em fração (0..1) só quando à vista; senão undefined (usa o padrão do servidor).
+  const descontoAvistaPct =
+    forma === "A_VISTA"
+      ? Math.max(0, Number(descontoAvista.replace(",", ".")) || 0) / 100
+      : undefined;
+
   function doCalc() {
     calc.mutate(
       {
         saldoAntesCentavos: toCents(antes),
         saldoDepoisCentavos: toCents(depois),
         parcelasPagasCentavos: toCents(pagas),
+        descontoAvistaPct,
       },
       {
         onSuccess: (r) => setPreview(r),
@@ -411,6 +430,18 @@ function ElaborarDialog({
               </div>
             </div>
           </div>
+          {/* #17 — desconto à vista só aparece quando Forma = À vista */}
+          {forma === "A_VISTA" && (
+            <div>
+              <Label>Desconto à vista (%)</Label>
+              <Input
+                value={descontoAvista}
+                onChange={(e) => setDescontoAvista(e.target.value)}
+                placeholder="10"
+                inputMode="decimal"
+              />
+            </div>
+          )}
           <Button variant="outline" size="sm" onClick={doCalc} disabled={calc.isPending}>
             {calc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
             Calcular
@@ -432,7 +463,7 @@ function ElaborarDialog({
             Cancelar
           </Button>
           <Button
-            disabled={create.isPending || !preview}
+            disabled={create.isPending || gerarDoc.isPending || !preview}
             onClick={() =>
               create.mutate(
                 {
@@ -442,22 +473,84 @@ function ElaborarDialog({
                   parcelasPagasCentavos: toCents(pagas),
                   tipoTermo: tipo,
                   formaPagamento: forma,
+                  descontoAvistaPct,
                   elaboradoPorId,
                 },
                 {
-                  onSuccess: () => {
+                  onSuccess: (termo) => {
                     toast.success("Termo elaborado (rascunho v1)");
-                    onOpenChange(false);
+                    // #17 — gera o documento do termo e abre o Word editável na tela.
+                    // Se o modelo não estiver cadastrado (424), avisa mas NÃO quebra o salvar.
+                    gerarDoc.mutate(
+                      { termoId: termo.id },
+                      {
+                        onSuccess: (r) => {
+                          onOpenChange(false);
+                          if (r.editUrl) {
+                            setDocUrl(r.editUrl);
+                            toast.success("Documento gerado — abrindo para revisão");
+                          }
+                        },
+                        onError: (e) => {
+                          onOpenChange(false);
+                          toast.error(
+                            e instanceof Error
+                              ? `Termo salvo, mas o documento não foi gerado: ${e.message}`
+                              : "Termo salvo, mas o documento não foi gerado (modelo do termo não cadastrado).",
+                          );
+                        },
+                      },
+                    );
                   },
                   onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
                 },
               )
             }
           >
+            {gerarDoc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
             Salvar termo
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* #17 — Word editável do termo (Google Docs) aberto após salvar */}
+      <Dialog open={!!docUrl} onOpenChange={(v) => !v && setDocUrl(null)}>
+        <DialogContent className="max-w-6xl w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Termo de acerto — revisão</DialogTitle>
+            <DialogDescription>
+              O termo com as duas formas de pagamento (à vista e parcelado) em formato Word (Google
+              Docs). Edite o que precisar antes de aprovar/imprimir.
+            </DialogDescription>
+          </DialogHeader>
+          {docUrl && (
+            <>
+              <div className="flex items-center justify-end mb-2">
+                <a
+                  href={docUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[var(--gold-700)] hover:underline text-sm inline-flex items-center gap-1"
+                >
+                  <ExternalLink size={13} /> Abrir em nova aba (tela cheia)
+                </a>
+              </div>
+              <iframe
+                src={toEmbedUrl(docUrl)}
+                title="Termo de acerto"
+                className="w-full rounded-md border border-[var(--border)]"
+                style={{ height: "70vh" }}
+                allow="clipboard-read; clipboard-write"
+              />
+            </>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDocUrl(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

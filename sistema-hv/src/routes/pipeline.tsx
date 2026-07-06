@@ -30,6 +30,7 @@ import {
   useServiceTypes,
   useStages,
 } from "@/hooks/usePipeline";
+import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
 
 function slugifyCat(s: string): string {
   return s
@@ -193,6 +194,10 @@ function DynamicKanban({
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
+  // Ponto 6 — vincular/trocar a pasta de modelos deste tipo (caso).
+  const setFolder = useSetTypeTemplatesFolder();
+  const [folderOpen, setFolderOpen] = useState(false);
+  const [folderInput, setFolderInput] = useState("");
 
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
   // Operacional esconde os casos "somente financeiro" (S19 / ADR-016) — filtro SÓ aqui,
@@ -266,6 +271,18 @@ function DynamicKanban({
               <Settings2 size={14} />
               Editar etapas
             </Btn>
+            {canEditStages && (
+              <Btn
+                variant="ghost"
+                onClick={() => {
+                  setFolderInput("");
+                  setFolderOpen(true);
+                }}
+              >
+                <FolderKanban size={14} />
+                Pasta de modelos
+              </Btn>
+            )}
             <Btn variant="ghost" onClick={onBack}>
               <ArrowLeft size={14} />
               Trocar tipo
@@ -282,6 +299,53 @@ function DynamicKanban({
         onOpenChange={setEditorOpen}
         canEdit={canEditStages}
       />
+
+      {/* Ponto 6 — vincular/trocar a pasta de modelos (procuração/caso) deste tipo */}
+      <Dialog open={folderOpen} onOpenChange={setFolderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pasta de modelos — {serviceType.name}</DialogTitle>
+            <DialogDescription>
+              Cole o link (ou o ID) da pasta do Google Drive com os modelos deste caso. Ao salvar, os
+              modelos dessa pasta são sincronizados e passam a aparecer ao gerar o documento deste
+              tipo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Link ou ID da pasta do Drive</Label>
+            <Input
+              value={folderInput}
+              onChange={(e) => setFolderInput(e.target.value)}
+              placeholder="https://drive.google.com/drive/folders/..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFolderOpen(false)} disabled={setFolder.isPending}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={!folderInput.trim() || setFolder.isPending}
+              onClick={async () => {
+                try {
+                  const res = await setFolder.mutateAsync({
+                    serviceTypeId: serviceType.id,
+                    folder: folderInput.trim(),
+                  });
+                  toast.success(
+                    `Pasta vinculada — ${res.created} novos, ${res.updated} atualizados, ${res.skipped} já existiam` +
+                      (res.errors.length ? ` | ${res.errors.length} erros` : ""),
+                  );
+                  setFolderOpen(false);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha ao vincular a pasta");
+                }
+              }}
+            >
+              {setFolder.isPending ? "Sincronizando…" : "Salvar e sincronizar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {isError && (
         <Alert variant="destructive" className="mb-4">

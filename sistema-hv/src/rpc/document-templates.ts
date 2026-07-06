@@ -10,7 +10,20 @@ import {
   updateDocumentTemplate,
 } from "@/lib/document-templates-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
-import { getTemplatePlaceholders, syncTemplatesFromDrives } from "@/lib/template-sync-service";
+import {
+  getTemplatePlaceholders,
+  syncTemplatesFromDrive,
+  syncTemplatesFromDrives,
+} from "@/lib/template-sync-service";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+
+// Extrai o ID da pasta de uma URL do Drive OU aceita o ID cru.
+// Ex.: https://drive.google.com/drive/u/0/folders/ABC123?x=1 → ABC123
+function parseDriveFolderId(input: string): string {
+  const m = input.match(/folders\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  return input.trim().replace(/[?#].*$/, "");
+}
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -105,4 +118,30 @@ export const syncDocumentTemplatesFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(() => syncTemplatesFromDrives(data.folderId ? [data.folderId] : MODELS_FOLDER_IDS)),
+  );
+
+// Ponto 6 (2026-07-06) — vincula/troca a PASTA de modelos de um TIPO de serviço
+// (caso). Salva `templates_folder_id` no tipo e já sincroniza os modelos daquela
+// pasta marcando-os com o case_type do tipo. Aceita URL do Drive ou o ID cru.
+export const setTypeTemplatesFolderFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ serviceTypeId: z.string().uuid(), folder: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const folderId = parseDriveFolderId(data.folder);
+      const sb = getSupabaseAdmin();
+      const { data: st, error } = await sb
+        .from("system_service_types")
+        .select("slug")
+        .eq("id", data.serviceTypeId)
+        .single();
+      if (error || !st) throw new Error("Tipo de serviço não encontrado");
+      await sb
+        .from("system_service_types")
+        .update({ templates_folder_id: folderId } as never)
+        .eq("id", data.serviceTypeId);
+      // Sincroniza os modelos DESSA pasta marcando com o tipo escolhido.
+      return syncTemplatesFromDrive(folderId, st.slug);
+    }),
   );

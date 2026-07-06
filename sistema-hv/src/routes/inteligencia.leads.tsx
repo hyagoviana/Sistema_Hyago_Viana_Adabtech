@@ -6,10 +6,9 @@ export const Route = createFileRoute("/inteligencia/leads")({
   component: LeadsRoster,
 });
 
-// S9-07 — Roster completo (Inteligência › Leads): apanhado geral de TODOS os
-// cadastros (pessoas), com as 4 sub-abas Todos/Leads/Clientes/Perdidos. Reusa o
-// componente compartilhado ClientRoster; nenhuma escrita nova (só leitura das
-// views system_clients_*).
+// S9-07 / #15 — Roster (Inteligência › Cadastro): TODOS os cadastros (pessoas),
+// com as sub-abas Leads (todo cadastro não-cliente) e Clientes. Reusa o
+// componente compartilhado ClientRoster; só leitura.
 function LeadsRoster() {
   return (
     <ClientRoster

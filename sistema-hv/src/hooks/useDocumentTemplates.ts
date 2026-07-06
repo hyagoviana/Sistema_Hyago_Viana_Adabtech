@@ -6,6 +6,7 @@ import {
   deleteAllDocumentTemplatesFn,
   getTemplatePlaceholdersFn,
   listDocumentTemplatesFn,
+  setTypeTemplatesFolderFn,
   softDeleteDocumentTemplateFn,
   syncDocumentTemplatesFn,
   updateDocumentTemplateFn,
@@ -79,5 +80,18 @@ export function useSyncDocumentTemplates() {
       return syncFn({ data: { folderId } });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
+  });
+}
+
+// Ponto 6 — vincula/troca a pasta de modelos de um TIPO (caso) e já sincroniza.
+export function useSetTypeTemplatesFolder() {
+  const fn = useServerFn(setTypeTemplatesFolderFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { serviceTypeId: string; folder: string }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["document-templates"] });
+      qc.invalidateQueries({ queryKey: ["service-types"] });
+    },
   });
 }

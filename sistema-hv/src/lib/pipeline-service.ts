@@ -292,6 +292,83 @@ export async function listLeadsByServiceType(serviceTypeId: string) {
   return data ?? [];
 }
 
+// #15 — Board comercial ÚNICO. Retorna, num só conjunto:
+//   (a) casos comerciais (lifecycle='LEAD', não perdidos) de TODOS os tipos, na
+//       etapa comercial atual (macrostatus_comercial);
+//   (b) cadastros que ainda NÃO são clientes e NÃO têm caso comercial — como
+//       "leads" sintéticos na 1ª etapa (NOVO), pra que TODO cadastro novo apareça
+//       automaticamente no comercial (sem exigir procuração enviada).
+// Cards com is_registration=true não têm caso: a UI aponta pra ficha do cadastro.
+export type ComercialBoardRow = {
+  id: string; // case_id (caso) OU client_id (cadastro sintético)
+  client_id: string;
+  case_code: string;
+  case_type: string;
+  macrostatus_comercial: string | null;
+  created_at: string;
+  client_name: string;
+  is_registration: boolean;
+};
+
+export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
+  const sb = getSupabaseAdmin();
+
+  // (a) Casos comerciais (leads não perdidos), todos os tipos.
+  const { data: cases, error } = await sb
+    .from("system_cases_active")
+    .select(
+      "id, client_id, case_code, case_type, macrostatus_comercial, created_at, client_name, perdido_at",
+    )
+    .eq("lifecycle", "LEAD")
+    .order("created_at", { ascending: false });
+  if (error) throw new PipelineServiceError(error.message, 500);
+
+  const caseRows: ComercialBoardRow[] = (cases ?? [])
+    .filter((c) => !(c as { perdido_at?: string | null }).perdido_at)
+    .map((c) => ({
+      id: c.id,
+      client_id: c.client_id,
+      case_code: c.case_code,
+      case_type: c.case_type,
+      macrostatus_comercial: c.macrostatus_comercial ?? "NOVO",
+      created_at: c.created_at,
+      client_name: c.client_name,
+      is_registration: false,
+    }));
+
+  // Cadastros que já têm caso comercial (LEAD) ou já são clientes (CLIENTE) não
+  // viram card sintético.
+  const withCase = new Set(caseRows.map((r) => r.client_id));
+  const { data: clienteCases } = await sb
+    .from("system_cases_active")
+    .select("client_id")
+    .eq("lifecycle", "CLIENTE");
+  const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
+
+  // (b) Cadastros puros (sem caso comercial e não-clientes) → NOVO sintético.
+  const { data: clients, error: cErr } = await sb
+    .from("system_clients")
+    .select("id, full_name, created_at")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (cErr) throw new PipelineServiceError(cErr.message, 500);
+
+  const regRows: ComercialBoardRow[] = (clients ?? [])
+    .filter((cli) => !withCase.has(cli.id) && !clienteIds.has(cli.id))
+    .map((cli) => ({
+      id: cli.id,
+      client_id: cli.id,
+      case_code: "—",
+      case_type: "",
+      macrostatus_comercial: "NOVO",
+      created_at: cli.created_at,
+      client_name: cli.full_name,
+      is_registration: true,
+    }));
+
+  return [...caseRows, ...regRows];
+}
+
 // Visão consolidada de todos os leads (para o índice/resumo do CRM).
 export async function listLeadsPipeline() {
   const sb = getSupabaseAdmin();

@@ -8,6 +8,7 @@ import {
   entrarFinanceiroFn,
   listAllBifurcatedCasesFn,
   listCasesByServiceTypeFn,
+  listComercialBoardFn,
   listLeadsByServiceTypeFn,
   listLeadsPipelineFn,
   listServiceTypesFn,
@@ -93,6 +94,16 @@ export function useLeadsPipeline() {
   });
 }
 
+// #15 — board comercial único (casos + cadastros-lead sintéticos).
+export function useComercialBoard() {
+  const fn = useServerFn(listComercialBoardFn);
+  return useQuery({
+    queryKey: ["comercial-board"],
+    queryFn: () => fn(),
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useMoveCaseStageComercial(serviceTypeId: string) {
   const fn = useServerFn(moveCaseToStageComercialFn);
   const qc = useQueryClient();
@@ -101,6 +112,7 @@ export function useMoveCaseStageComercial(serviceTypeId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads-by-service", serviceTypeId] });
       qc.invalidateQueries({ queryKey: ["leads-pipeline"] });
+      qc.invalidateQueries({ queryKey: ["comercial-board"] });
       qc.invalidateQueries({ queryKey: ["cases"] });
     },
   });
@@ -126,6 +138,8 @@ export function useMoveCaseStageFin(serviceTypeId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cases-by-service", serviceTypeId] });
       qc.invalidateQueries({ queryKey: ["cases"] });
+      // #16 — funil único: o board "Todos" usa a query consolidada.
+      qc.invalidateQueries({ queryKey: ["cases-all-bifurcated"] });
     },
   });
 }

@@ -1,6 +1,11 @@
 // Constants compartilhadas entre UI e validações.
 // Devem bater 1:1 com o CHECK do schema (system_cases).
 
+// #15/#16 — Tipo de serviço SENTINELA dono do funil ÚNICO (comercial + fin).
+// Inativo no banco (não aparece nas seleções de tipo); usado só como fonte das
+// etapas globais editáveis. Migration 20260706000010_global_funnel_sentinel.sql.
+export const GLOBAL_FUNNEL_SERVICE_TYPE_ID = "00000000-0000-0000-0000-0000000000f0";
+
 export const CASE_TYPES = [
   "FIES_ESF",
   "FIES_DGM",

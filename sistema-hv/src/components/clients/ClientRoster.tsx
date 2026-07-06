@@ -10,20 +10,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
-import { useClientsByLifecycle, useClientsList, type LifecycleTab } from "@/hooks/useClients";
+import { useClientsByLifecycle, type LifecycleTab } from "@/hooks/useClients";
 import { can } from "@/lib/rbac";
 import type { Database } from "@/lib/supabase/types";
 
 type Client = Database["public"]["Tables"]["system_clients"]["Row"];
 
-// S1-05 — abas por ciclo de vida (derivado do lifecycle dos casos da pessoa).
-export type LifecycleView = "todos" | LifecycleTab;
+// S1-05 / #15 — abas por ciclo de vida. Reduzidas a Leads e Clientes (sem
+// "Todos"/"Perdidos"); default = Leads. "Leads" = todo cadastro que ainda não é
+// cliente; "Clientes" = quem já virou cliente.
+export type LifecycleView = LifecycleTab;
 
 const ALL_LIFECYCLE_TABS: Array<{ key: LifecycleView; label: string }> = [
-  { key: "todos", label: "Todos" },
   { key: "lead", label: "Leads" },
   { key: "cliente", label: "Clientes" },
-  { key: "perdido", label: "Perdidos" },
 ];
 
 function pickCity(address: Client["address"]): string | null {
@@ -123,7 +123,7 @@ export function ClientRoster({
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [lifecycleTab, setLifecycleTab] = useState<LifecycleView>(
-    showLifecycleTabs ? "todos" : (fixedLifecycle ?? "cliente"),
+    showLifecycleTabs ? "lead" : (fixedLifecycle ?? "cliente"),
   );
 
   const { role } = useAuth();
@@ -134,12 +134,9 @@ export function ClientRoster({
     ? lifecycleTab
     : (fixedLifecycle ?? "cliente");
 
-  const allQuery = useClientsList(search);
-  const lifecycleQuery = useClientsByLifecycle(
-    (effectiveTab === "todos" ? "lead" : effectiveTab) as LifecycleTab,
-  );
-  const usingLifecycle = effectiveTab !== "todos";
-  const { data, isLoading, isError, error } = usingLifecycle ? lifecycleQuery : allQuery;
+  // #15 — sempre por lifecycle (Leads = não-clientes; Clientes = clientes).
+  const { data, isLoading, isError, error } = useClientsByLifecycle(effectiveTab as LifecycleTab);
+  const usingLifecycle = true;
 
   const tipos = useMemo(() => {
     const set = new Set<string>();
@@ -176,9 +173,7 @@ export function ClientRoster({
         eyebrow={eyebrow}
         title={title}
         subtitle={
-          isLoading
-            ? "Carregando…"
-            : `${total} ${total === 1 ? entityNoun : entityNounPlural}`
+          isLoading ? "Carregando…" : `${total} ${total === 1 ? entityNoun : entityNounPlural}`
         }
         aside={
           <div className="flex gap-2">

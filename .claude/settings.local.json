@@ -290,7 +290,10 @@
       "Bash(git check-ignore *)",
       "Bash(xargs grep -l \"procuracao\\\\|ZapSign\")",
       "Bash(xargs grep -l \"procuracao\")",
-      "Bash(xargs grep -l \"create.*procuracao\\\\|procuracao.*sem.*caso\")"
+      "Bash(xargs grep -l \"create.*procuracao\\\\|procuracao.*sem.*caso\")",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager log --oneline -8)",
+      "Bash(git --no-pager diff sistema-hv/src/lib/pipeline-service.ts sistema-hv/src/rpc/pipeline.ts sistema-hv/src/hooks/usePipeline.ts)"
     ]
   }
 }

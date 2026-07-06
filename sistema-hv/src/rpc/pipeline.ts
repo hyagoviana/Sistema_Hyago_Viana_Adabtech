@@ -9,6 +9,7 @@ import {
   entrarNoFinanceiro,
   listAllBifurcatedCases,
   listCasesByServiceType,
+  listComercialBoard,
   listLeadsByServiceType,
   listLeadsPipeline,
   listServiceTypes,
@@ -94,6 +95,11 @@ export const listLeadsByServiceTypeFn = createServerFn({ method: "GET" })
 
 export const listLeadsPipelineFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listLeadsPipeline()),
+);
+
+// #15 — board comercial único (casos comerciais + cadastros-lead sintéticos).
+export const listComercialBoardFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listComercialBoard()),
 );
 
 export const moveCaseToStageComercialFn = createServerFn({ method: "POST" })

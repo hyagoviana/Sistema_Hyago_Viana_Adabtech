@@ -277,12 +277,32 @@ export function CaseDocumentsTab({
                         </Button>
                       </a>
                     )}
-                    {d.status === "ASSINADO" && d.drive_url && (
-                      <a href={d.drive_url} target="_blank" rel="noreferrer">
-                        <Button variant="outline" size="sm">
-                          <ExternalLink size={13} className="mr-1" /> Assinado
+                    {d.status === "ASSINADO" && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={download.isPending}
+                          onClick={async () => {
+                            try {
+                              await download.mutateAsync({ id: d.id, format: "pdf" });
+                            } catch (err) {
+                              toast.error(
+                                err instanceof Error ? err.message : "Falha ao baixar PDF",
+                              );
+                            }
+                          }}
+                        >
+                          <Download size={13} className="mr-1" /> Baixar PDF
                         </Button>
-                      </a>
+                        {d.drive_url && (
+                          <a href={d.drive_url} target="_blank" rel="noreferrer">
+                            <Button variant="outline" size="sm">
+                              <ExternalLink size={13} className="mr-1" /> Assinado
+                            </Button>
+                          </a>
+                        )}
+                      </>
                     )}
                     <button
                       type="button"

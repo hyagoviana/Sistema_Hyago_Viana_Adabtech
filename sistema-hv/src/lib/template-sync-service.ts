@@ -214,7 +214,14 @@ export type SyncResult = {
   }>;
 };
 
-export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<SyncResult> {
+// `forceCaseType` (opcional): quando informado, TODOS os docs desta pasta (soltos
+// e em subpastas) são marcados com esse case_type — usado pelo "vincular pasta de
+// modelos" por tipo (o usuário escolhe a pasta do Drive daquele caso). Sem ele,
+// o case_type é derivado do nome da subpasta (comportamento padrão).
+export async function syncTemplatesFromDrive(
+  modelsFolderId: string,
+  forceCaseType?: string | null,
+): Promise<SyncResult> {
   const sb = getSupabaseAdmin();
   const result: SyncResult = {
     created: 0,
@@ -358,7 +365,7 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
   // 3. Process each subfolder (recursivo 1 nível)
   for (const folder of folders) {
     if (!folder.id || !folder.name) continue;
-    const caseType = folderToCaseType(folder.name);
+    const caseType = forceCaseType ?? folderToCaseType(folder.name);
     result.foldersScanned++;
 
     console.log(
@@ -392,7 +399,7 @@ export async function syncTemplatesFromDrive(modelsFolderId: string): Promise<Sy
 
   // 4. Process loose docs at root level
   for (const doc of looseDocs) {
-    await processDoc(doc, null);
+    await processDoc(doc, forceCaseType ?? null);
   }
 
   console.log(
