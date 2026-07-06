@@ -34,6 +34,7 @@ import {
   missingRequiredCustom,
 } from "@/components/clients/CustomFieldsSection";
 import { ESTADOS_BR } from "@/lib/br/estados";
+import { formatCep, formatCpfCnpj, formatPhone, formatRg } from "@/lib/format";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
 import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
 import { CepError, lookupCep, useMunicipios } from "@/hooks/useLocalidades";
@@ -91,6 +92,56 @@ const ESPECIALIDADES = [
   "Outra",
 ];
 
+// Sugestões FIXAS (datalist) — permitem digitar, mas padronizam a busca no CRM.
+const INSTITUICOES = [
+  "USP",
+  "UNIFESP",
+  "UFRJ",
+  "UFMG",
+  "UNICAMP",
+  "UFRGS",
+  "UFBA",
+  "UFPE",
+  "UFC",
+  "UFPR",
+  "UFSC",
+  "UERJ",
+  "UnB",
+  "UFG",
+  "UFPB",
+  "UFES",
+  "UFRN",
+  "UFPA",
+  "UFAL",
+  "UFMA",
+  "UFS",
+  "UEL",
+  "PUC-SP",
+  "PUC-RS",
+  "PUC-PR",
+  "EBMSP (Bahiana)",
+  "UNCISAL",
+  "UFMT",
+  "UFMS",
+  "UFU",
+];
+
+const HOSPITAIS = [
+  "Hospital das Clínicas (HC-FMUSP)",
+  "Hospital São Paulo (UNIFESP)",
+  "Santa Casa de São Paulo",
+  "Hospital Universitário Prof. Edgard Santos (HUPES)",
+  "Hospital das Clínicas da UFMG",
+  "Hospital de Clínicas de Porto Alegre",
+  "Hospital das Clínicas da UFPE",
+  "Hospital Geral de Fortaleza",
+  "Hospital de Base do DF",
+  "Hospital Universitário Walter Cantídio",
+];
+
+// Tags de perfil (multi-seleção) — parâmetros fixos para pesquisa no CRM.
+const TAGS_MEDICAS = ["Médico Militar", "Mais Médicos", "Médicos pelo Brasil"];
+
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -125,6 +176,16 @@ const EMPTY_PROFESSIONAL = {
   oab_uf: "",
   vinculo_institucional: "",
   especialidade: "",
+  instituicao_graduacao: "",
+  ano_formatura: "",
+  fies: "",
+  fies_contrato_numero: "",
+  fies_contrato_obs: "",
+  residencia_hospital: "",
+  residencia_inicio: "",
+  residencia_termino: "",
+  residencia_especialidade: "",
+  tags: [] as string[],
   observacoes: "",
 };
 
@@ -140,6 +201,16 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
     oab_uf: str("oab_uf"),
     vinculo_institucional: str("vinculo_institucional"),
     especialidade: str("especialidade"),
+    instituicao_graduacao: str("instituicao_graduacao"),
+    ano_formatura: str("ano_formatura"),
+    fies: str("fies"),
+    fies_contrato_numero: str("fies_contrato_numero"),
+    fies_contrato_obs: str("fies_contrato_obs"),
+    residencia_hospital: str("residencia_hospital"),
+    residencia_inicio: str("residencia_inicio"),
+    residencia_termino: str("residencia_termino"),
+    residencia_especialidade: str("residencia_especialidade"),
+    tags: Array.isArray(p.tags) ? (p.tags as unknown[]).filter((t): t is string => typeof t === "string") : [],
     observacoes: str("observacoes"),
   };
 }
@@ -218,11 +289,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
     if (mode === "edit" && client) {
       form.reset({
         full_name: client.full_name,
-        cpf_cnpj: client.cpf_cnpj,
-        rg: client.rg ?? "",
+        cpf_cnpj: formatCpfCnpj(client.cpf_cnpj ?? ""),
+        rg: client.rg ? formatRg(client.rg) : "",
         tipo: client.tipo ?? "",
         email: client.email ?? "",
-        phone: client.phone ?? "",
+        phone: client.phone ? formatPhone(client.phone) : "",
         address: pickAddress(client.address),
         professional_data: pickProfessional(client.professional_data),
         custom_fields: pickCustom(client.custom_fields),
@@ -316,6 +387,17 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         ? [cityValue]
         : [];
 
+  // Tags de perfil (multi-seleção) — armazenadas em professional_data.tags.
+  const tags =
+    (useWatch({ control: form.control, name: "professional_data.tags" }) as
+      | string[]
+      | null
+      | undefined) ?? [];
+  const toggleTag = (t: string) => {
+    const next = tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t];
+    form.setValue("professional_data.tags", next, { shouldDirty: true });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px] max-h-[88vh] overflow-y-auto">
@@ -353,7 +435,14 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   <FormItem>
                     <FormLabel>CPF / CNPJ *</FormLabel>
                     <FormControl>
-                      <Input placeholder="000.000.000-00" disabled={mode === "edit"} {...field} />
+                      <Input
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                        disabled={mode === "edit"}
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(formatCpfCnpj(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -368,10 +457,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                       <FormLabel>RG *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="0000000"
+                          placeholder="12.345.678-9"
                           disabled={mode === "edit" && !!client?.rg}
                           {...field}
                           value={field.value ?? ""}
+                          onChange={(e) => field.onChange(formatRg(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -424,7 +514,13 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   <FormItem>
                     <FormLabel>Telefone *</FormLabel>
                     <FormControl>
-                      <Input placeholder="(82) 99999-9999" {...field} value={field.value ?? ""} />
+                      <Input
+                        placeholder="(82) 99999-9999"
+                        inputMode="numeric"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -447,9 +543,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                     <FormControl>
                       <Input
                         placeholder="57000-000"
+                        inputMode="numeric"
                         maxLength={9}
                         {...field}
                         value={field.value ?? ""}
+                        onChange={(e) => field.onChange(formatCep(e.target.value))}
                         onBlur={() => {
                           field.onBlur();
                           void handleCepLookup();
@@ -650,6 +748,224 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Formação, FIES e Residência (Hyago 2) — persistido em professional_data */}
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Formação, FIES e Residência
+              </p>
+
+              <datalist id="instituicoes-graduacao">
+                {INSTITUICOES.map((i) => (
+                  <option key={i} value={i} />
+                ))}
+              </datalist>
+              <datalist id="hospitais-residencia">
+                {HOSPITAIS.map((h) => (
+                  <option key={h} value={h} />
+                ))}
+              </datalist>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="professional_data.instituicao_graduacao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instituição de graduação</FormLabel>
+                      <FormControl>
+                        <Input
+                          list="instituicoes-graduacao"
+                          placeholder="Ex.: UFBA"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="professional_data.ano_formatura"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ano de formatura</FormLabel>
+                      <FormControl>
+                        <Input
+                          inputMode="numeric"
+                          maxLength={4}
+                          placeholder="2018"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="professional_data.fies"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>FIES</FormLabel>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value="Sim">Sim</SelectItem>
+                          <SelectItem value="Não">Não</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="professional_data.fies_contrato_numero"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nº do contrato FIES</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Contrato FIES" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="professional_data.fies_contrato_obs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dados do contrato FIES (observações)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Instituição financeira, valor, situação…"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div>
+                <FormLabel>Tags (pesquisa no CRM)</FormLabel>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {TAGS_MEDICAS.map((t) => {
+                    const active = tags.includes(t);
+                    return (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => toggleTag(t)}
+                        className={
+                          active
+                            ? "px-3 py-1 rounded-full text-xs font-medium bg-[var(--navy)] text-white"
+                            : "px-3 py-1 rounded-full text-xs font-medium border border-input text-muted-foreground hover:bg-muted"
+                        }
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="professional_data.residencia_hospital"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Residência — hospital</FormLabel>
+                      <FormControl>
+                        <Input
+                          list="hospitais-residencia"
+                          placeholder="Hospital de residência"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="professional_data.residencia_especialidade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Residência — especialidade</FormLabel>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[300px]">
+                          <SelectItem value="__none__">—</SelectItem>
+                          {ESPECIALIDADES.map((e) => (
+                            <SelectItem key={e} value={e}>
+                              {e}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="professional_data.residencia_inicio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Residência — início</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="professional_data.residencia_termino"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Residência — término</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} value={field.value ?? ""} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

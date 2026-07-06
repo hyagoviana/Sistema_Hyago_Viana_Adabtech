@@ -159,6 +159,18 @@ export const professionalDataSchema = z
     oab_uf: ufOptional,
     vinculo_institucional: textOptional(100), // ex.: ANMR, AMPB
     especialidade: textOptional(100),
+    // Formação / FIES / Residência (Hyago 2, 2026-07-06) — em professional_data.
+    instituicao_graduacao: textOptional(150),
+    ano_formatura: textOptional(4),
+    fies: textOptional(10), // "Sim" | "Não"
+    fies_contrato_numero: textOptional(50),
+    fies_contrato_obs: textOptional(500),
+    residencia_hospital: textOptional(150),
+    residencia_inicio: textOptional(10),
+    residencia_termino: textOptional(10),
+    residencia_especialidade: textOptional(100),
+    // Tags de perfil (médico militar, mais médicos, médicos pelo brasil).
+    tags: z.array(z.string().max(60)).optional().nullable(),
     programas: z.array(z.enum(PROGRAMAS_GOVERNAMENTAIS)).optional().nullable(),
     observacoes: textOptional(1000),
   })

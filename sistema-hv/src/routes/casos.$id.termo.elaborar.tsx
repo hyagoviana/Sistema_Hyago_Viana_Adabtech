@@ -298,6 +298,24 @@ function ElaborarTermo() {
                         Remanescente do anterior: {brl(ultimoTermo.remanescente_anterior_centavos)}
                       </div>
                     )}
+                    {/* Renovação (Hyago 5) — reaproveita o valor do último termo como
+                        ponto de partida do remanescente anterior (editável). */}
+                    {(() => {
+                      const refValor =
+                        ultimoTermo.remanescente_anterior_centavos ??
+                        ultimoTermo.valor_total_centavos ??
+                        0;
+                      if (!refValor) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setRemanescente(brl(refValor).replace("R$ ", ""))}
+                          className="mt-2 inline-flex items-center rounded-md border border-[var(--gold-700)]/30 bg-[var(--gold-100,#faf3e0)] px-2 py-1 text-[11px] font-medium text-[var(--gold-700)] hover:bg-[var(--gold-100,#faf3e0)]/80"
+                        >
+                          Puxar {brl(refValor)} do último termo (confira e ajuste)
+                        </button>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

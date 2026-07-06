@@ -32,3 +32,42 @@ export function formatCpfCnpj(value: string): string {
 export function isCpfCnpjField(...candidates: Array<string | undefined>): boolean {
   return candidates.some((c) => /\bcpf\b|\bcnpj\b|cpf_cnpj|cpfcnpj/i.test(c ?? ""));
 }
+
+/**
+ * Formata progressivamente como telefone BR: (82) 9999-9999 (fixo, 10 díg.) ou
+ * (82) 99999-9999 (celular, 11 díg.). Pontua conforme o usuário digita.
+ */
+export function formatPhone(value: string): string {
+  const d = onlyDigits(value).slice(0, 11);
+  if (d.length <= 10) {
+    return d
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/^\((\d{2})\)\s(\d{4})(\d)/, "($1) $2-$3");
+  }
+  return d
+    .replace(/^(\d{2})(\d)/, "($1) $2")
+    .replace(/^\((\d{2})\)\s(\d{5})(\d)/, "($1) $2-$3");
+}
+
+/** Formata progressivamente como CEP: 57000-000 (8 dígitos). */
+export function formatCep(value: string): string {
+  return onlyDigits(value)
+    .slice(0, 8)
+    .replace(/^(\d{5})(\d)/, "$1-$2");
+}
+
+/**
+ * Formata progressivamente como RG no padrão mais comum: 12.345.678-9.
+ * Aceita o dígito verificador "X" (maiúsculo). RG varia por estado — esta é a
+ * máscara usual (2.3.3-1); campos fora do padrão ainda ficam legíveis.
+ */
+export function formatRg(value: string): string {
+  const raw = (value ?? "")
+    .toUpperCase()
+    .replace(/[^0-9X]/g, "")
+    .slice(0, 9);
+  return raw
+    .replace(/^([0-9X]{2})([0-9X])/, "$1.$2")
+    .replace(/^([0-9X]{2})\.([0-9X]{3})([0-9X])/, "$1.$2.$3")
+    .replace(/^([0-9X]{2})\.([0-9X]{3})\.([0-9X]{3})([0-9X])/, "$1.$2.$3-$4");
+}
