@@ -253,7 +253,7 @@ export async function syncTemplatesFromDrive(
   // 2. Get existing templates for dedup (by google_doc_id AND by name)
   const { data: existing } = await sb
     .from("system_document_templates")
-    .select("id, google_doc_id, name, fields")
+    .select("id, google_doc_id, name, fields, case_type")
     .eq("organization_id", DEFAULT_ORG)
     .is("deleted_at", null);
   const existingByDocId = new Map((existing ?? []).map((t) => [t.google_doc_id, t]));
@@ -274,12 +274,35 @@ export async function syncTemplatesFromDrive(
       .trim();
     result.filesFound++;
 
+    // Reconcilia o case_type de um registro já existente quando o sync é forçado
+    // (ex.: pasta de PROCURAÇÃO). Sem isso, docs já sincronizados como "soltos"
+    // (case_type=null) nunca ganham o marcador 'PROCURACAO' e o popup fica vazio.
+    async function reconcileCaseType(row: {
+      id: string;
+      case_type?: string | null;
+    }): Promise<boolean> {
+      if (!forceCaseType) return false;
+      if ((row.case_type ?? null) === caseType) return false;
+      await sb
+        .from("system_document_templates")
+        .update({ case_type: caseType } as never)
+        .eq("id", row.id);
+      row.case_type = caseType;
+      return true;
+    }
+
     try {
       // Dedup by google_doc_id
       const exById = existingByDocId.get(doc.id);
       if (exById) {
-        result.skipped++;
-        result.details.push({ name: docName, action: "skipped", caseType });
+        const changed = await reconcileCaseType(exById);
+        if (changed) {
+          result.updated++;
+          result.details.push({ name: docName, action: "updated", caseType });
+        } else {
+          result.skipped++;
+          result.details.push({ name: docName, action: "skipped", caseType });
+        }
         return;
       }
 
@@ -288,15 +311,28 @@ export async function syncTemplatesFromDrive(
       if (exByName) {
         const isNewNativeDoc = doc.mimeType === GOOGLE_DOC_MIME;
         if (exByName.google_doc_id === doc.id) {
-          // Mesmo arquivo, pula
-          result.skipped++;
-          result.details.push({ name: docName, action: "skipped", caseType });
+          // Mesmo arquivo — só reconcilia o case_type se necessário.
+          const changed = await reconcileCaseType(exByName);
+          if (changed) {
+            result.updated++;
+            result.details.push({ name: docName, action: "updated", caseType });
+          } else {
+            result.skipped++;
+            result.details.push({ name: docName, action: "skipped", caseType });
+          }
           return;
         }
         if (!isNewNativeDoc) {
-          // Novo é .docx mas já temos registro (provavelmente Google Doc nativo) — pula
-          result.skipped++;
-          result.details.push({ name: docName, action: "skipped", caseType });
+          // Novo é .docx mas já temos registro (provavelmente Google Doc nativo) —
+          // reconcilia o case_type (força PROCURACAO) sem trocar o arquivo.
+          const changed = await reconcileCaseType(exByName);
+          if (changed) {
+            result.updated++;
+            result.details.push({ name: docName, action: "updated", caseType });
+          } else {
+            result.skipped++;
+            result.details.push({ name: docName, action: "skipped", caseType });
+          }
           return;
         }
         // Novo é Google Doc nativo e existente é diferente — atualiza (upgrade de .docx para nativo)
@@ -345,12 +381,19 @@ export async function syncTemplatesFromDrive(
       });
 
       // Track for future dedup within this sync run
-      existingByDocId.set(doc.id, { id: "", google_doc_id: doc.id, name: docName, fields: [] });
+      existingByDocId.set(doc.id, {
+        id: "",
+        google_doc_id: doc.id,
+        name: docName,
+        fields: [],
+        case_type: caseType,
+      });
       existingByName.set(docName.toLowerCase(), {
         id: "",
         google_doc_id: doc.id,
         name: docName,
         fields: [],
+        case_type: caseType,
       });
 
       result.created++;

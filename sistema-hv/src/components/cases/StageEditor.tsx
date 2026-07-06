@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { StageChecklistEditor } from "@/components/pipeline/StageChecklistEditor";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import {
   useStages,
   useUpdateStage,
 } from "@/hooks/usePipeline";
+import { GLOBAL_FUNNEL_SERVICE_TYPE_ID } from "@/lib/cases/constants";
 
 function slugify(label: string): string {
   return label
@@ -73,6 +75,11 @@ export function StageEditor({
 
   const list = stages ?? [];
 
+  // ITEM 6.2 — funil ÚNICO (sentinela comercial/fin): compartilhado por TODOS os
+  // tipos via SLUG. Criar/excluir etapas AQUI geraria coluna órfã, então só
+  // permitimos renomear/reordenar. (O backend também bloqueia — defesa em profundidade.)
+  const isGlobalFunnel = serviceTypeId === GLOBAL_FUNNEL_SERVICE_TYPE_ID;
+
   async function addStage() {
     const label = newLabel.trim();
     if (!label) return;
@@ -113,11 +120,22 @@ export function StageEditor({
         <DialogHeader>
           <DialogTitle>Etapas — {serviceTypeName}</DialogTitle>
           <DialogDescription>
-            Crie, renomeie, reordene ou remova as etapas{" "}
-            {kind === "op" ? "operacionais" : kind === "fin" ? "financeiras" : "comerciais"}.
+            {isGlobalFunnel
+              ? "Renomeie e reordene as etapas. Este é o funil ÚNICO (compartilhado por todos os tipos), então criar/excluir etapas está desativado — evita colunas órfãs."
+              : "Crie, renomeie, reordene ou remova as etapas."}{" "}
             “Ganho” marca a etapa que dispara o financeiro.
           </DialogDescription>
         </DialogHeader>
+
+        {isGlobalFunnel && (
+          <Alert className="mb-1">
+            <AlertDescription className="text-xs">
+              Funil único ({kind === "fin" ? "financeiro" : "comercial"}): você pode renomear e
+              reordenar as etapas. Para adicionar/remover etapas, edite o funil por tipo no
+              Operacional.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
           {list.map((s, i) => (
@@ -172,21 +190,23 @@ export function StageEditor({
                     ))}
                   </SelectContent>
                 </Select>
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-destructive p-1"
-                  title="Excluir"
-                  onClick={async () => {
-                    try {
-                      await del.mutateAsync(s.id);
-                      toast.success("Etapa removida");
-                    } catch (err) {
-                      toast.error(err instanceof Error ? err.message : "Falha");
-                    }
-                  }}
-                >
-                  <Trash2 size={15} />
-                </button>
+                {!isGlobalFunnel && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive p-1"
+                    title="Excluir"
+                    onClick={async () => {
+                      try {
+                        await del.mutateAsync(s.id);
+                        toast.success("Etapa removida");
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Falha");
+                      }
+                    }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </div>
               {expanded === s.id && (
                 <div className="border-t border-[var(--border)] bg-muted/20 px-4 py-3">
@@ -201,21 +221,27 @@ export function StageEditor({
           ))}
         </div>
 
-        <div className="border-t border-[var(--border)] pt-3">
-          <Label>Nova etapa</Label>
-          <div className="flex items-center gap-2 mt-1">
-            <Input
-              value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="Nome da etapa"
-              onKeyDown={(e) => e.key === "Enter" && addStage()}
-            />
-            <Button onClick={addStage} disabled={createStage.isPending || !newLabel.trim()}>
-              {createStage.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-              Adicionar
-            </Button>
+        {!isGlobalFunnel && (
+          <div className="border-t border-[var(--border)] pt-3">
+            <Label>Nova etapa</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Nome da etapa"
+                onKeyDown={(e) => e.key === "Enter" && addStage()}
+              />
+              <Button onClick={addStage} disabled={createStage.isPending || !newLabel.trim()}>
+                {createStage.isPending ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Plus size={14} />
+                )}
+                Adicionar
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -3,6 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  confirmarAssinaturaManualDocumento,
   ensureCaseFolder,
   finalizeCaseDocument,
   generateCaseDocumentFromTemplate,
@@ -48,6 +49,9 @@ const generateSchema = z.object({
   templateId: z.string().uuid(),
   title: z.string().optional(),
   values: z.record(z.string(), z.string()).default({}),
+  // ITEM 1 — 'procuracao' | 'contrato' (default). Reflete a escolha do popup
+  // "Procuração vs Documento do caso".
+  docKind: z.enum(["procuracao", "contrato"]).optional(),
 });
 
 export const generateCaseDocumentFn = createServerFn({ method: "POST" })
@@ -59,6 +63,7 @@ export const generateCaseDocumentFn = createServerFn({ method: "POST" })
         templateId: data.templateId,
         title: data.title,
         values: data.values,
+        docKind: data.docKind,
         triggeredBy: userId,
       }),
     ),
@@ -121,3 +126,12 @@ export const ensureCaseFolderFn = createServerFn({ method: "POST" })
 export const softDeleteCaseDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => docIdSchema.parse(d))
   .handler(async ({ data }) => handle((userId) => softDeleteCaseDocument(data.id, userId)));
+
+// ITEM 5 — confirma a assinatura MANUALMENTE (equivalente ao webhook ZapSign,
+// que está adiado). Promove o caso conforme o doc_kind (contrato → CLIENTE;
+// procuração → GANHO comercial).
+export const confirmarAssinaturaManualFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => docIdSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle((userId) => confirmarAssinaturaManualDocumento(data.id, userId)),
+  );

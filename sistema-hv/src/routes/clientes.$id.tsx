@@ -1,10 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { AlertTriangle, ExternalLink, FileSignature, Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, FileText, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
-import { ProcuracaoFormDialog } from "@/components/cases/ProcuracaoFormDialog";
+import { ClientGenerateDocumentFlow } from "@/components/clients/ClientGenerateDocumentFlow";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
@@ -48,6 +48,12 @@ function maskPhone(phone: string | null): string {
   return phone;
 }
 
+function pickStr(obj: unknown, key: string): string | undefined {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return undefined;
+  const val = (obj as Record<string, unknown>)[key];
+  return typeof val === "string" && val ? val : undefined;
+}
+
 function ClienteDetalhe() {
   const { id } = Route.useParams();
   const navigate = Route.useNavigate();
@@ -56,7 +62,7 @@ function ClienteDetalhe() {
   const resyncMutation = useResyncDrive();
   const deleteMutation = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [procOpen, setProcOpen] = useState(false);
+  const [genDocOpen, setGenDocOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
@@ -126,8 +132,8 @@ function ClienteDetalhe() {
           </h1>
         </div>
         <div className="flex gap-2 self-start mt-2">
-          <Button size="sm" onClick={() => setProcOpen(true)}>
-            <FileSignature size={14} className="mr-1.5" /> Nova procuração
+          <Button size="sm" onClick={() => setGenDocOpen(true)}>
+            <FileText size={14} className="mr-1.5" /> Gerar documento
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil size={14} className="mr-1.5" /> Editar
@@ -256,7 +262,25 @@ function ClienteDetalhe() {
       <NotesBlock target="client" entityId={cliente.id} />
 
       <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
-      <ProcuracaoFormDialog open={procOpen} onOpenChange={setProcOpen} presetClientId={cliente.id} />
+      <ClientGenerateDocumentFlow
+        open={genDocOpen}
+        onOpenChange={setGenDocOpen}
+        clientId={cliente.id}
+        autoFill={{
+          clientName: cliente.full_name,
+          clientCpf: cliente.cpf_cnpj ?? undefined,
+          email: cliente.email ?? undefined,
+          phone: cliente.phone ?? undefined,
+          city: pickStr(cliente.address, "city"),
+          state: pickStr(cliente.address, "state"),
+          crm_numero: pickStr(cliente.professional_data, "crm_numero"),
+          crm_uf: pickStr(cliente.professional_data, "crm_uf"),
+          oab_numero: pickStr(cliente.professional_data, "oab_numero"),
+          oab_uf: pickStr(cliente.professional_data, "oab_uf"),
+          especialidade: pickStr(cliente.professional_data, "especialidade"),
+          vinculo_institucional: pickStr(cliente.professional_data, "vinculo_institucional"),
+        }}
+      />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   Check,
   Download,
   Edit3,
@@ -37,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   useCaseDocuments,
+  useConfirmarAssinaturaManual,
   useDeleteCaseDocument,
   useDownloadCaseDocument,
   useFinalizeCaseDocument,
@@ -45,8 +47,10 @@ import {
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
 import {
+  PROCURACAO_CASE_TYPE,
   useDocumentTemplates,
   useSyncDocumentTemplates,
+  useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
 } from "@/hooks/useDocumentTemplates";
 import {
@@ -86,13 +90,13 @@ export function CaseDocumentsTab({
   autoFillExtra?: Omit<AutoFillData, "clientName" | "clientCpf" | "municipio">;
 }) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
-  const { data: templates } = useDocumentTemplates(caseType);
   const generate = useGenerateCaseDocument(caseId);
   const finalize = useFinalizeCaseDocument(caseId);
   const reopen = useReopenCaseDocument(caseId);
   const download = useDownloadCaseDocument();
   const sendZap = useSendCaseDocumentToZapsign(caseId);
   const del = useDeleteCaseDocument(caseId);
+  const confirmarAssinatura = useConfirmarAssinaturaManual(caseId);
   const sync = useSyncDocumentTemplates();
 
   const [genOpen, setGenOpen] = useState(false);
@@ -268,14 +272,42 @@ export function CaseDocumentsTab({
                         <Button size="sm" onClick={() => setSendFor({ id: d.id, title: d.title })}>
                           <Send size={13} className="mr-1" /> ZapSign
                         </Button>
+                        <ConfirmSignatureButton
+                          docKind={d.doc_kind}
+                          pending={confirmarAssinatura.isPending}
+                          onConfirm={async () => {
+                            try {
+                              await confirmarAssinatura.mutateAsync(d.id);
+                              toast.success("Assinatura confirmada");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha");
+                            }
+                          }}
+                        />
                       </>
                     )}
-                    {d.status === "ENVIADO_ZAPSIGN" && d.zapsign_sign_url && (
-                      <a href={d.zapsign_sign_url} target="_blank" rel="noreferrer">
-                        <Button variant="outline" size="sm">
-                          <FileSignature size={13} className="mr-1" /> Link de assinatura
-                        </Button>
-                      </a>
+                    {d.status === "ENVIADO_ZAPSIGN" && (
+                      <>
+                        {d.zapsign_sign_url && (
+                          <a href={d.zapsign_sign_url} target="_blank" rel="noreferrer">
+                            <Button variant="outline" size="sm">
+                              <FileSignature size={13} className="mr-1" /> Link de assinatura
+                            </Button>
+                          </a>
+                        )}
+                        <ConfirmSignatureButton
+                          docKind={d.doc_kind}
+                          pending={confirmarAssinatura.isPending}
+                          onConfirm={async () => {
+                            try {
+                              await confirmarAssinatura.mutateAsync(d.id);
+                              toast.success("Assinatura confirmada");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Falha");
+                            }
+                          }}
+                        />
+                      </>
                     )}
                     {d.status === "ASSINADO" && (
                       <>
@@ -330,19 +362,12 @@ export function CaseDocumentsTab({
       <GenerateDialog
         open={genOpen}
         onOpenChange={setGenOpen}
-        templates={
-          (templates ?? []) as Array<{
-            id: string;
-            name: string;
-            fields: unknown;
-            google_doc_id?: string;
-          }>
-        }
+        caseType={caseType}
         pending={generate.isPending}
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
-        onGenerate={async (templateId, title, values) => {
+        onGenerate={async (templateId, title, values, docKind) => {
           try {
-            const res = await generate.mutateAsync({ caseId, templateId, title, values });
+            const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
             setGenOpen(false);
             toast.success("Documento gerado — abrindo editor");
             setEditorDocId(res.doc.id);
@@ -394,24 +419,79 @@ export function CaseDocumentsTab({
   );
 }
 
+// ------------------------------------------------- Confirmar assinatura ----
+// ITEM 5 — botão manual "Confirmar assinatura" (equivalente ao webhook ZapSign,
+// adiado). Só aparece para documentos de assinatura (contrato/procuração).
+function ConfirmSignatureButton({
+  docKind,
+  pending,
+  onConfirm,
+}: {
+  docKind: string | null;
+  pending: boolean;
+  onConfirm: () => void;
+}) {
+  if (docKind !== "contrato" && docKind !== "procuracao") return null;
+  return (
+    <Button variant="outline" size="sm" disabled={pending} onClick={onConfirm}>
+      <BadgeCheck size={13} className="mr-1" /> Confirmar assinatura
+    </Button>
+  );
+}
+
 // ---------------------------------------------------------------- Gerar ----
+type GenMode = "procuracao" | "caso";
+
+// ITEM 1 (2026-07-06) — "Gerar documento" pergunta primeiro: PROCURAÇÃO ou
+// DOCUMENTO DO CASO.
+//   - Procuração      → modelos da pasta de procuração (case_type='PROCURACAO')
+//     via useDocumentTemplates('PROCURACAO'); doc_kind='procuracao'.
+//   - Documento do caso → modelos do TIPO do caso (pasta vinculada ao tipo) via
+//     useDocumentTemplates(caseType); doc_kind='contrato'.
 function GenerateDialog({
   open,
   onOpenChange,
-  templates,
+  caseType,
   pending,
   onGenerate,
   autoFill,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  templates: Array<{ id: string; name: string; fields: unknown; google_doc_id?: string }>;
+  caseType: string;
   pending: boolean;
-  onGenerate: (templateId: string, title: string, values: Record<string, string>) => void;
+  onGenerate: (
+    templateId: string,
+    title: string,
+    values: Record<string, string>,
+    docKind: "procuracao" | "contrato",
+  ) => void;
   autoFill: AutoFillData;
 }) {
+  const [mode, setMode] = useState<GenMode | null>(null);
   const [templateId, setTemplateId] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
+
+  // Modelos por modo: procuração (marcador) vs tipo do caso.
+  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE);
+  const { data: caseTemplates } = useDocumentTemplates(caseType);
+  const syncProc = useSyncProcuracaoTemplates();
+
+  // Reset ao (re)abrir.
+  useEffect(() => {
+    if (open) {
+      setMode(null);
+      setTemplateId("");
+      setValues({});
+    }
+  }, [open]);
+
+  const templates = ((mode === "procuracao" ? procTemplates : caseTemplates) ?? []) as Array<{
+    id: string;
+    name: string;
+    fields: unknown;
+    google_doc_id?: string;
+  }>;
 
   const selected = templates.find((t) => t.id === templateId);
 
@@ -438,26 +518,119 @@ function GenerateDialog({
     setValues(pre);
   }, [fieldsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Etapa 1: escolher o tipo de documento (Procuração vs Documento do caso).
+  if (mode === null) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar documento</DialogTitle>
+            <DialogDescription>O que você quer gerar para este caso?</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setMode("procuracao");
+                setTemplateId("");
+                setValues({});
+              }}
+              className="rounded-md border border-[var(--border)] p-4 text-left hover:border-[var(--gold)] transition-colors"
+            >
+              <div className="flex items-center gap-2 font-medium text-[var(--navy)]">
+                <FileSignature size={16} className="text-[var(--gold-700)]" /> Procuração
+              </div>
+              <div className="text-[12px] text-muted-foreground mt-1">
+                Modelos da pasta de procuração.
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("caso");
+                setTemplateId("");
+                setValues({});
+              }}
+              className="rounded-md border border-[var(--border)] p-4 text-left hover:border-[var(--gold)] transition-colors"
+            >
+              <div className="flex items-center gap-2 font-medium text-[var(--navy)]">
+                <FileText size={16} className="text-[var(--gold-700)]" /> Documento do caso
+              </div>
+              <div className="text-[12px] text-muted-foreground mt-1">
+                Modelos do tipo do caso (pasta vinculada ao tipo).
+              </div>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const isProc = mode === "procuracao";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Gerar documento</DialogTitle>
+          <DialogTitle>Gerar {isProc ? "procuração" : "documento do caso"}</DialogTitle>
           <DialogDescription>
             Escolha um modelo e preencha os campos. O documento abre para edição.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => {
+              setMode(null);
+              setTemplateId("");
+              setValues({});
+            }}
+            className="text-xs text-[var(--gold-700)] hover:underline"
+          >
+            ← Trocar tipo de documento
+          </button>
           <div>
-            <Label>Procuração / modelo</Label>
+            <Label>{isProc ? "Modelo de procuração" : "Modelo do caso"}</Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
-                Nenhum modelo sincronizado. Use o botão "Sincronizar modelos" para puxar do Drive.
+                {isProc ? (
+                  <span className="flex items-center justify-between gap-2">
+                    Nenhum modelo de procuração sincronizado.
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={syncProc.isPending}
+                      onClick={async () => {
+                        try {
+                          const res = await syncProc.mutateAsync();
+                          toast.success(
+                            `Sync procurações: ${res.created} novos, ${res.updated} atualizados`,
+                          );
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Falha ao sincronizar");
+                        }
+                      }}
+                    >
+                      <RefreshCw
+                        size={13}
+                        className={`mr-1 ${syncProc.isPending ? "animate-spin" : ""}`}
+                      />
+                      Sincronizar procurações
+                    </Button>
+                  </span>
+                ) : (
+                  'Nenhum modelo sincronizado. Use "Sincronizar modelos" ou vincule a pasta do tipo (Pasta de modelos, no Operacional).'
+                )}
               </div>
             ) : (
               <Command className="mt-1 rounded-md border border-[var(--border)]">
-                <CommandInput placeholder="Buscar pelo nome (ex.: covid, procuração)…" />
+                <CommandInput placeholder="Buscar pelo nome…" />
                 <CommandList className="max-h-56">
                   <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
                   <CommandGroup>
@@ -558,7 +731,12 @@ function GenerateDialog({
                 toast.error(`Preencha: ${faltando.map((f) => f.label).join(", ")}`);
                 return;
               }
-              onGenerate(templateId, selected?.name ?? "Documento", values);
+              onGenerate(
+                templateId,
+                selected?.name ?? "Documento",
+                values,
+                isProc ? "procuracao" : "contrato",
+              );
             }}
           >
             {pending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}

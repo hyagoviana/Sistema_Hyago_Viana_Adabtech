@@ -140,8 +140,12 @@ export async function createCase(
       responsavel: input.responsavel ?? null,
       municipio: input.municipio ?? null,
       valor_centavos: input.valor_centavos ?? null,
-      // S1-02: a flag comercial passa a ser setada no envio da procuração, não aqui.
-      aguardando_assinatura_at: null,
+      // ITEM 5 (2026-07-06): criar/vincular um caso deixa-o no COMERCIAL
+      // (aguardando assinatura), NUNCA direto no operacional. Quando comercial=true,
+      // carimba `aguardando_assinatura_at` — o Kanban operacional esconde casos com
+      // essa flag, e eles aparecem no board COMERCIAL. A promoção para operacional
+      // acontece por (a) assinatura (webhook/manual) ou (b) "Enviar para operacional".
+      aguardando_assinatura_at: comercial ? new Date().toISOString() : null,
     })
     .select()
     .single();

@@ -50,10 +50,12 @@ type Props = {
   presetClientId?: string;
 };
 
-// Novo caso — SÓ o caso/contrato (operacional). A procuração virou um fluxo
-// próprio (ProcuracaoFormDialog / "+ Novo → Procuração"). Ao criar, o caso entra
-// direto no funil operacional; o contrato editável e o envio ao ZapSign ficam na
-// ficha do caso.
+// Novo caso — ITEM 5 (2026-07-06): o caso NÃO entra direto no operacional. Ele
+// nasce no COMERCIAL (aguardando assinatura): o Kanban operacional esconde casos
+// com `aguardando_assinatura_at` e o card aparece no board Comercial. A entrada no
+// operacional acontece por assinatura (webhook/manual) OU pelo botão "Enviar para
+// operacional" no board Comercial. O contrato/procuração e o envio ao ZapSign
+// ficam na ficha do caso.
 export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: clients } = useClientsList();
   const { data: serviceTypes } = useServiceTypes();
@@ -89,10 +91,11 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     try {
       const created = await create.mutateAsync({
         ...data,
-        comercial: false,
+        // ITEM 5: entra no COMERCIAL (aguardando assinatura), não no operacional.
+        comercial: true,
         procuracao_template_id: undefined,
       });
-      toast.success(`Caso ${created.case_code} criado`);
+      toast.success(`Caso ${created.case_code} criado — no Comercial (aguardando assinatura)`);
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
@@ -105,8 +108,9 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
         <DialogHeader>
           <DialogTitle>Novo caso</DialogTitle>
           <DialogDescription>
-            O código do caso é gerado automaticamente. Cliente é obrigatório. O contrato e o envio ao
-            ZapSign ficam na ficha do caso.
+            O código do caso é gerado automaticamente. Cliente é obrigatório. O caso entra no
+            Comercial (aguardando assinatura); vai ao Operacional quando o documento for assinado ou
+            você usar "Enviar para operacional" no board Comercial.
           </DialogDescription>
         </DialogHeader>
 

@@ -403,6 +403,8 @@ async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> 
   const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
 
   // Último movimento por pessoa a partir dos casos LEAD (para dias_parado).
+  // OBS: lifecycle='LEAD' já EXCLUI PERDIDO (lifecycle distinto), então leadMeta só
+  // tem leads ATIVOS.
   const { data: leadCases, error: lcErr } = await sb
     .from("system_cases_active")
     .select("client_id, status_changed_at, lifecycle")
@@ -420,6 +422,17 @@ async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> 
     }
   }
 
+  // ITEM 6.4 — pessoas com caso PERDIDO. Um lead PERDIDO (só com caso PERDIDO, sem
+  // lead ATIVO) NÃO deve reaparecer como "cadastro sintético novo" na aba Leads —
+  // o padrão é NÃO mostrar perdido em Leads (ele vive na aba Perdido). Excluímos
+  // da aba Leads quem tem PERDIDO e NÃO tem lead ativo.
+  const { data: perdidoCases, error: pcErr } = await sb
+    .from("system_cases_active")
+    .select("client_id")
+    .eq("lifecycle", "PERDIDO");
+  if (pcErr) throw new ClientServiceError(pcErr.message, "DB_ERROR", 500);
+  const perdidoIds = new Set((perdidoCases ?? []).map((c) => c.client_id));
+
   // Todos os cadastros ativos que NÃO são clientes.
   const { data: clients, error: cErr } = await sb
     .from("system_clients")
@@ -429,7 +442,8 @@ async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> 
 
   const now = Date.now();
   const out: ClientWithLifecycleMeta[] = (clients ?? [])
-    .filter((cli) => !clienteIds.has(cli.id))
+    // Fora: clientes (CLIENTE) e leads PERDIDOS sem nenhum lead ativo.
+    .filter((cli) => !clienteIds.has(cli.id) && !(perdidoIds.has(cli.id) && !leadMeta.has(cli.id)))
     .map((cli) => {
       const meta = leadMeta.get(cli.id);
       const base = meta?.ultimo || new Date(cli.created_at).getTime();

@@ -293,7 +293,14 @@
       "Bash(xargs grep -l \"create.*procuracao\\\\|procuracao.*sem.*caso\")",
       "Bash(git --no-pager diff --stat)",
       "Bash(git --no-pager log --oneline -8)",
-      "Bash(git --no-pager diff sistema-hv/src/lib/pipeline-service.ts sistema-hv/src/rpc/pipeline.ts sistema-hv/src/hooks/usePipeline.ts)"
+      "Bash(git --no-pager diff sistema-hv/src/lib/pipeline-service.ts sistema-hv/src/rpc/pipeline.ts sistema-hv/src/hooks/usePipeline.ts)",
+      "Bash(:)",
+      "Bash(echo \"===ESLINT_DONE_EXIT=$?===\")",
+      "Bash(echo EXIT=__TRACKED_VAR__)",
+      "Bash(grep -v 'casos.$id.tsx\\(597')",
+      "Bash(grep -vE 'casos\\\\.\\\\$id\\\\.tsx\\\\\\(549|casos\\\\.financeiro\\\\.index\\\\.tsx\\\\\\(206|casos\\\\.financeiro\\\\.index\\\\.tsx\\\\\\(343')",
+      "Bash(git --no-pager status --short)",
+      "Bash(grep -vE 'casos\\\\.\\\\$id\\\\.tsx\\\\\\(597|casos\\\\.financeiro\\\\.index\\\\.tsx\\\\\\(30|casos\\\\.financeiro\\\\.index\\\\.tsx\\\\\\(44')"
     ]
   }
 }

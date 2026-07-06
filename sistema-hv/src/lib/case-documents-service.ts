@@ -498,6 +498,52 @@ export async function sendCaseDocumentToZapsign(opts: {
 }
 
 // ----------------------------------------------------------------------------
+// ITEM 5 (2026-07-06) — CONFIRMAR ASSINATURA MANUALMENTE.
+// ----------------------------------------------------------------------------
+// Caminho MANUAL equivalente ao webhook do ZapSign (que está adiado): marca o
+// documento como ASSINADO e dispara o gatilho de ciclo de vida do caso:
+//   - contrato   (doc COMBINADO) ⇒ promoverCasoOperacional → CLIENTE (vai ao
+//     operacional; limpa aguardando_assinatura_at).
+//   - procuracao (procuração pura) ⇒ registrarProcuracaoAssinada (segue LEAD,
+//     sai do "aguardando assinatura", esteira comercial = GANHO).
+// Idempotente: doc já ASSINADO → no-op de status; o gatilho de caso também é
+// idempotente. Exige usuário autenticado (auditoria).
+export async function confirmarAssinaturaManualDocumento(docId: string, userId: string) {
+  if (!userId) throw new CaseDocumentServiceError("Ação exige usuário autenticado", 401);
+  const sb = getSupabaseAdmin();
+  const doc = await getCaseDocument(docId);
+
+  if (doc.status !== "ASSINADO") {
+    const { error } = await sb
+      .from("system_case_documents")
+      .update({ status: "ASSINADO" })
+      .eq("id", doc.id);
+    if (error) throw new CaseDocumentServiceError(error.message, 500);
+
+    await sb.from("system_case_events").insert({
+      case_id: doc.case_id,
+      organization_id: doc.organization_id,
+      action: "doc_assinado_manual",
+      diff: { doc_title: doc.title, doc_id: doc.id, doc_kind: doc.doc_kind },
+      triggered_by: userId,
+    });
+  }
+
+  // Dispara o gatilho de ciclo de vida do caso conforme o tipo do documento.
+  // Import dinâmico evita ciclo entre case-documents-service e cases-service.
+  if (doc.case_id) {
+    const { promoverCasoOperacional, registrarProcuracaoAssinada } = await import("./cases-service");
+    if (doc.doc_kind === "contrato") {
+      await promoverCasoOperacional(doc.case_id, { via: "manual", userId });
+    } else if (doc.doc_kind === "procuracao") {
+      await registrarProcuracaoAssinada(doc.case_id, { via: "manual", userId });
+    }
+  }
+
+  return { ok: true as const, id: doc.id };
+}
+
+// ----------------------------------------------------------------------------
 // SOFT DELETE
 // ----------------------------------------------------------------------------
 export async function softDeleteCaseDocument(docId: string, triggeredBy?: string) {

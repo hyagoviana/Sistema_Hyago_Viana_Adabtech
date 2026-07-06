@@ -4,6 +4,7 @@
 // a bifurcação atual intacta (ADR-007).
 
 import { countChecklistItemsForStage, instanciarChecklist } from "./checklist-service";
+import { GLOBAL_FUNNEL_SERVICE_TYPE_ID } from "./cases/constants";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -46,18 +47,40 @@ export async function createServiceType(input: { name: string; slug: string; ord
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao criar tipo", 500);
 
-  // Semeia etapas padrão (op + fin) para a categoria nascer usável; o dono edita depois.
+  // ITEM 6.3 (2026-07-06) — semeia o CONJUNTO COMPLETO de etapas (op + fin +
+  // comercial). Os slugs de FIN e COMERCIAL DEVEM espelhar exatamente o funil
+  // ÚNICO/sentinela (system_pipeline_stages do GLOBAL_FUNNEL_SERVICE_TYPE_ID),
+  // senão o tipo novo NASCE QUEBRADO no funil único: mover um caso desse tipo a
+  // uma etapa comercial/fin do board global gravaria macrostatus_* = slug e a
+  // projeção system_fn_sync_stage_ids não acharia a etapa per-tipo correspondente.
+  // O OPERACIONAL é per-tipo (o sentinela não tem etapas op) — mantemos um conjunto
+  // op enxuto e editável pelo dono.
   const defaults = [
+    // ── Operacional (per-tipo; editável) ──────────────────────────────────
     { kind: "op", slug: "NOVO", label: "Novo", ordem: 0, stage_role: "normal" },
     { kind: "op", slug: "EM_ANDAMENTO", label: "Em andamento", ordem: 1, stage_role: "normal" },
     { kind: "op", slug: "GANHO", label: "Ganho", ordem: 2, stage_role: "won" },
     { kind: "op", slug: "ENCERRADO", label: "Encerrado", ordem: 3, stage_role: "closed" },
     { kind: "op", slug: "CANCELADO", label: "Cancelado", ordem: 4, stage_role: "lost" },
+    // ── Financeiro (espelha o sentinela — conjunto COMPLETO) ───────────────
     { kind: "fin", slug: "ELABORANDO", label: "Elaborando", ordem: 0, stage_role: "normal" },
-    { kind: "fin", slug: "ATIVO", label: "Ativo", ordem: 1, stage_role: "normal" },
-    { kind: "fin", slug: "QUITADO", label: "Quitado", ordem: 2, stage_role: "closed" },
-    { kind: "fin", slug: "CANCELADO", label: "Cancelado", ordem: 3, stage_role: "lost" },
-    // S5-01 — esteira comercial (leads): novo tipo nasce com o funil de leads usável.
+    { kind: "fin", slug: "APROVACAO", label: "Aprovação", ordem: 1, stage_role: "normal" },
+    {
+      kind: "fin",
+      slug: "AGUARDANDO_ATIVACAO",
+      label: "Aguardando ativação",
+      ordem: 2,
+      stage_role: "normal",
+    },
+    { kind: "fin", slug: "ATIVO", label: "Ativo", ordem: 3, stage_role: "normal" },
+    { kind: "fin", slug: "QUITANDO", label: "Quitando", ordem: 4, stage_role: "normal" },
+    { kind: "fin", slug: "QUITADO", label: "Quitado", ordem: 5, stage_role: "closed" },
+    { kind: "fin", slug: "INADIMPLENTE", label: "Inadimplente", ordem: 6, stage_role: "normal" },
+    { kind: "fin", slug: "PARCIAL", label: "Parcial", ordem: 7, stage_role: "normal" },
+    { kind: "fin", slug: "RENEGOCIADO", label: "Renegociado", ordem: 8, stage_role: "normal" },
+    { kind: "fin", slug: "SUSPENSO", label: "Suspenso", ordem: 9, stage_role: "normal" },
+    { kind: "fin", slug: "CANCELADO", label: "Cancelado", ordem: 10, stage_role: "lost" },
+    // ── Comercial (espelha o sentinela — conjunto COMPLETO) ────────────────
     { kind: "comercial", slug: "NOVO", label: "Novo", ordem: 0, stage_role: "normal" },
     { kind: "comercial", slug: "EM_CONTATO", label: "Em contato", ordem: 1, stage_role: "normal" },
     {
@@ -108,6 +131,17 @@ export async function createStage(input: {
   color?: string | null;
   ordem?: number;
 }) {
+  // ITEM 6.2 (2026-07-06) — o funil ÚNICO (sentinela comercial/fin) é COMPARTILHADO
+  // por todos os tipos via SLUG. Criar uma etapa SÓ no sentinela geraria uma coluna
+  // órfã (nenhum tipo teria a etapa per-slug correspondente, então mover um caso
+  // para ela não resolveria stage_*_id). Bloqueamos criar/excluir no sentinela;
+  // renomear label/ordem continua permitido (updateStage/reorderStages).
+  if (input.service_type_id === GLOBAL_FUNNEL_SERVICE_TYPE_ID) {
+    throw new PipelineServiceError(
+      "O funil único não permite criar novas etapas (evita coluna órfã). Você pode renomear e reordenar as etapas existentes. Para adicionar etapas, edite o funil por tipo no Operacional.",
+      409,
+    );
+  }
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_pipeline_stages")
@@ -161,23 +195,68 @@ export async function reorderStages(ids: string[]) {
 
 export async function softDeleteStage(id: string) {
   const sb = getSupabaseAdmin();
-  // Bloqueia remover etapa com casos parados nela.
-  const { count } = await sb
-    .from("system_cases")
-    .select("id", { count: "exact", head: true })
-    .or(`stage_op_id.eq.${id},stage_fin_id.eq.${id}`)
-    .is("deleted_at", null);
-  if ((count ?? 0) > 0) {
+
+  // Carrega a etapa PRIMEIRO — precisamos do service_type_id/slug/kind para a
+  // guarda (ITEM 6.1) e para o bloqueio do sentinela (ITEM 6.2).
+  const { data: stage } = await sb
+    .from("system_pipeline_stages")
+    .select("service_type_id, slug, kind")
+    .eq("id", id)
+    .single();
+
+  // ITEM 6.2 — nunca excluir etapa do funil ÚNICO (sentinela): sumir com a coluna
+  // deixaria todos os tipos com casos "órfãos" naquele slug. Só renomear/reordenar.
+  if (stage?.service_type_id === GLOBAL_FUNNEL_SERVICE_TYPE_ID) {
+    throw new PipelineServiceError(
+      "O funil único não permite excluir etapas (evita órfãos em todos os tipos). Você pode renomear e reordenar. Para remover etapas, edite o funil por tipo no Operacional.",
+      409,
+    );
+  }
+
+  // ITEM 6.1 — a guarda "há casos nesta etapa" precisa contar corretamente.
+  // Para etapas do funil ÚNICO a contagem por stage_*_id do SENTINELA é sempre 0
+  // (os casos carregam o stage_*_id do SEU tipo, não do sentinela). Já para etapas
+  // PER-TIPO, contamos por stage_op_id/stage_fin_id (op/fin) OU por
+  // macrostatus_comercial = slug (comercial não tem projeção stage_comercial_id
+  // garantida na guarda). Como este ramo (per-tipo) chega aqui, contamos assim:
+  //   - op  → stage_op_id = id  OU  (service_type_id, macrostatus_op = slug)
+  //   - fin → stage_fin_id = id OU  (service_type_id, macrostatus_fin = slug)
+  //   - comercial → (service_type_id, macrostatus_comercial = slug)
+  let count = 0;
+  if (stage) {
+    if (stage.kind === "comercial") {
+      const { count: c } = await sb
+        .from("system_cases")
+        .select("id", { count: "exact", head: true })
+        .eq("service_type_id", stage.service_type_id)
+        .eq("macrostatus_comercial", stage.slug)
+        .is("deleted_at", null);
+      count = c ?? 0;
+    } else {
+      const macroCol = stage.kind === "fin" ? "macrostatus_fin" : "macrostatus_op";
+      const stageCol = stage.kind === "fin" ? "stage_fin_id" : "stage_op_id";
+      const { count: c } = await sb
+        .from("system_cases")
+        .select("id", { count: "exact", head: true })
+        .or(`${stageCol}.eq.${id},and(service_type_id.eq.${stage.service_type_id},${macroCol}.eq.${stage.slug})`)
+        .is("deleted_at", null);
+      count = c ?? 0;
+    }
+  } else {
+    // Fallback (etapa não encontrada por algum motivo) — guarda antiga por stage_*_id.
+    const { count: c } = await sb
+      .from("system_cases")
+      .select("id", { count: "exact", head: true })
+      .or(`stage_op_id.eq.${id},stage_fin_id.eq.${id}`)
+      .is("deleted_at", null);
+    count = c ?? 0;
+  }
+  if (count > 0) {
     throw new PipelineServiceError("Há casos nesta etapa — remaneje antes de excluir", 409);
   }
 
   // S2-02 (R-ARCH-7) — bloqueia também se houver checklist items ancorados por
   // (service_type_id, stage_slug) — a ancoragem do checklist é por slug.
-  const { data: stage } = await sb
-    .from("system_pipeline_stages")
-    .select("service_type_id, slug")
-    .eq("id", id)
-    .single();
   if (stage) {
     const itemCount = await countChecklistItemsForStage(stage.service_type_id, stage.slug);
     if (itemCount > 0) {
@@ -313,7 +392,12 @@ export type ComercialBoardRow = {
 export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
   const sb = getSupabaseAdmin();
 
-  // (a) Casos comerciais (leads não perdidos), todos os tipos.
+  // (a) Casos LEAD de TODOS os tipos. Montamos a lista de casos LEAD ANTES do
+  //     filtro `perdido_at` (ITEM 6.4) — assim conseguimos:
+  //       1) mostrar no board só os NÃO-perdidos (caseRows);
+  //       2) saber quais CLIENTES já têm ALGUM caso LEAD (allLeadClientIds),
+  //          inclusive perdido — pra NÃO recriar o cadastro sintético "Novo" de um
+  //          lead que já foi trabalhado e perdido.
   const { data: cases, error } = await sb
     .from("system_cases_active")
     .select(
@@ -323,6 +407,9 @@ export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
     .order("created_at", { ascending: false });
   if (error) throw new PipelineServiceError(error.message, 500);
 
+  const allLeadClientIds = new Set((cases ?? []).map((c) => c.client_id));
+
+  // Board: só leads NÃO perdidos (perdido não aparece no funil comercial).
   const caseRows: ComercialBoardRow[] = (cases ?? [])
     .filter((c) => !(c as { perdido_at?: string | null }).perdido_at)
     .map((c) => ({
@@ -336,9 +423,10 @@ export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
       is_registration: false,
     }));
 
-  // Cadastros que já têm caso comercial (LEAD) ou já são clientes (CLIENTE) não
-  // viram card sintético.
-  const withCase = new Set(caseRows.map((r) => r.client_id));
+  // Cadastros que já têm QUALQUER caso LEAD (perdido ou não) ou já são clientes
+  // (CLIENTE) não viram card sintético — evita que um lead PERDIDO reapareça como
+  // "cadastro novo" na coluna Novo (ITEM 6.4).
+  const withCase = allLeadClientIds;
   const { data: clienteCases } = await sb
     .from("system_cases_active")
     .select("client_id")

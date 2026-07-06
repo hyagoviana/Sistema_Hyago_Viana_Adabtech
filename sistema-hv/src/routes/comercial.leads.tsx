@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { LeadCard } from "@/components/comercial/LeadCard";
+import { SendToOperacionalDialog } from "@/components/comercial/SendToOperacionalDialog";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
@@ -53,6 +54,12 @@ function LeadsPage() {
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
+  // ITEM 5 — lead selecionado para "Enviar para operacional" (abre o popup que
+  // lista os casos do lead e deixa escolher qual promover).
+  const [sendTarget, setSendTarget] = useState<{
+    clientId: string;
+    clientName: string;
+  } | null>(null);
 
   useDocumentTitle("Comercial");
 
@@ -180,12 +187,30 @@ function LeadsPage() {
           isLoading={isLoading || stagesLoading}
           getId={(c) => c.id}
           getColumn={(c) => c.macrostatus_comercial ?? "NOVO"}
-          renderCard={(c) => <LeadCard lead={c} />}
+          renderCard={(c) => (
+            <LeadCard
+              lead={c}
+              onSendToOperacional={(lead) =>
+                setSendTarget({
+                  clientId: lead.client_id ?? lead.id,
+                  clientName: lead.client_name,
+                })
+              }
+            />
+          )}
           onMove={handleMove}
         />
       ) : (
         <LeadsList leads={rows} isLoading={isLoading || stagesLoading} stageLabel={stageLabel} />
       )}
+
+      {/* ITEM 5 — popup "Enviar para operacional": lista os casos do lead
+          (aguardando assinatura) e libera o escolhido para o Kanban operacional. */}
+      <SendToOperacionalDialog
+        clientId={sendTarget?.clientId ?? null}
+        clientName={sendTarget?.clientName ?? ""}
+        onClose={() => setSendTarget(null)}
+      />
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   Phone,
   Trash2,
   UserCheck,
-  UserX,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,8 +19,8 @@ import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
-import { CaseSignActions } from "@/components/cases/CaseSignActions";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
+import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
@@ -40,7 +39,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
@@ -61,7 +59,6 @@ import {
   useCaseEvents,
   useDeleteCase,
   useLiberarCaso,
-  useMarcarCasoPerdido,
   usePromoverCasoManual,
 } from "@/hooks/useCases";
 import {
@@ -112,7 +109,6 @@ function CasoDetalhe() {
   const acerto = useSetAcertoParcial();
   const liberar = useLiberarCaso();
   const promover = usePromoverCasoManual();
-  const marcarPerdido = useMarcarCasoPerdido();
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = can(role, "casos.manage");
@@ -146,8 +142,8 @@ function CasoDetalhe() {
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [entrarOpen, setEntrarOpen] = useState(false);
-  const [perdidoOpen, setPerdidoOpen] = useState(false);
-  const [perdidoMotivo, setPerdidoMotivo] = useState("");
+  // ITEM 2 — popup "Enviar contrato e procuração" (mesmo do "Gerar documento").
+  const [genFlowOpen, setGenFlowOpen] = useState(false);
 
   // S1-03 — promover manualmente lead→cliente (independe da flag comercial).
   async function handlePromover() {
@@ -159,22 +155,6 @@ function CasoDetalhe() {
     }
   }
 
-  // S1-03 / S1-01b — marcar como perdido (LEAD ou CLIENTE → PERDIDO), com motivo.
-  async function handleMarcarPerdido() {
-    const motivo = perdidoMotivo.trim();
-    if (!motivo) {
-      toast.error("Informe o motivo da perda");
-      return;
-    }
-    try {
-      await marcarPerdido.mutateAsync({ id, motivo });
-      toast.success("Caso marcado como perdido");
-      setPerdidoOpen(false);
-      setPerdidoMotivo("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao marcar perdido");
-    }
-  }
 
   // Carrega cliente vinculado pra header
   const { data: cliente } = useClient(caso?.client_id ?? "");
@@ -322,43 +302,15 @@ function CasoDetalhe() {
               {promover.isPending ? "Promovendo…" : "Marcar como cliente"}
             </Button>
           )}
-          {lifecycle !== "PERDIDO" && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setPerdidoOpen(true)}
-            >
-              <UserX size={14} className="mr-1.5" /> Marcar como perdido
-            </Button>
-          )}
-          {/* S9-09 — enviar procuração (comercial) / contrato (operacional).
-              Visíveis para lead E cliente; o "Enviar caso" degrada 424 sem modelo. */}
-          <CaseSignActions
-            caseId={caso.id}
-            clientId={caso.client_id}
-            caseType={caso.case_type}
-            clientName={cliente?.full_name}
-            clientCpf={cliente?.cpf_cnpj}
-            municipio={caso.municipio ?? undefined}
-            procuracaoAssinada={
-              !!(caso as { procuracao_assinada_at?: string | null }).procuracao_assinada_at
-            }
-            autoFillExtra={{
-              email: cliente?.email ?? undefined,
-              phone: cliente?.phone ?? undefined,
-              city: pickStr(cliente?.address, "city"),
-              state: pickStr(cliente?.address, "state"),
-              crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
-              crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
-              oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
-              oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
-              especialidade: pickStr(cliente?.professional_data, "especialidade"),
-              vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
-              caseCode: caso.case_code,
-              responsavel: caso.responsavel ?? undefined,
-            }}
-          />
+          {/* ITEM 2 (2026-07-06) — "Marcar como perdido" REMOVIDO do topo (decisão do
+              owner). O ciclo de vida do caso é governado pelo board Comercial +
+              assinatura. */}
+          {/* ITEM 2 — "Enviar contrato e procuração" abre o MESMO popup do "Gerar
+              documento" (Procuração vs Documento do caso). Gera e abre o Word; o
+              envio ao ZapSign continua na aba Documentos. */}
+          <Button variant="outline" size="sm" onClick={() => setGenFlowOpen(true)}>
+            <FileSignature size={14} className="mr-1.5" /> Enviar contrato e procuração
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
             <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
           </Button>
@@ -658,48 +610,31 @@ function CasoDetalhe() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={perdidoOpen}
-        onOpenChange={(v) => {
-          setPerdidoOpen(v);
-          if (!v) setPerdidoMotivo("");
+      {/* ITEM 2 — fluxo "Enviar contrato e procuração" (mesmo popup do "Gerar
+          documento"): Procuração vs Documento do caso → modelo → preenche → Word. */}
+      <GenerateCaseDocumentFlow
+        open={genFlowOpen}
+        onOpenChange={setGenFlowOpen}
+        caseId={caso.id}
+        caseType={caso.case_type}
+        autoFill={{
+          clientName: cliente?.full_name,
+          clientCpf: cliente?.cpf_cnpj,
+          municipio: caso.municipio ?? undefined,
+          email: cliente?.email ?? undefined,
+          phone: cliente?.phone ?? undefined,
+          city: pickStr(cliente?.address, "city"),
+          state: pickStr(cliente?.address, "state"),
+          crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
+          crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
+          oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
+          oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
+          especialidade: pickStr(cliente?.professional_data, "especialidade"),
+          vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
+          caseCode: caso.case_code,
+          responsavel: caso.responsavel ?? undefined,
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Marcar {caso.case_code} como perdido</DialogTitle>
-            <DialogDescription>
-              Informe o motivo. O caso sai das listas de Leads/Clientes ativos e passa a estado
-              terminal PERDIDO (reversível registrando de volta manualmente).
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Motivo *</label>
-            <Input
-              value={perdidoMotivo}
-              onChange={(e) => setPerdidoMotivo(e.target.value)}
-              placeholder="Ex.: cliente desistiu, sem interesse, distrato…"
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPerdidoOpen(false)}
-              disabled={marcarPerdido.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleMarcarPerdido}
-              disabled={marcarPerdido.isPending || !perdidoMotivo.trim()}
-            >
-              {marcarPerdido.isPending ? "Marcando…" : "Marcar como perdido"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

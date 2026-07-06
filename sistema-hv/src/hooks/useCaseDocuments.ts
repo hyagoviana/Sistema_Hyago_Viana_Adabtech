@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  confirmarAssinaturaManualFn,
   downloadCaseDocumentFn,
   finalizeCaseDocumentFn,
   generateCaseDocumentFn,
@@ -47,6 +48,7 @@ export function useGenerateCaseDocument(caseId: string) {
       templateId: string;
       title?: string;
       values: Record<string, string>;
+      docKind?: "procuracao" | "contrato";
     }) => fn({ data: input }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
@@ -111,6 +113,22 @@ export function useDeleteCaseDocument(caseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
       qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
+  });
+}
+
+// ITEM 5 — confirma a assinatura manualmente (caminho manual do webhook ZapSign).
+// Promove o caso (contrato → CLIENTE; procuração → GANHO). Invalida documentos,
+// eventos e a lista/detalhe de casos (o lifecycle muda).
+export function useConfirmarAssinaturaManual(caseId: string) {
+  const fn = useServerFn(confirmarAssinaturaManualFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 }

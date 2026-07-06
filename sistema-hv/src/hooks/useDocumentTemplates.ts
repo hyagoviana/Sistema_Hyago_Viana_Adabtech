@@ -9,8 +9,12 @@ import {
   setTypeTemplatesFolderFn,
   softDeleteDocumentTemplateFn,
   syncDocumentTemplatesFn,
+  syncProcuracaoTemplatesFn,
   updateDocumentTemplateFn,
 } from "@/rpc/document-templates";
+
+// ITEM 1 — marcador de case_type dos modelos de PROCURAÇÃO.
+export const PROCURACAO_CASE_TYPE = "PROCURACAO";
 
 export type TemplateFieldInput = {
   key: string;
@@ -79,6 +83,17 @@ export function useSyncDocumentTemplates() {
       // Incremental: só adiciona novos, dedup por google_doc_id e nome normalizado
       return syncFn({ data: { folderId } });
     },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
+  });
+}
+
+// ITEM 1 — sincroniza a pasta de PROCURAÇÕES (case_type='PROCURACAO'). Usado pelo
+// popup "Gerar documento → Procuração" quando não há modelos sincronizados.
+export function useSyncProcuracaoTemplates() {
+  const fn = useServerFn(syncProcuracaoTemplatesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fn(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
   });
 }

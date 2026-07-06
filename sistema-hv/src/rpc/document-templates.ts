@@ -120,6 +120,20 @@ export const syncDocumentTemplatesFn = createServerFn({ method: "POST" })
     handle(() => syncTemplatesFromDrives(data.folderId ? [data.folderId] : MODELS_FOLDER_IDS)),
   );
 
+// ITEM 1 (2026-07-06) — PASTA de modelos de PROCURAÇÃO no Drive. Os modelos dessa
+// pasta são marcados com case_type='PROCURACAO' (marcador), para o popup "Gerar
+// documento → Procuração" listá-los via useDocumentTemplates('PROCURACAO').
+// Configurável por env (default = pasta informada pelo owner).
+export const PROCURACAO_CASE_TYPE = "PROCURACAO";
+const PROCURACAO_TEMPLATES_FOLDER_ID =
+  process.env.GOOGLE_DRIVE_PROCURACAO_FOLDER_ID?.trim() || "1ed5kBsyHalUuMoap_0i_KJQ_fFfbiPYd";
+
+// Sincroniza a pasta de procurações forçando case_type='PROCURACAO' em todos os
+// docs. Reusa syncTemplatesFromDrive(folderId, 'PROCURACAO').
+export const syncProcuracaoTemplatesFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(() => syncTemplatesFromDrive(PROCURACAO_TEMPLATES_FOLDER_ID, PROCURACAO_CASE_TYPE)),
+);
+
 // Ponto 6 (2026-07-06) — vincula/troca a PASTA de modelos de um TIPO de serviço
 // (caso). Salva `templates_folder_id` no tipo e já sincroniza os modelos daquela
 // pasta marcando-os com o case_type do tipo. Aceita URL do Drive ou o ID cru.
