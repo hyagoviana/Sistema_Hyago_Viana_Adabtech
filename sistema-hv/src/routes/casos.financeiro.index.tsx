@@ -327,6 +327,12 @@ const ALL_FIN_COLUMNS: KanbanColumn<string>[] = (
 function FinanceiroKanbanTodos({ onBack }: { onBack: () => void }) {
   const [search, setSearch] = useState("");
   const { data: allCases, isLoading, isError, error } = useAllBifurcatedCases();
+  // Edição de etapas na visão "Todos": como ela agrega vários tipos, o usuário
+  // escolhe o tipo e edita os funis daquele tipo (reusa o StageEditor).
+  const { role } = useAuth();
+  const canEditStages = can(role, "config.manage");
+  const { data: serviceTypes } = useServiceTypes();
+  const [editType, setEditType] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = useMemo(() => {
     const cases = allCases ?? [];
@@ -360,6 +366,30 @@ function FinanceiroKanbanTodos({ onBack }: { onBack: () => void }) {
         }
         aside={
           <div className="flex items-center gap-2">
+            {canEditStages && (serviceTypes ?? []).length > 0 && (
+              <div className="relative inline-flex items-center">
+                <Settings2
+                  size={14}
+                  className="pointer-events-none absolute left-2.5 text-[var(--navy)]"
+                />
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const t = (serviceTypes ?? []).find((s) => s.id === e.target.value);
+                    if (t) setEditType({ id: t.id, name: t.name });
+                  }}
+                  className="h-9 rounded-md border border-[var(--border)] bg-[var(--card)] pl-8 pr-3 text-[13px] font-medium text-[var(--navy)] outline-none focus:border-[var(--gold)]"
+                  title="Escolha um tipo para editar as etapas (funis)"
+                >
+                  <option value="">Editar etapas…</option>
+                  {(serviceTypes ?? []).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <Btn variant="ghost" onClick={onBack}>
               <ArrowLeft size={14} />
               Trocar tipo
@@ -370,6 +400,17 @@ function FinanceiroKanbanTodos({ onBack }: { onBack: () => void }) {
           </div>
         }
       />
+
+      {editType && (
+        <StageEditor
+          serviceTypeId={editType.id}
+          serviceTypeName={editType.name}
+          kind="fin"
+          open={!!editType}
+          onOpenChange={(o) => !o && setEditType(null)}
+          canEdit={canEditStages}
+        />
+      )}
 
       <div className="flex items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
