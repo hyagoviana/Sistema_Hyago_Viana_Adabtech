@@ -580,6 +580,38 @@ function brlDoc(c: number | null | undefined) {
   );
 }
 
+// Reparcela um total (centavos) em parcelas de `valorParcela`, aplicando a MESMA
+// regra de calcularTermo (floor das cheias; resto vira última parcela; resto
+// abaixo de `restoMinimo` incorpora à última). Usado só para o parcelamento
+// EXIBIDO no documento COMPLEMENTAR (sobre honorarios_total = abatimento +
+// remanescente). NÃO altera calcularTermo nem o snapshot. Retorna qtd TOTAL de
+// parcelas (cheias + a irregular), o valor da cheia e o valor da última.
+function reparcelar(
+  totalCentavos: number,
+  valorParcela: number,
+  restoMinimo: number,
+): { qtd: number; valorParcela: number; valorUltima: number } {
+  const total = Math.max(0, totalCentavos);
+  let qtd = Math.floor(total / valorParcela);
+  const resto = total - qtd * valorParcela;
+  let ultima = 0;
+  if (total <= 0) {
+    qtd = 0;
+    ultima = 0;
+  } else if (qtd === 0) {
+    qtd = 1;
+    ultima = total;
+  } else if (resto === 0) {
+    ultima = valorParcela;
+  } else if (resto < restoMinimo) {
+    ultima = valorParcela + resto; // incorpora à última
+  } else {
+    qtd += 1;
+    ultima = resto;
+  }
+  return { qtd, valorParcela, valorUltima: ultima };
+}
+
 // Convenção de nome do modelo por tipo_termo. O modelo Google Doc deve ter, no
 // NOME, "TERMO ACERTO PARCIAL" ou "TERMO ACERTO COMPLEMENTAR" (case-insensitive,
 // acentos/hífen ignorados). Ajustar aqui se o owner mudar a convenção.
@@ -651,6 +683,27 @@ function buildTermoValues(
     : 0;
   const honorariosTotalCentavos = termo.valor_total_centavos + remanescenteCentavos;
 
+  // ── Parcelamento EXIBIDO no documento ────────────────────────────────────
+  // PARCIAL: usa os valores do snapshot (calcularTermo já parcelou sobre o
+  //   valor_total do abatimento — que é o total devido nesse tipo).
+  // COMPLEMENTAR: o total efetivamente devido no DOCUMENTO é
+  //   honorariosTotalCentavos (= abatimento novo + remanescente anterior), NÃO
+  //   o valor_total do snapshot. Reparcela sobre esse total aplicando a MESMA
+  //   regra do calcularTermo (floor das cheias; resto vira última; resto abaixo
+  //   do mínimo incorpora à última) — sem tocar em calcularTermo nem no snapshot
+  //   (que continua guardando o parcelamento do abatimento novo p/ as cobranças).
+  const parcelamentoDoc = isComplementar
+    ? reparcelar(
+        honorariosTotalCentavos,
+        termo.valor_parcela_centavos,
+        TERMO_DEFAULTS.resto_minimo_centavos,
+      )
+    : {
+        qtd: termo.qtd_parcelas ?? 0,
+        valorParcela: termo.valor_parcela_centavos,
+        valorUltima: termo.valor_ultima_parcela_centavos,
+      };
+
   // ── Derivados (calculados a partir do snapshot quando os extras não vierem) ──
   // Base da conta do abatimento: saldo à época = saldo antes − parcelas pagas
   // (referência histórica sobre a qual o percentual do abatimento é medido).
@@ -693,10 +746,11 @@ function buildTermoValues(
     // O modelo diz "<qtd_parcelas> parcelas de <valor_parcela> além de 1 parcela
     // de <valor_ultima_parcela>": o N é a contagem das parcelas CHEIAS (a última
     // irregular é a "1 parcela" à parte). Exibe qtd − 1; o snapshot mantém o total
-    // real para a geração das cobranças.
-    qtd_parcelas: String(Math.max(0, (termo.qtd_parcelas ?? 0) - 1)),
-    valor_parcela: brlDoc(termo.valor_parcela_centavos),
-    valor_ultima_parcela: brlDoc(termo.valor_ultima_parcela_centavos),
+    // real para a geração das cobranças. Em COMPLEMENTAR o parcelamento exibido é
+    // reparcelado sobre honorariosTotalCentavos (vide parcelamentoDoc acima).
+    qtd_parcelas: String(Math.max(0, (parcelamentoDoc.qtd ?? 0) - 1)),
+    valor_parcela: brlDoc(parcelamentoDoc.valorParcela),
+    valor_ultima_parcela: brlDoc(parcelamentoDoc.valorUltima),
     desconto_avista: `${termo.desconto_avista_pct}%`,
     valor_avista: brlDoc(termo.valor_avista_centavos),
     valor_avista_extenso: reaisPorExtenso(termo.valor_avista_centavos),
@@ -707,7 +761,7 @@ function buildTermoValues(
     // Ambos calculados do snapshot; override do extra (input da tela) tem prioridade.
     saldo_atual: saldoAtualValue,
     percentual_abatimento: percentualAbatimentoValue,
-    valor_ultima_parcela_extenso: reaisPorExtenso(termo.valor_ultima_parcela_centavos),
+    valor_ultima_parcela_extenso: reaisPorExtenso(parcelamentoDoc.valorUltima),
 
     // ── Só COMPLEMENTAR ───────────────────────────────────────────────────
     // honorarios_abatimento = só o abatimento novo (valor_total do cálculo).
