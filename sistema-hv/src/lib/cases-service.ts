@@ -607,6 +607,16 @@ export async function createComercialCaseAndGenerateProcuracao(
     { skipProcuracaoPrep: true },
   );
 
+  // 1.1) Entra no funil COMERCIAL (funil de entrada): carimba
+  //      `aguardando_assinatura_at` → o caso passa a aparecer em
+  //      listComercialCases e SOME do Kanban operacional (que esconde quem tem
+  //      esse campo). O envio ao ZapSign continua sendo ação separada na ficha.
+  await sb
+    .from("system_cases")
+    .update({ aguardando_assinatura_at: new Date().toISOString() })
+    .eq("id", created.id)
+    .is("aguardando_assinatura_at", null);
+
   // 2) Complementa os valores revisados com o autofill do caso já criado
   //    (ex.: código do caso, que só passa a existir agora). Os valores do
   //    usuário têm prioridade — só preenchemos o que ficou vazio.
@@ -647,10 +657,11 @@ export async function createComercialCaseAndGenerateProcuracao(
   };
   await upsertCaseHonorarios(created.id, created.organization_id, honorarios, triggeredBy);
 
-  // 3) Gera → finaliza (PDF na pasta do caso). Import dinâmico evita ciclo.
-  //    O envio ao ZapSign é uma ação separada na ficha do caso.
-  const { generateCaseDocumentFromTemplate, finalizeCaseDocument } =
-    await import("./case-documents-service");
+  // 3) Gera o documento EDITÁVEL (Google Docs) — NÃO finaliza aqui. O usuário
+  //    valida/edita o "Word" na tela e só então finaliza (PDF na pasta do caso).
+  //    A finalização + envio ao ZapSign são ações separadas (na ficha do caso ou
+  //    no próprio diálogo de procuração). Import dinâmico evita ciclo.
+  const { generateCaseDocumentFromTemplate } = await import("./case-documents-service");
 
   const gen = await generateCaseDocumentFromTemplate({
     caseId: created.id,
@@ -660,9 +671,7 @@ export async function createComercialCaseAndGenerateProcuracao(
     triggeredBy,
   });
 
-  const doc = await finalizeCaseDocument(gen.doc.id, triggeredBy);
-
-  return { case: created, doc };
+  return { case: created, doc: gen.doc };
 }
 
 // ----------------------------------------------------------------------------

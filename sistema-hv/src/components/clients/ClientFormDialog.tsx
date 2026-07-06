@@ -872,7 +872,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               />
 
               <div>
-                <FormLabel>Tags (pesquisa no CRM)</FormLabel>
+                <div className="text-sm font-medium leading-none mb-1.5">Tags (pesquisa no CRM)</div>
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {TAGS_MEDICAS.map((t) => {
                     const active = tags.includes(t);

@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, ExternalLink, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
+import { useFinalizeCaseDocument } from "@/hooks/useCaseDocuments";
 import { useCreateComercialProcuracao, usePreviewProcuracao } from "@/hooks/useCases";
 import { useDocumentTemplates } from "@/hooks/useDocumentTemplates";
 import { useServiceTypes } from "@/hooks/usePipeline";
@@ -42,6 +43,14 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   presetClientId?: string;
 };
+
+// Dados do documento gerado, para abrir o editor (Word) e validar.
+type EditorState = { docId: string; googleDocId: string; caseId: string; caseCode: string };
+
+// URL de edição embutível do Google Docs (barra de ferramentas completa).
+function editUrl(googleDocId: string): string {
+  return `https://docs.google.com/document/d/${googleDocId}/edit?rm=embedded`;
+}
 
 // Fluxo DEDICADO de Procuração (separado do Caso). Escolhe cliente + tipo +
 // modelo de procuração, revisa os campos <...> preenchidos com o cadastro e gera
@@ -59,6 +68,7 @@ export function ProcuracaoFormDialog({ open, onOpenChange, presetClientId }: Pro
   const [clientPopOpen, setClientPopOpen] = useState(false);
   const [procPopOpen, setProcPopOpen] = useState(false);
   const [step, setStep] = useState<"form" | "review">("form");
+  const [editor, setEditor] = useState<EditorState | null>(null);
 
   const { data: templates } = useDocumentTemplates(caseType);
   const selectedClient = (clients ?? []).find((c) => c.id === clientId);
@@ -72,6 +82,7 @@ export function ProcuracaoFormDialog({ open, onOpenChange, presetClientId }: Pro
       setMunicipio("");
       setResponsavel("");
       setStep("form");
+      setEditor(null);
     }
   }, [open, presetClientId, serviceTypes]);
 
@@ -87,14 +98,16 @@ export function ProcuracaoFormDialog({ open, onOpenChange, presetClientId }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
-        {step === "review" ? (
+      <DialogContent className={editor ? "max-w-5xl w-[95vw]" : "sm:max-w-[520px]"}>
+        {editor ? (
+          <ProcuracaoEditorStep editor={editor} onClose={() => onOpenChange(false)} />
+        ) : step === "review" ? (
           <ProcuracaoReviewStep
             caseData={caseData}
             templateId={templateId}
             templateName={selectedTemplate?.name ?? "Procuração"}
             onBack={() => setStep("form")}
-            onClose={() => onOpenChange(false)}
+            onGenerated={setEditor}
           />
         ) : (
           <>
@@ -289,13 +302,13 @@ function ProcuracaoReviewStep({
   templateId,
   templateName,
   onBack,
-  onClose,
+  onGenerated,
 }: {
   caseData: CaseCreateInput;
   templateId: string;
   templateName: string;
   onBack: () => void;
-  onClose: () => void;
+  onGenerated: (editor: EditorState) => void;
 }) {
   const preview = usePreviewProcuracao({
     clientId: caseData.client_id,
@@ -342,10 +355,14 @@ function ProcuracaoReviewStep({
         values: nonEmpty,
         honorarios,
       });
-      toast.success(
-        `Caso ${res.case.case_code} criado no Comercial — procuração gerada e disponível na ficha do caso para enviar ao ZapSign.`,
-      );
-      onClose();
+      const doc = res.doc as { id: string; google_doc_id: string | null };
+      toast.success(`Caso ${res.case.case_code} criado no Comercial — valide a procuração.`);
+      onGenerated({
+        docId: doc.id,
+        googleDocId: doc.google_doc_id ?? "",
+        caseId: res.case.id,
+        caseCode: res.case.case_code,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao gerar a procuração");
     }
@@ -357,8 +374,8 @@ function ProcuracaoReviewStep({
         <DialogTitle>Preencher procuração</DialogTitle>
         <DialogDescription>
           {templateName} — confira os campos preenchidos com os dados do cliente. Edite o que
-          precisar; os vazios você completa à mão. Ao confirmar, o cliente entra no Comercial e a
-          procuração fica na ficha do caso para enviar ao ZapSign.
+          precisar; os vazios você completa à mão. Ao confirmar, o cliente entra no Comercial e o
+          documento abre em formato Word para você validar/editar antes de enviar ao ZapSign.
         </DialogDescription>
       </DialogHeader>
 
@@ -431,6 +448,83 @@ function ProcuracaoReviewStep({
         >
           {gerar.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
           {gerar.isPending ? "Gerando…" : "Gerar procuração"}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Etapa 3 — Editor (Word na tela): abre o Google Docs editável para o usuário
+// VALIDAR/editar a procuração. Ao concluir, finaliza (PDF na pasta do caso); o
+// envio ao ZapSign é feito na ficha do caso. Pode fechar e validar depois (o
+// documento fica "em edição" na ficha).
+// --------------------------------------------------------------------------
+function ProcuracaoEditorStep({
+  editor,
+  onClose,
+}: {
+  editor: EditorState;
+  onClose: () => void;
+}) {
+  const finalize = useFinalizeCaseDocument(editor.caseId);
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Procuração {editor.caseCode} — validar</DialogTitle>
+        <DialogDescription>
+          Confira e edite o documento em formato Word (Google Docs). Ao concluir, ele é finalizado
+          (PDF na pasta do caso) e fica pronto para enviar ao ZapSign na ficha do caso.
+        </DialogDescription>
+      </DialogHeader>
+
+      {editor.googleDocId ? (
+        <>
+          <div className="flex items-center justify-end mb-2">
+            <a
+              href={editUrl(editor.googleDocId)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--gold-700)] hover:underline text-sm inline-flex items-center gap-1"
+            >
+              <ExternalLink size={13} /> Abrir em nova aba (tela cheia)
+            </a>
+          </div>
+          <iframe
+            src={editUrl(editor.googleDocId)}
+            title="Procuração"
+            className="w-full rounded-md border border-[var(--border)]"
+            style={{ height: "68vh" }}
+            allow="clipboard-read; clipboard-write"
+          />
+        </>
+      ) : (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Documento gerado, mas sem editor disponível. Abra a procuração na ficha do caso (aba
+          Documentos) para editar.
+        </div>
+      )}
+
+      <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+        <Button type="button" variant="outline" onClick={onClose} disabled={finalize.isPending}>
+          Fechar (validar depois)
+        </Button>
+        <Button
+          type="button"
+          disabled={finalize.isPending}
+          onClick={async () => {
+            try {
+              await finalize.mutateAsync(editor.docId);
+              toast.success("Procuração finalizada — pronta para enviar ao ZapSign na ficha do caso");
+              onClose();
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Falha ao finalizar");
+            }
+          }}
+        >
+          {finalize.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
+          {finalize.isPending ? "Concluindo…" : "Concluir"}
         </Button>
       </DialogFooter>
     </>
