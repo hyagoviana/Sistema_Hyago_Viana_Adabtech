@@ -152,6 +152,9 @@ export const professionalDataSchema = z
   .object({
     crm_numero: textOptional(20),
     crm_uf: ufOptional,
+    // RG — órgão emissor (ex.: SSP/BA). Guardado no JSONB professional_data para
+    // não exigir migração de coluna.
+    rg_orgao: textOptional(20),
     oab_numero: textOptional(20),
     oab_uf: ufOptional,
     vinculo_institucional: textOptional(100), // ex.: ANMR, AMPB

@@ -239,7 +239,7 @@ function FinanceiroKanban({
         }
         aside={
           <div className="flex items-center gap-2">
-            <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
+            <Btn onClick={() => setEditorOpen(true)}>
               <Settings2 size={14} />
               Editar etapas
             </Btn>

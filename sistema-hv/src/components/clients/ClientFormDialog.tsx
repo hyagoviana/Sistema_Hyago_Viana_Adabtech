@@ -53,7 +53,43 @@ type Props = {
   client?: Client | null;
 };
 
-const TIPOS = ["Médico", "Dentista", "Enfermeiro", "Outro profissional", "Pessoa jurídica"];
+// Hyago 2 (2026-07-06): TIPO passa a ser Médico / Previdenciário / Outro.
+const TIPOS = ["Médico", "Previdenciário", "Outro"];
+
+// Especialidades médicas — lista FIXA para padronizar a busca no CRM (Hyago 2).
+const ESPECIALIDADES = [
+  "Clínica Médica",
+  "Cardiologia",
+  "Pediatria",
+  "Ginecologia e Obstetrícia",
+  "Ortopedia e Traumatologia",
+  "Anestesiologia",
+  "Cirurgia Geral",
+  "Dermatologia",
+  "Psiquiatria",
+  "Radiologia e Diagnóstico por Imagem",
+  "Oftalmologia",
+  "Neurologia",
+  "Endocrinologia e Metabologia",
+  "Gastroenterologia",
+  "Pneumologia",
+  "Nefrologia",
+  "Urologia",
+  "Oncologia Clínica",
+  "Medicina de Família e Comunidade",
+  "Medicina Intensiva",
+  "Otorrinolaringologia",
+  "Infectologia",
+  "Reumatologia",
+  "Hematologia e Hemoterapia",
+  "Medicina do Trabalho",
+  "Geriatria",
+  "Cirurgia Vascular",
+  "Mastologia",
+  "Patologia",
+  "Medicina Legal e Perícia Médica",
+  "Outra",
+];
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -84,6 +120,7 @@ function pickAddress(address: Client["address"]): typeof EMPTY_ADDRESS {
 const EMPTY_PROFESSIONAL = {
   crm_numero: "",
   crm_uf: "",
+  rg_orgao: "",
   oab_numero: "",
   oab_uf: "",
   vinculo_institucional: "",
@@ -98,6 +135,7 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
   return {
     crm_numero: str("crm_numero"),
     crm_uf: str("crm_uf"),
+    rg_orgao: str("rg_orgao"),
     oab_numero: str("oab_numero"),
     oab_uf: str("oab_uf"),
     vinculo_institucional: str("vinculo_institucional"),
@@ -343,6 +381,22 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               )}
             </div>
 
+            {isPF && (
+              <FormField
+                control={form.control}
+                name="professional_data.rg_orgao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Órgão emissor do RG</FormLabel>
+                    <FormControl>
+                      <Input placeholder="SSP/BA" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* Contato — editável futuramente */}
             <div className="grid grid-cols-2 gap-3">
               <FormField
@@ -558,33 +612,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                 />
               </div>
 
-              <div className="grid grid-cols-[1fr_140px] gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.oab_numero"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>OAB</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12345" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.oab_uf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UF da OAB</FormLabel>
-                      <UfSelect value={field.value ?? ""} onChange={field.onChange} includeEmpty />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -605,9 +632,24 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Especialidade</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cardiologia…" {...field} value={field.value ?? ""} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                        value={field.value || "__none__"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[300px]">
+                          <SelectItem value="__none__">—</SelectItem>
+                          {ESPECIALIDADES.map((e) => (
+                            <SelectItem key={e} value={e}>
+                              {e}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

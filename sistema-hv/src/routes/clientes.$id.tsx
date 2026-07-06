@@ -1,9 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { AlertTriangle, ExternalLink, Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, ExternalLink, FileSignature, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
+import { ProcuracaoFormDialog } from "@/components/cases/ProcuracaoFormDialog";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
@@ -55,6 +56,7 @@ function ClienteDetalhe() {
   const resyncMutation = useResyncDrive();
   const deleteMutation = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [procOpen, setProcOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
@@ -124,6 +126,9 @@ function ClienteDetalhe() {
           </h1>
         </div>
         <div className="flex gap-2 self-start mt-2">
+          <Button size="sm" onClick={() => setProcOpen(true)}>
+            <FileSignature size={14} className="mr-1.5" /> Nova procuração
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil size={14} className="mr-1.5" /> Editar
           </Button>
@@ -251,6 +256,7 @@ function ClienteDetalhe() {
       <NotesBlock target="client" entityId={cliente.id} />
 
       <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
+      <ProcuracaoFormDialog open={procOpen} onOpenChange={setProcOpen} presetClientId={cliente.id} />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
@@ -299,13 +305,12 @@ function ProfessionalCard({ data, personType }: { data: unknown; personType: str
       : {};
   const s = (k: string) => (typeof p[k] === "string" && p[k] ? (p[k] as string) : null);
   const crm = s("crm_numero") ? `${s("crm_numero")}${s("crm_uf") ? `/${s("crm_uf")}` : ""}` : null;
-  const oab = s("oab_numero") ? `${s("oab_numero")}${s("oab_uf") ? `/${s("oab_uf")}` : ""}` : null;
   const programas = Array.isArray(p.programas) ? (p.programas as string[]) : [];
 
   const rows: Array<[string, string]> = [];
   if (personType) rows.push(["Pessoa", personType === "PJ" ? "Pessoa jurídica" : "Pessoa física"]);
   if (crm) rows.push(["CRM", crm]);
-  if (oab) rows.push(["OAB", oab]);
+  if (s("rg_orgao")) rows.push(["Órgão emissor (RG)", s("rg_orgao")!]);
   if (s("vinculo_institucional")) rows.push(["Vínculo institucional", s("vinculo_institucional")!]);
   if (s("especialidade")) rows.push(["Especialidade", s("especialidade")!]);
 
