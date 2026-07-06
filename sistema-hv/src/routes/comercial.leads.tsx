@@ -51,15 +51,17 @@ function LeadsPage() {
 
 function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: string }) => void }) {
   const { data: types, isLoading } = useServiceTypes();
-  useDocumentTitle("Leads");
+  useDocumentTitle("Comercial");
 
   return (
     <div className="page-container !pb-10">
-      <Breadcrumb items={[{ label: "Comercial", to: "/comercial" }, { label: "Leads" }]} />
+      <Breadcrumb
+        items={[{ label: "Inteligência", to: "/comercial" }, { label: "Comercial" }]}
+      />
       <PageHeader
-        eyebrow="Comercial"
-        title="Leads"
-        subtitle="Escolha o tipo de serviço para abrir a esteira de leads."
+        eyebrow="Inteligência"
+        title="Comercial"
+        subtitle="Escolha o tipo de serviço para abrir a pipeline comercial."
       />
 
       {isLoading ? (
@@ -86,7 +88,7 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                 </div>
                 <div>
                   <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
-                  <div className="text-[12px] text-muted-foreground">Abrir esteira de leads →</div>
+                  <div className="text-[12px] text-muted-foreground">Abrir pipeline comercial →</div>
                 </div>
               </div>
             </button>
@@ -115,21 +117,36 @@ function LeadsKanban({
   useDocumentTitle(
     resolveEntityLabel(serviceType.name, {
       loading: false,
-      notFoundLabel: "Leads",
+      notFoundLabel: "Comercial",
     }),
   );
 
   const items = leads ?? [];
 
+  // S9-08 — a etapa terminal comercial (stage_role='won', slug 'GANHO') é exibida
+  // como "Procuração assinada" no modelo novo. Preferimos o `label` da etapa
+  // (editável no funil); se ainda for o default "Ganho"/"GANHO", aplicamos o
+  // rótulo do modelo. NUNCA alteramos o slug (gatilhos S9-03/S9-05 dependem dele).
+  const displayStageLabel = (stage: { slug: string; label: string; stage_role: string }): string => {
+    if (stage.stage_role === "won") {
+      const isDefault = ["ganho", "GANHO"].includes(stage.label.trim().toLowerCase())
+        || stage.label.trim().toUpperCase() === "GANHO";
+      return isDefault ? "Procuração assinada" : stage.label;
+    }
+    return stage.label;
+  };
+
   const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
     id: s.slug,
-    label: s.label,
+    label: displayStageLabel(s),
     toneColor: roleColor(s.stage_role),
   }));
 
   // Rótulo da etapa comercial atual (para a lista).
-  const stageLabel = (slug: string | null): string =>
-    (stages ?? []).find((s) => s.slug === slug)?.label ?? "—";
+  const stageLabel = (slug: string | null): string => {
+    const s = (stages ?? []).find((st) => st.slug === slug);
+    return s ? displayStageLabel(s) : "—";
+  };
 
   function handleMove(id: string, toSlug: string) {
     const stage = (stages ?? []).find((s) => s.slug === toSlug);
@@ -137,7 +154,7 @@ function LeadsKanban({
     move.mutate(
       { caseId: id, stageId: stage.id },
       {
-        onSuccess: () => toast.success(`Movido pra ${stage.label}`),
+        onSuccess: () => toast.success(`Movido pra ${displayStageLabel(stage)}`),
         onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao mover"),
       },
     );
@@ -149,18 +166,18 @@ function LeadsKanban({
     <div className="px-5 lg:px-7 pt-7 pb-10">
       <Breadcrumb
         items={[
-          { label: "Comercial", to: "/comercial" },
-          { label: "Leads" },
+          { label: "Inteligência", to: "/comercial" },
+          { label: "Comercial", to: "/comercial/leads" },
           { label: serviceType.name },
         ]}
       />
       <PageHeader
-        eyebrow="Esteira de leads"
+        eyebrow="Pipeline comercial"
         title={serviceType.name}
         subtitle={
           isLoading || stagesLoading
             ? "Carregando…"
-            : `${total} lead${total === 1 ? "" : "s"} em ${columns.length} etapas.`
+            : `${total} caso${total === 1 ? "" : "s"} no comercial em ${columns.length} etapas.`
         }
         aside={
           <div className="flex items-center gap-2">
@@ -257,7 +274,10 @@ function LeadsList({
   if (leads.length === 0) {
     return (
       <Alert>
-        <AlertDescription>Nenhum lead nesta esteira.</AlertDescription>
+        <AlertDescription>
+          Nenhum caso no comercial ainda. Casos entram aqui quando a procuração é enviada para
+          assinatura.
+        </AlertDescription>
       </Alert>
     );
   }

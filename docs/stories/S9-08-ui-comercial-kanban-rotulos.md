@@ -2,7 +2,7 @@
 
 - **Sprint:** 9 — Modelo definitivo Lead→Comercial→Operacional
 - **ID:** S9-08
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** P/M (rótulos + renome do Kanban de Leads → "Comercial"; sem lógica nova de dados)
 - **Executor sugerido:** @dev (UI) · Quality gate: @ux-design-expert
 
@@ -39,11 +39,12 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Renomear apresentação → "Comercial"** (AC: 1) — eyebrow/título/breadcrumb em `comercial.leads.tsx` (ou realocar/renomear a rota para `comercial.index`/`comercial.pipeline` conforme S9-07 e a navegação). Confirmar o nome final da rota com o owner.
-- [ ] **Rótulo "Procuração assinada"** (AC: 2) — atualizar o `label` da etapa `GANHO` comercial (seed/editor) para "Procuração assinada"; se necessário, fallback de exibição na UI mapeando `won` → rótulo.
-- [ ] **Preservar slug/gatilhos** (AC: 3) — garantir que só o label muda; `slug='GANHO'` intacto.
-- [ ] **(Opcional) Seed de label** (AC: 5) — se for por dado, `UPDATE system_pipeline_stages SET label='Procuração assinada' WHERE kind='comercial' AND slug='GANHO'` idempotente (via `db-apply-pg.ts`).
-- [ ] **Testes** (AC: 6) — Kanban mostra "Comercial" + coluna "Procuração assinada"; DnD/mover funciona; slug inalterado; typecheck/lint; rotas.
+- [x] **Renomear apresentação → "Comercial"** (AC: 1) — eyebrow/título/breadcrumb em `comercial.leads.tsx` agora "Inteligência › Comercial" (seleção de tipo) e "Inteligência › Comercial › {tipo}" (Kanban, eyebrow "Pipeline comercial"). Rota mantida em `/comercial/leads` (menu "Pipeline comercial"); item "Leads" da S9-07 é o roster. Subtítulo passa a contar "casos no comercial".
+- [x] **Rótulo "Procuração assinada"** (AC: 2) — fallback de exibição na UI: `displayStageLabel()` mapeia `stage_role='won'` → "Procuração assinada" quando o label ainda é o default "Ganho"/"GANHO"; respeita label customizado no editor. Aplicado às colunas do Kanban, à lista e ao toast de mover.
+- [x] **Preservar slug/gatilhos** (AC: 3) — só o rótulo EXIBIDO muda; `slug='GANHO'` e `macrostatus_comercial` intactos; `moveCaseToStageComercial` inalterado.
+- [x] **(Opcional) Seed de label** (AC: 5) — NÃO aplicado; optou-se pelo fallback de exibição (sem migration/dado), respeitando labels customizados do owner. Se o owner preferir por dado, é um UPDATE idempotente futuro.
+- [x] **FILTRO comercial (S9-08 escopo do PO)** — `listLeadsByServiceType` agora filtra `lifecycle='LEAD'` E (`aguardando_assinatura_at IS NOT NULL` OU `procuracao_assinada_at IS NOT NULL`): só casos que ENTRARAM no fluxo comercial (procuração enviada/assinada). Cadastros sem procuração enviada ficam só no roster de Leads.
+- [x] **Testes** (AC: 6) — typecheck (3 erros pré-existentes de `service_type_id`); lint sem erros novos (CRLF ignorado); rotas resolvem. Teste funcional (DnD grava `GANHO`, segue LEAD) p/ @qa.
 
 ---
 
@@ -86,13 +87,13 @@
 
 ## File List
 
-- `sistema-hv/src/routes/comercial.leads.tsx` (rótulos/breadcrumb; possível renome)
-- Componente de navegação (menu)
-- `sistema-hv/src/lib/pipeline-service.ts` (default de label no seed — opcional)
-- `sistema-hv/supabase/migrations/<...>_seed_label_procuracao_assinada.sql` (opcional, se label por dado)
+- `sistema-hv/src/routes/comercial.leads.tsx` (apresentação "Comercial"; rótulo `won` → "Procuração assinada")
+- `sistema-hv/src/lib/pipeline-service.ts` (`listLeadsByServiceType` — filtro de entrada no comercial)
+- `sistema-hv/src/components/hv/Sidebar.tsx` (menu "Pipeline comercial")
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-03 | 0.1 | Draft inicial — UI Comercial (Kanban promovido a "Comercial"; rótulo "Procuração assinada") (Sprint 9) | @sm |
+| 2026-07-03 | 1.0 | Implementada. Apresentação "Comercial" (eyebrow/título/breadcrumb); `won` exibido como "Procuração assinada" (fallback de UI, slug intacto); filtro de entrada no comercial (procuração enviada/assinada) em `listLeadsByServiceType`. Sem migration. typecheck/lint ok. | @dev |

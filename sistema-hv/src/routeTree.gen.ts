@@ -45,6 +45,7 @@ import { Route as PainelAssociadosRouteImport } from './routes/painel.associados
 import { Route as MarketingConteudosRouteImport } from './routes/marketing.conteudos'
 import { Route as MarketingCalendarioRouteImport } from './routes/marketing.calendario'
 import { Route as MarketingBancoMidiaRouteImport } from './routes/marketing.banco-midia'
+import { Route as InteligenciaLeadsRouteImport } from './routes/inteligencia.leads'
 import { Route as DashboardsWhatsappRouteImport } from './routes/dashboards.whatsapp'
 import { Route as DashboardsOperacionalRouteImport } from './routes/dashboards.operacional'
 import { Route as DashboardsMarketingRouteImport } from './routes/dashboards.marketing'
@@ -257,6 +258,11 @@ const MarketingBancoMidiaRoute = MarketingBancoMidiaRouteImport.update({
   path: '/marketing/banco-midia',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InteligenciaLeadsRoute = InteligenciaLeadsRouteImport.update({
+  id: '/inteligencia/leads',
+  path: '/inteligencia/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardsWhatsappRoute = DashboardsWhatsappRouteImport.update({
   id: '/dashboards/whatsapp',
   path: '/dashboards/whatsapp',
@@ -444,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/dashboards/marketing': typeof DashboardsMarketingRoute
   '/dashboards/operacional': typeof DashboardsOperacionalRoute
   '/dashboards/whatsapp': typeof DashboardsWhatsappRoute
+  '/inteligencia/leads': typeof InteligenciaLeadsRoute
   '/marketing/banco-midia': typeof MarketingBancoMidiaRoute
   '/marketing/calendario': typeof MarketingCalendarioRoute
   '/marketing/conteudos': typeof MarketingConteudosRoute
@@ -511,6 +518,7 @@ export interface FileRoutesByTo {
   '/dashboards/marketing': typeof DashboardsMarketingRoute
   '/dashboards/operacional': typeof DashboardsOperacionalRoute
   '/dashboards/whatsapp': typeof DashboardsWhatsappRoute
+  '/inteligencia/leads': typeof InteligenciaLeadsRoute
   '/marketing/banco-midia': typeof MarketingBancoMidiaRoute
   '/marketing/calendario': typeof MarketingCalendarioRoute
   '/marketing/conteudos': typeof MarketingConteudosRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/dashboards/marketing': typeof DashboardsMarketingRoute
   '/dashboards/operacional': typeof DashboardsOperacionalRoute
   '/dashboards/whatsapp': typeof DashboardsWhatsappRoute
+  '/inteligencia/leads': typeof InteligenciaLeadsRoute
   '/marketing/banco-midia': typeof MarketingBancoMidiaRoute
   '/marketing/calendario': typeof MarketingCalendarioRoute
   '/marketing/conteudos': typeof MarketingConteudosRoute
@@ -650,6 +659,7 @@ export interface FileRouteTypes {
     | '/dashboards/marketing'
     | '/dashboards/operacional'
     | '/dashboards/whatsapp'
+    | '/inteligencia/leads'
     | '/marketing/banco-midia'
     | '/marketing/calendario'
     | '/marketing/conteudos'
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/dashboards/marketing'
     | '/dashboards/operacional'
     | '/dashboards/whatsapp'
+    | '/inteligencia/leads'
     | '/marketing/banco-midia'
     | '/marketing/calendario'
     | '/marketing/conteudos'
@@ -785,6 +796,7 @@ export interface FileRouteTypes {
     | '/dashboards/marketing'
     | '/dashboards/operacional'
     | '/dashboards/whatsapp'
+    | '/inteligencia/leads'
     | '/marketing/banco-midia'
     | '/marketing/calendario'
     | '/marketing/conteudos'
@@ -854,6 +866,7 @@ export interface RootRouteChildren {
   DashboardsMarketingRoute: typeof DashboardsMarketingRoute
   DashboardsOperacionalRoute: typeof DashboardsOperacionalRoute
   DashboardsWhatsappRoute: typeof DashboardsWhatsappRoute
+  InteligenciaLeadsRoute: typeof InteligenciaLeadsRoute
   MarketingBancoMidiaRoute: typeof MarketingBancoMidiaRoute
   MarketingCalendarioRoute: typeof MarketingCalendarioRoute
   MarketingConteudosRoute: typeof MarketingConteudosRoute
@@ -1138,6 +1151,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/banco-midia'
       fullPath: '/marketing/banco-midia'
       preLoaderRoute: typeof MarketingBancoMidiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inteligencia/leads': {
+      id: '/inteligencia/leads'
+      path: '/inteligencia/leads'
+      fullPath: '/inteligencia/leads'
+      preLoaderRoute: typeof InteligenciaLeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboards/whatsapp': {
@@ -1437,6 +1457,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardsMarketingRoute: DashboardsMarketingRoute,
   DashboardsOperacionalRoute: DashboardsOperacionalRoute,
   DashboardsWhatsappRoute: DashboardsWhatsappRoute,
+  InteligenciaLeadsRoute: InteligenciaLeadsRoute,
   MarketingBancoMidiaRoute: MarketingBancoMidiaRoute,
   MarketingCalendarioRoute: MarketingCalendarioRoute,
   MarketingConteudosRoute: MarketingConteudosRoute,

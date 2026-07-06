@@ -10,6 +10,7 @@ import {
   createComercialCaseAndGenerateProcuracao,
   enviarConferenciaFin,
   generateContratoFromTemplate,
+  generateProcuracaoFromTemplate,
   getCase,
   getConferenciaFinPendente,
   liberarCasoComercial,
@@ -132,6 +133,30 @@ export const generateContratoFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handle((userId) =>
       generateContratoFromTemplate(data.case_id, data.template_id ?? null, data.client_id, userId),
+    ),
+  );
+
+// S9-09 — gera a PROCURAÇÃO do caso (doc_kind='procuracao') a partir de um modelo,
+// idempotente por caso. O envio ao ZapSign (RPC genérico) carimba
+// aguardando_assinatura_at (ramo de procuração), colocando o caso no comercial.
+const generateProcuracaoSchema = z.object({
+  case_id: z.string().uuid(),
+  client_id: z.string().uuid(),
+  template_id: z.string().uuid(),
+  values: z.record(z.string(), z.string()).optional(),
+});
+
+export const generateProcuracaoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => generateProcuracaoSchema.parse(data))
+  .handler(async ({ data }) =>
+    handle((userId) =>
+      generateProcuracaoFromTemplate(
+        data.case_id,
+        data.template_id,
+        data.client_id,
+        userId,
+        data.values,
+      ),
     ),
   );
 

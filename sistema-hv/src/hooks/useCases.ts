@@ -9,6 +9,8 @@ import {
   createCaseFn,
   createComercialProcuracaoFn,
   enviarConferenciaFinFn,
+  generateContratoFn,
+  generateProcuracaoFn,
   getCaseFn,
   getConferenciaFinPendenteFn,
   liberarCasoFn,
@@ -65,6 +67,42 @@ export function useCreateCase() {
   return useMutation({
     mutationFn: (input: CaseCreateInput) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+// S9-09 — gera (idempotente) a PROCURAÇÃO do caso (doc_kind='procuracao'). O envio
+// ao ZapSign carimba aguardando_assinatura_at (ramo de procuração) → caso entra no
+// comercial. Aceita valores revisados (override do autofill).
+export function useGenerateProcuracao(caseId: string) {
+  const fn = useServerFn(generateProcuracaoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      case_id: string;
+      client_id: string;
+      template_id: string;
+      values?: Record<string, string>;
+    }) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
+    },
+  });
+}
+
+// S9-09 — gera (idempotente) o CONTRATO do caso (doc_kind='contrato'). Degrada
+// 424 no serviço quando não há modelo de contrato cadastrado. Invalida a lista de
+// documentos do caso para o novo doc aparecer.
+export function useGenerateContrato(caseId: string) {
+  const fn = useServerFn(generateContratoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { case_id: string; client_id: string; template_id?: string | null }) =>
+      fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
+    },
   });
 }
 

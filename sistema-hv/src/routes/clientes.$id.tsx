@@ -237,7 +237,13 @@ function ClienteDetalhe() {
 
       <OrnamentalDivider />
 
-      <ClientCasesSection clientId={cliente.id} />
+      <ClientCasesSection
+        clientId={cliente.id}
+        clientName={cliente.full_name}
+        clientCpf={cliente.cpf_cnpj ?? undefined}
+        clientEmail={cliente.email ?? undefined}
+        clientPhone={cliente.phone ?? undefined}
+      />
 
       <OrnamentalDivider />
 

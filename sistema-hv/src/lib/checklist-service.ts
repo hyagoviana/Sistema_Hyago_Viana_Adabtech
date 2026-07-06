@@ -199,7 +199,195 @@ export async function listCaseChecklistItems(caseId: string) {
     .order("stage_slug")
     .order("created_at");
   if (error) throw new ChecklistServiceError(error.message, 500);
-  return data ?? [];
+
+  // Normaliza itens AD-HOC (S9-11): quando def_id IS NULL, o item carrega a
+  // própria definição (label/required/ordem). Projetamos num `def` sintético para
+  // a UI consumir com a mesma forma dos itens herdados do modelo, e marcamos
+  // is_adhoc p/ diferenciar visualmente e liberar editar/excluir por caso.
+  return (data ?? []).map((row) => {
+    const r = row as typeof row & {
+      def_id: string | null;
+      label: string | null;
+      required: boolean;
+      ordem: number;
+    };
+    const isAdhoc = r.def_id == null;
+    if (isAdhoc) {
+      return {
+        ...r,
+        is_adhoc: true as const,
+        def: {
+          key: `adhoc:${r.id}`,
+          label: r.label ?? "—",
+          ordem: r.ordem ?? 0,
+          required: r.required ?? false,
+          expected_doc_pattern: null,
+        },
+      };
+    }
+    return { ...r, is_adhoc: false as const };
+  });
+}
+
+// ----------------------------------------------------------------------------
+// ITENS AD-HOC POR CASO (S9-11) — critérios EXTRAS que valem SÓ p/ este caso.
+//   - def_id IS NULL; a definição (label/required/ordem) vive no próprio item.
+//   - herdados do modelo (def_id NOT NULL) continuam vindo do editor de funil e
+//     NÃO são editáveis por caso (só marcáveis). Ad-hoc pode criar/editar/excluir.
+//   - o gate (op/fin) já considera required ad-hoc (migration 20260709000001);
+//     por isso, após criar/editar/excluir, disparamos o(s) gate(s) da etapa —
+//     remover/desobrigar um required ad-hoc pendente pode liberar o avanço.
+// ----------------------------------------------------------------------------
+
+// Carrega o caso (org + tipo + macrostatus) para validar a etapa do ad-hoc.
+async function loadCaseForAdhoc(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, macrostatus_op, macrostatus_fin, service_type_id, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new ChecklistServiceError("Caso não encontrado", 404);
+  return caso;
+}
+
+// Dispara o(s) gate(s) (op e/ou fin) da etapa informada. Cada gate só promove a
+// partir da etapa esperada (guarda WHERE macrostatus_* = esperado) → seguro chamar.
+async function dispararGatesDaEtapa(
+  caseId: string,
+  serviceTypeId: string | null,
+  stageSlug: string,
+  userId?: string,
+) {
+  const kinds = serviceTypeId
+    ? await stageKindsForSlug(serviceTypeId, stageSlug)
+    : new Set<"op" | "fin">();
+  if (kinds.size === 0 || kinds.has("op")) await avancarSeChecklistOk(caseId, userId);
+  if (kinds.has("fin")) await avancarFinSeOk(caseId, userId);
+}
+
+export async function createAdhocChecklistItem(input: {
+  caseId: string;
+  stageSlug: string;
+  label: string;
+  required?: boolean;
+}) {
+  const sb = getSupabaseAdmin();
+  const label = input.label.trim();
+  if (!label) throw new ChecklistServiceError("Informe o nome do critério", 400);
+
+  const caso = await loadCaseForAdhoc(input.caseId);
+
+  // ordem = próximo índice entre os itens (herdados + ad-hoc) da etapa, p/ o
+  // novo critério aparecer ao final da lista da etapa.
+  const { data: last } = await sb
+    .from("system_case_checklist_items")
+    .select("ordem")
+    .eq("case_id", input.caseId)
+    .eq("stage_slug", input.stageSlug)
+    .is("deleted_at", null)
+    .order("ordem", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const ordem = ((last?.ordem as number | undefined) ?? -1) + 1;
+
+  const { data, error } = await sb
+    .from("system_case_checklist_items")
+    .insert({
+      organization_id: caso.organization_id,
+      case_id: input.caseId,
+      def_id: null,
+      stage_slug: input.stageSlug,
+      label,
+      required: input.required ?? true,
+      ordem,
+      source: "manual",
+      done: false,
+    })
+    .select()
+    .single();
+  if (error || !data)
+    throw new ChecklistServiceError(error?.message ?? "Falha ao criar critério", 500);
+
+  return data;
+}
+
+// Edita label/required de um item AD-HOC (def_id IS NULL). NUNCA edita herdado.
+export async function updateAdhocChecklistItem(
+  itemId: string,
+  patch: { label?: string; required?: boolean },
+  userId?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  const { data: item, error: iErr } = await sb
+    .from("system_case_checklist_items")
+    .select("id, case_id, stage_slug, def_id")
+    .eq("id", itemId)
+    .is("deleted_at", null)
+    .single();
+  if (iErr || !item) throw new ChecklistServiceError("Critério não encontrado", 404);
+  if (item.def_id != null)
+    throw new ChecklistServiceError(
+      "Critério herdado do modelo não pode ser editado neste caso. Edite no editor de funil.",
+      409,
+    );
+
+  const clean: Record<string, unknown> = {};
+  if (patch.label !== undefined) {
+    const label = patch.label.trim();
+    if (!label) throw new ChecklistServiceError("Informe o nome do critério", 400);
+    clean.label = label;
+  }
+  if (patch.required !== undefined) clean.required = patch.required;
+
+  const { data, error } = await sb
+    .from("system_case_checklist_items")
+    .update(clean as never)
+    .eq("id", itemId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data)
+    throw new ChecklistServiceError(error?.message ?? "Falha ao editar critério", 500);
+
+  // Tornar não-obrigatório um required pendente pode liberar o avanço.
+  const caso = await loadCaseForAdhoc(item.case_id);
+  await dispararGatesDaEtapa(item.case_id, caso.service_type_id, item.stage_slug, userId);
+
+  return data;
+}
+
+// Soft-delete de um item AD-HOC (def_id IS NULL). NUNCA exclui herdado.
+export async function deleteAdhocChecklistItem(itemId: string, userId?: string) {
+  const sb = getSupabaseAdmin();
+
+  const { data: item, error: iErr } = await sb
+    .from("system_case_checklist_items")
+    .select("id, case_id, stage_slug, def_id")
+    .eq("id", itemId)
+    .is("deleted_at", null)
+    .single();
+  if (iErr || !item) throw new ChecklistServiceError("Critério não encontrado", 404);
+  if (item.def_id != null)
+    throw new ChecklistServiceError(
+      "Critério herdado do modelo não pode ser excluído neste caso. Exclua no editor de funil.",
+      409,
+    );
+
+  const { error } = await sb
+    .from("system_case_checklist_items")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", itemId)
+    .is("deleted_at", null);
+  if (error) throw new ChecklistServiceError(error.message, 500);
+
+  // Excluir um required ad-hoc pendente pode liberar o avanço.
+  const caso = await loadCaseForAdhoc(item.case_id);
+  await dispararGatesDaEtapa(item.case_id, caso.service_type_id, item.stage_slug, userId);
+
+  return { ok: true as const, id: itemId };
 }
 
 // ----------------------------------------------------------------------------
@@ -277,7 +465,7 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
   // Carrega o item + a etapa a que pertence + o caso.
   const { data: item, error: iErr } = await sb
     .from("system_case_checklist_items")
-    .select("id, case_id, stage_slug, def_id, organization_id")
+    .select("id, case_id, stage_slug, def_id, required, label, organization_id")
     .eq("id", itemId)
     .is("deleted_at", null)
     .single();
@@ -343,19 +531,30 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
 
     // etapa do item é anterior à atual → ultrapassada.
     if (itemOrdem !== undefined && currentOrdem !== undefined && itemOrdem < currentOrdem) {
-      const { data: def } = await sb
-        .from("system_stage_checklist_defs")
-        .select("required, key")
-        .eq("id", item.def_id)
-        .single();
-      if (def?.required) {
+      // required + rótulo: itens do modelo vêm do def; itens ad-hoc (def_id NULL)
+      // carregam a própria definição na linha (S9-11).
+      let isRequired = false;
+      let itemKey: string | null = null;
+      if (item.def_id != null) {
+        const { data: def } = await sb
+          .from("system_stage_checklist_defs")
+          .select("required, key")
+          .eq("id", item.def_id)
+          .single();
+        isRequired = !!def?.required;
+        itemKey = def?.key ?? null;
+      } else {
+        isRequired = !!item.required;
+        itemKey = item.label ?? null;
+      }
+      if (isRequired) {
         // NÃO regride; grava alerta/evento de inconsistência.
         await sb.from("system_case_events").insert({
           case_id: item.case_id,
           organization_id: caso.organization_id,
           action: "checklist_inconsistente",
           diff: {
-            def_key: def.key,
+            def_key: itemKey,
             stage_slug: item.stage_slug,
             etapa_atual: current,
             kind,

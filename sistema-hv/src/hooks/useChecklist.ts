@@ -3,12 +3,15 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { queryKeys } from "@/lib/queryKeys";
 import {
+  createAdhocChecklistItemFn,
   createChecklistDefFn,
+  deleteAdhocChecklistItemFn,
   listCaseChecklistItemsFn,
   listChecklistDefsFn,
   marcarItemChecklistFn,
   reorderChecklistDefsFn,
   softDeleteChecklistDefFn,
+  updateAdhocChecklistItemFn,
   updateChecklistDefFn,
 } from "@/rpc/checklist";
 
@@ -88,19 +91,57 @@ export function useCaseChecklistItems(caseId: string) {
   });
 }
 
+// Invalidações compartilhadas: itens do caso + caso/timeline/kanban (o gate pode
+// ter avançado a etapa). Reusado por marcar item e pelas mutações ad-hoc (S9-11).
+function invalidateAfterChecklistMutation(
+  qc: ReturnType<typeof useQueryClient>,
+  caseId: string,
+) {
+  qc.invalidateQueries({ queryKey: queryKeys.checklistItems.byCase(caseId) });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
+  qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
+  // Kanban (op/fin/comercial) lê por tipo de serviço → invalida p/ o card pular de coluna.
+  qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+}
+
 export function useMarcarItemChecklist(caseId: string) {
   const fn = useServerFn(marcarItemChecklistFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { itemId: string; done: boolean }) => fn({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.checklistItems.byCase(caseId) });
-      // O gate pode ter avançado a etapa → invalida o caso e a timeline.
-      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) });
-      qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
-      qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
-      // Kanban (op/fin/comercial) lê por tipo de serviço → invalida p/ o card pular de coluna.
-      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
-    },
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// ITENS AD-HOC POR CASO (S9-11) — criar/editar/excluir critérios extras do caso.
+// ----------------------------------------------------------------------------
+export function useCreateAdhocChecklistItem(caseId: string) {
+  const fn = useServerFn(createAdhocChecklistItemFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { stageSlug: string; label: string; required?: boolean }) =>
+      fn({ data: { caseId, ...vars } }),
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+export function useUpdateAdhocChecklistItem(caseId: string) {
+  const fn = useServerFn(updateAdhocChecklistItemFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { itemId: string; patch: { label?: string; required?: boolean } }) =>
+      fn({ data: vars }),
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+export function useDeleteAdhocChecklistItem(caseId: string) {
+  const fn = useServerFn(deleteAdhocChecklistItemFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) => fn({ data: { itemId } }),
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
   });
 }

@@ -273,9 +273,12 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
 }
 
 // ----------------------------------------------------------- Leads (comercial)
-// Lista os leads (casos lifecycle='LEAD') de um tipo de serviço para o Kanban
-// comercial. A fonte de verdade da pipeline de leads é lifecycle='LEAD' (S5-02):
-// casos que viraram CLIENTE/PERDIDO saem daqui automaticamente.
+// Lista os casos de um tipo de serviço que ENTRARAM no fluxo comercial para o
+// Kanban "Comercial" (S9-08). Fonte de verdade: lifecycle='LEAD' (S5-02) — casos
+// que viraram CLIENTE/PERDIDO saem daqui automaticamente — E que já têm
+// procuração ENVIADA (aguardando_assinatura_at) OU ASSINADA (procuracao_assinada_at).
+// Casos que são só cadastro (sem procuração enviada) aparecem apenas no roster de
+// Leads (Inteligência › Leads), NÃO no Kanban Comercial.
 export async function listLeadsByServiceType(serviceTypeId: string) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
@@ -283,6 +286,7 @@ export async function listLeadsByServiceType(serviceTypeId: string) {
     .select("*")
     .eq("service_type_id", serviceTypeId)
     .eq("lifecycle", "LEAD")
+    .or("aguardando_assinatura_at.not.is.null,procuracao_assinada_at.not.is.null")
     .order("created_at", { ascending: false });
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];

@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { CaseFormDialog } from "./CaseFormDialog";
+import { CaseSignActions } from "./CaseSignActions";
 import { Badge } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,21 @@ import {
   type MacroOp,
 } from "@/lib/cases/constants";
 
-type Props = { clientId: string };
+type Props = {
+  clientId: string;
+  clientName?: string;
+  clientCpf?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+};
 
-export function ClientCasesSection({ clientId }: Props) {
+export function ClientCasesSection({
+  clientId,
+  clientName,
+  clientCpf,
+  clientEmail,
+  clientPhone,
+}: Props) {
   const { data, isLoading, isError, error } = useCasesList({ client_id: clientId });
   const [createOpen, setCreateOpen] = useState(false);
   const cases = data ?? [];
@@ -54,17 +67,17 @@ export function ClientCasesSection({ clientId }: Props) {
       ) : (
         <ul className="space-y-2">
           {cases.map((c) => (
-            <li key={c.id}>
-              <Link
-                to="/casos/$id"
-                params={{ id: c.id }}
-                className="card-editorial !p-4 flex items-center gap-4 hover:border-[rgba(30,32,68,0.18)] transition"
-              >
-                <div className="flex-1 min-w-0">
+            <li key={c.id} className="card-editorial !p-4">
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/casos/$id"
+                  params={{ id: c.id }}
+                  className="flex-1 min-w-0 group"
+                >
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
                     {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
                   </span>
-                  <div className="text-[15px] text-[var(--navy)] font-semibold mt-0.5">
+                  <div className="text-[15px] text-[var(--navy)] font-semibold mt-0.5 group-hover:text-[var(--gold-700)] transition-colors">
                     {c.case_code}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
@@ -77,8 +90,29 @@ export function ClientCasesSection({ clientId }: Props) {
                       </span>
                     )}
                   </div>
+                </Link>
+                {/* S9-09 — enviar procuração/contrato direto da ficha do cliente
+                    (por caso). Visível para lead E cliente. */}
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  <CaseSignActions
+                    caseId={c.id}
+                    clientId={clientId}
+                    caseType={c.case_type}
+                    clientName={clientName}
+                    clientCpf={clientCpf}
+                    municipio={c.municipio ?? undefined}
+                    procuracaoAssinada={
+                      !!(c as { procuracao_assinada_at?: string | null }).procuracao_assinada_at
+                    }
+                    autoFillExtra={{
+                      email: clientEmail,
+                      phone: clientPhone,
+                      caseCode: c.case_code,
+                      responsavel: c.responsavel ?? undefined,
+                    }}
+                  />
                 </div>
-              </Link>
+              </div>
             </li>
           ))}
         </ul>

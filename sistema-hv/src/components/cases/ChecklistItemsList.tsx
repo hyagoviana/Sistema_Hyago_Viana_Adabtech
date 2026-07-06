@@ -3,7 +3,7 @@
 // (CaseCardFin, filtrado pela etapa atual). Reusa useCaseChecklistItems /
 // useMarcarItemChecklist — o mesmo caminho de marcação/gate da ficha.
 
-import { Sparkles } from "lucide-react";
+import { Pencil, Sparkles, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ export type ChecklistItem = {
   done: boolean;
   source: string;
   drive_file_id: string | null;
+  // S9-11 — item específico deste caso (def_id IS NULL). Herdados do modelo = false.
+  is_adhoc?: boolean;
   def: {
     key: string;
     label: string;
@@ -33,16 +35,22 @@ export function ChecklistItemsRows({
   onToggle,
   pending,
   compact = false,
+  onEditAdhoc,
+  onDeleteAdhoc,
 }: {
   items: ChecklistItem[];
   onToggle: (item: ChecklistItem, done: boolean) => void;
   pending: boolean;
   compact?: boolean;
+  // S9-11 — quando fornecidos, habilita editar/excluir dos itens AD-HOC (só eles).
+  onEditAdhoc?: (item: ChecklistItem) => void;
+  onDeleteAdhoc?: (item: ChecklistItem) => void;
 }) {
   return (
     <ul className={compact ? "space-y-1" : "space-y-1.5"}>
       {items.map((it) => {
         const isSuggestion = it.source === "drive_suggest" && !it.done;
+        const isAdhoc = it.is_adhoc === true;
         return (
           <li
             key={it.id}
@@ -62,6 +70,36 @@ export function ChecklistItemsRows({
             </span>
             {it.def?.required && (
               <Badge className="bg-[var(--navy)] text-white shrink-0">Obrigatório</Badge>
+            )}
+            {isAdhoc && (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] text-[var(--gold-700)] shrink-0"
+                title="Critério específico deste caso (não vem do modelo do tipo de serviço)"
+              >
+                <User size={11} /> Deste caso
+              </span>
+            )}
+            {isAdhoc && onEditAdhoc && (
+              <button
+                type="button"
+                title="Editar critério"
+                onClick={() => onEditAdhoc(it)}
+                disabled={pending}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 shrink-0"
+              >
+                <Pencil size={13} />
+              </button>
+            )}
+            {isAdhoc && onDeleteAdhoc && (
+              <button
+                type="button"
+                title="Excluir critério"
+                onClick={() => onDeleteAdhoc(it)}
+                disabled={pending}
+                className="text-muted-foreground hover:text-destructive disabled:opacity-30 shrink-0"
+              >
+                <Trash2 size={13} />
+              </button>
             )}
             {isSuggestion && (
               <>

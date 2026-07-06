@@ -164,8 +164,11 @@ export type Database = {
           id: string;
           organization_id: string;
           case_id: string;
-          def_id: string;
+          def_id: string | null;
           stage_slug: string;
+          label: string | null;
+          required: boolean;
+          ordem: number;
           done: boolean;
           done_at: string | null;
           done_by: string | null;
@@ -179,8 +182,11 @@ export type Database = {
           id?: string;
           organization_id: string;
           case_id: string;
-          def_id: string;
+          def_id?: string | null;
           stage_slug: string;
+          label?: string | null;
+          required?: boolean;
+          ordem?: number;
           done?: boolean;
           done_at?: string | null;
           done_by?: string | null;

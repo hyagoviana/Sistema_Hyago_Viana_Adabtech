@@ -104,6 +104,7 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
     "/tarefas",
     "/controladoria",
     "/peticionamento",
+    "/inteligencia/leads",
     "/comercial",
     "/comercial/leads",
     "/dashboards",
@@ -114,6 +115,7 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
   comercial: [
     "/hoje",
     "/clientes",
+    "/inteligencia/leads",
     "/comercial",
     "/comercial/leads",
     "/comercial/assinaturas",

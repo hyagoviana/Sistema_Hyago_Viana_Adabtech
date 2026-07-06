@@ -20,6 +20,7 @@ import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
+import { CaseSignActions } from "@/components/cases/CaseSignActions";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
 import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
@@ -331,6 +332,33 @@ function CasoDetalhe() {
               <UserX size={14} className="mr-1.5" /> Marcar como perdido
             </Button>
           )}
+          {/* S9-09 — enviar procuração (comercial) / contrato (operacional).
+              Visíveis para lead E cliente; o "Enviar caso" degrada 424 sem modelo. */}
+          <CaseSignActions
+            caseId={caso.id}
+            clientId={caso.client_id}
+            caseType={caso.case_type}
+            clientName={cliente?.full_name}
+            clientCpf={cliente?.cpf_cnpj}
+            municipio={caso.municipio ?? undefined}
+            procuracaoAssinada={
+              !!(caso as { procuracao_assinada_at?: string | null }).procuracao_assinada_at
+            }
+            autoFillExtra={{
+              email: cliente?.email ?? undefined,
+              phone: cliente?.phone ?? undefined,
+              city: pickStr(cliente?.address, "city"),
+              state: pickStr(cliente?.address, "state"),
+              crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
+              crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
+              oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
+              oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
+              especialidade: pickStr(cliente?.professional_data, "especialidade"),
+              vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
+              caseCode: caso.case_code,
+              responsavel: caso.responsavel ?? undefined,
+            }}
+          />
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
             <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
           </Button>
@@ -497,7 +525,14 @@ function CasoDetalhe() {
       <OrnamentalDivider />
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <CaseChecklistPanel caseId={caso.id} />
+        <CaseChecklistPanel
+          caseId={caso.id}
+          canEdit={podeGerirCaso}
+          currentStageSlugs={[
+            caso.macrostatus_op,
+            ...(finBifurcated ? [caso.macrostatus_fin] : []),
+          ].filter((s): s is string => !!s)}
+        />
         <CaseCanonicalFields
           caseId={caso.id}
           canonicalFields={

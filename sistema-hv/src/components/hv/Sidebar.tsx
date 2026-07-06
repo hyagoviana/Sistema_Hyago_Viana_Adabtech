@@ -11,6 +11,7 @@ import {
   Megaphone,
   MessageCircle,
   BarChart3,
+  LayoutGrid,
   Palette,
   Settings,
   LogOut,
@@ -61,8 +62,9 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
+      { to: "/inteligencia/leads", label: "Leads", icon: UserPlus },
       { to: "/comercial", label: "Comercial", icon: TrendingUp },
-      { to: "/comercial/leads", label: "Leads", icon: UserPlus },
+      { to: "/comercial/leads", label: "Pipeline comercial", icon: LayoutGrid },
       { to: "/comercial/assinaturas", label: "Assinaturas", icon: FileSignature, tone: "gold" },
       { to: "/marketing", label: "Marketing", icon: Megaphone },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },

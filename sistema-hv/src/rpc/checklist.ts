@@ -4,7 +4,9 @@ import { z } from "zod";
 
 import {
   ChecklistServiceError,
+  createAdhocChecklistItem,
   createChecklistDef,
+  deleteAdhocChecklistItem,
   instanciarChecklist,
   listCaseChecklistItems,
   listChecklistDefs,
@@ -12,6 +14,7 @@ import {
   reorderChecklistDefs,
   softDeleteChecklistDef,
   sugerirChecklistPorUpload,
+  updateAdhocChecklistItem,
   updateChecklistDef,
 } from "@/lib/checklist-service";
 import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
@@ -129,6 +132,58 @@ export const marcarItemChecklistFn = createServerFn({ method: "POST" })
     handle(async () => {
       const { id: userId } = await requireAuth();
       return marcarItemChecklist(data.itemId, data.done, userId);
+    }),
+  );
+
+// ----------------------------------------------------------------------------
+// ITENS AD-HOC POR CASO (S9-11) — criar/editar/excluir critérios extras que
+// valem SÓ para o caso. Autenticado (qualquer papel operacional); auditado pela
+// trigger de auditoria da tabela. Só mexe em itens def_id IS NULL (o service
+// bloqueia edição/exclusão de itens herdados do modelo).
+// ----------------------------------------------------------------------------
+export const createAdhocChecklistItemFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        stageSlug: z.string().min(1),
+        label: z.string().min(1),
+        required: z.boolean().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireAuth();
+      return createAdhocChecklistItem(data);
+    }),
+  );
+
+export const updateAdhocChecklistItemFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        itemId: z.string().uuid(),
+        patch: z.object({
+          label: z.string().min(1).optional(),
+          required: z.boolean().optional(),
+        }),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAuth();
+      return updateAdhocChecklistItem(data.itemId, data.patch, userId);
+    }),
+  );
+
+export const deleteAdhocChecklistItemFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ itemId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAuth();
+      return deleteAdhocChecklistItem(data.itemId, userId);
     }),
   );
 

@@ -2,7 +2,7 @@
 
 - **Sprint:** 9 — Modelo definitivo Lead→Comercial→Operacional
 - **ID:** S9-07
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (realocar/renomear a lista existente para "Leads/roster" em Inteligência; reduzir a página Clientes a só clientes)
 - **Executor sugerido:** @dev (UI) · Quality gate: @ux-design-expert / @architect
 
@@ -40,11 +40,11 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Extrair componente de lista** (AC: 4) — mover o corpo de `clientes.index.tsx` para um componente reutilizável (ex.: `ClientRoster`) com props: `tabs` (quais sub-abas), `dataSource`/hook, labels.
-- [ ] **Roster em Inteligência** (AC: 1, 3) — nova rota/realocação (ex.: `inteligencia.leads.tsx`), 4 sub-abas, breadcrumb "Inteligência › Leads".
-- [ ] **Clientes = só clientes** (AC: 2, 3) — `clientes.index.tsx` consome `system_clients_clientes` (via hook), sem sub-abas de lead; subtítulo/contagem só de clientes.
-- [ ] **Navegação/menu** — ajustar a barra lateral/menu para expor "Leads" em Inteligência e "Clientes" onde já está. Confirmar rótulos com owner/UX.
-- [ ] **Testes** (AC: 6) — as duas telas carregam; busca/filtros/menu de card funcionam no roster; Clientes só mostra clientes; typecheck/lint; rotas resolvem.
+- [x] **Extrair componente de lista** (AC: 4) — corpo de `clientes.index.tsx` movido para `components/clients/ClientRoster.tsx` com props: `showLifecycleTabs` (roster completo vs só-clientes), `fixedLifecycle`, `eyebrow`/`title`/`breadcrumb`/`entityNoun`. Reusa `useClientsByLifecycle`/`useClientsList`.
+- [x] **Roster em Inteligência** (AC: 1, 3) — nova rota `routes/inteligencia.leads.tsx` (`/inteligencia/leads`), 4 sub-abas, breadcrumb "Inteligência › Leads". routeTree.gen.ts regenerado via `@tanstack/router-generator` (OneDrive).
+- [x] **Clientes = só clientes** (AC: 2, 3) — `clientes.index.tsx` reduzido a um wrapper de `ClientRoster` com `showLifecycleTabs=false` + `fixedLifecycle="cliente"` (fonte `system_clients_clientes`); sem sub-abas; subtítulo/contagem só de clientes.
+- [x] **Navegação/menu** (AC: 3) — Sidebar (grupo Inteligência): novo item "Leads" → `/inteligencia/leads`; "Comercial" mantido; o Kanban vira "Pipeline comercial" (S9-08). RBAC `ROLE_NAV` ganhou `/inteligencia/leads` (admin/titular = all; advogado_associado + comercial).
+- [x] **Testes** (AC: 6) — typecheck só com os 3 erros pré-existentes de `service_type_id`; lint dos arquivos novos sem erros (CRLF ignorado nos legados). Rotas resolvem. Teste funcional (contagens/duplicidade multi-caso) fica p/ @qa.
 
 ---
 
@@ -89,14 +89,16 @@
 
 ## File List
 
-- `sistema-hv/src/routes/clientes.index.tsx` (só clientes)
-- `sistema-hv/src/routes/inteligencia.leads.tsx` (roster — nome a confirmar)
-- `sistema-hv/src/components/clients/ClientRoster.tsx` (novo, se extraído)
-- `sistema-hv/src/hooks/useClients.ts` (reuso/ajuste)
-- Componente de navegação (sidebar/menu)
+- `sistema-hv/src/components/clients/ClientRoster.tsx` (NOVO — componente de lista compartilhado)
+- `sistema-hv/src/routes/clientes.index.tsx` (reduzido a wrapper: só clientes)
+- `sistema-hv/src/routes/inteligencia.leads.tsx` (NOVO — roster com 4 sub-abas)
+- `sistema-hv/src/components/hv/Sidebar.tsx` (item "Leads" em Inteligência)
+- `sistema-hv/src/lib/rbac.ts` (`/inteligencia/leads` no ROLE_NAV)
+- `sistema-hv/src/routeTree.gen.ts` (regenerado)
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-03 | 0.1 | Draft inicial — UI Leads (roster com sub-abas) + Clientes só clientes (Sprint 9) | @sm |
+| 2026-07-03 | 1.0 | Implementada. `ClientRoster` extraído; roster em `/inteligencia/leads` (4 sub-abas); `clientes.index` = só clientes (`fixedLifecycle='cliente'`); Sidebar+RBAC atualizados; routeTree regenerado. Sem migration. typecheck/lint ok. | @dev |

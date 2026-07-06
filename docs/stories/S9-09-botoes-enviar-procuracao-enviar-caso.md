@@ -2,7 +2,7 @@
 
 - **Sprint:** 9 — Modelo definitivo Lead→Comercial→Operacional
 - **ID:** S9-09
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M/G (2 ações no detalhe; o fluxo do contrato — revisão → envio — espelha o da procuração; degrada 424 sem template)
 - **Executor sugerido:** @dev (UI + wiring) · Quality gate: @architect / @ux-design-expert
 
@@ -40,12 +40,12 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Ação "Enviar procuração"** (AC: 1) — botão no detalhe; reusa/gera a procuração + revisão + `sendCaseDocumentToZapsignFn`. (Grande parte já existe na aba Documentos/CaseFormDialog — expor/consolidar no detalhe.)
-- [ ] **Ação "Enviar caso (contrato)"** (AC: 2, 3) — botão análogo; wiring com `generateContratoFromTemplate` (S9-02) + revisão + `sendCaseDocumentToZapsign` (`doc_kind='contrato'`); degrada 424 sem template.
-- [ ] **Seleção de template de contrato** (AC: 2, 3) — UI para escolher o template de contrato (reusa o mecanismo da procuração); se nenhum, degrada 424 com mensagem.
-- [ ] **Disponibilidade lead/cliente** (AC: 4) — mostrar ambos para lead e cliente; aviso opcional se procuração ainda não assinada (confirmar regra com owner).
-- [ ] **Estados/UX** (AC: 5) — loading/erro/sucesso; toasts; reuso dos componentes de diálogo.
-- [ ] **Testes** (AC: 6) — enviar procuração (fluxo existente intacto); enviar contrato (gera+envia); sem template → 424; botões visíveis p/ lead e cliente; typecheck/lint.
+- [x] **Ação "Enviar procuração"** (AC: 1) — botão no detalhe (`casos.$id.tsx`) e por caso na ficha do cliente (`ClientCasesSection`). Novo `CaseSignActions` faz o fluxo 2 etapas: escolher modelo + revisão de campos → gera (`generateCaseDocumentFn`) → finaliza → envio ao ZapSign (`sendCaseDocumentToZapsignFn`, `doc_kind` da procuração via o ramo existente).
+- [x] **Ação "Enviar caso (contrato)"** (AC: 2, 3) — botão análogo; wiring com `generateContratoFn`/`generateContratoFromTemplate` (S9-02) + revisão + finalize + `sendCaseDocumentToZapsign` (`doc_kind='contrato'`). Degrada 424 sem template (mensagem do serviço aparece no toast).
+- [x] **Seleção de template de contrato** (AC: 2, 3) — Command list reusando `useDocumentTemplates(caseType)` (mesmo mecanismo da procuração). Sem template → `generateContratoFromTemplate` lança 424 "Modelo de contrato ainda não cadastrado".
+- [x] **Disponibilidade lead/cliente** (AC: 4) — ambos os botões sempre visíveis no detalhe do caso e por caso na ficha do cliente (não bloqueados por lifecycle). "Enviar caso" mostra AVISO (não bloqueia) quando `procuracao_assinada_at` é null.
+- [x] **Estados/UX** (AC: 5) — loading (spinner)/erro/sucesso via `toast`; reuso dos diálogos shadcn; RPCs auth-only (`requireAuth`).
+- [x] **Testes** (AC: 6) — typecheck (3 erros pré-existentes de `service_type_id`); lint sem erros novos (CRLF ignorado). Testes funcionais (envio real ZapSign, degradação 424 com modelo puro) p/ @qa — dependem do modelo PURO de contrato do owner.
 
 ---
 
@@ -93,14 +93,17 @@
 
 ## File List
 
-- `sistema-hv/src/routes/casos.$id.tsx` (ações no detalhe)
-- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (ações por caso)
-- `sistema-hv/src/components/cases/CaseFormDialog.tsx` (molde do fluxo de revisão)
-- `sistema-hv/src/rpc/cases.ts` / `src/rpc/case-documents.ts` (RPCs)
-- Componente de diálogo de revisão do contrato (novo, se necessário)
+- `sistema-hv/src/components/cases/CaseSignActions.tsx` (NOVO — 2 botões + diálogo 2 etapas: modelo/revisão → envio ZapSign)
+- `sistema-hv/src/routes/casos.$id.tsx` (ações no header do detalhe)
+- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (ações por caso na ficha do cliente; props de cliente)
+- `sistema-hv/src/routes/clientes.$id.tsx` (passa nome/cpf/email/phone do cliente)
+- `sistema-hv/src/hooks/useCases.ts` (`useGenerateProcuracao` + `useGenerateContrato`)
+- `sistema-hv/src/rpc/cases.ts` (`generateProcuracaoFn` — auth-only; `generateContratoFn` já existia da S9-02)
+- `sistema-hv/src/lib/cases-service.ts` (`generateProcuracaoFromTemplate` aceita `overrideValues` da revisão)
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-03 | 0.1 | Draft inicial — botões "Enviar procuração"/"Enviar caso (contrato)" no detalhe (Sprint 9) | @sm |
+| 2026-07-03 | 1.0 | Implementada. `CaseSignActions` (novo) no header do caso e por caso na ficha do cliente; fluxo modelo→revisão→gera→finaliza→envio ZapSign; contrato via `generateContratoFn` (degrada 424); ambos visíveis p/ lead e cliente; aviso (não bloqueia) se procuração não assinada. Sem migration. typecheck/lint ok. | @dev |
