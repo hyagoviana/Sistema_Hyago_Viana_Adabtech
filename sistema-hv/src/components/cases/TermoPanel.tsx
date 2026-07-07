@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
-import { maskBrlReais, normalizeBrl } from "@/lib/format";
+import { maskBrlReais, maskPercentBr, normalizeBrl, normalizePercentBr } from "@/lib/format";
 import {
   useAceitarTermo,
   useApresentarTermo,
@@ -477,7 +477,8 @@ function ElaborarDialog({
               <Label>% Financiado</Label>
               <Input
                 value={percentualFinanciado}
-                onChange={(e) => setPercentualFinanciado(e.target.value)}
+                onChange={(e) => setPercentualFinanciado(maskPercentBr(e.target.value))}
+                onBlur={() => setPercentualFinanciado((v) => normalizePercentBr(v))}
                 placeholder="100,00"
                 inputMode="decimal"
               />

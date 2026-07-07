@@ -80,6 +80,33 @@ export function normalizeBrl(raw: string): string {
   return `${intFmt},${dec}`;
 }
 
+/**
+ * Máscara de PERCENTUAL no padrão BR (vírgula decimal). Diferente de maskBrlReais,
+ * NÃO aplica separador de milhar (percentuais são pequenos). O usuário digita
+ * "100" → "100"; "100,5" → "100,5". Preserva até 2 casas após a vírgula enquanto digita.
+ */
+export function maskPercentBr(raw: string): string {
+  const cleaned = (raw ?? "").replace(/[^\d,]/g, "");
+  const [intRaw, decRaw] = cleaned.split(",");
+  const intPart = intRaw ?? "";
+  if (decRaw === undefined) return intPart; // digitando o inteiro
+  return `${intPart},${decRaw.slice(0, 2)}`;
+}
+
+/**
+ * Normaliza um percentual mascarado para SEMPRE ter 2 casas decimais (onBlur).
+ * Ex.: "100" → "100,00"; "100,5" → "100,50"; "" → "".
+ */
+export function normalizePercentBr(raw: string): string {
+  const s = (raw ?? "").trim();
+  if (s === "") return "";
+  const cleaned = s.replace(/[^\d,]/g, "");
+  const [intRaw, decRaw = ""] = cleaned.split(",");
+  const intPart = intRaw === "" ? "0" : intRaw;
+  const dec = (decRaw + "00").slice(0, 2);
+  return `${intPart},${dec}`;
+}
+
 /** Formata progressivamente como CEP: 57000-000 (8 dígitos). */
 export function formatCep(value: string): string {
   return onlyDigits(value)

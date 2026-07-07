@@ -10,6 +10,18 @@ export const Route = createFileRoute("/api/webhooks/n8n")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        // KILL-SWITCH — o onboarding automático via n8n foi DESATIVADO: o cadastro
+        // de clientes/casos agora é SÓ manual pelo sistema. Este endpoint só cria
+        // algo se N8N_INTAKE_ENABLED === "true" (default: DESATIVADO quando ausente).
+        // Mesmo que o fluxo n8n dispare, o app recusa com 403 e NÃO cria nada.
+        const intakeEnabled = process.env.N8N_INTAKE_ENABLED === "true";
+        if (!intakeEnabled) {
+          return Response.json(
+            { error: "Onboarding automático (n8n) desativado — cadastro é manual." },
+            { status: 403 },
+          );
+        }
+
         // Validar secret — obrigatório para proteger contra payloads não autorizados
         const secret = process.env.N8N_WEBHOOK_SECRET;
         if (!secret) {
