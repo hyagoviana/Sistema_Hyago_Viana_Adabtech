@@ -49,6 +49,37 @@ export function formatPhone(value: string): string {
     .replace(/^\((\d{2})\)\s(\d{5})(\d)/, "($1) $2-$3");
 }
 
+/**
+ * Máscara de valor monetário em BRL tratando a entrada como REAIS.
+ * O usuário digita só números (opcionalmente vírgula p/ centavos) e o campo
+ * formata no padrão BR: "20000" → "20.000", "200" → "200", "20000,5" → "20.000,5".
+ * A parte inteira ganha separador de milhar; a decimal (após vírgula) é
+ * preservada com até 2 casas enquanto o usuário digita.
+ */
+export function maskBrlReais(raw: string): string {
+  const cleaned = (raw ?? "").replace(/[^\d,]/g, "");
+  const [intRaw, decRaw] = cleaned.split(",");
+  const intNum = intRaw ? parseInt(intRaw, 10) : 0;
+  const intFmt = intNum.toLocaleString("pt-BR");
+  if (decRaw === undefined) return intFmt; // digitando o inteiro
+  return `${intFmt},${decRaw.slice(0, 2)}`;
+}
+
+/**
+ * Normaliza um valor mascarado para SEMPRE ter 2 casas decimais (usado no onBlur).
+ * Ex.: "20.000" → "20.000,00"; "200,5" → "200,50"; "" → "".
+ */
+export function normalizeBrl(raw: string): string {
+  const s = (raw ?? "").trim();
+  if (s === "") return "";
+  const cleaned = s.replace(/[^\d,]/g, "");
+  const [intRaw, decRaw = ""] = cleaned.split(",");
+  const intNum = intRaw ? parseInt(intRaw, 10) : 0;
+  const intFmt = intNum.toLocaleString("pt-BR");
+  const dec = (decRaw + "00").slice(0, 2);
+  return `${intFmt},${dec}`;
+}
+
 /** Formata progressivamente como CEP: 57000-000 (8 dígitos). */
 export function formatCep(value: string): string {
   return onlyDigits(value)

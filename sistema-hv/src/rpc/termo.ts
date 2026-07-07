@@ -93,6 +93,9 @@ export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
         percentualAbatimento: z.number().nonnegative().optional(),
         saldoOriginarioCentavos: z.number().int().nonnegative().optional(),
         saldoEpocaAbatimentoCentavos: z.number().int().nonnegative().optional(),
+        // Campos FIES (texto livre) coletados na tela elaborar.
+        taxaJuros: z.string().optional(),
+        percentualFinanciado: z.string().optional(),
       })
       .parse(d),
   )
@@ -106,6 +109,8 @@ export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
         percentualAbatimento: data.percentualAbatimento,
         saldoOriginarioCentavos: data.saldoOriginarioCentavos,
         saldoEpocaAbatimentoCentavos: data.saldoEpocaAbatimentoCentavos,
+        taxaJuros: data.taxaJuros,
+        percentualFinanciado: data.percentualFinanciado,
         triggeredBy: userId,
       });
     }),

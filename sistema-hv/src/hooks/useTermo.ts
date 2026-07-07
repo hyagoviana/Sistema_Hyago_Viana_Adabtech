@@ -80,6 +80,8 @@ export function useGerarDocumentoTermo(caseId: string) {
       percentualAbatimento?: number;
       saldoOriginarioCentavos?: number;
       saldoEpocaAbatimentoCentavos?: number;
+      taxaJuros?: string;
+      percentualFinanciado?: string;
     }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
   });

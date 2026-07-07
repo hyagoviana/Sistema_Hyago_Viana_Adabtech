@@ -659,7 +659,16 @@ export type TermoDocExtras = {
   percentualAbatimento?: number | null; // PARCIAL (%)
   saldoOriginarioCentavos?: number | null; // COMPLEMENTAR
   saldoEpocaAbatimentoCentavos?: number | null; // COMPLEMENTAR
+  taxaJuros?: string | null; // FIES — texto livre (ex.: "0,28")
+  percentualFinanciado?: string | null; // FIES — texto livre (ex.: "100,00")
 };
+
+// Data no formato dd/mm/aaaa (ex.: 07/07/2026). Usada na data de assinatura.
+function dataDDMMAAAA(d = new Date()): string {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
 
 // Monta TODOS os placeholders <campo> dos 2 modelos (PARCIAL/COMPLEMENTAR) a
 // partir do snapshot + cadastro + inputs opcionais. Reconciliação S7-02:
@@ -764,11 +773,17 @@ function buildTermoValues(
     valor_ultima_parcela_extenso: reaisPorExtenso(parcelamentoDoc.valorUltima),
 
     // ── FIES (prints do portal viraram texto editável nos modelos) ──────────
-    // Sem fonte no cálculo/cadastro: saem VAZIOS por padrão (o usuário preenche
-    // no Word editável). Nunca deixar o <placeholder> literal no documento.
-    taxa_juros: "",
-    percentual_financiado: "",
-    data_assinatura_fies: "",
+    // taxa_juros / percentual_financiado vêm dos inputs da tela elaborar (texto
+    // livre). Se vazios, saem "" (nunca o <placeholder> literal). A taxa ganha
+    // "%" quando o usuário não digitar (ex.: "0,28" → "0,28%").
+    taxa_juros: extras.taxaJuros
+      ? extras.taxaJuros.includes("%")
+        ? extras.taxaJuros
+        : `${extras.taxaJuros}%`
+      : "",
+    percentual_financiado: extras.percentualFinanciado ?? "",
+    // Data de assinatura: SEMPRE a data atual da geração (dd/mm/aaaa).
+    data_assinatura_fies: dataDDMMAAAA(),
 
     // ── Só COMPLEMENTAR ───────────────────────────────────────────────────
     // honorarios_abatimento = só o abatimento novo (valor_total do cálculo).
@@ -791,6 +806,8 @@ export async function gerarDocumentoTermo(input: {
   percentualAbatimento?: number;
   saldoOriginarioCentavos?: number;
   saldoEpocaAbatimentoCentavos?: number;
+  taxaJuros?: string;
+  percentualFinanciado?: string;
   triggeredBy?: string | null;
 }) {
   const sb = getSupabaseAdmin();
@@ -840,6 +857,8 @@ export async function gerarDocumentoTermo(input: {
       percentualAbatimento: input.percentualAbatimento,
       saldoOriginarioCentavos: input.saldoOriginarioCentavos,
       saldoEpocaAbatimentoCentavos: input.saldoEpocaAbatimentoCentavos,
+      taxaJuros: input.taxaJuros,
+      percentualFinanciado: input.percentualFinanciado,
     },
   );
 

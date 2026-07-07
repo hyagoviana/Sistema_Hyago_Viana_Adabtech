@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
+import { maskBrlReais, normalizeBrl } from "@/lib/format";
 import {
   useAceitarTermo,
   useApresentarTermo,
@@ -41,10 +42,13 @@ function brl(c: number | null | undefined) {
   return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
 }
 function toCents(v: string): number {
+  // Remove tudo que não é dígito/vírgula/ponto/sinal, tira TODOS os separadores
+  // de milhar (".") e troca a vírgula decimal por ".". Precisa remover todos os
+  // pontos (não só o 1º) porque a máscara BRL insere milhar (ex.: "1.234.567,00").
   const n = Number(
     String(v)
       .replace(/[^\d,.-]/g, "")
-      .replace(".", "")
+      .replace(/\./g, "")
       .replace(",", "."),
   );
   return Math.round((isNaN(n) ? 0 : n) * 100);
@@ -334,6 +338,9 @@ function ElaborarDialog({
   const [forma, setForma] = useState<"PARCELADO" | "A_VISTA">("PARCELADO");
   // #17 — desconto à vista (%), editável só quando Forma = À vista. Default 10%.
   const [descontoAvista, setDescontoAvista] = useState("10");
+  // Campos FIES (texto livre) que fluem para o documento do termo.
+  const [taxaJuros, setTaxaJuros] = useState("");
+  const [percentualFinanciado, setPercentualFinanciado] = useState("");
   // Word editável do termo gerado após salvar (aberto num Dialog aninhado).
   const [docUrl, setDocUrl] = useState<string | null>(null);
   const [preview, setPreview] = useState<{
@@ -378,17 +385,31 @@ function ElaborarDialog({
             <Label>Saldo antes (R$)</Label>
             <Input
               value={antes}
-              onChange={(e) => setAntes(e.target.value)}
-              placeholder="20000,00"
+              onChange={(e) => setAntes(maskBrlReais(e.target.value))}
+              onBlur={() => setAntes((v) => normalizeBrl(v))}
+              inputMode="decimal"
+              placeholder="20.000,00"
             />
           </div>
           <div>
             <Label>Saldo depois (R$)</Label>
-            <Input value={depois} onChange={(e) => setDepois(e.target.value)} placeholder="0,00" />
+            <Input
+              value={depois}
+              onChange={(e) => setDepois(maskBrlReais(e.target.value))}
+              onBlur={() => setDepois((v) => normalizeBrl(v))}
+              inputMode="decimal"
+              placeholder="0,00"
+            />
           </div>
           <div>
             <Label>Parcelas pagas no processo (R$)</Label>
-            <Input value={pagas} onChange={(e) => setPagas(e.target.value)} placeholder="0,00" />
+            <Input
+              value={pagas}
+              onChange={(e) => setPagas(maskBrlReais(e.target.value))}
+              onBlur={() => setPagas((v) => normalizeBrl(v))}
+              inputMode="decimal"
+              placeholder="0,00"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -442,6 +463,26 @@ function ElaborarDialog({
               />
             </div>
           )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Taxa de juros (%)</Label>
+              <Input
+                value={taxaJuros}
+                onChange={(e) => setTaxaJuros(e.target.value)}
+                placeholder="0,28"
+                inputMode="decimal"
+              />
+            </div>
+            <div>
+              <Label>% Financiado</Label>
+              <Input
+                value={percentualFinanciado}
+                onChange={(e) => setPercentualFinanciado(e.target.value)}
+                placeholder="100,00"
+                inputMode="decimal"
+              />
+            </div>
+          </div>
           <Button variant="outline" size="sm" onClick={doCalc} disabled={calc.isPending}>
             {calc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
             Calcular
@@ -482,7 +523,11 @@ function ElaborarDialog({
                     // #17 — gera o documento do termo e abre o Word editável na tela.
                     // Se o modelo não estiver cadastrado (424), avisa mas NÃO quebra o salvar.
                     gerarDoc.mutate(
-                      { termoId: termo.id },
+                      {
+                        termoId: termo.id,
+                        taxaJuros: taxaJuros.trim() || undefined,
+                        percentualFinanciado: percentualFinanciado.trim() || undefined,
+                      },
                       {
                         onSuccess: (r) => {
                           onOpenChange(false);
