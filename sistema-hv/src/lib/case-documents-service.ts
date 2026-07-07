@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 
 import { sugerirChecklistPorUpload } from "./checklist-service";
 import { createFolder, deleteFile as trashDriveFile, uploadFile, DriveError } from "./google/drive";
+import { validateUpload } from "./validators/file";
 import {
   copyTemplate,
   docUrl,
@@ -146,6 +147,124 @@ export async function ensureCaseFolder(caseId: string): Promise<{
       EXTERNAL_DEP_FAILED,
     );
   }
+}
+
+// ----------------------------------------------------------------------------
+// UPLOAD — anexa um arquivo (PDF/Word) direto na pasta do CASO no Drive e
+// registra em system_case_documents (source='UPLOAD', status='FINALIZADO').
+// Segue o padrão do upload de documentos do CLIENTE (magic-bytes anti-spoofing),
+// restringindo os tipos a PDF/DOC/DOCX.
+// ----------------------------------------------------------------------------
+const UPLOAD_ALLOWED_MIMES = new Set<string>([
+  "application/pdf",
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+]);
+
+export async function uploadCaseDocument(opts: {
+  caseId: string;
+  fileName: string;
+  mimeType: string;
+  buffer: Buffer;
+  triggeredBy?: string;
+}) {
+  // Restringe o tipo ANTES do magic-bytes (que aceita mais formatos).
+  if (!UPLOAD_ALLOWED_MIMES.has(opts.mimeType)) {
+    throw new CaseDocumentServiceError(
+      `Tipo não permitido (${opts.mimeType || "vazio"}). Envie PDF, DOC ou DOCX.`,
+      415,
+    );
+  }
+
+  const validation = validateUpload({
+    name: opts.fileName,
+    mimeType: opts.mimeType,
+    size: opts.buffer.length,
+    head: opts.buffer.subarray(0, 16),
+  });
+  if (!validation.ok) {
+    throw new CaseDocumentServiceError(validation.reason, validation.status);
+  }
+
+  const sb = getSupabaseAdmin();
+  const { data: caso, error: caseErr } = await sb
+    .from("system_cases")
+    .select("id, organization_id")
+    .eq("id", opts.caseId)
+    .is("deleted_at", null)
+    .single();
+  if (caseErr || !caso) throw new CaseDocumentServiceError("Caso não encontrado", 404);
+
+  // Garante a pasta do caso no Drive (idempotente).
+  const { folderId } = await ensureCaseFolder(opts.caseId);
+
+  let drive;
+  try {
+    drive = await uploadFile({
+      parentId: folderId,
+      name: opts.fileName,
+      mimeType: opts.mimeType,
+      body: opts.buffer,
+    });
+  } catch (err) {
+    const msg =
+      err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
+    throw new CaseDocumentServiceError(
+      `Falha ao subir na pasta do caso: ${msg}`,
+      EXTERNAL_DEP_FAILED,
+    );
+  }
+
+  const { data: doc, error: insErr } = await sb
+    .from("system_case_documents")
+    .insert({
+      case_id: caso.id,
+      organization_id: caso.organization_id,
+      title: opts.fileName,
+      status: "FINALIZADO",
+      source: "UPLOAD",
+      drive_file_id: drive.id,
+      drive_url: drive.url,
+      mime_type: drive.mimeType,
+      size_bytes: drive.size,
+      sha256: sha256Hex(opts.buffer),
+    })
+    .select()
+    .single();
+
+  if (insErr || !doc) {
+    // Rollback best-effort no Drive.
+    try {
+      await trashDriveFile(drive.id);
+    } catch (cleanupErr) {
+      console.error("case-documents-service: rollback Drive falhou:", cleanupErr);
+    }
+    throw new CaseDocumentServiceError(
+      `Falha ao gravar documento (${insErr?.message ?? "?"})`,
+      500,
+    );
+  }
+
+  await sb.from("system_audit_log").insert({
+    organization_id: caso.organization_id,
+    action: "case_document.upload",
+    entity_type: "case_document",
+    entity_id: doc.id,
+    diff: { name: opts.fileName, size: opts.buffer.length, drive_file_id: drive.id },
+  });
+
+  await sb.from("system_case_events").insert({
+    case_id: caso.id,
+    organization_id: caso.organization_id,
+    action: "doc_uploaded",
+    diff: { doc_title: opts.fileName, doc_id: doc.id },
+    triggered_by: opts.triggeredBy ?? null,
+  });
+
+  // Gancho de auto-check por upload (mesmo do finalize) — no-op quando desligado.
+  await sugerirChecklistPorUpload(caso.id, opts.fileName, drive.id).catch(() => {});
+
+  return doc;
 }
 
 // ----------------------------------------------------------------------------

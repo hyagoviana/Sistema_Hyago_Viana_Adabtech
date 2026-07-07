@@ -39,6 +39,38 @@ export function useClientCaseDocuments(clientId: string) {
   });
 }
 
+// Anexa um documento (PDF/DOC/DOCX) direto na pasta do CASO no Drive via upload
+// multipart (rota api.cases.$id.documents.upload). Segue o padrão de upload de
+// documentos do CLIENTE (magic-bytes anti-spoofing no servidor).
+export function useUploadCaseDocument(caseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/cases/${caseId}/documents/upload`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        let msg = res.statusText;
+        try {
+          const data = (await res.json()) as { error?: string };
+          msg = data.error ?? msg;
+        } catch {
+          /* mantém statusText */
+        }
+        throw new Error(msg);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+      qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
+  });
+}
+
 export function useGenerateCaseDocument(caseId: string) {
   const fn = useServerFn(generateCaseDocumentFn);
   const qc = useQueryClient();

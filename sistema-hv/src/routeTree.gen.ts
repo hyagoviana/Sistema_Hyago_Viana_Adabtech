@@ -75,6 +75,7 @@ import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
 import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
+import { Route as ApiCasesIdDocumentsUploadRouteImport } from './routes/api.cases.$id.documents.upload'
 import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes/api.clients.$id.documents.$docId.download'
 
 const TarefasRoute = TarefasRouteImport.update({
@@ -411,6 +412,12 @@ const ApiClientsIdDocumentsDocIdRoute =
     path: '/api/clients/$id/documents/$docId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiCasesIdDocumentsUploadRoute =
+  ApiCasesIdDocumentsUploadRouteImport.update({
+    id: '/api/cases/$id/documents/upload',
+    path: '/api/cases/$id/documents/upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiClientsIdDocumentsDocIdDownloadRoute =
   ApiClientsIdDocumentsDocIdDownloadRouteImport.update({
     id: '/download',
@@ -483,6 +490,7 @@ export interface FileRoutesByFullPath {
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
@@ -551,6 +559,7 @@ export interface FileRoutesByTo {
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/financeiro': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
@@ -621,6 +630,7 @@ export interface FileRoutesById {
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
+  '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
@@ -692,6 +702,7 @@ export interface FileRouteTypes {
     | '/whatsapp/conversas/$id'
     | '/casos/financeiro/'
     | '/casos/$id/termo/elaborar'
+    | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents/'
     | '/api/clients/$id/documents/$docId/download'
@@ -760,6 +771,7 @@ export interface FileRouteTypes {
     | '/whatsapp/conversas/$id'
     | '/casos/financeiro'
     | '/casos/$id/termo/elaborar'
+    | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents'
     | '/api/clients/$id/documents/$docId/download'
@@ -829,6 +841,7 @@ export interface FileRouteTypes {
     | '/whatsapp/conversas/$id'
     | '/casos/financeiro/'
     | '/casos/$id/termo/elaborar'
+    | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
     | '/api/clients/$id/documents/'
     | '/api/clients/$id/documents/$docId/download'
@@ -895,6 +908,7 @@ export interface RootRouteChildren {
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
+  ApiCasesIdDocumentsUploadRoute: typeof ApiCasesIdDocumentsUploadRoute
   ApiClientsIdDocumentsDocIdRoute: typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   ApiClientsIdDocumentsIndexRoute: typeof ApiClientsIdDocumentsIndexRoute
 }
@@ -1363,6 +1377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientsIdDocumentsDocIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cases/$id/documents/upload': {
+      id: '/api/cases/$id/documents/upload'
+      path: '/api/cases/$id/documents/upload'
+      fullPath: '/api/cases/$id/documents/upload'
+      preLoaderRoute: typeof ApiCasesIdDocumentsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/clients/$id/documents/$docId/download': {
       id: '/api/clients/$id/documents/$docId/download'
       path: '/download'
@@ -1486,6 +1507,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
+  ApiCasesIdDocumentsUploadRoute: ApiCasesIdDocumentsUploadRoute,
   ApiClientsIdDocumentsDocIdRoute: ApiClientsIdDocumentsDocIdRouteWithChildren,
   ApiClientsIdDocumentsIndexRoute: ApiClientsIdDocumentsIndexRoute,
 }

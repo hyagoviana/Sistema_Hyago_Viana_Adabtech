@@ -11,7 +11,13 @@ import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useComercialBoard, useMoveCaseStageComercial, useStages } from "@/hooks/usePipeline";
+import {
+  useComercialBoard,
+  useMoveCaseStageComercial,
+  useServiceTypes,
+  useStages,
+} from "@/hooks/usePipeline";
+import { useCreateCase } from "@/hooks/useCases";
 import {
   CASE_TYPE_LABELS,
   GLOBAL_FUNNEL_SERVICE_TYPE_ID,
@@ -51,6 +57,8 @@ function LeadsPage() {
   );
   const { data: items, isLoading, isError, error } = useComercialBoard();
   const move = useMoveCaseStageComercial(GLOBAL_FUNNEL_SERVICE_TYPE_ID);
+  const { data: serviceTypes } = useServiceTypes();
+  const createCase = useCreateCase();
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
@@ -96,15 +104,43 @@ function LeadsPage() {
   };
 
   function handleMove(id: string, toSlug: string) {
-    const row = rows.find((r) => r.id === id);
-    // Cadastros sintéticos (sem caso) não movem pelo Kanban — abra a ficha para
-    // iniciar o fluxo comercial (procuração). Silencioso: apenas ignora o drop.
-    if (row?.is_registration) {
-      toast.info("Abra o cadastro para iniciar o fluxo comercial deste lead.");
-      return;
-    }
     const stage = (stages ?? []).find((s) => s.slug === toSlug);
     if (!stage) return;
+
+    const row = rows.find((r) => r.id === id);
+    // Cadastros sintéticos (sem caso comercial ainda; id = client_id). Soltar num
+    // estágio INICIA o fluxo comercial: cria um CASO comercial (comercial=true →
+    // carimba aguardando_assinatura_at + entra na 1ª etapa) e, em seguida, move-o
+    // para a etapa onde foi solto. Como o cadastro não tem tipo, usa-se o PRIMEIRO
+    // tipo de serviço ativo como default; o usuário refina o tipo/procuração no caso.
+    if (row?.is_registration) {
+      const firstType = (serviceTypes ?? [])[0];
+      if (!firstType) {
+        toast.error("Cadastre um tipo de serviço antes de iniciar o fluxo comercial.");
+        return;
+      }
+      createCase.mutate(
+        { client_id: row.client_id, case_type: firstType.slug, comercial: true },
+        {
+          onSuccess: (created) => {
+            toast.success("Fluxo comercial iniciado — ajuste o tipo/procuração no caso.");
+            // Move o caso recém-criado para a etapa onde o card foi solto.
+            move.mutate(
+              { caseId: created.id, stageId: stage.id },
+              {
+                onSuccess: () => toast.success(`Movido pra ${displayStageLabel(stage)}`),
+                onError: (err) =>
+                  toast.error(err instanceof Error ? err.message : "Falha ao mover"),
+              },
+            );
+          },
+          onError: (err) =>
+            toast.error(err instanceof Error ? err.message : "Falha ao iniciar fluxo comercial"),
+        },
+      );
+      return;
+    }
+
     move.mutate(
       { caseId: id, stageId: stage.id },
       {

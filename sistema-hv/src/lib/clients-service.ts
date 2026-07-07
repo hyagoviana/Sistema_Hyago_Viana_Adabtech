@@ -387,20 +387,17 @@ export type ClientWithLifecycleMeta = ClientRow & {
   ultimo_movimento: string | null;
 };
 
-// #15 — Fonte da aba "Leads": TODO cadastro que ainda não virou cliente. Um
-// cadastro é cliente se tem ao menos um caso lifecycle='CLIENTE'. Cadastros puros
-// (sem caso) e leads-only entram aqui. Usa o último movimento do caso LEAD mais
-// recente (se houver) para dias_parado; sem caso, cai no created_at do cadastro.
-async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> {
+// AJUSTE A (2026-07-07) — Leads = banco-mestre de TODOS os cadastros ativos.
+// A aba "Leads" lista TODO cadastro ativo (system_clients, deleted_at IS NULL),
+// INCLUSIVE quem já virou cliente. Promover um lead a cliente NÃO o remove daqui:
+// ele fica em Leads E aparece também em Clientes. (Antes esta função excluía
+// clientes/perdidos — o que fazia o cadastro "sumir" do Leads ao virar cliente.)
+//
+// Enriquecimento mantido: casos_no_lifecycle conta os casos LEAD ativos da pessoa
+// e dias_parado usa o último movimento do caso LEAD mais recente; sem caso LEAD,
+// cai no created_at do cadastro.
+async function listAllActiveRegistrations(): Promise<ClientWithLifecycleMeta[]> {
   const sb = getSupabaseAdmin();
-
-  // Pessoas que já são clientes (têm caso CLIENTE) — excluídas da aba Leads.
-  const { data: clienteCases, error: ccErr } = await sb
-    .from("system_cases_active")
-    .select("client_id")
-    .eq("lifecycle", "CLIENTE");
-  if (ccErr) throw new ClientServiceError(ccErr.message, "DB_ERROR", 500);
-  const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
 
   // Último movimento por pessoa a partir dos casos LEAD (para dias_parado).
   // OBS: lifecycle='LEAD' já EXCLUI PERDIDO (lifecycle distinto), então leadMeta só
@@ -422,18 +419,7 @@ async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> 
     }
   }
 
-  // ITEM 6.4 — pessoas com caso PERDIDO. Um lead PERDIDO (só com caso PERDIDO, sem
-  // lead ATIVO) NÃO deve reaparecer como "cadastro sintético novo" na aba Leads —
-  // o padrão é NÃO mostrar perdido em Leads (ele vive na aba Perdido). Excluímos
-  // da aba Leads quem tem PERDIDO e NÃO tem lead ativo.
-  const { data: perdidoCases, error: pcErr } = await sb
-    .from("system_cases_active")
-    .select("client_id")
-    .eq("lifecycle", "PERDIDO");
-  if (pcErr) throw new ClientServiceError(pcErr.message, "DB_ERROR", 500);
-  const perdidoIds = new Set((perdidoCases ?? []).map((c) => c.client_id));
-
-  // Todos os cadastros ativos que NÃO são clientes.
+  // TODOS os cadastros ativos — sem excluir clientes nem perdidos.
   const { data: clients, error: cErr } = await sb
     .from("system_clients")
     .select("*")
@@ -441,20 +427,17 @@ async function listNonClientRegistrations(): Promise<ClientWithLifecycleMeta[]> 
   if (cErr) throw new ClientServiceError(cErr.message, "DB_ERROR", 500);
 
   const now = Date.now();
-  const out: ClientWithLifecycleMeta[] = (clients ?? [])
-    // Fora: clientes (CLIENTE) e leads PERDIDOS sem nenhum lead ativo.
-    .filter((cli) => !clienteIds.has(cli.id) && !(perdidoIds.has(cli.id) && !leadMeta.has(cli.id)))
-    .map((cli) => {
-      const meta = leadMeta.get(cli.id);
-      const base = meta?.ultimo || new Date(cli.created_at).getTime();
-      const dias = base ? Math.max(0, Math.floor((now - base) / 86_400_000)) : 0;
-      return {
-        ...(cli as ClientRow),
-        casos_no_lifecycle: meta?.count ?? 0,
-        dias_parado: dias,
-        ultimo_movimento: base ? new Date(base).toISOString() : null,
-      };
-    });
+  const out: ClientWithLifecycleMeta[] = (clients ?? []).map((cli) => {
+    const meta = leadMeta.get(cli.id);
+    const base = meta?.ultimo || new Date(cli.created_at).getTime();
+    const dias = base ? Math.max(0, Math.floor((now - base) / 86_400_000)) : 0;
+    return {
+      ...(cli as ClientRow),
+      casos_no_lifecycle: meta?.count ?? 0,
+      dias_parado: dias,
+      ultimo_movimento: base ? new Date(base).toISOString() : null,
+    };
+  });
   // Mais parados primeiro.
   out.sort((a, b) => b.dias_parado - a.dias_parado);
   return out;
@@ -468,11 +451,12 @@ export async function listClientsByLifecycle(
 ): Promise<ClientWithLifecycleMeta[]> {
   const sb = getSupabaseAdmin();
 
-  // #15 — aba LEADS = TODO cadastro que ainda NÃO é cliente (inclui cadastros
-  // puros, sem nenhum caso). Antes exigia caso LEAD, o que escondia cadastros
-  // recém-criados. "Cliente" = quem já tem algum caso CLIENTE.
+  // AJUSTE A (2026-07-07) — aba LEADS = banco-mestre: TODO cadastro ativo,
+  // INCLUSIVE quem já virou cliente. O cliente aparece em Leads E em Clientes;
+  // não some do Leads ao ser promovido. A aba "cliente" abaixo é o subset de
+  // quem tem >=1 caso CLIENTE.
   if (tab === "lead") {
-    return listNonClientRegistrations();
+    return listAllActiveRegistrations();
   }
 
   const lifecycle = tab === "cliente" ? "CLIENTE" : "PERDIDO";

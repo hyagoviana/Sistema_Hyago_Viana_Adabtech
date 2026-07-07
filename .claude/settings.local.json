@@ -324,7 +324,13 @@
       "PowerShell(npm run *)",
       "PowerShell(npx tsx scripts/db-query.ts \"select c.id, c.case_code, c.lifecycle, c.client_id, cl.full_name from system_cases c join system_clients cl on cl.id=c.client_id where c.lifecycle='LEAD' and c.deleted_at is null limit 5\")",
       "PowerShell(npx tsx scripts/db-query.ts \"select table_name from information_schema.views where table_name in \\('system_clients_clientes','system_clients_leads','system_cases_active'\\)\")",
-      "PowerShell(npx tsx scripts/db-query.ts \"update system_cases set lifecycle='CLIENTE', macrostatus_comercial='GANHO', assinatura_liberada_at=now\\(\\) where id='15775c64-525c-4125-a6d7-8759a5f16e65' returning id, lifecycle, assinatura_liberada_at\")"
+      "PowerShell(npx tsx scripts/db-query.ts \"update system_cases set lifecycle='CLIENTE', macrostatus_comercial='GANHO', assinatura_liberada_at=now\\(\\) where id='15775c64-525c-4125-a6d7-8759a5f16e65' returning id, lifecycle, assinatura_liberada_at\")",
+      "Bash(grep -v '`␍`')",
+      "Bash(grep -v \"Delete \\\\`␍\\\\`\")",
+      "Bash(git config *)",
+      "Bash(grep -o \"src/routes/[a-z.$]*\\\\.tsx\\([0-9]*\")",
+      "Bash(npm test *)",
+      "Bash(grep -oiE 'casos.\\\\$id|financeiro.index')"
     ]
   }
 }

@@ -8,7 +8,7 @@ import {
   resolveAutoValue,
   type TemplateField,
 } from "./cases/document-autofill";
-import { type MacroFin, type MacroOp } from "./cases/constants";
+import { GLOBAL_FUNNEL_SERVICE_TYPE_ID, type MacroFin, type MacroOp } from "./cases/constants";
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
@@ -100,6 +100,33 @@ export async function createCase(
   // (placeholder/geração), não a flag de "aguardando assinatura".
   const comercial = input.comercial === true;
 
+  // AJUSTE B (2026-07-07) — TODO caso criado (inclusive manual) deve aparecer no
+  // board "Todos" do financeiro (FinanceiroKanbanTodos / listAllBifurcatedCases),
+  // que só mostra macrostatus_fin != 'NAO_APLICAVEL'. Decisão: OPÇÃO 1 (semear na
+  // criação) por ser a MENOS invasiva — o board e sua query ficam intocados, e o
+  // KanbanBoard só renderiza cards cujo slug bate com uma coluna. Semeamos a 1ª
+  // etapa fin do FUNIL GLOBAL (fonte das colunas do board — GLOBAL_FUNNEL_..._ID),
+  // tipicamente 'ELABORANDO', garantindo coluna correspondente.
+  //
+  // Não quebra a bifurcação por trigger (system_cases_bifurcacao_trg): ela só
+  // dispara quando NEW.macrostatus_fin = 'NAO_APLICAVEL' no UPDATE op→IMPLANTADO;
+  // como o caso já nasce fora de 'NAO_APLICAVEL', NÃO há dupla-bifurcação.
+  // Respeita override explícito: se o caller passar input.macrostatus_fin, ele vence.
+  let defaultFinStatus: string = input.macrostatus_fin ?? "NAO_APLICAVEL";
+  if (!input.macrostatus_fin) {
+    const { data: firstFinStage } = await sb
+      .from("system_pipeline_stages")
+      .select("slug")
+      .eq("service_type_id", GLOBAL_FUNNEL_SERVICE_TYPE_ID)
+      .eq("kind", "fin")
+      .neq("slug", "NAO_APLICAVEL")
+      .is("deleted_at", null)
+      .order("ordem", { ascending: true })
+      .limit(1)
+      .single();
+    if (firstFinStage) defaultFinStatus = firstFinStage.slug;
+  }
+
   // S5-02: caso comercial entra na pipeline de leads na 1ª etapa comercial
   // (ordem 0) do seu tipo. Dual-write via macrostatus_comercial (a projeção
   // system_fn_sync_stage_ids preenche stage_comercial_id). Best-effort: se o tipo
@@ -134,7 +161,7 @@ export async function createCase(
       case_code: code,
       case_type: input.case_type,
       macrostatus_op: defaultOpStatus,
-      macrostatus_fin: input.macrostatus_fin ?? "NAO_APLICAVEL",
+      macrostatus_fin: defaultFinStatus,
       macrostatus_comercial: defaultComercialStatus,
       proximo_passo: input.proximo_passo ?? null,
       responsavel: input.responsavel ?? null,

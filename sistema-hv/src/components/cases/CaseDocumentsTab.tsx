@@ -12,7 +12,8 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Upload } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ import {
   useGenerateCaseDocument,
   useReopenCaseDocument,
   useSendCaseDocumentToZapsign,
+  useUploadCaseDocument,
 } from "@/hooks/useCaseDocuments";
 import {
   PROCURACAO_CASE_TYPE,
@@ -98,7 +100,9 @@ export function CaseDocumentsTab({
   const del = useDeleteCaseDocument(caseId);
   const confirmarAssinatura = useConfirmarAssinaturaManual(caseId);
   const sync = useSyncDocumentTemplates();
+  const uploadDoc = useUploadCaseDocument(caseId);
 
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const [genOpen, setGenOpen] = useState(false);
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
@@ -128,6 +132,36 @@ export function CaseDocumentsTab({
             <RefreshCw size={14} className={`mr-1.5 ${sync.isPending ? "animate-spin" : ""}`} />
             Sincronizar modelos
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={uploadDoc.isPending}
+            onClick={() => uploadInputRef.current?.click()}
+          >
+            {uploadDoc.isPending ? (
+              <Loader2 size={14} className="mr-1.5 animate-spin" />
+            ) : (
+              <Upload size={14} className="mr-1.5" />
+            )}
+            Anexar documento
+          </Button>
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              try {
+                await uploadDoc.mutateAsync(file);
+                toast.success(`${file.name} anexado ao caso`);
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Falha ao anexar");
+              }
+            }}
+          />
           <Button size="sm" onClick={() => setGenOpen(true)}>
             <Plus size={14} className="mr-1.5" /> Gerar documento
           </Button>

@@ -139,9 +139,6 @@ const HOSPITAIS = [
   "Hospital Universitário Walter Cantídio",
 ];
 
-// Tags de perfil (multi-seleção) — parâmetros fixos para pesquisa no CRM.
-const TAGS_MEDICAS = ["Médico Militar", "Mais Médicos", "Médicos pelo Brasil"];
-
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -386,17 +383,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
       : cityValue
         ? [cityValue]
         : [];
-
-  // Tags de perfil (multi-seleção) — armazenadas em professional_data.tags.
-  const tags =
-    (useWatch({ control: form.control, name: "professional_data.tags" }) as
-      | string[]
-      | null
-      | undefined) ?? [];
-  const toggleTag = (t: string) => {
-    const next = tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t];
-    form.setValue("professional_data.tags", next, { shouldDirty: true });
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -870,29 +856,6 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   </FormItem>
                 )}
               />
-
-              <div>
-                <div className="text-sm font-medium leading-none mb-1.5">Tags (pesquisa no CRM)</div>
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {TAGS_MEDICAS.map((t) => {
-                    const active = tags.includes(t);
-                    return (
-                      <button
-                        type="button"
-                        key={t}
-                        onClick={() => toggleTag(t)}
-                        className={
-                          active
-                            ? "px-3 py-1 rounded-full text-xs font-medium bg-[var(--navy)] text-white"
-                            : "px-3 py-1 rounded-full text-xs font-medium border border-input text-muted-foreground hover:bg-muted"
-                        }
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <FormField
