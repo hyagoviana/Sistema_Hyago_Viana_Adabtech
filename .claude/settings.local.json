@@ -330,7 +330,8 @@
       "Bash(git config *)",
       "Bash(grep -o \"src/routes/[a-z.$]*\\\\.tsx\\([0-9]*\")",
       "Bash(npm test *)",
-      "Bash(grep -oiE 'casos.\\\\$id|financeiro.index')"
+      "Bash(grep -oiE 'casos.\\\\$id|financeiro.index')",
+      "PowerShell(npx tsc --noEmit 2>&1 | Measure-Object -Line | Select-Object -ExpandProperty Lines; git status --short --untracked-files=all)"
     ]
   }
 }

@@ -341,14 +341,26 @@ function ElaborarDialog({
   // Campos FIES (texto livre) que fluem para o documento do termo.
   const [taxaJuros, setTaxaJuros] = useState("");
   const [percentualFinanciado, setPercentualFinanciado] = useState("");
-  // Word editável do termo gerado após salvar (aberto num Dialog aninhado).
+  // Word editável do termo gerado (aberto num Dialog aninhado).
   const [docUrl, setDocUrl] = useState<string | null>(null);
+  // Último editUrl gerado nesta sessão — persiste mesmo com o dialog do Word
+  // fechado, para permitir reabrir sem regerar quando os inputs não mudaram.
+  const [ultimoDocUrl, setUltimoDocUrl] = useState<string | null>(null);
   const [preview, setPreview] = useState<{
     valor_total_centavos: number;
     qtd_parcelas: number;
     valor_parcela_centavos: number;
     valor_avista_centavos: number;
   } | null>(null);
+  // Snapshot RASCUNHO criado nesta sessão do modal (id do termo). Reaproveitado
+  // entre recliques em "Calcular e revisar" enquanto os inputs não mudarem, para
+  // não acumular snapshots/documentos duplicados no Drive.
+  const [termoId, setTermoId] = useState<string | null>(null);
+  // Assinatura dos inputs que geraram o snapshot atual. Se o usuário reclicar
+  // "Calcular e revisar" com os MESMOS valores só reabrimos o Word já gerado;
+  // se mudou algo, aí sim geramos um novo snapshot/documento (valores diferentes
+  // exigem doc novo). Assim há no máximo 1 doc por conjunto distinto de inputs.
+  const [sigGerada, setSigGerada] = useState<string | null>(null);
 
   // Desconto em fração (0..1) só quando à vista; senão undefined (usa o padrão do servidor).
   const descontoAvistaPct =
@@ -356,7 +368,46 @@ function ElaborarDialog({
       ? Math.max(0, Number(descontoAvista.replace(",", ".")) || 0) / 100
       : undefined;
 
-  function doCalc() {
+  // Reseta o estado da sessão sempre que o modal abre (evita reaproveitar um
+  // termo de uma abertura anterior).
+  useEffect(() => {
+    if (open) {
+      setTermoId(null);
+      setSigGerada(null);
+      setDocUrl(null);
+      setUltimoDocUrl(null);
+      setPreview(null);
+    }
+  }, [open]);
+
+  // Assinatura dos parâmetros que afetam o cálculo/documento.
+  function calcSignature() {
+    return JSON.stringify({
+      antes: toCents(antes),
+      depois: toCents(depois),
+      pagas: toCents(pagas),
+      tipo,
+      forma,
+      descontoAvistaPct: descontoAvistaPct ?? null,
+      taxaJuros: taxaJuros.trim(),
+      percentualFinanciado: percentualFinanciado.trim(),
+    });
+  }
+
+  const busy = calc.isPending || create.isPending || gerarDoc.isPending;
+
+  // "Calcular e revisar": calcula (preview) → cria snapshot RASCUNHO → gera o
+  // documento → abre o Word. Recliques com os mesmos inputs apenas reabrem o Word.
+  function doCalcularERevisar() {
+    const sig = calcSignature();
+    // Mesmos inputs de um doc já gerado nesta sessão → só reabre o Word já
+    // gerado (não cria snapshot nem documento novo).
+    if (sig === sigGerada && ultimoDocUrl) {
+      setDocUrl(ultimoDocUrl);
+      toast.success("Reabrindo documento já gerado");
+      return;
+    }
+
     calc.mutate(
       {
         saldoAntesCentavos: toCents(antes),
@@ -365,10 +416,63 @@ function ElaborarDialog({
         descontoAvistaPct,
       },
       {
-        onSuccess: (r) => setPreview(r),
+        onSuccess: (r) => {
+          setPreview(r);
+          // Cria o snapshot RASCUNHO e, na sequência, gera o documento e abre o Word.
+          create.mutate(
+            {
+              caseId,
+              saldoAntesCentavos: toCents(antes),
+              saldoDepoisCentavos: toCents(depois),
+              parcelasPagasCentavos: toCents(pagas),
+              tipoTermo: tipo,
+              formaPagamento: forma,
+              descontoAvistaPct,
+              elaboradoPorId,
+            },
+            {
+              onSuccess: (termo) => {
+                setTermoId(termo.id);
+                gerarDoc.mutate(
+                  {
+                    termoId: termo.id,
+                    taxaJuros: taxaJuros.trim() || undefined,
+                    percentualFinanciado: percentualFinanciado.trim() || undefined,
+                  },
+                  {
+                    onSuccess: (res) => {
+                      if (res.editUrl) {
+                        setDocUrl(res.editUrl);
+                        setUltimoDocUrl(res.editUrl);
+                        setSigGerada(sig);
+                        toast.success("Documento gerado — abrindo para revisão");
+                      } else {
+                        toast.error("Documento não retornou link editável");
+                      }
+                    },
+                    onError: (e) =>
+                      toast.error(
+                        e instanceof Error
+                          ? `Termo salvo, mas o documento não foi gerado: ${e.message}`
+                          : "Termo salvo, mas o documento não foi gerado (modelo não cadastrado).",
+                      ),
+                  },
+                );
+              },
+              onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao criar termo"),
+            },
+          );
+        },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
       },
     );
+  }
+
+  // "Salvar termo": o snapshot RASCUNHO já foi criado em "Calcular e revisar" e as
+  // edições do Word já persistem no Google Docs. Aqui só confirmamos e fechamos.
+  function doSalvarTermo() {
+    toast.success("Termo salvo (rascunho) — aguardando aprovação");
+    onOpenChange(false);
   }
 
   return (
@@ -377,7 +481,8 @@ function ElaborarDialog({
         <DialogHeader>
           <DialogTitle>Elaborar Termo de Acerto</DialogTitle>
           <DialogDescription>
-            Informe os saldos. O cálculo usa 15% / R$500 / 10% (padrão PRD).
+            Informe os saldos e clique em “Calcular e revisar” para gerar o documento e abrir o
+            Word. O cálculo usa 15% / R$500 / 10% (padrão PRD).
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -484,9 +589,9 @@ function ElaborarDialog({
               />
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={doCalc} disabled={calc.isPending}>
-            {calc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
-            Calcular
+          <Button variant="outline" size="sm" onClick={doCalcularERevisar} disabled={busy}>
+            {busy ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
+            Calcular e revisar
           </Button>
           {preview && (
             <div className="rounded-md bg-[var(--muted)] p-3 text-[13px]">
@@ -501,66 +606,29 @@ function ElaborarDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancelar
           </Button>
-          <Button
-            disabled={create.isPending || gerarDoc.isPending || !preview}
-            onClick={() =>
-              create.mutate(
-                {
-                  caseId,
-                  saldoAntesCentavos: toCents(antes),
-                  saldoDepoisCentavos: toCents(depois),
-                  parcelasPagasCentavos: toCents(pagas),
-                  tipoTermo: tipo,
-                  formaPagamento: forma,
-                  descontoAvistaPct,
-                  elaboradoPorId,
-                },
-                {
-                  onSuccess: (termo) => {
-                    toast.success("Termo elaborado (rascunho v1)");
-                    // #17 — gera o documento do termo e abre o Word editável na tela.
-                    // Se o modelo não estiver cadastrado (424), avisa mas NÃO quebra o salvar.
-                    gerarDoc.mutate(
-                      {
-                        termoId: termo.id,
-                        taxaJuros: taxaJuros.trim() || undefined,
-                        percentualFinanciado: percentualFinanciado.trim() || undefined,
-                      },
-                      {
-                        onSuccess: (r) => {
-                          onOpenChange(false);
-                          if (r.editUrl) {
-                            setDocUrl(r.editUrl);
-                            toast.success("Documento gerado — abrindo para revisão");
-                          }
-                        },
-                        onError: (e) => {
-                          onOpenChange(false);
-                          toast.error(
-                            e instanceof Error
-                              ? `Termo salvo, mas o documento não foi gerado: ${e.message}`
-                              : "Termo salvo, mas o documento não foi gerado (modelo do termo não cadastrado).",
-                          );
-                        },
-                      },
-                    );
-                  },
-                  onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
-                },
-              )
-            }
-          >
-            {gerarDoc.isPending ? <Loader2 size={13} className="mr-1 animate-spin" /> : null}
+          {/* "Salvar termo" só habilita depois de o documento ter sido gerado
+              (snapshot RASCUNHO já existe). Aqui apenas conclui e fecha. */}
+          <Button disabled={busy || !termoId} onClick={doSalvarTermo}>
             Salvar termo
           </Button>
         </DialogFooter>
       </DialogContent>
 
-      {/* #17 — Word editável do termo (Google Docs) aberto após salvar */}
-      <Dialog open={!!docUrl} onOpenChange={(v) => !v && setDocUrl(null)}>
+      {/* #17 — Word editável do termo (Google Docs) aberto após "Calcular e revisar".
+          Fechar aqui NÃO conclui: as edições já persistem no Google Docs e o termo
+          segue RASCUNHO/reabrível; concluir é o botão "Salvar termo". */}
+      <Dialog
+        open={!!docUrl}
+        onOpenChange={(v) => {
+          if (!v) {
+            setDocUrl(null);
+            toast.success("Documento salvo — clique em Salvar termo para concluir.");
+          }
+        }}
+      >
         <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>Termo de acerto — revisão</DialogTitle>
@@ -591,6 +659,8 @@ function ElaborarDialog({
             </>
           )}
           <DialogFooter>
+            {/* Fechar apenas zera docUrl; o toast "Documento salvo…" é disparado
+                pelo onOpenChange do Dialog (cobre Fechar, Esc e clique fora). */}
             <Button variant="outline" onClick={() => setDocUrl(null)}>
               Fechar
             </Button>
