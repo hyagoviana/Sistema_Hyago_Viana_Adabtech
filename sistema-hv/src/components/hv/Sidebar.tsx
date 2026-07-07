@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { signOut, useAuth } from "@/lib/auth";
-import { useCasesList } from "@/hooks/useCases";
+import { useCasesList, useComercialCases } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
 import { useExceptions } from "@/hooks/useExceptions";
 import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
@@ -140,6 +140,11 @@ export function Sidebar() {
 
   const { session, role } = useAuth();
   const { data: casos } = useCasesList();
+  // ITEM 1 (2026-07-07) — o badge de "Assinaturas" deve refletir EXATAMENTE a
+  // lista da aba (casos cujo documento foi enviado ao ZapSign), não todo caso com
+  // aguardando_assinatura_at (que era carimbado antes do envio → badge "1"
+  // fantasma). Fonte única: useComercialCases (mesma de comercial/assinaturas).
+  const { data: comercialCases } = useComercialCases();
   const { data: tasks } = useAllTasks();
   const { total: excTotal } = useExceptions();
 
@@ -151,10 +156,9 @@ export function Sidebar() {
     realCounts["/casos/financeiro"] = casos.filter(
       (c) => c.macrostatus_fin !== "NAO_APLICAVEL",
     ).length;
-    const aguardando = casos.filter(
-      (c) => (c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at,
-    ).length;
-    if (aguardando > 0) realCounts["/comercial/assinaturas"] = aguardando;
+  }
+  if (comercialCases && comercialCases.length > 0) {
+    realCounts["/comercial/assinaturas"] = comercialCases.length;
   }
   if (tasks) {
     realCounts["/tarefas"] = tasks.filter((t) => t.status !== "CONCLUIDA").length;

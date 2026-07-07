@@ -221,8 +221,9 @@ function DynamicKanban({
     const stage = (stages ?? []).find((s) => s.slug === toSlug);
     if (!stage) return;
     const mover = kind === "op" ? moveOp : moveFin;
+    // ITEM 2 — passa `toSlug` para o optimistic update (card salta na hora).
     mover.mutate(
-      { caseId: id, stageId: stage.id },
+      { caseId: id, stageId: stage.id, toSlug },
       {
         onSuccess: () => toast.success(`Movido pra ${stage.label}`),
         onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao mover"),
@@ -306,9 +307,9 @@ function DynamicKanban({
           <DialogHeader>
             <DialogTitle>Pasta de modelos — {serviceType.name}</DialogTitle>
             <DialogDescription>
-              Cole o link (ou o ID) da pasta do Google Drive com os modelos deste caso. Ao salvar, os
-              modelos dessa pasta são sincronizados e passam a aparecer ao gerar o documento deste
-              tipo.
+              Cole o link (ou o ID) da pasta do Google Drive com os modelos deste caso. Ao salvar,
+              os modelos dessa pasta são sincronizados e passam a aparecer ao gerar o documento
+              deste tipo.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -320,7 +321,11 @@ function DynamicKanban({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFolderOpen(false)} disabled={setFolder.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setFolderOpen(false)}
+              disabled={setFolder.isPending}
+            >
               Cancelar
             </Button>
             <Button
@@ -368,7 +373,7 @@ function DynamicKanban({
           isLoading={isLoading || stagesLoading}
           getId={(c) => c.id}
           getColumn={(c) => (kind === "op" ? c.macrostatus_op : c.macrostatus_fin)}
-          renderCard={(c) => <CaseCardReal caso={c} />}
+          renderCard={(c) => <CaseCardReal caso={c} kind={kind} />}
           onMove={handleMove}
         />
       )}

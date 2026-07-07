@@ -28,7 +28,13 @@ import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
+// ITEM 6 (2026-07-07) — quando o cadastro é aberto a partir de "Cadastro"
+// (Inteligência › Cadastro / aba Leads), guardamos a origem em ?from=cadastro
+// para o breadcrumb voltar a Cadastro (e não "jogar" o usuário na aba Clientes).
 export const Route = createFileRoute("/clientes/$id")({
+  validateSearch: (s: Record<string, unknown>): { from?: "cadastro" } => ({
+    from: s.from === "cadastro" ? "cadastro" : undefined,
+  }),
   component: ClienteDetalhe,
 });
 
@@ -56,6 +62,7 @@ function pickStr(obj: unknown, key: string): string | undefined {
 
 function ClienteDetalhe() {
   const { id } = Route.useParams();
+  const { from } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { data: cliente, isLoading, isError, error } = useClient(id);
   const { data: casesData } = useCasesList({ client_id: id });
@@ -114,7 +121,14 @@ function ClienteDetalhe() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ label: "Clientes", to: "/clientes" }, { label: cliente.full_name }]} />
+      <Breadcrumb
+        items={[
+          from === "cadastro"
+            ? { label: "Cadastro", to: "/inteligencia/leads" }
+            : { label: "Clientes", to: "/clientes" },
+          { label: cliente.full_name },
+        ]}
+      />
 
       <header className="flex items-end gap-6 mb-8">
         <div

@@ -13,9 +13,9 @@ import {
   listLeadsPipelineFn,
   listServiceTypesFn,
   listStagesFn,
-  moveCaseToStageComercialFn,
   moveCaseToStageFinFn,
   moveCaseToStageOpFn,
+  moveLeadStageComercialFn,
   reorderStagesFn,
   setAcertoParcialFn,
   softDeleteStageFn,
@@ -104,41 +104,100 @@ export function useComercialBoard() {
   });
 }
 
-export function useMoveCaseStageComercial(serviceTypeId: string) {
-  const fn = useServerFn(moveCaseToStageComercialFn);
+// ITEM 1 + 2 (2026-07-07) — move um CADASTRO (lead) entre etapas comerciais SEM
+// criar caso. Optimistic update: o card salta de coluna INSTANTANEAMENTE (patch
+// no cache ["comercial-board"]); o refetch em onSettled só confirma. `toSlug` é a
+// etapa de destino (para o patch otimista).
+export function useMoveLeadStageComercial() {
+  const fn = useServerFn(moveLeadStageComercialFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads-by-service", serviceTypeId] });
-      qc.invalidateQueries({ queryKey: ["leads-pipeline"] });
+    mutationFn: (vars: { clientId: string; stageId: string; toSlug: string }) =>
+      fn({ data: { clientId: vars.clientId, stageId: vars.stageId } }),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["comercial-board"] });
+      const prev = qc.getQueryData(["comercial-board"]);
+      qc.setQueryData(["comercial-board"], (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((r) =>
+              (r as { id: string }).id === vars.clientId
+                ? { ...(r as object), macrostatus_comercial: vars.toSlug }
+                : r,
+            )
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev !== undefined) qc.setQueryData(["comercial-board"], ctx.prev);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["comercial-board"] });
-      qc.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 }
 
+// ITEM 2 (2026-07-07) — optimistic update no move OPERACIONAL: patch imediato de
+// macrostatus_op no cache ["cases-by-service", id] → card salta na hora.
 export function useMoveCaseStageOp(serviceTypeId: string) {
   const fn = useServerFn(moveCaseToStageOpFn);
   const qc = useQueryClient();
+  const key = ["cases-by-service", serviceTypeId];
   return useMutation({
-    mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["cases-by-service", serviceTypeId] });
-      qc.invalidateQueries({ queryKey: ["cases"] });
+    mutationFn: (vars: { caseId: string; stageId: string; toSlug: string }) =>
+      fn({ data: { caseId: vars.caseId, stageId: vars.stageId } }),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData(key);
+      qc.setQueryData(key, (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((c) =>
+              (c as { id: string }).id === vars.caseId
+                ? { ...(c as object), macrostatus_op: vars.toSlug }
+                : c,
+            )
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev !== undefined) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: key });
     },
   });
 }
 
+// ITEM 2 (2026-07-07) — optimistic update no move FINANCEIRO: patch imediato de
+// macrostatus_fin no cache ["cases-by-service", id].
 export function useMoveCaseStageFin(serviceTypeId: string) {
   const fn = useServerFn(moveCaseToStageFinFn);
   const qc = useQueryClient();
+  const key = ["cases-by-service", serviceTypeId];
   return useMutation({
-    mutationFn: (vars: { caseId: string; stageId: string }) => fn({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["cases-by-service", serviceTypeId] });
-      qc.invalidateQueries({ queryKey: ["cases"] });
-      // #16 — funil único: o board "Todos" usa a query consolidada.
+    mutationFn: (vars: { caseId: string; stageId: string; toSlug?: string }) =>
+      fn({ data: { caseId: vars.caseId, stageId: vars.stageId } }),
+    onMutate: async (vars) => {
+      if (!vars.toSlug) return { prev: undefined };
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData(key);
+      qc.setQueryData(key, (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((c) =>
+              (c as { id: string }).id === vars.caseId
+                ? { ...(c as object), macrostatus_fin: vars.toSlug }
+                : c,
+            )
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev !== undefined) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: key });
       qc.invalidateQueries({ queryKey: ["cases-all-bifurcated"] });
     },
   });

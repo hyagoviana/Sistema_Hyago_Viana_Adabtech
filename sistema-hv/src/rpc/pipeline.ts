@@ -14,9 +14,9 @@ import {
   listLeadsPipeline,
   listServiceTypes,
   listStages,
-  moveCaseToStageComercial,
   moveCaseToStageFin,
   moveCaseToStageOp,
+  moveLeadStageComercial,
   reorderStages,
   setAcertoParcial,
   softDeleteStage,
@@ -29,22 +29,6 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
     await requireAuth();
     return await fn();
-  } catch (err: unknown) {
-    if (err instanceof AuthError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
-    }
-    const status = (err as { status?: number })?.status;
-    setResponseStatus(typeof status === "number" ? status : 500);
-    throw err instanceof Error ? new Error(err.message) : err;
-  }
-}
-
-// Igual a `handle`, mas repassa o id do usuário autenticado (ator) para o serviço.
-async function handleAuthed<T>(fn: (userId: string) => Promise<T>): Promise<T> {
-  try {
-    const user = await requireAuth();
-    return await fn(user.id);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
       setResponseStatus(err.status);
@@ -102,13 +86,13 @@ export const listComercialBoardFn = createServerFn({ method: "GET" }).handler(as
   handle(() => listComercialBoard()),
 );
 
-export const moveCaseToStageComercialFn = createServerFn({ method: "POST" })
+// ITEM 1 (2026-07-07) — move um CADASTRO (lead) entre etapas comerciais. A etapa
+// é gravada no próprio cadastro; NÃO cria caso.
+export const moveLeadStageComercialFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
+    z.object({ clientId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) =>
-    handleAuthed((userId) => moveCaseToStageComercial(data.caseId, data.stageId, userId)),
-  );
+  .handler(async ({ data }) => handle(() => moveLeadStageComercial(data.clientId, data.stageId)));
 
 export const bifurcarCaseFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))

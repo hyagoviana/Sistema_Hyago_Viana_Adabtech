@@ -3,6 +3,7 @@ import { AlertCircle, ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
 
 import { MoveCaseDialog } from "./MoveCaseDialog";
+import { MoveCaseFinDialog } from "./MoveCaseFinDialog";
 import { Badge, StatusDot } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
 import { CASE_TYPE_LABELS, type CaseType, type MacroOp } from "@/lib/cases/constants";
@@ -13,20 +14,26 @@ type Props = {
     case_code: string;
     case_type: string;
     macrostatus_op: string;
+    macrostatus_fin?: string | null;
+    service_type_id?: string | null;
     status_changed_at: string;
     inadimplente: boolean;
     proximo_passo: string | null;
     client_name: string;
   };
   compact?: boolean;
+  // ITEM 5 (2026-07-07) — o board por onde o card é visto. O botão "mover" abre o
+  // dialog do MESMO funil: "op" move a etapa operacional; "fin" a financeira.
+  kind?: "op" | "fin";
 };
 
 function daysSince(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function CaseCardReal({ caso, compact = true }: Props) {
+export function CaseCardReal({ caso, compact = true, kind = "op" }: Props) {
   const [moveOpen, setMoveOpen] = useState(false);
+  const isFin = kind === "fin";
   const dias = daysSince(caso.status_changed_at);
   const tipoLabel = CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
   const tone = dias > 30 ? "danger" : dias > 15 ? "warning" : "success";
@@ -47,9 +54,7 @@ export function CaseCardReal({ caso, compact = true }: Props) {
           <span className="text-[11px] text-[var(--ink-500)] tabular tracking-tight truncate">
             {caso.case_code}
           </span>
-          {caso.inadimplente && (
-            <AlertCircle size={12} className="text-[var(--danger)] shrink-0" />
-          )}
+          {caso.inadimplente && <AlertCircle size={12} className="text-[var(--danger)] shrink-0" />}
         </div>
         <div className="mt-1 text-[14px] font-semibold text-[var(--navy)] leading-snug group-hover:text-[var(--gold-700)] transition-colors truncate">
           {caso.client_name}
@@ -78,13 +83,24 @@ export function CaseCardReal({ caso, compact = true }: Props) {
           <ArrowRightLeft size={13} />
         </Button>
       </div>
-      <MoveCaseDialog
-        open={moveOpen}
-        onOpenChange={setMoveOpen}
-        caseId={caso.id}
-        caseCode={caso.case_code}
-        currentStatus={caso.macrostatus_op as MacroOp}
-      />
+      {isFin && caso.service_type_id ? (
+        <MoveCaseFinDialog
+          open={moveOpen}
+          onOpenChange={setMoveOpen}
+          caseId={caso.id}
+          caseCode={caso.case_code}
+          currentFinSlug={caso.macrostatus_fin ?? "NAO_APLICAVEL"}
+          serviceTypeId={caso.service_type_id}
+        />
+      ) : (
+        <MoveCaseDialog
+          open={moveOpen}
+          onOpenChange={setMoveOpen}
+          caseId={caso.id}
+          caseCode={caso.case_code}
+          currentStatus={caso.macrostatus_op as MacroOp}
+        />
+      )}
     </div>
   );
 }

@@ -6,18 +6,11 @@ import { toast } from "sonner";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { LeadCard } from "@/components/comercial/LeadCard";
-import { SendToOperacionalDialog } from "@/components/comercial/SendToOperacionalDialog";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  useComercialBoard,
-  useMoveCaseStageComercial,
-  useServiceTypes,
-  useStages,
-} from "@/hooks/usePipeline";
-import { useCreateCase } from "@/hooks/useCases";
+import { useComercialBoard, useMoveLeadStageComercial, useStages } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
   GLOBAL_FUNNEL_SERVICE_TYPE_ID,
@@ -56,18 +49,10 @@ function LeadsPage() {
     "comercial",
   );
   const { data: items, isLoading, isError, error } = useComercialBoard();
-  const move = useMoveCaseStageComercial(GLOBAL_FUNNEL_SERVICE_TYPE_ID);
-  const { data: serviceTypes } = useServiceTypes();
-  const createCase = useCreateCase();
+  const move = useMoveLeadStageComercial();
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const [editorOpen, setEditorOpen] = useState(false);
-  // ITEM 5 — lead selecionado para "Enviar para operacional" (abre o popup que
-  // lista os casos do lead e deixa escolher qual promover).
-  const [sendTarget, setSendTarget] = useState<{
-    clientId: string;
-    clientName: string;
-  } | null>(null);
 
   useDocumentTitle("Comercial");
 
@@ -108,41 +93,12 @@ function LeadsPage() {
     if (!stage) return;
 
     const row = rows.find((r) => r.id === id);
-    // Cadastros sintéticos (sem caso comercial ainda; id = client_id). Soltar num
-    // estágio INICIA o fluxo comercial: cria um CASO comercial (comercial=true →
-    // carimba aguardando_assinatura_at + entra na 1ª etapa) e, em seguida, move-o
-    // para a etapa onde foi solto. Como o cadastro não tem tipo, usa-se o PRIMEIRO
-    // tipo de serviço ativo como default; o usuário refina o tipo/procuração no caso.
-    if (row?.is_registration) {
-      const firstType = (serviceTypes ?? [])[0];
-      if (!firstType) {
-        toast.error("Cadastre um tipo de serviço antes de iniciar o fluxo comercial.");
-        return;
-      }
-      createCase.mutate(
-        { client_id: row.client_id, case_type: firstType.slug, comercial: true },
-        {
-          onSuccess: (created) => {
-            toast.success("Fluxo comercial iniciado — ajuste o tipo/procuração no caso.");
-            // Move o caso recém-criado para a etapa onde o card foi solto.
-            move.mutate(
-              { caseId: created.id, stageId: stage.id },
-              {
-                onSuccess: () => toast.success(`Movido pra ${displayStageLabel(stage)}`),
-                onError: (err) =>
-                  toast.error(err instanceof Error ? err.message : "Falha ao mover"),
-              },
-            );
-          },
-          onError: (err) =>
-            toast.error(err instanceof Error ? err.message : "Falha ao iniciar fluxo comercial"),
-        },
-      );
-      return;
-    }
-
+    const clientId = row?.client_id ?? id;
+    // ITEM 1 (2026-07-07) — arrastar SÓ move o cadastro (lead) entre etapas
+    // comerciais. NÃO cria caso, não semeia financeiro, não gera documento. A
+    // vinculação de um caso ao cadastro é feita manualmente pelo usuário.
     move.mutate(
-      { caseId: id, stageId: stage.id },
+      { clientId, stageId: stage.id, toSlug },
       {
         onSuccess: () => toast.success(`Movido pra ${displayStageLabel(stage)}`),
         onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao mover"),
@@ -223,30 +179,12 @@ function LeadsPage() {
           isLoading={isLoading || stagesLoading}
           getId={(c) => c.id}
           getColumn={(c) => c.macrostatus_comercial ?? "NOVO"}
-          renderCard={(c) => (
-            <LeadCard
-              lead={c}
-              onSendToOperacional={(lead) =>
-                setSendTarget({
-                  clientId: lead.client_id ?? lead.id,
-                  clientName: lead.client_name,
-                })
-              }
-            />
-          )}
+          renderCard={(c) => <LeadCard lead={c} />}
           onMove={handleMove}
         />
       ) : (
         <LeadsList leads={rows} isLoading={isLoading || stagesLoading} stageLabel={stageLabel} />
       )}
-
-      {/* ITEM 5 — popup "Enviar para operacional": lista os casos do lead
-          (aguardando assinatura) e libera o escolhido para o Kanban operacional. */}
-      <SendToOperacionalDialog
-        clientId={sendTarget?.clientId ?? null}
-        clientName={sendTarget?.clientName ?? ""}
-        onClose={() => setSendTarget(null)}
-      />
     </div>
   );
 }

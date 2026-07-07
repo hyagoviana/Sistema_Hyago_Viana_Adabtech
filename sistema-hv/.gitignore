@@ -38,3 +38,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Backups de cadastros (contêm CPF/dados pessoais — NUNCA versionar)
+backup-cadastros-*.json

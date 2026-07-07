@@ -336,7 +336,16 @@
       "Bash(ls src/services)",
       "Bash(ls src/**/termo*)",
       "Bash(python -c \"import docx; print\\('docx ok'\\)\")",
-      "Bash(grep -iE \"taxa de juro|financiado|data assinatura|saldo devedor|R\\\\\\\\\\\\$ R\\\\\\\\\\\\$\")"
+      "Bash(grep -iE \"taxa de juro|financiado|data assinatura|saldo devedor|R\\\\\\\\\\\\$ R\\\\\\\\\\\\$\")",
+      "Bash(Select-Object -First 60)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 60)",
+      "PowerShell(npx eslint src/routes/comercial.leads.tsx src/routes/pipeline.tsx src/routes/casos.`$id.tsx src/routes/clientes.`$id.tsx src/hooks/usePipeline.ts src/lib/pipeline-service.ts src/rpc/pipeline.ts src/components/cases/CaseCardReal.tsx src/components/cases/MoveCaseFinDialog.tsx src/components/clients/ClientRoster.tsx src/components/hv/Sidebar.tsx 2>&1 | Select-Object -First 60)",
+      "PowerShell(npx prettier --write src/routes/comercial.leads.tsx src/routes/pipeline.tsx src/routes/casos.`$id.tsx src/routes/clientes.`$id.tsx src/hooks/usePipeline.ts src/lib/pipeline-service.ts src/rpc/pipeline.ts src/components/cases/CaseCardReal.tsx src/components/cases/MoveCaseFinDialog.tsx src/components/clients/ClientRoster.tsx src/components/hv/Sidebar.tsx 2>&1 | Select-Object -Last 15)",
+      "PowerShell(npx eslint src/routes/comercial.leads.tsx src/routes/pipeline.tsx src/routes/casos.`$id.tsx src/routes/clientes.`$id.tsx src/hooks/usePipeline.ts src/lib/pipeline-service.ts src/rpc/pipeline.ts src/components/cases/CaseCardReal.tsx src/components/cases/MoveCaseFinDialog.tsx src/components/clients/ClientRoster.tsx src/components/hv/Sidebar.tsx 2>&1 | Select-Object -Last 40)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx vite build 2>&1 | Select-Object -Last 20)",
+      "PowerShell(npx vite build 2>&1 | Select-Object -Last 15)",
+      "Bash(echo \"---exit=$?\")"
     ]
   }
 }

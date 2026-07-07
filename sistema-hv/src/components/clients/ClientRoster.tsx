@@ -372,6 +372,9 @@ export function ClientRoster({
               <Link
                 to="/clientes/$id"
                 params={{ id: c.id }}
+                // ITEM 6 (2026-07-07) — no roster de Cadastro (sub-abas Leads/
+                // Clientes), leva a origem para o breadcrumb voltar a Cadastro.
+                search={showLifecycleTabs ? { from: "cadastro" } : undefined}
                 className="card-editorial !p-5 flex items-center gap-4 group"
               >
                 <div

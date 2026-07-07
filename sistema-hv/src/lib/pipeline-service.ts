@@ -238,7 +238,9 @@ export async function softDeleteStage(id: string) {
       const { count: c } = await sb
         .from("system_cases")
         .select("id", { count: "exact", head: true })
-        .or(`${stageCol}.eq.${id},and(service_type_id.eq.${stage.service_type_id},${macroCol}.eq.${stage.slug})`)
+        .or(
+          `${stageCol}.eq.${id},and(service_type_id.eq.${stage.service_type_id},${macroCol}.eq.${stage.slug})`,
+        )
         .is("deleted_at", null);
       count = c ?? 0;
     }
@@ -392,69 +394,42 @@ export type ComercialBoardRow = {
 export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
   const sb = getSupabaseAdmin();
 
-  // (a) Casos LEAD de TODOS os tipos. Montamos a lista de casos LEAD ANTES do
-  //     filtro `perdido_at` (ITEM 6.4) — assim conseguimos:
-  //       1) mostrar no board só os NÃO-perdidos (caseRows);
-  //       2) saber quais CLIENTES já têm ALGUM caso LEAD (allLeadClientIds),
-  //          inclusive perdido — pra NÃO recriar o cadastro sintético "Novo" de um
-  //          lead que já foi trabalhado e perdido.
-  const { data: cases, error } = await sb
-    .from("system_cases_active")
-    .select(
-      "id, client_id, case_code, case_type, macrostatus_comercial, created_at, client_name, perdido_at",
-    )
-    .eq("lifecycle", "LEAD")
-    .order("created_at", { ascending: false });
-  if (error) throw new PipelineServiceError(error.message, 500);
+  // ITEM 1 (2026-07-07) — funil comercial por CADASTRO. Um card por cadastro
+  // (pessoa) que ainda NÃO é cliente. A etapa comercial vive no PRÓPRIO cadastro
+  // (system_clients.macrostatus_comercial) — arrastar o card só atualiza essa
+  // coluna, sem criar caso, sem semear financeiro e sem gerar documento. A
+  // vinculação de um CASO ao cadastro é 100% manual (feita pelo usuário).
 
-  const allLeadClientIds = new Set((cases ?? []).map((c) => c.client_id));
-
-  // Board: só leads NÃO perdidos (perdido não aparece no funil comercial).
-  const caseRows: ComercialBoardRow[] = (cases ?? [])
-    .filter((c) => !(c as { perdido_at?: string | null }).perdido_at)
-    .map((c) => ({
-      id: c.id,
-      client_id: c.client_id,
-      case_code: c.case_code,
-      case_type: c.case_type,
-      macrostatus_comercial: c.macrostatus_comercial ?? "NOVO",
-      created_at: c.created_at,
-      client_name: c.client_name,
-      is_registration: false,
-    }));
-
-  // Cadastros que já têm QUALQUER caso LEAD (perdido ou não) ou já são clientes
-  // (CLIENTE) não viram card sintético — evita que um lead PERDIDO reapareça como
-  // "cadastro novo" na coluna Novo (ITEM 6.4).
-  const withCase = allLeadClientIds;
+  // Cadastros que já viraram CLIENTE (têm algum caso lifecycle='CLIENTE') saem
+  // do funil comercial — eles graduaram.
   const { data: clienteCases } = await sb
     .from("system_cases_active")
     .select("client_id")
     .eq("lifecycle", "CLIENTE");
   const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
 
-  // (b) Cadastros puros (sem caso comercial e não-clientes) → NOVO sintético.
+  // Todos os cadastros ativos (select "*" porque macrostatus_comercial ainda não
+  // está nos tipos gerados — lido via cast defensivo).
   const { data: clients, error: cErr } = await sb
     .from("system_clients")
-    .select("id, full_name, created_at")
+    .select("*")
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (cErr) throw new PipelineServiceError(cErr.message, 500);
 
-  const regRows: ComercialBoardRow[] = (clients ?? [])
-    .filter((cli) => !withCase.has(cli.id) && !clienteIds.has(cli.id))
+  return (clients ?? [])
+    .filter((cli) => !clienteIds.has(cli.id))
     .map((cli) => ({
       id: cli.id,
       client_id: cli.id,
       case_code: "—",
       case_type: "",
-      macrostatus_comercial: "NOVO",
+      macrostatus_comercial:
+        (cli as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "NOVO",
       created_at: cli.created_at,
       client_name: cli.full_name,
       is_registration: true,
     }));
-
-  return [...caseRows, ...regRows];
 }
 
 // Visão consolidada de todos os leads (para o índice/resumo do CRM).
@@ -519,6 +494,51 @@ export async function moveCaseToStageComercial(
   });
 
   return data;
+}
+
+// ITEM 1 (2026-07-07) — move um CADASTRO (lead) entre etapas comerciais. A etapa
+// é gravada em system_clients.macrostatus_comercial. NÃO cria caso, não semeia
+// financeiro e não gera documento. Idempotente. Auditado (não há case_event, pois
+// não há caso — usamos system_audit_log).
+export async function moveLeadStageComercial(clientId: string, stageId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: stage, error: sErr } = await sb
+    .from("system_pipeline_stages")
+    .select("slug, kind")
+    .eq("id", stageId)
+    .single();
+  if (sErr || !stage || stage.kind !== "comercial")
+    throw new PipelineServiceError("Etapa comercial inválida", 422);
+
+  const { data: cli, error: cErr } = await sb
+    .from("system_clients")
+    .select("id, organization_id")
+    .eq("id", clientId)
+    .is("deleted_at", null)
+    .single();
+  if (cErr || !cli) throw new PipelineServiceError("Cadastro não encontrado", 404);
+
+  const { error } = await sb
+    .from("system_clients")
+    .update({ macrostatus_comercial: stage.slug } as never)
+    .eq("id", clientId)
+    .is("deleted_at", null);
+  if (error) throw new PipelineServiceError(error.message ?? "Falha ao mover lead", 500);
+
+  await sb
+    .from("system_audit_log")
+    .insert({
+      organization_id: cli.organization_id,
+      action: "lead.comercial_stage_changed",
+      entity_type: "client",
+      entity_id: clientId,
+    })
+    .then(
+      () => {},
+      () => {},
+    );
+
+  return { id: clientId, macrostatus_comercial: stage.slug };
 }
 
 // Bifurcação por botão (ADR-009) — idempotente via função do banco.

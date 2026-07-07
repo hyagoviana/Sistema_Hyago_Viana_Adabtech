@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   ArrowRightLeft,
+  DollarSign,
   ExternalLink,
   FileSignature,
   FolderOpen,
@@ -16,7 +17,6 @@ import {
   ChecklistInconsistencyAlert,
 } from "@/components/cases/CaseChecklistPanel";
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
-import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
@@ -154,7 +154,6 @@ function CasoDetalhe() {
       toast.error(err instanceof Error ? err.message : "Falha ao promover caso");
     }
   }
-
 
   // Carrega cliente vinculado pra header
   const { data: cliente } = useClient(caso?.client_id ?? "");
@@ -300,6 +299,14 @@ function CasoDetalhe() {
             >
               <UserCheck size={14} className="mr-1.5" />
               {promover.isPending ? "Promovendo…" : "Marcar como cliente"}
+            </Button>
+          )}
+          {/* ITEM 4 (2026-07-07) — "Enviar para o financeiro" também no TOPO (abre
+              o mesmo popup: duplicar p/ financeiro ou somente-financeiro). Só
+              enquanto o caso ainda não está no financeiro. */}
+          {podeFinanceiro && !finBifurcated && (
+            <Button variant="outline" size="sm" onClick={() => setEntrarOpen(true)}>
+              <DollarSign size={14} className="mr-1.5" /> Enviar para o financeiro
             </Button>
           )}
           {/* ITEM 2 (2026-07-06) — "Marcar como perdido" REMOVIDO do topo (decisão do
@@ -455,20 +462,10 @@ function CasoDetalhe() {
               )}
             </div>
 
-            {/* ITEM 2a (2026-07-07) — "Conferência (dupla checagem)" só quando o
-                caso ESTIVER no pipeline FINANCEIRO: macrostatus_fin válido e
-                != 'NAO_APLICAVEL'. Fora do financeiro, o painel some. */}
-            {caso.macrostatus_fin &&
-              caso.macrostatus_fin !== "NAO_APLICAVEL" &&
-              caso.service_type_id && (
-              <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
-                <CaseConferenciaFinPanel
-                  caseId={caso.id}
-                  serviceTypeId={caso.service_type_id}
-                  currentFinSlug={caso.macrostatus_fin}
-                />
-              </div>
-            )}
+            {/* ITEM 3 (2026-07-07) — "Conferência (dupla checagem)" REMOVIDA da
+                ficha. A entrada/movimentação no financeiro é feita pelo popup
+                "Enviar para o financeiro" (duplicar / somente-financeiro) e pelo
+                botão "mover" do rastro financeiro. */}
 
             {finBifurcated && (
               <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
