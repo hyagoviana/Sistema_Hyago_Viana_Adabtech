@@ -763,6 +763,13 @@ function buildTermoValues(
     percentual_abatimento: percentualAbatimentoValue,
     valor_ultima_parcela_extenso: reaisPorExtenso(parcelamentoDoc.valorUltima),
 
+    // ── FIES (prints do portal viraram texto editável nos modelos) ──────────
+    // Sem fonte no cálculo/cadastro: saem VAZIOS por padrão (o usuário preenche
+    // no Word editável). Nunca deixar o <placeholder> literal no documento.
+    taxa_juros: "",
+    percentual_financiado: "",
+    data_assinatura_fies: "",
+
     // ── Só COMPLEMENTAR ───────────────────────────────────────────────────
     // honorarios_abatimento = só o abatimento novo (valor_total do cálculo).
     honorarios_abatimento: brlDoc(termo.valor_total_centavos),

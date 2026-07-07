@@ -308,7 +308,18 @@
       "Bash(PYTHONIOENCODING=utf-8 grep -oE \"^\\(DATABASE_URL|SUPABASE_DB_URL|GOOGLE_DRIVE_TEMPLATES_FOLDER_ID|GOOGLE_DRIVE_PROCURACAO_FOLDER_ID|SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|VITE_SUPABASE_URL\\)=\" .env.local)",
       "Bash(PYTHONIOENCODING=utf-8 grep -oE \"GOOGLE_DRIVE_TEMPLATES_FOLDER_ID=.*\" .env.local)",
       "Bash(PYTHONIOENCODING=utf-8 npx tsx scripts/register-termo-templates.ts)",
-      "Bash(tee /tmp/tsc.out)"
+      "Bash(tee /tmp/tsc.out)",
+      "Bash(python scripts/_inspect-imgs.py)",
+      "Bash(py scripts/_inspect-imgs.py)",
+      "Bash(python scripts/_extract-imgs.py)",
+      "Bash(py scripts/_extract-imgs.py)",
+      "Bash(python -c \"import docx; print\\('python-docx', docx.__version__\\)\")",
+      "Bash(python scripts/_inspect2.py)",
+      "Bash(cp \"docs/modelos-termo/TERMO ACERTO PARCIAL.docx\" \"scripts/_bak_PARCIAL.docx\")",
+      "Bash(cp \"docs/modelos-termo/TERMO ACERTO COMPLEMENTAR.docx\" \"scripts/_bak_COMPLEMENTAR.docx\")",
+      "Bash(python scripts/_edit-termos.py)",
+      "Bash(cp \"scripts/_bak_PARCIAL.docx\" \"docs/modelos-termo/TERMO ACERTO PARCIAL.docx\")",
+      "Bash(cp \"scripts/_bak_COMPLEMENTAR.docx\" \"docs/modelos-termo/TERMO ACERTO COMPLEMENTAR.docx\")"
     ]
   }
 }
