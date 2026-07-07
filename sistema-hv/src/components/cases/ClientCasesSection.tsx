@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { CaseFormDialog } from "./CaseFormDialog";
-import { CaseSignActions } from "./CaseSignActions";
 import { Badge } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -18,19 +17,16 @@ import {
 
 type Props = {
   clientId: string;
+  // ITEM 1 (2026-07-07) — mantidos por compat com os callers (ficha do cliente
+  // ainda passa nome/cpf/email/phone), mas não são mais usados aqui: a ação de
+  // enviar contrato/procuração saiu desta lista (vai pra aba Documentos do caso).
   clientName?: string;
   clientCpf?: string;
   clientEmail?: string;
   clientPhone?: string;
 };
 
-export function ClientCasesSection({
-  clientId,
-  clientName,
-  clientCpf,
-  clientEmail,
-  clientPhone,
-}: Props) {
+export function ClientCasesSection({ clientId }: Props) {
   const { data, isLoading, isError, error } = useCasesList({ client_id: clientId });
   const [createOpen, setCreateOpen] = useState(false);
   const cases = data ?? [];
@@ -91,27 +87,10 @@ export function ClientCasesSection({
                     )}
                   </div>
                 </Link>
-                {/* S9-09 — enviar procuração/contrato direto da ficha do cliente
-                    (por caso). Visível para lead E cliente. */}
-                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                  <CaseSignActions
-                    caseId={c.id}
-                    clientId={clientId}
-                    caseType={c.case_type}
-                    clientName={clientName}
-                    clientCpf={clientCpf}
-                    municipio={c.municipio ?? undefined}
-                    procuracaoAssinada={
-                      !!(c as { procuracao_assinada_at?: string | null }).procuracao_assinada_at
-                    }
-                    autoFillExtra={{
-                      email: clientEmail,
-                      phone: clientPhone,
-                      caseCode: c.case_code,
-                      responsavel: c.responsavel ?? undefined,
-                    }}
-                  />
-                </div>
+                {/* ITEM 1 (2026-07-07) — a ação "Enviar contrato e procuração" foi
+                    REMOVIDA da lista de casos da ficha do cliente. Criar/listar caso
+                    aqui NÃO gera documento; a geração/envio acontece DENTRO do caso
+                    (aba Documentos). Abra o caso para gerar contrato/procuração. */}
               </div>
             </li>
           ))}

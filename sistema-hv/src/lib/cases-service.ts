@@ -716,7 +716,25 @@ export async function listComercialCases() {
     .not("aguardando_assinatura_at", "is", null)
     .order("aguardando_assinatura_at", { ascending: true });
   if (error) throw new CaseServiceError(error.message, 500);
-  return data ?? [];
+  const cases = data ?? [];
+  if (cases.length === 0) return cases;
+
+  // ITEM 3 (2026-07-07) — a aba "Assinaturas" (Comercial) deve listar SOMENTE
+  // casos cujo documento foi de fato ENVIADO AO ZAPSIGN (status ENVIADO_ZAPSIGN
+  // ou ASSINADO). Casos que apenas GERARAM o doc (RASCUNHO/EM_EDICAO/FINALIZADO)
+  // NÃO aparecem aqui. `aguardando_assinatura_at` sozinho não basta: ele é
+  // carimbado ao entrar no comercial (antes do envio ao ZapSign). ZapSign está
+  // adiado, então a aba pode ficar vazia — o filtro é o que importa.
+  const ids = cases.map((c) => c.id);
+  const { data: sentDocs, error: docErr } = await sb
+    .from("system_case_documents")
+    .select("case_id")
+    .in("case_id", ids)
+    .in("status", ["ENVIADO_ZAPSIGN", "ASSINADO"])
+    .is("deleted_at", null);
+  if (docErr) throw new CaseServiceError(docErr.message, 500);
+  const withSentDoc = new Set((sentDocs ?? []).map((d) => d.case_id));
+  return cases.filter((c) => withSentDoc.has(c.id));
 }
 
 // ----------------------------------------------------------------------------
@@ -800,7 +818,9 @@ export async function promoverCasoOperacional(
 
   const { data: caso } = await sb
     .from("system_cases")
-    .select("id, organization_id, lifecycle, aguardando_assinatura_at, assinatura_liberada_at")
+    .select(
+      "id, organization_id, lifecycle, aguardando_assinatura_at, assinatura_liberada_at, macrostatus_op, service_type_id",
+    )
     .eq("id", caseId)
     .is("deleted_at", null)
     .single();
@@ -822,6 +842,25 @@ export async function promoverCasoOperacional(
   };
   if (caso.aguardando_assinatura_at) {
     patch.aguardando_assinatura_at = null;
+  }
+
+  // ITEM 2b (2026-07-07) — o caso promovido deve cair na 1ª etapa OPERACIONAL do
+  // TIPO dele. Normalmente já nasce lá (createCase), então isto é defensivo: só
+  // corrige se `macrostatus_op` estiver NULO. Se já estiver numa etapa op válida
+  // (ex.: movido manualmente pra frente), NÃO regride — preserva o progresso.
+  if (!caso.macrostatus_op && (caso as { service_type_id?: string | null }).service_type_id) {
+    const { data: firstOpStage } = await sb
+      .from("system_pipeline_stages")
+      .select("slug")
+      .eq("service_type_id", (caso as { service_type_id: string }).service_type_id)
+      .eq("kind", "op")
+      .is("deleted_at", null)
+      .order("ordem", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (firstOpStage?.slug) {
+      patch.macrostatus_op = firstOpStage.slug;
+    }
   }
 
   const { data, error } = await sb

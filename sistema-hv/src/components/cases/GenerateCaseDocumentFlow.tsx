@@ -30,7 +30,9 @@ import {
   useDocumentTemplates,
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
+  useTemplatesByFolder,
 } from "@/hooks/useDocumentTemplates";
+import { CASE_DOCUMENT_FOLDERS } from "@/lib/cases/case-document-folders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -54,14 +56,15 @@ export function GenerateCaseDocumentFlow({
   open,
   onOpenChange,
   caseId,
-  caseType,
   autoFill,
   initialMode,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   caseId: string;
-  caseType: string;
+  // ITEM 4 (2026-07-07) — mantido por compat com callers; o caminho "Documento de
+  // caso" agora seleciona por PASTA (source_folder_id), não mais por case_type.
+  caseType?: string;
   autoFill: AutoFillData;
   // ITEM 2 — quando o chamador já sabe o modo (ex.: ficha do cliente já escolheu
   // "Documento do caso" e o caso), pula a pergunta Procuração vs Caso.
@@ -78,7 +81,6 @@ export function GenerateCaseDocumentFlow({
       <PickDialog
         open={open}
         onOpenChange={onOpenChange}
-        caseType={caseType}
         pending={generate.isPending}
         autoFill={autoFill}
         initialMode={initialMode}
@@ -164,7 +166,6 @@ export function GenerateCaseDocumentFlow({
 function PickDialog({
   open,
   onOpenChange,
-  caseType,
   pending,
   onGenerate,
   autoFill,
@@ -172,7 +173,6 @@ function PickDialog({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  caseType: string;
   pending: boolean;
   onGenerate: (
     templateId: string,
@@ -186,9 +186,14 @@ function PickDialog({
   const [mode, setMode] = useState<GenMode | null>(initialMode ?? null);
   const [templateId, setTemplateId] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
+  // ITEM 4 — "Documento de caso": passo 1 = escolher 1 das 6 pastas; passo 2 =
+  // só os docs daquela pasta (filtro por source_folder_id).
+  const [folderId, setFolderId] = useState<string | null>(null);
 
-  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE);
-  const { data: caseTemplates } = useDocumentTemplates(caseType);
+  // Procuração ESTRITA: só os modelos da pasta de procuração (case_type='PROCURACAO'),
+  // sem os modelos sem tipo (case_type null).
+  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE, true);
+  const { data: folderTemplates } = useTemplatesByFolder(mode === "caso" ? folderId : null);
   const syncProc = useSyncProcuracaoTemplates();
 
   useEffect(() => {
@@ -196,10 +201,11 @@ function PickDialog({
       setMode(initialMode ?? null);
       setTemplateId("");
       setValues({});
+      setFolderId(null);
     }
   }, [open, initialMode]);
 
-  const templates = ((mode === "procuracao" ? procTemplates : caseTemplates) ?? []) as Array<{
+  const templates = ((mode === "procuracao" ? procTemplates : folderTemplates) ?? []) as Array<{
     id: string;
     name: string;
     fields: unknown;
@@ -258,7 +264,7 @@ function PickDialog({
                 <FileText size={16} className="text-[var(--gold-700)]" /> Documento do caso
               </div>
               <div className="text-[12px] text-muted-foreground mt-1">
-                Modelos do tipo do caso (pasta vinculada ao tipo).
+                Escolha 1 das 6 pastas e o documento dela.
               </div>
             </button>
           </div>
@@ -272,7 +278,46 @@ function PickDialog({
     );
   }
 
+  // ITEM 4 — "Documento de caso", passo 1: escolher 1 das 6 pastas.
+  if (mode === "caso" && !folderId) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
+            <DialogDescription>
+              Selecione a pasta do documento. Só os documentos dela aparecerão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {CASE_DOCUMENT_FOLDERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setFolderId(f.id);
+                  setTemplateId("");
+                  setValues({});
+                }}
+                className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
+              >
+                <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
+                <span className="text-[13px] font-medium text-[var(--navy)]">{f.label}</span>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMode(null)}>
+              ← Voltar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const isProc = mode === "procuracao";
+  const folderLabel = CASE_DOCUMENT_FOLDERS.find((f) => f.id === folderId)?.label;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -288,16 +333,23 @@ function PickDialog({
           <button
             type="button"
             onClick={() => {
-              setMode(null);
+              // "caso": volta pra escolha das 6 pastas; "procuracao": pro tipo.
+              if (isProc) {
+                setMode(null);
+              } else {
+                setFolderId(null);
+              }
               setTemplateId("");
               setValues({});
             }}
             className="text-xs text-[var(--gold-700)] hover:underline"
           >
-            ← Trocar tipo de documento
+            {isProc ? "← Trocar tipo de documento" : "← Trocar pasta"}
           </button>
           <div>
-            <Label>{isProc ? "Modelo de procuração" : "Modelo do caso"}</Label>
+            <Label>
+              {isProc ? "Modelo de procuração" : `Documento — ${folderLabel ?? "pasta"}`}
+            </Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
                 {isProc ? (
@@ -326,7 +378,7 @@ function PickDialog({
                     </Button>
                   </span>
                 ) : (
-                  'Nenhum modelo sincronizado. Use "Sincronizar modelos" ou vincule a pasta do tipo (Pasta de modelos, no Operacional).'
+                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" na aba Documentos para importar os documentos das 6 pastas.'
                 )}
               </div>
             ) : (

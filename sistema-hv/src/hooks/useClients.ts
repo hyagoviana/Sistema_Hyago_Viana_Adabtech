@@ -7,10 +7,10 @@ import {
   createClientFn,
   findOrCreateClientFn,
   getClientFn,
+  hardDeleteClientFn,
   listClientsByLifecycleFn,
   listClientsFn,
   resyncDriveFn,
-  softDeleteClientFn,
   updateClientFn,
 } from "@/rpc/clients";
 
@@ -86,8 +86,9 @@ export function useUpdateClient() {
   });
 }
 
+// HARD-DELETE — exclusão PERMANENTE (apaga cliente + casos + docs + notas).
 export function useDeleteClient() {
-  const fn = useServerFn(softDeleteClientFn);
+  const fn = useServerFn(hardDeleteClientFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),

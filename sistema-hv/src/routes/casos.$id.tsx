@@ -455,7 +455,12 @@ function CasoDetalhe() {
               )}
             </div>
 
-            {finBifurcated && caso.service_type_id && (
+            {/* ITEM 2a (2026-07-07) — "Conferência (dupla checagem)" só quando o
+                caso ESTIVER no pipeline FINANCEIRO: macrostatus_fin válido e
+                != 'NAO_APLICAVEL'. Fora do financeiro, o painel some. */}
+            {caso.macrostatus_fin &&
+              caso.macrostatus_fin !== "NAO_APLICAVEL" &&
+              caso.service_type_id && (
               <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
                 <CaseConferenciaFinPanel
                   caseId={caso.id}

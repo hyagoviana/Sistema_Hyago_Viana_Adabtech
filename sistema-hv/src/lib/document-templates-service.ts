@@ -23,17 +23,38 @@ export type TemplateField = {
   auto_field?: string;
 };
 
-export async function listDocumentTemplates(opts?: { caseType?: string | null }) {
+export async function listDocumentTemplates(opts?: {
+  caseType?: string | null;
+  // strict=true → filtra APENAS case_type = {caseType} (SEM o fallback de null).
+  // Usado pela PROCURAÇÃO, que deve listar só os modelos da pasta de procuração
+  // (case_type='PROCURACAO'), sem misturar os modelos sem tipo (case_type null).
+  strict?: boolean;
+  // ITEM 4 (2026-07-07) — filtra por pasta de origem (Drive folder id). Usado
+  // pelo caminho "Documento de caso": passo 1 escolhe 1 das 6 pastas, passo 2
+  // lista só os docs daquela pasta. Quando presente, IGNORA o filtro de case_type
+  // (a fonte da verdade é a pasta).
+  sourceFolderId?: string | null;
+}) {
   const sb = getSupabaseAdmin();
   let q = sb
     .from("system_document_templates_active")
     .select("*")
     .eq("active", true)
     .order("name", { ascending: true });
-  // Modelos sem tipo (case_type NULL) valem para qualquer caso.
-  if (opts?.caseType) {
+  if (opts?.sourceFolderId) {
+    // `source_folder_id` (ITEM 4) ainda não está no types.ts gerado — cast.
+    q = q.eq("source_folder_id" as never, opts.sourceFolderId as never);
+  } else if (opts?.caseType) {
     const ct = opts.caseType.replace(/[,()]/g, "");
-    if (ct) q = q.or(`case_type.eq.${ct},case_type.is.null`);
+    if (ct) {
+      if (opts.strict) {
+        // ESTRITO: só o case_type exato (sem os modelos sem tipo).
+        q = q.eq("case_type", ct);
+      } else {
+        // Modelos sem tipo (case_type NULL) valem para qualquer caso.
+        q = q.or(`case_type.eq.${ct},case_type.is.null`);
+      }
+    }
   }
   const { data, error } = await q;
   if (error) throw new DocumentTemplateServiceError(error.message, 500);

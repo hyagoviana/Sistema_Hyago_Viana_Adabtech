@@ -9,6 +9,7 @@ import {
   softDeleteDocumentTemplate,
   updateDocumentTemplate,
 } from "@/lib/document-templates-service";
+import { CASE_DOCUMENT_FOLDER_IDS } from "@/lib/cases/case-document-folders";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import {
   getTemplatePlaceholders,
@@ -49,8 +50,26 @@ const fieldSchema = z.object({
 });
 
 export const listDocumentTemplatesFn = createServerFn({ method: "GET" })
-  .inputValidator((d: unknown) => z.object({ caseType: z.string().nullish() }).default({}).parse(d))
-  .handler(async ({ data }) => handle(() => listDocumentTemplates({ caseType: data.caseType })));
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseType: z.string().nullish(),
+        strict: z.boolean().optional(),
+        // ITEM 4 — filtro por pasta de origem (caminho "Documento de caso").
+        sourceFolderId: z.string().nullish(),
+      })
+      .default({})
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(() =>
+      listDocumentTemplates({
+        caseType: data.caseType,
+        strict: data.strict,
+        sourceFolderId: data.sourceFolderId,
+      }),
+    ),
+  );
 
 const createSchema = z.object({
   name: z.string().min(1),
@@ -132,6 +151,14 @@ const PROCURACAO_TEMPLATES_FOLDER_ID =
 // docs. Reusa syncTemplatesFromDrive(folderId, 'PROCURACAO').
 export const syncProcuracaoTemplatesFn = createServerFn({ method: "POST" }).handler(async () =>
   handle(() => syncTemplatesFromDrive(PROCURACAO_TEMPLATES_FOLDER_ID, PROCURACAO_CASE_TYPE)),
+);
+
+// ITEM 4 (2026-07-07) — sincroniza as 6 PASTAS do "Documento de caso". Cada pasta
+// é varrida como raiz, então seus docs (soltos ou em subpastas) ganham
+// source_folder_id = id da pasta. case_type fica derivado do nome (pode ser null);
+// o caminho "Documento de caso" filtra por source_folder_id, não por case_type.
+export const syncCaseDocumentFoldersFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(() => syncTemplatesFromDrives(CASE_DOCUMENT_FOLDER_IDS)),
 );
 
 // Ponto 6 (2026-07-06) — vincula/troca a PASTA de modelos de um TIPO de serviço

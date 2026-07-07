@@ -331,7 +331,12 @@
       "Bash(grep -o \"src/routes/[a-z.$]*\\\\.tsx\\([0-9]*\")",
       "Bash(npm test *)",
       "Bash(grep -oiE 'casos.\\\\$id|financeiro.index')",
-      "PowerShell(npx tsc --noEmit 2>&1 | Measure-Object -Line | Select-Object -ExpandProperty Lines; git status --short --untracked-files=all)"
+      "PowerShell(npx tsc --noEmit 2>&1 | Measure-Object -Line | Select-Object -ExpandProperty Lines; git status --short --untracked-files=all)",
+      "Bash(grep -v 'casos.$id.tsx\\\\|casos.financeiro.index.tsx')",
+      "Bash(ls src/services)",
+      "Bash(ls src/**/termo*)",
+      "Bash(python -c \"import docx; print\\('docx ok'\\)\")",
+      "Bash(grep -iE \"taxa de juro|financiado|data assinatura|saldo devedor|R\\\\\\\\\\\\$ R\\\\\\\\\\\\$\")"
     ]
   }
 }

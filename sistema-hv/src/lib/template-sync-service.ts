@@ -251,18 +251,32 @@ export async function syncTemplatesFromDrive(
   const looseDocs = items.filter((f) => isTemplateDoc(f.mimeType));
 
   // 2. Get existing templates for dedup (by google_doc_id AND by name)
-  const { data: existing } = await sb
+  // `source_folder_id` (ITEM 4) ainda não está no types.ts gerado — seleciona via
+  // "*" e trata como Row + coluna nova opcional (cast) para não quebrar o tipo.
+  const { data: existingRaw } = await sb
     .from("system_document_templates")
-    .select("id, google_doc_id, name, fields, case_type")
+    .select("id, google_doc_id, name, fields, case_type, source_folder_id")
     .eq("organization_id", DEFAULT_ORG)
     .is("deleted_at", null);
-  const existingByDocId = new Map((existing ?? []).map((t) => [t.google_doc_id, t]));
-  const existingByName = new Map((existing ?? []).map((t) => [t.name.toLowerCase(), t]));
+  const existing = (existingRaw ?? []) as unknown as Array<{
+    id: string;
+    google_doc_id: string | null;
+    name: string;
+    fields: unknown;
+    case_type: string | null;
+    source_folder_id: string | null;
+  }>;
+  const existingByDocId = new Map(existing.map((t) => [t.google_doc_id, t]));
+  const existingByName = new Map(existing.map((t) => [t.name.toLowerCase(), t]));
 
   // Helper: process a single doc
+  // `sourceFolderId` (ITEM 4) — a pasta do Drive de onde este doc veio. Gravada
+  // em system_document_templates.source_folder_id para o seletor de 6 pastas do
+  // "Documento de caso". Docs soltos na raiz recebem a própria modelsFolderId.
   async function processDoc(
     doc: { id?: string | null; name?: string | null; mimeType?: string | null },
     caseType: string | null,
+    sourceFolderId: string | null,
   ) {
     if (!doc.id || !doc.name) return;
     // Normaliza: remove extensão, prefixo "Cópia de", e sufixos de modelo
@@ -280,14 +294,24 @@ export async function syncTemplatesFromDrive(
     async function reconcileCaseType(row: {
       id: string;
       case_type?: string | null;
+      source_folder_id?: string | null;
     }): Promise<boolean> {
-      if (!forceCaseType) return false;
-      if ((row.case_type ?? null) === caseType) return false;
+      // ITEM 4 — sempre reconcilia a pasta de origem (mesmo sem forceCaseType),
+      // para docs já sincronizados antes desta coluna existir ganharem o
+      // source_folder_id no próximo sync.
+      const folderChanged =
+        sourceFolderId != null && (row.source_folder_id ?? null) !== sourceFolderId;
+      const typeChanged = !!forceCaseType && (row.case_type ?? null) !== caseType;
+      if (!folderChanged && !typeChanged) return false;
+      const patch: Record<string, unknown> = {};
+      if (typeChanged) patch.case_type = caseType;
+      if (folderChanged) patch.source_folder_id = sourceFolderId;
       await sb
         .from("system_document_templates")
-        .update({ case_type: caseType } as never)
+        .update(patch as never)
         .eq("id", row.id);
-      row.case_type = caseType;
+      if (typeChanged) row.case_type = caseType;
+      if (folderChanged) row.source_folder_id = sourceFolderId;
       return true;
     }
 
@@ -346,7 +370,12 @@ export async function syncTemplatesFromDrive(
         }));
         await sb
           .from("system_document_templates")
-          .update({ google_doc_id: doc.id, case_type: caseType, fields: newFields as never })
+          .update({
+            google_doc_id: doc.id,
+            case_type: caseType,
+            fields: newFields as never,
+            source_folder_id: sourceFolderId,
+          } as never)
           .eq("id", exByName.id);
         existingByDocId.set(doc.id, { ...exByName, google_doc_id: doc.id, fields: newFields });
         existingByName.set(docName.toLowerCase(), {
@@ -378,7 +407,8 @@ export async function syncTemplatesFromDrive(
         fields: fields as never,
         goes_to_zapsign: false,
         active: true,
-      });
+        source_folder_id: sourceFolderId,
+      } as never);
 
       // Track for future dedup within this sync run
       existingByDocId.set(doc.id, {
@@ -387,6 +417,7 @@ export async function syncTemplatesFromDrive(
         name: docName,
         fields: [],
         case_type: caseType,
+        source_folder_id: sourceFolderId,
       });
       existingByName.set(docName.toLowerCase(), {
         id: "",
@@ -394,6 +425,7 @@ export async function syncTemplatesFromDrive(
         name: docName,
         fields: [],
         case_type: caseType,
+        source_folder_id: sourceFolderId,
       });
 
       result.created++;
@@ -431,7 +463,8 @@ export async function syncTemplatesFromDrive(
       });
 
       for (const doc of templateDocs) {
-        await processDoc(doc, caseType);
+        // ITEM 4 — a pasta de origem do doc é a subpasta (folder.id).
+        await processDoc(doc, caseType, folder.id);
       }
     } catch (err) {
       const msg = `Pasta "${folder.name}": ${err instanceof Error ? err.message : String(err)}`;
@@ -440,9 +473,11 @@ export async function syncTemplatesFromDrive(
     }
   }
 
-  // 4. Process loose docs at root level
+  // 4. Process loose docs at root level — a pasta de origem é a própria raiz
+  // varrida (modelsFolderId). Isso permite sincronizar 1 das 6 pastas diretamente
+  // (a pasta em si é a raiz) e taguear seus docs soltos com o próprio id.
   for (const doc of looseDocs) {
-    await processDoc(doc, forceCaseType ?? null);
+    await processDoc(doc, forceCaseType ?? null, modelsFolderId);
   }
 
   console.log(

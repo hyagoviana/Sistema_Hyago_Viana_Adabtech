@@ -7,10 +7,10 @@ import {
   createClient,
   findOrCreateClient,
   getClient,
+  hardDeleteClient,
   listClients,
   listClientsByLifecycle,
   resyncClientDriveFolder,
-  softDeleteClient,
   updateClient,
 } from "@/lib/clients-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
@@ -76,9 +76,11 @@ export const updateClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
   .handler(async ({ data }) => handle(() => updateClient(data.id, data.input)));
 
-export const softDeleteClientFn = createServerFn({ method: "POST" })
+// HARD-DELETE — exclusão PERMANENTE do cliente e de tudo que depende dele
+// (casos + filhos, docs, notas, consentimentos). Substitui o antigo soft-delete.
+export const hardDeleteClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
-  .handler(async ({ data }) => handle(() => softDeleteClient(data.id)));
+  .handler(async ({ data }) => handle(() => hardDeleteClient(data.id)));
 
 export const resyncDriveFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))

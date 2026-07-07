@@ -73,10 +73,11 @@ export function ClientCardMenu({ clientId, clientName, onEdit }: Props) {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {clientName}?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir {clientName} permanentemente?</AlertDialogTitle>
             <AlertDialogDescription>
-              O cliente fica como excluído (soft-delete) e desaparece da lista. Você ainda pode
-              recuperar via banco se precisar. A pasta no Drive não é apagada.
+              Esta ação é <strong>PERMANENTE e não pode ser desfeita</strong>. O cliente e{" "}
+              <strong>tudo que depende dele</strong> — casos, documentos, parcelas, notas e
+              consentimentos — serão apagados do banco. A pasta no Google Drive não é apagada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

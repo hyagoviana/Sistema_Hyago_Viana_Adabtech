@@ -301,6 +301,129 @@ export async function softDeleteClient(id: string) {
 }
 
 // ----------------------------------------------------------------------------
+// HARD-DELETE (exclusão PERMANENTE — apaga o cliente e TUDO que depende dele)
+// ----------------------------------------------------------------------------
+// Diferente do soft-delete: remove fisicamente o registro do banco. Apaga em
+// ordem FK-safe (filhos primeiro). A pasta do Drive NÃO é apagada (fora de
+// escopo). Best-effort por tabela: se alguma não existir, ignora e segue.
+//
+// Ordem:
+//   1) Filhos dos CASOS do cliente (where case_id in casos-do-cliente)
+//   2) Os CASOS (system_cases where client_id)
+//   3) Filhos do CLIENTE (where client_id)
+//   4) O CLIENTE (system_clients where id)
+//
+// Tabelas filhas de system_cases (via case_id) — confirmado em
+// information_schema (FKs → system_cases):
+const CASE_CHILD_TABLES = [
+  "system_parcelas",
+  "system_termo_snapshots",
+  "system_case_honorarios",
+  "system_case_checklist_items",
+  "system_case_documents",
+  "system_case_events",
+  "system_case_tasks",
+  "system_case_deadlines",
+  "system_case_communications",
+  "system_case_notes",
+] as const;
+
+// Tabelas filhas de system_clients (via client_id) — confirmado em
+// information_schema (FKs → system_clients):
+const CLIENT_CHILD_TABLES = [
+  "system_client_documents",
+  "system_client_notes",
+  "system_consent_records",
+] as const;
+
+// PostgREST reporta tabela inexistente como 42P01 (undefined_table) ou PGRST205
+// (schema cache). Nesses casos ignoramos (best-effort).
+function isMissingTable(err: { code?: string } | null): boolean {
+  return err?.code === "42P01" || err?.code === "PGRST205";
+}
+
+export async function hardDeleteClient(id: string) {
+  const sb = getSupabaseAdmin();
+
+  // Confere existência (para 404 coerente com o soft-delete anterior).
+  const { data: client, error: findErr } = await sb
+    .from("system_clients")
+    .select("id, organization_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (findErr) throw new ClientServiceError(findErr.message, "DB_ERROR", 500);
+  if (!client) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
+
+  // Audit ANTES de apagar (best-effort — não bloqueia).
+  await sb
+    .from("system_audit_log")
+    .insert({
+      organization_id: client.organization_id,
+      action: "client.hard_delete",
+      entity_type: "client",
+      entity_id: id,
+    })
+    .then(
+      () => {},
+      () => {},
+    );
+
+  // 0) IDs dos casos do cliente (para apagar os filhos por case_id).
+  const { data: caseRows, error: casesErr } = await sb
+    .from("system_cases")
+    .select("id")
+    .eq("client_id", id);
+  if (casesErr) throw new ClientServiceError(casesErr.message, "DB_ERROR", 500);
+  const caseIds = (caseRows ?? []).map((c) => c.id);
+
+  // 1) Filhos dos casos (só se houver casos).
+  if (caseIds.length > 0) {
+    for (const table of CASE_CHILD_TABLES) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (sb.from(table as any) as any)
+        .delete()
+        .in("case_id", caseIds);
+      if (error && !isMissingTable(error)) {
+        throw new ClientServiceError(
+          `Falha ao apagar ${table}: ${error.message}`,
+          "DB_ERROR",
+          500,
+        );
+      }
+    }
+
+    // 2) Os casos.
+    const { error: delCasesErr } = await sb.from("system_cases").delete().eq("client_id", id);
+    if (delCasesErr) {
+      throw new ClientServiceError(
+        `Falha ao apagar casos: ${delCasesErr.message}`,
+        "DB_ERROR",
+        500,
+      );
+    }
+  }
+
+  // 3) Filhos do cliente.
+  for (const table of CLIENT_CHILD_TABLES) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (sb.from(table as any) as any).delete().eq("client_id", id);
+    if (error && !isMissingTable(error)) {
+      throw new ClientServiceError(
+        `Falha ao apagar ${table}: ${error.message}`,
+        "DB_ERROR",
+        500,
+      );
+    }
+  }
+
+  // 4) O cliente.
+  const { error: delClientErr } = await sb.from("system_clients").delete().eq("id", id);
+  if (delClientErr) throw new ClientServiceError(delClientErr.message, "DB_ERROR", 500);
+
+  return { ok: true as const, id };
+}
+
+// ----------------------------------------------------------------------------
 // RE-SYNC DRIVE (chamado quando drive_sync_failed=true e usuário pede retry)
 // ----------------------------------------------------------------------------
 export async function resyncClientDriveFolder(id: string) {

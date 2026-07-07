@@ -51,10 +51,13 @@ import {
 import {
   PROCURACAO_CASE_TYPE,
   useDocumentTemplates,
+  useSyncCaseDocumentFolders,
   useSyncDocumentTemplates,
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
+  useTemplatesByFolder,
 } from "@/hooks/useDocumentTemplates";
+import { CASE_DOCUMENT_FOLDERS } from "@/lib/cases/case-document-folders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -100,6 +103,8 @@ export function CaseDocumentsTab({
   const del = useDeleteCaseDocument(caseId);
   const confirmarAssinatura = useConfirmarAssinaturaManual(caseId);
   const sync = useSyncDocumentTemplates();
+  // ITEM 4 — sincroniza também as 6 pastas do "Documento de caso" (source_folder_id).
+  const syncFolders = useSyncCaseDocumentFolders();
   const uploadDoc = useUploadCaseDocument(caseId);
 
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -116,20 +121,32 @@ export function CaseDocumentsTab({
           <Button
             variant="outline"
             size="sm"
-            disabled={sync.isPending}
+            disabled={sync.isPending || syncFolders.isPending}
             onClick={async () => {
               try {
                 const res = await sync.mutateAsync(undefined);
+                // ITEM 4 — também varre as 6 pastas do "Documento de caso" para
+                // gravar source_folder_id em cada modelo.
+                const resF = await syncFolders.mutateAsync();
                 toast.success(
-                  `Sync: ${res.foldersScanned} pastas, ${res.filesFound} docs → ${res.created} novos, ${res.updated} atualizados, ${res.skipped} já existiam` +
-                    (res.errors.length ? ` | ${res.errors.length} erros` : ""),
+                  `Sync: ${res.foldersScanned + resF.foldersScanned} pastas, ${
+                    res.filesFound + resF.filesFound
+                  } docs → ${res.created + resF.created} novos, ${
+                    res.updated + resF.updated
+                  } atualizados, ${res.skipped + resF.skipped} já existiam` +
+                    (res.errors.length + resF.errors.length
+                      ? ` | ${res.errors.length + resF.errors.length} erros`
+                      : ""),
                 );
               } catch (err) {
                 toast.error(err instanceof Error ? err.message : "Falha ao sincronizar");
               }
             }}
           >
-            <RefreshCw size={14} className={`mr-1.5 ${sync.isPending ? "animate-spin" : ""}`} />
+            <RefreshCw
+              size={14}
+              className={`mr-1.5 ${sync.isPending || syncFolders.isPending ? "animate-spin" : ""}`}
+            />
             Sincronizar modelos
           </Button>
           <Button
@@ -485,14 +502,15 @@ type GenMode = "procuracao" | "caso";
 function GenerateDialog({
   open,
   onOpenChange,
-  caseType,
   pending,
   onGenerate,
   autoFill,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  caseType: string;
+  // ITEM 4 (2026-07-07) — mantido por compat; "Documento de caso" agora seleciona
+  // por PASTA (source_folder_id), não mais por case_type.
+  caseType?: string;
   pending: boolean;
   onGenerate: (
     templateId: string,
@@ -505,10 +523,14 @@ function GenerateDialog({
   const [mode, setMode] = useState<GenMode | null>(null);
   const [templateId, setTemplateId] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
+  // ITEM 4 — "Documento de caso": passo 1 = escolher 1 das 6 pastas; passo 2 =
+  // só os docs daquela pasta (filtro por source_folder_id).
+  const [folderId, setFolderId] = useState<string | null>(null);
 
-  // Modelos por modo: procuração (marcador) vs tipo do caso.
-  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE);
-  const { data: caseTemplates } = useDocumentTemplates(caseType);
+  // Modelos por modo: procuração (marcador, ESTRITO) vs pasta escolhida.
+  // Procuração usa strict → só case_type='PROCURACAO', sem os modelos sem tipo.
+  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE, true);
+  const { data: folderTemplates } = useTemplatesByFolder(mode === "caso" ? folderId : null);
   const syncProc = useSyncProcuracaoTemplates();
 
   // Reset ao (re)abrir.
@@ -517,10 +539,11 @@ function GenerateDialog({
       setMode(null);
       setTemplateId("");
       setValues({});
+      setFolderId(null);
     }
   }, [open]);
 
-  const templates = ((mode === "procuracao" ? procTemplates : caseTemplates) ?? []) as Array<{
+  const templates = ((mode === "procuracao" ? procTemplates : folderTemplates) ?? []) as Array<{
     id: string;
     name: string;
     fields: unknown;
@@ -591,7 +614,7 @@ function GenerateDialog({
                 <FileText size={16} className="text-[var(--gold-700)]" /> Documento do caso
               </div>
               <div className="text-[12px] text-muted-foreground mt-1">
-                Modelos do tipo do caso (pasta vinculada ao tipo).
+                Escolha 1 das 6 pastas e o documento dela.
               </div>
             </button>
           </div>
@@ -605,7 +628,46 @@ function GenerateDialog({
     );
   }
 
+  // ITEM 4 — "Documento de caso", passo 1: escolher 1 das 6 pastas.
+  if (mode === "caso" && !folderId) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
+            <DialogDescription>
+              Selecione a pasta do documento. Só os documentos dela aparecerão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {CASE_DOCUMENT_FOLDERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setFolderId(f.id);
+                  setTemplateId("");
+                  setValues({});
+                }}
+                className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
+              >
+                <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
+                <span className="text-[13px] font-medium text-[var(--navy)]">{f.label}</span>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMode(null)}>
+              ← Voltar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const isProc = mode === "procuracao";
+  const folderLabel = CASE_DOCUMENT_FOLDERS.find((f) => f.id === folderId)?.label;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -621,16 +683,22 @@ function GenerateDialog({
           <button
             type="button"
             onClick={() => {
-              setMode(null);
+              if (isProc) {
+                setMode(null);
+              } else {
+                setFolderId(null);
+              }
               setTemplateId("");
               setValues({});
             }}
             className="text-xs text-[var(--gold-700)] hover:underline"
           >
-            ← Trocar tipo de documento
+            {isProc ? "← Trocar tipo de documento" : "← Trocar pasta"}
           </button>
           <div>
-            <Label>{isProc ? "Modelo de procuração" : "Modelo do caso"}</Label>
+            <Label>
+              {isProc ? "Modelo de procuração" : `Documento — ${folderLabel ?? "pasta"}`}
+            </Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
                 {isProc ? (
@@ -659,7 +727,7 @@ function GenerateDialog({
                     </Button>
                   </span>
                 ) : (
-                  'Nenhum modelo sincronizado. Use "Sincronizar modelos" ou vincule a pasta do tipo (Pasta de modelos, no Operacional).'
+                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" para importar os documentos das 6 pastas do Drive.'
                 )}
               </div>
             ) : (

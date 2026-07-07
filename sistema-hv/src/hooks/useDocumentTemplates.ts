@@ -8,6 +8,7 @@ import {
   listDocumentTemplatesFn,
   setTypeTemplatesFolderFn,
   softDeleteDocumentTemplateFn,
+  syncCaseDocumentFoldersFn,
   syncDocumentTemplatesFn,
   syncProcuracaoTemplatesFn,
   updateDocumentTemplateFn,
@@ -33,11 +34,34 @@ export function useTemplatePlaceholders(googleDocId: string | null) {
   });
 }
 
-export function useDocumentTemplates(caseType?: string | null) {
+// strict=true → lista APENAS o case_type exato (sem o fallback de modelos sem
+// tipo). A PROCURAÇÃO usa strict para não misturar os modelos sem case_type.
+export function useDocumentTemplates(caseType?: string | null, strict?: boolean) {
   const fn = useServerFn(listDocumentTemplatesFn);
   return useQuery({
-    queryKey: ["document-templates", caseType ?? "all"],
-    queryFn: () => fn({ data: { caseType: caseType ?? undefined } }),
+    queryKey: ["document-templates", caseType ?? "all", strict ? "strict" : "loose"],
+    queryFn: () => fn({ data: { caseType: caseType ?? undefined, strict } }),
+  });
+}
+
+// ITEM 4 (2026-07-07) — modelos de UMA das 6 pastas do "Documento de caso"
+// (filtro por source_folder_id). Só habilita quando há pasta escolhida.
+export function useTemplatesByFolder(sourceFolderId: string | null) {
+  const fn = useServerFn(listDocumentTemplatesFn);
+  return useQuery({
+    queryKey: ["document-templates", "folder", sourceFolderId ?? "none"],
+    queryFn: () => fn({ data: { sourceFolderId: sourceFolderId! } }),
+    enabled: !!sourceFolderId,
+  });
+}
+
+// ITEM 4 — sincroniza as 6 pastas do "Documento de caso" (tagueia source_folder_id).
+export function useSyncCaseDocumentFolders() {
+  const fn = useServerFn(syncCaseDocumentFoldersFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fn(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["document-templates"] }),
   });
 }
 
