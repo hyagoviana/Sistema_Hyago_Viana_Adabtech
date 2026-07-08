@@ -23,6 +23,15 @@ export type TemplateField = {
   auto_field?: string;
 };
 
+// Os TERMOS DE ACERTO ficam na MESMA pasta das procurações e, no sync, recebem
+// case_type='PROCURACAO'. Eles NÃO devem aparecer no picker de procuração/documento
+// (são usados só no fluxo financeiro, via TermoPanel, que localiza o modelo pelo
+// NOME — ignorando case_type). Detecção por nome: "TERMO" + "ACERTO".
+function isTermoTemplateName(name: string): boolean {
+  const norm = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+  return norm.includes("TERMO") && norm.includes("ACERTO");
+}
+
 export async function listDocumentTemplates(opts?: {
   caseType?: string | null;
   // strict=true → filtra APENAS case_type = {caseType} (SEM o fallback de null).
@@ -58,9 +67,15 @@ export async function listDocumentTemplates(opts?: {
   }
   const { data, error } = await q;
   if (error) throw new DocumentTemplateServiceError(error.message, 500);
+  // Remove os termos de acerto quando a lista é de procuração (não podem aparecer
+  // no picker; o TermoPanel os acha pelo nome, então isso não afeta o financeiro).
+  const rows =
+    opts?.caseType === "PROCURACAO"
+      ? (data ?? []).filter((t) => !isTermoTemplateName(t.name))
+      : (data ?? []);
   // Dedup por nome normalizado — prefere o que TEM campos (Google Doc nativo)
-  const seen = new Map<string, (typeof data)[number]>();
-  for (const tpl of data ?? []) {
+  const seen = new Map<string, (typeof rows)[number]>();
+  for (const tpl of rows) {
     const key = tpl.name
       .replace(/^c[oó]pia\s+de\s+/i, "")
       .replace(/\s*-\s*modelo$/i, "")
@@ -110,7 +125,8 @@ export async function createDocumentTemplate(input: {
     })
     .select()
     .single();
-  if (error || !data) throw new DocumentTemplateServiceError(error?.message ?? "Falha ao criar modelo", 500);
+  if (error || !data)
+    throw new DocumentTemplateServiceError(error?.message ?? "Falha ao criar modelo", 500);
   return data;
 }
 
@@ -133,7 +149,8 @@ export async function updateDocumentTemplate(
     .is("deleted_at", null)
     .select()
     .single();
-  if (error || !data) throw new DocumentTemplateServiceError(error?.message ?? "Falha ao atualizar", 500);
+  if (error || !data)
+    throw new DocumentTemplateServiceError(error?.message ?? "Falha ao atualizar", 500);
   return data;
 }
 
