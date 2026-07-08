@@ -8,7 +8,7 @@ import {
   resolveAutoValue,
   type TemplateField,
 } from "./cases/document-autofill";
-import { GLOBAL_FUNNEL_SERVICE_TYPE_ID, type MacroFin, type MacroOp } from "./cases/constants";
+import { type MacroFin, type MacroOp } from "./cases/constants";
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
@@ -100,32 +100,12 @@ export async function createCase(
   // (placeholder/geração), não a flag de "aguardando assinatura".
   const comercial = input.comercial === true;
 
-  // AJUSTE B (2026-07-07) — TODO caso criado (inclusive manual) deve aparecer no
-  // board "Todos" do financeiro (FinanceiroKanbanTodos / listAllBifurcatedCases),
-  // que só mostra macrostatus_fin != 'NAO_APLICAVEL'. Decisão: OPÇÃO 1 (semear na
-  // criação) por ser a MENOS invasiva — o board e sua query ficam intocados, e o
-  // KanbanBoard só renderiza cards cujo slug bate com uma coluna. Semeamos a 1ª
-  // etapa fin do FUNIL GLOBAL (fonte das colunas do board — GLOBAL_FUNNEL_..._ID),
-  // tipicamente 'ELABORANDO', garantindo coluna correspondente.
-  //
-  // Não quebra a bifurcação por trigger (system_cases_bifurcacao_trg): ela só
-  // dispara quando NEW.macrostatus_fin = 'NAO_APLICAVEL' no UPDATE op→IMPLANTADO;
-  // como o caso já nasce fora de 'NAO_APLICAVEL', NÃO há dupla-bifurcação.
-  // Respeita override explícito: se o caller passar input.macrostatus_fin, ele vence.
-  let defaultFinStatus: string = input.macrostatus_fin ?? "NAO_APLICAVEL";
-  if (!input.macrostatus_fin) {
-    const { data: firstFinStage } = await sb
-      .from("system_pipeline_stages")
-      .select("slug")
-      .eq("service_type_id", GLOBAL_FUNNEL_SERVICE_TYPE_ID)
-      .eq("kind", "fin")
-      .neq("slug", "NAO_APLICAVEL")
-      .is("deleted_at", null)
-      .order("ordem", { ascending: true })
-      .limit(1)
-      .single();
-    if (firstFinStage) defaultFinStatus = firstFinStage.slug;
-  }
+  // REGRA (2026-07-08) — criar/vincular um caso NÃO o coloca na pipeline
+  // financeira. Reverte o AJUSTE B (2026-07-07), que semeava a 1ª etapa fin em
+  // todo caso e fazia o lead cair no financeiro automaticamente. O caso só entra
+  // no financeiro por ação MANUAL do usuário (system_fn_entrar_financeiro /
+  // botão "Entrar no financeiro"). Respeita override explícito do caller.
+  const defaultFinStatus: string = input.macrostatus_fin ?? "NAO_APLICAVEL";
 
   // S5-02: caso comercial entra na pipeline de leads na 1ª etapa comercial
   // (ordem 0) do seu tipo. Dual-write via macrostatus_comercial (a projeção
@@ -547,7 +527,9 @@ function brlToCentavos(v: string | undefined | null): number | null {
 // "15%" / "15" / "15,5" → número. null se não parseável.
 function pctToNumber(v: string | undefined | null): number | null {
   if (v == null) return null;
-  const cleaned = String(v).replace(/[^\d,.-]/g, "").replace(",", ".");
+  const cleaned = String(v)
+    .replace(/[^\d,.-]/g, "")
+    .replace(",", ".");
   if (!cleaned) return null;
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;

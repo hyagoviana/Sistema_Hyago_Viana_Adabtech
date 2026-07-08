@@ -152,7 +152,14 @@ export function Sidebar() {
   const realCounts: Record<string, number> = {};
   if (casos) {
     realCounts["/casos"] = casos.length;
-    realCounts["/pipeline"] = casos.length;
+    // Pipeline Operacional: conta só o que o Kanban operacional mostra — exclui
+    // casos em fase comercial (aguardando assinatura) e os removidos do op. Sem
+    // isso, um lead recém-vinculado a um caso já pontuava "1" sem card na coluna.
+    realCounts["/pipeline"] = casos.filter(
+      (c) =>
+        !(c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at &&
+        !(c as { removido_do_operacional_at?: string | null }).removido_do_operacional_at,
+    ).length;
     realCounts["/casos/financeiro"] = casos.filter(
       (c) => c.macrostatus_fin !== "NAO_APLICAVEL",
     ).length;
