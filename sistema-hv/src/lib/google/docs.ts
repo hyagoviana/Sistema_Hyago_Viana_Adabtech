@@ -101,12 +101,20 @@ export async function replacePlaceholders(
   documentId: string,
   values: Record<string, string>,
 ): Promise<void> {
-  const requests = Object.entries(values).map(([key, value]) => ({
-    replaceAllText: {
-      containsText: { text: `<${key}>`, matchCase: true },
-      replaceText: value ?? "",
-    },
-  }));
+  // A detecção do placeholder faz .trim() na chave, mas no documento o modelo pode
+  // ter espaço interno junto aos delimitadores ("< campo >", "<campo >", "< campo>").
+  // Como replaceAllText é busca LITERAL (sem regex), geramos as variações comuns de
+  // espaçamento para cada chave — senão "< data - obrigatório>" não seria substituído.
+  const requests = Object.entries(values).flatMap(([key, value]) => {
+    const k = key.trim();
+    const variants = [...new Set([`<${k}>`, `< ${k} >`, `< ${k}>`, `<${k} >`])];
+    return variants.map((text) => ({
+      replaceAllText: {
+        containsText: { text, matchCase: true },
+        replaceText: value ?? "",
+      },
+    }));
+  });
   if (requests.length === 0) return;
   try {
     await docsClient().documents.batchUpdate({ documentId, requestBody: { requests } });
