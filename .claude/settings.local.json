@@ -345,7 +345,8 @@
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40)",
       "PowerShell(npx vite build 2>&1 | Select-Object -Last 20)",
       "PowerShell(npx vite build 2>&1 | Select-Object -Last 15)",
-      "Bash(echo \"---exit=$?\")"
+      "Bash(echo \"---exit=$?\")",
+      "mcp__claude_ai_Google_Drive__read_file_content"
     ]
   }
 }
