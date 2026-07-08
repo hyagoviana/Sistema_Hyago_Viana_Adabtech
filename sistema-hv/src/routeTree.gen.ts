@@ -70,6 +70,7 @@ import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.finance
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
+import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
@@ -387,6 +388,12 @@ const CasosFinanceiroInadimplenciaRoute =
     path: '/inadimplencia',
     getParentRoute: () => CasosFinanceiroRoute,
   } as any)
+const CasosFinanceiroCobrancasRoute =
+  CasosFinanceiroCobrancasRouteImport.update({
+    id: '/cobrancas',
+    path: '/cobrancas',
+    getParentRoute: () => CasosFinanceiroRoute,
+  } as any)
 const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
   id: '/termo',
   path: '/termo',
@@ -499,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
+  '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
@@ -570,6 +578,7 @@ export interface FileRoutesByTo {
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
+  '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
@@ -643,6 +652,7 @@ export interface FileRoutesById {
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
+  '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
+    | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
@@ -788,6 +799,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
+    | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
@@ -860,6 +872,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
+    | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
@@ -1368,6 +1381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosFinanceiroInadimplenciaRouteImport
       parentRoute: typeof CasosFinanceiroRoute
     }
+    '/casos/financeiro/cobrancas': {
+      id: '/casos/financeiro/cobrancas'
+      path: '/cobrancas'
+      fullPath: '/casos/financeiro/cobrancas'
+      preLoaderRoute: typeof CasosFinanceiroCobrancasRouteImport
+      parentRoute: typeof CasosFinanceiroRoute
+    }
     '/casos/$id/termo': {
       id: '/casos/$id/termo'
       path: '/termo'
@@ -1458,11 +1478,13 @@ const CasosIdRouteWithChildren =
   CasosIdRoute._addFileChildren(CasosIdRouteChildren)
 
 interface CasosFinanceiroRouteChildren {
+  CasosFinanceiroCobrancasRoute: typeof CasosFinanceiroCobrancasRoute
   CasosFinanceiroInadimplenciaRoute: typeof CasosFinanceiroInadimplenciaRoute
   CasosFinanceiroIndexRoute: typeof CasosFinanceiroIndexRoute
 }
 
 const CasosFinanceiroRouteChildren: CasosFinanceiroRouteChildren = {
+  CasosFinanceiroCobrancasRoute: CasosFinanceiroCobrancasRoute,
   CasosFinanceiroInadimplenciaRoute: CasosFinanceiroInadimplenciaRoute,
   CasosFinanceiroIndexRoute: CasosFinanceiroIndexRoute,
 }

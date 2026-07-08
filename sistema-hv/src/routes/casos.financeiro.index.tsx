@@ -152,6 +152,9 @@ function FinanceiroKanban({
               <ArrowLeft size={14} />
               Trocar tipo
             </Btn>
+            <Link to="/casos/financeiro/cobrancas">
+              <Btn variant="outline">Cobranças</Btn>
+            </Link>
             <Link to="/casos/financeiro/inadimplencia">
               <Btn variant="outline">Inadimplência</Btn>
             </Link>
@@ -297,6 +300,9 @@ function FinanceiroKanbanTodos() {
                 <ArrowLeft size={14} />
                 Voltar ao Operacional
               </Btn>
+            </Link>
+            <Link to="/casos/financeiro/cobrancas">
+              <Btn variant="outline">Cobranças</Btn>
             </Link>
             <Link to="/casos/financeiro/inadimplencia">
               <Btn variant="outline">Inadimplência</Btn>

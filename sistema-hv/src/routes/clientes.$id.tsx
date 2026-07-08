@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
+import { ClientFinanceiroSection } from "@/components/clients/ClientFinanceiroSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import { NotesBlock } from "@/components/notes/NotesBlock";
@@ -258,6 +259,10 @@ function ClienteDetalhe() {
         clientEmail={cliente.email ?? undefined}
         clientPhone={cliente.phone ?? undefined}
       />
+
+      <OrnamentalDivider />
+
+      <ClientFinanceiroSection clientId={cliente.id} />
 
       <OrnamentalDivider />
 

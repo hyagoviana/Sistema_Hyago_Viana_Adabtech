@@ -34,6 +34,88 @@ export type DashboardFinanceiro = {
   }>;
 };
 
+// ─── Listar todas as parcelas (global ou por cliente) ─────────────────────────
+
+export type ParcelaComCaso = {
+  id: string;
+  case_id: string;
+  case_code: string;
+  client_id: string;
+  client_name: string;
+  numero: number;
+  valor_centavos: number;
+  valor_pago_centavos: number | null;
+  vencimento: string;
+  status: string;
+  provider: string | null;
+  provider_ext_id: string | null;
+  boleto_url: string | null;
+  metodo_pagamento: string | null;
+  data_pagamento: string | null;
+};
+
+export async function listAllParcelas(filters?: {
+  clientId?: string;
+  status?: string;
+}): Promise<ParcelaComCaso[]> {
+  const sb = getSupabaseAdmin();
+
+  let query = sb
+    .from("system_parcelas")
+    .select(
+      "id, case_id, numero, valor_centavos, valor_pago_centavos, vencimento, status, provider, provider_ext_id, boleto_url, metodo_pagamento, data_pagamento",
+    )
+    .eq("organization_id", DEFAULT_ORG)
+    .order("vencimento", { ascending: true });
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+
+  const { data: parcelas, error } = await query;
+  if (error) throw new FinanceiroServiceError(error.message, 500);
+
+  if (!parcelas || parcelas.length === 0) return [];
+
+  // Buscar case_code e client_id dos casos
+  const caseIds = [...new Set(parcelas.map((p) => p.case_id))];
+  const { data: cases } = await sb
+    .from("system_cases")
+    .select("id, case_code, client_id")
+    .in("id", caseIds);
+
+  const caseMap = new Map(
+    (cases ?? []).map((c) => [c.id, { case_code: c.case_code, client_id: c.client_id }]),
+  );
+
+  // Buscar nomes dos clientes
+  const clientIds = [...new Set((cases ?? []).map((c) => c.client_id))];
+  const { data: clients } = await sb
+    .from("system_clients")
+    .select("id, full_name")
+    .in("id", clientIds);
+
+  const clientMap = new Map((clients ?? []).map((c) => [c.id, c.full_name]));
+
+  // Montar resultado
+  let result: ParcelaComCaso[] = parcelas.map((p) => {
+    const caso = caseMap.get(p.case_id);
+    return {
+      ...p,
+      case_code: caso?.case_code ?? "",
+      client_id: caso?.client_id ?? "",
+      client_name: clientMap.get(caso?.client_id ?? "") ?? "",
+    };
+  });
+
+  // Filtrar por cliente se solicitado
+  if (filters?.clientId) {
+    result = result.filter((p) => p.client_id === filters.clientId);
+  }
+
+  return result;
+}
+
 export async function getDashboardFinanceiro(): Promise<DashboardFinanceiro> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
