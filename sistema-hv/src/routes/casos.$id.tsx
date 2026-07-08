@@ -21,6 +21,7 @@ import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
+import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
@@ -38,7 +39,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
@@ -63,7 +63,6 @@ import {
 import { useCase, useCaseEvents, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
 import {
   useEntrarFinanceiro,
-  useSetAcertoParcial,
   useVoltarOperacional,
 } from "@/hooks/usePipeline";
 import {
@@ -99,7 +98,6 @@ function CasoDetalhe() {
   const remove = useDeleteCase();
   const entrar = useEntrarFinanceiro();
   const voltar = useVoltarOperacional();
-  const acerto = useSetAcertoParcial();
   const promover = usePromoverCasoManual();
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
@@ -380,60 +378,12 @@ function CasoDetalhe() {
               </Button>
             )}
 
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                Acerto
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-[13px]">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={caso.acerto_parcial}
-                    onCheckedChange={(v) =>
-                      acerto.mutate({
-                        caseId: caso.id,
-                        acerto_parcial: !!v,
-                        tem_pendencia_judicial: caso.tem_pendencia_judicial,
-                        obs: caso.acerto_parcial_obs,
-                      })
-                    }
-                  />
-                  Acerto parcial
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={caso.tem_pendencia_judicial}
-                    onCheckedChange={(v) =>
-                      acerto.mutate({
-                        caseId: caso.id,
-                        acerto_parcial: caso.acerto_parcial,
-                        tem_pendencia_judicial: !!v,
-                        obs: caso.acerto_parcial_obs,
-                      })
-                    }
-                  />
-                  Pendência judicial
-                </label>
-              </div>
-              {(caso.acerto_parcial || caso.tem_pendencia_judicial) && (
-                <div className="mt-2 flex gap-2">
-                  {caso.acerto_parcial && (
-                    <Badge className="bg-[var(--gold-700)] text-white">Acerto parcial</Badge>
-                  )}
-                  {caso.tem_pendencia_judicial && (
-                    <Badge className="bg-amber-100 text-amber-800">Judicial</Badge>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ITEM 3 (2026-07-07) — "Conferência (dupla checagem)" REMOVIDA da
-                ficha. A entrada/movimentação no financeiro é feita pelo popup
-                "Enviar para o financeiro" (duplicar / somente-financeiro) e pelo
-                botão "mover" do rastro financeiro. */}
-
             {finBifurcated && (
-              <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
+              <div className="pt-4 border-t border-[rgba(30,32,68,0.08)] space-y-6">
                 <TermoPanel caseId={caso.id} />
+                <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">
+                  <AsaasCobrancasPanel caseId={caso.id} clientId={caso.client_id} />
+                </div>
               </div>
             )}
           </div>

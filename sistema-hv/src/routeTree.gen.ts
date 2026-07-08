@@ -73,6 +73,7 @@ import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
+import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
 import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
@@ -401,6 +402,11 @@ const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
   path: '/api/webhooks/n8n',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksAsaasRoute = ApiWebhooksAsaasRouteImport.update({
+  id: '/api/webhooks/asaas',
+  path: '/api/webhooks/asaas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
   id: '/elaborar',
   path: '/elaborar',
@@ -489,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/peticionamento': typeof PeticionamentoIndexRoute
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -631,6 +639,7 @@ export interface FileRoutesById {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -704,6 +713,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
@@ -774,6 +784,7 @@ export interface FileRouteTypes {
     | '/peticionamento'
     | '/portal'
     | '/whatsapp'
+    | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
@@ -845,6 +856,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
     | '/casos/$id/termo'
@@ -917,6 +929,7 @@ export interface RootRouteChildren {
   PeticionamentoIndexRoute: typeof PeticionamentoIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
+  ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
   ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
@@ -1376,6 +1389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksN8nRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/asaas': {
+      id: '/api/webhooks/asaas'
+      path: '/api/webhooks/asaas'
+      fullPath: '/api/webhooks/asaas'
+      preLoaderRoute: typeof ApiWebhooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/$id/termo/elaborar': {
       id: '/casos/$id/termo/elaborar'
       path: '/elaborar'
@@ -1524,6 +1544,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeticionamentoIndexRoute: PeticionamentoIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
+  ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
   ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,

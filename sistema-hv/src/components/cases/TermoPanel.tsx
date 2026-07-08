@@ -1,4 +1,4 @@
-import { ExternalLink, Loader2, Plus } from "lucide-react";
+import { Copy, ExternalLink, Loader2, Plus, QrCode, Receipt } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,8 +14,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { maskBrlReais, maskPercentBr, normalizeBrl, normalizePercentBr } from "@/lib/format";
+import { useCreateCharge, usePixQrCode, useCancelCharge } from "@/hooks/useAsaas";
 import {
   useAceitarTermo,
   useApresentarTermo,
@@ -81,6 +89,14 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const [baixaFor, setBaixaFor] = useState<{ id: string; valor: number; numero: number } | null>(
     null,
   );
+  // Asaas — cobrança e Pix
+  const [cobrancaFor, setCobrancaFor] = useState<{
+    id: string;
+    valor: number;
+    numero: number;
+    vencimento: string;
+  } | null>(null);
+  const [pixFor, setPixFor] = useState<string | null>(null);
 
   return (
     <div>
@@ -256,54 +272,111 @@ export function TermoPanel({ caseId }: { caseId: string }) {
             Parcelas
           </div>
           <ul className="space-y-1 text-[13px]">
-            {(parcelas ?? []).map((p) => (
-              <li
-                key={p.id}
-                className="flex items-center justify-between border-b border-[var(--border)] pb-1"
-              >
-                <span>
-                  {String(p.numero).padStart(2, "0")} · vence{" "}
-                  {new Date(p.vencimento + "T00:00:00").toLocaleDateString("pt-BR")}
-                </span>
-                <span className="flex items-center gap-2">
-                  {brl(p.valor_centavos)}
-                  <Badge
-                    className={
-                      p.status === "PAGA"
-                        ? "bg-green-600 text-white"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {p.status}
-                  </Badge>
-                  {p.status !== "PAGA" ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setBaixaFor({ id: p.id, valor: p.valor_centavos, numero: p.numero })
-                      }
-                      className="text-[var(--gold-700)] hover:underline text-[11px]"
-                    >
-                      pagar
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={estornar.isPending}
-                      onClick={() =>
-                        estornar.mutate(p.id, {
-                          onSuccess: () => toast.success("Baixa estornada"),
-                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
-                        })
-                      }
-                      className="text-muted-foreground hover:underline text-[11px]"
-                    >
-                      estornar
-                    </button>
-                  )}
-                </span>
-              </li>
-            ))}
+            {(parcelas ?? []).map((p) => {
+              const isAsaas = p.provider === "asaas" && !!p.provider_ext_id;
+              const statusBadgeCls =
+                p.status === "PAGA"
+                  ? "bg-green-600 text-white"
+                  : p.status === "VENCIDA"
+                    ? "bg-[var(--danger)] text-white"
+                    : "bg-muted text-muted-foreground";
+
+              return (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between border-b border-[var(--border)] pb-1.5 pt-1"
+                >
+                  <span>
+                    {String(p.numero).padStart(2, "0")} · vence{" "}
+                    {new Date(p.vencimento + "T00:00:00").toLocaleDateString("pt-BR")}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    {brl(p.valor_centavos)}
+                    <Badge className={statusBadgeCls}>{p.status}</Badge>
+
+                    {/* Asaas: link boleto/fatura */}
+                    {isAsaas && p.boleto_url && p.status !== "PAGA" && (
+                      <a
+                        href={p.boleto_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Ver fatura / boleto"
+                      >
+                        <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]">
+                          <ExternalLink size={11} className="mr-1" /> Fatura
+                        </Button>
+                      </a>
+                    )}
+
+                    {/* Asaas: gerar Pix QR Code */}
+                    {isAsaas && p.status !== "PAGA" && p.status !== "CANCELADA" && (
+                      <button
+                        type="button"
+                        onClick={() => setPixFor(p.id)}
+                        className="text-[var(--navy)] hover:underline text-[11px] inline-flex items-center gap-0.5"
+                        title="Gerar QR Code Pix"
+                      >
+                        <QrCode size={11} /> Pix
+                      </button>
+                    )}
+
+                    {/* Asaas badge */}
+                    {isAsaas && (
+                      <Badge className="bg-blue-100 text-blue-800 text-[10px]">Asaas</Badge>
+                    )}
+
+                    {/* Cobrar via Asaas (parcela sem provider vinculado) */}
+                    {!isAsaas && p.status !== "PAGA" && p.status !== "CANCELADA" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCobrancaFor({
+                            id: p.id,
+                            valor: p.valor_centavos,
+                            numero: p.numero,
+                            vencimento: p.vencimento,
+                          })
+                        }
+                        className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-0.5"
+                        title="Gerar cobrança no Asaas"
+                      >
+                        <Receipt size={11} /> cobrar
+                      </button>
+                    )}
+
+                    {/* Baixa manual */}
+                    {p.status !== "PAGA" && p.status !== "CANCELADA" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBaixaFor({ id: p.id, valor: p.valor_centavos, numero: p.numero })
+                        }
+                        className="text-[var(--gold-700)] hover:underline text-[11px]"
+                      >
+                        pagar
+                      </button>
+                    )}
+
+                    {/* Estorno */}
+                    {p.status === "PAGA" && (
+                      <button
+                        type="button"
+                        disabled={estornar.isPending}
+                        onClick={() =>
+                          estornar.mutate(p.id, {
+                            onSuccess: () => toast.success("Baixa estornada"),
+                            onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                          })
+                        }
+                        className="text-muted-foreground hover:underline text-[11px]"
+                      >
+                        estornar
+                      </button>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -325,6 +398,17 @@ export function TermoPanel({ caseId }: { caseId: string }) {
           );
         }}
         pending={darBaixa.isPending}
+      />
+
+      <CobrancaAsaasDialog
+        caseId={caseId}
+        parcela={cobrancaFor}
+        onOpenChange={(v) => !v && setCobrancaFor(null)}
+      />
+
+      <PixQrCodeDialog
+        parcelaId={pixFor}
+        onOpenChange={(v) => !v && setPixFor(null)}
       />
 
       <ElaborarDialog
@@ -690,6 +774,228 @@ function ElaborarDialog({
     </Dialog>
   );
 }
+
+// ─── Dialog: Gerar Cobrança no Asaas ─────────────────────────────────────────
+
+const BILLING_LABELS: Record<string, string> = {
+  BOLETO: "Boleto",
+  PIX: "Pix",
+  CREDIT_CARD: "Cartão de crédito",
+  UNDEFINED: "Cliente escolhe",
+};
+
+function CobrancaAsaasDialog({
+  caseId,
+  parcela,
+  onOpenChange,
+}: {
+  caseId: string;
+  parcela: { id: string; valor: number; numero: number; vencimento: string } | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const createCharge = useCreateCharge();
+  const [billingType, setBillingType] = useState<
+    "BOLETO" | "PIX" | "CREDIT_CARD" | "UNDEFINED"
+  >("PIX");
+  const [descricao, setDescricao] = useState("");
+
+  useEffect(() => {
+    if (parcela) {
+      setBillingType("PIX");
+      setDescricao("");
+    }
+  }, [parcela]);
+
+  function handleConfirm() {
+    if (!parcela) return;
+    createCharge.mutate(
+      {
+        caseId,
+        billingType,
+        value: parcela.valor / 100,
+        dueDate: parcela.vencimento,
+        description: descricao.trim() || undefined,
+        installmentCount: 1,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Cobrança gerada no Asaas — o cliente será notificado");
+          onOpenChange(false);
+        },
+        onError: (e) =>
+          toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança"),
+      },
+    );
+  }
+
+  return (
+    <Dialog open={!!parcela} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Gerar cobrança
+            {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
+          </DialogTitle>
+          <DialogDescription>
+            O cliente será criado automaticamente no Asaas (se ainda não existir) e receberá a
+            cobrança por e-mail/SMS.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded-md bg-[var(--muted)] p-3 text-[13px]">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Valor</span>
+              <span className="font-medium text-[var(--navy)]">
+                {brl(parcela?.valor ?? 0)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-muted-foreground">Vencimento</span>
+              <span className="font-medium">
+                {parcela
+                  ? new Date(parcela.vencimento + "T00:00:00").toLocaleDateString("pt-BR")
+                  : "—"}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <Label>Forma de pagamento</Label>
+            <Select
+              value={billingType}
+              onValueChange={(v) =>
+                setBillingType(v as "BOLETO" | "PIX" | "CREDIT_CARD" | "UNDEFINED")
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(BILLING_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Descrição (opcional)</Label>
+            <Input
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Ex: Honorários advocatícios - parcela 01"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={createCharge.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirm} disabled={createCharge.isPending}>
+            {createCharge.isPending ? (
+              <Loader2 size={13} className="mr-1 animate-spin" />
+            ) : (
+              <Receipt size={13} className="mr-1" />
+            )}
+            Gerar cobrança
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Dialog: Pix QR Code ─────────────────────────────────────────────────────
+
+function PixQrCodeDialog({
+  parcelaId,
+  onOpenChange,
+}: {
+  parcelaId: string | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { data: pix, isLoading, isError } = usePixQrCode(parcelaId ?? undefined);
+
+  function copyPayload() {
+    if (!pix?.payload) return;
+    navigator.clipboard.writeText(pix.payload).then(
+      () => toast.success("Código Pix copiado!"),
+      () => toast.error("Não foi possível copiar"),
+    );
+  }
+
+  return (
+    <Dialog open={!!parcelaId} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Pix QR Code</DialogTitle>
+          <DialogDescription>
+            Escaneie o QR Code ou copie o código Pix copia-e-cola.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-3">
+          {isLoading && (
+            <div className="flex items-center gap-2 py-8 text-muted-foreground text-[13px]">
+              <Loader2 size={16} className="animate-spin" /> Gerando QR Code…
+            </div>
+          )}
+          {isError && (
+            <div className="text-[var(--danger)] text-[13px] py-4">
+              Erro ao gerar QR Code. Verifique se a cobrança está ativa no Asaas.
+            </div>
+          )}
+          {pix?.encodedImage && (
+            <img
+              src={`data:image/png;base64,${pix.encodedImage}`}
+              alt="QR Code Pix"
+              className="w-52 h-52 rounded-md border border-[var(--border)]"
+            />
+          )}
+          {pix?.payload && (
+            <div className="w-full">
+              <div className="flex items-center gap-1 mb-1">
+                <Label className="text-[11px]">Copia e cola</Label>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={pix.payload}
+                  className="text-[11px] font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button size="sm" variant="outline" onClick={copyPayload} title="Copiar">
+                  <Copy size={13} />
+                </Button>
+              </div>
+            </div>
+          )}
+          {pix?.expirationDate && (
+            <div className="text-[11px] text-muted-foreground">
+              Expira em{" "}
+              {new Date(pix.expirationDate).toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Dialog: Baixa Manual ────────────────────────────────────────────────────
 
 function BaixaParcelaDialog({
   parcela,
