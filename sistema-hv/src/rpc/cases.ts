@@ -17,6 +17,7 @@ import {
   listCaseEvents,
   listCases,
   listComercialCases,
+  listComercialDocuments,
   marcarCasoPerdido,
   moveCaseStatus,
   moveCaseStatusFin,
@@ -231,6 +232,11 @@ export const aprovarConferenciaFinFn = createServerFn({ method: "POST" })
 // ----------------------------------------------------------------------------
 export const listComercialCasesFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listComercialCases()),
+);
+
+// Aba Assinaturas — DOCUMENTOS enviados ao ZapSign aguardando assinatura.
+export const listComercialDocumentsFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => listComercialDocuments()),
 );
 
 // Liberação manual: usuário confirma que a procuração foi assinada.

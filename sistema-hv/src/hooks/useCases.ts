@@ -17,6 +17,7 @@ import {
   listCaseEventsFn,
   listCasesFn,
   listComercialCasesFn,
+  listComercialDocumentsFn,
   marcarCasoPerdidoFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
@@ -26,6 +27,7 @@ import {
   updateCaseCanonicalFieldsFn,
   updateCaseFn,
 } from "@/rpc/cases";
+import { confirmarAssinaturaManualFn } from "@/rpc/case-documents";
 
 type Filters = {
   search?: string;
@@ -306,6 +308,30 @@ export function useComercialCases() {
     queryKey: queryKeys.cases.comercial(),
     queryFn: () => fn(),
     staleTime: 60 * 1000,
+  });
+}
+
+// Aba Assinaturas — DOCUMENTOS enviados ao ZapSign aguardando assinatura.
+export function useComercialDocuments() {
+  const fn = useServerFn(listComercialDocumentsFn);
+  return useQuery({
+    queryKey: ["cases", "comercial-documents"],
+    queryFn: () => fn(),
+    staleTime: 60 * 1000,
+  });
+}
+
+// Confirmar assinatura a partir da aba Assinaturas (por documento). Reusa o
+// mesmo RPC do caso; invalida casos + a lista de documentos aguardando.
+export function useConfirmarAssinaturaDoc() {
+  const fn = useServerFn(confirmarAssinaturaManualFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["case-documents"] });
+    },
   });
 }
 

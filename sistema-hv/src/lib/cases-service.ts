@@ -197,26 +197,14 @@ export async function createCase(
   }
 
   // Fase comercial: prepara o documento de procuração (best-effort).
-  // Se o usuário escolheu um modelo no ato, gera a procuração já preenchida com
-  // os dados do cliente; senão cai no placeholder (modelo definido depois).
-  // skipProcuracaoPrep: o fluxo de revisão (createComercialCaseAndGenerate
-  // Procuracao) cuida da geração com os valores revisados — não duplicar aqui.
-  if (comercial && !opts?.skipProcuracaoPrep) {
-    try {
-      if (input.procuracao_template_id) {
-        await generateProcuracaoFromTemplate(
-          created.id,
-          input.procuracao_template_id,
-          input.client_id,
-          triggeredBy,
-        );
-      } else {
-        await ensureProcuracaoDocument(created.id, triggeredBy);
-      }
-    } catch (err) {
-      console.error("cases-service: falha ao preparar procuração:", err);
-    }
-  }
+  // REGRA (2026-07-08) — criar um caso NÃO gera documento automático. O sistema
+  // não cria rascunho de procuração/contrato sozinho: quem gera é o usuário, na
+  // aba Documentos do caso (Procuração ou Documento do caso). Removida a antiga
+  // preparação automática (ensureProcuracaoDocument/generateProcuracaoFromTemplate
+  // no ato da criação). `opts.skipProcuracaoPrep` ficou sem efeito (mantido na
+  // assinatura por compatibilidade dos callers). As funções de geração seguem
+  // existindo e são chamadas pelos fluxos EXPLÍCITOS do usuário.
+  void opts;
 
   return result;
 }
@@ -717,6 +705,70 @@ export async function listComercialCases() {
   if (docErr) throw new CaseServiceError(docErr.message, 500);
   const withSentDoc = new Set((sentDocs ?? []).map((d) => d.case_id));
   return cases.filter((c) => withSentDoc.has(c.id));
+}
+
+// ----------------------------------------------------------------------------
+// ASSINATURAS (2026-07-08) — lista os DOCUMENTOS enviados ao ZapSign e ainda
+// aguardando assinatura (status ENVIADO_ZAPSIGN). Granularidade por DOCUMENTO
+// (não por caso) para a aba Assinaturas: cada linha é 1 documento com o botão
+// "Confirmar assinatura". Só entra aqui o que foi de fato ENVIADO ao ZapSign.
+// ----------------------------------------------------------------------------
+export type ComercialDocument = {
+  id: string;
+  case_id: string | null;
+  case_code: string;
+  case_type: string | null;
+  client_id: string | null;
+  client_name: string;
+  title: string;
+  doc_kind: string | null;
+  status: string;
+  zapsign_sign_url: string | null;
+  created_at: string;
+};
+
+export async function listComercialDocuments(): Promise<ComercialDocument[]> {
+  const sb = getSupabaseAdmin();
+  const { data: docs, error } = await sb
+    .from("system_case_documents")
+    .select("id, case_id, title, doc_kind, status, zapsign_sign_url, created_at")
+    .eq("status", "ENVIADO_ZAPSIGN")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+  if (error) throw new CaseServiceError(error.message, 500);
+  const rows = docs ?? [];
+  if (rows.length === 0) return [];
+
+  const caseIds = [...new Set(rows.map((d) => d.case_id).filter(Boolean))] as string[];
+  const { data: cases } = await sb
+    .from("system_cases_active")
+    .select("id, case_code, client_id, case_type")
+    .in("id", caseIds);
+  const caseById = new Map((cases ?? []).map((c) => [c.id, c]));
+
+  const clientIds = [...new Set((cases ?? []).map((c) => c.client_id).filter(Boolean))] as string[];
+  const { data: clients } = clientIds.length
+    ? await sb.from("system_clients").select("id, full_name").in("id", clientIds)
+    : { data: [] as { id: string; full_name: string }[] };
+  const clientById = new Map((clients ?? []).map((c) => [c.id, c]));
+
+  return rows.map((d) => {
+    const caso = d.case_id ? caseById.get(d.case_id) : undefined;
+    const cli = caso?.client_id ? clientById.get(caso.client_id) : undefined;
+    return {
+      id: d.id,
+      case_id: d.case_id,
+      case_code: caso?.case_code ?? "—",
+      case_type: caso?.case_type ?? null,
+      client_id: caso?.client_id ?? null,
+      client_name: cli?.full_name ?? "Cliente",
+      title: d.title,
+      doc_kind: d.doc_kind,
+      status: d.status,
+      zapsign_sign_url: d.zapsign_sign_url,
+      created_at: d.created_at,
+    };
+  });
 }
 
 // ----------------------------------------------------------------------------

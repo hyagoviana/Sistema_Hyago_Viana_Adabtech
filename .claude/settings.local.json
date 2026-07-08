@@ -355,7 +355,9 @@
       "PowerShell(npx tsc --noEmit 2>&1 | Select-String -Pattern \"error TS\" | ForEach-Object { $_.Line })",
       "PowerShell(npx eslint \"src/lib/cases-service.ts\" \"src/components/hv/Sidebar.tsx\" \"src/routes/clientes.`$id.tsx\"; if \\($?\\) { \"LINT OK\" })",
       "PowerShell($out = npx eslint \"src/routes/casos.financeiro.index.tsx\" 2>&1 | Out-String; $crlf = \\([regex]::Matches\\($out, 'Delete `.`'\\)\\).Count; $other = \\([regex]::Matches\\($out, 'error'\\)\\).Count - $crlf; \"Arquivo NÃO tocado \\(casos.financeiro.index.tsx\\): erros CRLF=$crlf, outros erros=$other\")",
-      "PowerShell(npx eslint --fix \"src/lib/cases-service.ts\" \"src/components/hv/Sidebar.tsx\" \"src/routes/clientes.`$id.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros\\)\" } else { \"ainda ha erros\" })"
+      "PowerShell(npx eslint --fix \"src/lib/cases-service.ts\" \"src/components/hv/Sidebar.tsx\" \"src/routes/clientes.`$id.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros\\)\" } else { \"ainda ha erros\" })",
+      "PowerShell(npx eslint --fix \"src/lib/cases-service.ts\" \"src/rpc/cases.ts\" \"src/hooks/useCases.ts\" \"src/routes/comercial.assinaturas.tsx\" \"src/routes/casos.`$id.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros\\)\" } else { \"ainda ha erros\" })",
+      "PowerShell(npx eslint \"src/routes/comercial.assinaturas.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros/0 warnings\\)\" })"
     ]
   }
 }
