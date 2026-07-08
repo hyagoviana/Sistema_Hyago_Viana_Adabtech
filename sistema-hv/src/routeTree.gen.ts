@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TarefasRouteImport } from './routes/tarefas'
+import { Route as ReferenciasRouteImport } from './routes/referencias'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
@@ -81,6 +82,11 @@ import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenciasRoute = ReferenciasRouteImport.update({
+  id: '/referencias',
+  path: '/referencias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
@@ -437,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/referencias': typeof ReferenciasRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -507,6 +514,7 @@ export interface FileRoutesByTo {
   '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/referencias': typeof ReferenciasRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -577,6 +585,7 @@ export interface FileRoutesById {
   '/nova-senha': typeof NovaSenhaRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/referencias': typeof ReferenciasRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -649,6 +658,7 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/pipeline'
     | '/recuperar-senha'
+    | '/referencias'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -719,6 +729,7 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/pipeline'
     | '/recuperar-senha'
+    | '/referencias'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/lista'
@@ -788,6 +799,7 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/pipeline'
     | '/recuperar-senha'
+    | '/referencias'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -859,6 +871,7 @@ export interface RootRouteChildren {
   NovaSenhaRoute: typeof NovaSenhaRoute
   PipelineRoute: typeof PipelineRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  ReferenciasRoute: typeof ReferenciasRoute
   TarefasRoute: typeof TarefasRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
@@ -920,6 +933,13 @@ declare module '@tanstack/react-router' {
       path: '/tarefas'
       fullPath: '/tarefas'
       preLoaderRoute: typeof TarefasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referencias': {
+      id: '/referencias'
+      path: '/referencias'
+      fullPath: '/referencias'
+      preLoaderRoute: typeof ReferenciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recuperar-senha': {
@@ -1458,6 +1478,7 @@ const rootRouteChildren: RootRouteChildren = {
   NovaSenhaRoute: NovaSenhaRoute,
   PipelineRoute: PipelineRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
+  ReferenciasRoute: ReferenciasRoute,
   TarefasRoute: TarefasRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,

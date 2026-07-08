@@ -13,6 +13,7 @@ import {
   BarChart3,
   LayoutGrid,
   Palette,
+  Library,
   Settings,
   LogOut,
   PanelLeftClose,
@@ -74,6 +75,7 @@ const groups: { label: string; items: Item[] }[] = [
   {
     label: "Sistema",
     items: [
+      { to: "/referencias", label: "Referências", icon: Library },
       { to: "/design-system", label: "Design System", icon: Palette },
       { to: "/configuracoes", label: "Configurações", icon: Settings },
     ],

@@ -651,12 +651,16 @@ export async function confirmarAssinaturaManualDocumento(docId: string, userId: 
   // Dispara o gatilho de ciclo de vida do caso conforme o tipo do documento.
   // Import dinâmico evita ciclo entre case-documents-service e cases-service.
   if (doc.case_id) {
-    const { promoverCasoOperacional, registrarProcuracaoAssinada } = await import("./cases-service");
-    if (doc.doc_kind === "contrato") {
-      await promoverCasoOperacional(doc.case_id, { via: "manual", userId });
-    } else if (doc.doc_kind === "procuracao") {
+    const { promoverCasoOperacional, registrarProcuracaoAssinada } =
+      await import("./cases-service");
+    // Procuração assinada: registra o marco comercial (procuracao_assinada_at + GANHO).
+    if (doc.doc_kind === "procuracao") {
       await registrarProcuracaoAssinada(doc.case_id, { via: "manual", userId });
     }
+    // REGRA (2026-07-08, owner): QUALQUER documento assinado — procuração, contrato
+    // ou documento de caso — promove o cadastro a CLIENTE (passa a aparecer na aba
+    // Clientes, não fica só em Lead). Idempotente (no-op se já é CLIENTE).
+    await promoverCasoOperacional(doc.case_id, { via: "manual", userId });
   }
 
   return { ok: true as const, id: doc.id };

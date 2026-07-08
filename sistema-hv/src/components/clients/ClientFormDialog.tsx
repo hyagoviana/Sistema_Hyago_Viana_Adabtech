@@ -169,6 +169,7 @@ const EMPTY_PROFESSIONAL = {
   crm_numero: "",
   crm_uf: "",
   rg_orgao: "",
+  estado_civil: "",
   oab_numero: "",
   oab_uf: "",
   vinculo_institucional: "",
@@ -194,6 +195,7 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
     crm_numero: str("crm_numero"),
     crm_uf: str("crm_uf"),
     rg_orgao: str("rg_orgao"),
+    estado_civil: str("estado_civil"),
     oab_numero: str("oab_numero"),
     oab_uf: str("oab_uf"),
     vinculo_institucional: str("vinculo_institucional"),
@@ -207,7 +209,9 @@ function pickProfessional(pd: Client["professional_data"]): typeof EMPTY_PROFESS
     residencia_inicio: str("residencia_inicio"),
     residencia_termino: str("residencia_termino"),
     residencia_especialidade: str("residencia_especialidade"),
-    tags: Array.isArray(p.tags) ? (p.tags as unknown[]).filter((t): t is string => typeof t === "string") : [],
+    tags: Array.isArray(p.tags)
+      ? (p.tags as unknown[]).filter((t): t is string => typeof t === "string")
+      : [],
     observacoes: str("observacoes"),
   };
 }
@@ -458,19 +462,38 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
             </div>
 
             {isPF && (
-              <FormField
-                control={form.control}
-                name="professional_data.rg_orgao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Órgão emissor do RG</FormLabel>
-                    <FormControl>
-                      <Input placeholder="SSP/BA" {...field} value={field.value ?? ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="professional_data.rg_orgao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Órgão emissor do RG</FormLabel>
+                      <FormControl>
+                        <Input placeholder="SSP/BA" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="professional_data.estado_civil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado civil</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="solteira / casado / ..."
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
             {/* Contato — editável futuramente */}

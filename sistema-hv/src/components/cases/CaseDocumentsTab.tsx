@@ -92,7 +92,7 @@ export function CaseDocumentsTab({
   clientName?: string;
   clientCpf?: string;
   municipio?: string;
-  autoFillExtra?: Omit<AutoFillData, "clientName" | "clientCpf" | "municipio">;
+  autoFillExtra?: AutoFillData;
 }) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
   const generate = useGenerateCaseDocument(caseId);

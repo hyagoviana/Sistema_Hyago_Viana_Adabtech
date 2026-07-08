@@ -29,7 +29,121 @@ export type AutoFillData = {
   vinculo_institucional?: string;
   caseCode?: string;
   responsavel?: string;
+  // Autofill (2026-07-08) — usados para montar o bloco "dados pessoais" completo.
+  rg?: string;
+  rgOrgao?: string;
+  estadoCivil?: string;
+  enderecoCompleto?: string;
+  cep?: string;
+  // Autofill B — dados do MUNICÍPIO (tabela system_municipios).
+  populacao?: string;
+  densidade?: string;
+  salarioMedio?: string;
+  percentual?: string;
+  ibge?: string;
+  secretario?: string;
+  secretarioCargo?: string;
+  // Autofill C — PERFIL (tabela system_perfis).
+  numeroPerfil?: string;
+  perfilTexto?: string;
+  // Autofill D — campos do CASO (canonical_fields): chave (nome do campo) → valor.
+  canonical?: Record<string, string>;
 };
+
+// Normaliza texto p/ casar placeholder ↔ nome de campo canônico do caso: remove
+// acentos, sufixo "- obrigatório", pontuação e caixa.
+function normKey(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s*-\s*obrigat[oó]rio\s*$/i, "")
+    .replace(/[^a-z0-9]+/gi, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Autofill D — casa o placeholder com um campo canônico do CASO pelo nome.
+function canonicalLookup(fieldKey: string, canonical?: Record<string, string>): string | undefined {
+  if (!canonical) return undefined;
+  const nk = normKey(fieldKey);
+  for (const [ck, cv] of Object.entries(canonical)) {
+    if (cv && normKey(ck) === nk) return cv;
+  }
+  return undefined;
+}
+
+/** Mescla os dados de um município (tabela) no AutoFillData. Puro. */
+export function augmentWithMunicipio(
+  data: AutoFillData,
+  m?: {
+    populacao?: string | null;
+    densidade?: string | null;
+    salario_medio?: string | null;
+    percentual?: string | null;
+    ibge?: string | null;
+    secretario_nome?: string | null;
+    secretario_cargo?: string | null;
+  } | null,
+): AutoFillData {
+  if (!m) return data;
+  return {
+    ...data,
+    populacao: m.populacao ?? data.populacao,
+    densidade: m.densidade ?? data.densidade,
+    salarioMedio: m.salario_medio ?? data.salarioMedio,
+    percentual: m.percentual ?? data.percentual,
+    ibge: m.ibge ?? data.ibge,
+    secretario: m.secretario_nome ?? data.secretario,
+    secretarioCargo: m.secretario_cargo ?? data.secretarioCargo,
+  };
+}
+
+/** Mescla o texto de um perfil (tabela) no AutoFillData. Puro. */
+export function augmentWithPerfil(
+  data: AutoFillData,
+  p?: { nome?: string | null; texto?: string | null } | null,
+): AutoFillData {
+  if (!p) return data;
+  return {
+    ...data,
+    numeroPerfil: p.nome ?? data.numeroPerfil,
+    perfilTexto: p.texto ?? data.perfilTexto,
+  };
+}
+
+function formatCep(cep?: string): string {
+  const d = (cep ?? "").replace(/\D/g, "");
+  return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : (cep ?? "");
+}
+
+// Monta o bloco "dados pessoais" completo (nome, nacionalidade, [estado civil],
+// profissão, RG + órgão, CPF, endereço). O GÊNERO é inferido do próprio nome do
+// placeholder: "dados pessoais DA médica" = feminino; "DO médico" = masculino.
+// Tudo o que faltar no cadastro é simplesmente omitido — e o campo é editável.
+function buildDadosPessoais(fieldKey: string, data: AutoFillData): string | undefined {
+  if (!data.clientName) return undefined;
+  const k = fieldKey.toLowerCase();
+  const fem = /m[ée]dica/.test(k) || /\bda\b/.test(k);
+  const g = (masc: string, fmn: string) => (fem ? fmn : masc);
+
+  const parts: string[] = [data.clientName, g("brasileiro", "brasileira")];
+  if (data.estadoCivil) parts.push(data.estadoCivil);
+  parts.push(g("médico", "médica"));
+  let s = parts.join(", ");
+  if (data.rg) {
+    s += `, portador${g("", "a")} da Cédula de Identidade/RG nº: ${data.rg}${
+      data.rgOrgao ? ` ${data.rgOrgao}` : ""
+    }`;
+  }
+  if (data.clientCpf) {
+    s += `, inscrit${g("o", "a")} no CPF nº: ${formatCpfCnpj(data.clientCpf)}`;
+  }
+  if (data.enderecoCompleto) {
+    s += `, residente e domiciliad${g("o", "a")} na ${data.enderecoCompleto}`;
+    if (data.cep) s += `, CEP: ${data.cep}`;
+  }
+  return s;
+}
 
 /** Resolve o valor de um placeholder a partir dos dados do cliente/caso. */
 export function resolveAutoValue(field: TemplateField, data: AutoFillData): string | undefined {
@@ -51,13 +165,9 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
     if (autoField === "responsavel") return data.responsavel;
     if (autoField === "cidade" || autoField === "city") return data.city;
     if (autoField === "estado" || autoField === "uf" || autoField === "state") return data.state;
-    // "dados_pessoais" = nome + CPF combinado
+    // "dados_pessoais" = bloco completo (nome, nacionalidade, RG, CPF, endereço)
     if (autoField === "dados_pessoais") {
-      const parts = [
-        data.clientName,
-        data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : "",
-      ].filter(Boolean);
-      return parts.length ? parts.join(", ") : undefined;
+      return buildDadosPessoais(field.key, data);
     }
   }
 
@@ -67,11 +177,7 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
   const match = (patterns: RegExp) => patterns.test(key) || patterns.test(label);
 
   if (/\bdados pessoais\b/.test(key)) {
-    const parts = [
-      data.clientName,
-      data.clientCpf ? `CPF: ${formatCpfCnpj(data.clientCpf)}` : "",
-    ].filter(Boolean);
-    return parts.length ? parts.join(", ") : undefined;
+    return buildDadosPessoais(field.key, data);
   }
   // Nome do cliente / médico / profissional → sempre é o nome do cliente
   if (
@@ -97,7 +203,22 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
   if (match(/\brespons[aá]vel\b/)) return data.responsavel;
   if (match(/\b(cidade|city)\b/)) return data.city;
   if (key === "uf" || key === "estado" || key === "state") return data.state;
-  return undefined;
+
+  const canon = () => canonicalLookup(field.key, data.canonical);
+  // Autofill B — dados do município (tabela). Fallback: campo canônico do caso.
+  if (match(/\bpopula[cç][aã]o\b/) && !match(/percentual/)) return data.populacao ?? canon();
+  if (match(/\bdensidade\b/)) return data.densidade ?? canon();
+  if (match(/\bsal[aá]rio\b/)) return data.salarioMedio ?? canon();
+  if (match(/\bpercentual\b/)) return data.percentual ?? canon();
+  if (match(/\bibge\b/)) return data.ibge ?? canon();
+  if (match(/\bcargo\b/) && match(/secret/)) return data.secretarioCargo ?? canon();
+  if (match(/secret[aá]rio/)) return data.secretario ?? canon();
+  // Autofill C — perfil (tabela).
+  if (match(/informa[cç][oõ]es sobre o perfil/)) return data.perfilTexto ?? canon();
+  if (match(/\bperfil\b/)) return data.numeroPerfil ?? canon();
+  // Autofill D — qualquer outro placeholder casa com um campo canônico do caso
+  // (UBS, CNES, período de vínculo, período trabalhado, carga horária, unidade…).
+  return canon();
 }
 
 /** Monta o AutoFillData a partir de um registro de cliente + dados do caso. */
@@ -105,6 +226,7 @@ export function buildAutoFillFromClient(
   client: {
     full_name?: string | null;
     cpf_cnpj?: string | null;
+    rg?: string | null;
     email?: string | null;
     phone?: string | null;
     address?: unknown;
@@ -114,12 +236,36 @@ export function buildAutoFillFromClient(
     municipio?: string | null;
     case_code?: string | null;
     responsavel?: string | null;
+    canonical_fields?: unknown;
   },
 ): AutoFillData {
   const addr = (client.address ?? {}) as Record<string, unknown>;
   const prof = (client.professional_data ?? {}) as Record<string, unknown>;
   const pick = (o: Record<string, unknown>, k: string) =>
-    typeof o[k] === "string" ? (o[k] as string) : undefined;
+    typeof o[k] === "string" && o[k] ? (o[k] as string) : undefined;
+
+  // Autofill D — campos canônicos do caso (nome do campo → valor string).
+  const canonRaw = (caso?.canonical_fields ?? {}) as Record<string, unknown>;
+  const canonical: Record<string, string> = {};
+  for (const [k, v] of Object.entries(canonRaw)) {
+    if (typeof v === "string" && v) canonical[k] = v;
+    else if (typeof v === "number") canonical[k] = String(v);
+  }
+
+  // Endereço completo: "Rua X, nº Y, Complemento, Bairro, Cidade - UF".
+  const street = pick(addr, "street");
+  const number = pick(addr, "number");
+  const endParts = [
+    street ? (number ? `${street}, nº ${number}` : street) : undefined,
+    pick(addr, "complement"),
+    pick(addr, "neighborhood"),
+    pick(addr, "city")
+      ? pick(addr, "state")
+        ? `${pick(addr, "city")} - ${pick(addr, "state")}`
+        : pick(addr, "city")
+      : undefined,
+  ].filter(Boolean) as string[];
+  const zipcode = pick(addr, "zipcode");
 
   return {
     clientName: client.full_name ?? undefined,
@@ -137,6 +283,13 @@ export function buildAutoFillFromClient(
     vinculo_institucional: pick(prof, "vinculo_institucional"),
     caseCode: caso?.case_code ?? undefined,
     responsavel: caso?.responsavel ?? undefined,
+    // Autofill do bloco "dados pessoais".
+    rg: client.rg ?? undefined,
+    rgOrgao: pick(prof, "rg_orgao"),
+    estadoCivil: pick(prof, "estado_civil"),
+    enderecoCompleto: endParts.length ? endParts.join(", ") : undefined,
+    cep: zipcode ? formatCep(zipcode) : undefined,
+    canonical: Object.keys(canonical).length ? canonical : undefined,
   };
 }
 

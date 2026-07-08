@@ -153,30 +153,29 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
       diff: { zapsign_doc_token: token, drive_file_id: file.id },
     });
 
-    // S9-05: roteia o efeito de negócio por doc_kind. Best-effort (não bloqueia
-    // o armazenamento do PDF nem o ASSINADO).
-    //   - procuracao → registrarProcuracaoAssinada (COMERCIAL — segue LEAD).
-    //   - contrato   → promoverCasoOperacional (OPERACIONAL — vira CLIENTE).
-    //   - NULL/outro → só armazena (sem efeito de negócio).
+    // REGRA (2026-07-08, owner): QUALQUER documento assinado promove a CLIENTE.
+    // Best-effort (não bloqueia o armazenamento do PDF nem o ASSINADO).
+    //   - procuracao → registra o marco comercial (procuracao_assinada_at + GANHO)
+    //     E promove a CLIENTE.
+    //   - contrato/documento de caso → promove a CLIENTE.
     if (caseDoc.doc_kind === "procuracao") {
       try {
         await registrarProcuracaoAssinada(caseDoc.case_id, { via: "webhook" });
       } catch (err) {
         console.error("zapsign/webhook: falha ao registrar procuração assinada:", err);
       }
-    } else if (caseDoc.doc_kind === "contrato") {
-      try {
-        const actorId = await resolveSystemActorId();
-        if (actorId) {
-          await promoverCasoOperacional(caseDoc.case_id, { via: "webhook", userId: actorId });
-        } else {
-          console.error(
-            "zapsign/webhook: sem admin na org p/ promover contrato assinado — promoção pulada.",
-          );
-        }
-      } catch (err) {
-        console.error("zapsign/webhook: falha ao promover caso (contrato):", err);
+    }
+    try {
+      const actorId = await resolveSystemActorId();
+      if (actorId) {
+        await promoverCasoOperacional(caseDoc.case_id, { via: "webhook", userId: actorId });
+      } else {
+        console.error(
+          "zapsign/webhook: sem admin na org p/ promover documento assinado — promoção pulada.",
+        );
       }
+    } catch (err) {
+      console.error("zapsign/webhook: falha ao promover caso (documento assinado):", err);
     }
     return {
       ok: true,

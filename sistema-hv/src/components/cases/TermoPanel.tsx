@@ -216,6 +216,26 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       Registrar recusa
                     </Button>
                   )}
+                  {/* Aprovar direto (2026-07-08) — o termo NÃO vai ao ZapSign; é
+                      enviado ao cliente por e-mail/baixado. Este botão aprova em 1
+                      clique (gera o PDF), sem depender da conferência por 2ª pessoa. */}
+                  {(t.status === "RASCUNHO" || t.status === "EM_CONFERENCIA") && (
+                    <Button
+                      size="sm"
+                      disabled={aprovar.isPending || !profile}
+                      onClick={() =>
+                        aprovar.mutate(
+                          { termoId: t.id, aprovadoPorId: profile!.id },
+                          {
+                            onSuccess: () => toast.success("Termo aprovado"),
+                            onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                          },
+                        )
+                      }
+                    >
+                      Aprovar
+                    </Button>
+                  )}
                   {t.drive_url && (
                     <a href={t.drive_url} target="_blank" rel="noreferrer">
                       <Button size="sm" variant="outline">

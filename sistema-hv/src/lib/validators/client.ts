@@ -155,6 +155,9 @@ export const professionalDataSchema = z
     // RG — órgão emissor (ex.: SSP/BA). Guardado no JSONB professional_data para
     // não exigir migração de coluna.
     rg_orgao: textOptional(20),
+    // Estado civil (ex.: solteira, casado) — usado no bloco "dados pessoais" de
+    // alguns documentos (ex.: COVID). Em professional_data (sem migração).
+    estado_civil: textOptional(30),
     oab_numero: textOptional(20),
     oab_uf: ufOptional,
     vinculo_institucional: textOptional(100), // ex.: ANMR, AMPB

@@ -358,7 +358,12 @@
       "PowerShell(npx eslint --fix \"src/lib/cases-service.ts\" \"src/components/hv/Sidebar.tsx\" \"src/routes/clientes.`$id.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros\\)\" } else { \"ainda ha erros\" })",
       "PowerShell(npx eslint --fix \"src/lib/cases-service.ts\" \"src/rpc/cases.ts\" \"src/hooks/useCases.ts\" \"src/routes/comercial.assinaturas.tsx\" \"src/routes/casos.`$id.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros\\)\" } else { \"ainda ha erros\" })",
       "PowerShell(npx eslint \"src/routes/comercial.assinaturas.tsx\"; if \\($?\\) { \"LINT OK \\(0 erros/0 warnings\\)\" })",
-      "Bash(xargs grep -l \"PROCURACAO\\\\|case_type\")"
+      "Bash(xargs grep -l \"PROCURACAO\\\\|case_type\")",
+      "PowerShell(npx eslint --fix \"src/lib/cases/document-autofill.ts\" \"src/routes/casos.`$id.tsx\" \"src/components/cases/CaseDocumentsTab.tsx\" \"src/lib/validators/client.ts\" \"src/components/clients/ClientFormDialog.tsx\"; if \\($?\\) { \"LINT OK\" })",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-String -Pattern \"error TS\" | ForEach-Object { $_.Line } | Select-Object -First 40)",
+      "PowerShell($p=\"src/routeTree.gen.ts\"; for\\($i=0;$i -lt 30;$i++\\){ if\\(\\(Test-Path $p\\) -and \\(Select-String -Path $p -Pattern \"referencias\" -Quiet\\)\\){ \"ROUTE OK \\($i\\)\"; break }; Start-Sleep -Milliseconds 1000 }; if\\(-not \\(Select-String -Path $p -Pattern \"referencias\" -Quiet\\)\\){ \"ainda nao gerou\" })",
+      "PowerShell(npx eslint --fix \"src/lib/cases/document-autofill.ts\" \"src/lib/referencias-service.ts\" \"src/rpc/referencias.ts\" \"src/hooks/useReferencias.ts\" \"src/routes/referencias.tsx\" \"src/routes/casos.`$id.tsx\" \"src/components/hv/Sidebar.tsx\" 2>&1 | Select-Object -Last 20; if \\($?\\) { \"LINT OK\" } else { \"ERROS DE LINT\" })",
+      "PowerShell(npx tsx scripts/db-apply-pg.ts supabase/migrations/20260709000010_municipios_perfis.sql 2>&1 | Select-Object -Last 25)"
     ]
   }
 }

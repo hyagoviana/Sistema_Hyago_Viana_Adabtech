@@ -54,6 +54,12 @@ import { can } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { useClient } from "@/hooks/useClients";
+import { useMunicipios, usePerfis } from "@/hooks/useReferencias";
+import {
+  augmentWithMunicipio,
+  augmentWithPerfil,
+  buildAutoFillFromClient,
+} from "@/lib/cases/document-autofill";
 import { useCase, useCaseEvents, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
 import {
   useEntrarFinanceiro,
@@ -85,13 +91,6 @@ function maskPhone(phone: string | null): string {
   return phone;
 }
 
-/** Extrai string de um campo JSONB (address / professional_data). */
-function pickStr(obj: unknown, key: string): string | undefined {
-  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return undefined;
-  const val = (obj as Record<string, unknown>)[key];
-  return typeof val === "string" && val ? val : undefined;
-}
-
 function CasoDetalhe() {
   const { id } = Route.useParams();
   const navigate = Route.useNavigate();
@@ -105,6 +104,9 @@ function CasoDetalhe() {
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = can(role, "casos.manage");
+  // Autofill B/C — tabelas de referência (município / perfil).
+  const { data: municipios } = useMunicipios();
+  const { data: perfis } = usePerfis();
 
   // S4-06 — título da aba por NOME (case_code), nunca UUID.
   useDocumentTitle(
@@ -192,6 +194,21 @@ function CasoDetalhe() {
   // `removido_do_operacional_at` entra no types.ts só após db:push + db:types (S19).
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
+
+  // Autofill do documento: cadastro + endereço + campos do caso (canonical) e,
+  // por cima, dados do MUNICÍPIO (tabela) e do PERFIL (tabela). Tudo editável.
+  let docAutoFill = buildAutoFillFromClient(cliente ?? {}, caso);
+  const municipioRow = (municipios ?? []).find(
+    (m) => m.nome.trim().toLowerCase() === (caso.municipio ?? "").trim().toLowerCase(),
+  );
+  docAutoFill = augmentWithMunicipio(docAutoFill, municipioRow);
+  const perfilNum = Object.entries(docAutoFill.canonical ?? {}).find(
+    ([k]) => /perfil/i.test(k) && !/informa/i.test(k),
+  )?.[1];
+  const perfilRow = perfilNum
+    ? (perfis ?? []).find((p) => p.nome.trim().toLowerCase() === perfilNum.trim().toLowerCase())
+    : undefined;
+  docAutoFill = augmentWithPerfil(docAutoFill, perfilRow);
 
   return (
     <div className="page-container">
@@ -455,20 +472,7 @@ function CasoDetalhe() {
         clientName={cliente?.full_name}
         clientCpf={cliente?.cpf_cnpj}
         municipio={caso.municipio ?? undefined}
-        autoFillExtra={{
-          email: cliente?.email ?? undefined,
-          phone: cliente?.phone ?? undefined,
-          city: pickStr(cliente?.address, "city"),
-          state: pickStr(cliente?.address, "state"),
-          crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
-          crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
-          oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
-          oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
-          especialidade: pickStr(cliente?.professional_data, "especialidade"),
-          vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
-          caseCode: caso.case_code,
-          responsavel: caso.responsavel ?? undefined,
-        }}
+        autoFillExtra={docAutoFill}
       />
 
       <OrnamentalDivider />
@@ -566,23 +570,7 @@ function CasoDetalhe() {
         onOpenChange={setGenFlowOpen}
         caseId={caso.id}
         caseType={caso.case_type}
-        autoFill={{
-          clientName: cliente?.full_name,
-          clientCpf: cliente?.cpf_cnpj,
-          municipio: caso.municipio ?? undefined,
-          email: cliente?.email ?? undefined,
-          phone: cliente?.phone ?? undefined,
-          city: pickStr(cliente?.address, "city"),
-          state: pickStr(cliente?.address, "state"),
-          crm_numero: pickStr(cliente?.professional_data, "crm_numero"),
-          crm_uf: pickStr(cliente?.professional_data, "crm_uf"),
-          oab_numero: pickStr(cliente?.professional_data, "oab_numero"),
-          oab_uf: pickStr(cliente?.professional_data, "oab_uf"),
-          especialidade: pickStr(cliente?.professional_data, "especialidade"),
-          vinculo_institucional: pickStr(cliente?.professional_data, "vinculo_institucional"),
-          caseCode: caso.case_code,
-          responsavel: caso.responsavel ?? undefined,
-        }}
+        autoFill={docAutoFill}
       />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
