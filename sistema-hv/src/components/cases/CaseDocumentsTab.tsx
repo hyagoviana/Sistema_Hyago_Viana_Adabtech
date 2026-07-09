@@ -49,15 +49,19 @@ import {
   useUploadCaseDocument,
 } from "@/hooks/useCaseDocuments";
 import {
-  PROCURACAO_CASE_TYPE,
-  useDocumentTemplates,
   useSyncCaseDocumentFolders,
   useSyncDocumentTemplates,
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
   useTemplatesByFolder,
+  useTemplatesByFolders,
 } from "@/hooks/useDocumentTemplates";
-import { CASE_DOCUMENT_FOLDERS } from "@/lib/cases/case-document-folders";
+import { useServiceTypes } from "@/hooks/usePipeline";
+import {
+  useCreateTypeFolder,
+  useTypeFolders,
+  useUploadTypeTemplate,
+} from "@/hooks/useServiceTypeFolders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -502,14 +506,15 @@ type GenMode = "procuracao" | "caso";
 function GenerateDialog({
   open,
   onOpenChange,
+  caseType,
   pending,
   onGenerate,
   autoFill,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  // ITEM 4 (2026-07-07) — mantido por compat; "Documento de caso" agora seleciona
-  // por PASTA (source_folder_id), não mais por case_type.
+  // (2026-07-09) — usado para resolver as pastas (caso/procuração) DA CATEGORIA
+  // do caso; os seletores passam a listar só os modelos dessas pastas.
   caseType?: string;
   pending: boolean;
   onGenerate: (
@@ -527,11 +532,27 @@ function GenerateDialog({
   // só os docs daquela pasta (filtro por source_folder_id).
   const [folderId, setFolderId] = useState<string | null>(null);
 
-  // Modelos por modo: procuração (marcador, ESTRITO) vs pasta escolhida.
-  // Procuração usa strict → só case_type='PROCURACAO', sem os modelos sem tipo.
-  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE, true);
+  // (2026-07-09) — as pastas são POR CATEGORIA. Resolve o tipo do caso pelo slug e
+  // busca suas pastas de caso e de procuração vinculadas.
+  const { data: serviceTypes } = useServiceTypes();
+  const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso");
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
+
+  // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
+  // pasta de caso escolhida (também da categoria).
+  const { data: procTemplates } = useTemplatesByFolders(
+    mode === "procuracao" ? procFolderIds : null,
+  );
   const { data: folderTemplates } = useTemplatesByFolder(mode === "caso" ? folderId : null);
   const syncProc = useSyncProcuracaoTemplates();
+
+  // Empty-state do "Documento de caso" (categorias sem pasta): criar pasta + anexar.
+  const createCasoFolder = useCreateTypeFolder();
+  const uploadTemplate = useUploadTypeTemplate();
+  const casoFileRef = useRef<HTMLInputElement>(null);
+  const [newFolderName, setNewFolderName] = useState("");
 
   // Reset ao (re)abrir.
   useEffect(() => {
@@ -540,6 +561,7 @@ function GenerateDialog({
       setTemplateId("");
       setValues({});
       setFolderId(null);
+      setNewFolderName("");
     }
   }, [open]);
 
@@ -614,7 +636,7 @@ function GenerateDialog({
                 <FileText size={16} className="text-[var(--gold-700)]" /> Documento do caso
               </div>
               <div className="text-[12px] text-muted-foreground mt-1">
-                Escolha 1 das 6 pastas e o documento dela.
+                Só as pastas de documentos desta categoria.
               </div>
             </button>
           </div>
@@ -628,34 +650,109 @@ function GenerateDialog({
     );
   }
 
-  // ITEM 4 — "Documento de caso", passo 1: escolher 1 das 6 pastas.
+  // "Documento de caso", passo 1: escolher a pasta DA CATEGORIA (ou criar a 1ª).
   if (mode === "caso" && !folderId) {
+    const folders = casoFolders ?? [];
+    const busy = createCasoFolder.isPending || uploadTemplate.isPending;
+
+    const handleCreateAndAttach = async (file: File) => {
+      if (!serviceTypeId) {
+        toast.error("Categoria do caso não encontrada");
+        return;
+      }
+      const nome = newFolderName.trim();
+      if (!nome) {
+        toast.error("Dê um nome para a pasta");
+        return;
+      }
+      try {
+        const folder = await createCasoFolder.mutateAsync({
+          serviceTypeId,
+          kind: "caso",
+          name: nome,
+        });
+        await uploadTemplate.mutateAsync({
+          serviceTypeId,
+          kind: "caso",
+          folderId: folder.drive_folder_id,
+          file,
+        });
+        toast.success("Pasta criada e documento anexado");
+        setNewFolderName("");
+        setFolderId(folder.drive_folder_id);
+        setTemplateId("");
+        setValues({});
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Falha ao criar/anexar");
+      }
+    };
+
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
             <DialogDescription>
-              Selecione a pasta do documento. Só os documentos dela aparecerão.
+              Só as pastas desta categoria aparecem. Os documentos da pasta escolhida ficam
+              disponíveis para gerar.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {CASE_DOCUMENT_FOLDERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => {
-                  setFolderId(f.id);
-                  setTemplateId("");
-                  setValues({});
+
+          {folders.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {folders.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => {
+                    setFolderId(f.drive_folder_id);
+                    setTemplateId("");
+                    setValues({});
+                  }}
+                  className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
+                >
+                  <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
+                  <span className="text-[13px] font-medium text-[var(--navy)]">{f.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-3">
+              <p className="text-sm text-amber-800">
+                Esta categoria ainda não tem nenhuma pasta de documentos de caso. Quer incluir uma
+                agora? Dê um nome à pasta e anexe um documento Word — ou saia se clicou aqui sem
+                querer.
+              </p>
+              <div>
+                <Label>Nome da nova pasta</Label>
+                <Input
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Ex.: Documentos gerais"
+                  disabled={busy}
+                />
+              </div>
+              <input
+                ref={casoFileRef}
+                type="file"
+                accept=".doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) handleCreateAndAttach(file);
                 }}
-                className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
+              />
+              <Button
+                size="sm"
+                disabled={busy || !newFolderName.trim()}
+                onClick={() => casoFileRef.current?.click()}
               >
-                <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
-                <span className="text-[13px] font-medium text-[var(--navy)]">{f.label}</span>
-              </button>
-            ))}
-          </div>
+                {busy ? "Enviando…" : "Anexar documento e criar pasta"}
+              </Button>
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setMode(null)}>
               ← Voltar
@@ -667,7 +764,7 @@ function GenerateDialog({
   }
 
   const isProc = mode === "procuracao";
-  const folderLabel = CASE_DOCUMENT_FOLDERS.find((f) => f.id === folderId)?.label;
+  const folderLabel = (casoFolders ?? []).find((f) => f.drive_folder_id === folderId)?.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -703,7 +800,8 @@ function GenerateDialog({
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
                 {isProc ? (
                   <span className="flex items-center justify-between gap-2">
-                    Nenhum modelo de procuração sincronizado.
+                    Nenhum modelo de procuração desta categoria. Sincronize as procurações do Drive
+                    para importá-las.
                     <Button
                       variant="outline"
                       size="sm"
@@ -727,7 +825,7 @@ function GenerateDialog({
                     </Button>
                   </span>
                 ) : (
-                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" para importar os documentos das 6 pastas do Drive.'
+                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" para importar os documentos das pastas do Drive.'
                 )}
               </div>
             ) : (

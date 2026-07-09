@@ -42,6 +42,9 @@ import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
+import { useUsers } from "@/hooks/useUsers";
+import { useAuth } from "@/lib/auth";
+import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
 import { caseCreateSchema, type CaseCreateInput } from "@/lib/validators/case";
 
 type Props = {
@@ -59,8 +62,18 @@ type Props = {
 export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: clients } = useClientsList();
   const { data: serviceTypes } = useServiceTypes();
+  const { data: users } = useUsers();
+  const { profile, role } = useAuth();
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);
+  const [respPopOpen, setRespPopOpen] = useState(false);
+
+  // Advogados ativos (titular/associado) selecionáveis como responsáveis.
+  const advogados = (users ?? []).filter(
+    (u) => isAdvogado(u.role as Role) && u.status === "ACTIVE",
+  );
+  const iAmAdvogado = isAdvogado(role);
+  const myId = profile?.id ?? null;
 
   const firstType = serviceTypes?.[0]?.slug ?? "";
 
@@ -71,6 +84,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
       case_type: firstType,
       proximo_passo: "",
       responsavel: "",
+      responsavelIds: iAmAdvogado && myId ? [myId] : [],
       municipio: "",
     },
   });
@@ -82,10 +96,11 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
         case_type: serviceTypes?.[0]?.slug ?? "",
         proximo_passo: "",
         responsavel: "",
+        responsavelIds: iAmAdvogado && myId ? [myId] : [],
         municipio: "",
       });
     }
-  }, [open, presetClientId, form, serviceTypes]);
+  }, [open, presetClientId, form, serviceTypes, iAmAdvogado, myId]);
 
   async function onSubmit(data: CaseCreateInput) {
     try {
@@ -226,16 +241,78 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="responsavel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome" {...field} value={field.value ?? ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="responsavelIds"
+                render={({ field }) => {
+                  const selected = (field.value ?? []) as string[];
+                  const labelFor = (id: string) => {
+                    const a = advogados.find((x) => x.id === id);
+                    return a?.full_name || a?.email || "—";
+                  };
+                  const toggle = (id: string) => {
+                    if (iAmAdvogado) return; // advogado fica travado em si mesmo
+                    field.onChange(
+                      selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id],
+                    );
+                  };
+                  return (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Responsável</FormLabel>
+                      {iAmAdvogado ? (
+                        <div className="rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
+                          {(myId && labelFor(myId)) || profile?.full_name || "Você"} (você)
+                        </div>
+                      ) : (
+                        <Popover open={respPopOpen} onOpenChange={setRespPopOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              className="justify-between font-normal"
+                            >
+                              <span className="truncate">
+                                {selected.length === 0
+                                  ? "Selecionar advogados"
+                                  : selected.length === 1
+                                    ? labelFor(selected[0])
+                                    : `${selected.length} advogados`}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                            <Command>
+                              <CommandInput placeholder="Buscar advogado…" />
+                              <CommandList>
+                                <CommandEmpty>Nenhum advogado ativo.</CommandEmpty>
+                                <CommandGroup>
+                                  {advogados.map((a) => (
+                                    <CommandItem
+                                      key={a.id}
+                                      value={a.full_name || a.email}
+                                      onSelect={() => toggle(a.id)}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selected.includes(a.id) ? "opacity-100" : "opacity-0",
+                                        )}
+                                      />
+                                      <span className="flex-1">{a.full_name || a.email}</span>
+                                      <span className="text-[11px] text-muted-foreground">
+                                        {ROLE_LABELS[a.role as Role]}
+                                      </span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}

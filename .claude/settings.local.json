@@ -363,7 +363,19 @@
       "PowerShell(npx tsc --noEmit 2>&1 | Select-String -Pattern \"error TS\" | ForEach-Object { $_.Line } | Select-Object -First 40)",
       "PowerShell($p=\"src/routeTree.gen.ts\"; for\\($i=0;$i -lt 30;$i++\\){ if\\(\\(Test-Path $p\\) -and \\(Select-String -Path $p -Pattern \"referencias\" -Quiet\\)\\){ \"ROUTE OK \\($i\\)\"; break }; Start-Sleep -Milliseconds 1000 }; if\\(-not \\(Select-String -Path $p -Pattern \"referencias\" -Quiet\\)\\){ \"ainda nao gerou\" })",
       "PowerShell(npx eslint --fix \"src/lib/cases/document-autofill.ts\" \"src/lib/referencias-service.ts\" \"src/rpc/referencias.ts\" \"src/hooks/useReferencias.ts\" \"src/routes/referencias.tsx\" \"src/routes/casos.`$id.tsx\" \"src/components/hv/Sidebar.tsx\" 2>&1 | Select-Object -Last 20; if \\($?\\) { \"LINT OK\" } else { \"ERROS DE LINT\" })",
-      "PowerShell(npx tsx scripts/db-apply-pg.ts supabase/migrations/20260709000010_municipios_perfis.sql 2>&1 | Select-Object -Last 25)"
+      "PowerShell(npx tsx scripts/db-apply-pg.ts supabase/migrations/20260709000010_municipios_perfis.sql 2>&1 | Select-Object -Last 25)",
+      "Bash(Select-String -Pattern \"adavio\" -SimpleMatch)",
+      "Bash(Select-String sprint1 *)",
+      "Bash(echo \"=== EXIT tsc: $? ===\")",
+      "Bash(grep -v 'casos.$id.tsx')",
+      "Bash(grep -c \"service-types\" src/routeTree.gen.ts)",
+      "Bash(tail -15 \"C:\\\\Users\\\\mathe\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-mathe-OneDrive--rea-de-Trabalho-Projeto-Hytalo-advogado-Sistema-Hyago-Viana-Adabtech\\\\5e91f10b-1acc-4ed7-8411-d9ea860b6b70\\\\tasks\\\\bbc8qszs6.output\")",
+      "Bash(grep -v 'casos.$id.tsx\\(452')",
+      "Bash(xargs grep -l \"marcarItemChecklist\\\\|useMarcarItemChecklist\")",
+      "Bash(xargs grep -l \"fn_avancar_fin\\\\|avancar_fin_se_ok\")",
+      "Bash(grep -v 'casos.$id.tsx\\(451')",
+      "Bash(grep -vE 'casos\\\\.financeiro\\\\.index\\\\.tsx|casos\\\\.\\\\$id\\\\.tsx\\\\\\(449' /tmp/errs.txt)",
+      "Bash(grep -vE 'casos\\\\.financeiro\\\\.index\\\\.tsx|casos\\\\.\\\\$id\\\\.tsx\\\\\\(449')"
     ]
   }
 }

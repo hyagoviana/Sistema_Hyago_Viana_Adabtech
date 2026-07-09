@@ -2,6 +2,8 @@
 // NUNCA importe no browser.
 
 import { instanciarChecklist } from "./checklist-service";
+import { enforceResponsavelIds, setCaseResponsaveis } from "./case-responsaveis-service";
+import { getVisibleCaseIds } from "./visibility";
 import {
   buildAutoFillFromClient,
   buildAutoFillValues,
@@ -153,12 +155,21 @@ export async function createCase(
       // essa flag, e eles aparecem no board COMERCIAL. A promoção para operacional
       // acontece por (a) assinatura (webhook/manual) ou (b) "Enviar para operacional".
       aguardando_assinatura_at: comercial ? new Date().toISOString() : null,
+      // (2026-07-09) — quem criou (base da visibilidade "meus casos").
+      created_by: triggeredBy ?? null,
     })
     .select()
     .single();
 
   if (error || !created) {
     throw new CaseServiceError(error?.message ?? "Falha ao criar caso", 500);
+  }
+
+  // (2026-07-09) — vincula os responsáveis (advogados). Enforcement: se o criador
+  // é advogado, ele é sempre o único responsável (não atribui a outros).
+  {
+    const enforced = await enforceResponsavelIds(triggeredBy, input.responsavelIds);
+    if (enforced !== undefined) await setCaseResponsaveis(created.id, enforced, triggeredBy);
   }
 
   await sb.from("system_case_events").insert({
@@ -996,15 +1007,23 @@ export async function updateCase(id: string, input: CaseUpdateOutput, triggeredB
     .single();
   if (!before) throw new CaseServiceError("Caso não encontrado", 404);
 
+  // responsavelIds não é coluna — trata à parte (vínculo N:N + cache de exibição).
+  const { responsavelIds, ...dbInput } = input as CaseUpdateOutput & { responsavelIds?: string[] };
+
   const { data, error } = await sb
     .from("system_cases")
-    .update(input)
+    .update(dbInput)
     .eq("id", id)
     .is("deleted_at", null)
     .select()
     .single();
   if (error || !data) {
     throw new CaseServiceError(error?.message ?? "Falha ao atualizar", 500);
+  }
+
+  if (responsavelIds !== undefined) {
+    const ids = await enforceResponsavelIds(triggeredBy, responsavelIds);
+    await setCaseResponsaveis(id, ids ?? [], triggeredBy);
   }
 
   // Event: se mudou status, registra transition; senão, updated genérico
@@ -1021,11 +1040,9 @@ export async function updateCase(id: string, input: CaseUpdateOutput, triggeredB
     triggered_by: triggeredBy ?? null,
   });
 
-  // S2-03 — instancia os itens de checklist da etapa de destino (idempotente,
-  // server-side, dentro da transição). Falha aqui não deve derrubar o move.
-  if (statusChanged && data.macrostatus_op) {
-    await instanciarChecklist(id, data.macrostatus_op).catch(() => {});
-  }
+  // (2026-07-09) — checklist é SÓ do financeiro. Mudança de etapa OPERACIONAL não
+  // instancia checklist. (No fin, a instanciação segue em moveCaseToStageFin /
+  // entrarNoFinanceiro.)
 
   return data;
 }
@@ -1103,8 +1120,12 @@ export async function softDeleteCase(id: string, triggeredBy?: string) {
 // ----------------------------------------------------------------------------
 // MOVE STATUS (atalho usado pelo dialog Mover do Kanban operacional)
 // ----------------------------------------------------------------------------
-export async function moveCaseStatus(id: string, to: MacroOp, triggeredBy?: string) {
-  return updateCase(id, { macrostatus_op: to }, triggeredBy);
+// `to` é o SLUG da etapa op (configurável por categoria) — texto livre desde a
+// migration 0017. O trigger system_fn_sync_stage_ids reaponta stage_op_id.
+export async function moveCaseStatus(id: string, to: string, triggeredBy?: string) {
+  // Cast: macrostatus_op é texto livre no banco (etapas por categoria), mas o tipo
+  // do patch ainda usa o enum legado MacroOp. O trigger reaponta stage_op_id.
+  return updateCase(id, { macrostatus_op: to as MacroOp }, triggeredBy);
 }
 
 // ----------------------------------------------------------------------------
@@ -1270,14 +1291,22 @@ export async function aprovarConferenciaFin(caseId: string, triggeredBy?: string
 // ----------------------------------------------------------------------------
 // READ
 // ----------------------------------------------------------------------------
-export async function listCases(filters?: {
-  search?: string;
-  macrostatus_op?: MacroOp;
-  macrostatus_fin?: MacroFin;
-  client_id?: string;
-}) {
+export async function listCases(
+  filters?: {
+    search?: string;
+    macrostatus_op?: MacroOp;
+    macrostatus_fin?: MacroFin;
+    client_id?: string;
+  },
+  viewerUserId?: string,
+) {
   const sb = getSupabaseAdmin();
+  // Visibilidade: advogado vê só os casos vinculados a ele; admin vê tudo.
+  const visible = await getVisibleCaseIds(viewerUserId);
+  if (visible !== null && visible.length === 0) return [];
+
   let query = sb.from("system_cases_active").select("*").order("created_at", { ascending: false });
+  if (visible !== null) query = query.in("id", visible);
 
   if (filters?.macrostatus_op) {
     query = query.eq("macrostatus_op", filters.macrostatus_op);
@@ -1303,11 +1332,13 @@ export async function listCases(filters?: {
   // mesclando com o resultado do ilike em case_code/proximo_passo.
   if (searchTerm) {
     const needle = searchTerm.toLowerCase();
-    const { data: withCanon } = await sb
+    let canonQ = sb
       .from("system_cases_active")
       .select("*")
       .not("canonical_fields", "is", null)
       .order("created_at", { ascending: false });
+    if (visible !== null) canonQ = canonQ.in("id", visible);
+    const { data: withCanon } = await canonQ;
     const seen = new Set(rows.map((r) => r.id));
     for (const r of withCanon ?? []) {
       if (seen.has(r.id)) continue;

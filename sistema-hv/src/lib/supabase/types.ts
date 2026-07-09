@@ -174,6 +174,7 @@ export type Database = {
           done_by: string | null;
           source: string;
           drive_file_id: string | null;
+          assigned_to: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -192,6 +193,7 @@ export type Database = {
           done_by?: string | null;
           source?: string;
           drive_file_id?: string | null;
+          assigned_to?: string | null;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
@@ -432,6 +434,34 @@ export type Database = {
           deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_service_types"]["Insert"]>;
+        Relationships: [];
+      };
+      system_service_type_folders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          service_type_id: string;
+          kind: string;
+          drive_folder_id: string;
+          name: string;
+          ordem: number;
+          created_by: string | null;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          service_type_id: string;
+          kind: string;
+          drive_folder_id: string;
+          name: string;
+          ordem?: number;
+          created_by?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_service_type_folders"]["Insert"]>;
         Relationships: [];
       };
       system_pipeline_stages: {
@@ -967,6 +997,7 @@ export type Database = {
           organization_id: string;
           email: string;
           full_name: string | null;
+          phone: string | null;
           role: string;
           status: string;
           created_at: string;
@@ -978,6 +1009,7 @@ export type Database = {
           organization_id: string;
           email: string;
           full_name?: string | null;
+          phone?: string | null;
           role?: string;
           status?: string;
           created_at?: string;
@@ -985,6 +1017,28 @@ export type Database = {
           deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_users"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_responsaveis: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          user_id: string;
+          created_by: string | null;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          user_id: string;
+          created_by?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_responsaveis"]["Insert"]>;
         Relationships: [];
       };
       system_consent_records: {
@@ -1072,6 +1126,10 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_users"]["Row"];
         Relationships: [];
       };
+      system_case_responsaveis_active: {
+        Row: Database["public"]["Tables"]["system_case_responsaveis"]["Row"];
+        Relationships: [];
+      };
       system_case_documents_active: {
         Row: Database["public"]["Tables"]["system_case_documents"]["Row"];
         Relationships: [];
@@ -1082,6 +1140,10 @@ export type Database = {
       };
       system_service_types_active: {
         Row: Database["public"]["Tables"]["system_service_types"]["Row"];
+        Relationships: [];
+      };
+      system_service_type_folders_active: {
+        Row: Database["public"]["Tables"]["system_service_type_folders"]["Row"];
         Relationships: [];
       };
       system_pipeline_stages_active: {

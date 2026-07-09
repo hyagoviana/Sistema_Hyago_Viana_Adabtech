@@ -20,6 +20,8 @@ import {
   PanelLeftOpen,
   FileSignature,
   UserPlus,
+  Receipt,
+  ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -47,6 +49,7 @@ const GROUP_LABEL = "rgba(233,205,132,0.5)";
 type BadgeTone = "neutral" | "gold" | "danger";
 type Item = { to: string; label: string; icon: LucideIcon; count?: number; tone?: BadgeTone };
 
+// Reorganização das abas (2026-07-09, item 5).
 const groups: { label: string; items: Item[] }[] = [
   {
     label: "Operação",
@@ -54,8 +57,18 @@ const groups: { label: string; items: Item[] }[] = [
       { to: "/hoje", label: "Hoje", icon: Home },
       { to: "/pipeline", label: "Pipeline Operacional", icon: Briefcase },
       { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign },
+      { to: "/relatorio-financeiro", label: "Relatório Financeiro", icon: Receipt },
       { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/comercial/assinaturas", label: "Assinatura", icon: FileSignature, tone: "gold" },
       { to: "/tarefas", label: "Tarefas", icon: CheckSquare },
+    ],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { to: "/inteligencia/leads", label: "Cadastro", icon: UserPlus },
+      { to: "/comercial", label: "Comercial", icon: TrendingUp },
+      { to: "/comercial/leads", label: "Pipeline Comercial", icon: LayoutGrid },
     ],
   },
   {
@@ -63,20 +76,22 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
-      { to: "/inteligencia/leads", label: "Cadastro", icon: UserPlus },
-      { to: "/comercial", label: "Comercial", icon: TrendingUp },
-      { to: "/comercial/leads", label: "Pipeline comercial", icon: LayoutGrid },
-      { to: "/comercial/assinaturas", label: "Assinaturas", icon: FileSignature, tone: "gold" },
-      { to: "/marketing", label: "Marketing", icon: Megaphone },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
-      { to: "/dashboards", label: "Dashboards", icon: BarChart3 },
+      { to: "/dashboards", label: "Dashboard", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { to: "/marketing", label: "Marketing", icon: Megaphone },
+      { to: "/design-system", label: "Design System", icon: Palette },
     ],
   },
   {
     label: "Sistema",
     items: [
       { to: "/referencias", label: "Referências", icon: Library },
-      { to: "/design-system", label: "Design System", icon: Palette },
+      { to: "/permissoes", label: "Permissões", icon: ShieldCheck },
       { to: "/configuracoes", label: "Configurações", icon: Settings },
     ],
   },
@@ -185,7 +200,15 @@ export function Sidebar() {
   // mostra tudo para não "piscar" o menu — os gates de ação seguram o resto.
   const visibleGroups = role
     ? groups
-        .map((g) => ({ ...g, items: g.items.filter((it) => canSeeRoute(role, it.to)) }))
+        .map((g) => ({
+          ...g,
+          items: g.items.filter(
+            (it) =>
+              canSeeRoute(role, it.to) &&
+              // Permissões é exclusivo do admin (mesmo papéis "all" não veem).
+              (it.to !== "/permissoes" || role === "admin"),
+          ),
+        }))
         .filter((g) => g.items.length > 0)
     : groups;
 

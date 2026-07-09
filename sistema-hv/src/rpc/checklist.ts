@@ -12,6 +12,7 @@ import {
   listChecklistDefs,
   marcarItemChecklist,
   reorderChecklistDefs,
+  setChecklistItemAssignee,
   softDeleteChecklistDef,
   sugerirChecklistPorUpload,
   updateAdhocChecklistItem,
@@ -132,6 +133,18 @@ export const marcarItemChecklistFn = createServerFn({ method: "POST" })
     handle(async () => {
       const { id: userId } = await requireAuth();
       return marcarItemChecklist(data.itemId, data.done, userId);
+    }),
+  );
+
+// Vincula/desvincula o RESPONSÁVEL (usuário do sistema) de um item (item 3).
+export const setChecklistItemAssigneeFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ itemId: z.string().uuid(), assignedTo: z.string().uuid().nullable() }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireAuth();
+      return setChecklistItemAssignee(data.itemId, data.assignedTo);
     }),
   );
 

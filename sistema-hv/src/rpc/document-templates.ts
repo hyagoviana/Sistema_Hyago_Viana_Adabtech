@@ -57,6 +57,8 @@ export const listDocumentTemplatesFn = createServerFn({ method: "GET" })
         strict: z.boolean().optional(),
         // ITEM 4 — filtro por pasta de origem (caminho "Documento de caso").
         sourceFolderId: z.string().nullish(),
+        // (2026-07-09) — filtro por VÁRIAS pastas (categoria com N pastas).
+        sourceFolderIds: z.array(z.string()).nullish(),
       })
       .default({})
       .parse(d),
@@ -67,6 +69,7 @@ export const listDocumentTemplatesFn = createServerFn({ method: "GET" })
         caseType: data.caseType,
         strict: data.strict,
         sourceFolderId: data.sourceFolderId,
+        sourceFolderIds: data.sourceFolderIds,
       }),
     ),
   );

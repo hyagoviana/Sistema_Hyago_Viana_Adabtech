@@ -1,7 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { getDashboardFinanceiroFn, listAllParcelasFn } from "@/rpc/financeiro";
+import {
+  getDashboardFinanceiroFn,
+  getRelatorioFinanceiroFn,
+  listAllParcelasFn,
+} from "@/rpc/financeiro";
+
+export function useRelatorioFinanceiro() {
+  const fn = useServerFn(getRelatorioFinanceiroFn);
+  return useQuery({
+    queryKey: ["relatorio-financeiro"],
+    queryFn: () => fn(),
+    staleTime: 60 * 1000,
+  });
+}
 
 export function useDashboardFinanceiro() {
   const fn = useServerFn(getDashboardFinanceiroFn);

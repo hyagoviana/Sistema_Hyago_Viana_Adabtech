@@ -16,6 +16,7 @@ import {
   liberarCasoFn,
   listCaseEventsFn,
   listCasesFn,
+  listCaseResponsaveisFn,
   listComercialCasesFn,
   listComercialDocumentsFn,
   marcarCasoPerdidoFn,
@@ -42,6 +43,16 @@ export function useCasesList(filters?: Filters) {
     queryKey: queryKeys.cases.list(filters),
     queryFn: () => fn({ data: filters ?? {} }),
     staleTime: 2 * 60 * 1000, // 2 min
+  });
+}
+
+// Responsáveis (advogados) vinculados a um caso — para pré-carregar ao editar.
+export function useCaseResponsaveis(caseId: string | null | undefined) {
+  const fn = useServerFn(listCaseResponsaveisFn);
+  return useQuery({
+    queryKey: ["case-responsaveis", caseId ?? "none"],
+    queryFn: () => fn({ data: { caseId: caseId! } }),
+    enabled: !!caseId,
   });
 }
 
@@ -217,7 +228,8 @@ export function useMoveCaseStatus() {
   const fn = useServerFn(moveCaseStatusFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; to: MacroOp }) => fn({ data: vars }),
+    // `to` = slug da etapa op (configurável por categoria) — texto livre.
+    mutationFn: (vars: { id: string; to: string }) => fn({ data: vars }),
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: queryKeys.cases.lists() });
       const snapshot = patchCaseInLists(qc, vars.id, {

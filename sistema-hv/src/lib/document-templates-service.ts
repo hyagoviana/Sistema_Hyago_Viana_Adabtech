@@ -43,6 +43,10 @@ export async function listDocumentTemplates(opts?: {
   // lista só os docs daquela pasta. Quando presente, IGNORA o filtro de case_type
   // (a fonte da verdade é a pasta).
   sourceFolderId?: string | null;
+  // (2026-07-09) — filtra por VÁRIAS pastas de origem. Usado pelo vínculo de
+  // pastas por CATEGORIA (uma categoria pode ter N pastas de caso/procuração).
+  // Precede case_type; ignora-o (a fonte da verdade são as pastas da categoria).
+  sourceFolderIds?: string[] | null;
 }) {
   const sb = getSupabaseAdmin();
   let q = sb
@@ -50,7 +54,11 @@ export async function listDocumentTemplates(opts?: {
     .select("*")
     .eq("active", true)
     .order("name", { ascending: true });
-  if (opts?.sourceFolderId) {
+  const folderIds = (opts?.sourceFolderIds ?? []).filter(Boolean);
+  if (folderIds.length > 0) {
+    // Filtra pelos modelos vindos de QUALQUER uma das pastas da categoria.
+    q = q.in("source_folder_id" as never, folderIds as never);
+  } else if (opts?.sourceFolderId) {
     // `source_folder_id` (ITEM 4) ainda não está no types.ts gerado — cast.
     q = q.eq("source_folder_id" as never, opts.sourceFolderId as never);
   } else if (opts?.caseType) {

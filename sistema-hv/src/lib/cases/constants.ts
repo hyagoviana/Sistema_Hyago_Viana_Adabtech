@@ -13,16 +13,22 @@ export const CASE_TYPES = [
   "MAIS_MEDICOS",
   "RESIDENCIA",
   "CFM_CRM",
+  "OUTROS",
 ] as const;
 export type CaseType = (typeof CASE_TYPES)[number];
 
+// OBS: a fonte de verdade do NOME exibido é system_service_types.name (editável no
+// banco). Este mapa é o fallback de rótulo por slug usado nas telas que só têm o
+// case_type (cards/listas/dashboards). Manter em sincronia com o banco nos renames.
+// FIES_DGM manteve o slug, mas passou a se chamar "Abatimento Militar" (2026-07-09).
 export const CASE_TYPE_LABELS: Record<CaseType, string> = {
   FIES_ESF: "FIES ESF",
-  FIES_DGM: "FIES DGM",
+  FIES_DGM: "Abatimento Militar",
   COVID: "COVID",
   MAIS_MEDICOS: "Mais Médicos",
   RESIDENCIA: "Residência",
   CFM_CRM: "CFM/CRM",
+  OUTROS: "Outros",
 };
 
 // Estados operacionais — UNIÃO dos slugs usados pelos fluxos por tipo (POPs).

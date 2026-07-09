@@ -80,6 +80,10 @@ export function StageEditor({
   // permitimos renomear/reordenar. (O backend também bloqueia — defesa em profundidade.)
   const isGlobalFunnel = serviceTypeId === GLOBAL_FUNNEL_SERVICE_TYPE_ID;
 
+  // (2026-07-09) — checklist de critérios existe SÓ no pipeline FINANCEIRO. No
+  // operacional/comercial não instanciamos, exibimos nem editamos checklist.
+  const showChecklist = kind === "fin";
+
   async function addStage() {
     const label = newLabel.trim();
     if (!label) return;
@@ -141,14 +145,16 @@ export function StageEditor({
           {list.map((s, i) => (
             <div key={s.id} className="border border-[var(--border)] rounded-md">
               <div className="flex items-center gap-2 p-2">
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-[var(--navy)]"
-                  title="Critérios (checklist) desta etapa"
-                  onClick={() => setExpanded(expanded === s.id ? null : s.id)}
-                >
-                  {expanded === s.id ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                </button>
+                {showChecklist && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-[var(--navy)]"
+                    title="Critérios (checklist) desta etapa"
+                    onClick={() => setExpanded(expanded === s.id ? null : s.id)}
+                  >
+                    {expanded === s.id ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                  </button>
+                )}
                 <div className="flex flex-col">
                   <button
                     type="button"
@@ -208,7 +214,7 @@ export function StageEditor({
                   </button>
                 )}
               </div>
-              {expanded === s.id && (
+              {showChecklist && expanded === s.id && (
                 <div className="border-t border-[var(--border)] bg-muted/20 px-4 py-3">
                   <StageChecklistEditor
                     serviceTypeId={serviceTypeId}

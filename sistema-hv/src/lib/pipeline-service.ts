@@ -5,7 +5,9 @@
 
 import { countChecklistItemsForStage, instanciarChecklist } from "./checklist-service";
 import { GLOBAL_FUNNEL_SERVICE_TYPE_ID } from "./cases/constants";
+import { deleteFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
+import { getVisibleCaseIds, getVisibleClientIds } from "./visibility";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 
@@ -107,6 +109,108 @@ export async function createServiceType(input: { name: string; slug: string; ord
     );
 
   return data;
+}
+
+// Renomeia/edita um Tipo de Serviço (pipeline). Só o DISPLAY (name/ordem/active) —
+// o slug PERMANECE imutável, pois é a chave de case_type, das etapas e dos templates.
+// Bloqueia o funil único (sentinela) para não renomear o board global por engano.
+export async function updateServiceType(
+  id: string,
+  patch: Partial<{ name: string; ordem: number; active: boolean }>,
+) {
+  if (id === GLOBAL_FUNNEL_SERVICE_TYPE_ID) {
+    throw new PipelineServiceError("O funil único (global) não pode ser renomeado por aqui.", 409);
+  }
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_service_types")
+    .update(patch)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data)
+    throw new PipelineServiceError(error?.message ?? "Falha ao atualizar tipo", 500);
+  return data;
+}
+
+// (item 1, 2026-07-09) — EXCLUI uma categoria (tipo de serviço). Só permite se NÃO
+// houver casos/clientes vinculados. Em cascata: soft-delete das etapas, dos vínculos
+// de pasta e dos modelos daquelas pastas; e MANDA PARA A LIXEIRA no Drive as pastas
+// da categoria (que não sejam compartilhadas com outra categoria ativa).
+export async function deleteServiceType(id: string) {
+  if (id === GLOBAL_FUNNEL_SERVICE_TYPE_ID) {
+    throw new PipelineServiceError("O funil único (global) não pode ser excluído.", 409);
+  }
+  const sb = getSupabaseAdmin();
+  const nowIso = new Date().toISOString();
+
+  const { data: st } = await sb
+    .from("system_service_types")
+    .select("slug")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (!st) throw new PipelineServiceError("Categoria não encontrada", 404);
+
+  // GUARDA: nenhum caso vinculado (por service_type_id OU case_type=slug).
+  const { count } = await sb
+    .from("system_cases")
+    .select("id", { count: "exact", head: true })
+    .or(`service_type_id.eq.${id},case_type.eq.${st.slug}`)
+    .is("deleted_at", null);
+  if ((count ?? 0) > 0) {
+    throw new PipelineServiceError(
+      "Não é possível excluir: há casos/clientes vinculados a esta categoria. Remaneje-os antes.",
+      409,
+    );
+  }
+
+  // Pastas vinculadas → trash no Drive (se não compartilhadas) + soft-delete dos modelos.
+  const { data: folders } = await sb
+    .from("system_service_type_folders_active")
+    .select("id, drive_folder_id")
+    .eq("service_type_id", id);
+  for (const f of folders ?? []) {
+    const driveId = (f as { drive_folder_id: string }).drive_folder_id;
+    // Modelos daquela pasta saem do sistema.
+    await sb
+      .from("system_document_templates")
+      .update({ deleted_at: nowIso } as never)
+      .eq("source_folder_id" as never, driveId as never)
+      .is("deleted_at", null);
+    // Só manda a pasta pra lixeira se NÃO estiver vinculada a outra categoria ativa.
+    const { count: shared } = await sb
+      .from("system_service_type_folders_active")
+      .select("id", { count: "exact", head: true })
+      .eq("drive_folder_id", driveId)
+      .neq("service_type_id", id);
+    if (!shared) {
+      await deleteFile(driveId).catch(() => {});
+    }
+  }
+
+  // Soft-delete: vínculos de pasta, etapas, modelos por case_type e a própria categoria.
+  await sb
+    .from("system_service_type_folders")
+    .update({ deleted_at: nowIso })
+    .eq("service_type_id", id);
+  await sb.from("system_pipeline_stages").update({ deleted_at: nowIso }).eq("service_type_id", id);
+  await sb
+    .from("system_document_templates")
+    .update({ deleted_at: nowIso } as never)
+    .eq("case_type", st.slug)
+    .is("deleted_at", null);
+  await sb.from("system_service_types").update({ deleted_at: nowIso, active: false }).eq("id", id);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "service_type.deleted",
+    entity_type: "service_type",
+    entity_id: id,
+  });
+
+  return { ok: true as const, id };
 }
 
 // ------------------------------------------------------------------- Etapas
@@ -278,24 +382,32 @@ export async function softDeleteStage(id: string) {
 }
 
 // ------------------------------------------------------------------- Casos
-export async function listAllBifurcatedCases() {
+export async function listAllBifurcatedCases(viewerUserId?: string) {
   const sb = getSupabaseAdmin();
-  const { data, error } = await sb
+  const visible = await getVisibleCaseIds(viewerUserId);
+  if (visible !== null && visible.length === 0) return [];
+  let q = sb
     .from("system_cases_active")
     .select("*")
     .neq("macrostatus_fin", "NAO_APLICAVEL")
     .order("created_at", { ascending: false });
+  if (visible !== null) q = q.in("id", visible);
+  const { data, error } = await q;
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];
 }
 
-export async function listCasesByServiceType(serviceTypeId: string) {
+export async function listCasesByServiceType(serviceTypeId: string, viewerUserId?: string) {
   const sb = getSupabaseAdmin();
-  const { data, error } = await sb
+  const visible = await getVisibleCaseIds(viewerUserId);
+  if (visible !== null && visible.length === 0) return [];
+  let q = sb
     .from("system_cases_active")
     .select("*")
     .eq("service_type_id", serviceTypeId)
     .order("created_at", { ascending: false });
+  if (visible !== null) q = q.in("id", visible);
+  const { data, error } = await q;
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];
 }
@@ -320,10 +432,7 @@ export async function moveCaseToStageOp(caseId: string, stageId: string) {
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
 
-  // S2-03 — instancia os itens de checklist da etapa de destino (idempotente,
-  // server-side, dentro da transição — cobre o caminho do DnD do Kanban).
-  await instanciarChecklist(caseId, stage.slug).catch(() => {});
-
+  // (2026-07-09) — checklist é SÓ do financeiro. No operacional NÃO instanciamos.
   return data;
 }
 
@@ -360,15 +469,19 @@ export async function moveCaseToStageFin(caseId: string, stageId: string) {
 // procuração ENVIADA (aguardando_assinatura_at) OU ASSINADA (procuracao_assinada_at).
 // Casos que são só cadastro (sem procuração enviada) aparecem apenas no roster de
 // Leads (Inteligência › Leads), NÃO no Kanban Comercial.
-export async function listLeadsByServiceType(serviceTypeId: string) {
+export async function listLeadsByServiceType(serviceTypeId: string, viewerUserId?: string) {
   const sb = getSupabaseAdmin();
-  const { data, error } = await sb
+  const visible = await getVisibleCaseIds(viewerUserId);
+  if (visible !== null && visible.length === 0) return [];
+  let q = sb
     .from("system_cases_active")
     .select("*")
     .eq("service_type_id", serviceTypeId)
     .eq("lifecycle", "LEAD")
     .or("aguardando_assinatura_at.not.is.null,procuracao_assinada_at.not.is.null")
     .order("created_at", { ascending: false });
+  if (visible !== null) q = q.in("id", visible);
+  const { data, error } = await q;
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];
 }
@@ -391,8 +504,10 @@ export type ComercialBoardRow = {
   is_registration: boolean;
 };
 
-export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
+export async function listComercialBoard(viewerUserId?: string): Promise<ComercialBoardRow[]> {
   const sb = getSupabaseAdmin();
+  const visibleClients = await getVisibleClientIds(viewerUserId);
+  if (visibleClients !== null && visibleClients.length === 0) return [];
 
   // ITEM 1 (2026-07-07) — funil comercial por CADASTRO. Um card por cadastro
   // (pessoa) que ainda NÃO é cliente. A etapa comercial vive no PRÓPRIO cadastro
@@ -410,11 +525,13 @@ export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
 
   // Todos os cadastros ativos (select "*" porque macrostatus_comercial ainda não
   // está nos tipos gerados — lido via cast defensivo).
-  const { data: clients, error: cErr } = await sb
+  let clientsQ = sb
     .from("system_clients")
     .select("*")
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
+  if (visibleClients !== null) clientsQ = clientsQ.in("id", visibleClients);
+  const { data: clients, error: cErr } = await clientsQ;
   if (cErr) throw new PipelineServiceError(cErr.message, 500);
 
   return (clients ?? [])
@@ -433,13 +550,17 @@ export async function listComercialBoard(): Promise<ComercialBoardRow[]> {
 }
 
 // Visão consolidada de todos os leads (para o índice/resumo do CRM).
-export async function listLeadsPipeline() {
+export async function listLeadsPipeline(viewerUserId?: string) {
   const sb = getSupabaseAdmin();
-  const { data, error } = await sb
+  const visible = await getVisibleCaseIds(viewerUserId);
+  if (visible !== null && visible.length === 0) return [];
+  let q = sb
     .from("system_cases_active")
     .select("*")
     .eq("lifecycle", "LEAD")
     .order("created_at", { ascending: false });
+  if (visible !== null) q = q.in("id", visible);
+  const { data, error } = await q;
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];
 }

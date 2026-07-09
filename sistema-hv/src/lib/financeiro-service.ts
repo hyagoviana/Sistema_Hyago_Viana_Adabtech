@@ -116,6 +116,102 @@ export async function listAllParcelas(filters?: {
   return result;
 }
 
+// ─── Relatório financeiro POR CASO (item 3, 2026-07-09) ───────────────────────
+// Consolida as parcelas de cada caso (independente do provider: Asaas / Conta Azul
+// / manual): total, pago, pendente e vencido. Os valores pagos vêm do webhook das
+// plataformas (system_parcelas.valor_pago_centavos / status).
+export type RelatorioCasoFinanceiro = {
+  case_id: string;
+  case_code: string;
+  client_id: string;
+  client_name: string;
+  case_type: string;
+  total_centavos: number;
+  pago_centavos: number;
+  pendente_centavos: number;
+  vencido_centavos: number;
+  qtd_parcelas: number;
+  providers: string[];
+};
+
+export async function getRelatorioFinanceiroPorCaso(): Promise<RelatorioCasoFinanceiro[]> {
+  const sb = getSupabaseAdmin();
+  const { data: parcelas, error } = await sb
+    .from("system_parcelas")
+    .select("case_id, valor_centavos, valor_pago_centavos, status, vencimento, provider")
+    .eq("organization_id", DEFAULT_ORG);
+  if (error) throw new FinanceiroServiceError(error.message, 500);
+  if (!parcelas || parcelas.length === 0) return [];
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const byCase = new Map<
+    string,
+    Omit<RelatorioCasoFinanceiro, "case_code" | "client_id" | "client_name" | "case_type"> & {
+      providersSet: Set<string>;
+    }
+  >();
+
+  for (const p of parcelas) {
+    const entry =
+      byCase.get(p.case_id) ??
+      (() => {
+        const e = {
+          case_id: p.case_id,
+          total_centavos: 0,
+          pago_centavos: 0,
+          pendente_centavos: 0,
+          vencido_centavos: 0,
+          qtd_parcelas: 0,
+          providers: [] as string[],
+          providersSet: new Set<string>(),
+        };
+        byCase.set(p.case_id, e);
+        return e;
+      })();
+
+    const valor = p.valor_centavos ?? 0;
+    entry.total_centavos += valor;
+    entry.qtd_parcelas += 1;
+    if (p.provider) entry.providersSet.add(p.provider);
+
+    if (p.status === "PAGA") {
+      entry.pago_centavos += p.valor_pago_centavos ?? valor;
+    } else if (p.status === "VENCIDA" || (p.vencimento && p.vencimento < hoje)) {
+      entry.vencido_centavos += valor;
+    } else if (p.status === "PENDENTE") {
+      entry.pendente_centavos += valor;
+    }
+  }
+
+  const caseIds = [...byCase.keys()];
+  const { data: cases } = await sb
+    .from("system_cases")
+    .select("id, case_code, client_id, case_type")
+    .in("id", caseIds);
+  const caseMap = new Map((cases ?? []).map((c) => [c.id, c]));
+  const clientIds = [...new Set((cases ?? []).map((c) => c.client_id))];
+  const { data: clients } = await sb
+    .from("system_clients")
+    .select("id, full_name")
+    .in("id", clientIds);
+  const clientMap = new Map((clients ?? []).map((c) => [c.id, c.full_name]));
+
+  return [...byCase.values()]
+    .map((e) => {
+      const caso = caseMap.get(e.case_id);
+      const { providersSet, ...rest } = e;
+      return {
+        ...rest,
+        providers: [...providersSet],
+        case_code: caso?.case_code ?? "—",
+        client_id: caso?.client_id ?? "",
+        client_name: clientMap.get(caso?.client_id ?? "") ?? "—",
+        case_type: caso?.case_type ?? "",
+      };
+    })
+    .sort((a, b) => b.total_centavos - a.total_centavos);
+}
+
 export async function getDashboardFinanceiro(): Promise<DashboardFinanceiro> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb

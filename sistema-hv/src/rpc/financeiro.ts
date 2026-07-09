@@ -2,7 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { getDashboardFinanceiro, listAllParcelas } from "@/lib/financeiro-service";
+import {
+  getDashboardFinanceiro,
+  getRelatorioFinanceiroPorCaso,
+  listAllParcelas,
+} from "@/lib/financeiro-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
@@ -32,3 +36,8 @@ const listParcelasFiltersSchema = z.object({
 export const listAllParcelasFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => listParcelasFiltersSchema.parse(d ?? {}))
   .handler(async ({ data }) => handle(() => listAllParcelas(data)));
+
+// Relatório financeiro por CASO (pago/pendente/vencido) — item 3.
+export const getRelatorioFinanceiroFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(() => getRelatorioFinanceiroPorCaso()),
+);

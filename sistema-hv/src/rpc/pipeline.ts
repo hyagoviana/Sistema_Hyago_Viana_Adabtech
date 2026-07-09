@@ -6,6 +6,7 @@ import {
   bifurcarCaseToFinanceiro,
   createServiceType,
   createStage,
+  deleteServiceType,
   entrarNoFinanceiro,
   listAllBifurcatedCases,
   listCasesByServiceType,
@@ -20,15 +21,16 @@ import {
   reorderStages,
   setAcertoParcial,
   softDeleteStage,
+  updateServiceType,
   updateStage,
   voltarAoOperacional,
 } from "@/lib/pipeline-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
-async function handle<T>(fn: () => Promise<T>): Promise<T> {
+async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
-    await requireAuth();
-    return await fn();
+    const { id: userId } = await requireAuth();
+    return await fn(userId);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
       setResponseStatus(err.status);
@@ -53,12 +55,14 @@ export const listStagesFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => handle(() => listStages(data.serviceTypeId, data.kind)));
 
 export const listAllBifurcatedCasesFn = createServerFn({ method: "GET" }).handler(async () =>
-  handle(() => listAllBifurcatedCases()),
+  handle((userId) => listAllBifurcatedCases(userId)),
 );
 
 export const listCasesByServiceTypeFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => listCasesByServiceType(data.serviceTypeId)));
+  .handler(async ({ data }) =>
+    handle((userId) => listCasesByServiceType(data.serviceTypeId, userId)),
+  );
 
 export const moveCaseToStageOpFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -75,15 +79,17 @@ export const moveCaseToStageFinFn = createServerFn({ method: "POST" })
 // ------------------------------------------------------------- Leads (comercial)
 export const listLeadsByServiceTypeFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => listLeadsByServiceType(data.serviceTypeId)));
+  .handler(async ({ data }) =>
+    handle((userId) => listLeadsByServiceType(data.serviceTypeId, userId)),
+  );
 
 export const listLeadsPipelineFn = createServerFn({ method: "GET" }).handler(async () =>
-  handle(() => listLeadsPipeline()),
+  handle((userId) => listLeadsPipeline(userId)),
 );
 
 // #15 — board comercial único (casos comerciais + cadastros-lead sintéticos).
 export const listComercialBoardFn = createServerFn({ method: "GET" }).handler(async () =>
-  handle(() => listComercialBoard()),
+  handle((userId) => listComercialBoard(userId)),
 );
 
 // ITEM 1 (2026-07-07) — move um CADASTRO (lead) entre etapas comerciais. A etapa
@@ -141,6 +147,25 @@ export const createServiceTypeFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => handle(() => createServiceType(data)));
+
+export const updateServiceTypeFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        patch: z.object({
+          name: z.string().min(1).optional(),
+          ordem: z.number().optional(),
+          active: z.boolean().optional(),
+        }),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => handle(() => updateServiceType(data.id, data.patch)));
+
+export const deleteServiceTypeFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => deleteServiceType(data.id)));
 
 const createStageSchema = z.object({
   service_type_id: z.string().uuid(),

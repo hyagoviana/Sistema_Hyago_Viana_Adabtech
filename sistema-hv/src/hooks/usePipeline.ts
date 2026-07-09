@@ -5,6 +5,7 @@ import {
   bifurcarCaseFn,
   createServiceTypeFn,
   createStageFn,
+  deleteServiceTypeFn,
   entrarFinanceiroFn,
   listAllBifurcatedCasesFn,
   listCasesByServiceTypeFn,
@@ -19,6 +20,7 @@ import {
   reorderStagesFn,
   setAcertoParcialFn,
   softDeleteStageFn,
+  updateServiceTypeFn,
   updateStageFn,
   voltarOperacionalFn,
 } from "@/rpc/pipeline";
@@ -42,6 +44,33 @@ export function useCreateServiceType() {
   return useMutation({
     mutationFn: (input: { name: string; slug: string; ordem?: number }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["service-types"] }),
+  });
+}
+
+// Renomeia/edita um Tipo de Serviço (pipeline). Grava no banco e invalida a lista.
+export function useUpdateServiceType() {
+  const fn = useServerFn(updateServiceTypeFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      id: string;
+      patch: { name?: string; ordem?: number; active?: boolean };
+    }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["service-types"] }),
+  });
+}
+
+// Exclui uma categoria (com guarda + cascata no servidor).
+export function useDeleteServiceType() {
+  const fn = useServerFn(deleteServiceTypeFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service-types"] });
+      qc.invalidateQueries({ queryKey: ["service-type-folders"] });
+      qc.invalidateQueries({ queryKey: ["document-templates"] });
+    },
   });
 }
 

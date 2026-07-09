@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { listCaseResponsaveis } from "@/lib/case-responsaveis-service";
 import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
   aprovarConferenciaFin,
@@ -71,7 +72,7 @@ const listFiltersSchema = z
 
 export const listCasesFn = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => listFiltersSchema.parse(data))
-  .handler(async ({ data }) => handle(() => listCases(data)));
+  .handler(async ({ data }) => handle((userId) => listCases(data, userId)));
 
 export const getCaseFn = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => idSchema.parse(data))
@@ -88,6 +89,11 @@ export const listCaseEventsFn = createServerFn({ method: "GET" })
 export const createCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => caseCreateSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => createCase(data, userId)));
+
+// Responsáveis (advogados) vinculados a um caso — para carregar ao editar.
+export const listCaseResponsaveisFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listCaseResponsaveis(data.caseId)));
 
 // Procuração comercial — preview dos campos <...> + valores do cadastro.
 export const previewProcuracaoFn = createServerFn({ method: "GET" })
@@ -190,7 +196,11 @@ export const updateCaseCanonicalFieldsFn = createServerFn({ method: "POST" })
     handle((userId) => updateCaseCanonicalFields(data.id, data.patch, userId)),
   );
 
-const moveSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_OP) });
+// (2026-07-09) — `to` é o SLUG da etapa op. Aceita qualquer slug (as etapas são
+// configuráveis por categoria em system_pipeline_stages; o CHECK fixo já foi
+// relaxado na migration 0017). Antes era z.enum(MACRO_OP), o que barrava etapas
+// de funil criadas/renomeadas pelo usuário.
+const moveSchema = z.object({ id: z.string().uuid(), to: z.string().min(1) });
 
 export const moveCaseStatusFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveSchema.parse(data))

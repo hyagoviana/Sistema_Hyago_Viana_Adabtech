@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, FolderKanban, Layers, Plus, Settings2 } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
+import { ArrowLeft, FolderKanban, Layers, Pencil, Plus, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
+import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
@@ -25,10 +27,12 @@ import { Label } from "@/components/ui/label";
 import {
   useCasesByServiceType,
   useCreateServiceType,
+  useDeleteServiceType,
   useMoveCaseStageFin,
   useMoveCaseStageOp,
   useServiceTypes,
   useStages,
+  useUpdateServiceType,
 } from "@/hooks/usePipeline";
 import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
 
@@ -42,8 +46,17 @@ function slugifyCat(s: string): string {
     .slice(0, 40);
 }
 
+// (item 2, 2026-07-09) — a categoria selecionada vive na URL (search param `cat`).
+// Assim, clicar em "Pipeline Operacional" no menu (Link sem search) VOLTA ao
+// seletor de categorias — mesmo padrão do financeiro.
+const searchSchema = z.object({
+  cat: z.string().uuid().optional().catch(undefined),
+  catName: z.string().optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/pipeline")({
   component: PipelinePage,
+  validateSearch: (search) => searchSchema.parse(search),
 });
 
 function roleColor(role: string): string {
@@ -60,34 +73,82 @@ function roleColor(role: string): string {
 }
 
 function PipelinePage() {
-  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
+  const { cat, catName } = Route.useSearch();
+  const navigate = useNavigate();
 
-  if (selected) {
-    return <DynamicKanban serviceType={selected} onBack={() => setSelected(null)} />;
+  const onPick = (t: { id: string; name: string }) =>
+    navigate({ to: "/pipeline", search: { cat: t.id, catName: t.name } });
+  const onBack = () => navigate({ to: "/pipeline", search: {} });
+
+  if (cat) {
+    return <DynamicKanban serviceType={{ id: cat, name: catName ?? "—" }} onBack={onBack} />;
   }
-  return <ServiceTypeSelection onPick={setSelected} />;
+  return <ServiceTypeSelection onPick={onPick} />;
 }
 
 function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: string }) => void }) {
   const { data: types, isLoading } = useServiceTypes();
   const createCat = useCreateServiceType();
+  const updateCat = useUpdateServiceType();
+  const deleteCat = useDeleteServiceType();
+  const { role } = useAuth();
+  const canManage = can(role, "config.manage");
+
+  async function excluirCategoria() {
+    if (!renaming) return;
+    if (
+      !window.confirm(
+        `Excluir a categoria "${renaming.name}"?\n\nIsto remove as etapas, os modelos e as pastas do Drive vinculadas. Só é possível se não houver casos vinculados. Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
+    try {
+      await deleteCat.mutateAsync(renaming.id);
+      toast.success("Categoria excluída");
+      setRenaming(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao excluir categoria");
+    }
+  }
   const [newOpen, setNewOpen] = useState(false);
   const [createCaseOpen, setCreateCaseOpen] = useState(false);
   const [catName, setCatName] = useState("");
+  // Renomear um tipo existente (grava name no banco).
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   async function criarCategoria() {
     const name = catName.trim();
     if (!name) return;
     try {
-      await createCat.mutateAsync({
+      const created = await createCat.mutateAsync({
         name,
         slug: slugifyCat(name) || `CAT_${(types?.length ?? 0) + 1}`,
       });
-      toast.success("Categoria criada (já com etapas padrão — edite como quiser)");
+      toast.success("Categoria criada — agora vincule os documentos de caso e procurações");
       setCatName("");
       setNewOpen(false);
+      // Abre o editor da categoria recém-criada para já subir os modelos.
+      if (created?.id) {
+        setRenaming({ id: created.id, name: created.name });
+        setRenameValue(created.name);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar categoria");
+    }
+  }
+
+  async function salvarNome() {
+    if (!renaming) return;
+    const name = renameValue.trim();
+    if (!name || name === renaming.name) return;
+    try {
+      await updateCat.mutateAsync({ id: renaming.id, patch: { name } });
+      toast.success("Nome da categoria atualizado");
+      // Mantém o editor aberto (o usuário pode continuar vinculando pastas).
+      setRenaming({ id: renaming.id, name });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao renomear");
     }
   }
 
@@ -153,15 +214,17 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {(types ?? []).map((t) => (
-            <button
+            <div
               key={t.id}
-              type="button"
-              onClick={() => onPick({ id: t.id, name: t.name })}
-              className="card-hero p-6 text-left hover:border-[var(--gold)] transition-colors group"
+              className="card-hero relative p-6 hover:border-[var(--gold)] transition-colors group"
             >
-              <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onPick({ id: t.id, name: t.name })}
+                className="flex items-center gap-3 text-left w-full"
+              >
                 <div
-                  className="w-11 h-11 rounded-lg flex items-center justify-center text-white"
+                  className="w-11 h-11 rounded-lg flex items-center justify-center text-white shrink-0"
                   style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}
                 >
                   <FolderKanban size={20} />
@@ -170,11 +233,75 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                   <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
                   <div className="text-[12px] text-muted-foreground">Abrir esteira →</div>
                 </div>
-              </div>
-            </button>
+              </button>
+              {canManage && (
+                <button
+                  type="button"
+                  title="Renomear pipeline"
+                  onClick={() => {
+                    setRenaming({ id: t.id, name: t.name });
+                    setRenameValue(t.name);
+                  }}
+                  className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-opacity"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
+
+      {/* Renomear pipeline (grava system_service_types.name no banco) */}
+      <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar categoria</DialogTitle>
+            <DialogDescription>
+              Renomeie a categoria e vincule os modelos de documento de caso e de procuração. Tudo é
+              salvo no banco e no Drive.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome da categoria</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && salvarNome()}
+                />
+                <Button
+                  variant="outline"
+                  onClick={salvarNome}
+                  disabled={
+                    updateCat.isPending ||
+                    !renameValue.trim() ||
+                    renameValue.trim() === renaming?.name
+                  }
+                >
+                  {updateCat.isPending ? "Salvando…" : "Salvar nome"}
+                </Button>
+              </div>
+            </div>
+
+            {renaming && <CategoryFoldersEditor serviceTypeId={renaming.id} />}
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={excluirCategoria}
+              disabled={deleteCat.isPending}
+            >
+              {deleteCat.isPending ? "Excluindo…" : "Excluir categoria"}
+            </Button>
+            <Button variant="outline" onClick={() => setRenaming(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

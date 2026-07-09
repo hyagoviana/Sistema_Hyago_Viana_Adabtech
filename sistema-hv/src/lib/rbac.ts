@@ -89,6 +89,29 @@ export function can(role: Role | null | undefined, cap: Capability): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Visibilidade de CASOS por usuário (2026-07-09).
+// Advogados (titular/associado) e prestador externo veem SOMENTE os casos
+// vinculados a eles (criador, responsável ou responsável de checklist). Os demais
+// papéis (admin, back-office) veem tudo. Editar esta lista muda o escopo.
+// ---------------------------------------------------------------------------
+const OWN_CASES_ONLY_ROLES: Role[] = [
+  "advogado_titular",
+  "advogado_associado",
+  "prestador_externo",
+];
+
+/** `true` se o papel só enxerga os casos vinculados a ele (não vê a base toda). */
+export function seesOnlyOwnCases(role: Role | null | undefined): boolean {
+  if (!role) return false;
+  return OWN_CASES_ONLY_ROLES.includes(role);
+}
+
+/** Papéis que podem ser RESPONSÁVEIS por um caso (aparecem no seletor). */
+export function isAdvogado(role: Role | null | undefined): boolean {
+  return role === "advogado_titular" || role === "advogado_associado";
+}
+
+// ---------------------------------------------------------------------------
 // Navegação — quais rotas (sidebar `to`) cada papel enxerga.
 // "all" = todas. Lista = subconjunto explícito.
 // ---------------------------------------------------------------------------
@@ -100,7 +123,9 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
     "/casos",
     "/pipeline",
     "/casos/financeiro",
+    "/relatorio-financeiro",
     "/clientes",
+    "/comercial/assinaturas",
     "/tarefas",
     "/controladoria",
     "/peticionamento",
@@ -123,7 +148,14 @@ const ROLE_NAV: Record<Role, "all" | string[]> = {
     "/dashboards",
     "/configuracoes",
   ],
-  financeiro: ["/hoje", "/casos/financeiro", "/clientes", "/dashboards", "/configuracoes"],
+  financeiro: [
+    "/hoje",
+    "/casos/financeiro",
+    "/relatorio-financeiro",
+    "/clientes",
+    "/dashboards",
+    "/configuracoes",
+  ],
   operacional: ["/hoje", "/casos", "/pipeline", "/clientes", "/tarefas", "/configuracoes"],
   marketing: ["/hoje", "/marketing", "/dashboards", "/configuracoes"],
 };

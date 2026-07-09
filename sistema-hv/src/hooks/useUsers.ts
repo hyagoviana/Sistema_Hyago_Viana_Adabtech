@@ -3,11 +3,32 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   listUsersFn,
+  getMyProfileFn,
+  getUserReportFn,
   inviteUserFn,
   setUserRoleFn,
   setUserStatusFn,
   removeUserFn,
+  updateUserProfileFn,
 } from "@/rpc/users";
+
+export function useUserReport(userId: string | null) {
+  const fn = useServerFn(getUserReportFn);
+  return useQuery({
+    queryKey: ["user-report", userId],
+    queryFn: () => fn({ data: { userId: userId! } }),
+    enabled: !!userId,
+  });
+}
+
+export function useMyProfile() {
+  const fn = useServerFn(getMyProfileFn);
+  return useQuery({
+    queryKey: ["me"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function useUsers() {
   const fn = useServerFn(listUsersFn);
@@ -43,6 +64,20 @@ export function useSetUserStatus() {
   return useMutation({
     mutationFn: (vars: { id: string; status: string }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-users"] }),
+  });
+}
+
+// Edita nome/telefone (próprio usuário ou admin). Sem `id` → edita a si mesmo.
+export function useUpdateUserProfile() {
+  const fn = useServerFn(updateUserProfileFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id?: string; full_name?: string | null; phone?: string | null }) =>
+      fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["system-users"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 }
 

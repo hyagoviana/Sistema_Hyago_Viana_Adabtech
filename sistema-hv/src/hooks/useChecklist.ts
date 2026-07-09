@@ -10,6 +10,7 @@ import {
   listChecklistDefsFn,
   marcarItemChecklistFn,
   reorderChecklistDefsFn,
+  setChecklistItemAssigneeFn,
   softDeleteChecklistDefFn,
   updateAdhocChecklistItemFn,
   updateChecklistDefFn,
@@ -93,10 +94,7 @@ export function useCaseChecklistItems(caseId: string) {
 
 // Invalidações compartilhadas: itens do caso + caso/timeline/kanban (o gate pode
 // ter avançado a etapa). Reusado por marcar item e pelas mutações ad-hoc (S9-11).
-function invalidateAfterChecklistMutation(
-  qc: ReturnType<typeof useQueryClient>,
-  caseId: string,
-) {
+function invalidateAfterChecklistMutation(qc: ReturnType<typeof useQueryClient>, caseId: string) {
   qc.invalidateQueries({ queryKey: queryKeys.checklistItems.byCase(caseId) });
   qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) });
   qc.invalidateQueries({ queryKey: queryKeys.cases.events(caseId) });
@@ -110,6 +108,16 @@ export function useMarcarItemChecklist(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { itemId: string; done: boolean }) => fn({ data: vars }),
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+// (item 3) — vincula/desvincula o responsável (usuário) de um item de checklist.
+export function useSetChecklistItemAssignee(caseId: string) {
+  const fn = useServerFn(setChecklistItemAssigneeFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { itemId: string; assignedTo: string | null }) => fn({ data: vars }),
     onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
   });
 }

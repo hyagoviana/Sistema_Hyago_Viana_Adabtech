@@ -19,8 +19,10 @@ import {
   useCreateAdhocChecklistItem,
   useDeleteAdhocChecklistItem,
   useMarcarItemChecklist,
+  useSetChecklistItemAssignee,
   useUpdateAdhocChecklistItem,
 } from "@/hooks/useChecklist";
+import { useUsers } from "@/hooks/useUsers";
 
 // S9-11 — Painel de checklist do caso. Além de MARCAR os itens herdados do
 // modelo (por tipo de serviço) e os ad-hoc, permite ACRESCENTAR / EDITAR /
@@ -38,10 +40,25 @@ export function CaseChecklistPanel({
   canEdit?: boolean;
 }) {
   const { data: items, isLoading } = useCaseChecklistItems(caseId);
+  const { data: users } = useUsers();
   const marcarMut = useMarcarItemChecklist(caseId);
   const createMut = useCreateAdhocChecklistItem(caseId);
   const updateMut = useUpdateAdhocChecklistItem(caseId);
   const deleteMut = useDeleteAdhocChecklistItem(caseId);
+  const assignMut = useSetChecklistItemAssignee(caseId);
+
+  // Responsável do checklist vem de TODOS os usuários ativos do sistema (item 3).
+  const assignees = (users ?? [])
+    .filter((u) => u.status === "ACTIVE")
+    .map((u) => ({ id: u.id, full_name: u.full_name, email: u.email }));
+
+  async function assign(item: Item, userId: string | null) {
+    try {
+      await assignMut.mutateAsync({ itemId: item.id, assignedTo: userId });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
+    }
+  }
 
   const [editing, setEditing] = useState<Item | null>(null);
 
@@ -125,6 +142,8 @@ export function CaseChecklistPanel({
                   pending={busy}
                   onEditAdhoc={editable ? (it) => setEditing(it) : undefined}
                   onDeleteAdhoc={editable ? removeAdhoc : undefined}
+                  assignees={canEdit ? assignees : undefined}
+                  onAssign={canEdit ? assign : undefined}
                 />
               ) : (
                 <p className="text-[12px] text-muted-foreground">Nenhum critério nesta etapa.</p>

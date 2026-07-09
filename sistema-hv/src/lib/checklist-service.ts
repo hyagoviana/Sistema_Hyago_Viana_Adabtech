@@ -267,6 +267,23 @@ async function dispararGatesDaEtapa(
   if (kinds.has("fin")) await avancarFinSeOk(caseId, userId);
 }
 
+// (2026-07-09, item 3) — vincula/desvincula o RESPONSÁVEL (usuário do sistema) de
+// um item de checklist. Ao vincular, o caso passa a ser visível para o usuário
+// (ver getVisibleCaseIds). null = remove o responsável.
+export async function setChecklistItemAssignee(itemId: string, assignedTo: string | null) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_checklist_items")
+    .update({ assigned_to: assignedTo })
+    .eq("id", itemId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data)
+    throw new ChecklistServiceError(error?.message ?? "Falha ao vincular responsável", 500);
+  return data;
+}
+
 export async function createAdhocChecklistItem(input: {
   caseId: string;
   stageSlug: string;
@@ -278,6 +295,18 @@ export async function createAdhocChecklistItem(input: {
   if (!label) throw new ChecklistServiceError("Informe o nome do critério", 400);
 
   const caso = await loadCaseForAdhoc(input.caseId);
+
+  // (2026-07-09) — checklist é SÓ do financeiro. Bloqueia criar critério numa
+  // etapa que é apenas OPERACIONAL (kind 'op' e não 'fin').
+  if (caso.service_type_id) {
+    const kinds = await stageKindsForSlug(caso.service_type_id, input.stageSlug);
+    if (kinds.has("op") && !kinds.has("fin")) {
+      throw new ChecklistServiceError(
+        "Checklist existe apenas nas etapas financeiras. Etapas operacionais não têm checklist.",
+        422,
+      );
+    }
+  }
 
   // ordem = próximo índice entre os itens (herdados + ad-hoc) da etapa, p/ o
   // novo critério aparecer ao final da lista da etapa.

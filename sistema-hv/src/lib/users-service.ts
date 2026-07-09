@@ -38,10 +38,35 @@ export async function listUsers() {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_users_active")
-    .select("id, email, full_name, role, status, created_at")
+    .select("id, email, full_name, phone, role, status, created_at")
     .order("created_at", { ascending: true });
   check(error);
   return data ?? [];
+}
+
+/**
+ * Edita dados de perfil de um usuário (nome e telefone). Chamado tanto pelo
+ * próprio usuário quanto pelo admin — a autorização é feita no RPC.
+ */
+export async function updateUserProfile(
+  id: string,
+  patch: { full_name?: string | null; phone?: string | null },
+) {
+  const sb = getSupabaseAdmin();
+  const fields: Record<string, unknown> = {};
+  if (patch.full_name !== undefined) fields.full_name = patch.full_name;
+  if (patch.phone !== undefined) fields.phone = patch.phone;
+  if (Object.keys(fields).length === 0) {
+    throw new UsersServiceError("Nada para atualizar.", 400);
+  }
+  const { data, error } = await sb
+    .from("system_users")
+    .update(fields as never)
+    .eq("id", id)
+    .select("id, email, full_name, phone, role, status")
+    .single();
+  check(error);
+  return data;
 }
 
 /**
@@ -97,6 +122,171 @@ export async function activateUser(id: string) {
     .maybeSingle();
   check(error);
   return data ?? { id, status: "ACTIVE" as const };
+}
+
+/** Perfil do próprio usuário (inclui telefone) — para a tela de configurações. */
+export async function getMyProfile(id: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_users")
+    .select("id, email, full_name, phone, role, status")
+    .eq("id", id)
+    .maybeSingle();
+  check(error);
+  return data;
+}
+
+// ─── Relatório de tudo que está vinculado a um usuário (item 2026-07-09) ───────
+// Casos onde é responsável/criador, tarefas atribuídas e itens de checklist sob
+// sua responsabilidade — com destaque para as PENDÊNCIAS.
+export type UserReport = {
+  user: {
+    id: string;
+    email: string;
+    full_name: string | null;
+    phone: string | null;
+    role: string;
+    status: string;
+  } | null;
+  casos: Array<{
+    case_id: string;
+    case_code: string;
+    client_name: string;
+    case_type: string;
+    macrostatus_op: string | null;
+    macrostatus_fin: string | null;
+    is_responsavel: boolean;
+    is_creator: boolean;
+  }>;
+  tarefas: Array<{
+    id: string;
+    case_id: string;
+    case_code: string;
+    client_name: string;
+    title: string;
+    status: string;
+    due_date: string | null;
+  }>;
+  checklist: Array<{
+    id: string;
+    case_id: string;
+    case_code: string;
+    client_name: string;
+    label: string;
+    stage_slug: string;
+    done: boolean;
+  }>;
+  resumo: { total_casos: number; tarefas_pendentes: number; checklist_pendentes: number };
+};
+
+export async function getUserReport(userId: string): Promise<UserReport> {
+  const sb = getSupabaseAdmin();
+
+  const user = await getMyProfile(userId);
+
+  const { data: resp } = await sb
+    .from("system_case_responsaveis_active")
+    .select("case_id")
+    .eq("user_id", userId);
+  const respIds = new Set((resp ?? []).map((r) => (r as { case_id: string }).case_id));
+
+  const { data: created } = await sb
+    .from("system_cases")
+    .select("id")
+    .eq("created_by", userId)
+    .is("deleted_at", null);
+  const createdIds = new Set((created ?? []).map((c) => c.id));
+
+  const { data: tasks } = await sb
+    .from("system_case_tasks")
+    .select("id, case_id, title, status, due_date")
+    .eq("assignee_id", userId)
+    .is("deleted_at", null)
+    .order("due_date", { ascending: true, nullsFirst: false });
+
+  const { data: chk } = await sb
+    .from("system_case_checklist_items")
+    .select("id, case_id, stage_slug, label, done, def:system_stage_checklist_defs(label)")
+    .eq("assigned_to", userId)
+    .is("deleted_at", null);
+
+  // Lookup de código do caso + nome do cliente para todas as entidades envolvidas.
+  const allCaseIds = [
+    ...new Set([
+      ...respIds,
+      ...createdIds,
+      ...(tasks ?? []).map((t) => t.case_id),
+      ...(chk ?? []).map((c) => c.case_id),
+    ]),
+  ];
+  const { data: cases } = await sb
+    .from("system_cases")
+    .select("id, case_code, client_id, case_type, macrostatus_op, macrostatus_fin")
+    .in("id", allCaseIds);
+  const caseMap = new Map((cases ?? []).map((c) => [c.id, c]));
+  const clientIds = [...new Set((cases ?? []).map((c) => c.client_id))];
+  const { data: clients } = await sb
+    .from("system_clients")
+    .select("id, full_name")
+    .in("id", clientIds);
+  const clientMap = new Map((clients ?? []).map((c) => [c.id, c.full_name]));
+  const nameOf = (caseId: string) => {
+    const c = caseMap.get(caseId);
+    return {
+      case_code: c?.case_code ?? "—",
+      client_name: clientMap.get(c?.client_id ?? "") ?? "—",
+    };
+  };
+
+  const casos = [...new Set([...respIds, ...createdIds])].map((id) => {
+    const c = caseMap.get(id);
+    return {
+      case_id: id,
+      ...nameOf(id),
+      case_type: c?.case_type ?? "",
+      macrostatus_op: c?.macrostatus_op ?? null,
+      macrostatus_fin: c?.macrostatus_fin ?? null,
+      is_responsavel: respIds.has(id),
+      is_creator: createdIds.has(id),
+    };
+  });
+
+  const tarefas = (tasks ?? []).map((t) => ({
+    id: t.id,
+    case_id: t.case_id,
+    ...nameOf(t.case_id),
+    title: t.title,
+    status: t.status,
+    due_date: t.due_date,
+  }));
+
+  const checklist = (chk ?? []).map((it) => ({
+    id: it.id,
+    case_id: it.case_id,
+    ...nameOf(it.case_id),
+    label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "—",
+    stage_slug: it.stage_slug,
+    done: it.done,
+  }));
+
+  return {
+    user,
+    casos,
+    tarefas,
+    checklist,
+    resumo: {
+      total_casos: casos.length,
+      tarefas_pendentes: tarefas.filter((t) => t.status !== "CONCLUIDA").length,
+      checklist_pendentes: checklist.filter((c) => !c.done).length,
+    },
+  };
+}
+
+/** Papel atual de um usuário (para checagens de autorização no RPC). */
+export async function getUserRole(id: string): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb.from("system_users").select("role").eq("id", id).maybeSingle();
+  return data?.role ?? null;
 }
 
 export async function setUserRole(id: string, role: string) {

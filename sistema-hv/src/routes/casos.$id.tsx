@@ -61,10 +61,7 @@ import {
   buildAutoFillFromClient,
 } from "@/lib/cases/document-autofill";
 import { useCase, useCaseEvents, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
-import {
-  useEntrarFinanceiro,
-  useVoltarOperacional,
-} from "@/hooks/usePipeline";
+import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
   MACRO_FIN_LABELS,
@@ -393,13 +390,12 @@ function CasoDetalhe() {
       <OrnamentalDivider />
 
       <div className="grid lg:grid-cols-2 gap-6">
+        {/* (2026-07-09) — checklist é SÓ do financeiro. Passa apenas a etapa fin
+            (quando o caso já bifurcou); no operacional não há checklist. */}
         <CaseChecklistPanel
           caseId={caso.id}
           canEdit={podeGerirCaso}
-          currentStageSlugs={[
-            caso.macrostatus_op,
-            ...(finBifurcated ? [caso.macrostatus_fin] : []),
-          ].filter((s): s is string => !!s)}
+          currentStageSlugs={finBifurcated && caso.macrostatus_fin ? [caso.macrostatus_fin] : []}
         />
         <CaseCanonicalFields
           caseId={caso.id}
@@ -440,7 +436,8 @@ function CasoDetalhe() {
         onOpenChange={setMoveOpen}
         caseId={caso.id}
         caseCode={caso.case_code}
-        currentStatus={caso.macrostatus_op as MacroOp}
+        caseType={caso.case_type}
+        currentStatus={caso.macrostatus_op ?? ""}
       />
 
       <MoveCaseFinDialog

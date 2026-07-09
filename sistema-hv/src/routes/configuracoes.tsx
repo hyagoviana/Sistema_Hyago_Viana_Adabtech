@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ShieldCheck, Users } from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { ChangePasswordSection } from "@/components/settings/ChangePasswordSection";
-import { UsersAdmin } from "@/components/settings/UsersAdmin";
+import { MyProfileSection } from "@/components/settings/MyProfileSection";
 import { useAuth } from "@/lib/auth";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/rbac";
 
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/configuracoes")({
 });
 
 function Configuracoes() {
-  const { session, profile, role, loading } = useAuth();
+  const { session, profile, role } = useAuth();
   const email = session?.user?.email ?? "—";
   const isAdmin = role === "admin";
 
@@ -55,19 +55,32 @@ function Configuracoes() {
         </div>
       </section>
 
+      {/* Meus dados — nome e telefone (o próprio usuário edita) */}
+      <MyProfileSection />
+
       {/* Alterar senha */}
       <ChangePasswordSection />
 
       {/* Aparência — cores e fonte */}
       <AppearanceSettings />
 
-      {/* Gestão de usuários — só admin */}
-      {loading ? null : isAdmin && session?.user?.id ? (
-        <UsersAdmin currentUserId={session.user.id} />
-      ) : (
-        <div className="card-editorial !p-6 text-center text-[13px] text-muted-foreground">
-          A gestão de usuários e permissões está restrita ao administrador.
-        </div>
+      {/* Atalho para a aba dedicada de Permissões (só admin) */}
+      {isAdmin && (
+        <Link
+          to="/permissoes"
+          className="card-editorial !p-5 mt-5 flex items-center gap-3 hover:border-[var(--gold)] transition-colors"
+        >
+          <Users size={18} className="text-[var(--gold-700)]" />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold text-[var(--navy)]">
+              Usuários e permissões
+            </div>
+            <div className="text-[12px] text-muted-foreground">
+              Convites, papéis e acesso — agora em uma aba própria.
+            </div>
+          </div>
+          <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
+        </Link>
       )}
     </div>
   );

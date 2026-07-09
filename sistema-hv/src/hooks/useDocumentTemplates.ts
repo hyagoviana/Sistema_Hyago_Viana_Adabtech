@@ -55,6 +55,19 @@ export function useTemplatesByFolder(sourceFolderId: string | null) {
   });
 }
 
+// (2026-07-09) — modelos vindos de VÁRIAS pastas (as pastas de uma CATEGORIA).
+// Usado pelos seletores do caso: procuração e documento de caso passam a listar
+// só os modelos das pastas vinculadas ao tipo do caso. Habilita quando há pastas.
+export function useTemplatesByFolders(sourceFolderIds: string[] | null | undefined) {
+  const fn = useServerFn(listDocumentTemplatesFn);
+  const ids = (sourceFolderIds ?? []).filter(Boolean);
+  return useQuery({
+    queryKey: ["document-templates", "folders", ids.slice().sort().join(",") || "none"],
+    queryFn: () => fn({ data: { sourceFolderIds: ids } }),
+    enabled: ids.length > 0,
+  });
+}
+
 // ITEM 4 — sincroniza as 6 pastas do "Documento de caso" (tagueia source_folder_id).
 export function useSyncCaseDocumentFolders() {
   const fn = useServerFn(syncCaseDocumentFoldersFn);

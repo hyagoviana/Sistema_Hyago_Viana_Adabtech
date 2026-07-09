@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TarefasRouteImport } from './routes/tarefas'
+import { Route as RelatorioFinanceiroRouteImport } from './routes/relatorio-financeiro'
 import { Route as ReferenciasRouteImport } from './routes/referencias'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as PipelineRouteImport } from './routes/pipeline'
+import { Route as PermissoesRouteImport } from './routes/permissoes'
 import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as ModelosRouteImport } from './routes/modelos'
 import { Route as LoginRouteImport } from './routes/login'
@@ -77,6 +79,7 @@ import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
+import { Route as ApiServiceTypesIdTemplatesUploadRouteImport } from './routes/api.service-types.$id.templates.upload'
 import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
 import { Route as ApiCasesIdDocumentsUploadRouteImport } from './routes/api.cases.$id.documents.upload'
 import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes/api.clients.$id.documents.$docId.download'
@@ -84,6 +87,11 @@ import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatorioFinanceiroRoute = RelatorioFinanceiroRouteImport.update({
+  id: '/relatorio-financeiro',
+  path: '/relatorio-financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReferenciasRoute = ReferenciasRouteImport.update({
@@ -99,6 +107,11 @@ const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
 const PipelineRoute = PipelineRouteImport.update({
   id: '/pipeline',
   path: '/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PermissoesRoute = PermissoesRouteImport.update({
+  id: '/permissoes',
+  path: '/permissoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NovaSenhaRoute = NovaSenhaRouteImport.update({
@@ -425,6 +438,12 @@ const ApiClientsIdDocumentsIndexRoute =
     path: '/api/clients/$id/documents/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiServiceTypesIdTemplatesUploadRoute =
+  ApiServiceTypesIdTemplatesUploadRouteImport.update({
+    id: '/api/service-types/$id/templates/upload',
+    path: '/api/service-types/$id/templates/upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiClientsIdDocumentsDocIdRoute =
   ApiClientsIdDocumentsDocIdRouteImport.update({
     id: '/api/clients/$id/documents/$docId',
@@ -454,9 +473,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
   '/nova-senha': typeof NovaSenhaRoute
+  '/permissoes': typeof PermissoesRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/referencias': typeof ReferenciasRoute
+  '/relatorio-financeiro': typeof RelatorioFinanceiroRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -514,6 +535,7 @@ export interface FileRoutesByFullPath {
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/service-types/$id/templates/upload': typeof ApiServiceTypesIdTemplatesUploadRoute
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
@@ -527,9 +549,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
   '/nova-senha': typeof NovaSenhaRoute
+  '/permissoes': typeof PermissoesRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/referencias': typeof ReferenciasRoute
+  '/relatorio-financeiro': typeof RelatorioFinanceiroRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
@@ -586,6 +610,7 @@ export interface FileRoutesByTo {
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/service-types/$id/templates/upload': typeof ApiServiceTypesIdTemplatesUploadRoute
   '/api/clients/$id/documents': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
@@ -600,9 +625,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/modelos': typeof ModelosRoute
   '/nova-senha': typeof NovaSenhaRoute
+  '/permissoes': typeof PermissoesRoute
   '/pipeline': typeof PipelineRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/referencias': typeof ReferenciasRoute
+  '/relatorio-financeiro': typeof RelatorioFinanceiroRoute
   '/tarefas': typeof TarefasRoute
   '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
@@ -660,6 +687,7 @@ export interface FileRoutesById {
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
   '/api/cases/$id/documents/upload': typeof ApiCasesIdDocumentsUploadRoute
   '/api/clients/$id/documents/$docId': typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  '/api/service-types/$id/templates/upload': typeof ApiServiceTypesIdTemplatesUploadRoute
   '/api/clients/$id/documents/': typeof ApiClientsIdDocumentsIndexRoute
   '/api/clients/$id/documents/$docId/download': typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
@@ -675,9 +703,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/modelos'
     | '/nova-senha'
+    | '/permissoes'
     | '/pipeline'
     | '/recuperar-senha'
     | '/referencias'
+    | '/relatorio-financeiro'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -735,6 +765,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo/elaborar'
     | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
+    | '/api/service-types/$id/templates/upload'
     | '/api/clients/$id/documents/'
     | '/api/clients/$id/documents/$docId/download'
   fileRoutesByTo: FileRoutesByTo
@@ -748,9 +779,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/modelos'
     | '/nova-senha'
+    | '/permissoes'
     | '/pipeline'
     | '/recuperar-senha'
     | '/referencias'
+    | '/relatorio-financeiro'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/lista'
@@ -807,6 +840,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo/elaborar'
     | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
+    | '/api/service-types/$id/templates/upload'
     | '/api/clients/$id/documents'
     | '/api/clients/$id/documents/$docId/download'
   id:
@@ -820,9 +854,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/modelos'
     | '/nova-senha'
+    | '/permissoes'
     | '/pipeline'
     | '/recuperar-senha'
     | '/referencias'
+    | '/relatorio-financeiro'
     | '/tarefas'
     | '/casos/$id'
     | '/casos/financeiro'
@@ -880,6 +916,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo/elaborar'
     | '/api/cases/$id/documents/upload'
     | '/api/clients/$id/documents/$docId'
+    | '/api/service-types/$id/templates/upload'
     | '/api/clients/$id/documents/'
     | '/api/clients/$id/documents/$docId/download'
   fileRoutesById: FileRoutesById
@@ -894,9 +931,11 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ModelosRoute: typeof ModelosRoute
   NovaSenhaRoute: typeof NovaSenhaRoute
+  PermissoesRoute: typeof PermissoesRoute
   PipelineRoute: typeof PipelineRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ReferenciasRoute: typeof ReferenciasRoute
+  RelatorioFinanceiroRoute: typeof RelatorioFinanceiroRoute
   TarefasRoute: typeof TarefasRoute
   CasosIdRoute: typeof CasosIdRouteWithChildren
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
@@ -949,6 +988,7 @@ export interface RootRouteChildren {
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
   ApiCasesIdDocumentsUploadRoute: typeof ApiCasesIdDocumentsUploadRoute
   ApiClientsIdDocumentsDocIdRoute: typeof ApiClientsIdDocumentsDocIdRouteWithChildren
+  ApiServiceTypesIdTemplatesUploadRoute: typeof ApiServiceTypesIdTemplatesUploadRoute
   ApiClientsIdDocumentsIndexRoute: typeof ApiClientsIdDocumentsIndexRoute
 }
 
@@ -959,6 +999,13 @@ declare module '@tanstack/react-router' {
       path: '/tarefas'
       fullPath: '/tarefas'
       preLoaderRoute: typeof TarefasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorio-financeiro': {
+      id: '/relatorio-financeiro'
+      path: '/relatorio-financeiro'
+      fullPath: '/relatorio-financeiro'
+      preLoaderRoute: typeof RelatorioFinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/referencias': {
@@ -980,6 +1027,13 @@ declare module '@tanstack/react-router' {
       path: '/pipeline'
       fullPath: '/pipeline'
       preLoaderRoute: typeof PipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/permissoes': {
+      id: '/permissoes'
+      path: '/permissoes'
+      fullPath: '/permissoes'
+      preLoaderRoute: typeof PermissoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nova-senha': {
@@ -1430,6 +1484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientsIdDocumentsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/service-types/$id/templates/upload': {
+      id: '/api/service-types/$id/templates/upload'
+      path: '/api/service-types/$id/templates/upload'
+      fullPath: '/api/service-types/$id/templates/upload'
+      preLoaderRoute: typeof ApiServiceTypesIdTemplatesUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/clients/$id/documents/$docId': {
       id: '/api/clients/$id/documents/$docId'
       path: '/api/clients/$id/documents/$docId'
@@ -1518,9 +1579,11 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ModelosRoute: ModelosRoute,
   NovaSenhaRoute: NovaSenhaRoute,
+  PermissoesRoute: PermissoesRoute,
   PipelineRoute: PipelineRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ReferenciasRoute: ReferenciasRoute,
+  RelatorioFinanceiroRoute: RelatorioFinanceiroRoute,
   TarefasRoute: TarefasRoute,
   CasosIdRoute: CasosIdRouteWithChildren,
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
@@ -1573,6 +1636,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
   ApiCasesIdDocumentsUploadRoute: ApiCasesIdDocumentsUploadRoute,
   ApiClientsIdDocumentsDocIdRoute: ApiClientsIdDocumentsDocIdRouteWithChildren,
+  ApiServiceTypesIdTemplatesUploadRoute: ApiServiceTypesIdTemplatesUploadRoute,
   ApiClientsIdDocumentsIndexRoute: ApiClientsIdDocumentsIndexRoute,
 }
 export const routeTree = rootRouteImport

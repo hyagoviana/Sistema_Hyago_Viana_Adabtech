@@ -9,6 +9,9 @@ export const caseCreateSchema = z.object({
   macrostatus_fin: z.enum(MACRO_FIN).optional(),
   proximo_passo: z.string().trim().max(500).optional().nullable(),
   responsavel: z.string().trim().max(200).optional().nullable(),
+  // (2026-07-09) — responsáveis do caso = advogados vinculados (múltipla escolha).
+  // Fonte de verdade do vínculo/visibilidade; `responsavel` (texto) vira cache.
+  responsavelIds: z.array(z.string().uuid()).optional(),
   municipio: z.string().trim().max(200).optional().nullable(),
   valor_centavos: z.number().int().nonnegative().optional().nullable(),
   // Melhoria 3: quando true, o caso nasce em fase comercial (aguardando

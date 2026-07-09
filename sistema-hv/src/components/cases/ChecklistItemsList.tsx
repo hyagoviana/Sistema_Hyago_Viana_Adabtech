@@ -17,6 +17,8 @@ export type ChecklistItem = {
   done: boolean;
   source: string;
   drive_file_id: string | null;
+  // item 3 — responsável (usuário do sistema) por este critério.
+  assigned_to?: string | null;
   // S9-11 — item específico deste caso (def_id IS NULL). Herdados do modelo = false.
   is_adhoc?: boolean;
   def: {
@@ -28,6 +30,8 @@ export type ChecklistItem = {
   } | null;
 };
 
+export type AssigneeOption = { id: string; full_name: string | null; email: string };
+
 // Render puro de uma lista de itens já resolvida (sem fetch). Usado pela ficha,
 // que agrupa por etapa e passa cada grupo já ordenado.
 export function ChecklistItemsRows({
@@ -37,6 +41,8 @@ export function ChecklistItemsRows({
   compact = false,
   onEditAdhoc,
   onDeleteAdhoc,
+  assignees,
+  onAssign,
 }: {
   items: ChecklistItem[];
   onToggle: (item: ChecklistItem, done: boolean) => void;
@@ -45,7 +51,11 @@ export function ChecklistItemsRows({
   // S9-11 — quando fornecidos, habilita editar/excluir dos itens AD-HOC (só eles).
   onEditAdhoc?: (item: ChecklistItem) => void;
   onDeleteAdhoc?: (item: ChecklistItem) => void;
+  // item 3 — quando fornecidos, mostra o seletor de RESPONSÁVEL por item (não compacto).
+  assignees?: AssigneeOption[];
+  onAssign?: (item: ChecklistItem, userId: string | null) => void;
 }) {
+  const showAssignee = !compact && !!assignees && !!onAssign;
   return (
     <ul className={compact ? "space-y-1" : "space-y-1.5"}>
       {items.map((it) => {
@@ -70,6 +80,22 @@ export function ChecklistItemsRows({
             </span>
             {it.def?.required && (
               <Badge className="bg-[var(--navy)] text-white shrink-0">Obrigatório</Badge>
+            )}
+            {showAssignee && (
+              <select
+                value={it.assigned_to ?? ""}
+                disabled={pending}
+                onChange={(e) => onAssign!(it, e.target.value || null)}
+                title="Responsável por este critério"
+                className="shrink-0 max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]"
+              >
+                <option value="">Sem responsável</option>
+                {assignees!.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.full_name || u.email}
+                  </option>
+                ))}
+              </select>
             )}
             {isAdhoc && (
               <span

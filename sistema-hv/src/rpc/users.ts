@@ -6,11 +6,15 @@ import {
   listUsers,
   inviteUser,
   activateUser,
+  getMyProfile,
+  getUserReport,
+  getUserRole,
   setUserRole,
   setUserStatus,
   removeUser,
   requestPasswordReset,
   updateUserPassword,
+  updateUserProfile,
   recordConsent,
   listConsents,
   revokeConsent,
@@ -70,8 +74,18 @@ export const listUsersFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listUsers()),
 );
 
+// Perfil do próprio usuário autenticado (para editar nome/telefone).
+export const getMyProfileFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(async () => {
+    const me = await requireAuth();
+    return getMyProfile(me.id);
+  }),
+);
+
 export const inviteUserFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { email: string; full_name?: string; role: string; redirectTo?: string }) => d)
+  .inputValidator(
+    (d: { email: string; full_name?: string; role: string; redirectTo?: string }) => d,
+  )
   .handler(async ({ data }) => handle(() => inviteUser(data)));
 
 // Ativa o próprio usuário autenticado após ele definir a senha (convite aceito).
@@ -81,6 +95,39 @@ export const activateUserFn = createServerFn({ method: "POST" }).handler(async (
     return activateUser(me.id);
   }),
 );
+
+// Edita nome/telefone de um usuário. Autorização: o PRÓPRIO usuário ou um admin.
+export const updateUserProfileFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { id?: string; full_name?: string | null; phone?: string | null }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      const targetId = data.id ?? me.id;
+      if (targetId !== me.id) {
+        const myRole = await getUserRole(me.id);
+        if (myRole !== "admin") {
+          throw new UsersServiceError("Sem permissão para editar outro usuário.", 403);
+        }
+      }
+      return updateUserProfile(targetId, { full_name: data.full_name, phone: data.phone });
+    }),
+  );
+
+// Relatório de tudo vinculado a um usuário. Autorização: admin ou o próprio.
+export const getUserReportFn = createServerFn({ method: "GET" })
+  .inputValidator((d: { userId: string }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      if (data.userId !== me.id) {
+        const myRole = await getUserRole(me.id);
+        if (myRole !== "admin") {
+          throw new UsersServiceError("Sem permissão para ver este usuário.", 403);
+        }
+      }
+      return getUserReport(data.userId);
+    }),
+  );
 
 export const setUserRoleFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; role: string }) => d)

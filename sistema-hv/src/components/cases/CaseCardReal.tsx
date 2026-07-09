@@ -98,7 +98,8 @@ export function CaseCardReal({ caso, compact = true, kind = "op" }: Props) {
           onOpenChange={setMoveOpen}
           caseId={caso.id}
           caseCode={caso.case_code}
-          currentStatus={caso.macrostatus_op as MacroOp}
+          caseType={caso.case_type}
+          currentStatus={caso.macrostatus_op}
         />
       )}
     </div>

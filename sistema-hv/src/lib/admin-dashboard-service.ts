@@ -56,11 +56,12 @@ export type DashboardAdmin = {
 
 const CASE_TYPE_LABELS: Record<string, string> = {
   FIES_ESF: "FIES ESF",
-  FIES_DGM: "FIES DGM",
+  FIES_DGM: "Abatimento Militar",
   COVID: "COVID",
   MAIS_MEDICOS: "Mais Médicos",
   RESIDENCIA: "Residência",
   CFM_CRM: "CFM/CRM",
+  OUTROS: "Outros",
 };
 
 const MACRO_OP_LABELS: Record<string, string> = {
@@ -98,7 +99,9 @@ export async function getDashboardAdmin(): Promise<DashboardAdmin> {
   const [casesRes, clientsRes, parcelasRes] = await Promise.all([
     sb
       .from("system_cases")
-      .select("id, case_code, case_type, macrostatus_op, macrostatus_fin, client_id, inadimplente, created_at")
+      .select(
+        "id, case_code, case_type, macrostatus_op, macrostatus_fin, client_id, inadimplente, created_at",
+      )
       .eq("organization_id", DEFAULT_ORG)
       .is("deleted_at", null),
     sb
@@ -183,7 +186,10 @@ export async function getDashboardAdmin(): Promise<DashboardAdmin> {
     const valor = p.valor_centavos ?? 0;
     if (p.status === "PAGA") {
       recebido += p.valor_pago_centavos ?? valor;
-    } else if (p.status === "VENCIDA" || (p.status === "PENDENTE" && p.vencimento && p.vencimento < hoje)) {
+    } else if (
+      p.status === "VENCIDA" ||
+      (p.status === "PENDENTE" && p.vencimento && p.vencimento < hoje)
+    ) {
       vencido += valor;
     }
   }
