@@ -158,15 +158,29 @@ export async function reorderChecklistDefs(ids: string[]) {
   return { ok: true as const };
 }
 
-// Soft-delete do DEF. NÃO apaga instâncias já criadas (items done permanecem).
+// Soft-delete do DEF + PROPAGA para as instâncias já criadas nos casos. Ao
+// excluir uma etapa fixa no editor de funil, ela some de TODOS os cards que a
+// herdaram (soft-delete = reversível). Antes as instâncias ficavam órfãs e
+// continuavam aparecendo no checklist do caso (bug 2026-07-09).
 export async function softDeleteChecklistDef(id: string) {
   const sb = getSupabaseAdmin();
+  const now = new Date().toISOString();
+
   const { error } = await sb
     .from("system_stage_checklist_defs")
-    .update({ deleted_at: new Date().toISOString(), active: false })
+    .update({ deleted_at: now, active: false })
     .eq("id", id)
     .is("deleted_at", null);
   if (error) throw new ChecklistServiceError(error.message, 500);
+
+  // Propaga a exclusão para as instâncias herdadas desta def em todos os casos.
+  const { error: itErr } = await sb
+    .from("system_case_checklist_items")
+    .update({ deleted_at: now })
+    .eq("def_id", id)
+    .is("deleted_at", null);
+  if (itErr) throw new ChecklistServiceError(itErr.message, 500);
+
   return { ok: true as const, id };
 }
 
@@ -223,18 +237,28 @@ export async function listCaseChecklistItems(caseId: string) {
 
   const { data, error } = await sb
     .from("system_case_checklist_items")
-    .select("*, def:system_stage_checklist_defs(key, label, ordem, required, expected_doc_pattern)")
+    .select(
+      "*, def:system_stage_checklist_defs(key, label, ordem, required, expected_doc_pattern, deleted_at)",
+    )
     .eq("case_id", caseId)
     .is("deleted_at", null)
     .order("stage_slug")
     .order("created_at");
   if (error) throw new ChecklistServiceError(error.message, 500);
 
+  // Guarda de leitura: item HERDADO (def_id != null) cuja DEF foi excluída no
+  // editor de funil NÃO deve aparecer, mesmo que a instância ainda não tenha sido
+  // propagada (defesa em profundidade junto ao soft-delete em softDeleteChecklistDef).
+  const visible = (data ?? []).filter((row) => {
+    const r = row as { def_id: string | null; def?: { deleted_at?: string | null } | null };
+    return !(r.def_id != null && r.def?.deleted_at);
+  });
+
   // Normaliza itens AD-HOC (S9-11): quando def_id IS NULL, o item carrega a
   // própria definição (label/required/ordem). Projetamos num `def` sintético para
   // a UI consumir com a mesma forma dos itens herdados do modelo, e marcamos
   // is_adhoc p/ diferenciar visualmente e liberar editar/excluir por caso.
-  return (data ?? []).map((row) => {
+  return visible.map((row) => {
     const r = row as typeof row & {
       def_id: string | null;
       label: string | null;

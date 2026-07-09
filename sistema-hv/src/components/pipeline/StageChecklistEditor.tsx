@@ -96,7 +96,9 @@ export function StageChecklistEditor({
 
   async function remove(d: Def) {
     if (
-      !confirm(`Excluir o item "${d.label}"? Itens já concluídos em casos existentes permanecem.`)
+      !confirm(
+        `Excluir o item "${d.label}"? Ele será removido do checklist de TODOS os casos desta etapa.`,
+      )
     )
       return;
     try {
