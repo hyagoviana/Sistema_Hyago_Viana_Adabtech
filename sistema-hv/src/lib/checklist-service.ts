@@ -195,6 +195,32 @@ export async function countChecklistItemsForStage(
 // ----------------------------------------------------------------------------
 export async function listCaseChecklistItems(caseId: string) {
   const sb = getSupabaseAdmin();
+
+  // (2026-07-09) Reconciliação idempotente ANTES de ler: garante que TODA def da(s)
+  // etapa(s) ATUAL(is) do caso (operacional + financeira) tenha uma instância. Sem
+  // isso, uma etapa de checklist criada no editor de funil DEPOIS que o caso já
+  // estava na etapa nunca aparecia (a instanciação só rodava ao ENTRAR na etapa).
+  // A fn usa ON CONFLICT DO NOTHING → não duplica instâncias já existentes.
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("macrostatus_op, macrostatus_fin, service_type_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (caso?.service_type_id) {
+    const stages = [caso.macrostatus_op, caso.macrostatus_fin].filter(
+      (s): s is string => !!s && s !== "NAO_APLICAVEL",
+    );
+    for (const slug of [...new Set(stages)]) {
+      const { error: rErr } = await sb.rpc("system_fn_instanciar_checklist", {
+        p_case_id: caseId,
+        p_stage_slug: slug,
+      });
+      // Falha na reconciliação não deve derrubar a leitura do checklist.
+      if (rErr) console.error("reconciliar checklist:", rErr.message);
+    }
+  }
+
   const { data, error } = await sb
     .from("system_case_checklist_items")
     .select("*, def:system_stage_checklist_defs(key, label, ordem, required, expected_doc_pattern)")
