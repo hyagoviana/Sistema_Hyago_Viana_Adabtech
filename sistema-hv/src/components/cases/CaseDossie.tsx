@@ -240,7 +240,7 @@ function TasksSection({ caseId }: { caseId: string }) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : !tasks || tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">Nenhuma tarefa ainda.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma tarefa ainda.</p>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {tasks.map((t) => {
@@ -434,7 +434,7 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : !deadlines || deadlines.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">Nenhum prazo cadastrado.</p>
+          <p className="text-sm text-muted-foreground">Nenhum prazo cadastrado.</p>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {deadlines.map((d) => {
@@ -552,7 +552,7 @@ function CommsSection({ caseId }: { caseId: string }) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : !comms || comms.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">Nenhuma comunicação registrada.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma comunicação registrada.</p>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {comms.map((c) => (

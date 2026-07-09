@@ -230,7 +230,7 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
 
       <div className="card-editorial !p-0 overflow-hidden">
         {list.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground italic text-sm">
+          <div className="p-8 text-center text-muted-foreground text-sm">
             Sem eventos registrados.
           </div>
         ) : (

@@ -110,7 +110,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
       </div>
 
       {(termos ?? []).length === 0 ? (
-        <div className="text-[13px] text-muted-foreground italic">Nenhum termo elaborado.</div>
+        <div className="text-[13px] text-muted-foreground">Nenhum termo elaborado.</div>
       ) : (
         <ul className="space-y-2">
           {(termos ?? []).map((t) => {

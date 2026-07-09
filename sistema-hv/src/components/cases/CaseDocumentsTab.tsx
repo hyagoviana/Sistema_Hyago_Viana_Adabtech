@@ -193,7 +193,7 @@ export function CaseDocumentsTab({
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground text-sm">Carregando…</div>
         ) : (docs ?? []).length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground italic text-sm">
+          <div className="p-8 text-center text-muted-foreground text-sm">
             Nenhum documento gerado neste caso ainda.
           </div>
         ) : (

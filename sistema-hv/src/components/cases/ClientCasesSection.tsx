@@ -57,7 +57,7 @@ export function ClientCasesSection({ clientId }: Props) {
           ))}
         </div>
       ) : cases.length === 0 ? (
-        <div className="card-editorial !p-8 text-center text-muted-foreground italic text-sm">
+        <div className="card-editorial !p-8 text-center text-muted-foreground text-sm">
           Esse cliente ainda não tem casos. Clique em "Novo caso" pra começar.
         </div>
       ) : (

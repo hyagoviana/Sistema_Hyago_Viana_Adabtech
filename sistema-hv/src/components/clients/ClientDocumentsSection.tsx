@@ -159,7 +159,7 @@ export function ClientDocumentsSection({ clientId, clientHasDriveFolder }: Props
             ))}
           </div>
         ) : (docs ?? []).length === 0 ? (
-          <div className="text-center text-muted-foreground italic py-8 text-sm">
+          <div className="text-center text-muted-foreground py-8 text-sm">
             Nenhum documento anexado ainda.
           </div>
         ) : (

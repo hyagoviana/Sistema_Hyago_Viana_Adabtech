@@ -50,7 +50,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-white">
+    <div className="min-h-screen grid lg:grid-cols-2">
       {/* Painel de marca (esquerda) — só cor, sem texturas nem grid */}
       <div
         className="relative hidden lg:flex flex-col justify-between p-14 text-white"
@@ -62,8 +62,11 @@ function LoginPage() {
         <div className="relative flex items-center gap-3">
           <img src={symbolHV} alt="" className="h-11 w-auto object-contain" />
           <div>
-            <div className="font-display text-lg font-semibold tracking-tight">Hyago Viana</div>
-            <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "#c9a634" }}>
+            <div className="font-brand text-[19px] tracking-tight">Hyago Viana</div>
+            <div
+              className="text-[10px] uppercase tracking-[0.28em]"
+              style={{ color: "var(--hv-gold-soft)" }}
+            >
               Advocacia
             </div>
           </div>
@@ -73,7 +76,7 @@ function LoginPage() {
           <div className="text-2xl mb-5" style={{ color: "#c9a634" }}>
             ✦
           </div>
-          <p className="font-display italic text-[29px] leading-[1.28] text-white/95">
+          <p className="font-brand text-[29px] leading-[1.28] text-white/95">
             A excelência jurídica começa pela disciplina dos detalhes.
           </p>
           <footer
@@ -89,8 +92,11 @@ function LoginPage() {
         </div>
       </div>
 
-      {/* Formulário (direita) */}
-      <div className="flex items-center justify-center p-8 lg:p-16">
+      {/* Formulário (direita) — fundo creme→branco (handoff v3) */}
+      <div
+        className="flex items-center justify-center p-8 lg:p-16"
+        style={{ background: "var(--hv-bg-login-form)" }}
+      >
         <form onSubmit={handleSubmit} className="w-full max-w-md">
           {/* Logo no topo — visível no mobile, onde o painel esquerdo some */}
           <img
@@ -146,12 +152,12 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3.5 text-white font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3.5 text-white font-semibold transition-all hover:-translate-y-0.5 active:scale-[.99] disabled:opacity-60"
             style={{
-              background: "linear-gradient(180deg, #b1902a 0%, #987814 55%, #856611 100%)",
-              borderRadius: 8,
+              background: "var(--hv-gold-grad)",
+              borderRadius: "var(--hv-r-md)",
               boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.28), 0 12px 30px -10px rgba(152,120,20,0.6)",
+                "inset 0 1px 0 rgba(255,255,255,0.38), inset 0 -1px 0 rgba(0,0,0,0.15), 0 8px 20px -6px rgba(138,103,42,0.5)",
             }}
           >
             {loading ? "Entrando…" : "Entrar no sistema"}

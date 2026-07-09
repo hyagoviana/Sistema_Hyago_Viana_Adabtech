@@ -68,7 +68,7 @@ export function SendToOperacionalDialog({
         {isLoading ? (
           <div className="py-6 text-center text-sm text-muted-foreground">Carregando casos…</div>
         ) : comercialCases.length === 0 ? (
-          <div className="py-6 text-center text-sm text-muted-foreground italic">
+          <div className="py-6 text-center text-sm text-muted-foreground">
             Nenhum caso aguardando assinatura para este lead.
           </div>
         ) : (

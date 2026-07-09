@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate, Link } from "@tanstack/react-router";
-import { Search, Plus, Filter, Bell, ChevronDown } from "lucide-react";
+import { Search, Plus, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
@@ -69,9 +69,11 @@ export function Topbar() {
       className="sticky top-0 z-30 flex items-center gap-4 px-6"
       style={{
         height: 56,
-        background: "#f8f7f3",
-        borderBottom: "1px solid rgba(120,96,30,0.10)",
-        boxShadow: "0 1px 2px rgba(60,50,20,0.04)",
+        // Handoff v3 — topbar em vidro translúcido (estilo Apple).
+        background: "var(--hv-glass)",
+        backdropFilter: "var(--hv-glass-blur)",
+        WebkitBackdropFilter: "var(--hv-glass-blur)",
+        borderBottom: "1px solid var(--hv-glass-border)",
       }}
     >
       <nav className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--ink-500)] min-w-0">
@@ -104,10 +106,11 @@ export function Topbar() {
           <button
             onClick={() => setOpenNew((v) => !v)}
             onBlur={() => setTimeout(() => setOpenNew(false), 150)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px active:scale-[.98]"
             style={{
-              background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
+              background: "var(--hv-gold-grad)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.38), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 5px rgba(138,103,42,0.35), 0 8px 20px -6px rgba(138,103,42,0.5)",
             }}
           >
             <Plus size={13} strokeWidth={2} />
@@ -132,7 +135,11 @@ export function Topbar() {
                 <button
                   key={it.label}
                   className="w-full text-left px-3 py-1.5 text-[13px] text-[#1a1a1f] hover:bg-[var(--ink-50)]"
-                  onMouseDown={(e) => { e.preventDefault(); it.action(); setOpenNew(false); }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    it.action();
+                    setOpenNew(false);
+                  }}
                 >
                   {it.label}
                 </button>
@@ -140,13 +147,6 @@ export function Topbar() {
             </div>
           )}
         </div>
-
-        <button
-          className="relative w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-500)] hover:bg-[var(--ink-50)] hover:text-[#1a1a1f]"
-          title="Filtros"
-        >
-          <Filter size={14} strokeWidth={1.6} />
-        </button>
 
         <div className="relative">
           <button

@@ -125,7 +125,7 @@ export function NotesBlock({ target, entityId }: { target: NoteTarget; entityId:
           <Skeleton className="h-16 w-full" />
         </div>
       ) : notes.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic px-1">Nenhuma nota registrada ainda.</p>
+        <p className="text-sm text-muted-foreground px-1">Nenhuma nota registrada ainda.</p>
       ) : (
         <ul className="space-y-2">
           {notes.map((n) => (
@@ -174,7 +174,7 @@ export function NotesBlock({ target, entityId }: { target: NoteTarget; entityId:
                         </span>
                       )}
                       {n.updated_at !== n.created_at && (
-                        <span className="ml-2 italic">(editada)</span>
+                        <span className="ml-2">(editada)</span>
                       )}
                     </div>
                   </div>

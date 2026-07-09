@@ -174,7 +174,7 @@ function AdminDash() {
             <div className="card-editorial p-6">
               <SectionTitle>Casos por tipo</SectionTitle>
               {(data?.casos_por_tipo ?? []).length === 0 ? (
-                <p className="text-[13px] text-muted-foreground italic">Nenhum caso.</p>
+                <p className="text-[13px] text-muted-foreground">Nenhum caso.</p>
               ) : (
                 <ul className="space-y-2">
                   {(data?.casos_por_tipo ?? []).map((t) => (
@@ -204,7 +204,7 @@ function AdminDash() {
                 </Link>
               </div>
               {(data?.casos_por_status_op ?? []).length === 0 ? (
-                <p className="text-[13px] text-muted-foreground italic">Nenhum caso.</p>
+                <p className="text-[13px] text-muted-foreground">Nenhum caso.</p>
               ) : (
                 <ul className="space-y-2">
                   {(data?.casos_por_status_op ?? []).map((s) => (
@@ -234,7 +234,7 @@ function AdminDash() {
                 </Link>
               </div>
               {(data?.casos_por_status_fin ?? []).length === 0 ? (
-                <p className="text-[13px] text-muted-foreground italic">Nenhum caso.</p>
+                <p className="text-[13px] text-muted-foreground">Nenhum caso.</p>
               ) : (
                 <ul className="space-y-2">
                   {(data?.casos_por_status_fin ?? []).map((s) => (
@@ -267,7 +267,7 @@ function AdminDash() {
                 </Link>
               </div>
               {(data?.casos_recentes ?? []).length === 0 ? (
-                <p className="text-[13px] text-muted-foreground italic">Nenhum caso ainda.</p>
+                <p className="text-[13px] text-muted-foreground">Nenhum caso ainda.</p>
               ) : (
                 <ul className="space-y-3">
                   {(data?.casos_recentes ?? []).map((c) => (
@@ -308,7 +308,7 @@ function AdminDash() {
                 </Link>
               </div>
               {(data?.clientes_recentes ?? []).length === 0 ? (
-                <p className="text-[13px] text-muted-foreground italic">Nenhum cliente ainda.</p>
+                <p className="text-[13px] text-muted-foreground">Nenhum cliente ainda.</p>
               ) : (
                 <ul className="space-y-3">
                   {(data?.clientes_recentes ?? []).map((c) => (

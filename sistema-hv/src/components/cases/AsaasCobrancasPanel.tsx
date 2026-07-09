@@ -126,7 +126,7 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
       </div>
 
       {isLoading && (
-        <div className="text-[13px] text-muted-foreground italic py-4 flex items-center gap-2">
+        <div className="text-[13px] text-muted-foreground py-4 flex items-center gap-2">
           <Loader2 size={14} className="animate-spin" /> Carregando parcelas…
         </div>
       )}

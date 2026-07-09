@@ -29,14 +29,32 @@ function fmtBRL(centavos: number | null): string {
 function CasosLista() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const { data, isLoading, isError, error } = useCasesList(search ? { search } : undefined);
+  const { data, isLoading, isError, error } = useCasesList();
+
+  // Busca CLIENT-SIDE por cliente, categoria (label), etapa (label), código e
+  // município — instantânea (sem ida ao servidor).
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return data ?? [];
+    return (data ?? []).filter((c) => {
+      const tipo = (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type).toLowerCase();
+      const op = (MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op).toLowerCase();
+      return (
+        c.case_code.toLowerCase().includes(q) ||
+        (c.client_name ?? "").toLowerCase().includes(q) ||
+        tipo.includes(q) ||
+        op.includes(q) ||
+        (c.municipio ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [data, search]);
 
   const sliced = useMemo(() => {
     const start = page * PAGE_SIZE;
-    return (data ?? []).slice(start, start + PAGE_SIZE);
-  }, [data, page]);
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
 
-  const total = data?.length ?? 0;
+  const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
@@ -74,7 +92,7 @@ function CasosLista() {
               setSearch(e.target.value);
               setPage(0);
             }}
-            placeholder="Buscar por código ou próximo passo…"
+            placeholder="Buscar por cliente, categoria, etapa, código…"
             className="w-full pl-9 pr-4 py-2.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
           />
         </div>
@@ -119,7 +137,7 @@ function CasosLista() {
                 ))
               ) : sliced.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground italic">
+                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
                     Nenhum caso encontrado.
                   </td>
                 </tr>

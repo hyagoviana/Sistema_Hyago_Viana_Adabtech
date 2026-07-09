@@ -13,6 +13,7 @@ import {
   useReorderChecklistDefs,
   useUpdateChecklistDef,
 } from "@/hooks/useChecklist";
+import { useUsers } from "@/hooks/useUsers";
 
 type Def = {
   id: string;
@@ -22,6 +23,7 @@ type Def = {
   required: boolean;
   active: boolean;
   expected_doc_pattern: string | null;
+  assigned_to?: string | null;
 };
 
 export function StageChecklistEditor({
@@ -34,6 +36,7 @@ export function StageChecklistEditor({
   canEdit: boolean;
 }) {
   const { data: defs, isLoading } = useChecklistDefs(serviceTypeId, stageSlug);
+  const { data: users } = useUsers();
   const createMut = useCreateChecklistDef();
   const updateMut = useUpdateChecklistDef();
   const deleteMut = useDeleteChecklistDef();
@@ -41,6 +44,12 @@ export function StageChecklistEditor({
 
   const [newLabel, setNewLabel] = useState("");
   const [newRequired, setNewRequired] = useState(false);
+  const [newAssignee, setNewAssignee] = useState("");
+
+  // Responsável vem dos usuários ativos (cadastro de permissões). Não obrigatório.
+  const assignees = (users ?? [])
+    .filter((u) => u.status === "ACTIVE")
+    .map((u) => ({ id: u.id, name: u.full_name || u.email }));
 
   const list = (defs ?? []) as Def[];
   const busy =
@@ -58,12 +67,22 @@ export function StageChecklistEditor({
         stage_slug: stageSlug,
         label,
         required: newRequired,
+        assigned_to: newAssignee || null,
       });
       setNewLabel("");
       setNewRequired(false);
+      setNewAssignee("");
       toast.success("Item adicionado");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao adicionar item");
+    }
+  }
+
+  async function setAssignee(d: Def, userId: string | null) {
+    try {
+      await updateMut.mutateAsync({ id: d.id, patch: { assigned_to: userId } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
     }
   }
 
@@ -140,6 +159,20 @@ export function StageChecklistEditor({
               {d.required && <Badge tone="navy">Obrigatório</Badge>}
               {canEdit && (
                 <>
+                  <select
+                    value={d.assigned_to ?? ""}
+                    disabled={busy}
+                    onChange={(e) => setAssignee(d, e.target.value || null)}
+                    title="Responsável desta etapa (opcional)"
+                    className="max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]"
+                  >
+                    <option value="">Sem responsável</option>
+                    {assignees.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     Obrig.
                     <Switch checked={d.required} onCheckedChange={() => toggleRequired(d)} />
@@ -174,6 +207,19 @@ export function StageChecklistEditor({
               }
             }}
           />
+          <select
+            value={newAssignee}
+            onChange={(e) => setNewAssignee(e.target.value)}
+            title="Responsável (opcional)"
+            className="max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1.5 text-[13px]"
+          >
+            <option value="">Sem responsável</option>
+            {assignees.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             Obrigatório
             <Switch checked={newRequired} onCheckedChange={setNewRequired} />

@@ -375,7 +375,18 @@
       "Bash(xargs grep -l \"fn_avancar_fin\\\\|avancar_fin_se_ok\")",
       "Bash(grep -v 'casos.$id.tsx\\(451')",
       "Bash(grep -vE 'casos\\\\.financeiro\\\\.index\\\\.tsx|casos\\\\.\\\\$id\\\\.tsx\\\\\\(449' /tmp/errs.txt)",
-      "Bash(grep -vE 'casos\\\\.financeiro\\\\.index\\\\.tsx|casos\\\\.\\\\$id\\\\.tsx\\\\\\(449')"
+      "Bash(grep -vE 'casos\\\\.financeiro\\\\.index\\\\.tsx|casos\\\\.\\\\$id\\\\.tsx\\\\\\(449')",
+      "Bash(ls src/styles/)",
+      "Bash(find src *)",
+      "Bash(ls src/routes/__root.tsx src/components/hv/*.tsx)",
+      "Bash(mkdir -p docs/design)",
+      "Bash(cp \"../Re-paginada layout/HANDOFF_HYAGO_VIANA.md\" docs/design/)",
+      "Bash(cp \"../Re-paginada layout/hyago-design-tokens.css\" docs/design/)",
+      "Bash(cp \"../Re-paginada layout/hyago-viana-redesign-v3 \\(1\\).html\" \"docs/design/hyago-viana-redesign-v3.html\")",
+      "Bash(git --no-pager diff HEAD -- sistema-hv/src/components/hv/Sidebar.tsx)",
+      "Bash(echo \"EXIT eslint: $?\")",
+      "Bash(ls docs/design/)",
+      "Bash(ls \"Re-paginada layout/\")"
     ]
   }
 }

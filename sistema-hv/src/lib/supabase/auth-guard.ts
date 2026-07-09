@@ -144,7 +144,10 @@ export async function requireRole(
     .maybeSingle();
 
   if (error) throw new AuthError("Falha ao verificar permissões", 500);
-  if (!data || data.status !== "active") throw new AuthError("Usuário inativo ou sem perfil", 403);
+  // status em system_users é MAIÚSCULO (ACTIVE/INVITED/SUSPENDED). Comparar com
+  // "active" minúsculo barrava TODO usuário válido (403) — inclusive o admin.
+  if (!data || data.status?.toUpperCase() !== "ACTIVE")
+    throw new AuthError("Usuário inativo ou sem perfil", 403);
   if (!allowed.includes(data.role)) {
     throw new AuthError("Você não tem permissão para esta ação", 403);
   }

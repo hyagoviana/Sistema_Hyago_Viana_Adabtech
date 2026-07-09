@@ -91,7 +91,7 @@ function RelatorioFinanceiro() {
             ))}
           </div>
         ) : (casos ?? []).length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm italic">
+          <div className="p-8 text-center text-muted-foreground text-sm">
             Nenhum caso com cobranças/parcelas ainda.
           </div>
         ) : (

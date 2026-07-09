@@ -112,7 +112,7 @@ export function KanbanBoard<TItem, C extends string>({
                     <Skeleton key={i} className="h-16 rounded-[10px]" />
                   ))
                 ) : colItems.length === 0 ? (
-                  <div className="py-2.5 text-center text-[11px] text-[var(--ink-400)] italic select-none">
+                  <div className="py-2.5 text-center text-[11px] text-[var(--ink-400)] select-none">
                     Vazio
                   </div>
                 ) : (

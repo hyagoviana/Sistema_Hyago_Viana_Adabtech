@@ -109,7 +109,7 @@ function MunicipiosSection() {
       {isLoading ? (
         <Skeleton className="h-20" />
       ) : (data ?? []).length === 0 ? (
-        <div className="text-[13px] text-muted-foreground italic">Nenhum município cadastrado.</div>
+        <div className="text-[13px] text-muted-foreground">Nenhum município cadastrado.</div>
       ) : (
         <ul className="divide-y divide-[var(--border)]">
           {(data ?? []).map((m) => (
@@ -217,7 +217,7 @@ function PerfisSection() {
       {isLoading ? (
         <Skeleton className="h-20" />
       ) : (data ?? []).length === 0 ? (
-        <div className="text-[13px] text-muted-foreground italic">Nenhum perfil cadastrado.</div>
+        <div className="text-[13px] text-muted-foreground">Nenhum perfil cadastrado.</div>
       ) : (
         <ul className="divide-y divide-[var(--border)]">
           {(data ?? []).map((p) => (

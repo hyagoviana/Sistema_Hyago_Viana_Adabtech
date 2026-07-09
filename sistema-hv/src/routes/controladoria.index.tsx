@@ -333,7 +333,7 @@ function CasosTab({
                 ))
               ) : sliced.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground italic">
+                  <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
                     Nenhum caso encontrado.
                   </td>
                 </tr>
@@ -380,7 +380,7 @@ function CasosTab({
                           <span className="text-[12.5px]">{c.responsavel}</span>
                         </div>
                       ) : (
-                        <span className="text-[12px] text-[var(--danger)] italic">Sem responsável</span>
+                        <span className="text-[12px] text-[var(--danger)]">Sem responsável</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -764,7 +764,7 @@ function TarefasTab({
       {/* Lista */}
       <div className="card-editorial !p-0 overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="px-5 py-10 text-center text-muted-foreground text-[13px] italic">
+          <div className="px-5 py-10 text-center text-muted-foreground text-[13px]">
             Nenhuma tarefa encontrada.
           </div>
         ) : (

@@ -131,7 +131,7 @@ function DesignSystem() {
 
       <OrnamentalDivider symbol="✦ ✦ ✦" />
 
-      <p className="text-center text-muted-foreground italic font-display">— fim do catálogo —</p>
+      <p className="text-center text-muted-foreground font-display">— fim do catálogo —</p>
     </div>
   );
 }

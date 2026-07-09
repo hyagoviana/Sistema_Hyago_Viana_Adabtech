@@ -227,7 +227,7 @@ function ClienteDetalhe() {
               </Button>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground italic">
+            <p className="mt-3 text-sm text-muted-foreground">
               Pasta ainda não criada.{" "}
               {cliente.drive_sync_failed && "Use o botão acima pra tentar de novo."}
             </p>
@@ -333,7 +333,7 @@ function ProfessionalCard({ data, personType }: { data: unknown; personType: str
       <Card>
         <Eyebrow>Dados profissionais</Eyebrow>
         {rows.length === 0 && programas.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground italic">
+          <p className="mt-3 text-sm text-muted-foreground">
             Nenhum dado profissional cadastrado. Use “Editar” para preencher.
           </p>
         ) : (

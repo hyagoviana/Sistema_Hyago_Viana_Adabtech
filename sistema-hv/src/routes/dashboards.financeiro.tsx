@@ -91,7 +91,7 @@ function DashboardFinanceiro() {
               Parcelas vencidas ({data?.qtd_vencidas ?? 0})
             </div>
             {(data?.vencidas ?? []).length === 0 ? (
-              <div className="text-[13px] text-muted-foreground italic">
+              <div className="text-[13px] text-muted-foreground">
                 Nenhuma parcela vencida. 🎉
               </div>
             ) : (

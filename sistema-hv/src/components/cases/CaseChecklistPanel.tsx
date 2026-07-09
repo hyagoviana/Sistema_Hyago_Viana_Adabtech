@@ -94,11 +94,13 @@ export function CaseChecklistPanel({
     );
   }
 
-  // Agrupa itens por etapa. Garante que as etapas ATUAIS apareçam mesmo sem itens
-  // (p/ oferecer o "acrescentar critério" nelas).
+  // (2026-07-09) — mostra SÓ a(s) etapa(s) ATUAL(is) do funil. Ao avançar de etapa,
+  // o painel exibe os itens da nova etapa (herdados do editor) e NÃO mantém os das
+  // etapas anteriores. Itens de etapas passadas ficam fora desta visão.
   const byStage = new Map<string, Item[]>();
   for (const slug of currentSet) byStage.set(slug, []);
   for (const it of list) {
+    if (!currentSet.has(it.stage_slug)) continue; // ignora etapas passadas
     const arr = byStage.get(it.stage_slug) ?? [];
     arr.push(it);
     byStage.set(it.stage_slug, arr);

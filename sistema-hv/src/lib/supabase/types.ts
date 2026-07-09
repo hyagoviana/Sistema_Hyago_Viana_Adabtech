@@ -135,6 +135,7 @@ export type Database = {
           required: boolean;
           expected_doc_pattern: string | null;
           active: boolean;
+          assigned_to: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -151,6 +152,7 @@ export type Database = {
           required?: boolean;
           expected_doc_pattern?: string | null;
           active?: boolean;
+          assigned_to?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

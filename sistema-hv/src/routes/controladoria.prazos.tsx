@@ -225,7 +225,7 @@ function PrazosPage() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground italic">
+                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
                     Nenhum prazo encontrado.
                   </td>
                 </tr>
@@ -287,7 +287,7 @@ function PrazoRow({
       </td>
       <td className="px-4 py-3 text-[12.5px]">
         {d.responsible || (
-          <span className="text-[var(--danger)] italic text-[12px]">Sem responsável</span>
+          <span className="text-[var(--danger)] text-[12px]">Sem responsável</span>
         )}
       </td>
       <td className="px-4 py-3 text-[12px] text-muted-foreground">{d.tipo ?? "—"}</td>

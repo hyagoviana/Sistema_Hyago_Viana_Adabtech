@@ -64,7 +64,7 @@ function ModelosPage() {
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground text-sm">Carregando…</div>
         ) : (templates ?? []).length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground italic text-sm">
+          <div className="p-8 text-center text-muted-foreground text-sm">
             Nenhum modelo cadastrado.
           </div>
         ) : (

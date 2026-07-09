@@ -32,7 +32,7 @@ export function ClientCaseDocumentsSection({ clientId }: Props) {
 
   if ((docs ?? []).length === 0) {
     return (
-      <div className="card-editorial !p-8 text-center text-muted-foreground italic text-sm">
+      <div className="card-editorial !p-8 text-center text-muted-foreground text-sm">
         Nenhum documento gerado nos casos deste cliente ainda.
       </div>
     );

@@ -67,7 +67,7 @@ function RecuperarSenhaPage() {
           <div className="text-2xl mb-5" style={{ color: "#c9a634" }}>
             ✦
           </div>
-          <p className="font-display italic text-[29px] leading-[1.28] text-white/95">
+          <p className="font-display text-[29px] leading-[1.28] text-white/95">
             A excelência jurídica começa pela disciplina dos detalhes.
           </p>
           <footer

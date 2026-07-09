@@ -94,7 +94,7 @@ function Inadimplencia() {
                       size={32}
                       className="mx-auto mb-3 text-[var(--success)] opacity-60"
                     />
-                    <p className="text-muted-foreground italic">
+                    <p className="text-muted-foreground">
                       Nenhum caso inadimplente. Tudo em dia.
                     </p>
                   </td>

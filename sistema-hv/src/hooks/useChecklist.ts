@@ -39,6 +39,7 @@ export function useCreateChecklistDef() {
       label: string;
       required?: boolean;
       expected_doc_pattern?: string | null;
+      assigned_to?: string | null;
     }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.checklistDefs.all }),
   });
@@ -56,6 +57,7 @@ export function useUpdateChecklistDef() {
         required?: boolean;
         active?: boolean;
         expected_doc_pattern?: string | null;
+        assigned_to?: string | null;
       };
     }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.checklistDefs.all }),
@@ -106,9 +108,29 @@ function invalidateAfterChecklistMutation(qc: ReturnType<typeof useQueryClient>,
 export function useMarcarItemChecklist(caseId: string) {
   const fn = useServerFn(marcarItemChecklistFn);
   const qc = useQueryClient();
+  const key = queryKeys.checklistItems.byCase(caseId);
   return useMutation({
     mutationFn: (vars: { itemId: string; done: boolean }) => fn({ data: vars }),
-    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+    // Optimistic: o check vira INSTANTÂNEO no UI; o refetch em onSettled confirma
+    // (e traz o eventual avanço de etapa disparado pelo gate).
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData(key);
+      qc.setQueryData(key, (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((it) =>
+              (it as { id: string }).id === vars.itemId
+                ? { ...(it as object), done: vars.done }
+                : it,
+            )
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev !== undefined) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => invalidateAfterChecklistMutation(qc, caseId),
   });
 }
 

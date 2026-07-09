@@ -7,11 +7,15 @@
 @import "@fontsource-variable/inter/index.css";
 @import "@fontsource-variable/fraunces/index.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
+/* Marca (wordmark) — Marcellus, self-hosted. Serifa SÓ na marca (handoff v3). */
+@import "@fontsource/marcellus/400.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Fraunces Variable", "Lora", Georgia, "Times New Roman", serif;
+  /* Handoff v3: TÍTULOS em Inter (sem serifa). Serifa (Marcellus) só no wordmark. */
+  --font-display: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-brand: "Marcellus", Georgia, "Times New Roman", serif;
   --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 
@@ -57,76 +61,131 @@
 :root {
   --radius: 12px;
 
-  --navy: #1e2044;
-  --navy-700: #2a2c54;
-  --navy-800: #14162e;
-  --navy-900: #0b0c1d;
-  --gold: #987814;
-  --gold-700: #7b6010;
-  --gold-light: #c9a634;
-  --gold-pale: #faf4e2;
+  /* ═══ DESIGN TOKENS v3 (fonte da verdade: docs/design/hyago-design-tokens.css) ═══ */
+  --hv-ink-950: #0a101f;
+  --hv-ink-900: #0d1426;
+  --hv-ink-800: #131b31;
+  --hv-ink-700: #1c2742;
+  --hv-ink-text: #151b2c;
+  --hv-cream: #f3eee1;
+  --hv-paper: #f9f7f1;
+  --hv-white-warm: #fdfcf9;
+  --hv-surface: #ffffff;
+  --hv-line: #e7e1d4;
+  --hv-line-soft: #efebe1;
+  --hv-muted: #777163;
+  --hv-muted-2: #a29a89;
+  --hv-bg-app:
+    radial-gradient(1200px 600px at 15% -5%, rgba(198, 161, 85, 0.1), transparent 55%),
+    linear-gradient(168deg, var(--hv-cream) 0%, var(--hv-paper) 42%, var(--hv-white-warm) 100%);
+  --hv-bg-login-form:
+    radial-gradient(800px 480px at 70% -10%, rgba(198, 161, 85, 0.1), transparent 60%),
+    linear-gradient(175deg, var(--hv-cream) 0%, var(--hv-paper) 55%, var(--hv-white-warm) 100%);
+  --hv-gold: #a8813b;
+  --hv-gold-deep: #8a672a;
+  --hv-gold-soft: #c6a155;
+  --hv-gold-hi: #e4c77f;
+  --hv-green: #2f7a50;
+  --hv-green-bg: #e7f2eb;
+  --hv-red: #b04a39;
+  --hv-red-bg: #f8ece8;
+  --hv-amber: #9e7126;
+  --hv-amber-bg: #f6eedc;
+  --hv-elev-1:
+    0 1px 1px rgba(21, 27, 44, 0.03), 0 2px 4px rgba(21, 27, 44, 0.03),
+    0 6px 14px -4px rgba(21, 27, 44, 0.06), 0 20px 40px -20px rgba(21, 27, 44, 0.1);
+  --hv-elev-2:
+    0 1px 1px rgba(21, 27, 44, 0.04), 0 4px 8px rgba(21, 27, 44, 0.05),
+    0 12px 24px -8px rgba(21, 27, 44, 0.1), 0 32px 64px -24px rgba(21, 27, 44, 0.16);
+  --hv-inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --hv-surface-grad: linear-gradient(180deg, #ffffff 0%, #fdfcf8 100%);
+  --hv-gold-grad: linear-gradient(180deg, #cfa95c 0%, #a8813b 55%, #8a672a 100%);
+  --hv-sidebar-grad: linear-gradient(180deg, #131b31 0%, #0d1426 30%, #0a101f 100%);
+  --hv-glass: rgba(249, 247, 241, 0.72);
+  --hv-glass-blur: saturate(1.4) blur(16px);
+  --hv-glass-border: rgba(231, 225, 212, 0.7);
+  --hv-r-xl: 20px;
+  --hv-r-lg: 16px;
+  --hv-r-md: 11px;
+  --hv-r-sm: 9px;
+  --hv-ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --hv-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --hv-dur-fast: 0.18s;
+  --hv-dur-base: 0.28s;
+  --hv-dur-slow: 0.45s;
+  --hv-sidebar-w: 256px;
+  --hv-sidebar-w-collapsed: 72px;
+  --hv-sidebar-transition: width var(--hv-dur-base) var(--hv-ease-out);
 
-  /* Neutral graphite scale (Apple/Linear inspired) */
-  --ink-900: #0a0a0a;
+  /* ═══ Tokens semânticos remapeados para a paleta v3 (restyle global) ═══ */
+  --navy: var(--hv-ink-900);
+  --navy-700: var(--hv-ink-700);
+  --navy-800: var(--hv-ink-800);
+  --navy-900: var(--hv-ink-950);
+  --gold: var(--hv-gold);
+  --gold-700: var(--hv-gold-deep);
+  --gold-light: var(--hv-gold-soft);
+  --gold-pale: var(--hv-amber-bg);
+
+  /* Neutros quentes (nunca cinza frio) */
+  --ink-900: var(--hv-ink-text);
   --ink-700: #2a2a2e;
-  --ink-500: #6b6b73;
-  --ink-400: #8e8e98;
-  --ink-300: #b8b8c0;
+  --ink-500: var(--hv-muted);
+  --ink-400: var(--hv-muted-2);
+  --ink-300: #c3bcac;
   --ink-200: #e0d7c3;
   --ink-100: #eae2d0;
-  --ink-50:  #efe8d6;
+  --ink-50: #f2ecdd;
 
-  /* Creme boutique monocromático (medido do exemplo): fundo creme CLARO com
-     degradê sutil + cards marfim levemente mais claros; faixa do topo
-     branco-acinzentada. Cards NUNCA brancos puros. */
-  --bg-page: #f1ead9;
-  --bg-subtle: #ece4d1;
-  --bg-paper: #f7f2e9;
-  --cream: #f1ead9;
+  --bg-page: var(--hv-cream);
+  --bg-subtle: var(--hv-paper);
+  --bg-paper: var(--hv-paper);
+  --cream: var(--hv-cream);
   --cream-deep: #e8dfc9;
 
-  --success: #1f7a4d;
-  --warning: #a25a08;
-  --danger: #b42432;
+  --success: var(--hv-green);
+  --warning: var(--hv-amber);
+  --danger: var(--hv-red);
 
-  --background: #f1ead9;
-  --foreground: #1a1a1f;
-  --card: #f7f2e9;
-  --card-foreground: #1a1a1f;
-  --popover: #f7f2e9;
-  --popover-foreground: #1a1a1f;
-  --secondary: #ece4d1;
-  --secondary-foreground: #1e2044;
-  --muted: #ece4d1;
-  --muted-foreground: #6b6b73;
-  --accent: #ece4d1;
-  --accent-foreground: #1e2044;
-  --destructive: #b42432;
+  --background: var(--hv-cream);
+  --foreground: var(--hv-ink-text);
+  --card: var(--hv-surface);
+  --card-foreground: var(--hv-ink-text);
+  --popover: var(--hv-surface);
+  --popover-foreground: var(--hv-ink-text);
+  --secondary: var(--hv-paper);
+  --secondary-foreground: var(--hv-ink-900);
+  --muted: #f1ebdd;
+  --muted-foreground: var(--hv-muted);
+  --accent: #f1ebdd;
+  --accent-foreground: var(--hv-ink-900);
+  --destructive: var(--hv-red);
   --destructive-foreground: #ffffff;
-  --border: rgba(15, 17, 35, 0.06);
-  --input: rgba(15, 17, 35, 0.08);
-  --ring: rgba(152, 120, 20, 0.4);
-  --sidebar: #fbfbfb;
-  --sidebar-foreground: #2a2a2e;
-  --sidebar-primary: #1e2044;
+  --border: var(--hv-line);
+  --input: var(--hv-line);
+  --ring: rgba(168, 129, 59, 0.3);
+  --sidebar: var(--hv-ink-900);
+  --sidebar-foreground: rgba(233, 205, 132, 0.85);
+  --sidebar-primary: var(--hv-gold);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(15, 17, 35, 0.04);
-  --sidebar-accent-foreground: #1e2044;
-  --sidebar-border: rgba(15, 17, 35, 0.06);
-  --sidebar-ring: rgba(152, 120, 20, 0.3);
+  --sidebar-accent: rgba(198, 161, 85, 0.1);
+  --sidebar-accent-foreground: var(--hv-gold-hi);
+  --sidebar-border: rgba(198, 161, 85, 0.14);
+  --sidebar-ring: rgba(198, 161, 85, 0.3);
 
-  /* Refined elevation */
-  --shadow-xs: 0 1px 2px rgba(15, 17, 35, 0.04);
-  --shadow-sm: 0 1px 3px rgba(15, 17, 35, 0.04), 0 1px 2px rgba(15, 17, 35, 0.03);
-  --shadow-md: 0 4px 16px -4px rgba(15, 17, 35, 0.06), 0 2px 6px -2px rgba(15, 17, 35, 0.04);
-  --shadow-lg: 0 12px 32px -12px rgba(15, 17, 35, 0.08), 0 4px 12px -4px rgba(15, 17, 35, 0.04);
+  /* Elevação (mapeada para o stack de 4 camadas v3) */
+  --shadow-xs: 0 1px 2px rgba(21, 27, 44, 0.04);
+  --shadow-sm: var(--hv-elev-1);
+  --shadow-md: var(--hv-elev-1);
+  --shadow-lg: var(--hv-elev-2);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     font-family: var(--font-sans);
     font-feature-settings: "tnum", "cv11", "ss01";
     font-optical-sizing: auto;
@@ -136,10 +195,9 @@
   }
   body {
     color: var(--foreground);
-    /* Degradê creme suave: levemente mais quente em cima → creme mais claro
-       embaixo (sem grão, sem vinheta forte). */
-    background-color: var(--bg-page);
-    background-image: linear-gradient(180deg, #ede5d2 0%, #f3eee3 55%, #f6f1e8 100%);
+    /* Handoff v3 — fundo creme em degradê para o branco quente (nunca chapado). */
+    background-color: var(--hv-cream);
+    background-image: var(--hv-bg-app);
     background-attachment: fixed;
     min-height: 100vh;
     letter-spacing: 0;
@@ -150,14 +208,24 @@
      a headings GRANDES de página (>= ~24px, ex.: "Bom dia", título da esteira).
      Nunca aplicar serif por cascata em h1/h2/h3 — isso vazava para nomes de
      cliente, títulos de card e labels, dando aspecto pixelado em tamanho pequeno. */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     letter-spacing: -0.005em;
     line-height: 1.25;
   }
+  /* Handoff v3: títulos em Inter apertado (sem serifa). */
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
-    line-height: 1.2;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  /* Marca (wordmark) — ÚNICO lugar com serifa. */
+  .font-brand {
+    font-family: var(--font-brand);
+    font-weight: 400;
+    letter-spacing: 0.02em;
   }
   /* Números/horas em títulos não devem usar serif — mantêm Inter tabular */
   .font-display.tabular,
@@ -182,60 +250,72 @@
     line-height: 1;
   }
 
-  .card-editorial {
-    background: var(--card);
-    border: 1px solid rgba(120, 96, 30, 0.12);
-    border-radius: 14px;
-    /* Cards marfim sobre fundo areia — sombra quente em duas camadas */
-    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.06), 0 12px 28px -12px rgba(60, 50, 20, 0.20);
-    transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
-  }
-  .card-editorial:hover {
-    border-color: rgba(152, 120, 20, 0.26);
-    box-shadow: 0 2px 4px rgba(60, 50, 20, 0.07), 0 18px 38px -14px rgba(60, 50, 20, 0.26);
-    transform: translateY(-1px);
-  }
-
+  /* Cards v3: surface-grad + linha + luz de cima (inset-hi) + elev-1;
+     hover eleva -3px com spring (estilo Apple). */
+  .card-editorial,
   .card-hero {
-    background: var(--card);
-    border: 1px solid rgba(120, 96, 30, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(60, 50, 20, 0.06), 0 12px 28px -12px rgba(60, 50, 20, 0.20);
+    background: var(--hv-surface-grad);
+    border: 1px solid var(--hv-line);
+    border-radius: var(--hv-r-lg);
+    box-shadow: var(--hv-inset-hi), var(--hv-elev-1);
+    transition:
+      box-shadow var(--hv-dur-base) var(--hv-ease-spring),
+      border-color var(--hv-dur-base) var(--hv-ease-spring),
+      transform var(--hv-dur-base) var(--hv-ease-spring);
+  }
+  .card-editorial:hover,
+  .card-hero:hover {
+    border-color: rgba(198, 161, 85, 0.28);
+    box-shadow: var(--hv-inset-hi), var(--hv-elev-2);
+    transform: translateY(-3px);
   }
 
+  /* Material translúcido (topbar, modais, popovers) */
   .glass-panel {
-    background: rgba(240, 235, 222, 0.78);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: var(--hv-glass);
+    backdrop-filter: var(--hv-glass-blur);
+    -webkit-backdrop-filter: var(--hv-glass-blur);
   }
 
+  /* Fluido — preenche a largura de QUALQUER monitor (sem cap central que fazia a
+     tela "travar" no tamanho de um monitor menor). Padding do handoff v3. */
   .page-container {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 32px 40px 56px;
+    width: 100%;
+    padding: 28px 32px 90px;
   }
 
   .kpi-number {
     font-family: var(--font-sans);
-    font-weight: 500;
-    letter-spacing: -0.03em;
+    font-weight: 650;
+    letter-spacing: -0.045em;
     font-variant-numeric: tabular-nums lining-nums;
-    color: var(--navy);
+    color: var(--hv-ink-900);
   }
 
   .status-dot {
-    width: 7px; height: 7px; border-radius: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     display: inline-block;
   }
 
   .trend-pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 12px; font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
-  .trend-pill--up { color: var(--success); }
-  .trend-pill--down { color: var(--danger); }
-  .trend-pill--neutral { color: var(--muted-foreground); }
+  .trend-pill--up {
+    color: var(--success);
+  }
+  .trend-pill--down {
+    color: var(--danger);
+  }
+  .trend-pill--neutral {
+    color: var(--muted-foreground);
+  }
 
   .sidebar-badge {
     display: inline-flex;
@@ -275,9 +355,15 @@
     border-bottom: 1px solid rgba(15, 17, 35, 0.04);
     font-weight: 400;
   }
-  .data-table tbody tr:last-child td { border-bottom: 0; }
-  .data-table tbody tr { transition: background 120ms ease; }
-  .data-table tbody tr:hover td { background: var(--ink-50); }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .data-table tbody tr {
+    transition: background 120ms ease;
+  }
+  .data-table tbody tr:hover td {
+    background: var(--ink-50);
+  }
 
   /* Soft pastel badges */
   .badge-soft {
@@ -290,23 +376,172 @@
     font-weight: 500;
     line-height: 1.3;
   }
-  .badge-soft--neutral { background: var(--ink-100); color: var(--ink-700); }
-  .badge-soft--navy    { background: rgba(30, 32, 68, 0.06); color: var(--navy); }
-  .badge-soft--gold    { background: var(--gold-pale); color: var(--gold-700); }
-  .badge-soft--success { background: rgba(31, 122, 77, 0.08); color: var(--success); }
-  .badge-soft--warning { background: rgba(162, 90, 8, 0.08);  color: var(--warning); }
-  .badge-soft--danger  { background: rgba(180, 36, 50, 0.07); color: var(--danger);  }
+  .badge-soft--neutral {
+    background: var(--ink-100);
+    color: var(--ink-700);
+  }
+  .badge-soft--navy {
+    background: rgba(30, 32, 68, 0.06);
+    color: var(--navy);
+  }
+  .badge-soft--gold {
+    background: var(--gold-pale);
+    color: var(--gold-700);
+  }
+  .badge-soft--success {
+    background: rgba(31, 122, 77, 0.08);
+    color: var(--success);
+  }
+  .badge-soft--warning {
+    background: rgba(162, 90, 8, 0.08);
+    color: var(--warning);
+  }
+  .badge-soft--danger {
+    background: rgba(180, 36, 50, 0.07);
+    color: var(--danger);
+  }
 }
 
-::selection { background: var(--gold-pale); color: var(--navy); }
+::selection {
+  background: var(--gold-pale);
+  color: var(--navy);
+}
 
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
+  box-shadow: 0 0 0 3.5px var(--ring);
   border-radius: 8px;
 }
 
+/* ═══ MOTION v3 — física de mola, respeitando prefers-reduced-motion ═══ */
+@keyframes hv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Entrada em cascata: aplique .hv-rise no item e --hv-i (índice) para o stagger. */
+.hv-rise {
+  animation: hv-rise var(--hv-dur-slow) var(--hv-ease-spring) both;
+  animation-delay: calc(var(--hv-i, 0) * 40ms);
+}
+/* Entrada em cascata dos filhos diretos (stagger 40ms) — estilo /hoje. */
+.hv-stagger > * {
+  animation: hv-rise var(--hv-dur-slow) var(--hv-ease-spring) both;
+}
+.hv-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.hv-stagger > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.hv-stagger > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.hv-stagger > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.hv-stagger > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.hv-stagger > *:nth-child(6) {
+  animation-delay: 200ms;
+}
+.hv-stagger > *:nth-child(7) {
+  animation-delay: 240ms;
+}
+.hv-stagger > *:nth-child(n + 8) {
+  animation-delay: 280ms;
+}
+
+/* Barra crescendo (scaleX) — barras de distribuição do /hoje. */
+@keyframes hv-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* Linha de distribuição (Casos por tipo) — grid [nome 124px | trilho | valor],
+   idêntica ao handoff v3 (.bar-row). */
+.hv-bar-row {
+  display: grid;
+  grid-template-columns: 124px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 7.5px 0;
+}
+.hv-bar-track {
+  height: 9px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #efebe0, #f5f2ea);
+  box-shadow: inset 0 1px 2px rgba(21, 27, 44, 0.07);
+  overflow: hidden;
+}
+.hv-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--hv-gold-grad);
+  box-shadow:
+    0 1px 3px rgba(138, 103, 42, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform-origin: left;
+  animation: hv-grow var(--hv-dur-slow) var(--hv-ease-out) both 0.3s;
+}
+.hv-bar-fill.dim {
+  background: linear-gradient(180deg, #c4bdac, #948c79);
+  box-shadow: 0 1px 2px rgba(21, 27, 44, 0.15);
+}
+
+/* Card hero navy (métrica nº 1 por tela — uso opcional). */
+.hv-hero-navy {
+  position: relative;
+  color: #fff;
+  border: 1px solid rgba(198, 161, 85, 0.3);
+  border-radius: var(--hv-r-lg);
+  background:
+    radial-gradient(320px 160px at 85% -30%, rgba(198, 161, 85, 0.28), transparent 65%),
+    linear-gradient(160deg, var(--hv-ink-700), var(--hv-ink-900) 60%, var(--hv-ink-950));
+  box-shadow: var(--hv-elev-2);
+}
+.hv-hero-navy::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: var(--hv-r-lg) var(--hv-r-lg) 0 0;
+  background: var(--hv-gold-grad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Subtle scrollbars */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(15, 17, 35, 0.12); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
-::-webkit-scrollbar-thumb:hover { background: rgba(15, 17, 35, 0.2); background-clip: content-box; border: 2px solid transparent; }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 17, 35, 0.12);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 17, 35, 0.2);
+  background-clip: content-box;
+  border: 2px solid transparent;
+}

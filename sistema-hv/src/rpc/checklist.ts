@@ -63,6 +63,7 @@ export const createChecklistDefFn = createServerFn({ method: "POST" })
         ordem: z.number().optional(),
         required: z.boolean().optional(),
         expected_doc_pattern: z.string().nullish(),
+        assigned_to: z.string().uuid().nullish(),
       })
       .parse(d),
   )
@@ -84,6 +85,7 @@ export const updateChecklistDefFn = createServerFn({ method: "POST" })
           required: z.boolean().optional(),
           active: z.boolean().optional(),
           expected_doc_pattern: z.string().nullish(),
+          assigned_to: z.string().uuid().nullish(),
         }),
       })
       .parse(d),
@@ -186,8 +188,8 @@ export const updateAdhocChecklistItemFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
-      return updateAdhocChecklistItem(data.itemId, data.patch, userId);
+      await requireAuth();
+      return updateAdhocChecklistItem(data.itemId, data.patch);
     }),
   );
 
@@ -195,8 +197,8 @@ export const deleteAdhocChecklistItemFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ itemId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
-      return deleteAdhocChecklistItem(data.itemId, userId);
+      await requireAuth();
+      return deleteAdhocChecklistItem(data.itemId);
     }),
   );
 

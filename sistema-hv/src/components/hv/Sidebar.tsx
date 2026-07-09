@@ -32,7 +32,26 @@ import { useCasesList, useComercialCases } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
 import { useExceptions } from "@/hooks/useExceptions";
 import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
-import symbolHV from "@/assets/symbol-hv.png";
+
+// Monograma H·V oficial (SVG) — copiado da referência de design v3 (hvmark).
+function HvMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="28" height="24" viewBox="0 0 57 48" aria-hidden>
+      <defs>
+        <linearGradient id="hvGoldMark" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#D3AE60" />
+          <stop offset="1" stopColor="#8A672A" />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="4" width="7" height="40" fill="url(#hvGoldMark)" />
+      <rect x="11" y="30" width="7" height="7" fill="url(#hvGoldMark)" />
+      <rect x="22" y="4" width="7" height="40" fill="url(#hvGoldMark)" />
+      <polygon points="29,4 50,44 43,44 29,17" fill="url(#hvGoldMark)" />
+      <polygon points="43,4 57,4 50,17" fill="url(#hvGoldMark)" />
+      <rect x="50" y="4" width="7" height="40" fill="url(#hvGoldMark)" />
+    </svg>
+  );
+}
 
 const COLLAPSE_KEY = "hv:sidebar-collapsed";
 
@@ -40,11 +59,12 @@ const COLLAPSE_KEY = "hv:sidebar-collapsed";
 // TEXTO e ícones, igual ao tom da topbar (contraste AA folgado, ~9:1). O gold
 // escuro #987814 fica reservado só pra preenchimentos/acentos sólidos.
 const GOLD_BRIGHT = "#e9cd84";
-const TEXT_IDLE = "rgba(233,205,132,0.85)";
-const TEXT_HOVER = "#f6e3ac";
-const TEXT_ACTIVE = GOLD_BRIGHT;
-const ICON_IDLE = "rgba(233,205,132,0.85)";
-const GROUP_LABEL = "rgba(233,205,132,0.5)";
+// Texto do menu no padrão v3: idle taupe quente, hover creme, ativo creme-claro.
+const TEXT_IDLE = "#a9a292";
+const TEXT_HOVER = "#e7e2d3";
+const TEXT_ACTIVE = "#f6f1e2";
+const ICON_IDLE = "rgba(169,162,146,0.9)";
+const GROUP_LABEL = "rgba(198,161,85,0.55)";
 
 type BadgeTone = "neutral" | "gold" | "danger";
 type Item = { to: string; label: string; icon: LucideIcon; count?: number; tone?: BadgeTone };
@@ -222,11 +242,10 @@ export function Sidebar() {
       <aside
         className="hidden lg:flex flex-col shrink-0 sticky top-0 h-screen text-white"
         style={{
-          width: collapsed ? 64 : 256,
-          transition: "width 200ms ease",
-          background: "linear-gradient(180deg, #1e2044 0%, #181a33 60%, #14162e 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.04)",
-          boxShadow: "1px 0 0 rgba(0,0,0,0.4), 6px 0 24px -8px rgba(0,0,0,0.35)",
+          width: collapsed ? 72 : 256,
+          transition: "width var(--hv-dur-base) var(--hv-ease-out)",
+          background: "var(--hv-sidebar-grad)",
+          boxShadow: "inset -1px 0 0 rgba(198,161,85,0.14), 4px 0 24px -8px rgba(10,16,31,0.35)",
         }}
       >
         {/* Brand + toggle */}
@@ -242,19 +261,28 @@ export function Sidebar() {
             className="flex items-center gap-2.5 min-w-0"
             aria-label="Hyago Viana Advocacia"
           >
-            <img src={symbolHV} alt="" className="h-7 w-auto object-contain shrink-0" />
+            <HvMark className="shrink-0" />
             {!collapsed && (
-              <div className="leading-tight">
-                <div className="text-[13px] font-semibold text-white tracking-tight">
-                  Hyago Viana
+              <>
+                <span
+                  className="w-px h-7 shrink-0"
+                  style={{ background: "rgba(198,161,85,0.4)" }}
+                />
+                <div className="leading-tight">
+                  <div
+                    className="font-brand text-[13px] text-white"
+                    style={{ letterSpacing: "0.14em" }}
+                  >
+                    HYAGOVIANA
+                  </div>
+                  <div
+                    className="text-[6.5px] font-semibold uppercase"
+                    style={{ color: "rgba(233,205,132,0.85)", letterSpacing: "0.5em" }}
+                  >
+                    Advocacia
+                  </div>
                 </div>
-                <div
-                  className="text-[9.5px] font-medium uppercase"
-                  style={{ color: "rgba(233,205,132,0.9)", letterSpacing: "0.22em" }}
-                >
-                  Advocacia
-                </div>
-              </div>
+              </>
             )}
           </Link>
           <button
@@ -282,8 +310,8 @@ export function Sidebar() {
             >
               {!collapsed && (
                 <div
-                  className="px-3 mb-2 text-[10.5px] uppercase font-semibold"
-                  style={{ color: GROUP_LABEL, letterSpacing: "0.16em" }}
+                  className="px-3 mb-2 text-[9px] uppercase font-semibold"
+                  style={{ color: GROUP_LABEL, letterSpacing: "0.28em" }}
                 >
                   {g.label}
                 </div>
@@ -297,11 +325,11 @@ export function Sidebar() {
 
                   const idleStyle: React.CSSProperties = active
                     ? {
-                        background: "rgba(152,120,20,0.18)",
-                        border: "1px solid rgba(152,120,20,0.35)",
+                        background:
+                          "linear-gradient(90deg, rgba(198,161,85,0.17), rgba(198,161,85,0.03))",
+                        boxShadow: "inset 0 0 0 1px rgba(198,161,85,0.14)",
                         color: TEXT_ACTIVE,
-                        boxShadow:
-                          "inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 14px -8px rgba(0,0,0,0.5)",
+                        border: "1px solid transparent",
                       }
                     : { color: TEXT_IDLE, border: "1px solid transparent" };
 
@@ -329,10 +357,10 @@ export function Sidebar() {
                       {active && (
                         <span
                           aria-hidden
-                          className="absolute -left-[1px] top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r"
+                          className="absolute -left-[1px] top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r"
                           style={{
-                            background: "#d4b04a",
-                            boxShadow: "0 0 8px rgba(152,120,20,0.6)",
+                            background: "var(--hv-gold-soft)",
+                            boxShadow: "0 0 10px rgba(198,161,85,0.55)",
                           }}
                         />
                       )}
@@ -340,7 +368,7 @@ export function Sidebar() {
                         <Icon
                           size={collapsed ? 18 : 15}
                           strokeWidth={1.7}
-                          style={{ color: active ? TEXT_ACTIVE : ICON_IDLE }}
+                          style={{ color: active ? "var(--hv-gold-soft)" : ICON_IDLE }}
                         />
                         {/* No modo colapsado, contador vira um dot no canto do ícone */}
                         {collapsed && hasCount && (

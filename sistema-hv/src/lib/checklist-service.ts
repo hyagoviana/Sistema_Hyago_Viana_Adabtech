@@ -71,6 +71,7 @@ export async function createChecklistDef(input: {
   ordem?: number;
   required?: boolean;
   expected_doc_pattern?: string | null;
+  assigned_to?: string | null;
 }) {
   const sb = getSupabaseAdmin();
   const key = await uniqueDefKey(input.service_type_id, input.stage_slug, input.label);
@@ -99,7 +100,8 @@ export async function createChecklistDef(input: {
       ordem,
       required: input.required ?? false,
       expected_doc_pattern: input.expected_doc_pattern ?? null,
-    })
+      assigned_to: input.assigned_to ?? null,
+    } as never)
     .select()
     .single();
   if (error || !data) {
@@ -119,6 +121,7 @@ export async function updateChecklistDef(
     required: boolean;
     active: boolean;
     expected_doc_pattern: string | null;
+    assigned_to: string | null;
   }>,
 ) {
   const sb = getSupabaseAdmin();
@@ -129,6 +132,7 @@ export async function updateChecklistDef(
   if (patch.active !== undefined) clean.active = patch.active;
   if (patch.expected_doc_pattern !== undefined)
     clean.expected_doc_pattern = patch.expected_doc_pattern;
+  if (patch.assigned_to !== undefined) clean.assigned_to = patch.assigned_to;
 
   const { data, error } = await sb
     .from("system_stage_checklist_defs")
@@ -234,9 +238,10 @@ export async function listCaseChecklistItems(caseId: string) {
 //   - def_id IS NULL; a definição (label/required/ordem) vive no próprio item.
 //   - herdados do modelo (def_id NOT NULL) continuam vindo do editor de funil e
 //     NÃO são editáveis por caso (só marcáveis). Ad-hoc pode criar/editar/excluir.
-//   - o gate (op/fin) já considera required ad-hoc (migration 20260709000001);
-//     por isso, após criar/editar/excluir, disparamos o(s) gate(s) da etapa —
-//     remover/desobrigar um required ad-hoc pendente pode liberar o avanço.
+//   - o gate (op/fin) já considera required ad-hoc (migration 20260709000001),
+//     MAS o avanço do funil só é disparado ao MARCAR um item como concluído
+//     (marcarItemChecklist). Criar/editar/excluir uma etapa NÃO avança o caso —
+//     senão excluir um item pendente "pulava" o funil sozinho (bug 2026-07-09).
 // ----------------------------------------------------------------------------
 
 // Carrega o caso (org + tipo + macrostatus) para validar a etapa do ad-hoc.
@@ -250,21 +255,6 @@ async function loadCaseForAdhoc(caseId: string) {
     .single();
   if (!caso) throw new ChecklistServiceError("Caso não encontrado", 404);
   return caso;
-}
-
-// Dispara o(s) gate(s) (op e/ou fin) da etapa informada. Cada gate só promove a
-// partir da etapa esperada (guarda WHERE macrostatus_* = esperado) → seguro chamar.
-async function dispararGatesDaEtapa(
-  caseId: string,
-  serviceTypeId: string | null,
-  stageSlug: string,
-  userId?: string,
-) {
-  const kinds = serviceTypeId
-    ? await stageKindsForSlug(serviceTypeId, stageSlug)
-    : new Set<"op" | "fin">();
-  if (kinds.size === 0 || kinds.has("op")) await avancarSeChecklistOk(caseId, userId);
-  if (kinds.has("fin")) await avancarFinSeOk(caseId, userId);
 }
 
 // (2026-07-09, item 3) — vincula/desvincula o RESPONSÁVEL (usuário do sistema) de
@@ -346,7 +336,6 @@ export async function createAdhocChecklistItem(input: {
 export async function updateAdhocChecklistItem(
   itemId: string,
   patch: { label?: string; required?: boolean },
-  userId?: string,
 ) {
   const sb = getSupabaseAdmin();
 
@@ -381,15 +370,15 @@ export async function updateAdhocChecklistItem(
   if (error || !data)
     throw new ChecklistServiceError(error?.message ?? "Falha ao editar critério", 500);
 
-  // Tornar não-obrigatório um required pendente pode liberar o avanço.
-  const caso = await loadCaseForAdhoc(item.case_id);
-  await dispararGatesDaEtapa(item.case_id, caso.service_type_id, item.stage_slug, userId);
-
+  // (2026-07-09) — editar/excluir uma etapa NÃO avança o funil. O avanço só ocorre
+  // ao MARCAR uma etapa como concluída (marcarItemChecklist). Antes, editar/excluir
+  // disparava o gate e "pulava" o caso indevidamente (ex.: voltar manualmente e
+  // excluir uma etapa fazia o caso avançar de novo).
   return data;
 }
 
 // Soft-delete de um item AD-HOC (def_id IS NULL). NUNCA exclui herdado.
-export async function deleteAdhocChecklistItem(itemId: string, userId?: string) {
+export async function deleteAdhocChecklistItem(itemId: string) {
   const sb = getSupabaseAdmin();
 
   const { data: item, error: iErr } = await sb
@@ -412,10 +401,7 @@ export async function deleteAdhocChecklistItem(itemId: string, userId?: string) 
     .is("deleted_at", null);
   if (error) throw new ChecklistServiceError(error.message, 500);
 
-  // Excluir um required ad-hoc pendente pode liberar o avanço.
-  const caso = await loadCaseForAdhoc(item.case_id);
-  await dispararGatesDaEtapa(item.case_id, caso.service_type_id, item.stage_slug, userId);
-
+  // (2026-07-09) — excluir uma etapa NÃO avança o funil (só marcar avança).
   return { ok: true as const, id: itemId };
 }
 
