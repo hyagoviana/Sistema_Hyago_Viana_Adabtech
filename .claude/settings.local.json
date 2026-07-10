@@ -396,7 +396,11 @@
       "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000002_checklist_item_assignees.sql)",
       "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000003_checklist_def_assignees.sql)",
       "Bash(xargs grep -A5 -B5 \"cron\\\\|schedule\")",
-      "WebFetch(domain:developers.contaazul.com)"
+      "WebFetch(domain:developers.contaazul.com)",
+      "Bash(ls vercel.json)",
+      "Bash(cat vercel.json)",
+      "Bash(npx tsr *)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }
