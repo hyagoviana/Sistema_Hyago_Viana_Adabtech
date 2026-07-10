@@ -10,6 +10,7 @@ import {
   conferirTermo,
   createTermo,
   darBaixaParcela,
+  deleteTermoRascunho,
   enviarParaConferencia,
   estornarParcela,
   gerarDocumentoTermo,
@@ -75,6 +76,15 @@ const createSchema = calcSchema.extend({
 export const createTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
   .handler(async ({ data }) => handle(() => createTermo(data)));
+
+export const deleteTermoRascunhoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAuth();
+      return deleteTermoRascunho(data.termoId, userId);
+    }),
+  );
 
 export const enviarParaConferenciaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))

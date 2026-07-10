@@ -960,6 +960,14 @@ function EditorDialog({
   onFinalize: () => void;
   finalizing: boolean;
 }) {
+  // Recarrega o iframe uma vez após abrir para cair direto em modo edição (a
+  // permissão do Google Docs propaga com atraso e mostra o banner "Atualize a página").
+  const [nonce, setNonce] = useState(0);
+  useEffect(() => {
+    if (!url) return;
+    const t = setTimeout(() => setNonce((n) => n + 1), 1800);
+    return () => clearTimeout(t);
+  }, [url]);
   return (
     <Dialog open={!!url} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-6xl w-[95vw]">
@@ -986,6 +994,7 @@ function EditorDialog({
 
         {url && (
           <iframe
+            key={nonce}
             src={url}
             title="Editor de documento"
             className="w-full rounded-md border border-[var(--border)]"

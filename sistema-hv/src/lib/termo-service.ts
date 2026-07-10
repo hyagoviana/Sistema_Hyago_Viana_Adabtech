@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import {
   ensureCaseFolder,
   generateCaseDocumentFromTemplate,
+  softDeleteCaseDocument,
 } from "./case-documents-service";
 import { createDocWithText, docUrl, exportPdf } from "./google/docs";
 import { uploadFile } from "./google/drive";
@@ -128,6 +129,51 @@ export async function getTermo(id: string) {
   const { data, error } = await sb.from("system_termo_snapshots").select("*").eq("id", id).single();
   if (error || !data) throw new TermoServiceError("Termo não encontrado", 404);
   return data;
+}
+
+// Exclui um termo em RASCUNHO: apaga o snapshot + o documento gerado (Google Doc/
+// PDF) no Drive, de forma sincronizada com Documentos. Só RASCUNHO (aprovado é
+// imutável). O documento é removido com cascadeTermo:false para não recursar.
+export async function deleteTermoRascunho(termoId: string, triggeredBy?: string) {
+  const sb = getSupabaseAdmin();
+  const termo = await getTermo(termoId);
+  if (termo.status !== "RASCUNHO") {
+    throw new TermoServiceError(
+      "Só é possível excluir termos em rascunho. Termos aprovados são imutáveis.",
+      409,
+    );
+  }
+
+  // Documento gerado do termo (doc_kind='TERMO_ACERTO') do caso → apaga do Drive.
+  const { data: doc } = await sb
+    .from("system_case_documents")
+    .select("id")
+    .eq("case_id", termo.case_id)
+    .eq("doc_kind", "TERMO_ACERTO")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (doc?.id) {
+    await softDeleteCaseDocument(doc.id, `termo.delete:${termoId}`, { cascadeTermo: false });
+  }
+
+  // Remove o snapshot RASCUNHO.
+  const { error } = await sb
+    .from("system_termo_snapshots")
+    .delete()
+    .eq("id", termoId)
+    .eq("status", "RASCUNHO");
+  if (error) throw new TermoServiceError(error.message, 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: termo.organization_id,
+    action: "termo.delete_rascunho",
+    entity_type: "termo",
+    entity_id: termoId,
+    diff: { case_id: termo.case_id, doc_id: doc?.id ?? null },
+    triggered_by: triggeredBy ?? null,
+  });
+
+  return { ok: true as const, id: termoId, docDeleted: !!doc?.id };
 }
 
 // Cria snapshot v(n+1) em RASCUNHO a partir do cálculo.

@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Loader2, Plus, QrCode, Receipt } from "lucide-react";
+import { Copy, ExternalLink, Loader2, Plus, QrCode, Receipt, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -32,6 +32,7 @@ import {
   useConferirTermo,
   useCreateTermo,
   useDarBaixaParcela,
+  useDeleteTermo,
   useEnviarConferencia,
   useEstornarParcela,
   useGerarDocumentoTermo,
@@ -82,6 +83,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const apresentar = useApresentarTermo(caseId);
   const aceitar = useAceitarTermo(caseId);
   const recusar = useRecusarTermo(caseId);
+  const del = useDeleteTermo(caseId);
   const { data: parcelas } = useParcelas(caseId);
   const darBaixa = useDarBaixaParcela(caseId);
   const estornar = useEstornarParcela(caseId);
@@ -146,6 +148,28 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       }
                     >
                       Enviar p/ conferência
+                    </Button>
+                  )}
+                  {t.status === "RASCUNHO" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
+                      disabled={del.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            "Excluir este rascunho de termo? Apaga o documento no Drive e some também da aba Documentos.",
+                          )
+                        )
+                          return;
+                        del.mutate(t.id, {
+                          onSuccess: () => toast.success("Rascunho de termo excluído"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        });
+                      }}
+                    >
+                      <Trash2 size={13} className="mr-1" /> Excluir
                     </Button>
                   )}
                   {t.status === "EM_CONFERENCIA" && (

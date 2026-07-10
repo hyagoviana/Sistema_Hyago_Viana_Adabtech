@@ -110,6 +110,21 @@ export async function requireAuth(): Promise<{ id: string; email: string }> {
   } = await sb.auth.getUser();
   if (error || !user) throw new AuthError("Sessão inválida ou expirada");
 
+  // Revogação de acesso: mesmo com JWT válido, o usuário PRECISA ter perfil ativo
+  // em system_users. Se foi EXCLUÍDO (linha some / deleted_at) ou SUSPENSO, o acesso
+  // é negado imediatamente (na próxima requisição). INVITED é permitido — está em
+  // onboarding (define senha/ativa). Antes, suspender/excluir não tirava o acesso
+  // da sessão já aberta (o JWT continuava valendo ~1h).
+  const { data: prof } = await getSupabaseAdmin()
+    .from("system_users")
+    .select("status, deleted_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!prof || prof.deleted_at || prof.status?.toUpperCase() === "SUSPENDED") {
+    tokenCache.delete(token);
+    throw new AuthError("Acesso revogado. Fale com o administrador.", 403);
+  }
+
   const result = { id: user.id, email: user.email ?? "" };
 
   // Cacheia resultado para evitar N chamadas getUser() no mesmo request batch

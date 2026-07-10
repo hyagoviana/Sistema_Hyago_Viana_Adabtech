@@ -9,6 +9,7 @@ import {
   conferirTermoFn,
   createTermoFn,
   darBaixaParcelaFn,
+  deleteTermoRascunhoFn,
   enviarParaConferenciaFn,
   estornarParcelaFn,
   gerarDocumentoTermoFn,
@@ -84,6 +85,18 @@ export function useGerarDocumentoTermo(caseId: string) {
       percentualFinanciado?: string;
     }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["termos", caseId] }),
+  });
+}
+
+export function useDeleteTermo(caseId: string) {
+  const fn = useServerFn(deleteTermoRascunhoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (termoId: string) => fn({ data: { termoId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["termos", caseId] });
+      qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
+    },
   });
 }
 

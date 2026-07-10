@@ -9,7 +9,7 @@
 // Destino: se o token casar com um system_case_documents, cai na PASTA DO CASO;
 // senão, na caixa "ZapSign - Recebidos".
 
-import { ensureCaseFolder } from "../case-documents-service";
+import { buildSignatureDocName, ensureCaseFolder } from "../case-documents-service";
 import { promoverCasoOperacional, registrarProcuracaoAssinada } from "../cases-service";
 import { createFolder, getRootFolderId, listFilesInFolder, uploadFile } from "../google/drive";
 import { getSupabaseAdmin } from "../supabase/server";
@@ -135,9 +135,11 @@ export async function processZapsignWebhook(payload: AnyPayload): Promise<Zapsig
 
   if (caseDoc?.case_id) {
     const { folderId, folderUrl } = await ensureCaseFolder(caseDoc.case_id);
+    // Nome padrão por tipo: "Procuração - {cliente}.pdf" / "Contrato - {cliente}.pdf".
+    const signedName = await buildSignatureDocName(sb, caseDoc.case_id, caseDoc.doc_kind);
     const file = await uploadFile({
       parentId: folderId,
-      name: `assinado-${caseDoc.title ?? token.slice(0, 8)}.pdf`,
+      name: `${signedName}.pdf`,
       mimeType: "application/pdf",
       body: buffer,
     });

@@ -513,6 +513,33 @@ export async function reopenCaseDocument(docId: string, triggeredBy?: string) {
   return data;
 }
 
+// Nome que o CLIENTE vê para assinar (ZapSign) e do PDF assinado salvo no Drive.
+// Padrão por tipo (2026-07-10): "Procuração - {cliente}" ou "Contrato - {cliente}".
+// Os nomes dos MODELOS nas pastas do Drive continuam como estão — isto é só o nome
+// do documento gerado/enviado para assinatura.
+export async function buildSignatureDocName(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  caseId: string,
+  docKind: string | null | undefined,
+): Promise<string> {
+  const label = docKind === "procuracao" ? "Procuração" : "Contrato";
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("client_id")
+    .eq("id", caseId)
+    .maybeSingle();
+  let clientName = "";
+  if (caso?.client_id) {
+    const { data: cli } = await sb
+      .from("system_clients")
+      .select("full_name")
+      .eq("id", caso.client_id)
+      .maybeSingle();
+    clientName = (cli?.full_name ?? "").trim();
+  }
+  return clientName ? `${label} - ${clientName}` : label;
+}
+
 // ----------------------------------------------------------------------------
 // SEND TO ZAPSIGN — envia o PDF finalizado para assinatura
 // ----------------------------------------------------------------------------
@@ -550,8 +577,10 @@ export async function sendCaseDocumentToZapsign(opts: {
     throw new CaseDocumentServiceError(`Falha ao preparar PDF: ${msg}`, EXTERNAL_DEP_FAILED);
   }
 
+  // Nome que o cliente assina: "Procuração - {cliente}" / "Contrato - {cliente}".
+  const signatureName = await buildSignatureDocName(sb, doc.case_id, doc.doc_kind);
   const zdoc = await createDocument({
-    name: doc.title,
+    name: signatureName,
     base64Pdf,
     externalId: doc.id,
     signers: opts.signers,
@@ -669,7 +698,11 @@ export async function confirmarAssinaturaManualDocumento(docId: string, userId: 
 // ----------------------------------------------------------------------------
 // SOFT DELETE
 // ----------------------------------------------------------------------------
-export async function softDeleteCaseDocument(docId: string, triggeredBy?: string) {
+export async function softDeleteCaseDocument(
+  docId: string,
+  triggeredBy?: string,
+  opts?: { cascadeTermo?: boolean },
+) {
   const sb = getSupabaseAdmin();
   const doc = await getCaseDocument(docId);
 
@@ -678,12 +711,27 @@ export async function softDeleteCaseDocument(docId: string, triggeredBy?: string
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", doc.id);
 
-  if (doc.drive_file_id) {
+  // Apaga do Drive tanto o PDF finalizado (drive_file_id) quanto o Google Doc
+  // editável (google_doc_id) — antes só o PDF ia pra lixeira, e o rascunho do
+  // termo/documento continuava no Drive.
+  for (const fileId of [doc.drive_file_id, doc.google_doc_id]) {
+    if (!fileId) continue;
     try {
-      await trashDriveFile(doc.drive_file_id);
+      await trashDriveFile(fileId);
     } catch (err) {
       console.error("case-documents-service: trash Drive falhou:", err);
     }
+  }
+
+  // Cascata bidirecional TERMO ↔ DOCUMENTO: excluir o documento de um termo
+  // (doc_kind='TERMO_ACERTO') também apaga o rascunho do termo. O caminho inverso
+  // (excluir pelo painel do termo) chama isto com cascadeTermo:false p/ não recursar.
+  if (opts?.cascadeTermo !== false && (doc as { doc_kind?: string }).doc_kind === "TERMO_ACERTO") {
+    await sb
+      .from("system_termo_snapshots")
+      .delete()
+      .eq("case_id", doc.case_id)
+      .eq("status", "RASCUNHO");
   }
 
   await sb.from("system_audit_log").insert({

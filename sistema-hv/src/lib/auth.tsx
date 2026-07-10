@@ -45,12 +45,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         return;
       }
-      const { data } = await sb
+      const { data, error } = await sb
         .from("system_users_active")
         .select("id, email, full_name, role, status")
         .eq("id", s.user.id)
         .maybeSingle();
-      if (mounted) setProfile((data as UserProfile) ?? null);
+      // Erro transitório de rede: não desloga (evita falso logout).
+      if (error) {
+        if (mounted) setProfile(null);
+        return;
+      }
+      const prof = (data as UserProfile) ?? null;
+      // Acesso revogado: perfil EXCLUÍDO (some do active) ou SUSPENSO → desloga já.
+      if (!prof || prof.status?.toUpperCase() === "SUSPENDED") {
+        await sb.auth.signOut();
+        if (mounted) {
+          setSession(null);
+          setProfile(null);
+        }
+        return;
+      }
+      if (mounted) setProfile(prof);
     }
 
     sb.auth.getSession().then(async ({ data, error: sessionErr }) => {

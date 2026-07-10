@@ -76,6 +76,15 @@ export function GenerateCaseDocumentFlow({
 
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
+  // A permissão de edição do Google Docs propaga com um pequeno atraso; ao abrir o
+  // editor, recarregamos o iframe UMA vez para cair direto em modo edição (sem o
+  // banner "Seu acesso foi alterado. Atualize a página").
+  const [iframeNonce, setIframeNonce] = useState(0);
+  useEffect(() => {
+    if (!editorUrl) return;
+    const t = setTimeout(() => setIframeNonce((n) => n + 1), 1800);
+    return () => clearTimeout(t);
+  }, [editorUrl]);
 
   return (
     <>
@@ -123,6 +132,7 @@ export function GenerateCaseDocumentFlow({
 
           {editorUrl && (
             <iframe
+              key={iframeNonce}
               src={editorUrl}
               title="Editor de documento"
               className="w-full rounded-md border border-[var(--border)]"
