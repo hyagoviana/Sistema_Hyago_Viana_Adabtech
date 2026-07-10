@@ -31,19 +31,41 @@ export class CaseServiceError extends Error {
 }
 
 // ----------------------------------------------------------------------------
-// case_code generator: {TIPO}-{YEAR}-{NNNN}
+// case_code generator: {PREFIXO}-{YEAR}-{NNNN}
 // ----------------------------------------------------------------------------
+// Prefixo derivado do NOME da categoria (sem acento, maiúsculo, só letras/números).
+// Antes usava caseType.split("_")[0] — o slug é legado (ex.: "Abatimento Militar"
+// tem slug FIES_DGM), então o código saía "FIES" e colidia com FIES_ESF.
+export function caseCodePrefix(nameOrSlug: string): string {
+  const cleaned = (nameOrSlug ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // remove acentos
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, ""); // remove espaços, "/", "_", etc.
+  return cleaned || "CASO";
+}
+
 async function nextCaseCode(caseType: string): Promise<string> {
   const sb = getSupabaseAdmin();
+  // Busca o NOME da categoria pelo slug (o slug é imutável/legado; o nome é o que
+  // o usuário vê e renomeia). Fallback: deriva do próprio slug.
+  let prefix = caseCodePrefix(caseType);
+  const { data: stRows } = await sb
+    .from("system_service_types")
+    .select("name")
+    .eq("slug", caseType)
+    .limit(1);
+  const name = stRows?.[0]?.name;
+  if (name) prefix = caseCodePrefix(name);
+
+  const year = new Date().getFullYear();
   const { data, error } = await sb.rpc("nextval_seq_system_case_code");
   if (error) {
     const fallback = Date.now().toString().slice(-5);
-    return `${caseType.split("_")[0]}-${new Date().getFullYear()}-${fallback}`;
+    return `${prefix}-${year}-${fallback}`;
   }
   const n = typeof data === "number" ? data : Number(data ?? 0);
-  const year = new Date().getFullYear();
-  const tipoShort = caseType.split("_")[0];
-  return `${tipoShort}-${year}-${String(n).padStart(4, "0")}`;
+  return `${prefix}-${year}-${String(n).padStart(4, "0")}`;
 }
 
 // ----------------------------------------------------------------------------
