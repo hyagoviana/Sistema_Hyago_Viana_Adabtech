@@ -12,6 +12,9 @@ import {
   setUserRole,
   setUserStatus,
   removeUser,
+  getUserWorkload,
+  reassignAndDeleteUser,
+  type ReassignMapping,
   requestPasswordReset,
   updateUserPassword,
   updateUserProfile,
@@ -110,6 +113,32 @@ export const updateUserProfileFn = createServerFn({ method: "POST" })
         }
       }
       return updateUserProfile(targetId, { full_name: data.full_name, phone: data.phone });
+    }),
+  );
+
+// Carga de trabalho reatribuível de um usuário (para a tela de exclusão). Admin.
+export const getUserWorkloadFn = createServerFn({ method: "GET" })
+  .inputValidator((d: { userId: string }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      if ((await getUserRole(me.id)) !== "admin") {
+        throw new UsersServiceError("Apenas o administrador pode excluir colaboradores.", 403);
+      }
+      return getUserWorkload(data.userId);
+    }),
+  );
+
+// Reatribui o trabalho e EXCLUI o colaborador de vez (perfil + Auth). Admin.
+export const reassignAndDeleteUserFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { userId: string; mapping: ReassignMapping }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      if ((await getUserRole(me.id)) !== "admin") {
+        throw new UsersServiceError("Apenas o administrador pode excluir colaboradores.", 403);
+      }
+      return reassignAndDeleteUser(data.userId, data.mapping, me.id);
     }),
   );
 

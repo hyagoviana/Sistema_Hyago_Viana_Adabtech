@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { Eyebrow } from "@/components/hv/primitives";
 import { useAuth } from "@/lib/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { activateUserFn } from "@/rpc/users";
+import { activateUserFn, updateUserProfileFn } from "@/rpc/users";
 import symbolHV from "@/assets/symbol-hv.png";
 
 export const Route = createFileRoute("/nova-senha")({
@@ -21,10 +21,35 @@ function NovaSenhaPage() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  // null = ainda processando o token do hash; true/false = resultado.
+  const [tokenReady, setTokenReady] = useState<boolean | null>(null);
 
-  // O link do e-mail (convite/reset) estabelece a sessão automaticamente
-  // via detectSessionInUrl do @supabase/ssr. Sem sessão → link inválido.
-  const linkInvalido = !loading && !session;
+  // O link do e-mail (convite/reset) traz o token no HASH (#access_token=...&
+  // refresh_token=...&type=invite). O client do @supabase/ssr NÃO processa o hash
+  // sozinho — então lemos o hash e estabelecemos a sessão manualmente. Sem isso a
+  // sessão nunca é criada e a página mostrava "Link inválido" mesmo com link bom.
+  useEffect(() => {
+    const raw = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+    const params = new URLSearchParams(raw);
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+    if (access_token && refresh_token) {
+      getSupabaseBrowserClient()
+        .auth.setSession({ access_token, refresh_token })
+        .then(({ error: sErr }) => {
+          setTokenReady(!sErr);
+          // Remove o token da URL (não deixa vazar em histórico/print).
+          if (!sErr) window.history.replaceState(null, "", window.location.pathname);
+        })
+        .catch(() => setTokenReady(false));
+    } else {
+      setTokenReady(false); // sem token no hash — depende de sessão já existente
+    }
+  }, []);
+
+  const processing = tokenReady === null || loading;
+  const hasSession = tokenReady === true || !!session;
+  const linkInvalido = !processing && !hasSession;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,6 +58,8 @@ function NovaSenhaPage() {
     const fd = new FormData(e.currentTarget);
     const password = String(fd.get("password") ?? "");
     const confirm = String(fd.get("confirm") ?? "");
+    const fullName = String(fd.get("full_name") ?? "").trim();
+    const phone = String(fd.get("phone") ?? "").trim();
 
     if (password.length < 6) {
       setError("A senha deve ter no mínimo 6 caracteres.");
@@ -51,6 +78,15 @@ function NovaSenhaPage() {
         "Não foi possível salvar a senha. O link pode ter expirado — solicite um novo.",
       );
       return;
+    }
+
+    // Salva os dados do onboarding (nome/telefone). Não bloqueia o acesso se falhar.
+    try {
+      await updateUserProfileFn({
+        data: { full_name: fullName || undefined, phone: phone || undefined },
+      });
+    } catch {
+      /* admin pode ajustar depois na aba de Permissões */
     }
 
     // Ativa usuário convidado (INVITED → ACTIVE). Falha não bloqueia acesso.
@@ -170,15 +206,17 @@ function NovaSenhaPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <Eyebrow>Defina sua senha</Eyebrow>
+              <Eyebrow>Complete seu cadastro</Eyebrow>
               <h1 className="font-display text-[34px] font-semibold text-[var(--navy)] mt-4 mb-2 leading-tight">
-                Nova senha
+                Bem-vindo(a)
               </h1>
               <p className="text-muted-foreground mb-10">
-                Escolha uma senha segura com no mínimo 6 caracteres.
+                Confirme seus dados e defina uma senha (mínimo 6 caracteres) para acessar o sistema.
               </p>
 
               <div className="space-y-5">
+                <TextField label="Nome completo" name="full_name" placeholder="Seu nome completo" />
+                <TextField label="Telefone" name="phone" placeholder="(82) 99999-9999" />
                 <PasswordField
                   label="Nova senha"
                   name="password"
@@ -223,6 +261,40 @@ function NovaSenhaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TextField({
+  label,
+  name,
+  placeholder,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[var(--gold-700)] mb-2">
+        {label}
+      </span>
+      <div
+        className="flex items-center gap-2.5 px-3.5 rounded-lg transition-all focus-within:border-[var(--gold)]"
+        style={{
+          background: "#fcfbf8",
+          border: "1px solid rgba(120,96,30,0.16)",
+          boxShadow: "inset 0 1px 2px rgba(60,50,20,0.03)",
+        }}
+      >
+        <input
+          name={name}
+          type="text"
+          placeholder={placeholder}
+          className="flex-1 bg-transparent py-3 text-[15px] focus:outline-none placeholder:text-[var(--ink-400)]"
+          style={{ appearance: "none" }}
+        />
+      </div>
+    </label>
   );
 }
 

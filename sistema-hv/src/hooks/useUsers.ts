@@ -5,12 +5,15 @@ import {
   listUsersFn,
   getMyProfileFn,
   getUserReportFn,
+  getUserWorkloadFn,
+  reassignAndDeleteUserFn,
   inviteUserFn,
   setUserRoleFn,
   setUserStatusFn,
   removeUserFn,
   updateUserProfileFn,
 } from "@/rpc/users";
+import type { ReassignMapping } from "@/lib/users-service";
 
 export function useUserReport(userId: string | null) {
   const fn = useServerFn(getUserReportFn);
@@ -86,6 +89,26 @@ export function useRemoveUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["system-users"] }),
+  });
+}
+
+// Carga de trabalho reatribuível (para a tela de exclusão de colaborador).
+export function useUserWorkload(userId: string | null) {
+  const fn = useServerFn(getUserWorkloadFn);
+  return useQuery({
+    queryKey: ["user-workload", userId],
+    queryFn: () => fn({ data: { userId: userId! } }),
+    enabled: !!userId,
+  });
+}
+
+// Reatribui o trabalho e exclui o colaborador de vez (perfil + Auth).
+export function useDeleteUserWithReassign() {
+  const fn = useServerFn(reassignAndDeleteUserFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { userId: string; mapping: ReassignMapping }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-users"] }),
   });
 }

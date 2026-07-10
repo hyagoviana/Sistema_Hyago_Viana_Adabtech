@@ -201,7 +201,18 @@ export async function deleteServiceType(id: string) {
     .update({ deleted_at: nowIso } as never)
     .eq("case_type", st.slug)
     .is("deleted_at", null);
-  await sb.from("system_service_types").update({ deleted_at: nowIso, active: false }).eq("id", id);
+  // Tombstone do slug: a constraint UNIQUE(organization_id, slug) mantém o slug
+  // "preso" mesmo após o soft-delete, impedindo recriar uma categoria com o mesmo
+  // nome (o slug é derivado do nome no cadastro). Renomeamos o slug da linha
+  // excluída para liberar o original — só não pode repetir nome de categoria ATIVA.
+  await sb
+    .from("system_service_types")
+    .update({
+      deleted_at: nowIso,
+      active: false,
+      slug: `${st.slug}__del_${Date.now().toString(36)}`,
+    })
+    .eq("id", id);
 
   await sb.from("system_audit_log").insert({
     organization_id: DEFAULT_ORG,

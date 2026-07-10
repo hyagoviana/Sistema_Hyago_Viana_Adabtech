@@ -1,5 +1,6 @@
 // Server-only — gestão de usuários do sistema (RBAC) e consentimento (LGPD).
 // NUNCA importe este arquivo em código que roda no browser (usa service_role).
+import { listCaseResponsaveis, setCaseResponsaveis } from "./case-responsaveis-service";
 import { ROLES, type Role } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
 
@@ -326,6 +327,168 @@ export async function removeUser(id: string) {
     .eq("id", id);
   check(error);
   return { ok: true as const, id };
+}
+
+// ----------------------------------------------------------------------------
+// EXCLUSÃO DEFINITIVA com reatribuição (item por item)
+// ----------------------------------------------------------------------------
+// Tudo que amarra "trabalho" a um colaborador, para o admin reatribuir antes de
+// excluí-lo de vez (perfil + conta Auth). É a base da tela de exclusão.
+export type UserWorkload = {
+  user: { id: string; full_name: string | null; email: string } | null;
+  responsaveis: { case_id: string; case_code: string; client_name: string }[];
+  casesCreated: { case_id: string; case_code: string; client_name: string }[];
+  clientsCreated: { client_id: string; client_name: string }[];
+  tasks: { id: string; case_id: string; case_code: string; title: string }[];
+  checklist: { id: string; case_id: string; case_code: string; label: string }[];
+};
+
+export async function getUserWorkload(userId: string): Promise<UserWorkload> {
+  const sb = getSupabaseAdmin();
+  const prof = await getMyProfile(userId);
+  const user = prof ? { id: prof.id, full_name: prof.full_name, email: prof.email } : null;
+
+  const { data: resp } = await sb
+    .from("system_case_responsaveis_active")
+    .select("case_id")
+    .eq("user_id", userId);
+  const respIds = [...new Set((resp ?? []).map((r) => (r as { case_id: string }).case_id))];
+
+  const { data: created } = await sb
+    .from("system_cases")
+    .select("id")
+    .eq("created_by", userId)
+    .is("deleted_at", null);
+  const createdIds = (created ?? []).map((c) => c.id);
+
+  const { data: clientsCreated } = await sb
+    .from("system_clients")
+    .select("id, full_name")
+    .eq("created_by", userId)
+    .is("deleted_at", null);
+
+  const { data: tasks } = await sb
+    .from("system_case_tasks")
+    .select("id, case_id, title")
+    .eq("assignee_id", userId)
+    .is("deleted_at", null);
+
+  const { data: chk } = await sb
+    .from("system_case_checklist_items")
+    .select("id, case_id, label, def:system_stage_checklist_defs(label)")
+    .eq("assigned_to", userId)
+    .is("deleted_at", null);
+
+  const allCaseIds = [
+    ...new Set([
+      ...respIds,
+      ...createdIds,
+      ...(tasks ?? []).map((t) => t.case_id),
+      ...(chk ?? []).map((c) => c.case_id),
+    ]),
+  ];
+  const { data: cases } = allCaseIds.length
+    ? await sb.from("system_cases").select("id, case_code, client_id").in("id", allCaseIds)
+    : { data: [] as { id: string; case_code: string; client_id: string }[] };
+  const caseMap = new Map((cases ?? []).map((c) => [c.id, c]));
+  const clientIds = [...new Set((cases ?? []).map((c) => c.client_id))];
+  const { data: cli } = clientIds.length
+    ? await sb.from("system_clients").select("id, full_name").in("id", clientIds)
+    : { data: [] as { id: string; full_name: string }[] };
+  const clientMap = new Map((cli ?? []).map((c) => [c.id, c.full_name]));
+  const codeOf = (cid: string) => caseMap.get(cid)?.case_code ?? "—";
+  const clientOf = (cid: string) => clientMap.get(caseMap.get(cid)?.client_id ?? "") ?? "—";
+
+  return {
+    user,
+    responsaveis: respIds.map((cid) => ({
+      case_id: cid,
+      case_code: codeOf(cid),
+      client_name: clientOf(cid),
+    })),
+    casesCreated: createdIds.map((cid) => ({
+      case_id: cid,
+      case_code: codeOf(cid),
+      client_name: clientOf(cid),
+    })),
+    clientsCreated: (clientsCreated ?? []).map((c) => ({
+      client_id: c.id,
+      client_name: c.full_name,
+    })),
+    tasks: (tasks ?? []).map((t) => ({
+      id: t.id,
+      case_id: t.case_id,
+      case_code: codeOf(t.case_id),
+      title: t.title,
+    })),
+    checklist: (chk ?? []).map((it) => ({
+      id: it.id,
+      case_id: it.case_id,
+      case_code: codeOf(it.case_id),
+      label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "—",
+    })),
+  };
+}
+
+export type ReassignMapping = {
+  responsaveis: { case_id: string; to: string }[];
+  casesCreated: { case_id: string; to: string }[];
+  clientsCreated: { client_id: string; to: string }[];
+  tasks: { id: string; to: string }[];
+  checklist: { id: string; to: string }[];
+};
+
+/**
+ * Reatribui TODO o trabalho do colaborador (item por item) para os destinos
+ * escolhidos e então EXCLUI o usuário DE VEZ (perfil + conta Auth → perde acesso).
+ * Só deve ser chamado pelo admin (gate no RPC). Não permite excluir a si mesmo.
+ */
+export async function reassignAndDeleteUser(
+  userId: string,
+  map: ReassignMapping,
+  actorId: string,
+) {
+  const sb = getSupabaseAdmin();
+  if (userId === actorId) {
+    throw new UsersServiceError("Você não pode excluir a si mesmo.", 400);
+  }
+
+  // 1) Responsáveis: em cada caso, troca o excluído pelo destino (mantém os demais).
+  for (const r of map.responsaveis) {
+    const current = await listCaseResponsaveis(r.case_id);
+    const ids = current.map((c) => c.user_id).filter((id) => id !== userId);
+    if (r.to && !ids.includes(r.to)) ids.push(r.to);
+    await setCaseResponsaveis(r.case_id, ids, actorId);
+  }
+  // 2) Casos criados → novo criador.
+  for (const c of map.casesCreated) {
+    await sb.from("system_cases").update({ created_by: c.to }).eq("id", c.case_id);
+  }
+  // 3) Clientes criados → novo criador.
+  for (const c of map.clientsCreated) {
+    await sb.from("system_clients").update({ created_by: c.to }).eq("id", c.client_id);
+  }
+  // 4) Tarefas → novo responsável (trigger sincroniza o cache de nome).
+  for (const t of map.tasks) {
+    await sb.from("system_case_tasks").update({ assignee_id: t.to }).eq("id", t.id);
+  }
+  // 5) Itens de checklist → novo responsável.
+  for (const it of map.checklist) {
+    await sb.from("system_case_checklist_items").update({ assigned_to: it.to }).eq("id", it.id);
+  }
+
+  // 6) Exclusão definitiva. Remove o perfil (cascade limpa vínculos residuais de
+  //    responsáveis) e a conta Auth (o colaborador perde acesso à plataforma).
+  const { error: delErr } = await sb.from("system_users").delete().eq("id", userId);
+  check(delErr);
+  const { error: authErr } = await sb.auth.admin.deleteUser(userId);
+  if (authErr) {
+    throw new UsersServiceError(
+      `Perfil removido, mas falhou remover do login (Auth): ${authErr.message}`,
+      500,
+    );
+  }
+  return { ok: true as const, id: userId };
 }
 
 // ----------------------------------------------------------------------------

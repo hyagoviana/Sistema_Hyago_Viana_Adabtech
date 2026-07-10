@@ -1,4 +1,4 @@
-import { Pencil, Plus, UserCog } from "lucide-react";
+import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUsers, useSetUserRole, useSetUserStatus, useUpdateUserProfile } from "@/hooks/useUsers";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
 
+import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { UserReportDialog } from "./UserReportDialog";
 
@@ -46,6 +47,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const updateProfile = useUpdateUserProfile();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [editing, setEditing] = useState<{
     id: string;
     full_name: string;
@@ -218,6 +220,17 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 >
                   {suspended ? "Reativar" : "Suspender"}
                 </button>
+
+                <button
+                  onClick={() =>
+                    setDeleting({ id: u.id, name: u.full_name || u.email.split("@")[0] })
+                  }
+                  disabled={isSelf || u.role === "admin"}
+                  title="Excluir colaborador (reatribui o trabalho e remove o acesso)"
+                  className="text-[#b4232a] hover:bg-[#b4232a]/10 p-1.5 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={14} />
+                </button>
               </li>
             );
           })}
@@ -225,6 +238,18 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       )}
 
       <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+
+      <DeleteUserDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        userId={deleting?.id ?? null}
+        userName={deleting?.name ?? ""}
+        users={(data ?? []).map((u) => ({
+          id: u.id,
+          full_name: u.full_name,
+          email: u.email,
+        }))}
+      />
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
