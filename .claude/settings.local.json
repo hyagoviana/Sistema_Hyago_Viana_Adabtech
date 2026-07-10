@@ -388,7 +388,10 @@
       "Bash(ls docs/design/)",
       "Bash(ls \"Re-paginada layout/\")",
       "PowerShell($bytes = New-Object 'System.Byte[]' 24; \\(New-Object System.Security.Cryptography.RNGCryptoServiceProvider\\).GetBytes\\($bytes\\); \\($bytes | ForEach-Object { $_.ToString\\('x2'\\) }\\) -join '')",
-      "Bash(rm -f .env.vercel.check)"
+      "Bash(rm -f .env.vercel.check)",
+      "Bash(grep -viE \"Delete .␍.|prettier/prettier|potentially fixable|^\\\\s*$\")",
+      "Bash(npx vitest *)",
+      "Bash(grep -viE \"Delete .␍.|prettier/prettier|potentially fixable|^\\\\s*$|problems\")"
     ]
   }
 }

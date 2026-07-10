@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ import { ESTADOS_BR } from "@/lib/br/estados";
 import { formatCep, formatCpfCnpj, formatPhone, formatRg } from "@/lib/format";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
 import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
+import { checkEmailFn } from "@/rpc/clients";
 import { CepError, lookupCep, useMunicipios } from "@/hooks/useLocalidades";
 import type { Database } from "@/lib/supabase/types";
 import {
@@ -271,6 +273,30 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   const [cepLoading, setCepLoading] = useState(false);
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
+  // Verificação de entregabilidade do e-mail (DNS/MX + sugestão de typo). Auxiliar:
+  // avisa/sugere no onBlur; o bloqueio duro fica no servidor (createClient).
+  const checkEmail = useServerFn(checkEmailFn);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [emailWarn, setEmailWarn] = useState<string | null>(null);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
+
+  const handleEmailCheck = async () => {
+    const email = (form.getValues("email") || "").trim();
+    setEmailWarn(null);
+    setEmailSuggestion(null);
+    if (!email || !email.includes("@")) return;
+    setEmailChecking(true);
+    try {
+      const r = await checkEmail({ data: { email } });
+      if (!r.ok) setEmailWarn(r.reason ?? "Domínio de e-mail suspeito.");
+      if (r.suggestion) setEmailSuggestion(r.suggestion);
+    } catch {
+      // Verificação é auxiliar — se falhar, não trava o cadastro.
+    } finally {
+      setEmailChecking(false);
+    }
+  };
+
   const form = useForm<ClientCreateInput>({
     resolver: zodResolver(clientCreateSchema),
     defaultValues: emptyDefaults(),
@@ -287,6 +313,8 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    setEmailWarn(null);
+    setEmailSuggestion(null);
     if (mode === "edit" && client) {
       form.reset({
         full_name: client.full_name,
@@ -510,9 +538,30 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                         placeholder="maria@exemplo.com"
                         {...field}
                         value={field.value ?? ""}
+                        onBlur={() => {
+                          field.onBlur();
+                          void handleEmailCheck();
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
+                    {emailChecking && (
+                      <p className="text-[11px] text-muted-foreground">Verificando e-mail…</p>
+                    )}
+                    {emailWarn && <p className="text-[11px] text-amber-600">{emailWarn}</p>}
+                    {emailSuggestion && (
+                      <button
+                        type="button"
+                        className="text-[11px] text-[var(--gold-700)] hover:underline"
+                        onClick={() => {
+                          form.setValue("email", emailSuggestion, { shouldValidate: true });
+                          setEmailSuggestion(null);
+                          setEmailWarn(null);
+                        }}
+                      >
+                        Usar {emailSuggestion}
+                      </button>
+                    )}
                   </FormItem>
                 )}
               />

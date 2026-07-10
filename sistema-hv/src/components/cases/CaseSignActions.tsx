@@ -28,7 +28,9 @@ import {
   useFinalizeCaseDocument,
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
-import { useDocumentTemplates, useTemplatePlaceholders } from "@/hooks/useDocumentTemplates";
+import { useTemplatePlaceholders, useTemplatesByFolders } from "@/hooks/useDocumentTemplates";
+import { useServiceTypes } from "@/hooks/usePipeline";
+import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -136,7 +138,15 @@ function SendFlowDialog({
   const open = kind !== null;
   const isContrato = kind === "contrato";
 
-  const { data: templates } = useDocumentTemplates(caseType);
+  // (2026-07-10) — o documento COMBINADO ("Contrato e procuração - [serviço]")
+  // fica na pasta de PROCURAÇÃO da CATEGORIA do caso. Resolve o tipo pelo slug e
+  // lista só os modelos dessas pastas (antes usava useDocumentTemplates(caseType),
+  // que caía no fallback e puxava TODOS os modelos sem tipo).
+  const { data: serviceTypes } = useServiceTypes();
+  const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
+  const { data: templates } = useTemplatesByFolders(procFolderIds);
   const { data: docs } = useCaseDocuments(caseId);
   const generateProcuracao = useGenerateProcuracao(caseId);
   const generateContrato = useGenerateContrato(caseId);

@@ -26,13 +26,13 @@ import {
   useGenerateCaseDocument,
 } from "@/hooks/useCaseDocuments";
 import {
-  PROCURACAO_CASE_TYPE,
-  useDocumentTemplates,
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
   useTemplatesByFolder,
+  useTemplatesByFolders,
 } from "@/hooks/useDocumentTemplates";
-import { CASE_DOCUMENT_FOLDERS } from "@/lib/cases/case-document-folders";
+import { useServiceTypes } from "@/hooks/usePipeline";
+import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -56,6 +56,7 @@ export function GenerateCaseDocumentFlow({
   open,
   onOpenChange,
   caseId,
+  caseType,
   autoFill,
   initialMode,
 }: {
@@ -83,6 +84,7 @@ export function GenerateCaseDocumentFlow({
         onOpenChange={onOpenChange}
         pending={generate.isPending}
         autoFill={autoFill}
+        caseType={caseType}
         initialMode={initialMode}
         onGenerate={async (templateId, title, values, docKind) => {
           try {
@@ -169,6 +171,7 @@ function PickDialog({
   pending,
   onGenerate,
   autoFill,
+  caseType,
   initialMode,
 }: {
   open: boolean;
@@ -181,6 +184,7 @@ function PickDialog({
     docKind: "procuracao" | "contrato",
   ) => void;
   autoFill: AutoFillData;
+  caseType?: string;
   initialMode?: GenMode;
 }) {
   const [mode, setMode] = useState<GenMode | null>(initialMode ?? null);
@@ -190,9 +194,21 @@ function PickDialog({
   // só os docs daquela pasta (filtro por source_folder_id).
   const [folderId, setFolderId] = useState<string | null>(null);
 
-  // Procuração ESTRITA: só os modelos da pasta de procuração (case_type='PROCURACAO'),
-  // sem os modelos sem tipo (case_type null).
-  const { data: procTemplates } = useDocumentTemplates(PROCURACAO_CASE_TYPE, true);
+  // (2026-07-10) — as pastas são POR CATEGORIA (system_service_type_folders).
+  // Resolve o tipo do caso pelo slug e busca suas pastas de caso e de procuração.
+  const { data: serviceTypes } = useServiceTypes();
+  const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso");
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
+
+  // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
+  // pasta de caso escolhida (também da categoria). Antes a procuração usava
+  // useDocumentTemplates('PROCURACAO', true) — listava procurações de TODAS as
+  // categorias; e o "documento de caso" usava a lista GLOBAL de pastas.
+  const { data: procTemplates } = useTemplatesByFolders(
+    mode === "procuracao" ? procFolderIds : null,
+  );
   const { data: folderTemplates } = useTemplatesByFolder(mode === "caso" ? folderId : null);
   const syncProc = useSyncProcuracaoTemplates();
 
@@ -264,7 +280,7 @@ function PickDialog({
                 <FileText size={16} className="text-[var(--gold-700)]" /> Documento do caso
               </div>
               <div className="text-[12px] text-muted-foreground mt-1">
-                Escolha 1 das 6 pastas e o documento dela.
+                Escolha a pasta da categoria e o documento dela.
               </div>
             </button>
           </div>
@@ -278,34 +294,43 @@ function PickDialog({
     );
   }
 
-  // ITEM 4 — "Documento de caso", passo 1: escolher 1 das 6 pastas.
+  // "Documento de caso", passo 1: escolher a pasta DA CATEGORIA do caso.
   if (mode === "caso" && !folderId) {
+    const folders = casoFolders ?? [];
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
             <DialogDescription>
-              Selecione a pasta do documento. Só os documentos dela aparecerão.
+              Só as pastas desta categoria aparecem. Os documentos da pasta escolhida ficam
+              disponíveis para gerar.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {CASE_DOCUMENT_FOLDERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => {
-                  setFolderId(f.id);
-                  setTemplateId("");
-                  setValues({});
-                }}
-                className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
-              >
-                <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
-                <span className="text-[13px] font-medium text-[var(--navy)]">{f.label}</span>
-              </button>
-            ))}
-          </div>
+          {folders.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {folders.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => {
+                    setFolderId(f.drive_folder_id);
+                    setTemplateId("");
+                    setValues({});
+                  }}
+                  className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left hover:border-[var(--gold)] transition-colors"
+                >
+                  <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
+                  <span className="text-[13px] font-medium text-[var(--navy)]">{f.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Esta categoria ainda não tem pasta de documentos de caso. Vincule/crie uma na aba
+              Documentos (ou nas Configurações da categoria).
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setMode(null)}>
               ← Voltar
@@ -317,7 +342,7 @@ function PickDialog({
   }
 
   const isProc = mode === "procuracao";
-  const folderLabel = CASE_DOCUMENT_FOLDERS.find((f) => f.id === folderId)?.label;
+  const folderLabel = (casoFolders ?? []).find((f) => f.drive_folder_id === folderId)?.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -378,7 +403,7 @@ function PickDialog({
                     </Button>
                   </span>
                 ) : (
-                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" na aba Documentos para importar os documentos das 6 pastas.'
+                  'Nenhum documento nesta pasta. Use "Sincronizar modelos" na aba Documentos para importar os documentos das pastas da categoria.'
                 )}
               </div>
             ) : (

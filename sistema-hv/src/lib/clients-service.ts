@@ -3,6 +3,7 @@
 
 import slugify from "slugify";
 
+import { checkEmailDeliverability } from "./email-verify";
 import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database, Json } from "./supabase/types";
@@ -16,7 +17,7 @@ const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 export class ClientServiceError extends Error {
   constructor(
     message: string,
-    public readonly code: "DUPLICATE_CPF" | "NOT_FOUND" | "DB_ERROR",
+    public readonly code: "DUPLICATE_CPF" | "NOT_FOUND" | "DB_ERROR" | "INVALID_EMAIL",
     public readonly status: number,
   ) {
     super(message);
@@ -44,6 +45,21 @@ function buildFolderName(fullName: string, cpfCnpj: string): string {
 // ----------------------------------------------------------------------------
 export async function createClient(input: ClientCreateOutput) {
   const sb = getSupabaseAdmin();
+
+  // 0) Valida ENTREGABILIDADE do e-mail (evita typo tipo "gmaill.com" que faz o
+  //    link da ZapSign nunca chegar). Bloqueia só quando o domínio claramente não
+  //    recebe e-mail; em erro transitório de DNS faz fail-open (não trava cadastro).
+  if (input.email) {
+    const chk = await checkEmailDeliverability(input.email);
+    if (!chk.ok) {
+      const extra = chk.suggestion ? ` Você quis dizer ${chk.suggestion}?` : "";
+      throw new ClientServiceError(
+        (chk.reason ?? "E-mail inválido.") + extra,
+        "INVALID_EMAIL",
+        422,
+      );
+    }
+  }
 
   // 1) INSERT cliente (cpf_cnpj já vem canônico do Zod transform)
   //    person_type é derivado do tamanho do CPF/CNPJ (11 = PF, 14 = PJ).

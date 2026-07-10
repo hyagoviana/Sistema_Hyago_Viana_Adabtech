@@ -13,6 +13,7 @@ import {
   resyncClientDriveFolder,
   updateClient,
 } from "@/lib/clients-service";
+import { checkEmailDeliverability } from "@/lib/email-verify";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 import { clientCreateSchema, clientUpdateSchema } from "@/lib/validators/client";
 
@@ -66,6 +67,14 @@ export const createClientFn = createServerFn({ method: "POST" })
 export const findOrCreateClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => clientCreateSchema.parse(data))
   .handler(async ({ data }) => handle(() => findOrCreateClient(data)));
+
+// Verificação de entregabilidade do e-mail (DNS/MX + sugestão de typo). Usada
+// pelo formulário no onBlur do campo e-mail para avisar/sugerir antes de salvar.
+export const checkEmailFn = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) =>
+    z.object({ email: z.string().trim().min(3).max(200) }).parse(data),
+  )
+  .handler(async ({ data }) => handle(() => checkEmailDeliverability(data.email)));
 
 const updateInputSchema = z.object({
   id: z.string().uuid("ID inválido"),
