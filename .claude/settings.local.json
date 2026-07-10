@@ -386,7 +386,8 @@
       "Bash(git --no-pager diff HEAD -- sistema-hv/src/components/hv/Sidebar.tsx)",
       "Bash(echo \"EXIT eslint: $?\")",
       "Bash(ls docs/design/)",
-      "Bash(ls \"Re-paginada layout/\")"
+      "Bash(ls \"Re-paginada layout/\")",
+      "PowerShell($bytes = New-Object 'System.Byte[]' 24; \\(New-Object System.Security.Cryptography.RNGCryptoServiceProvider\\).GetBytes\\($bytes\\); \\($bytes | ForEach-Object { $_.ToString\\('x2'\\) }\\) -join '')"
     ]
   }
 }

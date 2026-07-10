@@ -24,6 +24,7 @@ const KEYS = [
   "GOOGLE_OAUTH_REFRESH_TOKEN",
   "ZAPSIGN_API_TOKEN",
   "ZAPSIGN_API_BASE_URL",
+  "ZAPSIGN_WEBHOOK_SECRET",
   "APP_ENV",
   "APP_URL",
 ];
@@ -38,6 +39,14 @@ for (const key of KEYS) {
     continue;
   }
   for (const env of ENVS) {
+    // `vercel env add` falha se a variável já existir — removemos antes para que
+    // o push seja idempotente (sobrescreve o valor). Ignoramos falha do rm
+    // (acontece quando a variável ainda não existe).
+    spawnSync(
+      "npx",
+      ["vercel", "env", "rm", key, env, "--yes", "--scope", SCOPE],
+      { encoding: "utf8", shell: true },
+    );
     const r = spawnSync(
       "npx",
       ["vercel", "env", "add", key, env, "--scope", SCOPE],
