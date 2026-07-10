@@ -342,6 +342,56 @@ export async function criarBaixa(
   );
 }
 
+// ─── Conta a receber (cobrança) ──────────────────────────────────────────────
+
+export type CAContaReceberParcela = {
+  descricao: string;
+  data_vencimento: string; // YYYY-MM-DD
+  nota?: string;
+  conta_financeira: string; // uuid
+  detalhe_valor: {
+    valor_bruto: number; // obrigatório
+    multa?: number;
+    juros?: number;
+    valor_liquido?: number;
+    desconto?: number;
+    taxa?: number;
+  };
+  // Enum amplo (doc lista PIX_PAGAMENTO_INSTANTANEO etc.) — string p/ não engessar.
+  metodo_pagamento?: string;
+};
+
+export type CAContaReceberInput = {
+  data_competencia: string; // YYYY-MM-DD
+  valor: number;
+  observacao: string;
+  descricao: string;
+  contato: string; // uuid da PESSOA (cliente) no Conta Azul (contaazul_customer_id)
+  conta_financeira: string; // uuid da conta financeira (Receba Fácil / Conta PJ)
+  rateio?: Array<{
+    id_categoria: string;
+    valor: number;
+    rateio_centro_custo?: Array<{ id_centro_custo: string; valor: number }>;
+  }>;
+  condicao_pagamento: { parcelas: CAContaReceberParcela[] };
+};
+
+// Resposta ASSÍNCRONA (202): devolve um protocolo. Os ids das parcelas criadas
+// (usados depois na baixa) saem consultando o protocolo/listagem, não aqui.
+export type CAContaReceberResponse = {
+  protocolo: string;
+  status: "PENDING" | "SUCCESS" | "ERROR";
+  data_criacao: string;
+};
+
+// Cria um evento financeiro de contas a receber (cobrança). Doc oficial:
+// POST /v1/financeiro/eventos-financeiros/contas-a-receber
+export async function criarContaAReceber(
+  input: CAContaReceberInput,
+): Promise<CAContaReceberResponse> {
+  return request("POST", "v1/financeiro/eventos-financeiros/contas-a-receber", input);
+}
+
 // ─── Health check ────────────────────────────────────────────────────────────
 
 export async function ping(): Promise<{ ok: true }> {
