@@ -10,6 +10,8 @@ import {
   conferirTermo,
   createTermo,
   darBaixaParcela,
+  deleteAllParcelasDoCaso,
+  deleteParcela,
   deleteTermoRascunho,
   enviarParaConferencia,
   estornarParcela,
@@ -178,3 +180,12 @@ export const darBaixaParcelaFn = createServerFn({ method: "POST" })
 export const estornarParcelaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ parcelaId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => estornarParcela(data.parcelaId)));
+
+// (item 5) — excluir parcela / todas as parcelas do caso.
+export const deleteParcelaFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ parcelaId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => deleteParcela(data.parcelaId)));
+
+export const deleteAllParcelasFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => deleteAllParcelasDoCaso(data.caseId)));

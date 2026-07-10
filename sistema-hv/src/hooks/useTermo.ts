@@ -9,6 +9,8 @@ import {
   conferirTermoFn,
   createTermoFn,
   darBaixaParcelaFn,
+  deleteAllParcelasFn,
+  deleteParcelaFn,
   deleteTermoRascunhoFn,
   enviarParaConferenciaFn,
   estornarParcelaFn,
@@ -189,6 +191,31 @@ export function useEstornarParcela(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (parcelaId: string) => fn({ data: { parcelaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+// (item 5) — excluir parcela / todas as parcelas do caso.
+export function useDeleteParcela(caseId: string) {
+  const fn = useServerFn(deleteParcelaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (parcelaId: string) => fn({ data: { parcelaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+export function useDeleteAllParcelas(caseId: string) {
+  const fn = useServerFn(deleteAllParcelasFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fn({ data: { caseId } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
       qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });

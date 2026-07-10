@@ -493,6 +493,53 @@ export async function listParcelas(caseId: string) {
   return data ?? [];
 }
 
+// (item 5, 2026-07-10) — exclui UMA parcela (soft-delete; some da lista/relatório).
+// Quando a cobrança existir no Conta Azul (provider='conta_azul' + provider_ext_id),
+// o cancelamento espelhado no CA entra junto com o build de cobrança (#1).
+export async function deleteParcela(parcelaId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: p } = await sb
+    .from("system_parcelas")
+    .select("id, case_id, organization_id, numero")
+    .eq("id", parcelaId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!p) throw new TermoServiceError("Parcela não encontrada", 404);
+  const { error } = await sb
+    .from("system_parcelas")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", parcelaId);
+  if (error) throw new TermoServiceError(error.message, 500);
+  await sb.from("system_audit_log").insert({
+    organization_id: p.organization_id,
+    action: "parcela.delete",
+    entity_type: "parcela",
+    entity_id: parcelaId,
+    diff: { numero: p.numero, case_id: p.case_id },
+  });
+  return { ok: true as const, id: parcelaId };
+}
+
+// (item 5) — exclui TODAS as parcelas do caso (soft-delete).
+export async function deleteAllParcelasDoCaso(caseId: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_parcelas")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("case_id", caseId)
+    .is("deleted_at", null)
+    .select("id");
+  if (error) throw new TermoServiceError(error.message, 500);
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "parcela.delete_all",
+    entity_type: "case",
+    entity_id: caseId,
+    diff: { count: data?.length ?? 0 },
+  });
+  return { ok: true as const, count: data?.length ?? 0 };
+}
+
 // Baixa manual de parcela (S22) — substituto provisório da cobrança via n8n.
 // Idempotente: só dá baixa se a parcela ainda não está PAGA (senão 409).
 export async function darBaixaParcela(

@@ -32,6 +32,8 @@ import {
   useConferirTermo,
   useCreateTermo,
   useDarBaixaParcela,
+  useDeleteAllParcelas,
+  useDeleteParcela,
   useDeleteTermo,
   useEnviarConferencia,
   useEstornarParcela,
@@ -84,6 +86,8 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const aceitar = useAceitarTermo(caseId);
   const recusar = useRecusarTermo(caseId);
   const del = useDeleteTermo(caseId);
+  const delParcela = useDeleteParcela(caseId);
+  const delAllParcelas = useDeleteAllParcelas(caseId);
   const { data: parcelas } = useParcelas(caseId);
   const darBaixa = useDarBaixaParcela(caseId);
   const estornar = useEstornarParcela(caseId);
@@ -292,8 +296,24 @@ export function TermoPanel({ caseId }: { caseId: string }) {
 
       {(parcelas ?? []).length > 0 && (
         <div className="mt-4">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-            Parcelas
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Parcelas
+            </div>
+            <button
+              type="button"
+              disabled={delAllParcelas.isPending}
+              onClick={() => {
+                if (!window.confirm("Excluir TODAS as parcelas deste caso?")) return;
+                delAllParcelas.mutate(undefined, {
+                  onSuccess: (r) => toast.success(`${r.count} parcela(s) excluída(s)`),
+                  onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                });
+              }}
+              className="text-[11px] text-destructive hover:underline disabled:opacity-40"
+            >
+              Excluir todas
+            </button>
           </div>
           <ul className="space-y-1 text-[13px]">
             {(parcelas ?? []).map((p) => {
@@ -397,6 +417,28 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                         estornar
                       </button>
                     )}
+
+                    {/* Excluir parcela (item 5) */}
+                    <button
+                      type="button"
+                      disabled={delParcela.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Excluir a parcela ${String(p.numero).padStart(2, "0")}?`,
+                          )
+                        )
+                          return;
+                        delParcela.mutate(p.id, {
+                          onSuccess: () => toast.success("Parcela excluída"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        });
+                      }}
+                      className="text-muted-foreground hover:text-destructive"
+                      title="Excluir parcela"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </span>
                 </li>
               );

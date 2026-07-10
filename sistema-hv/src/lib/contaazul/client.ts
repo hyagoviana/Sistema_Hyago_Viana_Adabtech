@@ -284,6 +284,64 @@ export async function createServico(input: {
   return request<CAServico>("POST", "v1/servicos", input);
 }
 
+// ─── Financeiro: contas financeiras + eventos financeiros (contas a receber) ──
+
+export type CAContaFinanceira = {
+  id: string;
+  nome?: string;
+  tipo?: string;
+  [k: string]: unknown;
+};
+
+// Lista as contas financeiras (ex.: "Receba Fácil"/Conta PJ). Vazio até o owner
+// ativar uma conta que emita cobrança. Usada para pegar o `conta_financeira` id.
+export async function listContasFinanceiras(): Promise<{
+  itens: CAContaFinanceira[];
+  itens_totais: number;
+}> {
+  return request("GET", "v1/conta-financeira");
+}
+
+export type CAMetodoPagamento =
+  | "DINHEIRO"
+  | "CARTAO_CREDITO"
+  | "BOLETO_BANCARIO"
+  | "CARTAO_CREDITO_VIA_LINK"
+  | "CHEQUE"
+  | "CARTAO_DEBITO"
+  | "TRANSFERENCIA_BANCARIA"
+  | "OUTRO"
+  | "CARTEIRA_DIGITAL"
+  | "CASHBACK";
+
+export type CABaixaInput = {
+  data_pagamento: string; // YYYY-MM-DD
+  composicao_valor: {
+    valor_bruto: number; // obrigatório, >= 0
+    multa?: number;
+    juros?: number;
+    desconto?: number;
+    taxa?: number;
+  };
+  conta_financeira: string; // uuid
+  metodo_pagamento?: CAMetodoPagamento;
+  observacao?: string;
+  nsu?: string;
+};
+
+// Registra a BAIXA (quitação) de uma parcela do Conta Azul. Doc oficial:
+// POST /v1/financeiro/eventos-financeiros/parcelas/{parcela_id}/baixa
+export async function criarBaixa(
+  parcelaId: string,
+  input: CABaixaInput,
+): Promise<{ id: string; versao: number }> {
+  return request(
+    "POST",
+    `v1/financeiro/eventos-financeiros/parcelas/${parcelaId}/baixa`,
+    input,
+  );
+}
+
 // ─── Health check ────────────────────────────────────────────────────────────
 
 export async function ping(): Promise<{ ok: true }> {
