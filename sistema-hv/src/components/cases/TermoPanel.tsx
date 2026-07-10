@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { maskBrlReais, maskPercentBr, normalizeBrl, normalizePercentBr } from "@/lib/format";
-import { useCreateCharge, usePixQrCode, useCancelCharge } from "@/hooks/useAsaas";
+import { usePixQrCode, useCancelCharge } from "@/hooks/useAsaas";
+import { useCreateContaAzulCharge } from "@/hooks/useContaAzul";
 import {
   useAceitarTermo,
   useApresentarTermo,
@@ -382,7 +383,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                           })
                         }
                         className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-0.5"
-                        title="Gerar cobrança no Asaas"
+                        title="Gerar cobrança no Conta Azul"
                       >
                         <Receipt size={11} /> cobrar
                       </button>
@@ -841,13 +842,16 @@ function ElaborarDialog({
   );
 }
 
-// ─── Dialog: Gerar Cobrança no Asaas ─────────────────────────────────────────
+// ─── Dialog: Gerar Cobrança no Conta Azul ────────────────────────────────────
 
+// Métodos de pagamento do Conta Azul (evento financeiro de contas a receber).
 const BILLING_LABELS: Record<string, string> = {
-  BOLETO: "Boleto",
   PIX: "Pix",
-  CREDIT_CARD: "Cartão de crédito",
-  UNDEFINED: "Cliente escolhe",
+  BOLETO_BANCARIO: "Boleto bancário",
+  CARTAO_CREDITO: "Cartão de crédito",
+  TRANSFERENCIA_BANCARIA: "Transferência",
+  DINHEIRO: "Dinheiro",
+  OUTRO: "Outro",
 };
 
 function CobrancaAsaasDialog({
@@ -859,10 +863,9 @@ function CobrancaAsaasDialog({
   parcela: { id: string; valor: number; numero: number; vencimento: string } | null;
   onOpenChange: (v: boolean) => void;
 }) {
-  const createCharge = useCreateCharge();
-  const [billingType, setBillingType] = useState<
-    "BOLETO" | "PIX" | "CREDIT_CARD" | "UNDEFINED"
-  >("PIX");
+  const createCharge = useCreateContaAzulCharge();
+  // Vem pré-selecionado (Pix) e editável — o owner só troca se quiser.
+  const [billingType, setBillingType] = useState<string>("PIX");
   const [descricao, setDescricao] = useState("");
 
   useEffect(() => {
@@ -877,7 +880,7 @@ function CobrancaAsaasDialog({
     createCharge.mutate(
       {
         caseId,
-        billingType,
+        paymentMethod: billingType,
         value: parcela.valor / 100,
         dueDate: parcela.vencimento,
         description: descricao.trim() || undefined,
@@ -885,11 +888,10 @@ function CobrancaAsaasDialog({
       },
       {
         onSuccess: () => {
-          toast.success("Cobrança gerada no Asaas — o cliente será notificado");
+          toast.success("Cobrança criada no Conta Azul — o cliente recebe por e-mail");
           onOpenChange(false);
         },
-        onError: (e) =>
-          toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança"),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança"),
       },
     );
   }
@@ -903,8 +905,7 @@ function CobrancaAsaasDialog({
             {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
           </DialogTitle>
           <DialogDescription>
-            O cliente será criado automaticamente no Asaas (se ainda não existir) e receberá a
-            cobrança por e-mail/SMS.
+            A cobrança é criada no Conta Azul e o cliente recebe por e-mail, com link de pagamento.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -927,12 +928,7 @@ function CobrancaAsaasDialog({
 
           <div>
             <Label>Forma de pagamento</Label>
-            <Select
-              value={billingType}
-              onValueChange={(v) =>
-                setBillingType(v as "BOLETO" | "PIX" | "CREDIT_CARD" | "UNDEFINED")
-              }
-            >
+            <Select value={billingType} onValueChange={setBillingType}>
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>

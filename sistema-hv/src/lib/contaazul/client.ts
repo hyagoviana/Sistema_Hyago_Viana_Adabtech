@@ -392,6 +392,83 @@ export async function criarContaAReceber(
   return request("POST", "v1/financeiro/eventos-financeiros/contas-a-receber", input);
 }
 
+// ─── Consultar contas a receber (parcelas) ───────────────────────────────────
+
+export type CAStatusContaAReceber =
+  | "PERDIDO"
+  | "RECEBIDO"
+  | "EM_ABERTO"
+  | "RENEGOCIADO"
+  | "RECEBIDO_PARCIAL"
+  | "ATRASADO";
+
+// Uma PARCELA de conta a receber. Shape tipado de forma defensiva (campos
+// opcionais + índice) porque a doc lista 15 propriedades cujos nomes exatos
+// confirmamos ao ler a resposta real. Os leitores em service.ts usam fallback
+// de nomes, então o matching não quebra se um campo vier com nome alternativo.
+export type CAContaAReceberItem = {
+  id: string;
+  descricao?: string;
+  nota?: string;
+  observacao?: string;
+  status?: CAStatusContaAReceber | string;
+  valor?: number;
+  valor_pago?: number;
+  data_vencimento?: string;
+  data_pagamento?: string | null;
+  data_competencia?: string;
+  cliente?: { id?: string; nome?: string };
+  [k: string]: unknown;
+};
+
+export type BuscarContasAReceberFiltro = {
+  pagina?: number;
+  tamanho_pagina?: 10 | 20 | 50 | 100 | 200 | 500 | 1000;
+  data_vencimento_de: string; // YYYY-MM-DD (OBRIGATÓRIO)
+  data_vencimento_ate: string; // YYYY-MM-DD (OBRIGATÓRIO)
+  data_pagamento_de?: string;
+  data_pagamento_ate?: string;
+  data_competencia_de?: string;
+  data_competencia_ate?: string;
+  valor_de?: string;
+  valor_ate?: string;
+  status?: CAStatusContaAReceber[];
+  ids_clientes?: string[];
+  ids_contas_financeiras?: string[];
+};
+
+export type BuscarContasAReceberResponse = {
+  itens_totais: number;
+  itens: CAContaAReceberItem[];
+  totais?: { ativo: number; inativo: number; todos: number };
+};
+
+// Consulta as PARCELAS de contas a receber por filtros. Doc oficial:
+// GET /v1/financeiro/eventos-financeiros/contas-a-receber/buscar
+export async function buscarContasAReceber(
+  f: BuscarContasAReceberFiltro,
+): Promise<BuscarContasAReceberResponse> {
+  const p = new URLSearchParams();
+  p.set("pagina", String(f.pagina ?? 1));
+  p.set("tamanho_pagina", String(f.tamanho_pagina ?? 500));
+  p.set("data_vencimento_de", f.data_vencimento_de);
+  p.set("data_vencimento_ate", f.data_vencimento_ate);
+  if (f.data_pagamento_de) p.set("data_pagamento_de", f.data_pagamento_de);
+  if (f.data_pagamento_ate) p.set("data_pagamento_ate", f.data_pagamento_ate);
+  if (f.data_competencia_de) p.set("data_competencia_de", f.data_competencia_de);
+  if (f.data_competencia_ate) p.set("data_competencia_ate", f.data_competencia_ate);
+  if (f.valor_de) p.set("valor_de", f.valor_de);
+  if (f.valor_ate) p.set("valor_ate", f.valor_ate);
+  for (const s of f.status ?? []) p.append("status", s);
+  for (const id of f.ids_clientes ?? []) p.append("ids_clientes", id);
+  for (const id of f.ids_contas_financeiras ?? []) p.append("ids_contas_financeiras", id);
+
+  return request(
+    "GET",
+    `v1/financeiro/eventos-financeiros/contas-a-receber/buscar?${p.toString()}`,
+  );
+}
+
 // ─── Health check ────────────────────────────────────────────────────────────
 
 export async function ping(): Promise<{ ok: true }> {

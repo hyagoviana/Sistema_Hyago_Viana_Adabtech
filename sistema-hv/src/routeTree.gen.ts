@@ -77,6 +77,7 @@ import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
+import { Route as ApiCronSyncContaazulRouteImport } from './routes/api.cron.sync-contaazul'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
 import { Route as ApiServiceTypesIdTemplatesUploadRouteImport } from './routes/api.service-types.$id.templates.upload'
@@ -427,6 +428,11 @@ const ApiWebhooksAsaasRoute = ApiWebhooksAsaasRouteImport.update({
   path: '/api/webhooks/asaas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronSyncContaazulRoute = ApiCronSyncContaazulRouteImport.update({
+  id: '/api/cron/sync-contaazul',
+  path: '/api/cron/sync-contaazul',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
   id: '/elaborar',
   path: '/elaborar',
@@ -523,6 +529,7 @@ export interface FileRoutesByFullPath {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
@@ -598,6 +605,7 @@ export interface FileRoutesByTo {
   '/peticionamento': typeof PeticionamentoIndexRoute
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
+  '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
@@ -675,6 +683,7 @@ export interface FileRoutesById {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
@@ -753,6 +762,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
@@ -828,6 +838,7 @@ export interface FileRouteTypes {
     | '/peticionamento'
     | '/portal'
     | '/whatsapp'
+    | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
@@ -904,6 +915,7 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
@@ -981,6 +993,7 @@ export interface RootRouteChildren {
   PeticionamentoIndexRoute: typeof PeticionamentoIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
+  ApiCronSyncContaazulRoute: typeof ApiCronSyncContaazulRoute
   ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
   ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
@@ -1470,6 +1483,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksAsaasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/sync-contaazul': {
+      id: '/api/cron/sync-contaazul'
+      path: '/api/cron/sync-contaazul'
+      fullPath: '/api/cron/sync-contaazul'
+      preLoaderRoute: typeof ApiCronSyncContaazulRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/$id/termo/elaborar': {
       id: '/casos/$id/termo/elaborar'
       path: '/elaborar'
@@ -1629,6 +1649,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeticionamentoIndexRoute: PeticionamentoIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
+  ApiCronSyncContaazulRoute: ApiCronSyncContaazulRoute,
   ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
   ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,

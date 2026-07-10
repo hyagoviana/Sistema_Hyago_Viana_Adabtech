@@ -150,9 +150,32 @@ export function useSetChecklistItemAssignee(caseId: string) {
 export function useSetChecklistItemAssignees(caseId: string) {
   const fn = useServerFn(setChecklistItemAssigneesFn);
   const qc = useQueryClient();
+  const key = queryKeys.checklistItems.byCase(caseId);
   return useMutation({
     mutationFn: (vars: { itemId: string; userIds: string[] }) => fn({ data: vars }),
-    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+    // Optimista: a seleção de responsáveis fica INSTANTÂNEA no UI (não espera o servidor).
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData(key);
+      qc.setQueryData(key, (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((it) =>
+              (it as { id: string }).id === vars.itemId
+                ? {
+                    ...(it as object),
+                    assignee_ids: vars.userIds,
+                    assigned_to: vars.userIds[0] ?? null,
+                  }
+                : it,
+            )
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev !== undefined) qc.setQueryData(key, ctx.prev);
+    },
+    onSettled: () => invalidateAfterChecklistMutation(qc, caseId),
   });
 }
 

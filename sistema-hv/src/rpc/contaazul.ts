@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   createContaAzulCharge,
   syncClientToContaAzul,
+  syncContaAzulPagamentos,
   type CreateContaAzulChargeInput,
 } from "@/lib/contaazul/service";
 import { ping } from "@/lib/contaazul/client";
@@ -49,6 +50,14 @@ export const createContaAzulChargeFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handle(() => createContaAzulCharge(data as CreateContaAzulChargeInput)),
   );
+
+// ─── Sync de Pagamentos (manual — o cron das 08:30 chama o mesmo motor) ──────
+
+const syncPagamentosSchema = z.object({ caseId: z.string().uuid().optional() });
+
+export const syncContaAzulPagamentosFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => syncPagamentosSchema.parse(data ?? {}))
+  .handler(async ({ data }) => handle(() => syncContaAzulPagamentos(data.caseId)));
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 
