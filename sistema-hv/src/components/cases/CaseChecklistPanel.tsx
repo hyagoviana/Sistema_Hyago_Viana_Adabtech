@@ -19,7 +19,7 @@ import {
   useCreateAdhocChecklistItem,
   useDeleteAdhocChecklistItem,
   useMarcarItemChecklist,
-  useSetChecklistItemAssignee,
+  useSetChecklistItemAssignees,
   useUpdateAdhocChecklistItem,
 } from "@/hooks/useChecklist";
 import { useUsers } from "@/hooks/useUsers";
@@ -45,16 +45,16 @@ export function CaseChecklistPanel({
   const createMut = useCreateAdhocChecklistItem(caseId);
   const updateMut = useUpdateAdhocChecklistItem(caseId);
   const deleteMut = useDeleteAdhocChecklistItem(caseId);
-  const assignMut = useSetChecklistItemAssignee(caseId);
+  const assignMut = useSetChecklistItemAssignees(caseId);
 
   // Responsável do checklist vem de TODOS os usuários ativos do sistema (item 3).
   const assignees = (users ?? [])
     .filter((u) => u.status === "ACTIVE")
     .map((u) => ({ id: u.id, full_name: u.full_name, email: u.email }));
 
-  async function assign(item: Item, userId: string | null) {
+  async function assign(item: Item, userIds: string[]) {
     try {
-      await assignMut.mutateAsync({ itemId: item.id, assignedTo: userId });
+      await assignMut.mutateAsync({ itemId: item.id, userIds });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
     }

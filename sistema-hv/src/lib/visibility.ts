@@ -50,6 +50,22 @@ export async function getVisibleCaseIds(
     .is("deleted_at", null);
   for (const r of chk ?? []) ids.add((r as { case_id: string }).case_id);
 
+  // 3b) Casos onde ele é UM DOS responsáveis do item (N:N, item 2b). Aditivo ao
+  // assigned_to acima — responsável secundário também enxerga o caso.
+  const { data: links } = await sb
+    .from("system_case_checklist_item_assignees")
+    .select("item_id")
+    .eq("user_id", viewerUserId);
+  const linkItemIds = (links ?? []).map((l) => (l as { item_id: string }).item_id);
+  if (linkItemIds.length) {
+    const { data: chk2 } = await sb
+      .from("system_case_checklist_items")
+      .select("case_id")
+      .in("id", linkItemIds)
+      .is("deleted_at", null);
+    for (const r of chk2 ?? []) ids.add((r as { case_id: string }).case_id);
+  }
+
   return [...ids];
 }
 

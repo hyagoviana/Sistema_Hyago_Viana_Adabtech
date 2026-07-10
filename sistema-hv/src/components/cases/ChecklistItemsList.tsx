@@ -19,6 +19,8 @@ export type ChecklistItem = {
   drive_file_id: string | null;
   // item 3 — responsável (usuário do sistema) por este critério.
   assigned_to?: string | null;
+  // 2b — conjunto COMPLETO de responsáveis (múltiplos) do item.
+  assignee_ids?: string[];
   // S9-11 — item específico deste caso (def_id IS NULL). Herdados do modelo = false.
   is_adhoc?: boolean;
   def: {
@@ -31,6 +33,63 @@ export type ChecklistItem = {
 };
 
 export type AssigneeOption = { id: string; full_name: string | null; email: string };
+
+// (2b) — seletor de MÚLTIPLOS responsáveis (checkboxes num dropdown leve, sem deps).
+function AssigneeMultiSelect({
+  options,
+  value,
+  disabled,
+  onChange,
+}: {
+  options: AssigneeOption[];
+  value: string[];
+  disabled?: boolean;
+  onChange: (ids: string[]) => void;
+}) {
+  const nameOf = (o: AssigneeOption) => o.full_name || o.email;
+  const selected = options.filter((o) => value.includes(o.id));
+  const label =
+    selected.length === 0
+      ? "Sem responsável"
+      : selected.length === 1
+        ? nameOf(selected[0])
+        : `${selected.length} responsáveis`;
+  return (
+    <details className="relative shrink-0">
+      <summary
+        className="cursor-pointer list-none max-w-[160px] truncate rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]"
+        title="Responsáveis por este critério"
+      >
+        {label}
+      </summary>
+      <div className="absolute right-0 z-20 mt-1 w-56 max-h-60 overflow-auto rounded-md border border-[var(--border)] bg-white p-1 shadow-lg">
+        {options.length === 0 ? (
+          <div className="px-2 py-1.5 text-[12px] text-muted-foreground">Nenhum usuário.</div>
+        ) : (
+          options.map((o) => {
+            const checked = value.includes(o.id);
+            return (
+              <label
+                key={o.id}
+                className="flex items-center gap-2 px-2 py-1 text-[12px] rounded hover:bg-[var(--ink-50)] cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={() =>
+                    onChange(checked ? value.filter((v) => v !== o.id) : [...value, o.id])
+                  }
+                />
+                <span className="truncate">{nameOf(o)}</span>
+              </label>
+            );
+          })
+        )}
+      </div>
+    </details>
+  );
+}
 
 // Render puro de uma lista de itens já resolvida (sem fetch). Usado pela ficha,
 // que agrupa por etapa e passa cada grupo já ordenado.
@@ -51,9 +110,9 @@ export function ChecklistItemsRows({
   // S9-11 — quando fornecidos, habilita editar/excluir dos itens AD-HOC (só eles).
   onEditAdhoc?: (item: ChecklistItem) => void;
   onDeleteAdhoc?: (item: ChecklistItem) => void;
-  // item 3 — quando fornecidos, mostra o seletor de RESPONSÁVEL por item (não compacto).
+  // item 3/2b — quando fornecidos, mostra o seletor de RESPONSÁVEIS (múltiplos) por item.
   assignees?: AssigneeOption[];
-  onAssign?: (item: ChecklistItem, userId: string | null) => void;
+  onAssign?: (item: ChecklistItem, userIds: string[]) => void;
 }) {
   const showAssignee = !compact && !!assignees && !!onAssign;
   return (
@@ -82,20 +141,12 @@ export function ChecklistItemsRows({
               <Badge className="bg-[var(--navy)] text-white shrink-0">Obrigatório</Badge>
             )}
             {showAssignee && (
-              <select
-                value={it.assigned_to ?? ""}
+              <AssigneeMultiSelect
+                options={assignees!}
+                value={it.assignee_ids ?? (it.assigned_to ? [it.assigned_to] : [])}
                 disabled={pending}
-                onChange={(e) => onAssign!(it, e.target.value || null)}
-                title="Responsável por este critério"
-                className="shrink-0 max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]"
-              >
-                <option value="">Sem responsável</option>
-                {assignees!.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.full_name || u.email}
-                  </option>
-                ))}
-              </select>
+                onChange={(ids) => onAssign!(it, ids)}
+              />
             )}
             {isAdhoc && (
               <span

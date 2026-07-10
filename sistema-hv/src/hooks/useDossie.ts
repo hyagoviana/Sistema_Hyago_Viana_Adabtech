@@ -15,7 +15,25 @@ import {
   deleteCaseCommunicationFn,
   listAllTasksFn,
   listAllDeadlinesFn,
+  listWorkItemsFn,
 } from "@/rpc/dossie";
+
+export type WorkItemFilters = {
+  assigneeId?: string | null;
+  caseId?: string | null;
+  status?: string | null;
+  search?: string | null;
+};
+
+// Agregação "Tarefas": tarefas + itens de checklist do colaborador (com RBAC).
+export function useWorkItems(filters: WorkItemFilters) {
+  const fn = useServerFn(listWorkItemsFn);
+  return useQuery({
+    queryKey: ["work-items", filters],
+    queryFn: () => fn({ data: filters }),
+    staleTime: 60 * 1000,
+  });
+}
 
 // ----------------------------------------------- Agregação global (Tarefas) ----
 export function useAllTasks() {

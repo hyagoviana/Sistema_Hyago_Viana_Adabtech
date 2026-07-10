@@ -13,6 +13,7 @@ import {
   marcarItemChecklist,
   reorderChecklistDefs,
   setChecklistItemAssignee,
+  setChecklistItemAssignees,
   softDeleteChecklistDef,
   sugerirChecklistPorUpload,
   updateAdhocChecklistItem,
@@ -147,6 +148,18 @@ export const setChecklistItemAssigneeFn = createServerFn({ method: "POST" })
     handle(async () => {
       await requireAuth();
       return setChecklistItemAssignee(data.itemId, data.assignedTo);
+    }),
+  );
+
+// (2b) — define MÚLTIPLOS responsáveis de um item de checklist.
+export const setChecklistItemAssigneesFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ itemId: z.string().uuid(), userIds: z.array(z.string().uuid()) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireAuth();
+      return setChecklistItemAssignees(data.itemId, data.userIds);
     }),
   );
 

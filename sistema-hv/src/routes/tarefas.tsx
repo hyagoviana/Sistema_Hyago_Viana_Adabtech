@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarClock, CheckSquare, AlertCircle, ChevronRight } from "lucide-react";
+import { CalendarClock, CheckSquare, AlertCircle, ChevronRight, ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAllTasks, useAllDeadlines } from "@/hooks/useDossie";
+import { useWorkItems, useAllDeadlines } from "@/hooks/useDossie";
+import { useUsers } from "@/hooks/useUsers";
 
 export const Route = createFileRoute("/tarefas")({
   component: TarefasPage,
@@ -31,18 +33,34 @@ const PRIO_LABEL: Record<string, string> = {
 const PRIO_ORDER: Record<string, number> = { URGENTE: 0, ALTA: 1, MEDIA: 2, BAIXA: 3 };
 
 function TarefasPage() {
-  const tarefasQ = useAllTasks();
-  const prazosQ = useAllDeadlines();
-  const loading = tarefasQ.isLoading || prazosQ.isLoading;
+  const [assigneeId, setAssigneeId] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
-  const tarefas = (tarefasQ.data ?? []).filter((t) => t.status !== "CONCLUIDA");
-  const tarefasOrdenadas = [...tarefas].sort(
-    (a, b) => (PRIO_ORDER[a.priority] ?? 9) - (PRIO_ORDER[b.priority] ?? 9),
-  );
+  const workQ = useWorkItems({
+    assigneeId: assigneeId || null,
+    status: status || null,
+    search: search || null,
+  });
+  const prazosQ = useAllDeadlines();
+  const canSeeAll = workQ.data?.canSeeAll ?? false;
+  const { data: users } = useUsers();
+  const loading = workQ.isLoading || prazosQ.isLoading;
+
+  const items = workQ.data?.items ?? [];
+  const itemsOrdenados = [...items].sort((a, b) => {
+    // tarefas por prioridade primeiro; checklist depois.
+    const pa = a.type === "tarefa" ? (PRIO_ORDER[a.priority ?? "MEDIA"] ?? 9) : 9;
+    const pb = b.type === "tarefa" ? (PRIO_ORDER[b.priority ?? "MEDIA"] ?? 9) : 9;
+    return pa - pb;
+  });
 
   const prazos = (prazosQ.data ?? []).filter((d) => d.status === "ABERTO");
   const prazosCriticos = prazos.filter((d) => daysUntil(d.fatal_date) <= 7).length;
   const prazosVencidos = prazos.filter((d) => daysUntil(d.fatal_date) < 0).length;
+
+  const selCls =
+    "h-9 rounded-md border border-[var(--border)] bg-white px-2.5 text-[13px] text-[var(--navy)] focus:outline-none focus:border-[var(--gold)]";
 
   return (
     <div className="page-container">
@@ -50,12 +68,16 @@ function TarefasPage() {
       <PageHeader
         eyebrow="Operação"
         title="Tarefas e prazos"
-        subtitle="Visão consolidada de todas as tarefas e prazos dos casos."
+        subtitle={
+          canSeeAll
+            ? "Tudo que está atribuído aos colaboradores (tarefas + checklist) e os prazos."
+            : "Tudo que está atribuído a você (tarefas + checklist) e os prazos dos seus casos."
+        }
       />
 
       {/* KPIs reais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Kpi label="Tarefas abertas" value={tarefas.length} icon={CheckSquare} loading={loading} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Kpi label="Itens abertos" value={items.length} icon={CheckSquare} loading={loading} />
         <Kpi label="Prazos abertos" value={prazos.length} icon={CalendarClock} loading={loading} />
         <Kpi
           label="Prazos ≤ 7 dias"
@@ -74,7 +96,71 @@ function TarefasPage() {
         />
       </div>
 
+      {/* Filtros — colaborador só para quem vê tudo (admin/back-office). */}
+      <div className="flex flex-wrap items-center gap-2 mb-5">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por título, caso ou cliente…"
+          className={`${selCls} min-w-[240px] flex-1`}
+        />
+        {canSeeAll && (
+          <select
+            value={assigneeId}
+            onChange={(e) => setAssigneeId(e.target.value)}
+            className={selCls}
+          >
+            <option value="">Todos os colaboradores</option>
+            {(users ?? []).map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.full_name || u.email}
+              </option>
+            ))}
+          </select>
+        )}
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={selCls}>
+          <option value="">Todos os status</option>
+          <option value="PENDENTE">Pendente</option>
+          <option value="EM_ANDAMENTO">Em andamento</option>
+        </select>
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-5">
+        {/* Tarefas + Checklist (itens de trabalho) */}
+        <div>
+          <SectionHead title="Tarefas e checklist" count={items.length} />
+          <div className="card-editorial !p-0 overflow-hidden">
+            {loading ? (
+              <ListSkeleton />
+            ) : itemsOrdenados.length === 0 ? (
+              <Empty>Nada atribuído com os filtros atuais.</Empty>
+            ) : (
+              itemsOrdenados.map((it, i) => {
+                const isTask = it.type === "tarefa";
+                const trailing = isTask
+                  ? (PRIO_LABEL[it.priority ?? "MEDIA"] ?? it.priority ?? "—")
+                  : "Checklist";
+                const trailingColor = isTask
+                  ? (PRIO_TONE[it.priority ?? "MEDIA"] ?? "var(--ink-500)")
+                  : "var(--gold-700)";
+                const who = it.assignee_name ? ` · ${it.assignee_name}` : "";
+                return (
+                  <Row
+                    key={`${it.type}:${it.id}`}
+                    caseId={it.case_id}
+                    icon={isTask ? CheckSquare : ListChecks}
+                    primary={it.title}
+                    secondary={`${it.client_name} · ${it.case_code}${who}`}
+                    trailing={trailing}
+                    trailingColor={trailingColor}
+                    last={i === itemsOrdenados.length - 1}
+                  />
+                );
+              })
+            )}
+          </div>
+        </div>
+
         {/* Prazos */}
         <div>
           <SectionHead title="Prazos" count={prazos.length} />
@@ -100,30 +186,6 @@ function TarefasPage() {
                   />
                 );
               })
-            )}
-          </div>
-        </div>
-
-        {/* Tarefas */}
-        <div>
-          <SectionHead title="Tarefas" count={tarefas.length} />
-          <div className="card-editorial !p-0 overflow-hidden">
-            {loading ? (
-              <ListSkeleton />
-            ) : tarefasOrdenadas.length === 0 ? (
-              <Empty>Nenhuma tarefa aberta.</Empty>
-            ) : (
-              tarefasOrdenadas.map((t, i) => (
-                <Row
-                  key={t.id}
-                  caseId={t.case_id}
-                  primary={t.title}
-                  secondary={`${t.client_name} · ${t.case_code}${t.assignee ? ` · ${t.assignee}` : ""}`}
-                  trailing={PRIO_LABEL[t.priority] ?? t.priority}
-                  trailingColor={PRIO_TONE[t.priority] ?? "var(--ink-500)"}
-                  last={i === tarefasOrdenadas.length - 1}
-                />
-              ))
             )}
           </div>
         </div>
@@ -180,6 +242,7 @@ function Row({
   trailing,
   trailingColor,
   last,
+  icon: Icon,
 }: {
   caseId: string;
   primary: string;
@@ -187,6 +250,7 @@ function Row({
   trailing: string;
   trailingColor: string;
   last: boolean;
+  icon?: LucideIcon;
 }) {
   return (
     <Link
@@ -195,6 +259,7 @@ function Row({
       className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--ink-50)]"
       style={last ? undefined : { borderBottom: "1px solid var(--border)" }}
     >
+      {Icon && <Icon size={15} className="text-[var(--ink-400)] shrink-0" />}
       <div className="flex-1 min-w-0">
         <div className="text-[13.5px] font-medium text-[var(--navy)] truncate">{primary}</div>
         <div className="text-[11.5px] text-muted-foreground truncate">{secondary}</div>

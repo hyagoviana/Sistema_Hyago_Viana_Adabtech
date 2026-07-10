@@ -17,6 +17,7 @@ import {
   deleteCaseCommunication,
   listAllTasks,
   listAllDeadlines,
+  listWorkItems,
 } from "@/lib/dossie-service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
@@ -40,6 +41,20 @@ async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
     throw err;
   }
 }
+
+// Agregação "Tarefas": tarefas + checklist do colaborador, com RBAC + filtros.
+const workItemsSchema = z
+  .object({
+    assigneeId: z.string().uuid().nullish(),
+    caseId: z.string().uuid().nullish(),
+    status: z.string().nullish(),
+    search: z.string().nullish(),
+  })
+  .default({});
+
+export const listWorkItemsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => workItemsSchema.parse(d ?? {}))
+  .handler(async ({ data }) => handle((userId) => listWorkItems(userId, data)));
 
 // ---------------------------------------------------------------- Tarefas ----
 export const listCaseTasksFn = createServerFn({ method: "GET" })

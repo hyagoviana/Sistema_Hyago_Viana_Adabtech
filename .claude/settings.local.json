@@ -392,7 +392,8 @@
       "Bash(grep -viE \"Delete .␍.|prettier/prettier|potentially fixable|^\\\\s*$\")",
       "Bash(npx vitest *)",
       "Bash(grep -viE \"Delete .␍.|prettier/prettier|potentially fixable|^\\\\s*$|problems\")",
-      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000001_checklist_avanca_todos.sql)"
+      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000001_checklist_avanca_todos.sql)",
+      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000002_checklist_item_assignees.sql)"
     ]
   }
 }

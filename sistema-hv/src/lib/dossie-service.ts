@@ -1,6 +1,8 @@
 // Server-only — CRUD do dossiê do caso (tarefas, prazos, comunicações).
 // NUNCA importe este arquivo em código que roda no browser.
+import { seesOnlyOwnCases, type Role } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
+import { getUserRole } from "./users-service";
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -321,6 +323,155 @@ export async function listAllTasks() {
     case_code: map.get(t.case_id)?.case_code ?? "—",
     client_name: map.get(t.case_id)?.client_name ?? "—",
   }));
+}
+
+// ----------------------------------------------------------------------------
+// AGREGAÇÃO "TAREFAS" — tudo vinculado a um colaborador: tarefas do caso +
+// itens de checklist com responsável. RBAC: quem só vê os próprios casos
+// (advogado etc.) só recebe o que está atribuído A SI; admin/back-office veem
+// tudo e podem filtrar por colaborador.
+// ----------------------------------------------------------------------------
+export type WorkItem = {
+  id: string;
+  type: "tarefa" | "checklist";
+  case_id: string;
+  case_code: string;
+  client_name: string;
+  title: string;
+  status: string;
+  priority: string | null;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  due_date: string | null;
+  stage_slug: string | null;
+};
+
+export async function listWorkItems(
+  viewerId: string,
+  filters?: {
+    assigneeId?: string | null;
+    caseId?: string | null;
+    status?: string | null;
+    search?: string | null;
+  },
+): Promise<{ items: WorkItem[]; canSeeAll: boolean }> {
+  const sb = getSupabaseAdmin();
+  const role = await getUserRole(viewerId);
+  // Papéis que só veem os próprios casos → escopo travado em si mesmo.
+  const canSeeAll = !seesOnlyOwnCases((role ?? "") as Role);
+  const scopeAssignee = canSeeAll ? (filters?.assigneeId || null) : viewerId;
+
+  // Tarefas (não concluídas).
+  let tq = sb
+    .from("system_case_tasks")
+    .select("id, case_id, title, status, priority, assignee_id, due_date")
+    .is("deleted_at", null)
+    .neq("status", "CONCLUIDA");
+  if (scopeAssignee) tq = tq.eq("assignee_id", scopeAssignee);
+  if (filters?.caseId) tq = tq.eq("case_id", filters.caseId);
+  const { data: tasks } = await tq;
+
+  // Itens de checklist pendentes. Para um colaborador específico, considera tanto o
+  // assigned_to (primário) quanto a N:N (responsável secundário, item 2b).
+  const chkSelect =
+    "id, case_id, assigned_to, stage_slug, label, done, def:system_stage_checklist_defs(label)";
+  let chk: unknown[] = [];
+  if (scopeAssignee) {
+    const { data: links } = await sb
+      .from("system_case_checklist_item_assignees")
+      .select("item_id")
+      .eq("user_id", scopeAssignee);
+    const linkIds = (links ?? []).map((l) => (l as { item_id: string }).item_id);
+    const orExpr = linkIds.length
+      ? `assigned_to.eq.${scopeAssignee},id.in.(${linkIds.join(",")})`
+      : `assigned_to.eq.${scopeAssignee}`;
+    let cq = sb
+      .from("system_case_checklist_items")
+      .select(chkSelect)
+      .is("deleted_at", null)
+      .eq("done", false)
+      .or(orExpr);
+    if (filters?.caseId) cq = cq.eq("case_id", filters.caseId);
+    chk = (await cq).data ?? [];
+  } else {
+    let cq = sb
+      .from("system_case_checklist_items")
+      .select(chkSelect)
+      .is("deleted_at", null)
+      .eq("done", false)
+      .not("assigned_to", "is", null);
+    if (filters?.caseId) cq = cq.eq("case_id", filters.caseId);
+    chk = (await cq).data ?? [];
+  }
+
+  const map = await caseLookup(sb);
+  const userIds = [
+    ...new Set(
+      [
+        ...(tasks ?? []).map((t) => t.assignee_id),
+        ...(chk ?? []).map((c) => (c as { assigned_to: string | null }).assigned_to),
+      ].filter(Boolean) as string[],
+    ),
+  ];
+  const { data: users } = userIds.length
+    ? await sb.from("system_users").select("id, full_name, email").in("id", userIds)
+    : { data: [] as { id: string; full_name: string | null; email: string }[] };
+  const userMap = new Map((users ?? []).map((u) => [u.id, u.full_name || u.email]));
+
+  const items: WorkItem[] = [];
+  for (const t of tasks ?? []) {
+    items.push({
+      id: t.id,
+      type: "tarefa",
+      case_id: t.case_id,
+      case_code: map.get(t.case_id)?.case_code ?? "—",
+      client_name: map.get(t.case_id)?.client_name ?? "—",
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      assignee_id: t.assignee_id,
+      assignee_name: t.assignee_id ? (userMap.get(t.assignee_id) ?? null) : null,
+      due_date: t.due_date,
+      stage_slug: null,
+    });
+  }
+  for (const c of chk ?? []) {
+    const row = c as {
+      id: string;
+      case_id: string;
+      assigned_to: string | null;
+      stage_slug: string | null;
+      label: string | null;
+      def?: { label?: string } | null;
+    };
+    items.push({
+      id: row.id,
+      type: "checklist",
+      case_id: row.case_id,
+      case_code: map.get(row.case_id)?.case_code ?? "—",
+      client_name: map.get(row.case_id)?.client_name ?? "—",
+      title: row.def?.label ?? row.label ?? "Item de checklist",
+      status: "PENDENTE",
+      priority: null,
+      assignee_id: row.assigned_to,
+      assignee_name: row.assigned_to ? (userMap.get(row.assigned_to) ?? null) : null,
+      due_date: null,
+      stage_slug: row.stage_slug,
+    });
+  }
+
+  let out = items;
+  if (filters?.status) out = out.filter((i) => i.status === filters.status);
+  const q = (filters?.search ?? "").trim().toLowerCase();
+  if (q) {
+    out = out.filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.case_code.toLowerCase().includes(q) ||
+        i.client_name.toLowerCase().includes(q),
+    );
+  }
+  return { items: out, canSeeAll };
 }
 
 export async function listAllDeadlines() {

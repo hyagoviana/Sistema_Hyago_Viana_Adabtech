@@ -11,6 +11,7 @@ import {
   marcarItemChecklistFn,
   reorderChecklistDefsFn,
   setChecklistItemAssigneeFn,
+  setChecklistItemAssigneesFn,
   softDeleteChecklistDefFn,
   updateAdhocChecklistItemFn,
   updateChecklistDefFn,
@@ -140,6 +141,16 @@ export function useSetChecklistItemAssignee(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { itemId: string; assignedTo: string | null }) => fn({ data: vars }),
+    onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+// (2b) — define MÚLTIPLOS responsáveis de um item de checklist.
+export function useSetChecklistItemAssignees(caseId: string) {
+  const fn = useServerFn(setChecklistItemAssigneesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { itemId: string; userIds: string[] }) => fn({ data: vars }),
     onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
   });
 }

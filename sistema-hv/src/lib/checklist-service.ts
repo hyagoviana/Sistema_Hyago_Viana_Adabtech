@@ -254,21 +254,44 @@ export async function listCaseChecklistItems(caseId: string) {
     return !(r.def_id != null && r.def?.deleted_at);
   });
 
+  // (2b, 2026-07-10) Responsáveis MÚLTIPLOS por item (N:N) — une com o assigned_to
+  // primário. `assignee_ids` alimenta o seletor multi na UI.
+  const itemIds = visible.map((r) => (r as { id: string }).id);
+  const assigneeMap = new Map<string, Set<string>>();
+  if (itemIds.length) {
+    const { data: links } = await sb
+      .from("system_case_checklist_item_assignees")
+      .select("item_id, user_id")
+      .in("item_id", itemIds);
+    for (const l of links ?? []) {
+      const row = l as { item_id: string; user_id: string };
+      const set = assigneeMap.get(row.item_id) ?? new Set<string>();
+      set.add(row.user_id);
+      assigneeMap.set(row.item_id, set);
+    }
+  }
+
   // Normaliza itens AD-HOC (S9-11): quando def_id IS NULL, o item carrega a
   // própria definição (label/required/ordem). Projetamos num `def` sintético para
   // a UI consumir com a mesma forma dos itens herdados do modelo, e marcamos
   // is_adhoc p/ diferenciar visualmente e liberar editar/excluir por caso.
   return visible.map((row) => {
     const r = row as typeof row & {
+      id: string;
       def_id: string | null;
       label: string | null;
       required: boolean;
       ordem: number;
+      assigned_to: string | null;
     };
+    const set = assigneeMap.get(r.id) ?? new Set<string>();
+    if (r.assigned_to) set.add(r.assigned_to);
+    const assignee_ids = [...set];
     const isAdhoc = r.def_id == null;
     if (isAdhoc) {
       return {
         ...r,
+        assignee_ids,
         is_adhoc: true as const,
         def: {
           key: `adhoc:${r.id}`,
@@ -279,7 +302,7 @@ export async function listCaseChecklistItems(caseId: string) {
         },
       };
     }
-    return { ...r, is_adhoc: false as const };
+    return { ...r, assignee_ids, is_adhoc: false as const };
   });
 }
 
@@ -322,6 +345,33 @@ export async function setChecklistItemAssignee(itemId: string, assignedTo: strin
   if (error || !data)
     throw new ChecklistServiceError(error?.message ?? "Falha ao vincular responsável", 500);
   return data;
+}
+
+// (2b, 2026-07-10) — define o conjunto de responsáveis (MÚLTIPLOS) de um item de
+// checklist. Substitui a N:N e mantém assigned_to = primeiro (compat com a
+// visibilidade single/leituras). Todos os responsáveis passam a ver o caso.
+export async function setChecklistItemAssignees(itemId: string, userIds: string[]) {
+  const sb = getSupabaseAdmin();
+  const unique = [...new Set((userIds ?? []).filter(Boolean))];
+
+  await sb.from("system_case_checklist_item_assignees").delete().eq("item_id", itemId);
+  if (unique.length) {
+    const { error: insErr } = await sb
+      .from("system_case_checklist_item_assignees")
+      .upsert(
+        unique.map((uid) => ({ item_id: itemId, user_id: uid })),
+        { onConflict: "item_id,user_id" },
+      );
+    if (insErr) throw new ChecklistServiceError(insErr.message, 500);
+  }
+
+  const { error } = await sb
+    .from("system_case_checklist_items")
+    .update({ assigned_to: unique[0] ?? null })
+    .eq("id", itemId)
+    .is("deleted_at", null);
+  if (error) throw new ChecklistServiceError(error.message, 500);
+  return { ok: true as const, itemId, userIds: unique };
 }
 
 export async function createAdhocChecklistItem(input: {
