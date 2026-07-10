@@ -12,6 +12,7 @@ import {
   reorderChecklistDefsFn,
   setChecklistItemAssigneeFn,
   setChecklistItemAssigneesFn,
+  setChecklistDefAssigneesFn,
   softDeleteChecklistDefFn,
   updateAdhocChecklistItemFn,
   updateChecklistDefFn,
@@ -152,6 +153,16 @@ export function useSetChecklistItemAssignees(caseId: string) {
   return useMutation({
     mutationFn: (vars: { itemId: string; userIds: string[] }) => fn({ data: vars }),
     onSuccess: () => invalidateAfterChecklistMutation(qc, caseId),
+  });
+}
+
+// (item 7) — define MÚLTIPLOS responsáveis de uma DEF (etapa mestre do funil).
+export function useSetChecklistDefAssignees() {
+  const fn = useServerFn(setChecklistDefAssigneesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { defId: string; userIds: string[] }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.checklistDefs.all }),
   });
 }
 

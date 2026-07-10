@@ -14,6 +14,7 @@ import {
   reorderChecklistDefs,
   setChecklistItemAssignee,
   setChecklistItemAssignees,
+  setChecklistDefAssignees,
   softDeleteChecklistDef,
   sugerirChecklistPorUpload,
   updateAdhocChecklistItem,
@@ -160,6 +161,18 @@ export const setChecklistItemAssigneesFn = createServerFn({ method: "POST" })
     handle(async () => {
       await requireAuth();
       return setChecklistItemAssignees(data.itemId, data.userIds);
+    }),
+  );
+
+// (item 7) — define MÚLTIPLOS responsáveis de uma DEF (etapa mestre).
+export const setChecklistDefAssigneesFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ defId: z.string().uuid(), userIds: z.array(z.string().uuid()) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireAuth();
+      return setChecklistDefAssignees(data.defId, data.userIds);
     }),
   );
 

@@ -344,11 +344,20 @@ export function CaseDocumentsTab({
                     {d.status === "ENVIADO_ZAPSIGN" && (
                       <>
                         {d.zapsign_sign_url && (
-                          <a href={d.zapsign_sign_url} target="_blank" rel="noreferrer">
-                            <Button variant="outline" size="sm">
-                              <FileSignature size={13} className="mr-1" /> Link de assinatura
-                            </Button>
-                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(d.zapsign_sign_url!);
+                                toast.success("Link de assinatura copiado");
+                              } catch {
+                                toast.error("Não foi possível copiar o link");
+                              }
+                            }}
+                          >
+                            <FileSignature size={13} className="mr-1" /> Copiar link de assinatura
+                          </Button>
                         )}
                         <ConfirmSignatureButton
                           docKind={d.doc_kind}

@@ -42,7 +42,28 @@ export async function listChecklistDefs(serviceTypeId: string, stageSlug: string
     .order("ordem")
     .order("created_at");
   if (error) throw new ChecklistServiceError(error.message, 500);
-  return data ?? [];
+  const rows = data ?? [];
+  // (item 7) Responsáveis MÚLTIPLOS da def (N:N) — une com o assigned_to primário.
+  const ids = rows.map((r) => (r as { id: string }).id);
+  const map = new Map<string, Set<string>>();
+  if (ids.length) {
+    const { data: links } = await sb
+      .from("system_stage_checklist_def_assignees")
+      .select("def_id, user_id")
+      .in("def_id", ids);
+    for (const l of links ?? []) {
+      const row = l as { def_id: string; user_id: string };
+      const set = map.get(row.def_id) ?? new Set<string>();
+      set.add(row.user_id);
+      map.set(row.def_id, set);
+    }
+  }
+  return rows.map((r) => {
+    const row = r as { id: string; assigned_to?: string | null };
+    const set = map.get(row.id) ?? new Set<string>();
+    if (row.assigned_to) set.add(row.assigned_to);
+    return { ...r, assignee_ids: [...set] };
+  });
 }
 
 async function uniqueDefKey(
@@ -110,6 +131,32 @@ export async function createChecklistDef(input: {
     throw new ChecklistServiceError(error?.message ?? "Falha ao criar item", 500);
   }
   return data;
+}
+
+// (item 7) — define MÚLTIPLOS responsáveis de uma DEF de checklist (etapa mestre).
+// Substitui a N:N e sincroniza assigned_to = primeiro (compat). Ao instanciar num
+// caso, todos os responsáveis são propagados para o item (fn system_fn_instanciar_checklist).
+export async function setChecklistDefAssignees(defId: string, userIds: string[]) {
+  const sb = getSupabaseAdmin();
+  const unique = [...new Set((userIds ?? []).filter(Boolean))];
+
+  await sb.from("system_stage_checklist_def_assignees").delete().eq("def_id", defId);
+  if (unique.length) {
+    const { error } = await sb
+      .from("system_stage_checklist_def_assignees")
+      .upsert(
+        unique.map((uid) => ({ def_id: defId, user_id: uid })),
+        { onConflict: "def_id,user_id" },
+      );
+    if (error) throw new ChecklistServiceError(error.message, 500);
+  }
+
+  const { error: uErr } = await sb
+    .from("system_stage_checklist_defs")
+    .update({ assigned_to: unique[0] ?? null } as never)
+    .eq("id", defId);
+  if (uErr) throw new ChecklistServiceError(uErr.message, 500);
+  return { ok: true as const, defId, userIds: unique };
 }
 
 // Só altera label/ordem/required/active/expected_doc_pattern. NUNCA a ancoragem.

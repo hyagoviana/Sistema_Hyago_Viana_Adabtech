@@ -11,6 +11,7 @@ import {
   useCreateChecklistDef,
   useDeleteChecklistDef,
   useReorderChecklistDefs,
+  useSetChecklistDefAssignees,
   useUpdateChecklistDef,
 } from "@/hooks/useChecklist";
 import { useUsers } from "@/hooks/useUsers";
@@ -24,7 +25,61 @@ type Def = {
   active: boolean;
   expected_doc_pattern: string | null;
   assigned_to?: string | null;
+  assignee_ids?: string[];
 };
+
+// (item 7) — multi-seleção de responsáveis (checkboxes num dropdown leve, sem deps).
+function MultiUserSelect({
+  options,
+  value,
+  disabled,
+  onChange,
+}: {
+  options: { id: string; name: string }[];
+  value: string[];
+  disabled?: boolean;
+  onChange: (ids: string[]) => void;
+}) {
+  const selected = options.filter((o) => value.includes(o.id));
+  const label =
+    selected.length === 0
+      ? "Sem responsável"
+      : selected.length === 1
+        ? selected[0].name
+        : `${selected.length} responsáveis`;
+  return (
+    <details className="relative shrink-0">
+      <summary className="cursor-pointer list-none max-w-[160px] truncate rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]">
+        {label}
+      </summary>
+      <div className="absolute right-0 z-20 mt-1 w-56 max-h-60 overflow-auto rounded-md border border-[var(--border)] bg-white p-1 shadow-lg">
+        {options.length === 0 ? (
+          <div className="px-2 py-1.5 text-[12px] text-muted-foreground">Nenhum usuário.</div>
+        ) : (
+          options.map((o) => {
+            const checked = value.includes(o.id);
+            return (
+              <label
+                key={o.id}
+                className="flex items-center gap-2 px-2 py-1 text-[12px] rounded hover:bg-[var(--ink-50)] cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={() =>
+                    onChange(checked ? value.filter((v) => v !== o.id) : [...value, o.id])
+                  }
+                />
+                <span className="truncate">{o.name}</span>
+              </label>
+            );
+          })
+        )}
+      </div>
+    </details>
+  );
+}
 
 export function StageChecklistEditor({
   serviceTypeId,
@@ -41,10 +96,11 @@ export function StageChecklistEditor({
   const updateMut = useUpdateChecklistDef();
   const deleteMut = useDeleteChecklistDef();
   const reorderMut = useReorderChecklistDefs();
+  const defAssignMut = useSetChecklistDefAssignees();
 
   const [newLabel, setNewLabel] = useState("");
   const [newRequired, setNewRequired] = useState(false);
-  const [newAssignee, setNewAssignee] = useState("");
+  const [newAssignees, setNewAssignees] = useState<string[]>([]);
 
   // Responsável vem dos usuários ativos (cadastro de permissões). Não obrigatório.
   const assignees = (users ?? [])
@@ -62,25 +118,32 @@ export function StageChecklistEditor({
       return;
     }
     try {
-      await createMut.mutateAsync({
+      const created = await createMut.mutateAsync({
         service_type_id: serviceTypeId,
         stage_slug: stageSlug,
         label,
         required: newRequired,
-        assigned_to: newAssignee || null,
+        assigned_to: newAssignees[0] ?? null,
       });
+      // Define o conjunto COMPLETO de responsáveis (múltiplos) da nova etapa.
+      if (newAssignees.length > 1 && (created as { id?: string })?.id) {
+        await defAssignMut.mutateAsync({
+          defId: (created as { id: string }).id,
+          userIds: newAssignees,
+        });
+      }
       setNewLabel("");
       setNewRequired(false);
-      setNewAssignee("");
+      setNewAssignees([]);
       toast.success("Item adicionado");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao adicionar item");
     }
   }
 
-  async function setAssignee(d: Def, userId: string | null) {
+  async function setAssignees(d: Def, userIds: string[]) {
     try {
-      await updateMut.mutateAsync({ id: d.id, patch: { assigned_to: userId } });
+      await defAssignMut.mutateAsync({ defId: d.id, userIds });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
     }
@@ -161,20 +224,12 @@ export function StageChecklistEditor({
               {d.required && <Badge tone="navy">Obrigatório</Badge>}
               {canEdit && (
                 <>
-                  <select
-                    value={d.assigned_to ?? ""}
+                  <MultiUserSelect
+                    options={assignees}
+                    value={d.assignee_ids ?? (d.assigned_to ? [d.assigned_to] : [])}
                     disabled={busy}
-                    onChange={(e) => setAssignee(d, e.target.value || null)}
-                    title="Responsável desta etapa (opcional)"
-                    className="max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1 text-[12px]"
-                  >
-                    <option value="">Sem responsável</option>
-                    {assignees.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(ids) => setAssignees(d, ids)}
+                  />
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     Obrig.
                     <Switch checked={d.required} onCheckedChange={() => toggleRequired(d)} />
@@ -209,19 +264,7 @@ export function StageChecklistEditor({
               }
             }}
           />
-          <select
-            value={newAssignee}
-            onChange={(e) => setNewAssignee(e.target.value)}
-            title="Responsável (opcional)"
-            className="max-w-[150px] rounded-md border border-[var(--border)] bg-white px-1.5 py-1.5 text-[13px]"
-          >
-            <option value="">Sem responsável</option>
-            {assignees.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
+          <MultiUserSelect options={assignees} value={newAssignees} onChange={setNewAssignees} />
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             Obrigatório
             <Switch checked={newRequired} onCheckedChange={setNewRequired} />

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,6 +31,7 @@ function KpiCard({ label, value, tone }: { label: string; value: string; tone: s
 }
 
 function RelatorioFinanceiro() {
+  const navigate = useNavigate();
   const { data: dash, isLoading: dashLoading } = useDashboardFinanceiro();
   const { data: casos, isLoading, isError, error } = useRelatorioFinanceiro();
 
@@ -111,15 +112,15 @@ function RelatorioFinanceiro() {
               </thead>
               <tbody>
                 {(casos ?? []).map((c) => (
-                  <tr key={c.case_id} className="border-b border-[var(--border)] last:border-0">
+                  <tr
+                    key={c.case_id}
+                    onClick={() => navigate({ to: "/casos/$id", params: { id: c.case_id } })}
+                    className="border-b border-[var(--border)] last:border-0 cursor-pointer transition-colors hover:bg-[var(--ink-50)]"
+                  >
                     <td className="px-5 py-2.5">
-                      <Link
-                        to="/casos/$id"
-                        params={{ id: c.case_id }}
-                        className="font-medium text-[var(--navy)] hover:underline"
-                      >
+                      <span className="font-medium text-[var(--navy)] hover:underline">
                         {c.case_code}
-                      </Link>
+                      </span>
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground truncate max-w-[180px]">
                       {c.client_name}

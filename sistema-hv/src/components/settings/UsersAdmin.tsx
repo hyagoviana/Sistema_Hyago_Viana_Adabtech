@@ -214,7 +214,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
 
                 <button
                   onClick={() => handleStatus(u.id, suspended ? "ACTIVE" : "SUSPENDED")}
-                  disabled={isSelf || u.role === "admin"}
+                  disabled={isSelf}
                   className="text-[12px] font-medium px-3 py-1.5 rounded-md border border-[var(--border)] transition-colors hover:bg-black/[0.03] disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   style={{ color: suspended ? "var(--gold-700)" : "#b4232a" }}
                 >
@@ -225,7 +225,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   onClick={() =>
                     setDeleting({ id: u.id, name: u.full_name || u.email.split("@")[0] })
                   }
-                  disabled={isSelf || u.role === "admin"}
+                  disabled={isSelf}
                   title="Excluir colaborador (reatribui o trabalho e remove o acesso)"
                   className="text-[#b4232a] hover:bg-[#b4232a]/10 p-1.5 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
                 >

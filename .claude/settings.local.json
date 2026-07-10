@@ -393,7 +393,10 @@
       "Bash(npx vitest *)",
       "Bash(grep -viE \"Delete .␍.|prettier/prettier|potentially fixable|^\\\\s*$|problems\")",
       "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000001_checklist_avanca_todos.sql)",
-      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000002_checklist_item_assignees.sql)"
+      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000002_checklist_item_assignees.sql)",
+      "Bash(SUPABASE_PROJECT_REF=sptfmfeoikukrhbekitl npx tsx scripts/db-apply-pg.ts supabase/migrations/20260710000003_checklist_def_assignees.sql)",
+      "Bash(xargs grep -A5 -B5 \"cron\\\\|schedule\")",
+      "WebFetch(domain:developers.contaazul.com)"
     ]
   }
 }

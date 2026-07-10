@@ -46,6 +46,21 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
   const address = client.address as Record<string, string> | null;
   const tipoPessoa = client.cpf_cnpj.length === 14 ? "Jurídica" : "Física";
 
+  const enderecoObj = address
+    ? {
+        endereco: {
+          cep: address.zipcode,
+          logradouro: address.street,
+          numero: address.number,
+          complemento: address.complement,
+          bairro: address.neighborhood,
+          cidade: address.city,
+          uf: address.state,
+        },
+      }
+    : {};
+
+  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + documento (obrigatórios).
   const caData = {
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
@@ -53,19 +68,16 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     email: client.email ?? undefined,
     telefone: client.phone ?? undefined,
     perfis: ["Cliente"],
-    ...(address
-      ? {
-          endereco: {
-            cep: address.zipcode,
-            logradouro: address.street,
-            numero: address.number,
-            complemento: address.complement,
-            bairro: address.neighborhood,
-            cidade: address.city,
-            uf: address.state,
-          },
-        }
-      : {}),
+    ...enderecoObj,
+  };
+
+  // ATUALIZAÇÃO (PUT): o Conta Azul REJEITA (400) campos não-editáveis como
+  // `perfis` (e documento/tipo_pessoa são imutáveis). Envia só o que muda.
+  const caUpdate = {
+    nome: client.full_name,
+    email: client.email ?? undefined,
+    telefone: client.phone ?? undefined,
+    ...enderecoObj,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +86,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      await updatePessoa(caCustomerId, caData);
+      await updatePessoa(caCustomerId, caUpdate);
     } catch (err) {
       if (err instanceof ContaAzulError) {
         throw new ContaAzulServiceError(
