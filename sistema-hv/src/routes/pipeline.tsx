@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, FolderKanban, Layers, Pencil, Plus, Settings2 } from "lucide-react";
+import { ArrowLeft, FolderKanban, Layers, Pencil, Plus, Settings2, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
+import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
@@ -112,6 +113,8 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
   }
   const [newOpen, setNewOpen] = useState(false);
   const [createCaseOpen, setCreateCaseOpen] = useState(false);
+  // R2-06 — gestão de TEMAS/FRENTES (admin-only).
+  const [temasOpen, setTemasOpen] = useState(false);
   const [catName, setCatName] = useState("");
   // Renomear um tipo existente (grava name no banco).
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
@@ -169,9 +172,18 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
               <Plus size={14} />
               Nova categoria
             </Btn>
+            {canManage && (
+              <Btn variant="ghost" onClick={() => setTemasOpen(true)}>
+                <Tag size={14} />
+                Temas
+              </Btn>
+            )}
           </div>
         }
       />
+
+      {/* R2-06 — gestão de temas/frentes (admin-only, gate acima) */}
+      {canManage && <TemasManagerDialog open={temasOpen} onOpenChange={setTemasOpen} />}
 
       <CaseFormDialog open={createCaseOpen} onOpenChange={setCreateCaseOpen} />
 
