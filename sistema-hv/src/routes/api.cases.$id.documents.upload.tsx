@@ -35,9 +35,18 @@ export const Route = createFileRoute("/api/cases/$id/documents/upload")({
           return Response.json(doc, { status: 201 });
         } catch (err) {
           if (err instanceof CaseDocumentServiceError) {
+            // Loga no servidor as falhas de dependência externa (Drive/Docs = 424)
+            // e erros internos (>=500) p/ diagnóstico — as 4xx de validação (409
+            // pasta, 415 MIME) já viram mensagem acionável no front, sem ruído.
+            if (err.status >= 500 || err.status === 424) {
+              console.error(
+                `api/cases/${params.id}/documents/upload [${err.status}]:`,
+                err.message,
+              );
+            }
             return Response.json({ error: err.message }, { status: err.status });
           }
-          console.error("api/cases/$id/documents/upload:", err);
+          console.error(`api/cases/${params.id}/documents/upload:`, err);
           return Response.json(
             { error: err instanceof Error ? err.message : "Erro interno" },
             { status: 500 },

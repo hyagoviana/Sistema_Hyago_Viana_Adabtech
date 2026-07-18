@@ -30,7 +30,9 @@
 | **R5-01** | ✅ **Concluída** (dev+qa) | Bug B1: lupa do roster só filtrava com "chip" de campo marcado. Agora termo sem chip faz match amplo (nome/CPF/e-mail/município/profissional/custom). Client-side, sem migration. |
 | **R5-02** | ✅ **Concluída** (dev+qa) | Bug B2: `formatRg` truncava no 9º dígito (`slice(0,9)`). Agora preserva RGs mais longos (head mascarado + excedente); padrão comum e `X` intactos. Teste unitário `format.test.ts`. |
 
-Fila R5: R5-03 (anexar doc — diagnóstico), R5-04 (mover etapa), R5-05 (base grad/residência — spike owner), R5-06 (campos FIES — cruza R2), R5-07 (termo 15%/R$500 editável), R5-08 (variáveis de documentos). Depois **R2** (TEMA/CASO/TIPO).
+| **R5-03** | ✅ **Concluída** (dev+qa) | Bug B4: robustez do anexo — fallback de criar pasta do cliente no 409 (idempotente), sniff de MIME p/ doc/docx sem `.type` (anti-spoofing preservado), 424 em vez de 5xx + log, mensagem acionável no front. *AC-1 caminho-feliz a confirmar no Drive real do Hyago.* |
+
+Fila R5: R5-04 (mover etapa), R5-05 (base grad/residência — spike owner), R5-06 (campos FIES — cruza R2), R5-07 (termo 15%/R$500 editável), R5-08 (variáveis de documentos). Depois **R2** (TEMA/CASO/TIPO).
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
 
 **Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.

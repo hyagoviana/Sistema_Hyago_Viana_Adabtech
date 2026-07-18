@@ -20,6 +20,7 @@
     "test:financeiro": "tsx scripts/test-financeiro.ts",
     "seed:cases": "tsx scripts/seed-cases-demo.ts",
     "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts",
+    "test:case-documents": "tsx src/lib/case-documents-mime.test.ts",
     "test:rbac": "tsx src/lib/rbac.test.ts",
     "test:webhook-replay": "tsx scripts/zapsign-webhook-replay.ts"
   },

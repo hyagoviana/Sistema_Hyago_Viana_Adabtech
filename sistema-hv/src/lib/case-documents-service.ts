@@ -116,15 +116,35 @@ export async function ensureCaseFolder(caseId: string): Promise<{
     .select("id, drive_folder_id")
     .eq("id", caso.client_id)
     .single();
-  if (cErr || !client?.drive_folder_id) {
-    throw new CaseDocumentServiceError(
-      "Cliente sem pasta no Drive — crie a pasta do cliente antes de gerar documentos do caso",
-      409,
-    );
+
+  // R5-03 (B4): fallback do cenário "cliente sem pasta no Drive" (drive_sync_failed).
+  // Antes de falhar, tenta criar/ressincronizar a pasta do cliente automaticamente
+  // (reusa resyncClientDriveFolder de clients-service). Só se AINDA assim faltar é
+  // que devolvemos um erro ACIONÁVEL — nunca um 409 seco sem instrução.
+  let clientFolderId = client?.drive_folder_id ?? null;
+  if (cErr || !clientFolderId) {
+    if (caso.client_id) {
+      try {
+        const { resyncClientDriveFolder } = await import("./clients-service");
+        const res = await resyncClientDriveFolder(caso.client_id);
+        clientFolderId =
+          res.folderId ??
+          (res as { folder?: { drive_folder_id?: string | null } }).folder?.drive_folder_id ??
+          null;
+      } catch (resyncErr) {
+        console.error("ensureCaseFolder: resync automático da pasta do cliente falhou:", resyncErr);
+      }
+    }
+    if (!clientFolderId) {
+      throw new CaseDocumentServiceError(
+        'O cliente não tem pasta no Drive e a criação automática falhou. Abra a ficha do cliente e use "Sincronizar pasta do Drive", depois tente anexar novamente.',
+        409,
+      );
+    }
   }
 
   try {
-    const folder = await createFolder(`Caso-${caso.case_code}`, client.drive_folder_id);
+    const folder = await createFolder(`Caso-${caso.case_code}`, clientFolderId);
     await sb
       .from("system_cases")
       .update({
@@ -161,6 +181,40 @@ const UPLOAD_ALLOWED_MIMES = new Set<string>([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 ]);
 
+const UPLOAD_ALLOWED_LABEL = "PDF, DOC ou DOCX";
+
+// R5-03 (B4) candidato #2: alguns browsers/OS enviam File.type vazio ou
+// "application/octet-stream" (típico p/ .doc/.docx dependendo do MIME registrado
+// no sistema), o que fazia o upload cair como "Tipo não permitido" mesmo sendo um
+// arquivo VÁLIDO. Quando o tipo declarado não é conclusivo, inferimos pela
+// extensão do nome + magic-bytes do conteúdo (o validateUpload depois confirma).
+export function resolveUploadMime(
+  declaredMime: string,
+  fileName: string,
+  head: Buffer,
+): string | null {
+  if (UPLOAD_ALLOWED_MIMES.has(declaredMime)) return declaredMime;
+
+  const inconclusive = !declaredMime || declaredMime === "application/octet-stream";
+  if (!inconclusive) return null; // tipo declarado explícito e não permitido → rejeita
+
+  const headHex = head.subarray(0, 8).toString("hex").toLowerCase();
+  if (headHex.startsWith("25504446")) return "application/pdf"; // %PDF
+  if (headHex.startsWith("d0cf11e0a1b11ae1")) return "application/msword"; // OLE (.doc)
+  // Container ZIP (504b0304): .docx OU .doc-zip. Desambigua pela extensão do nome.
+  const lower = fileName.toLowerCase();
+  if (headHex.startsWith("504b0304")) {
+    if (lower.endsWith(".docx"))
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  // Sem magic-byte conclusivo: cai pra extensão declarada.
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".docx"))
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (lower.endsWith(".doc")) return "application/msword";
+  return null;
+}
+
 export async function uploadCaseDocument(opts: {
   caseId: string;
   fileName: string;
@@ -168,17 +222,20 @@ export async function uploadCaseDocument(opts: {
   buffer: Buffer;
   triggeredBy?: string;
 }) {
-  // Restringe o tipo ANTES do magic-bytes (que aceita mais formatos).
-  if (!UPLOAD_ALLOWED_MIMES.has(opts.mimeType)) {
+  // Restringe o tipo ANTES do magic-bytes (que aceita mais formatos). Quando o
+  // browser envia .type vazio/octet-stream (comum p/ .doc/.docx), tenta inferir o
+  // tipo real por extensão + magic-bytes em vez de rejeitar um arquivo válido.
+  const resolvedMime = resolveUploadMime(opts.mimeType, opts.fileName, opts.buffer.subarray(0, 8));
+  if (!resolvedMime) {
     throw new CaseDocumentServiceError(
-      `Tipo não permitido (${opts.mimeType || "vazio"}). Envie PDF, DOC ou DOCX.`,
+      `Tipo de arquivo não suportado (${opts.mimeType || "desconhecido"}). Aceitamos apenas ${UPLOAD_ALLOWED_LABEL}.`,
       415,
     );
   }
 
   const validation = validateUpload({
     name: opts.fileName,
-    mimeType: opts.mimeType,
+    mimeType: resolvedMime,
     size: opts.buffer.length,
     head: opts.buffer.subarray(0, 16),
   });
@@ -203,7 +260,7 @@ export async function uploadCaseDocument(opts: {
     drive = await uploadFile({
       parentId: folderId,
       name: opts.fileName,
-      mimeType: opts.mimeType,
+      mimeType: resolvedMime,
       body: opts.buffer,
     });
   } catch (err) {

@@ -179,7 +179,12 @@ export function CaseDocumentsTab({
                 await uploadDoc.mutateAsync(file);
                 toast.success(`${file.name} anexado ao caso`);
               } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Falha ao anexar");
+                // Mostra a mensagem ACIONÁVEL vinda da rota (pasta faltando, tipo
+                // não suportado, falha do Drive) — não um "erro interno" genérico.
+                // Duração maior porque a mensagem de 409/415 traz instrução ao usuário.
+                toast.error(err instanceof Error ? err.message : "Falha ao anexar documento", {
+                  duration: 8000,
+                });
               }
             }}
           />
