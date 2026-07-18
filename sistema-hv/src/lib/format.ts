@@ -117,15 +117,20 @@ export function formatCep(value: string): string {
 /**
  * Formata progressivamente como RG no padrão mais comum: 12.345.678-9.
  * Aceita o dígito verificador "X" (maiúsculo). RG varia por estado — esta é a
- * máscara usual (2.3.3-1); campos fora do padrão ainda ficam legíveis.
+ * máscara usual (2.3.3-1); os 9 primeiros caracteres ganham a pontuação usual e
+ * o excedente (RGs com mais de 9 caracteres, por variação de UF) é preservado
+ * legível ao final. NUNCA trunca dígitos digitados — a máscara é só apresentação.
  */
 export function formatRg(value: string): string {
-  const raw = (value ?? "")
+  const clean = (value ?? "")
     .toUpperCase()
     .replace(/[^0-9X]/g, "")
-    .slice(0, 9);
-  return raw
+    .slice(0, 12);
+  const head = clean.slice(0, 9);
+  const tail = clean.slice(9); // excedente além do 9º caractere (não descartar)
+  const masked = head
     .replace(/^([0-9X]{2})([0-9X])/, "$1.$2")
     .replace(/^([0-9X]{2})\.([0-9X]{3})([0-9X])/, "$1.$2.$3")
     .replace(/^([0-9X]{2})\.([0-9X]{3})\.([0-9X]{3})([0-9X])/, "$1.$2.$3-$4");
+  return masked + tail;
 }
