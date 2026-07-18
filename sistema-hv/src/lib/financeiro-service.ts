@@ -108,12 +108,61 @@ export async function listAllParcelas(filters?: {
     };
   });
 
-  // Filtrar por cliente se solicitado
+  // Filtrar por cliente se solicitado.
+  // Robustez (R4-04): parcela cujo caso não resolveu (`caseMap.get` → undefined)
+  // fica com `client_id === ""`. Um filtro `=== filters.clientId` já a exclui,
+  // mas guardamos explicitamente contra `filters.clientId === ""` para NUNCA
+  // agregar parcelas órfãs (sem caso/cliente) no cliente errado.
   if (filters?.clientId) {
-    result = result.filter((p) => p.client_id === filters.clientId);
+    const wanted = filters.clientId;
+    result = result.filter((p) => p.client_id !== "" && p.client_id === wanted);
   }
 
   return result;
+}
+
+// ─── Selo binário "Em dia / Devendo" (R4-04, AC-3) ────────────────────────────
+// Sinal NÃO-SENSÍVEL: devolve APENAS um boolean, SEM nenhum centavo/valor. É o que
+// papéis SEM `financeiro:view` (operacional etc.) podem ver no lugar dos números.
+// Por isso o RPC que o expõe usa `requireAuth` (qualquer autenticado), não
+// `requireModule('financeiro','view')` — ver `getClientPaymentStatusFn`.
+//
+// Regra: `emDia = false` (Devendo) se EXISTE ao menos uma parcela do cliente
+// considerada em atraso — status `VENCIDA`/`INADIMPLENTE`, OU pendente com
+// vencimento já passado. Caso contrário `emDia = true` (Em dia). Cliente sem
+// nenhuma parcela também é "Em dia" (nada devendo).
+export async function getClientPaymentStatus(clientId: string): Promise<{ emDia: boolean }> {
+  if (!clientId) return { emDia: true };
+  const sb = getSupabaseAdmin();
+
+  // Casos do cliente (só o necessário para achar as parcelas). Não lê valores.
+  const { data: cases, error: casesErr } = await sb
+    .from("system_cases")
+    .select("id")
+    .eq("organization_id", DEFAULT_ORG)
+    .eq("client_id", clientId);
+  if (casesErr) throw new FinanceiroServiceError(casesErr.message, 500);
+
+  const caseIds = (cases ?? []).map((c) => c.id);
+  if (caseIds.length === 0) return { emDia: true };
+
+  // Só status + vencimento — NENHUM campo de valor é lido/retornado.
+  const { data: parcelas, error } = await sb
+    .from("system_parcelas")
+    .select("status, vencimento")
+    .eq("organization_id", DEFAULT_ORG)
+    .in("case_id", caseIds);
+  if (error) throw new FinanceiroServiceError(error.message, 500);
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const devendo = (parcelas ?? []).some((p) => {
+    if (p.status === "VENCIDA" || p.status === "INADIMPLENTE") return true;
+    // Pendente com vencimento no passado = em atraso.
+    if (p.status === "PENDENTE" && p.vencimento && p.vencimento < hoje) return true;
+    return false;
+  });
+
+  return { emDia: !devendo };
 }
 
 // ─── Relatório financeiro POR CASO (item 3, 2026-07-09) ───────────────────────

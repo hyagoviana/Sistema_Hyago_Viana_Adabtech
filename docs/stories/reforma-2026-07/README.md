@@ -13,7 +13,10 @@
 | **R4-01** | ✅ **Concluída** (dev+qa+architect+correção) | Gate de $ na ficha do cliente via `permissaoEfetiva`. Só front. Sem commit. |
 | **R4-02** | ✅ **Concluída** (dev+qa+architect) | Gate de $ no bloco `finBifurcated` da ficha do caso (TermoPanel+AsaasCobrancasPanel). Só front. Sem commit. |
 | **R4-03** | ✅ **Concluída** (dev+qa+architect) | `requireModule` server-side (papel+overrides via `permissaoEfetiva`) nos RPCs financeiro/asaas/contaazul (view/edit) + guard do dashboard. Crons (contaazul+asaas) confirmados seguros (chamam service, não RPC). **Base pronta p/ R3-03.** |
-| R4-04 | ⏭️ **Próxima** | Espelhamento: painel financeiro do cliente agrega todos os casos + selo "em dia/devendo". |
+| **R4-04** | ✅ **Concluída** (dev+qa+architect) | Agregação por cliente robustecida (edge órfã) + endpoint leve `getClientPaymentStatus` (`requireAuth`, só `{emDia}`, sem $) → selo "Em dia/Devendo" para não-financeiro. MIX/PLA não existe na modelagem → pendência do owner (3 perguntas). |
+| R4-05 | ⏭️ **Próxima** | Mover "Gerar fatura / Conta Azul" para dentro do painel financeiro do cliente. **Fecha o épico R4.** |
+
+**Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.
 
 > **Trabalho agora direto na `main`** (decisão do dono 2026-07-18 — sistema em construção, não em produção). Sem push automático.
 

@@ -3,13 +3,14 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  getClientPaymentStatus,
   getDashboardFinanceiro,
   getRelatorioFinanceiroPorCaso,
   listAllParcelas,
 } from "@/lib/financeiro-service";
 import { syncAsaasPagamentos } from "@/lib/asaas/service";
 import { syncContaAzulPagamentos } from "@/lib/contaazul/service";
-import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 import type { ModuleAction } from "@/lib/rbac";
 
 // R4-03 — todos os RPCs deste arquivo expõem/movimentam $ (módulo `financeiro`).
@@ -45,6 +46,33 @@ const listParcelasFiltersSchema = z.object({
 export const listAllParcelasFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => listParcelasFiltersSchema.parse(d ?? {}))
   .handler(async ({ data }) => handle("view", () => listAllParcelas(data)));
+
+// R4-04 (AC-3) — SELO BINÁRIO "Em dia / Devendo" do cliente.
+// ATENÇÃO: este RPC usa `requireAuth` (qualquer autenticado), NÃO
+// `requireModule('financeiro','view')`. Isso é INTENCIONAL: o retorno é apenas
+// `{ emDia: boolean }` — um sinal binário NÃO-SENSÍVEL, sem nenhum centavo/valor.
+// Se fosse gated por `financeiro:view`, o operacional (que pode ver a ficha do
+// cliente mas não os $) receberia 403 e o selo não apareceria — justamente o
+// caso de uso. O serviço `getClientPaymentStatus` só lê `status`/`vencimento`
+// das parcelas e nunca expõe valor, então é seguro liberar a todo autenticado.
+const clientStatusSchema = z.object({ clientId: z.string().uuid() });
+
+export const getClientPaymentStatusFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => clientStatusSchema.parse(d))
+  .handler(async ({ data }) => {
+    try {
+      await requireAuth();
+      return await getClientPaymentStatus(data.clientId);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      const status = (err as { status?: number })?.status;
+      setResponseStatus(typeof status === "number" ? status : 500);
+      throw err instanceof Error ? new Error(err.message) : err;
+    }
+  });
 
 // Relatório financeiro por CASO (pago/pendente/vencido) — item 3.
 export const getRelatorioFinanceiroFn = createServerFn({ method: "GET" }).handler(async () =>

@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
+import { useClientPaymentStatus } from "@/hooks/useFinanceiro";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
 import { useMyModulePerms } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
@@ -275,21 +276,13 @@ function ClienteDetalhe() {
       <OrnamentalDivider />
 
       {/* R4-01 — gate de $ (AC-2/AC-4): sem `financeiro:view` o componente que
-          busca valores (useAllParcelas) NÃO é montado. Mostra só um selo textual
-          sem nenhum valor $. Selo "Em dia/Devendo" é opcional aqui (R4-04 entrega
-          o sinal binário); no MVP fica "—". */}
+          busca valores (useAllParcelas) NÃO é montado. R4-04 (AC-3) — no lugar dos
+          valores, o papel sem gate vê o SELO BINÁRIO "Em dia / Devendo" (endpoint
+          leve `requireAuth`, retorna só boolean, sem R$). */}
       {podeVerFinanceiro ? (
         <ClientFinanceiroSection clientId={cliente.id} />
       ) : (
-        <div>
-          <h2 className="text-[19px] font-semibold text-[var(--navy)] mb-4">
-            Financeiro do cliente
-          </h2>
-          <div className="card-hero p-4 flex items-center justify-between gap-4">
-            <span className="text-[13px] text-muted-foreground">Situação financeira</span>
-            <Badge className="bg-muted text-muted-foreground text-[11px]">—</Badge>
-          </div>
-        </div>
+        <ClientPaymentStatusSeal clientId={cliente.id} />
       )}
 
       <OrnamentalDivider />
@@ -327,6 +320,29 @@ function ClienteDetalhe() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+// R4-04 (AC-3) — SELO BINÁRIO para papéis SEM `financeiro:view`. Consome o
+// endpoint leve `getClientPaymentStatusFn` (requireAuth), que devolve só
+// `{ emDia }` — nenhum valor $ passa por aqui. Substitui o antigo "—".
+function ClientPaymentStatusSeal({ clientId }: { clientId: string }) {
+  const { data, isLoading } = useClientPaymentStatus(clientId);
+
+  return (
+    <div>
+      <h2 className="text-[19px] font-semibold text-[var(--navy)] mb-4">Financeiro do cliente</h2>
+      <div className="card-hero p-4 flex items-center justify-between gap-4">
+        <span className="text-[13px] text-muted-foreground">Situação financeira</span>
+        {isLoading ? (
+          <Badge className="bg-muted text-muted-foreground text-[11px]">…</Badge>
+        ) : data?.emDia ? (
+          <Badge className="bg-green-100 text-green-800 text-[11px]">Em dia</Badge>
+        ) : (
+          <Badge className="bg-red-100 text-red-800 text-[11px]">Devendo</Badge>
+        )}
+      </div>
     </div>
   );
 }

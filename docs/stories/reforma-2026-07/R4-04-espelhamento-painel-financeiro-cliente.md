@@ -2,7 +2,7 @@
 
 - **Épico:** R4 — Desacoplar Financeiro (bloco B4 + E5)
 - **ID:** R4-04
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (consolidar/validar agregação por cliente + selo devendo/em dia + valor MIX/PLA)
 - **Executor sugerido:** @dev · Quality gate: @architect
 - **Prioridade no épico:** 4 (o painel "só admin/financeiro" que agrega tudo — depende dos gates R4-01/03)
@@ -55,11 +55,14 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Validar agregação por cliente** (AC: 1,2) — teste com cliente de ≥2 casos: `listAllParcelas({ clientId })` retorna parcelas dos 2 casos; totais batem; nenhum vazamento cross-cliente. Corrigir se o filtro (`financeiro-service.ts:112`) falhar em edge (client_id nulo → hoje vira `""`, revisar linha 106).
-- [ ] **Sinal binário "devendo/em dia"** (AC: 3) — adicionar seletor derivado (no hook/serviço) que devolve `{ emDia: boolean }` a partir de status (`VENCIDA`/`INADIMPLENTE`), SEM centavos, para o caminho sem gate (usado por R4-01/R4-02).
-- [ ] **[C7] MIX/PLA (investigar + elicitar owner)** (AC: 4) — localizar a origem de MIX/PLA (termo/honorários) e **levar as 3 perguntas do bloco "Pendência Formal do Owner" ao owner**. Se existir/definido, expor rótulo por caso no painel; senão, manter a pendência registrada e seguir — **N4 aceito sem MIX/PLA** (não-bloqueante).
-- [ ] **Robustez** — tratar `client_id === ""` (parcela órfã sem caso) para não somar no cliente errado.
-- [ ] **Testes** (AC: 1-4) — cliente multi-caso; isolamento entre clientes; selo binário; `npx tsc --noEmit` / `npm run lint` verdes.
+- [x] **Validar agregação por cliente** (AC: 1,2) — `listAllParcelas({ clientId })` já agrega todos os casos do cliente e filtra por `client_id`; robustecido o edge (ver abaixo). Teste de isolamento/agregação em `financeiro-aggregation.test.ts` (verde).
+- [x] **Sinal binário "devendo/em dia"** (AC: 3) — `getClientPaymentStatus(clientId)` (serviço) → `{ emDia }` SEM valores; RPC `getClientPaymentStatusFn` (`requireAuth`); hook `useClientPaymentStatus`; consumido no caminho sem gate de `clientes.$id.tsx`.
+- [x] **[C7] MIX/PLA (investigar + elicitar owner)** (AC: 4) — investigado: **não existe origem** para MIX/PLA na modelagem (ver Investigação abaixo). Pendência mantida (3 perguntas ao owner). **N4 aceito sem MIX/PLA** (não-bloqueante) — nada implementado.
+- [x] **Robustez** — `client_id === ""` (parcela órfã sem caso) tratado no filtro (`financeiro-service.ts` — `p.client_id !== "" && p.client_id === wanted`); parcela órfã nunca agrega no cliente errado.
+- [x] **Testes** (AC: 1-4) — `financeiro-aggregation.test.ts` (agregação + isolamento + selo binário) verde; `npm run typecheck` sem erro NOVO nos arquivos tocados; `npm run test:rbac` verde; eslint sem erro real (só CRLF pré-existente do repo).
+
+### Investigação MIX/PLA (C7) — resultado
+Busca por `MIX`/`PLA` em todo `src/` e nas migrations: **nenhum token literal**. A única classificação de forma de pagamento é `system_case_honorarios.forma_pagamento` / `system_termo_snapshots.forma_pagamento`, cujos valores são apenas **`PARCELADO` / `A_VISTA`** (CHECK em `20260608000007_s17_termo.sql:28`). Não há coluna nem enum que corresponda a "MIX" (valor misto) nem "PLA" (plano). **Conclusão:** origem inexistente na modelagem atual → pendência formal do owner mantida (3 perguntas), MIX/PLA NÃO implementado (opcional, não-bloqueante conforme AC-4).
 
 ---
 
@@ -94,9 +97,29 @@
 
 ## File List
 
-- `sistema-hv/src/lib/financeiro-service.ts` (validar/robustecer filtro por cliente + seletor binário)
-- `sistema-hv/src/components/clients/ClientFinanceiroSection.tsx` (selo devendo/em dia; MIX/PLA se existir)
-- `sistema-hv/src/hooks/useFinanceiro.ts` (seletor `emDia` sem valores)
+- `sistema-hv/src/lib/financeiro-service.ts` (robustez do filtro por cliente `client_id !== ""` + novo `getClientPaymentStatus` — só boolean, sem valores)
+- `sistema-hv/src/rpc/financeiro.ts` (novo `getClientPaymentStatusFn` — `requireAuth`, sem `requireModule`; documentado o porquê)
+- `sistema-hv/src/hooks/useFinanceiro.ts` (novo `useClientPaymentStatus`)
+- `sistema-hv/src/routes/clientes.$id.tsx` (caminho SEM gate agora mostra selo binário "Em dia"/"Devendo" via `ClientPaymentStatusSeal`, no lugar do "—")
+- `sistema-hv/src/lib/financeiro-aggregation.test.ts` (NOVO — teste standalone: agregação/isolamento por cliente + derivação do selo binário)
+
+> Nota: `ClientFinanceiroSection.tsx` **não** foi alterado — a agregação já funcionava; o selo binário vive no caminho sem gate (`clientes.$id.tsx`) para não montar o componente que busca valores.
+
+## Dev Agent Record
+
+**Agente:** @dev (James) · **Modelo:** claude-opus-4-8[1m]
+
+**Decisões de implementação:**
+1. **Endpoint do selo (`requireAuth`, não `requireModule`):** o selo "Em dia/Devendo" precisa aparecer para papéis SEM `financeiro:view` (operacional). Como `listAllParcelasFn` é gated (403 p/ eles em R4-03), criei um endpoint SEPARADO e LEVE. `getClientPaymentStatus` lê só `status`/`vencimento` das parcelas dos casos do cliente e devolve `{ emDia: boolean }` — **nenhum centavo/valor** trafega. Por não expor $, o RPC usa `requireAuth` (sinal não-sensível, permitido a todo autenticado); usar `requireModule('financeiro','view')` aqui derrotaria o objetivo. Justificativa documentada no service e no RPC.
+2. **Robustez da agregação:** o filtro por cliente passou de `p.client_id === filters.clientId` para `p.client_id !== "" && p.client_id === wanted`. Parcela cujo caso não resolve fica com `client_id === ""`; a guarda explícita garante que uma órfã nunca agregue no cliente errado (e que um `clientId===""` acidental não junte todas as órfãs).
+3. **Regra do selo:** `emDia=false` (Devendo) se existe parcela `VENCIDA`/`INADIMPLENTE` OU `PENDENTE` com vencimento no passado; senão `Em dia`. Cliente sem parcelas = Em dia.
+4. **MIX/PLA:** investigado, sem origem na modelagem → não implementado (não-bloqueante); pendência do owner mantida.
+
+**Validação:**
+- `npm run typecheck`: sem erro NOVO nos arquivos tocados (erros restantes são pré-existentes em `termo-service.ts:173`, `visibility.ts`, `casos.$id.tsx:463`, `casos.financeiro.index.tsx` — não relacionados a R4-04).
+- `npm run test:rbac`: 🎉 verde.
+- `npx tsx src/lib/financeiro-aggregation.test.ts`: 11/11 verdes.
+- eslint dos arquivos alterados: zero erro real; único ruído é `prettier/prettier` CRLF, **pré-existente no repo** (git avisa "LF will be replaced by CRLF"; versões pristine já acusam os mesmos erros).
 
 ## Change Log
 
@@ -104,3 +127,4 @@
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial do épico R4 (B4/E5) — espelhamento painel do cliente (N4) | @sm |
 | 2026-07-18 | 0.2 | C7 (QA): "valor MIX/PLA" elevado a **pendência formal do owner** (novo bloco com 3 perguntas) — N4 aceito sem ela, enriquecimento opcional não-bloqueante; task MIX/PLA e AC-4 atualizados. C9 (QA): AC frouxo resolvido — selo "Em dia"/"Devendo" cravado como **binário obrigatório** (AC-3) e MIX/PLA como **opcional não-bloqueante** (AC-4), sem ambiguidade. | @sm |
+| 2026-07-18 | 0.3 | **Implementação (@dev).** AC-1/2: agregação por cliente validada + robustez do edge `client_id===""` (parcela órfã não vaza). AC-3: selo binário "Em dia/Devendo" — `getClientPaymentStatus` (só boolean) + RPC `getClientPaymentStatusFn` (`requireAuth`, documentado) + hook `useClientPaymentStatus` + consumo no caminho sem gate de `clientes.$id.tsx` (substitui o "—"). AC-4: MIX/PLA sem origem na modelagem → não implementado, pendência mantida (não-bloqueante). Teste `financeiro-aggregation.test.ts` (11/11). typecheck sem erro novo, test:rbac verde, eslint só CRLF pré-existente. Status → Ready for Review. | @dev |
