@@ -23,8 +23,13 @@ export const Route = createFileRoute("/api/contaazul/callback")({
           );
         }
 
-        // O redirect_uri usado na troca DEVE ser idêntico ao da URL de autorização.
-        const redirectUri = `${url.origin}/api/contaazul/callback`;
+        // O redirect_uri usado na troca DEVE ser idêntico ao registrado no portal
+        // da Conta Azul. O domínio pode chegar sem www (redirect 301), mas o Cognito
+        // exige match exato com o que foi cadastrado.
+        const registeredUri = "https://www.sistemahyagoviana.com.br/api/contaazul/callback";
+        const redirectUri = url.origin.includes("localhost")
+          ? `${url.origin}/api/contaazul/callback`
+          : registeredUri;
 
         try {
           await exchangeCodeForTokens(code, redirectUri);
