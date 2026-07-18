@@ -35,6 +35,7 @@ import {
   missingRequiredCustom,
 } from "@/components/clients/CustomFieldsSection";
 import { ESTADOS_BR } from "@/lib/br/estados";
+import { HOSPITAIS_RESIDENCIA, INSTITUICOES_GRADUACAO } from "@/lib/br/instituicoes";
 import { formatCep, formatCpfCnpj, formatPhone, formatRg } from "@/lib/format";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
 import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
@@ -94,52 +95,9 @@ const ESPECIALIDADES = [
   "Outra",
 ];
 
-// Sugestões FIXAS (datalist) — permitem digitar, mas padronizam a busca no CRM.
-const INSTITUICOES = [
-  "USP",
-  "UNIFESP",
-  "UFRJ",
-  "UFMG",
-  "UNICAMP",
-  "UFRGS",
-  "UFBA",
-  "UFPE",
-  "UFC",
-  "UFPR",
-  "UFSC",
-  "UERJ",
-  "UnB",
-  "UFG",
-  "UFPB",
-  "UFES",
-  "UFRN",
-  "UFPA",
-  "UFAL",
-  "UFMA",
-  "UFS",
-  "UEL",
-  "PUC-SP",
-  "PUC-RS",
-  "PUC-PR",
-  "EBMSP (Bahiana)",
-  "UNCISAL",
-  "UFMT",
-  "UFMS",
-  "UFU",
-];
-
-const HOSPITAIS = [
-  "Hospital das Clínicas (HC-FMUSP)",
-  "Hospital São Paulo (UNIFESP)",
-  "Santa Casa de São Paulo",
-  "Hospital Universitário Prof. Edgard Santos (HUPES)",
-  "Hospital das Clínicas da UFMG",
-  "Hospital de Clínicas de Porto Alegre",
-  "Hospital das Clínicas da UFPE",
-  "Hospital Geral de Fortaleza",
-  "Hospital de Base do DF",
-  "Hospital Universitário Walter Cantídio",
-];
+// Sugestões de graduação/residência: fonte única curada e ampliada em
+// `@/lib/br/instituicoes` (datalist). São só SUGESTÕES — o usuário pode digitar
+// um valor fora da lista (entrada livre), que persiste em professional_data.
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -820,12 +778,12 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               </p>
 
               <datalist id="instituicoes-graduacao">
-                {INSTITUICOES.map((i) => (
+                {INSTITUICOES_GRADUACAO.map((i) => (
                   <option key={i} value={i} />
                 ))}
               </datalist>
               <datalist id="hospitais-residencia">
-                {HOSPITAIS.map((h) => (
+                {HOSPITAIS_RESIDENCIA.map((h) => (
                   <option key={h} value={h} />
                 ))}
               </datalist>
