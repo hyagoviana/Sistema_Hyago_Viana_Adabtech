@@ -1,9 +1,34 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Loader2, Receipt } from "lucide-react";
+import { Loader2, Plus, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
+import { NovaCobrancaDialog } from "@/components/cases/NovaCobrancaDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Eyebrow } from "@/components/hv/primitives";
+import { useCasesList } from "@/hooks/useCases";
 import { useAllParcelas } from "@/hooks/useFinanceiro";
+import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useAuth } from "@/lib/auth";
+import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
+import { permissaoEfetiva } from "@/lib/rbac";
 
 function fmtBRL(centavos: number | null | undefined): string {
   if (!centavos) return "R$ 0,00";
@@ -27,6 +52,14 @@ export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
   const { data: parcelas, isLoading } = useAllParcelas({ clientId });
   const items = parcelas ?? [];
 
+  // R4-05 — a criação de cobrança vive DENTRO do painel financeiro do cliente
+  // (já gate-ado por `financeiro:view` em R4-01), e o BOTÃO só aparece com
+  // `financeiro:edit`. Escrita ($) → gate de edição efetivo (papel + overrides).
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  const podeEditarFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "edit");
+  const [novaCobrancaOpen, setNovaCobrancaOpen] = useState(false);
+
   const totalValor = items.reduce((s, p) => s + (p.valor_centavos ?? 0), 0);
   const totalPago = items
     .filter((p) => p.status === "PAGA")
@@ -38,7 +71,14 @@ export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
 
   return (
     <div>
-      <h2 className="text-[19px] font-semibold text-[var(--navy)] mb-4">Financeiro do cliente</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-[19px] font-semibold text-[var(--navy)]">Financeiro do cliente</h2>
+        {podeEditarFinanceiro && (
+          <Button size="sm" onClick={() => setNovaCobrancaOpen(true)}>
+            <Plus size={13} className="mr-1" /> Nova cobrança
+          </Button>
+        )}
+      </div>
 
       {isLoading && (
         <div className="flex items-center gap-2 text-muted-foreground text-[13px] py-4">
@@ -153,6 +193,115 @@ export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
           </div>
         </>
       )}
+
+      {/* R4-05 — criação de cobrança pelo painel do cliente: escolhe o CASO
+          (a cobrança é por caseId) e delega ao NovaCobrancaDialog compartilhado.
+          Só monta com `financeiro:edit`. */}
+      {podeEditarFinanceiro && (
+        <NovaCobrancaClienteDialog
+          clientId={clientId}
+          open={novaCobrancaOpen}
+          onOpenChange={setNovaCobrancaOpen}
+        />
+      )}
     </div>
+  );
+}
+
+// R4-05 — wrapper que roda no painel do CLIENTE: pede o caso-alvo (lista só os
+// casos DAQUELE cliente, via useCasesList({ client_id })) e então abre o
+// NovaCobrancaDialog compartilhado com o caseId escolhido. Valida que o caso
+// pertence ao cliente antes de prosseguir (caso∈cliente).
+function NovaCobrancaClienteDialog({
+  clientId,
+  open,
+  onOpenChange,
+}: {
+  clientId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { data: cases, isLoading } = useCasesList({ client_id: clientId });
+  const casos = cases ?? [];
+  const [caseId, setCaseId] = useState("");
+  const [cobrancaOpen, setCobrancaOpen] = useState(false);
+
+  // Reseta a seleção sempre que o seletor (re)abre.
+  useEffect(() => {
+    if (open) setCaseId("");
+  }, [open]);
+
+  function handleAvancar() {
+    if (!caseId) {
+      toast.error("Escolha o caso para gerar a cobrança");
+      return;
+    }
+    // Guarda caso∈cliente: só avança se o caseId pertence à lista do cliente.
+    const pertence = casos.some((c) => c.id === caseId);
+    if (!pertence) {
+      toast.error("Caso inválido para este cliente");
+      return;
+    }
+    onOpenChange(false);
+    setCobrancaOpen(true);
+  }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova cobrança</DialogTitle>
+            <DialogDescription>
+              Escolha o caso deste cliente para o qual a cobrança será gerada.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label>Caso</Label>
+              {isLoading ? (
+                <div className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
+                  <Loader2 size={14} className="animate-spin" /> Carregando casos…
+                </div>
+              ) : casos.length === 0 ? (
+                <div className="mt-1 rounded-md border border-dashed border-[var(--border)] p-3 text-[13px] text-muted-foreground">
+                  Este cliente ainda não tem casos. Crie um caso antes de gerar cobrança.
+                </div>
+              ) : (
+                <Select value={caseId} onValueChange={setCaseId}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o caso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {casos.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.case_code || c.id.slice(0, 8)}
+                        {" — "}
+                        {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAvancar} disabled={!caseId || casos.length === 0}>
+              Avançar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de cobrança compartilhado — mesmo fluxo da ficha do caso. */}
+      {caseId && (
+        <NovaCobrancaDialog caseId={caseId} open={cobrancaOpen} onOpenChange={setCobrancaOpen} />
+      )}
+    </>
   );
 }
