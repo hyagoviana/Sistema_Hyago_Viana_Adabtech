@@ -2,7 +2,7 @@
 
 - **Sprint/Epic:** Reforma 2026-07 · **R1 — Modelo Pessoa/Lead/Cliente por caso** (bloco B1)
 - **ID:** R1-03
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** S (agrupamento/seção na lista de casos da ficha; sem migration)
 - **Executor sugerido:** @dev (UI) · Quality gate: @qa
 
@@ -42,12 +42,12 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Particionar por lifecycle** (AC:1,2,5) — em `ClientCasesSection`, dividir `cases` em `leads`/`clientes`/`perdidos` por `c.lifecycle` (`useMemo`).
-- [ ] **Renderizar grupos** (AC:1,3) — cabeçalhos de seção com contagem; reusar o `card-editorial` de cada item (não reescrever o card). Grupo vazio oculto.
-- [ ] **Ordenação** — dentro de cada grupo, manter a ordem atual (mais recente primeiro).
-- [ ] **Estado vazio** (AC:3) — se o cliente não tem nenhum caso, manter a mensagem atual ("Novo caso").
-- [ ] **Invalidação** (AC:4) — confirmar que a promoção a CLIENTE invalida `queryKeys.cases.list({ client_id })` (já ocorre nos mutations existentes; só validar).
-- [ ] **Testes** (AC:1-5) — ver Testing; `npx tsc --noEmit` / `npm run lint` verdes.
+- [x] **Particionar por lifecycle** (AC:1,2,5) — em `ClientCasesSection`, dividir `cases` em `leads`/`clientes`/`perdidos` por `c.lifecycle` (`useMemo`). Extraído em função **exportada e reutilizável** `partitionCasesByLifecycle<T>()` (compõe com R1-04/TEMA).
+- [x] **Renderizar grupos** (AC:1,3) — cabeçalhos de seção com contagem; reusa o `card-editorial` de cada item via `CaseCard` (mesmo markup/`Link`, não reescrito). Grupo vazio oculto (`CaseGroup` retorna `null`).
+- [x] **Ordenação** — dentro de cada grupo, mantida a ordem original (a partição percorre `cases` em ordem e faz `push`; mais recente primeiro).
+- [x] **Estado vazio** (AC:3) — `cases.length === 0` mantém a mensagem/botão "Novo caso" intactos.
+- [x] **Invalidação** (AC:4) — não tocado: promoção a CLIENTE já invalida `queryKeys.cases.list(...)` nos mutations existentes; particionamento é derivado do `data` do mesmo hook, então migra de grupo no refetch.
+- [x] **Testes** (AC:1-5) — `npm run typecheck` (0 erro novo em `ClientCasesSection.tsx`), `npx eslint` (0 erro), `npm run test:rbac` (verde).
 
 ---
 
@@ -81,10 +81,32 @@
 
 ## File List
 
-- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (seções por lifecycle)
+- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (partição por lifecycle + seções; único arquivo tocado)
+
+## Dev Agent Record
+
+**Agente:** @dev (James) · **Data:** 2026-07-18
+
+**Como particionou:** função **exportada e reutilizável** `partitionCasesByLifecycle<T>(cases)` retorna `{ clientes, leads, perdidos }`. É genérica (`<T>`) e não conhece a forma do caso — usa o helper `caseLifecycle(c)` que lê `c.lifecycle` de forma defensiva. Percorre a lista uma vez em ordem e distribui por `push`, preservando a ordem original (mais recente primeiro). O componente a consome num `useMemo([cases])`. Deixada exportada de propósito para R1-04 compor a partição por lifecycle com o agrupamento por TEMA.
+
+**Seções e ordem (grupo vazio some):**
+1. **"Casos efetivados"** — `lifecycle='CLIENTE'` (primeiro).
+2. **"Aguardando assinatura"** — `lifecycle='LEAD'`.
+3. **"Perdidos"** — `lifecycle='PERDIDO'` (ao final).
+Cada seção (`CaseGroup`) mostra o título + contagem `(n)` e retorna `null` quando vazia. O estado vazio global (cliente sem nenhum caso) permanece com a mensagem/botão "Novo caso" originais.
+
+**Tratamento de lifecycle undefined/null:** `caseLifecycle()` só reconhece `'CLIENTE'` e `'PERDIDO'`; **qualquer outro valor (incl. `undefined`/`null`)** cai no default **LEAD**. Segue o mesmo padrão de `casos.$id.tsx` (`... ?? "LEAD"`). Casos antigos sem o campo não somem — aparecem em "Aguardando assinatura".
+
+**Card / navegação intactos:** o markup do `<li className="card-editorial !p-4">` e o `Link to="/casos/$id" params={{ id: c.id }}` foram **extraídos sem alteração** para o componente `CaseCard` (mesmas classes, mesmo conteúdo, mesmo comentário ITEM 1). Nenhuma query nova: consome só o `data` de `useCasesList({ client_id })`.
+
+**Validação:**
+- `npm run typecheck`: 22 erros no total, **idênticos** ao tree limpo (medido via `git stash`) — **0 erro novo**, nenhum em `ClientCasesSection.tsx`.
+- `npx eslint src/components/cases/ClientCasesSection.tsx`: **0 error**, 1 warning `react-refresh/only-export-components` (esperado/aceito: a story pede a função de partição **exportada** para R1-04; warning é só dica de HMR em dev).
+- `npm run test:rbac`: **verde** (todos passaram).
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial (N7 / B1) | @sm |
+| 2026-07-18 | 0.2 | Implementado: `partitionCasesByLifecycle` (exportada/reutilizável) + seções `CaseGroup`/`CaseCard` por lifecycle; default LEAD p/ undefined; card/navegação preservados. Typecheck (0 novo)/eslint (0 erro)/test:rbac verdes. Status → Ready for Review. | @dev |

@@ -22,7 +22,9 @@
 
 | **R1-02** | ✅ **Concluída** (auditoria; validação combinada OK) | Bug B3: **sem dado incoerente** — os 3 casos flagados são clientes legítimos (doc combinado "Contrato e procuração" assinado, `doc_kind='procuracao'` do S9-12; regra `webhook.ts:158` qualquer-doc-assinado⇒CLIENTE). NÃO criou migration (rebaixaria clientes reais). A percepção "lead E cliente" do Hyago é **UX do roster** (aba Leads = lista-mestra) → resolvida em **R1-03**. |
 
-Próximo: **R1-03** (aba casos separa leads / raiz da percepção do Hyago) → R1-04/05 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
+| **R1-03** | ✅ **Concluída** (dev+qa) | Aba de casos do cliente particionada em seções por lifecycle (Efetivados/Aguardando assinatura/Perdidos), client-side, sem query nova. Função `partitionCasesByLifecycle` exportada (reuso em R1-04). *UX: confirmar com Hyago a ordem dos grupos (hoje Efetivados primeiro).* |
+
+Próximo: **R1-04** (ficha ramificada por TEMA — depende de R2, entra atrás de adaptador) → R1-05 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
 
 **Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.
