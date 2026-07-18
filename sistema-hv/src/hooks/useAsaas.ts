@@ -8,6 +8,7 @@ import {
   getChargeStatusFn,
   getPixQrCodeFn,
   listClientChargesFn,
+  syncAsaasPagamentosFn,
   syncClientToAsaasFn,
 } from "@/rpc/asaas";
 
@@ -97,6 +98,21 @@ export function useClientCharges(clientId: string | undefined) {
     queryKey: ["asaas-charges", clientId],
     queryFn: () => fn({ data: { clientId: clientId! } }),
     enabled: !!clientId,
+  });
+}
+
+// ─── Sync Pagamentos (manual) ────────────────────────────────────────────────
+
+export function useSyncAsaasPagamentos() {
+  const fn = useServerFn(syncAsaasPagamentosFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (caseId?: string) => fn({ data: { caseId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+      qc.invalidateQueries({ queryKey: ["parcelas"] });
+      qc.invalidateQueries({ queryKey: ["asaas-charges"] });
+    },
   });
 }
 

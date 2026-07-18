@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { maskBrlReais, normalizeBrl } from "@/lib/format";
-import { useCancelCharge, useCreateCharge, usePixQrCode } from "@/hooks/useAsaas";
+import { useCancelCharge, useCreateCharge, usePixQrCode, useSyncAsaasPagamentos, useSyncClientToAsaas } from "@/hooks/useAsaas";
 import { useSyncClientToContaAzul, useCreateContaAzulCharge } from "@/hooks/useContaAzul";
 import { useParcelas } from "@/hooks/useTermo";
 
@@ -78,6 +78,8 @@ type Props = {
 export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
   const { data: parcelas, isLoading } = useParcelas(caseId);
   const syncClient = useSyncClientToContaAzul();
+  const syncAsaasClient = useSyncClientToAsaas();
+  const syncAsaasPagamentos = useSyncAsaasPagamentos();
   const cancelCharge = useCancelCharge();
   const [novaOpen, setNovaOpen] = useState(false);
   const [pixFor, setPixFor] = useState<string | null>(null);
@@ -118,6 +120,36 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
               <RefreshCw size={12} className="mr-1" />
             )}
             Sync Conta Azul
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={syncAsaasClient.isPending || syncAsaasPagamentos.isPending}
+            onClick={() => {
+              syncAsaasClient.mutate(clientId, {
+                onSuccess: (r) =>
+                  toast.success(
+                    r.created
+                      ? "Cliente criado no Asaas"
+                      : "Cliente sincronizado com Asaas",
+                  ),
+                onError: (e) =>
+                  toast.error(e instanceof Error ? e.message : "Falha ao sincronizar"),
+              });
+              syncAsaasPagamentos.mutate(caseId, {
+                onSuccess: (r) => {
+                  if (r.atualizadas > 0) toast.success(`${r.atualizadas} parcela(s) atualizada(s) via Asaas`);
+                },
+              });
+            }}
+            title="Sincronizar cliente e pagamentos com Asaas"
+          >
+            {(syncAsaasClient.isPending || syncAsaasPagamentos.isPending) ? (
+              <Loader2 size={12} className="mr-1 animate-spin" />
+            ) : (
+              <RefreshCw size={12} className="mr-1" />
+            )}
+            Sync Asaas
           </Button>
           <Button size="sm" onClick={() => setNovaOpen(true)}>
             <Plus size={13} className="mr-1" /> Nova cobrança

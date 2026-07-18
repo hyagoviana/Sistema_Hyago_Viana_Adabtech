@@ -9,145 +9,87 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TarefasRouteImport } from './routes/tarefas'
-import { Route as RelatorioFinanceiroRouteImport } from './routes/relatorio-financeiro'
-import { Route as ReferenciasRouteImport } from './routes/referencias'
-import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
-import { Route as PipelineRouteImport } from './routes/pipeline'
-import { Route as PermissoesRouteImport } from './routes/permissoes'
-import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
-import { Route as ModelosRouteImport } from './routes/modelos'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as HojeRouteImport } from './routes/hoje'
-import { Route as EntrarRouteImport } from './routes/entrar'
-import { Route as DesignSystemRouteImport } from './routes/design-system'
-import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
-import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as WhatsappIndexRouteImport } from './routes/whatsapp.index'
-import { Route as PortalIndexRouteImport } from './routes/portal.index'
-import { Route as PeticionamentoIndexRouteImport } from './routes/peticionamento.index'
-import { Route as PainelIndexRouteImport } from './routes/painel.index'
-import { Route as MarketingIndexRouteImport } from './routes/marketing.index'
-import { Route as DashboardsIndexRouteImport } from './routes/dashboards.index'
-import { Route as ControladoriaIndexRouteImport } from './routes/controladoria.index'
-import { Route as ComercialIndexRouteImport } from './routes/comercial.index'
-import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as HojeRouteImport } from './routes/hoje'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ModelosRouteImport } from './routes/modelos'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
+import { Route as PermissoesRouteImport } from './routes/permissoes'
+import { Route as PipelineRouteImport } from './routes/pipeline'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as ReferenciasRouteImport } from './routes/referencias'
+import { Route as RelatorioFinanceiroRouteImport } from './routes/relatorio-financeiro'
+import { Route as TarefasRouteImport } from './routes/tarefas'
 import { Route as CasosIndexRouteImport } from './routes/casos.index'
-import { Route as WhatsappAgenteRouteImport } from './routes/whatsapp.agente'
-import { Route as PortalPerfilRouteImport } from './routes/portal.perfil'
-import { Route as PortalMensagensRouteImport } from './routes/portal.mensagens'
-import { Route as PortalDocumentosRouteImport } from './routes/portal.documentos'
-import { Route as PortalBoletosRouteImport } from './routes/portal.boletos'
-import { Route as PeticionamentoBancoPecasRouteImport } from './routes/peticionamento.banco-pecas'
-import { Route as PeticionamentoIdRouteImport } from './routes/peticionamento.$id'
-import { Route as PainelResultadosRouteImport } from './routes/painel.resultados'
-import { Route as PainelRelatoriosRouteImport } from './routes/painel.relatorios'
-import { Route as PainelDemandasRouteImport } from './routes/painel.demandas'
-import { Route as PainelAssociadosRouteImport } from './routes/painel.associados'
-import { Route as MarketingConteudosRouteImport } from './routes/marketing.conteudos'
-import { Route as MarketingCalendarioRouteImport } from './routes/marketing.calendario'
-import { Route as MarketingBancoMidiaRouteImport } from './routes/marketing.banco-midia'
-import { Route as InteligenciaLeadsRouteImport } from './routes/inteligencia.leads'
-import { Route as DashboardsWhatsappRouteImport } from './routes/dashboards.whatsapp'
-import { Route as DashboardsOperacionalRouteImport } from './routes/dashboards.operacional'
-import { Route as DashboardsMarketingRouteImport } from './routes/dashboards.marketing'
-import { Route as DashboardsFinanceiroRouteImport } from './routes/dashboards.financeiro'
-import { Route as DashboardsComercialRouteImport } from './routes/dashboards.comercial'
-import { Route as DashboardsAdminRouteImport } from './routes/dashboards.admin'
-import { Route as ControladoriaTesesRouteImport } from './routes/controladoria.teses'
-import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.prazos'
-import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
-import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
-import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
-import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
-import { Route as ComercialFunilRouteImport } from './routes/comercial.funil'
-import { Route as ComercialEmailMarketingRouteImport } from './routes/comercial.email-marketing'
-import { Route as ComercialAssinaturasRouteImport } from './routes/comercial.assinaturas'
-import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
-import { Route as CasosListaRouteImport } from './routes/casos.lista'
-import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
 import { Route as CasosIdRouteImport } from './routes/casos.$id'
-import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
-import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
-import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
-import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
-import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
-import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
-import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
-import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
-import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
+import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
+import { Route as CasosListaRouteImport } from './routes/casos.lista'
+import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
+import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
+import { Route as ComercialIndexRouteImport } from './routes/comercial.index'
+import { Route as ComercialAssinaturasRouteImport } from './routes/comercial.assinaturas'
+import { Route as ComercialEmailMarketingRouteImport } from './routes/comercial.email-marketing'
+import { Route as ComercialFunilRouteImport } from './routes/comercial.funil'
+import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
+import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
+import { Route as ControladoriaIndexRouteImport } from './routes/controladoria.index'
+import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
+import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
+import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.prazos'
+import { Route as ControladoriaTesesRouteImport } from './routes/controladoria.teses'
+import { Route as DashboardsIndexRouteImport } from './routes/dashboards.index'
+import { Route as DashboardsAdminRouteImport } from './routes/dashboards.admin'
+import { Route as DashboardsComercialRouteImport } from './routes/dashboards.comercial'
+import { Route as DashboardsFinanceiroRouteImport } from './routes/dashboards.financeiro'
+import { Route as DashboardsMarketingRouteImport } from './routes/dashboards.marketing'
+import { Route as DashboardsOperacionalRouteImport } from './routes/dashboards.operacional'
+import { Route as DashboardsWhatsappRouteImport } from './routes/dashboards.whatsapp'
+import { Route as InteligenciaLeadsRouteImport } from './routes/inteligencia.leads'
+import { Route as MarketingIndexRouteImport } from './routes/marketing.index'
+import { Route as MarketingBancoMidiaRouteImport } from './routes/marketing.banco-midia'
+import { Route as MarketingCalendarioRouteImport } from './routes/marketing.calendario'
+import { Route as MarketingConteudosRouteImport } from './routes/marketing.conteudos'
+import { Route as PainelIndexRouteImport } from './routes/painel.index'
+import { Route as PainelAssociadosRouteImport } from './routes/painel.associados'
+import { Route as PainelDemandasRouteImport } from './routes/painel.demandas'
+import { Route as PainelRelatoriosRouteImport } from './routes/painel.relatorios'
+import { Route as PainelResultadosRouteImport } from './routes/painel.resultados'
+import { Route as PeticionamentoIndexRouteImport } from './routes/peticionamento.index'
+import { Route as PeticionamentoIdRouteImport } from './routes/peticionamento.$id'
+import { Route as PeticionamentoBancoPecasRouteImport } from './routes/peticionamento.banco-pecas'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalBoletosRouteImport } from './routes/portal.boletos'
+import { Route as PortalDocumentosRouteImport } from './routes/portal.documentos'
+import { Route as PortalMensagensRouteImport } from './routes/portal.mensagens'
+import { Route as PortalPerfilRouteImport } from './routes/portal.perfil'
+import { Route as WhatsappIndexRouteImport } from './routes/whatsapp.index'
+import { Route as WhatsappAgenteRouteImport } from './routes/whatsapp.agente'
+import { Route as ApiContaazulCallbackRouteImport } from './routes/api.contaazul.callback'
+import { Route as ApiCronSyncAsaasRouteImport } from './routes/api.cron.sync-asaas'
 import { Route as ApiCronSyncContaazulRouteImport } from './routes/api.cron.sync-contaazul'
+import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
+import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
+import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
+import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
+import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
+import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
+import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
+import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
+import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
-import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
-import { Route as ApiServiceTypesIdTemplatesUploadRouteImport } from './routes/api.service-types.$id.templates.upload'
-import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
 import { Route as ApiCasesIdDocumentsUploadRouteImport } from './routes/api.cases.$id.documents.upload'
+import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
+import { Route as ApiClientsIdDocumentsDocIdRouteImport } from './routes/api.clients.$id.documents.$docId'
+import { Route as ApiServiceTypesIdTemplatesUploadRouteImport } from './routes/api.service-types.$id.templates.upload'
 import { Route as ApiClientsIdDocumentsDocIdDownloadRouteImport } from './routes/api.clients.$id.documents.$docId.download'
 
-const TarefasRoute = TarefasRouteImport.update({
-  id: '/tarefas',
-  path: '/tarefas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RelatorioFinanceiroRoute = RelatorioFinanceiroRouteImport.update({
-  id: '/relatorio-financeiro',
-  path: '/relatorio-financeiro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReferenciasRoute = ReferenciasRouteImport.update({
-  id: '/referencias',
-  path: '/referencias',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
-  id: '/recuperar-senha',
-  path: '/recuperar-senha',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PipelineRoute = PipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PermissoesRoute = PermissoesRouteImport.update({
-  id: '/permissoes',
-  path: '/permissoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NovaSenhaRoute = NovaSenhaRouteImport.update({
-  id: '/nova-senha',
-  path: '/nova-senha',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ModelosRoute = ModelosRouteImport.update({
-  id: '/modelos',
-  path: '/modelos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HojeRoute = HojeRouteImport.update({
-  id: '/hoje',
-  path: '/hoje',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EntrarRoute = EntrarRouteImport.update({
-  id: '/entrar',
-  path: '/entrar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DesignSystemRoute = DesignSystemRouteImport.update({
-  id: '/design-system',
-  path: '/design-system',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
-  id: '/definir-senha',
-  path: '/definir-senha',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -155,54 +97,69 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
+  id: '/definir-senha',
+  path: '/definir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WhatsappIndexRoute = WhatsappIndexRouteImport.update({
-  id: '/whatsapp/',
-  path: '/whatsapp/',
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalIndexRoute = PortalIndexRouteImport.update({
-  id: '/portal/',
-  path: '/portal/',
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PeticionamentoIndexRoute = PeticionamentoIndexRouteImport.update({
-  id: '/peticionamento/',
-  path: '/peticionamento/',
+const HojeRoute = HojeRouteImport.update({
+  id: '/hoje',
+  path: '/hoje',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelIndexRoute = PainelIndexRouteImport.update({
-  id: '/painel/',
-  path: '/painel/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingIndexRoute = MarketingIndexRouteImport.update({
-  id: '/marketing/',
-  path: '/marketing/',
+const ModelosRoute = ModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardsIndexRoute = DashboardsIndexRouteImport.update({
-  id: '/dashboards/',
-  path: '/dashboards/',
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ControladoriaIndexRoute = ControladoriaIndexRouteImport.update({
-  id: '/controladoria/',
-  path: '/controladoria/',
+const PermissoesRoute = PermissoesRouteImport.update({
+  id: '/permissoes',
+  path: '/permissoes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ComercialIndexRoute = ComercialIndexRouteImport.update({
-  id: '/comercial/',
-  path: '/comercial/',
+const PipelineRoute = PipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientesIndexRoute = ClientesIndexRouteImport.update({
-  id: '/clientes/',
-  path: '/clientes/',
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenciasRoute = ReferenciasRouteImport.update({
+  id: '/referencias',
+  path: '/referencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatorioFinanceiroRoute = RelatorioFinanceiroRouteImport.update({
+  id: '/relatorio-financeiro',
+  path: '/relatorio-financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TarefasRoute = TarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CasosIndexRoute = CasosIndexRouteImport.update({
@@ -210,29 +167,179 @@ const CasosIndexRoute = CasosIndexRouteImport.update({
   path: '/casos/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WhatsappAgenteRoute = WhatsappAgenteRouteImport.update({
-  id: '/whatsapp/agente',
-  path: '/whatsapp/agente',
+const CasosIdRoute = CasosIdRouteImport.update({
+  id: '/casos/$id',
+  path: '/casos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalPerfilRoute = PortalPerfilRouteImport.update({
-  id: '/portal/perfil',
-  path: '/portal/perfil',
+const CasosFinanceiroRoute = CasosFinanceiroRouteImport.update({
+  id: '/casos/financeiro',
+  path: '/casos/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalMensagensRoute = PortalMensagensRouteImport.update({
-  id: '/portal/mensagens',
-  path: '/portal/mensagens',
+const CasosListaRoute = CasosListaRouteImport.update({
+  id: '/casos/lista',
+  path: '/casos/lista',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalDocumentosRoute = PortalDocumentosRouteImport.update({
-  id: '/portal/documentos',
-  path: '/portal/documentos',
+const ClientesIndexRoute = ClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalBoletosRoute = PortalBoletosRouteImport.update({
-  id: '/portal/boletos',
-  path: '/portal/boletos',
+const ClientesIdRoute = ClientesIdRouteImport.update({
+  id: '/clientes/$id',
+  path: '/clientes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialIndexRoute = ComercialIndexRouteImport.update({
+  id: '/comercial/',
+  path: '/comercial/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialAssinaturasRoute = ComercialAssinaturasRouteImport.update({
+  id: '/comercial/assinaturas',
+  path: '/comercial/assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialEmailMarketingRoute = ComercialEmailMarketingRouteImport.update({
+  id: '/comercial/email-marketing',
+  path: '/comercial/email-marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialFunilRoute = ComercialFunilRouteImport.update({
+  id: '/comercial/funil',
+  path: '/comercial/funil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialLeadsRoute = ComercialLeadsRouteImport.update({
+  id: '/comercial/leads',
+  path: '/comercial/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercialOportunidadesRoute = ComercialOportunidadesRouteImport.update({
+  id: '/comercial/oportunidades',
+  path: '/comercial/oportunidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControladoriaIndexRoute = ControladoriaIndexRouteImport.update({
+  id: '/controladoria/',
+  path: '/controladoria/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControladoriaDecisoesRoute = ControladoriaDecisoesRouteImport.update({
+  id: '/controladoria/decisoes',
+  path: '/controladoria/decisoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControladoriaExcecoesRoute = ControladoriaExcecoesRouteImport.update({
+  id: '/controladoria/excecoes',
+  path: '/controladoria/excecoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControladoriaPrazosRoute = ControladoriaPrazosRouteImport.update({
+  id: '/controladoria/prazos',
+  path: '/controladoria/prazos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControladoriaTesesRoute = ControladoriaTesesRouteImport.update({
+  id: '/controladoria/teses',
+  path: '/controladoria/teses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsIndexRoute = DashboardsIndexRouteImport.update({
+  id: '/dashboards/',
+  path: '/dashboards/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsAdminRoute = DashboardsAdminRouteImport.update({
+  id: '/dashboards/admin',
+  path: '/dashboards/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsComercialRoute = DashboardsComercialRouteImport.update({
+  id: '/dashboards/comercial',
+  path: '/dashboards/comercial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsFinanceiroRoute = DashboardsFinanceiroRouteImport.update({
+  id: '/dashboards/financeiro',
+  path: '/dashboards/financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsMarketingRoute = DashboardsMarketingRouteImport.update({
+  id: '/dashboards/marketing',
+  path: '/dashboards/marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsOperacionalRoute = DashboardsOperacionalRouteImport.update({
+  id: '/dashboards/operacional',
+  path: '/dashboards/operacional',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardsWhatsappRoute = DashboardsWhatsappRouteImport.update({
+  id: '/dashboards/whatsapp',
+  path: '/dashboards/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InteligenciaLeadsRoute = InteligenciaLeadsRouteImport.update({
+  id: '/inteligencia/leads',
+  path: '/inteligencia/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/marketing/',
+  path: '/marketing/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingBancoMidiaRoute = MarketingBancoMidiaRouteImport.update({
+  id: '/marketing/banco-midia',
+  path: '/marketing/banco-midia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingCalendarioRoute = MarketingCalendarioRouteImport.update({
+  id: '/marketing/calendario',
+  path: '/marketing/calendario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingConteudosRoute = MarketingConteudosRouteImport.update({
+  id: '/marketing/conteudos',
+  path: '/marketing/conteudos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelIndexRoute = PainelIndexRouteImport.update({
+  id: '/painel/',
+  path: '/painel/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelAssociadosRoute = PainelAssociadosRouteImport.update({
+  id: '/painel/associados',
+  path: '/painel/associados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelDemandasRoute = PainelDemandasRouteImport.update({
+  id: '/painel/demandas',
+  path: '/painel/demandas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRelatoriosRoute = PainelRelatoriosRouteImport.update({
+  id: '/painel/relatorios',
+  path: '/painel/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelResultadosRoute = PainelResultadosRouteImport.update({
+  id: '/painel/resultados',
+  path: '/painel/resultados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeticionamentoIndexRoute = PeticionamentoIndexRouteImport.update({
+  id: '/peticionamento/',
+  path: '/peticionamento/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeticionamentoIdRoute = PeticionamentoIdRouteImport.update({
+  id: '/peticionamento/$id',
+  path: '/peticionamento/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PeticionamentoBancoPecasRoute =
@@ -241,191 +348,49 @@ const PeticionamentoBancoPecasRoute =
     path: '/peticionamento/banco-pecas',
     getParentRoute: () => rootRouteImport,
   } as any)
-const PeticionamentoIdRoute = PeticionamentoIdRouteImport.update({
-  id: '/peticionamento/$id',
-  path: '/peticionamento/$id',
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/portal/',
+  path: '/portal/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelResultadosRoute = PainelResultadosRouteImport.update({
-  id: '/painel/resultados',
-  path: '/painel/resultados',
+const PortalBoletosRoute = PortalBoletosRouteImport.update({
+  id: '/portal/boletos',
+  path: '/portal/boletos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelRelatoriosRoute = PainelRelatoriosRouteImport.update({
-  id: '/painel/relatorios',
-  path: '/painel/relatorios',
+const PortalDocumentosRoute = PortalDocumentosRouteImport.update({
+  id: '/portal/documentos',
+  path: '/portal/documentos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelDemandasRoute = PainelDemandasRouteImport.update({
-  id: '/painel/demandas',
-  path: '/painel/demandas',
+const PortalMensagensRoute = PortalMensagensRouteImport.update({
+  id: '/portal/mensagens',
+  path: '/portal/mensagens',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelAssociadosRoute = PainelAssociadosRouteImport.update({
-  id: '/painel/associados',
-  path: '/painel/associados',
+const PortalPerfilRoute = PortalPerfilRouteImport.update({
+  id: '/portal/perfil',
+  path: '/portal/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingConteudosRoute = MarketingConteudosRouteImport.update({
-  id: '/marketing/conteudos',
-  path: '/marketing/conteudos',
+const WhatsappIndexRoute = WhatsappIndexRouteImport.update({
+  id: '/whatsapp/',
+  path: '/whatsapp/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingCalendarioRoute = MarketingCalendarioRouteImport.update({
-  id: '/marketing/calendario',
-  path: '/marketing/calendario',
+const WhatsappAgenteRoute = WhatsappAgenteRouteImport.update({
+  id: '/whatsapp/agente',
+  path: '/whatsapp/agente',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingBancoMidiaRoute = MarketingBancoMidiaRouteImport.update({
-  id: '/marketing/banco-midia',
-  path: '/marketing/banco-midia',
+const ApiContaazulCallbackRoute = ApiContaazulCallbackRouteImport.update({
+  id: '/api/contaazul/callback',
+  path: '/api/contaazul/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InteligenciaLeadsRoute = InteligenciaLeadsRouteImport.update({
-  id: '/inteligencia/leads',
-  path: '/inteligencia/leads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsWhatsappRoute = DashboardsWhatsappRouteImport.update({
-  id: '/dashboards/whatsapp',
-  path: '/dashboards/whatsapp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsOperacionalRoute = DashboardsOperacionalRouteImport.update({
-  id: '/dashboards/operacional',
-  path: '/dashboards/operacional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsMarketingRoute = DashboardsMarketingRouteImport.update({
-  id: '/dashboards/marketing',
-  path: '/dashboards/marketing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsFinanceiroRoute = DashboardsFinanceiroRouteImport.update({
-  id: '/dashboards/financeiro',
-  path: '/dashboards/financeiro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsComercialRoute = DashboardsComercialRouteImport.update({
-  id: '/dashboards/comercial',
-  path: '/dashboards/comercial',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardsAdminRoute = DashboardsAdminRouteImport.update({
-  id: '/dashboards/admin',
-  path: '/dashboards/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ControladoriaTesesRoute = ControladoriaTesesRouteImport.update({
-  id: '/controladoria/teses',
-  path: '/controladoria/teses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ControladoriaPrazosRoute = ControladoriaPrazosRouteImport.update({
-  id: '/controladoria/prazos',
-  path: '/controladoria/prazos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ControladoriaExcecoesRoute = ControladoriaExcecoesRouteImport.update({
-  id: '/controladoria/excecoes',
-  path: '/controladoria/excecoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ControladoriaDecisoesRoute = ControladoriaDecisoesRouteImport.update({
-  id: '/controladoria/decisoes',
-  path: '/controladoria/decisoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComercialOportunidadesRoute = ComercialOportunidadesRouteImport.update({
-  id: '/comercial/oportunidades',
-  path: '/comercial/oportunidades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComercialLeadsRoute = ComercialLeadsRouteImport.update({
-  id: '/comercial/leads',
-  path: '/comercial/leads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComercialFunilRoute = ComercialFunilRouteImport.update({
-  id: '/comercial/funil',
-  path: '/comercial/funil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComercialEmailMarketingRoute = ComercialEmailMarketingRouteImport.update({
-  id: '/comercial/email-marketing',
-  path: '/comercial/email-marketing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComercialAssinaturasRoute = ComercialAssinaturasRouteImport.update({
-  id: '/comercial/assinaturas',
-  path: '/comercial/assinaturas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientesIdRoute = ClientesIdRouteImport.update({
-  id: '/clientes/$id',
-  path: '/clientes/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasosListaRoute = CasosListaRouteImport.update({
-  id: '/casos/lista',
-  path: '/casos/lista',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasosFinanceiroRoute = CasosFinanceiroRouteImport.update({
-  id: '/casos/financeiro',
-  path: '/casos/financeiro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasosIdRoute = CasosIdRouteImport.update({
-  id: '/casos/$id',
-  path: '/casos/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CasosFinanceiroRoute,
-} as any)
-const WhatsappConversasIdRoute = WhatsappConversasIdRouteImport.update({
-  id: '/whatsapp/conversas/$id',
-  path: '/whatsapp/conversas/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalCasosIdRoute = PortalCasosIdRouteImport.update({
-  id: '/portal/casos/$id',
-  path: '/portal/casos/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasosFinanceiroInadimplenciaRoute =
-  CasosFinanceiroInadimplenciaRouteImport.update({
-    id: '/inadimplencia',
-    path: '/inadimplencia',
-    getParentRoute: () => CasosFinanceiroRoute,
-  } as any)
-const CasosFinanceiroCobrancasRoute =
-  CasosFinanceiroCobrancasRouteImport.update({
-    id: '/cobrancas',
-    path: '/cobrancas',
-    getParentRoute: () => CasosFinanceiroRoute,
-  } as any)
-const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
-  id: '/termo',
-  path: '/termo',
-  getParentRoute: () => CasosIdRoute,
-} as any)
-const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
-  id: '/api/webhooks/zapsign',
-  path: '/api/webhooks/zapsign',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
-  id: '/api/webhooks/n8n',
-  path: '/api/webhooks/n8n',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksAsaasRoute = ApiWebhooksAsaasRouteImport.update({
-  id: '/api/webhooks/asaas',
-  path: '/api/webhooks/asaas',
+const ApiCronSyncAsaasRoute = ApiCronSyncAsaasRouteImport.update({
+  id: '/api/cron/sync-asaas',
+  path: '/api/cron/sync-asaas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCronSyncContaazulRoute = ApiCronSyncContaazulRouteImport.update({
@@ -433,21 +398,68 @@ const ApiCronSyncContaazulRoute = ApiCronSyncContaazulRouteImport.update({
   path: '/api/cron/sync-contaazul',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksAsaasRoute = ApiWebhooksAsaasRouteImport.update({
+  id: '/api/webhooks/asaas',
+  path: '/api/webhooks/asaas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
+  id: '/api/webhooks/n8n',
+  path: '/api/webhooks/n8n',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
+  id: '/api/webhooks/zapsign',
+  path: '/api/webhooks/zapsign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
+  id: '/termo',
+  path: '/termo',
+  getParentRoute: () => CasosIdRoute,
+} as any)
+const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CasosFinanceiroRoute,
+} as any)
+const CasosFinanceiroCobrancasRoute =
+  CasosFinanceiroCobrancasRouteImport.update({
+    id: '/cobrancas',
+    path: '/cobrancas',
+    getParentRoute: () => CasosFinanceiroRoute,
+  } as any)
+const CasosFinanceiroInadimplenciaRoute =
+  CasosFinanceiroInadimplenciaRouteImport.update({
+    id: '/inadimplencia',
+    path: '/inadimplencia',
+    getParentRoute: () => CasosFinanceiroRoute,
+  } as any)
+const PortalCasosIdRoute = PortalCasosIdRouteImport.update({
+  id: '/portal/casos/$id',
+  path: '/portal/casos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatsappConversasIdRoute = WhatsappConversasIdRouteImport.update({
+  id: '/whatsapp/conversas/$id',
+  path: '/whatsapp/conversas/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosIdTermoElaborarRoute = CasosIdTermoElaborarRouteImport.update({
   id: '/elaborar',
   path: '/elaborar',
   getParentRoute: () => CasosIdTermoRoute,
 } as any)
+const ApiCasesIdDocumentsUploadRoute =
+  ApiCasesIdDocumentsUploadRouteImport.update({
+    id: '/api/cases/$id/documents/upload',
+    path: '/api/cases/$id/documents/upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiClientsIdDocumentsIndexRoute =
   ApiClientsIdDocumentsIndexRouteImport.update({
     id: '/api/clients/$id/documents/',
     path: '/api/clients/$id/documents/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiServiceTypesIdTemplatesUploadRoute =
-  ApiServiceTypesIdTemplatesUploadRouteImport.update({
-    id: '/api/service-types/$id/templates/upload',
-    path: '/api/service-types/$id/templates/upload',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiClientsIdDocumentsDocIdRoute =
@@ -456,10 +468,10 @@ const ApiClientsIdDocumentsDocIdRoute =
     path: '/api/clients/$id/documents/$docId',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiCasesIdDocumentsUploadRoute =
-  ApiCasesIdDocumentsUploadRouteImport.update({
-    id: '/api/cases/$id/documents/upload',
-    path: '/api/cases/$id/documents/upload',
+const ApiServiceTypesIdTemplatesUploadRoute =
+  ApiServiceTypesIdTemplatesUploadRouteImport.update({
+    id: '/api/service-types/$id/templates/upload',
+    path: '/api/service-types/$id/templates/upload',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiClientsIdDocumentsDocIdDownloadRoute =
@@ -529,6 +541,8 @@ export interface FileRoutesByFullPath {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
@@ -605,6 +619,8 @@ export interface FileRoutesByTo {
   '/peticionamento': typeof PeticionamentoIndexRoute
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
+  '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
@@ -683,6 +699,8 @@ export interface FileRoutesById {
   '/peticionamento/': typeof PeticionamentoIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
+  '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
@@ -762,6 +780,8 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/contaazul/callback'
+    | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
@@ -838,6 +858,8 @@ export interface FileRouteTypes {
     | '/peticionamento'
     | '/portal'
     | '/whatsapp'
+    | '/api/contaazul/callback'
+    | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
@@ -915,6 +937,8 @@ export interface FileRouteTypes {
     | '/peticionamento/'
     | '/portal/'
     | '/whatsapp/'
+    | '/api/contaazul/callback'
+    | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
@@ -993,6 +1017,8 @@ export interface RootRouteChildren {
   PeticionamentoIndexRoute: typeof PeticionamentoIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
+  ApiContaazulCallbackRoute: typeof ApiContaazulCallbackRoute
+  ApiCronSyncAsaasRoute: typeof ApiCronSyncAsaasRoute
   ApiCronSyncContaazulRoute: typeof ApiCronSyncContaazulRoute
   ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
   ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
@@ -1007,95 +1033,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tarefas': {
-      id: '/tarefas'
-      path: '/tarefas'
-      fullPath: '/tarefas'
-      preLoaderRoute: typeof TarefasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/relatorio-financeiro': {
-      id: '/relatorio-financeiro'
-      path: '/relatorio-financeiro'
-      fullPath: '/relatorio-financeiro'
-      preLoaderRoute: typeof RelatorioFinanceiroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/referencias': {
-      id: '/referencias'
-      path: '/referencias'
-      fullPath: '/referencias'
-      preLoaderRoute: typeof ReferenciasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recuperar-senha': {
-      id: '/recuperar-senha'
-      path: '/recuperar-senha'
-      fullPath: '/recuperar-senha'
-      preLoaderRoute: typeof RecuperarSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pipeline': {
-      id: '/pipeline'
-      path: '/pipeline'
-      fullPath: '/pipeline'
-      preLoaderRoute: typeof PipelineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/permissoes': {
-      id: '/permissoes'
-      path: '/permissoes'
-      fullPath: '/permissoes'
-      preLoaderRoute: typeof PermissoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/nova-senha': {
-      id: '/nova-senha'
-      path: '/nova-senha'
-      fullPath: '/nova-senha'
-      preLoaderRoute: typeof NovaSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/modelos': {
-      id: '/modelos'
-      path: '/modelos'
-      fullPath: '/modelos'
-      preLoaderRoute: typeof ModelosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hoje': {
-      id: '/hoje'
-      path: '/hoje'
-      fullPath: '/hoje'
-      preLoaderRoute: typeof HojeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/entrar': {
-      id: '/entrar'
-      path: '/entrar'
-      fullPath: '/entrar'
-      preLoaderRoute: typeof EntrarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/design-system': {
-      id: '/design-system'
-      path: '/design-system'
-      fullPath: '/design-system'
-      preLoaderRoute: typeof DesignSystemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/definir-senha': {
-      id: '/definir-senha'
-      path: '/definir-senha'
-      fullPath: '/definir-senha'
-      preLoaderRoute: typeof DefinirSenhaRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -1105,74 +1047,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/definir-senha': {
+      id: '/definir-senha'
+      path: '/definir-senha'
+      fullPath: '/definir-senha'
+      preLoaderRoute: typeof DefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/whatsapp/': {
-      id: '/whatsapp/'
-      path: '/whatsapp'
-      fullPath: '/whatsapp/'
-      preLoaderRoute: typeof WhatsappIndexRouteImport
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal/': {
-      id: '/portal/'
-      path: '/portal'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof PortalIndexRouteImport
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/peticionamento/': {
-      id: '/peticionamento/'
-      path: '/peticionamento'
-      fullPath: '/peticionamento/'
-      preLoaderRoute: typeof PeticionamentoIndexRouteImport
+    '/hoje': {
+      id: '/hoje'
+      path: '/hoje'
+      fullPath: '/hoje'
+      preLoaderRoute: typeof HojeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/painel/': {
-      id: '/painel/'
-      path: '/painel'
-      fullPath: '/painel/'
-      preLoaderRoute: typeof PainelIndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/marketing/': {
-      id: '/marketing/'
-      path: '/marketing'
-      fullPath: '/marketing/'
-      preLoaderRoute: typeof MarketingIndexRouteImport
+    '/modelos': {
+      id: '/modelos'
+      path: '/modelos'
+      fullPath: '/modelos'
+      preLoaderRoute: typeof ModelosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboards/': {
-      id: '/dashboards/'
-      path: '/dashboards'
-      fullPath: '/dashboards/'
-      preLoaderRoute: typeof DashboardsIndexRouteImport
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/controladoria/': {
-      id: '/controladoria/'
-      path: '/controladoria'
-      fullPath: '/controladoria/'
-      preLoaderRoute: typeof ControladoriaIndexRouteImport
+    '/permissoes': {
+      id: '/permissoes'
+      path: '/permissoes'
+      fullPath: '/permissoes'
+      preLoaderRoute: typeof PermissoesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/comercial/': {
-      id: '/comercial/'
-      path: '/comercial'
-      fullPath: '/comercial/'
-      preLoaderRoute: typeof ComercialIndexRouteImport
+    '/pipeline': {
+      id: '/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof PipelineRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/clientes/': {
-      id: '/clientes/'
-      path: '/clientes'
-      fullPath: '/clientes/'
-      preLoaderRoute: typeof ClientesIndexRouteImport
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referencias': {
+      id: '/referencias'
+      path: '/referencias'
+      fullPath: '/referencias'
+      preLoaderRoute: typeof ReferenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorio-financeiro': {
+      id: '/relatorio-financeiro'
+      path: '/relatorio-financeiro'
+      fullPath: '/relatorio-financeiro'
+      preLoaderRoute: typeof RelatorioFinanceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tarefas': {
+      id: '/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof TarefasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/casos/': {
@@ -1182,228 +1145,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/whatsapp/agente': {
-      id: '/whatsapp/agente'
-      path: '/whatsapp/agente'
-      fullPath: '/whatsapp/agente'
-      preLoaderRoute: typeof WhatsappAgenteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/perfil': {
-      id: '/portal/perfil'
-      path: '/portal/perfil'
-      fullPath: '/portal/perfil'
-      preLoaderRoute: typeof PortalPerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/mensagens': {
-      id: '/portal/mensagens'
-      path: '/portal/mensagens'
-      fullPath: '/portal/mensagens'
-      preLoaderRoute: typeof PortalMensagensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/documentos': {
-      id: '/portal/documentos'
-      path: '/portal/documentos'
-      fullPath: '/portal/documentos'
-      preLoaderRoute: typeof PortalDocumentosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/boletos': {
-      id: '/portal/boletos'
-      path: '/portal/boletos'
-      fullPath: '/portal/boletos'
-      preLoaderRoute: typeof PortalBoletosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/peticionamento/banco-pecas': {
-      id: '/peticionamento/banco-pecas'
-      path: '/peticionamento/banco-pecas'
-      fullPath: '/peticionamento/banco-pecas'
-      preLoaderRoute: typeof PeticionamentoBancoPecasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/peticionamento/$id': {
-      id: '/peticionamento/$id'
-      path: '/peticionamento/$id'
-      fullPath: '/peticionamento/$id'
-      preLoaderRoute: typeof PeticionamentoIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/painel/resultados': {
-      id: '/painel/resultados'
-      path: '/painel/resultados'
-      fullPath: '/painel/resultados'
-      preLoaderRoute: typeof PainelResultadosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/painel/relatorios': {
-      id: '/painel/relatorios'
-      path: '/painel/relatorios'
-      fullPath: '/painel/relatorios'
-      preLoaderRoute: typeof PainelRelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/painel/demandas': {
-      id: '/painel/demandas'
-      path: '/painel/demandas'
-      fullPath: '/painel/demandas'
-      preLoaderRoute: typeof PainelDemandasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/painel/associados': {
-      id: '/painel/associados'
-      path: '/painel/associados'
-      fullPath: '/painel/associados'
-      preLoaderRoute: typeof PainelAssociadosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketing/conteudos': {
-      id: '/marketing/conteudos'
-      path: '/marketing/conteudos'
-      fullPath: '/marketing/conteudos'
-      preLoaderRoute: typeof MarketingConteudosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketing/calendario': {
-      id: '/marketing/calendario'
-      path: '/marketing/calendario'
-      fullPath: '/marketing/calendario'
-      preLoaderRoute: typeof MarketingCalendarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketing/banco-midia': {
-      id: '/marketing/banco-midia'
-      path: '/marketing/banco-midia'
-      fullPath: '/marketing/banco-midia'
-      preLoaderRoute: typeof MarketingBancoMidiaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inteligencia/leads': {
-      id: '/inteligencia/leads'
-      path: '/inteligencia/leads'
-      fullPath: '/inteligencia/leads'
-      preLoaderRoute: typeof InteligenciaLeadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/whatsapp': {
-      id: '/dashboards/whatsapp'
-      path: '/dashboards/whatsapp'
-      fullPath: '/dashboards/whatsapp'
-      preLoaderRoute: typeof DashboardsWhatsappRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/operacional': {
-      id: '/dashboards/operacional'
-      path: '/dashboards/operacional'
-      fullPath: '/dashboards/operacional'
-      preLoaderRoute: typeof DashboardsOperacionalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/marketing': {
-      id: '/dashboards/marketing'
-      path: '/dashboards/marketing'
-      fullPath: '/dashboards/marketing'
-      preLoaderRoute: typeof DashboardsMarketingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/financeiro': {
-      id: '/dashboards/financeiro'
-      path: '/dashboards/financeiro'
-      fullPath: '/dashboards/financeiro'
-      preLoaderRoute: typeof DashboardsFinanceiroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/comercial': {
-      id: '/dashboards/comercial'
-      path: '/dashboards/comercial'
-      fullPath: '/dashboards/comercial'
-      preLoaderRoute: typeof DashboardsComercialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboards/admin': {
-      id: '/dashboards/admin'
-      path: '/dashboards/admin'
-      fullPath: '/dashboards/admin'
-      preLoaderRoute: typeof DashboardsAdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controladoria/teses': {
-      id: '/controladoria/teses'
-      path: '/controladoria/teses'
-      fullPath: '/controladoria/teses'
-      preLoaderRoute: typeof ControladoriaTesesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controladoria/prazos': {
-      id: '/controladoria/prazos'
-      path: '/controladoria/prazos'
-      fullPath: '/controladoria/prazos'
-      preLoaderRoute: typeof ControladoriaPrazosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controladoria/excecoes': {
-      id: '/controladoria/excecoes'
-      path: '/controladoria/excecoes'
-      fullPath: '/controladoria/excecoes'
-      preLoaderRoute: typeof ControladoriaExcecoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controladoria/decisoes': {
-      id: '/controladoria/decisoes'
-      path: '/controladoria/decisoes'
-      fullPath: '/controladoria/decisoes'
-      preLoaderRoute: typeof ControladoriaDecisoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comercial/oportunidades': {
-      id: '/comercial/oportunidades'
-      path: '/comercial/oportunidades'
-      fullPath: '/comercial/oportunidades'
-      preLoaderRoute: typeof ComercialOportunidadesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comercial/leads': {
-      id: '/comercial/leads'
-      path: '/comercial/leads'
-      fullPath: '/comercial/leads'
-      preLoaderRoute: typeof ComercialLeadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comercial/funil': {
-      id: '/comercial/funil'
-      path: '/comercial/funil'
-      fullPath: '/comercial/funil'
-      preLoaderRoute: typeof ComercialFunilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comercial/email-marketing': {
-      id: '/comercial/email-marketing'
-      path: '/comercial/email-marketing'
-      fullPath: '/comercial/email-marketing'
-      preLoaderRoute: typeof ComercialEmailMarketingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comercial/assinaturas': {
-      id: '/comercial/assinaturas'
-      path: '/comercial/assinaturas'
-      fullPath: '/comercial/assinaturas'
-      preLoaderRoute: typeof ComercialAssinaturasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clientes/$id': {
-      id: '/clientes/$id'
-      path: '/clientes/$id'
-      fullPath: '/clientes/$id'
-      preLoaderRoute: typeof ClientesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/casos/lista': {
-      id: '/casos/lista'
-      path: '/casos/lista'
-      fullPath: '/casos/lista'
-      preLoaderRoute: typeof CasosListaRouteImport
+    '/casos/$id': {
+      id: '/casos/$id'
+      path: '/casos/$id'
+      fullPath: '/casos/$id'
+      preLoaderRoute: typeof CasosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/casos/financeiro': {
@@ -1413,74 +1159,305 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosFinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/casos/$id': {
-      id: '/casos/$id'
-      path: '/casos/$id'
-      fullPath: '/casos/$id'
-      preLoaderRoute: typeof CasosIdRouteImport
+    '/casos/lista': {
+      id: '/casos/lista'
+      path: '/casos/lista'
+      fullPath: '/casos/lista'
+      preLoaderRoute: typeof CasosListaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/casos/financeiro/': {
-      id: '/casos/financeiro/'
-      path: '/'
-      fullPath: '/casos/financeiro/'
-      preLoaderRoute: typeof CasosFinanceiroIndexRouteImport
-      parentRoute: typeof CasosFinanceiroRoute
-    }
-    '/whatsapp/conversas/$id': {
-      id: '/whatsapp/conversas/$id'
-      path: '/whatsapp/conversas/$id'
-      fullPath: '/whatsapp/conversas/$id'
-      preLoaderRoute: typeof WhatsappConversasIdRouteImport
+    '/clientes/': {
+      id: '/clientes/'
+      path: '/clientes'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof ClientesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal/casos/$id': {
-      id: '/portal/casos/$id'
-      path: '/portal/casos/$id'
-      fullPath: '/portal/casos/$id'
-      preLoaderRoute: typeof PortalCasosIdRouteImport
+    '/clientes/$id': {
+      id: '/clientes/$id'
+      path: '/clientes/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof ClientesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/casos/financeiro/inadimplencia': {
-      id: '/casos/financeiro/inadimplencia'
-      path: '/inadimplencia'
-      fullPath: '/casos/financeiro/inadimplencia'
-      preLoaderRoute: typeof CasosFinanceiroInadimplenciaRouteImport
-      parentRoute: typeof CasosFinanceiroRoute
-    }
-    '/casos/financeiro/cobrancas': {
-      id: '/casos/financeiro/cobrancas'
-      path: '/cobrancas'
-      fullPath: '/casos/financeiro/cobrancas'
-      preLoaderRoute: typeof CasosFinanceiroCobrancasRouteImport
-      parentRoute: typeof CasosFinanceiroRoute
-    }
-    '/casos/$id/termo': {
-      id: '/casos/$id/termo'
-      path: '/termo'
-      fullPath: '/casos/$id/termo'
-      preLoaderRoute: typeof CasosIdTermoRouteImport
-      parentRoute: typeof CasosIdRoute
-    }
-    '/api/webhooks/zapsign': {
-      id: '/api/webhooks/zapsign'
-      path: '/api/webhooks/zapsign'
-      fullPath: '/api/webhooks/zapsign'
-      preLoaderRoute: typeof ApiWebhooksZapsignRouteImport
+    '/comercial/': {
+      id: '/comercial/'
+      path: '/comercial'
+      fullPath: '/comercial/'
+      preLoaderRoute: typeof ComercialIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/n8n': {
-      id: '/api/webhooks/n8n'
-      path: '/api/webhooks/n8n'
-      fullPath: '/api/webhooks/n8n'
-      preLoaderRoute: typeof ApiWebhooksN8nRouteImport
+    '/comercial/assinaturas': {
+      id: '/comercial/assinaturas'
+      path: '/comercial/assinaturas'
+      fullPath: '/comercial/assinaturas'
+      preLoaderRoute: typeof ComercialAssinaturasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/asaas': {
-      id: '/api/webhooks/asaas'
-      path: '/api/webhooks/asaas'
-      fullPath: '/api/webhooks/asaas'
-      preLoaderRoute: typeof ApiWebhooksAsaasRouteImport
+    '/comercial/email-marketing': {
+      id: '/comercial/email-marketing'
+      path: '/comercial/email-marketing'
+      fullPath: '/comercial/email-marketing'
+      preLoaderRoute: typeof ComercialEmailMarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comercial/funil': {
+      id: '/comercial/funil'
+      path: '/comercial/funil'
+      fullPath: '/comercial/funil'
+      preLoaderRoute: typeof ComercialFunilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comercial/leads': {
+      id: '/comercial/leads'
+      path: '/comercial/leads'
+      fullPath: '/comercial/leads'
+      preLoaderRoute: typeof ComercialLeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comercial/oportunidades': {
+      id: '/comercial/oportunidades'
+      path: '/comercial/oportunidades'
+      fullPath: '/comercial/oportunidades'
+      preLoaderRoute: typeof ComercialOportunidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/': {
+      id: '/controladoria/'
+      path: '/controladoria'
+      fullPath: '/controladoria/'
+      preLoaderRoute: typeof ControladoriaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/decisoes': {
+      id: '/controladoria/decisoes'
+      path: '/controladoria/decisoes'
+      fullPath: '/controladoria/decisoes'
+      preLoaderRoute: typeof ControladoriaDecisoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/excecoes': {
+      id: '/controladoria/excecoes'
+      path: '/controladoria/excecoes'
+      fullPath: '/controladoria/excecoes'
+      preLoaderRoute: typeof ControladoriaExcecoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/prazos': {
+      id: '/controladoria/prazos'
+      path: '/controladoria/prazos'
+      fullPath: '/controladoria/prazos'
+      preLoaderRoute: typeof ControladoriaPrazosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/teses': {
+      id: '/controladoria/teses'
+      path: '/controladoria/teses'
+      fullPath: '/controladoria/teses'
+      preLoaderRoute: typeof ControladoriaTesesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/': {
+      id: '/dashboards/'
+      path: '/dashboards'
+      fullPath: '/dashboards/'
+      preLoaderRoute: typeof DashboardsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/admin': {
+      id: '/dashboards/admin'
+      path: '/dashboards/admin'
+      fullPath: '/dashboards/admin'
+      preLoaderRoute: typeof DashboardsAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/comercial': {
+      id: '/dashboards/comercial'
+      path: '/dashboards/comercial'
+      fullPath: '/dashboards/comercial'
+      preLoaderRoute: typeof DashboardsComercialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/financeiro': {
+      id: '/dashboards/financeiro'
+      path: '/dashboards/financeiro'
+      fullPath: '/dashboards/financeiro'
+      preLoaderRoute: typeof DashboardsFinanceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/marketing': {
+      id: '/dashboards/marketing'
+      path: '/dashboards/marketing'
+      fullPath: '/dashboards/marketing'
+      preLoaderRoute: typeof DashboardsMarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/operacional': {
+      id: '/dashboards/operacional'
+      path: '/dashboards/operacional'
+      fullPath: '/dashboards/operacional'
+      preLoaderRoute: typeof DashboardsOperacionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboards/whatsapp': {
+      id: '/dashboards/whatsapp'
+      path: '/dashboards/whatsapp'
+      fullPath: '/dashboards/whatsapp'
+      preLoaderRoute: typeof DashboardsWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inteligencia/leads': {
+      id: '/inteligencia/leads'
+      path: '/inteligencia/leads'
+      fullPath: '/inteligencia/leads'
+      preLoaderRoute: typeof InteligenciaLeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing/': {
+      id: '/marketing/'
+      path: '/marketing'
+      fullPath: '/marketing/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing/banco-midia': {
+      id: '/marketing/banco-midia'
+      path: '/marketing/banco-midia'
+      fullPath: '/marketing/banco-midia'
+      preLoaderRoute: typeof MarketingBancoMidiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing/calendario': {
+      id: '/marketing/calendario'
+      path: '/marketing/calendario'
+      fullPath: '/marketing/calendario'
+      preLoaderRoute: typeof MarketingCalendarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing/conteudos': {
+      id: '/marketing/conteudos'
+      path: '/marketing/conteudos'
+      fullPath: '/marketing/conteudos'
+      preLoaderRoute: typeof MarketingConteudosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/': {
+      id: '/painel/'
+      path: '/painel'
+      fullPath: '/painel/'
+      preLoaderRoute: typeof PainelIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/associados': {
+      id: '/painel/associados'
+      path: '/painel/associados'
+      fullPath: '/painel/associados'
+      preLoaderRoute: typeof PainelAssociadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/demandas': {
+      id: '/painel/demandas'
+      path: '/painel/demandas'
+      fullPath: '/painel/demandas'
+      preLoaderRoute: typeof PainelDemandasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/relatorios': {
+      id: '/painel/relatorios'
+      path: '/painel/relatorios'
+      fullPath: '/painel/relatorios'
+      preLoaderRoute: typeof PainelRelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/resultados': {
+      id: '/painel/resultados'
+      path: '/painel/resultados'
+      fullPath: '/painel/resultados'
+      preLoaderRoute: typeof PainelResultadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/peticionamento/': {
+      id: '/peticionamento/'
+      path: '/peticionamento'
+      fullPath: '/peticionamento/'
+      preLoaderRoute: typeof PeticionamentoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/peticionamento/$id': {
+      id: '/peticionamento/$id'
+      path: '/peticionamento/$id'
+      fullPath: '/peticionamento/$id'
+      preLoaderRoute: typeof PeticionamentoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/peticionamento/banco-pecas': {
+      id: '/peticionamento/banco-pecas'
+      path: '/peticionamento/banco-pecas'
+      fullPath: '/peticionamento/banco-pecas'
+      preLoaderRoute: typeof PeticionamentoBancoPecasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/': {
+      id: '/portal/'
+      path: '/portal'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/boletos': {
+      id: '/portal/boletos'
+      path: '/portal/boletos'
+      fullPath: '/portal/boletos'
+      preLoaderRoute: typeof PortalBoletosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/documentos': {
+      id: '/portal/documentos'
+      path: '/portal/documentos'
+      fullPath: '/portal/documentos'
+      preLoaderRoute: typeof PortalDocumentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/mensagens': {
+      id: '/portal/mensagens'
+      path: '/portal/mensagens'
+      fullPath: '/portal/mensagens'
+      preLoaderRoute: typeof PortalMensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/perfil': {
+      id: '/portal/perfil'
+      path: '/portal/perfil'
+      fullPath: '/portal/perfil'
+      preLoaderRoute: typeof PortalPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whatsapp/': {
+      id: '/whatsapp/'
+      path: '/whatsapp'
+      fullPath: '/whatsapp/'
+      preLoaderRoute: typeof WhatsappIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whatsapp/agente': {
+      id: '/whatsapp/agente'
+      path: '/whatsapp/agente'
+      fullPath: '/whatsapp/agente'
+      preLoaderRoute: typeof WhatsappAgenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/contaazul/callback': {
+      id: '/api/contaazul/callback'
+      path: '/api/contaazul/callback'
+      fullPath: '/api/contaazul/callback'
+      preLoaderRoute: typeof ApiContaazulCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/sync-asaas': {
+      id: '/api/cron/sync-asaas'
+      path: '/api/cron/sync-asaas'
+      fullPath: '/api/cron/sync-asaas'
+      preLoaderRoute: typeof ApiCronSyncAsaasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/sync-contaazul': {
@@ -1490,6 +1467,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronSyncContaazulRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/asaas': {
+      id: '/api/webhooks/asaas'
+      path: '/api/webhooks/asaas'
+      fullPath: '/api/webhooks/asaas'
+      preLoaderRoute: typeof ApiWebhooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/n8n': {
+      id: '/api/webhooks/n8n'
+      path: '/api/webhooks/n8n'
+      fullPath: '/api/webhooks/n8n'
+      preLoaderRoute: typeof ApiWebhooksN8nRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/zapsign': {
+      id: '/api/webhooks/zapsign'
+      path: '/api/webhooks/zapsign'
+      fullPath: '/api/webhooks/zapsign'
+      preLoaderRoute: typeof ApiWebhooksZapsignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/casos/$id/termo': {
+      id: '/casos/$id/termo'
+      path: '/termo'
+      fullPath: '/casos/$id/termo'
+      preLoaderRoute: typeof CasosIdTermoRouteImport
+      parentRoute: typeof CasosIdRoute
+    }
+    '/casos/financeiro/': {
+      id: '/casos/financeiro/'
+      path: '/'
+      fullPath: '/casos/financeiro/'
+      preLoaderRoute: typeof CasosFinanceiroIndexRouteImport
+      parentRoute: typeof CasosFinanceiroRoute
+    }
+    '/casos/financeiro/cobrancas': {
+      id: '/casos/financeiro/cobrancas'
+      path: '/cobrancas'
+      fullPath: '/casos/financeiro/cobrancas'
+      preLoaderRoute: typeof CasosFinanceiroCobrancasRouteImport
+      parentRoute: typeof CasosFinanceiroRoute
+    }
+    '/casos/financeiro/inadimplencia': {
+      id: '/casos/financeiro/inadimplencia'
+      path: '/inadimplencia'
+      fullPath: '/casos/financeiro/inadimplencia'
+      preLoaderRoute: typeof CasosFinanceiroInadimplenciaRouteImport
+      parentRoute: typeof CasosFinanceiroRoute
+    }
+    '/portal/casos/$id': {
+      id: '/portal/casos/$id'
+      path: '/portal/casos/$id'
+      fullPath: '/portal/casos/$id'
+      preLoaderRoute: typeof PortalCasosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whatsapp/conversas/$id': {
+      id: '/whatsapp/conversas/$id'
+      path: '/whatsapp/conversas/$id'
+      fullPath: '/whatsapp/conversas/$id'
+      preLoaderRoute: typeof WhatsappConversasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/$id/termo/elaborar': {
       id: '/casos/$id/termo/elaborar'
       path: '/elaborar'
@@ -1497,18 +1537,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdTermoElaborarRouteImport
       parentRoute: typeof CasosIdTermoRoute
     }
+    '/api/cases/$id/documents/upload': {
+      id: '/api/cases/$id/documents/upload'
+      path: '/api/cases/$id/documents/upload'
+      fullPath: '/api/cases/$id/documents/upload'
+      preLoaderRoute: typeof ApiCasesIdDocumentsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/clients/$id/documents/': {
       id: '/api/clients/$id/documents/'
       path: '/api/clients/$id/documents'
       fullPath: '/api/clients/$id/documents/'
       preLoaderRoute: typeof ApiClientsIdDocumentsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/service-types/$id/templates/upload': {
-      id: '/api/service-types/$id/templates/upload'
-      path: '/api/service-types/$id/templates/upload'
-      fullPath: '/api/service-types/$id/templates/upload'
-      preLoaderRoute: typeof ApiServiceTypesIdTemplatesUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/clients/$id/documents/$docId': {
@@ -1518,11 +1558,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientsIdDocumentsDocIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/cases/$id/documents/upload': {
-      id: '/api/cases/$id/documents/upload'
-      path: '/api/cases/$id/documents/upload'
-      fullPath: '/api/cases/$id/documents/upload'
-      preLoaderRoute: typeof ApiCasesIdDocumentsUploadRouteImport
+    '/api/service-types/$id/templates/upload': {
+      id: '/api/service-types/$id/templates/upload'
+      path: '/api/service-types/$id/templates/upload'
+      fullPath: '/api/service-types/$id/templates/upload'
+      preLoaderRoute: typeof ApiServiceTypesIdTemplatesUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/clients/$id/documents/$docId/download': {
@@ -1649,6 +1689,8 @@ const rootRouteChildren: RootRouteChildren = {
   PeticionamentoIndexRoute: PeticionamentoIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
+  ApiContaazulCallbackRoute: ApiContaazulCallbackRoute,
+  ApiCronSyncAsaasRoute: ApiCronSyncAsaasRoute,
   ApiCronSyncContaazulRoute: ApiCronSyncContaazulRoute,
   ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
   ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
@@ -1663,13 +1705,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

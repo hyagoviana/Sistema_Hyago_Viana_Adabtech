@@ -8,6 +8,7 @@ import {
   getChargeStatus,
   getParcelaPixQrCode,
   listClientCharges,
+  syncAsaasPagamentos,
   syncClientToAsaas,
   type CreateChargeInput,
 } from "@/lib/asaas/service";
@@ -81,6 +82,14 @@ const clientIdSchema = z.object({ clientId: z.string().uuid() });
 export const listClientChargesFn = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => clientIdSchema.parse(data))
   .handler(async ({ data }) => handle(() => listClientCharges(data.clientId)));
+
+// ─── Sync de Pagamentos (manual — o cron chama o mesmo motor) ───────────────
+
+const syncPagamentosSchema = z.object({ caseId: z.string().uuid().optional() });
+
+export const syncAsaasPagamentosFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => syncPagamentosSchema.parse(data ?? {}))
+  .handler(async ({ data }) => handle(() => syncAsaasPagamentos(data.caseId)));
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 

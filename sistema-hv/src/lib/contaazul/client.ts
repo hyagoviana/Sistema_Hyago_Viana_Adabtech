@@ -50,6 +50,65 @@ function sanitize(msg: string): string {
   return out;
 }
 
+// ─── OAuth: trocar code por tokens ──────────────────────────────────────────
+
+/**
+ * Troca o authorization_code (obtido via redirect do Conta Azul) por
+ * access_token + refresh_token. Salva ambos em system_integrations.
+ */
+export async function exchangeCodeForTokens(code: string, redirectUri: string): Promise<{
+  accessToken: string;
+  refreshToken: string;
+}> {
+  const { clientId, clientSecret } = getEnv();
+  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  const res = await fetch(AUTH_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basicAuth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new ContaAzulError(`Falha ao trocar code por token (${res.status}).`, {
+      status: res.status,
+      body,
+    });
+  }
+
+  const data = (await res.json()) as ContaAzulTokenResponse;
+
+  // Salva no DB
+  const sb = getSupabaseAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (sb as any).from("system_integrations").upsert(
+    {
+      organization_id: DEFAULT_ORG,
+      provider: "conta_azul",
+      refresh_token: data.refresh_token,
+      access_token: data.access_token,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organization_id,provider" },
+  );
+
+  // Atualiza cache em memória
+  cachedToken = {
+    accessToken: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 300) * 1000,
+  };
+
+  return { accessToken: data.access_token, refreshToken: data.refresh_token };
+}
+
 // ─── Token Management ────────────────────────────────────────────────────────
 
 let cachedToken: { accessToken: string; expiresAt: number } | null = null;

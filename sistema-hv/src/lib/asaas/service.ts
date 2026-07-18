@@ -358,6 +358,102 @@ export async function listClientCharges(clientId: string) {
   return listPaymentsByCustomer(asaasId);
 }
 
+// ─── Sync de PAGAMENTOS (cron + botão manual) ──────────────────────────────
+
+/**
+ * Varre as parcelas com provider='asaas' que ainda estão PENDENTE, consulta o
+ * status atualizado na API do Asaas (GET /payments/{id}) e baixa as que já
+ * foram pagas. Fallback para quando o webhook falha ou atrasa.
+ *
+ * Chamada pelo cron (api/cron/sync-asaas) e reutilizável pelo botão manual.
+ */
+export async function syncAsaasPagamentos(caseId?: string): Promise<{
+  ok: boolean;
+  pendentes: number;
+  atualizadas: number;
+  nota?: string;
+}> {
+  const sb = getSupabaseAdmin();
+
+  // 1) Parcelas locais asaas ainda PENDENTE
+  let query = sb
+    .from("system_parcelas")
+    .select("id, case_id, numero, valor_centavos, vencimento, provider_ext_id, status")
+    .eq("provider", "asaas")
+    .eq("status", "PENDENTE");
+  if (caseId) query = query.eq("case_id", caseId);
+
+  const { data: parcelasRaw, error } = await query;
+  if (error) {
+    console.error("syncAsaasPagamentos: erro ao ler parcelas:", error.message);
+    return { ok: false, pendentes: 0, atualizadas: 0, nota: error.message };
+  }
+  const pendentes = parcelasRaw ?? [];
+  if (pendentes.length === 0) {
+    return { ok: true, pendentes: 0, atualizadas: 0, nota: "Sem parcelas pendentes." };
+  }
+
+  // 2) Para cada parcela com provider_ext_id, consulta o status no Asaas
+  let atualizadas = 0;
+  const STATUS_MAP: Record<string, string> = {
+    RECEIVED: "PAGA",
+    CONFIRMED: "PAGA",
+    RECEIVED_IN_CASH: "PAGA",
+    OVERDUE: "VENCIDA",
+    REFUNDED: "CANCELADA",
+    DELETED: "CANCELADA",
+  };
+
+  for (const p of pendentes) {
+    if (!p.provider_ext_id) continue;
+
+    let payment: AsaasPayment;
+    try {
+      payment = await getPayment(p.provider_ext_id);
+    } catch (err) {
+      console.error(`syncAsaasPagamentos: erro ao consultar payment ${p.provider_ext_id}:`, err);
+      continue;
+    }
+
+    const newStatus = STATUS_MAP[payment.status];
+    if (!newStatus) continue; // ainda PENDING ou status não mapeado
+
+    const updateData: Record<string, unknown> = { status: newStatus, updated_at: new Date().toISOString() };
+
+    if (newStatus === "PAGA") {
+      updateData.data_pagamento = payment.paymentDate ?? new Date().toISOString().slice(0, 10);
+      updateData.valor_pago_centavos = Math.round(payment.value * 100);
+      updateData.metodo_pagamento = payment.billingType;
+      updateData.boleto_url = payment.bankSlipUrl ?? payment.invoiceUrl ?? null;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: upErr } = await (sb.from("system_parcelas") as any)
+      .update(updateData)
+      .eq("id", p.id);
+
+    if (upErr) {
+      console.error(`syncAsaasPagamentos: erro ao atualizar parcela ${p.id}:`, upErr.message);
+      continue;
+    }
+    atualizadas++;
+  }
+
+  // Audit
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "asaas.sync_pagamentos",
+    entity_type: caseId ? "case" : "system",
+    entity_id: caseId ?? DEFAULT_ORG,
+    diff: {
+      pendentes: pendentes.length,
+      atualizadas,
+    } as unknown as Json,
+  });
+
+  return { ok: true, pendentes: pendentes.length, atualizadas };
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Adiciona N meses a uma data YYYY-MM-DD. */

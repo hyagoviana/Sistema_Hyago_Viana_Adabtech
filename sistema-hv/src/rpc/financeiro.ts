@@ -7,6 +7,8 @@ import {
   getRelatorioFinanceiroPorCaso,
   listAllParcelas,
 } from "@/lib/financeiro-service";
+import { syncAsaasPagamentos } from "@/lib/asaas/service";
+import { syncContaAzulPagamentos } from "@/lib/contaazul/service";
 import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
@@ -40,4 +42,18 @@ export const listAllParcelasFn = createServerFn({ method: "GET" })
 // Relatório financeiro por CASO (pago/pendente/vencido) — item 3.
 export const getRelatorioFinanceiroFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => getRelatorioFinanceiroPorCaso()),
+);
+
+// Sync de pagamentos — dispara sync simultâneo no Asaas e Conta Azul.
+export const syncAllPagamentosFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(async () => {
+    const [asaas, contaAzul] = await Promise.allSettled([
+      syncAsaasPagamentos(),
+      syncContaAzulPagamentos(),
+    ]);
+    return {
+      asaas: asaas.status === "fulfilled" ? asaas.value : { ok: false, nota: String((asaas as PromiseRejectedResult).reason) },
+      contaAzul: contaAzul.status === "fulfilled" ? contaAzul.value : { ok: false, nota: String((contaAzul as PromiseRejectedResult).reason) },
+    };
+  }),
 );

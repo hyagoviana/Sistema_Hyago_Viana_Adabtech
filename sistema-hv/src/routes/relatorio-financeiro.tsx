@@ -1,9 +1,12 @@
+import { Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardFinanceiro, useRelatorioFinanceiro } from "@/hooks/useFinanceiro";
+import { useDashboardFinanceiro, useRelatorioFinanceiro, useSyncAllPagamentos } from "@/hooks/useFinanceiro";
 import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/relatorio-financeiro")({
@@ -34,15 +37,43 @@ function RelatorioFinanceiro() {
   const navigate = useNavigate();
   const { data: dash, isLoading: dashLoading } = useDashboardFinanceiro();
   const { data: casos, isLoading, isError, error } = useRelatorioFinanceiro();
+  const syncAll = useSyncAllPagamentos();
+
+  function handleSync() {
+    syncAll.mutate(undefined, {
+      onSuccess: (r) => {
+        const asaasOk = r.asaas && "atualizadas" in r.asaas ? r.asaas.atualizadas : 0;
+        const caOk = r.contaAzul && "atualizadas" in r.contaAzul ? r.contaAzul.atualizadas : 0;
+        toast.success(`Sync concluído — Asaas: ${asaasOk} atualizada(s), Conta Azul: ${caOk} atualizada(s)`);
+      },
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao sincronizar"),
+    });
+  }
 
   return (
     <div className="page-container">
       <Breadcrumb items={[{ label: "Operação", to: "/hoje" }, { label: "Relatório Financeiro" }]} />
-      <PageHeader
-        eyebrow="Operação"
-        title="Relatório Financeiro"
-        subtitle="Valores pagos e pendentes por caso — consolidando Asaas, Conta Azul e cobranças manuais."
-      />
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader
+          eyebrow="Operação"
+          title="Relatório Financeiro"
+          subtitle="Valores pagos e pendentes por caso — consolidando Asaas, Conta Azul e cobranças manuais."
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={syncAll.isPending}
+          onClick={handleSync}
+          className="mt-2 shrink-0"
+        >
+          {syncAll.isPending ? (
+            <Loader2 size={13} className="mr-1.5 animate-spin" />
+          ) : (
+            <RefreshCw size={13} className="mr-1.5" />
+          )}
+          Sincronizar pagamentos
+        </Button>
+      </div>
 
       {/* Totais gerais (mesma fonte do dashboard financeiro) */}
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
