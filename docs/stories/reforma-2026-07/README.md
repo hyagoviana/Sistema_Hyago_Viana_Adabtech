@@ -1,0 +1,77 @@
+# Reforma 2026-07 — Índice de Stories
+
+> Stories de execução da reforma **TEMA→CASO→TIPO + Módulos + Permissões**.
+> Base: `docs/reforma-tema-caso-modulos-2026-07-18.md` (documento-mestre).
+> Criadas pelo @sm · Validadas por @qa (Quinn) e @architect (Winston) · Correções v0.2 aplicadas.
+> **Veredito da validação:** cobertura **100%** das melhorias (reunião E1–E9 + bugs Hyago B1–B5/A1–A3/D1–D4) · PASS-com-ressalvas, ressalvas corrigidas.
+
+## Progresso de execução
+
+| Story | Status | Notas |
+|-------|--------|-------|
+| **R3-01** | ✅ **Concluída** (dev+qa+architect OK) | Migration `20260718000001` **APLICADA no banco** (2026-07-18). Testes 18/18, regressão-zero. Sem commit. |
+| **R4-01** | ✅ **Concluída** (dev+qa+architect+correção) | Gate de $ na ficha do cliente via `permissaoEfetiva`. Só front. Sem commit. |
+| **R4-02** | ✅ **Concluída** (dev+qa+architect) | Gate de $ no bloco `finBifurcated` da ficha do caso (TermoPanel+AsaasCobrancasPanel). Só front. Sem commit. |
+| R4-03 | ⏭️ **Próxima** | Gate nos dashboards + reforço nos RPCs financeiro/asaas/contaazul (defesa server-side). |
+
+### 🔑 Decisão do dono (2026-07-18) — régua do módulo financeiro
+Permissões **por aba/módulo**, 3 níveis: **não ver / visualizar / editar**. Módulo **financeiro**: base = **só admin + financeiro**; todos os outros papéis (incl. advogados) = `none` por padrão, liberados só via **override por usuário** (`system_user_module_perms`). Aplicado em `ROLE_MODULE_ACCESS` (rbac.ts) — 1ª aba com régua de negócio própria (mais restrita que o NAV). Vale para TODO o R4.
+
+### Notas da validação R3-01 (aplicar nas stories consumidoras)
+- **[R3-04, ALTA]** NÃO usar `permissaoEfetiva(...,'sistema','view')` como gate de `/permissoes` — o módulo `sistema` dá `view` a todos (rota representativa `/configuracoes`). Usar `sistema:edit` ou `role==='admin'`.
+- **[R3-02, MÉDIA]** Criar açúcar `useMyPerms()`/`can$(module,action)` que já combine `role` + overrides com fallback `?? {}`, evitando call-sites frágeis.
+- **[R3-06, MÉDIA]** Invalidar `queryKey:["my-module-perms"]` ao editar overrides; sempre setar `access` explícito no insert (coluna tem `DEFAULT 'view'`).
+
+## Épicos (40 stories)
+
+| Épico | Bloco | Stories | Tema |
+|-------|-------|---------|------|
+| **R1** | B1 | R1-01…R1-05 (5) | Modelo Pessoa/Lead/Cliente por caso |
+| **R2** | B2 | R2-01…R2-08 (8) | Camada TEMA→CASO→TIPO (o mais sensível) |
+| **R3** | B3 | R3-01…R3-06 (6) | Permissões por módulo (ver/editar/não ver) + reorg |
+| **R4** | B4 | R4-01…R4-05 (5) | Desacoplar Financeiro ($ só admin/financeiro) |
+| **R5** | B5 | R5-01…R5-08 (8) | Bugs e ajustes do Hyago |
+| **R6** | B6 | R6-01…R6-04 (4) | Controladoria + ProIuris + tarefas (DESIGN) |
+| **R7** | B7 | R7-01…R7-02 (2) | Inteligência / dashboards / IA (DESIGN) |
+| **R8** | B8 | R8-01…R8-02 (2) | Inadimplência: relatório + tema (DESIGN) |
+
+## Ordem de execução (Sequência Segura §7 do doc-mestre)
+
+```
+1. R3-01  (infra permissaoEfetiva — regressão zero, base de tudo)
+2. R4     (desacoplar $, usando ponte can() até R3 completar)
+3. R1     (lead/cliente — ajustes sobre lifecycle existente)   ─┐ podem ir
+4. R5     (bugs Hyago — quick wins independentes)              ─┘ em paralelo
+5. R2     (TEMA/CASO/TIPO — faseado 5a→5e, só após fundação estável)
+   R2-01 → R2-02 → R2-03 → R2-04 → R2-05 → (R2-06, R2-07, R2-08)
+6. R6 / R7 / R8  (quando as pendências do cliente chegarem)
+```
+Migrations: R3 usa faixa `20260718000001`; R2 usa `20260719000001+` (colisão corrigida em v0.2).
+
+## Matriz de cruzamentos (validada pelo Arquiteto)
+
+| Cruzamento | Como é tratado |
+|-----------|----------------|
+| **R4 → R3-01** | R4 usa `permissaoEfetiva('financeiro',…)`; ponte `can(role,'financeiro.manage')` + `requireRole` até R3 existir (`// TODO(R4/R3)`). |
+| **R1-04 → R2** | Adaptador `getCaseTemaKey` opera com `case_type` hoje, troca p/ `tema_id` quando R2 chegar. Sem retrabalho de UI. |
+| **R5-04 × R2-03** | Fix defensivo do move (valida etapa vs tipo + `deleted_at`) não toca `system_pipeline_stages`; segue válido após unificação. R5-04 antes, R2-03 depois. |
+| **R5-06/A2 × R2-07** | R2-07 = estrutura de campos por tema/frente; R5-06 = campos FIES concretos. Ambos gravam em `canonical_fields`. Sem duplicação. |
+| **R2/P4 × R3** | Criar tema/frente = admin (`config.manage` na UI + `requireRole` no RPC), com piso admin anti-escalonamento. |
+| **R6/R8 × R3 + ProIuris/CA** | RBAC via `permissaoEfetiva`; bloqueados por API ProIuris/Conta Azul + regras + mockups. |
+
+## Regras de ouro (em todas as stories de banco)
+- NUNCA deletar `case_type`/`macrostatus_*` (dual-write `system_fn_sync_stage_ids`).
+- Migration que toca `system_cases` → recriar `system_cases_active` (DROP+CREATE) + grants.
+- NÃO recriar `trg_system_cases_bifurcacao`. Não remover CHECKs de lifecycle.
+- Migrations via `npx tsx scripts/db-apply-pg.ts` + rollback. Prefixo `system_`.
+
+## Decisões pendentes a travar antes de codar (destaques da validação)
+- **R2-03:** escolher (a) patch das funções `avancar_*` com filtro de `frente_slug`, ou (b) "etapas condicionais viram comuns do tema". *(evita caso ESF parar em etapa DGM)*
+- **R2-05 vs R2-08:** fronteira de escopo cravada (dados+filtro vs toggle+Lista) — ou fundir.
+
+## Pendências do cliente (bloqueiam blocos)
+1. Lista definitiva de **temas + frentes + campos** → R2-02+ (backfill).
+2. Hierarquia TEMA/CASO/TIPO confirmada (MD do Dr. Thiago).
+3. **Regras de distribuição** + **mockup** Controladoria → R6.
+4. **API ProIuris** + **Conta Azul** (débito) → R6/R8.
+5. Base de graduação/residência (A1) → R5-05.
