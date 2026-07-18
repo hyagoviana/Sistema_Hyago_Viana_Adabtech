@@ -12,7 +12,10 @@
 | **R3-01** | ✅ **Concluída** (dev+qa+architect OK) | Migration `20260718000001` **APLICADA no banco** (2026-07-18). Testes 18/18, regressão-zero. Sem commit. |
 | **R4-01** | ✅ **Concluída** (dev+qa+architect+correção) | Gate de $ na ficha do cliente via `permissaoEfetiva`. Só front. Sem commit. |
 | **R4-02** | ✅ **Concluída** (dev+qa+architect) | Gate de $ no bloco `finBifurcated` da ficha do caso (TermoPanel+AsaasCobrancasPanel). Só front. Sem commit. |
-| R4-03 | ⏭️ **Próxima** | Gate nos dashboards + reforço nos RPCs financeiro/asaas/contaazul (defesa server-side). |
+| **R4-03** | ✅ **Concluída** (dev+qa+architect) | `requireModule` server-side (papel+overrides via `permissaoEfetiva`) nos RPCs financeiro/asaas/contaazul (view/edit) + guard do dashboard. Crons (contaazul+asaas) confirmados seguros (chamam service, não RPC). **Base pronta p/ R3-03.** |
+| R4-04 | ⏭️ **Próxima** | Espelhamento: painel financeiro do cliente agrega todos os casos + selo "em dia/devendo". |
+
+> **Trabalho agora direto na `main`** (decisão do dono 2026-07-18 — sistema em construção, não em produção). Sem push automático.
 
 ### 🔑 Decisão do dono (2026-07-18) — régua do módulo financeiro
 Permissões **por aba/módulo**, 3 níveis: **não ver / visualizar / editar**. Módulo **financeiro**: base = **só admin + financeiro**; todos os outros papéis (incl. advogados) = `none` por padrão, liberados só via **override por usuário** (`system_user_module_perms`). Aplicado em `ROLE_MODULE_ACCESS` (rbac.ts) — 1ª aba com régua de negócio própria (mais restrita que o NAV). Vale para TODO o R4.

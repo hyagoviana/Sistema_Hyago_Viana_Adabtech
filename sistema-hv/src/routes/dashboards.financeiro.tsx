@@ -5,6 +5,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardFinanceiro } from "@/hooks/useFinanceiro";
+import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useAuth } from "@/lib/auth";
+import { permissaoEfetiva } from "@/lib/rbac";
 
 export const Route = createFileRoute("/dashboards/financeiro")({
   component: DashboardFinanceiro,
@@ -31,6 +34,32 @@ function Card({ label, value, tone }: { label: string; value: string; tone?: str
 }
 
 function DashboardFinanceiro() {
+  // R4-03 — gate de $ no dashboard. Mesma infra efetiva de R4-01
+  // (permissaoEfetiva combina PAPEL + overrides por usuário×módulo). O RPC
+  // getDashboardFinanceiroFn já barra os dados no servidor (403); este guard
+  // evita renderizar a casca visual com totais para quem não tem financeiro:view.
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
+
+  if (!podeVerFinanceiro) {
+    return (
+      <div className="page-container">
+        <Breadcrumb items={[{ label: "Dashboards", to: "/dashboards" }, { label: "Financeiro" }]} />
+        <PageHeader eyebrow="Dashboards" title="Financeiro" />
+        <Alert className="mt-4">
+          <AlertDescription>
+            Você não tem permissão para visualizar o dashboard financeiro.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return <DashboardFinanceiroContent />;
+}
+
+function DashboardFinanceiroContent() {
   const { data, isLoading, isError, error } = useDashboardFinanceiro();
 
   return (

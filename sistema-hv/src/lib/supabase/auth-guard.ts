@@ -5,6 +5,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { getCookies, getRequestHeader } from "@tanstack/react-start/server";
 
+import { getUserModulePerms } from "../rbac-perms-service";
+import { permissaoEfetiva, type Module, type ModuleAction, type Role } from "../rbac";
 import { getSupabaseAdmin } from "./server";
 
 export class AuthError extends Error {
@@ -164,6 +166,50 @@ export async function requireRole(
   if (!data || data.status?.toUpperCase() !== "ACTIVE")
     throw new AuthError("Usuário inativo ou sem perfil", 403);
   if (!allowed.includes(data.role)) {
+    throw new AuthError("Você não tem permissão para esta ação", 403);
+  }
+  return { id: user.id, email: user.email, role: data.role };
+}
+
+/**
+ * Guard de MÓDULO server-side — versão de servidor de `permissaoEfetiva` (R3-01).
+ * Antecipa parte de R3-03: em vez de exigir uma lista fixa de papéis
+ * (`requireRole`), respeita a régua "por módulo com overrides por usuário"
+ * (`system_user_module_perms`), exatamente como a UI. É o gate correto para os
+ * RPCs de $ do épico R4, onde advogados têm a rota financeira no NAV mas NÃO
+ * devem ver valores (a régua base do módulo `financeiro` já limita a
+ * admin/financeiro; overrides liberam quem precisar).
+ *
+ * Fluxo: (1) `requireAuth()` p/ obter o usuário; (2) lê `role`/`status` de
+ * `system_users` (reuse da mesma query de `requireRole`); (3) carrega overrides
+ * via `getUserModulePerms`; (4) combina com `permissaoEfetiva(role, overrides,
+ * module, action)`; (5) `false` ⇒ `AuthError(403)`.
+ *
+ * Exige status **ACTIVE** (rejeita INVITED) — mesma postura de `requireRole` e
+ * aceitável/desejável para os RPCs de $.
+ *
+ * @returns `{ id, email, role }` do usuário autenticado e autorizado.
+ * @throws  `AuthError(403)` se o usuário não tem a permissão efetiva no módulo.
+ */
+export async function requireModule(
+  module: Module,
+  action: ModuleAction,
+): Promise<{ id: string; email: string; role: string }> {
+  const user = await requireAuth();
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_users")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw new AuthError("Falha ao verificar permissões", 500);
+  // status em system_users é MAIÚSCULO (ACTIVE/INVITED/SUSPENDED).
+  if (!data || data.status?.toUpperCase() !== "ACTIVE")
+    throw new AuthError("Usuário inativo ou sem perfil", 403);
+
+  const overrides = await getUserModulePerms(user.id);
+  if (!permissaoEfetiva(data.role as Role, overrides, module, action)) {
     throw new AuthError("Você não tem permissão para esta ação", 403);
   }
   return { id: user.id, email: user.email, role: data.role };
