@@ -30,6 +30,7 @@ import {
   useApresentarTermo,
   useAprovarTermo,
   useCalcTermo,
+  useCaseHonorarios,
   useConferirTermo,
   useCreateTermo,
   useDarBaixaParcela,
@@ -65,6 +66,17 @@ function toCents(v: string): number {
   );
   return Math.round((isNaN(n) ? 0 : n) * 100);
 }
+
+// Fallback client-side dos TERMO_DEFAULTS (termo-service.ts é server-only por
+// causa do node:crypto; não dá para importar num componente client). Espelha
+// { percentual_honorarios: 15, valor_parcela_centavos: 50000, desconto_avista_pct: 10 }.
+// O cálculo autoritativo continua no servidor com os MESMOS defaults — aqui é só
+// para semear os campos quando o caso não tem honorários registrados.
+const TERMO_DEFAULTS_UI = {
+  percentual_honorarios: 15, // %
+  valor_parcela_centavos: 50000, // R$ 500,00
+  desconto_avista_pct: 10, // %
+};
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   RASCUNHO: { label: "Rascunho", cls: "bg-muted text-muted-foreground" },
@@ -425,9 +437,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       disabled={delParcela.isPending}
                       onClick={() => {
                         if (
-                          !window.confirm(
-                            `Excluir a parcela ${String(p.numero).padStart(2, "0")}?`,
-                          )
+                          !window.confirm(`Excluir a parcela ${String(p.numero).padStart(2, "0")}?`)
                         )
                           return;
                         delParcela.mutate(p.id, {
@@ -473,10 +483,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
         onOpenChange={(v) => !v && setCobrancaFor(null)}
       />
 
-      <PixQrCodeDialog
-        parcelaId={pixFor}
-        onOpenChange={(v) => !v && setPixFor(null)}
-      />
+      <PixQrCodeDialog parcelaId={pixFor} onOpenChange={(v) => !v && setPixFor(null)} />
 
       <ElaborarDialog
         caseId={caseId}
@@ -502,11 +509,20 @@ function ElaborarDialog({
   const calc = useCalcTermo();
   const create = useCreateTermo(caseId);
   const gerarDoc = useGerarDocumentoTermo(caseId);
+  // R5-07 (A3) — honorários do caso (persistidos da procuração em
+  // system_case_honorarios). Usados para pré-preencher % e valor da parcela.
+  const { data: honorarios } = useCaseHonorarios(caseId);
   const [antes, setAntes] = useState("");
   const [depois, setDepois] = useState("");
   const [pagas, setPagas] = useState("");
   const [tipo, setTipo] = useState<"PARCIAL" | "COMPLEMENTAR">("PARCIAL");
   const [forma, setForma] = useState<"PARCELADO" | "A_VISTA">("PARCELADO");
+  // R5-07 (A3) — % de honorários editável (antes fixo 15%). Pré-preenchido do
+  // caso; fallback TERMO_DEFAULTS. Máscara percentual BR (vírgula decimal).
+  const [percentual, setPercentual] = useState("");
+  // R5-07 (A3) — valor da parcela editável (antes fixo R$500). Pré-preenchido do
+  // caso; fallback TERMO_DEFAULTS. Máscara monetária BRL (em reais → centavos).
+  const [valorParcela, setValorParcela] = useState("");
   // #17 — desconto à vista (%), editável só quando Forma = À vista. Default 10%.
   const [descontoAvista, setDescontoAvista] = useState("10");
   // Campos FIES (texto livre) que fluem para o documento do termo.
@@ -539,6 +555,21 @@ function ElaborarDialog({
       ? Math.max(0, Number(descontoAvista.replace(",", ".")) || 0) / 100
       : undefined;
 
+  // R5-07 (A3) — % de honorários editável (percentual inteiro, ex.: 15). Vazio →
+  // undefined → o servidor cai em TERMO_DEFAULTS. Nunca envia valor negativo.
+  const percentualNum = (() => {
+    const v = percentual.trim();
+    if (v === "") return undefined;
+    const n = Number(v.replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  })();
+  // R5-07 (A3) — valor da parcela editável (em centavos). Vazio/zero → undefined →
+  // o servidor cai em TERMO_DEFAULTS (R$ 500).
+  const valorParcelaCentavos = (() => {
+    const c = toCents(valorParcela);
+    return c > 0 ? c : undefined;
+  })();
+
   // Reseta o estado da sessão sempre que o modal abre (evita reaproveitar um
   // termo de uma abertura anterior).
   useEffect(() => {
@@ -551,6 +582,21 @@ function ElaborarDialog({
     }
   }, [open]);
 
+  // R5-07 (A3) — pré-preenche % e valor da parcela ao abrir: usa os honorários do
+  // caso quando existem (system_case_honorarios); senão cai em TERMO_DEFAULTS.
+  // Depende de `honorarios` porque o hook pode resolver depois do modal abrir.
+  useEffect(() => {
+    if (!open) return;
+    const pct = honorarios?.percentual_honorarios ?? TERMO_DEFAULTS_UI.percentual_honorarios;
+    const parcelaCentavos =
+      honorarios?.valor_parcela_centavos ?? TERMO_DEFAULTS_UI.valor_parcela_centavos;
+    setPercentual(normalizePercentBr(String(pct).replace(".", ",")));
+    setValorParcela(normalizeBrl((parcelaCentavos / 100).toFixed(2).replace(".", ",")));
+    // Desconto à vista também pré-preenche do caso (fallback TERMO_DEFAULTS).
+    const desc = honorarios?.desconto_avista_pct ?? TERMO_DEFAULTS_UI.desconto_avista_pct;
+    setDescontoAvista(String(desc).replace(".", ","));
+  }, [open, honorarios]);
+
   // Assinatura dos parâmetros que afetam o cálculo/documento.
   function calcSignature() {
     return JSON.stringify({
@@ -559,6 +605,8 @@ function ElaborarDialog({
       pagas: toCents(pagas),
       tipo,
       forma,
+      percentual: percentualNum ?? null,
+      valorParcelaCentavos: valorParcelaCentavos ?? null,
       descontoAvistaPct: descontoAvistaPct ?? null,
       taxaJuros: taxaJuros.trim(),
       percentualFinanciado: percentualFinanciado.trim(),
@@ -584,6 +632,9 @@ function ElaborarDialog({
         saldoAntesCentavos: toCents(antes),
         saldoDepoisCentavos: toCents(depois),
         parcelasPagasCentavos: toCents(pagas),
+        // R5-07 (A3) — % e valor da parcela editáveis (undefined → default no servidor).
+        percentual: percentualNum,
+        valorParcelaCentavos,
         descontoAvistaPct,
       },
       {
@@ -598,6 +649,9 @@ function ElaborarDialog({
               parcelasPagasCentavos: toCents(pagas),
               tipoTermo: tipo,
               formaPagamento: forma,
+              // R5-07 (A3) — % e valor da parcela editáveis persistem no snapshot.
+              percentual: percentualNum,
+              valorParcelaCentavos,
               descontoAvistaPct,
               elaboradoPorId,
             },
@@ -653,7 +707,8 @@ function ElaborarDialog({
           <DialogTitle>Elaborar Termo de Acerto</DialogTitle>
           <DialogDescription>
             Informe os saldos e clique em “Calcular e revisar” para gerar o documento e abrir o
-            Word. O cálculo usa 15% / R$500 / 10% (padrão PRD).
+            Word. O percentual de honorários e o valor da parcela vêm pré-preenchidos do caso e
+            podem ser editados.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -686,6 +741,30 @@ function ElaborarDialog({
               inputMode="decimal"
               placeholder="0,00"
             />
+          </div>
+          {/* R5-07 (A3) — % de honorários e valor da parcela editáveis, pré-preenchidos
+              do caso (system_case_honorarios) com fallback TERMO_DEFAULTS (15% / R$500). */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Honorários (%)</Label>
+              <Input
+                value={percentual}
+                onChange={(e) => setPercentual(maskPercentBr(e.target.value))}
+                onBlur={() => setPercentual((v) => normalizePercentBr(v))}
+                inputMode="decimal"
+                placeholder="15"
+              />
+            </div>
+            <div>
+              <Label>Valor da parcela (R$)</Label>
+              <Input
+                value={valorParcela}
+                onChange={(e) => setValorParcela(maskBrlReais(e.target.value))}
+                onBlur={() => setValorParcela((v) => normalizeBrl(v))}
+                inputMode="decimal"
+                placeholder="500,00"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -912,9 +991,7 @@ function CobrancaAsaasDialog({
           <div className="rounded-md bg-[var(--muted)] p-3 text-[13px]">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Valor</span>
-              <span className="font-medium text-[var(--navy)]">
-                {brl(parcela?.valor ?? 0)}
-              </span>
+              <span className="font-medium text-[var(--navy)]">{brl(parcela?.valor ?? 0)}</span>
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-muted-foreground">Vencimento</span>

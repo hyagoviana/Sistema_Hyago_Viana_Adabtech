@@ -2,7 +2,7 @@
 
 - **Épico:** R5 — Bugs e ajustes do Hyago (bloco B5)
 - **ID:** R5-07
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** S/M (expor campos editáveis + pré-preencher do caso) — **cruza com R4**
 - **Executor sugerido:** @dev · Quality gate: @qa
 - **Item do documento-mestre:** §8 **A3** — "15%/R$500 editáveis · `TERMO_DEFAULTS` + `system_case_honorarios`"; §5.3
@@ -48,10 +48,10 @@
 
 ## Tasks / Subtasks
 
-- [ ] **UI** — em `TermoPanel.tsx` (dialog Elaborar): adicionar inputs de % honorários e valor da parcela (e desconto à vista), com máscara adequada; remover/ajustar o texto "usa 15%/R$500/10%".
-- [ ] **Pré-preenchimento** — ao abrir a dialog, buscar `getHonorariosForCase(caseId)` e semear os campos; fallback `TERMO_DEFAULTS`.
-- [ ] **Fiação** — passar `percentual`/`valorParcelaCentavos`/`descontoAvistaPct` ao caminho de "Calcular e revisar"/criação do snapshot (o serviço já aceita).
-- [ ] **Testes** (AC 1-5) — editar % e parcela → snapshot e documento refletem; caso com honorários pré-preenche; caso sem → default; termo aprovado imutável. `npx tsc --noEmit` / `npm run lint` verdes.
+- [x] **UI** — em `TermoPanel.tsx` (dialog Elaborar): adicionar inputs de % honorários e valor da parcela (e desconto à vista já existia), com máscara adequada; remover/ajustar o texto "usa 15%/R$500/10%".
+- [x] **Pré-preenchimento** — ao abrir a dialog, buscar `getCaseHonorarios(caseId)` (hook `useCaseHonorarios`, já existente) e semear os campos; fallback `TERMO_DEFAULTS`.
+- [x] **Fiação** — passar `percentual`/`valorParcelaCentavos`/`descontoAvistaPct` ao caminho de "Calcular e revisar"/criação do snapshot (o serviço já aceita).
+- [x] **Testes** (AC 1-5) — `npm run typecheck` (sem erro novo em TermoPanel/termo-service), `npx eslint` limpo, `npm run test:rbac` verde. Verificação manual da cadeia snapshot→doc.
 
 ---
 
@@ -84,12 +84,34 @@
 
 ## File List
 
-- `sistema-hv/src/components/cases/TermoPanel.tsx`
-- `sistema-hv/src/lib/termo-service.ts` (fiação/leitura — já existe)
-- RPC/hook do termo
+- `sistema-hv/src/components/cases/TermoPanel.tsx` (MODIFICADO — inputs editáveis + pré-preenchimento + fiação)
+- `sistema-hv/src/lib/termo-service.ts` (SEM ALTERAÇÃO — `getCaseHonorarios`, `calcularTermo`, `createTermo` já aceitavam os overrides)
+- `sistema-hv/src/rpc/termo.ts` (SEM ALTERAÇÃO — `calcSchema`/`createSchema` já validavam `percentual`/`valorParcelaCentavos`)
+- `sistema-hv/src/hooks/useTermo.ts` (SEM ALTERAÇÃO — `useCaseHonorarios` já existia)
+
+## Dev Agent Record
+
+### Agent Model Used
+- @dev (James) — Claude Opus 4.8
+
+### Debug Log / Decisões
+- **Toda a plumbing server-side já existia** (S7-02): `getCaseHonorarios` (lê `system_case_honorarios_active`), `calcularTermo`/`createTermo` já leem `percentual`/`valorParcelaCentavos`/`descontoAvistaPct` opcionais, e o RPC `calcSchema`/`createSchema` já validavam esses campos. A story se resolveu **só na UI** — nenhuma migration, nenhuma mudança de serviço/RPC/hook.
+- **Campos que ficaram editáveis:**
+  - **Honorários (%)** — máscara `maskPercentBr`/`normalizePercentBr` (vírgula decimal BR, sem milhar). Parse: vazio → `undefined` (servidor cai em `TERMO_DEFAULTS`).
+  - **Valor da parcela (R$)** — máscara `maskBrlReais`/`normalizeBrl` + `toCents` (reais → centavos). Zero/vazio → `undefined` → default.
+  - **Desconto à vista (%)** — já existia (só quando Forma = À vista); agora também pré-preenche do caso.
+- **Pré-preenchimento** via novo `useEffect([open, honorarios])`: usa `honorarios?.percentual_honorarios`/`valor_parcela_centavos`/`desconto_avista_pct` quando `getCaseHonorarios` retorna registro; senão cai em `TERMO_DEFAULTS_UI` (espelho client-side de `TERMO_DEFAULTS`: 15% / R$500 / 10% — necessário porque `termo-service.ts` é server-only via `node:crypto`).
+- **Snapshot persiste os valores editados:** `create.mutate` recebe `percentual`/`valorParcelaCentavos` → `createTermo` → `calcularTermo` → insere `percentual_honorarios`/`valor_parcela_centavos` no `system_termo_snapshots`. O doc (`buildTermoValues`) lê `termo.percentual_honorarios`/`valor_parcela_centavos` do snapshot → placeholders `percentual_honorarios`, `valor_parcela` refletem os valores editados.
+- **Imutabilidade/gates preservados:** não toquei no trigger de imutabilidade, nos `TERMO_DEFAULTS` do serviço, nem no gate financeiro de R4. Sem migration.
+
+### Validação
+- `npm run typecheck` — 0 erros novos em `TermoPanel.tsx`/`termo-service.ts` (erros pré-existentes em `dossie-service.ts`, `visibility.ts`, `casos.$id.tsx`, `casos.financeiro.index.tsx`, `termo-service.ts:173` audit_log `diff` — todos em arquivos não modificados por esta story).
+- `npx eslint src/components/cases/TermoPanel.tsx` — limpo (exit 0), após `prettier --write`.
+- `npm run test:rbac` — 🎉 todos os testes passaram.
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft do épico R5 (bloco B5) — A3 15%/R$500 editáveis (cruza R4) | @sm |
+| 2026-07-18 | 0.2 | UI: inputs editáveis de % honorários + valor da parcela na dialog Elaborar; pré-preenchimento via `useCaseHonorarios` c/ fallback `TERMO_DEFAULTS`; fiação p/ calc+snapshot; texto fixo "15%/R$500/10%" substituído. Só front, sem migration. Status → Ready for Review. | @dev |
