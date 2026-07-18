@@ -400,7 +400,28 @@
       "Bash(ls vercel.json)",
       "Bash(cat vercel.json)",
       "Bash(npx tsr *)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -c \"import docx\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(xargs grep -l \"GenerateCaseDocumentFlow\\\\|CaseDocumentsTab\")",
+      "Bash(echo \"ESLINT EXIT: $?\")",
+      "Bash(grep -i 'clientes.$id\\\\|clientes\\\\.')",
+      "Bash(grep -rl \"R4-01\" docs/stories)",
+      "Bash(grep -rl \"R3-01\" docs/stories)",
+      "Bash(ls src/lib/auth*)",
+      "Bash(ls src/lib/auth/)",
+      "Bash(sed -n '20,45p' src/lib/rbac-perms-service.ts)",
+      "Bash(sed -n '1,30p' src/hooks/usePermissions.ts)",
+      "Bash(grep -viE \"prettier/prettier|Delete .*␍|Replace|Insert|^\\\\s*$|problems|potentially fixable|error·Delete\")",
+      "Bash(tee /tmp/tc.txt)",
+      "Bash(grep -E 'financeiro-service|rpc/financeiro|useFinanceiro|clientes\\\\.\\\\$id|financeiro-aggregation')",
+      "PowerShell(Set-Content *)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(cat .prettierrc*)",
+      "Bash(cat prettier.config.*)",
+      "Bash(cat ../.gitattributes)",
+      "Bash(cat .gitattributes)",
+      "Bash(xxd)"
     ]
   }
 }

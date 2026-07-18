@@ -1,0 +1,598 @@
+Impromptu Google Meet Meeting - July 15
+VIEW RECORDING - 65 mins (No highlights): https://fathom.video/share/ziVEBkabBNymp7bpioXAzpzSs-85ZX1T
+
+---
+
+0:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ah, não, é tranquilo. O que eu mais preciso, assim, é que a gente consiga mapear da forma que você quer, mais ou menos, que aí eu consigo alterar, e aí a gente consegue, na sexta-feira, fazer uma reunião com o Iago para mostrar.
+
+0:17 - Dr. Thiago Correia
+  Beleza, beleza. Eu não sei se para ele já ficaria para sexta ou se ele prefere no Insta outra semana.  Pode ser também. Depende do que ele vai trazer aí e do quão avançada a gente estaria até a sexta, porque aí talvez fique melhor para fazer depois, mas a gente vê aí, né, de amanhã para sexta, como ficariam os avanços.  Beleza, para, o Iago mandou uns negócios no grupo ontem, umas observações que ele tinha feito no sistema, eu acho que isso aí fica melhor passar depois para ele, conforme as outras coisas foram feitas, porque aí você mostra para ele ali, naquelas pontuações, o que ele concluiu já, né, e para hoje, só para me entender, você prefere a gente ver alguma coisa para o primeiro mundo?  No que está aí, no seu, ou a gente entra nas ideias novas aí? Como é que você prefere fazer?
+
+1:07 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, eu acho que para que a gente consiga entregar algo para iniciar, se a gente conseguir ver pelo meu aqui, e aí você vai me guiando, Adavio, acho que aqui, aí depois a gente olha o seu e entra dentro do processo.  Você consegue me mandar ali? Tem que conseguir? tem acesso?
+
+1:28 - Dr. Thiago Correia
+  Eu abro aqui também.
+
+1:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu te mandei aqui, e aí eu vou mandar o usuário e a senha aqui, peraí só um momentinho, usuário e a senha é arroba e abro.  Cara, agora eu não consegui abrir esse negócio. Eu também acima no... tô, nossa, uma loucura, cara. Acabei de sair de uma live, aí eu tenho aula pra dar no sábado, eu tô cheio de aulas essa semana.
+
+2:08 - Dr. Thiago Correia
+  Tô num período aí que, meu Deus do céu, passa a dia, passa a dia, e dá agonia, cara, que você chega todo dia, você não fez tudo que você tinha que fazer, e dá 10 horas, você não acabou o dia.
+
+2:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Parece que o cara não tá evoluindo, né?
+
+2:22 - Dr. Thiago Correia
+  É, você fica frustrado, porque você não consegue fazer tudo que você tinha que fazer, sabe? Só que é 10 horas da noite e você fala, pô, eu preciso dormir.
+
+2:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu também tô me sentindo assim. Esse final de semana, eu trabalhei todos os dias, 3 horas da manhã, todos os dias, na sexta, na sábado e no domingo, pra eu conseguir iniciar a semana com um pouquinho mais leve, porque eu tinha aula, tinha live, eu tinha que montar um monte de processos, né?  E aí é difícil. Mas, vamos aproveitar esse momento aqui pra gente poder terminar, e aí hoje à noite, acredito que eu consiga já entregar uma boa parte.  Isso que eu tinha falado na sexta, mas eu posso marcar a coisa na segunda, por exemplo. É... É... É...  Vamos entender, essa parte da pipeline do hoje, é um dashboard que a gente diz o que tem hoje dentro desse processo, então quantidade de casos por tipo, quantidade de casos ativos, quantidade de clientes, quantidade de pessoas que se encontram dentro da pipeline financeira, aí você pode pensar assim, tem quatro na pipeline financeira e três clientes, é por causa do caso, porque cada caso é que cai na pipeline financeira, então o mesmo cliente pode ter mais de um contrato, de um caso, então a pipeline pode ser que fiquem mais pessoas, entendeu, dentro desse processo.
+
+3:37 - Dr. Thiago Correia
+  Esse painel aqui está ok, lógico, depois a gente vai ver, porque os dashboards precisam dos dados, né, para depois a gente ter mais informação.
+
+3:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, tudo que vocês quiserem colocar aí dentro desse processo, a gente só botou mesmo para não ficar, porque estava muito básico, entendeu, então a gente colocou mais para trazer mais alguns determinados dados.  isso, é É. É...
+
+4:00 - Dr. Thiago Correia
+  Aqui tem informações diferentes, porque vai ter coisas que são da administração, coisas que são das áreas e coisas que são de cada pessoa.  Então, por exemplo, quando a fala aqui de o número total de casos ativos, de forma geral, no escritório, é algo mais para a administração.  O número de clientes também, quantas coisas estão na pipeline financeira também, é mais para a administração. Eu e a Patrícia.  Agora, quantos casos nós temos por tipo e tudo, não tem problema o pessoal ter tipo de informação, mas algumas coisas aqui, por exemplo, não é interessante, né?  Mas isso aí depois é muito tranquilo. Acho que a gente não precisa se preocupar de mexer no dashboard agora, não.  Beleza. Aqui a gente tem a pipeline operacional, mas aí ainda não está daquele jeito.
+
+4:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O a gente vai fazer? Quando você abrir, quando você operacional, que é o que eu estou montando... Agora, aí vai ter essa visualização, certo?  Que é separadas por caso e vai ter uma visualização em lista. Fora dessa daí, né? Fora da Fies ESF.  Lá dentro da Pipeline Operacional. Aqui. Isso. Aqui a gente está vendo, por exemplo, dentro de um grau separado por caso.  Por tema. Por tema de caso, isso. E, dentro dessa parte, vai ter ali um botão escrito assim, visualizar em lista.  Aí, em lista, todos os temas entram dentro do mesmo grau. Não é isso que a gente vai querer? Que seria um geral de todos.  E aí você pode filtrar dentro deles.
+
+5:46 - Dr. Thiago Correia
+  Sim, não. Sim, porque pode ter essa geral, mas... Tá, então eu ainda não entendi o que...
+
+5:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu ainda não consegui interpretar.
+
+5:57 - Dr. Thiago Correia
+  Quando eu estava falando ontem, aquele negócio de multicamada, eu estava... A gente já cansado, por da ideia louca na cabeça, era para tentar trazer essa hierarquia de situação.  Cara, eu até fiquei pensando, tem alguma forma de eu conseguir explicar melhor as coisas com papel, sabe? Que eu vou fazer uns desenhos.  Tem, pesquisa aí na internet, Escalidrão.
+
+6:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O E-X, E-X-C-A, isso, já está ali embaixo, Escalidrão. Eu acho que fica. Nós que somos desenvolvedores bem ruins de front-end, esse é o mais fácil que tem.  Que aí você consegue me explicar ali em cima, nos quadradinhos, está vendo? Você adiciona um quadrado, eu acho que é mais fácil com um quadrado.
+
+6:38 - Dr. Thiago Correia
+  Aqui, eu acho que até o Drive tinha uma opção disso, que a gente fez complementos aqui, mas...
+
+6:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas pode ser também aí, pelo X, não tem problema.
+
+6:47 - Dr. Thiago Correia
+  Aqui, beleza. Dá para ver...
+
+6:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Dá.
+
+6:52 - Dr. Thiago Correia
+  Fô, Matheus. Vê se o Matheus está aí. Matheus, deixa eu ver. Aí, o Matheus já pega na loucura nossa aqui de...  Mas está tranquilo, porque eu fico passando para ele depois.
+
+7:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  fazendo pepopig aqui, Matheus. Está tranquilo?
+
+7:06 - Matheus Torquato
+  Como vocês estão? Beleza.
+
+7:08 - Dr. Thiago Correia
+  Estou tentando ver se eu consigo explicar para o Adavio essa questão da estrutura, de como são essas divisões internas, porque aí vocês têm essa clareza, fica mais fácil para vocês também.  Beleza, nós temos aqui, Adavio, todo o cliente, tá? O cliente, né?
+
+7:27 - Matheus Torquato
+  A pessoa, a gente... A pessoa, é.
+
+7:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vamos considerar, assim, para que a gente consiga entender melhor. Pessoa. Pessoa. Isso.
+
+7:34 - Dr. Thiago Correia
+  Aí esse cara tem uma categoria interna, que ele é lead... Ou cliente. Ou cliente. Então, aqui, Matheus, já para você entender, eu vou traduzindo aqui, Thiago?
+
+7:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só para aí o Matheus já ficar ciente. Hoje, a gente criou o lead como a pessoa. É o contrário, é uma pessoa e o lead...  E o cliente, ela encadastra o que isso fica, tá, Thiago? Se você clicar ali em cadastro, você vai conseguir acompanhar junto comigo também.
+
+8:06 - Dr. Thiago Correia
+  Deixa eu puxar esse negócio para essa tela aqui, porque na outra tela aqui fica mais difícil eu fazer esse troço aqui, peraí.  Tá.
+
+8:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, Matheus, ali onde a gente tem cadastro vai ser pessoa, e ser lead ou cliente é o momento daquela pessoa.  Não vai ser lead, entendeu? Então, lead ou pessoa é onde ela se encontra.
+
+8:32 - Matheus Torquato
+  Então, o cadastro é uma pessoa, aí se é lead, ele entra na pipeline comercial, se é cliente, ele entra na pipeline operacional ou financeira, né?  Exato. No começo, sei se o Thiago lembra, até naquela reunião que foi só eu, você e o Iago, eu falei para terem a aba de cadastro, né?  Só que seria essa parte de pessoa. É isso que a vai fazer ali, ajustar. isso. Mais ou menos isso mesmo.
+
+9:02 - Dr. Thiago Correia
+  É que eu acho que aquele dia até a gente não conseguiu explicar também isso para o Iago, para ele ter essa conversa.  Não, era tudo muito novo também, mas isso a gente vai fazer. Então tem essa situação da pessoa, isso aqui, e aí tem esse caso dessa pessoa.  Se esse caso é um caso de contrato fechado, procuração e assinatura, ele tem essa classificação interna no sistema de lead.  Se esse caso está fechado, procuração e contrato. Ele vira cliente. Isso, ele é cliente. A partir de uma assinatura, né?  Isso, a partir do contrato assinado, né? Aí pode ser um caso de T2 e tudo, mas teoria é isso aí.  Ok, esse caso está aqui como assinado e aí agora ele é lead. Enquanto ele é caso lead, ele fica com informações no comercial.
+
+9:54 - Matheus Torquato
+  Aí quando é um caso de um cliente, né?
+
+9:58 - Dr. Thiago Correia
+  Um caso de um lead é um caso de um cliente. O operacional é que determina quando ele vai virar financeiro, correto?
+
+10:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim, exato, exato.
+
+10:14 - Dr. Thiago Correia
+  Dá para considerar já o financeiro como...
+
+10:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque como a gente tem as três pipelines, é só para a gente conseguir mapear.
+
+10:22 - Dr. Thiago Correia
+  financeiro está aqui dentro do operacional, ele é um setor dentro do operacional, mas a gente pode considerar assim como algo fora.  Eu não sei se seria como ideal a gente fazer esse caso já separado, operacional e financeiro, porque é meio que interligado.  Por exemplo, o cara fechou aqui com comercial, ele vem para operacional, quando ele vem para operacional, ele pode já estar em andamento o processo dele e ter situações com o financeiro, parcelas sendo pagas...  Mas a gente botou para ele ficar nos dois lugares, ele fica no operacional e fica no financeiro.
+
+10:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pode ficar tanto em um só como nos dois.
+
+10:58 - Matheus Torquato
+  Os dois, é.
+
+11:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É determinado pelo usuário, entendeu?
+
+11:03 - Matheus Torquato
+  Entendi. Beleza.
+
+11:05 - Dr. Thiago Correia
+  Aí, nessa parte aqui, eu acho que a gente já tem uma boa compreensão, né? A questão que eu acho que a gente tem que ver essa multicamada é nesse meio aqui, Matheus.  Porque aqui nesse meio, esse caso, ele tem uma categorização do tema. Esse caso, ele é de algum tema de atuação, que aí vão ter vários temas.  Então, ele pode ser do 1%, ele pode ser do 10% do PMB, ele pode ser do indenização do Mais Médicos, tá?  Então, esse caso, ele é obrigatoriamente de algum tema. Quando ele não é de tema nenhum classificado, a gente chama aqui de cível.  É tudo que é outro, sabe? Tudo que não tem um tema próprio, a gente categoriza como cível, porque ou é irrelevante para fins do total, ou é Você consegue abrir ali o sistema?
+
+12:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O para a gente? Consigo, está aqui.
+
+12:04 - Dr. Thiago Correia
+  Acho que está aqui como outros, a gente tem utilizado mais o Cível. Está aberto aqui? Está, está aberto.
+
+12:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então deixa a gente entender, certo? Por exemplo, vamos fazer um rastreamento para que a gente consiga ver como é que a vai programar.  Primeiro, eu vou cadastrar a pessoa lá no cadastro, vai lá no cadastro.
+
+12:30 - Matheus Torquato
+  Não, ali embaixo, na pipeline ali, no comercial.
+
+12:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na segunda, aí, cadastro.
+
+12:38 - Matheus Torquato
+  Beleza.
+
+12:38 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui, hoje está como lead e cliente. Isso vai sumir e ele vai virar um cadastro que é uma pessoa.  Dentro desta pessoa, aí entra no primeiro Matheus aí, por favor. Dentro desta pessoa, nós vamos ter ali em cima.  se ele é um lead ou um cliente, certo?
+
+13:04 - Dr. Thiago Correia
+  Mais abaixo, nós temos os casos desse cliente, certo?
+
+13:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  São os casos que a gente tem, mais médicos, esse é um caso, ou é um tema?
+
+13:19 - Dr. Thiago Correia
+  Esse seria um tema, não existe esse tema mais médicos, tá? Mas esse seria um tema. Tá, beleza.
+
+13:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, este é um tema, outros é o cível, certo? CFM e CRM, existe esse caso, esse tema?
+
+13:37 - Dr. Thiago Correia
+  Não, não, eu vou te passar essa lista de temas.
+
+13:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, se você conseguir passar a lista de temas para a gente... Eu tenho essa lista dos temas que a gente...  Aí, por exemplo, aqui a gente está dividido pelo tema, certo? Nesse caso, você não quer que a gente divida pelo tema, você quer que a gente divida pelo caso.
+
+13:55 - Dr. Thiago Correia
+  Pelo caso, porque o mesmo cara pode ter mais de um caso do mesmo tema ou não. Então, sim, é pelo caso.
+
+14:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, a gente precisa de uma lista de temas e de uma lista de casos.
+
+14:08 - Dr. Thiago Correia
+  Eu acho que nem precisa dessa lista de casos. Aqui, por exemplo, quando a gente abrisse aqui o Fies SF, você já veria todos os casos desse tema.  Então, já é uma segregação suficiente. Você não precisa de outra lista só de casos, porque os casos desse tema vão estar aqui.  A gente pode ter um lugar geral que você vai ver de todos os casos? Pode, mas... O mais importante é o do tema, que é as informações segregadas.  Então, você entender, deixa eu abrir aqui hoje como que a gente faz aqui o do 1%. Esse aqui, por exemplo, é uma lista dos casos de 1%.  Todos os nossos casos estão aqui. Para analisar qualquer coisa desse tema, eu não preciso das informações do outro caso do cara, entendeu?  Todos os casos dele, por exemplo, esse cara aqui, Caça. Isso aqui, cada linha dessa aqui é um caso dela do 1%.  Então, no sistema ficariam três casozinhos dentro do SF, que é daquele cliente. Mas que não são casos diferentes?
+
+15:28 - Matheus Torquato
+  É, que eu estou tentando pensar.
+
+15:30 - Dr. Thiago Correia
+  Podem ser, e aí a gente que na hora de fazer o sistema vai colocar qual é o vínculo da pessoa que está naquele caso, né?  Tá, peraí, deixa eu tentar entender de novo.
+
+15:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vamos voltar ali, vamos lá para a pipeline operacional. Que aí a gente está dentro do tema. Sim. Então, você vai me mandar os temas, e aí, por exemplo, nós vamos ter sete temas.  Que temas, Matheus, são frentes para eles, certo? Então, dentro... Imagina, por exemplo, front-end e back-end para nós aqui dentro do nosso processo.  Então, dentro do front-end, a gente tem o cara de UX, tem o cara de design, tem o cara de tatatata.  Então, são complementos do front-end. Então, no caso dele, esse FIES, por exemplo, o ESF, DGM, é tudo o mesmo tema, só são casos diferentes dentro desse tema.  Então, a ESF é uma frente diferente do tema FIES 1%, DGM é uma frente do tema FIES 1%, não isso?
+
+16:34 - Matheus Torquato
+  Então, em vez de ser esses cards de caso, vão ser temas, e dentro de cada tema, eu posso colocar quantos casos eu quiser, e a gente vai a frente que eu quiser.  Então, o funil é voltado pelo tema. Pelo tema, isso.
+
+16:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, dentro do tema, aí a gente criou, exemplo, entramos ali, só para a gente terminar o raciocínio, Thiago, para ver se está certo.  Qual é que é que eu vou fazendo aqui para...
+
+16:58 - Dr. Thiago Correia
+  Aí a gente entrou dentro do tema...
+
+17:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu quero que você entenda a ideia, o termo técnico não importa, mas aí entramos dentro do tema, a gente vai ter a nossa pipeline, dentro dessa pipeline, ela tanto vai poder ser por Kanban, quanto por lista de filtro, porque, por exemplo, ele vai conseguir pesquisar pela lista de filtro, no formato lista, como se fosse um Excel, só os casos fiéis DGM dentro de 1%, entendeu?  Porque podem ter vários casos DGM dentro do tema 1%, como pode ter vários casos EFS dentro do tema 1%, mas eles têm que ter a opção de conseguir ver quantos casos tem no tema 1%, então vai ter 30 casos de DGM, 30 casos de ESF, 30 casos, entendeu?  Agora, única coisa, Thiago, que a gente precisa... Você precisa? FAD Nisso daí, é saber o seguinte, como é que a gente vai criar os tipos de caso dentro de cada tema?  Você vai mandar isso padronizado para a gente, ou vocês querem que vocês consigam criar caso aquele caso seja diferente, por exemplo?
+
+18:19 - Dr. Thiago Correia
+  Eu acho que, de começo, a gente pode mandar para vocês, e aí a gente já deixa pronto, mas precisa ter essa flexibilidade de poder adicionar a melhor caso.
+
+18:32 - Matheus Torquato
+  O que a gente pode fazer é o seguinte, essa pergunta que eu vou fazer às vezes já mata um pouco.  Todos os temas que vocês têm hoje, pode acrescentar temas também? Aumentar temas ou não?
+
+18:44 - Dr. Thiago Correia
+  Bom, a gente pode aumentar temas conforme os nossos serviços aumentem, né? Tá.
+
+18:52 - Matheus Torquato
+  E aumentando esses temas, eles vão usar os mesmos? próximos casos que já estão criados, ou eles usam um tema usa dois casos, outro tema usa todos, outro tema usa quatro?  Como é que funciona essa parte?
+
+19:10 - Dr. Thiago Correia
+  Eu não entendi a dúvida, perdão.
+
+19:13 - Matheus Torquato
+  Tipo assim, a gente tem o tema, né? Dentro do tema vai ter os casos que são relacionados a esse tema.  Só que eu quero saber o seguinte, se tem algum tema específico aonde não entra certo tipo de caso, ou todos os temas vão ter todos os casos juntos?  Dentro de um tema. Por exemplo, eu tenho cinco casos, aí eu tenho cinco temas. Cada tema vão ter dentro esses cinco casos ou tem um tema que vai ter só três casos, no outro vai ter cinco, no outro vai ter quatro?  Você sabe me dizer?
+
+19:45 - Dr. Thiago Correia
+  Eu acredito que todos os temas tenham casos com especificações diferentes.
+
+19:51 - Matheus Torquato
+  Então, são diferentes. Então, nem todo tema vão ter os mesmos conjuntos de casos. São diferentes. Exatamente. Isso é bom você passar para a gente, para a gente já deixar isso amarrado, aí quando você quiser acrescentar um caso novo dentro de um tema, a gente deixa na estrutura que já tem hoje, ele vai lá cria a pasta, cria o nome, anexo dos documentos, isso dentro do tema, aí ele vai criar um caso dentro do tema, aí quando o cliente entra dentro do tema, caso ali, ele vai entrar ali, você pode escolher qual caso ele quer, e automaticamente vai vir a documentação sobre aquele caso que vai estar dentro do tema.
+
+20:28 - Dr. Thiago Correia
+  Exatamente, cada tema, o que eu queria desenhar era justamente isso aqui, cada tema, ele é um universo próprio. Sim, tem um universo próprio, são distintos um do outro.
+
+20:39 - Matheus Torquato
+  Distintos, exato.
+
+20:40 - Dr. Thiago Correia
+  Então aqui no 1%, a gente vai ter a possibilidade do mesmo cliente, ele ser um caso de DGM para um vínculo dele, outro município é portaria, sei o que, aí quando a gente abre o painel ali operacional do 1%, eu preciso ter um painel operacional do 1%, todos os casos do 1%, dos clientes, bem-vindo.  Só que com especificidade de filtro rápido, eu poder ver esse, eu poder ver esse, Pela parte de coluna tipo Excel, que fica mais fácil de ver do que pelo Kanban, entendeu?
+
+21:11 - Matheus Torquato
+  O que a gente pode fazer também, quando for colocar um cliente lá e anexar, tem que anexar primeiro o tema...  Escolhe o tema e depois o caso, é isso que eu pensei. Seleciona o tema, dá o tema, tem esses casos dentro desse tema, você seleciona, esse é o tema que eu quero para...  Esse é o caso que eu quero para esse tema. Esse o eu pensei também.
+
+21:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí dentro do tema, tipo assim, como é que a gente vai fazer para eles, entendeu, Matheus? Tipo, quando ele entrar no tema, lá na pipeline tema, ele vai ter a configuração, aí vai ter lá, 1%, tem o caso DGM, caso portaria, caso censo, adicionar caso.  Aí ele vai clicar em adicionar caso, ele cria lá, como você disse, a pasta no drive, e escreve lá, caso Thiago.  Pronto, aí a partir desse momento, clientes que são do tema 1%, agora também podem...
+
+22:00 - Matheus Torquato
+  So we were talking about Fathom, Adavio Tittoni, Thiago Correia.
+
+22:30 - Dr. Thiago Correia
+  So Fathom, Adavio Tittoni, Dr. Thiago Correia, Correia, Dr. Thiago Correia, Thiago Correia, Dr.
+
+22:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Thiago Correia. A gente vai deixar livre para vocês conseguirem, dentro do tema 1%, criar mais categorias, entendeu? E jogar os documentos que são desta categoria.
+
+23:13 - Dr. Thiago Correia
+  O ideal é essa criação de tema e categoria ser limitada a administradores. Tudo bem, mas vai ser.
+
+23:21 - Matheus Torquato
+  Aí seria bom você passar essa lista para a gente, quais são os temas totais e dentro de cada tema, quais são os casos que tem em cada tema.  É, só para a gente deixar pré-pronto. Pré-pronto, é. Mas vocês vão poder criar temas e vão poder criar frentes, entendeu?
+
+23:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso vai ficar disponível para vocês, administradores, criarem frentes e criarem temas.
+
+23:42 - Dr. Thiago Correia
+  Tá. Aí...
+
+23:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí deixa só entender mais uma coisa, certo? Uhum. Dentro da pipeline operacional, a gente vai olhar o tema.  O tema. Dentro do tema, eu vou ter as frentes. Mas você quer que tenha uma pipeline para cada... A da frente também?  Ou a pipeline do tema é igual para todos? Acho que é por tema igual para todos.
+
+24:08 - Dr. Thiago Correia
+  Ok.
+
+24:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não muda, por exemplo, a frente.
+
+24:13 - Matheus Torquato
+  A da tema vai ter sua pipeline com o seu cliente, né? Aí você fala o mesmo funil, o mesmo nome de funil para todos, aí vocês editam como vocês querem?
+
+24:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, não. Eu acho que, assim, a minha dúvida é o seguinte. Hoje, hoje está assim, certo? Aí vamos imaginar que isso é o tema.  Aí você abriu o tema. Aí vai ter, por exemplo, dentro de onboarding, digamos, vai ter Adavio, caso DGM. Adavio, caso ESF.  Adavio, censo. Matheus, censo. Thiago, ESF, por exemplo. Aí ali em cima você tem um filtro para escolher se você quer ESF ou não.  Mas, por exemplo, quando eu entro dentro de ESF, eu tenho uma pipeline de... É ou ela vai ser igual para todos os temas?  Isso aí muda o grau, entendeu?
+
+25:08 - Dr. Thiago Correia
+  Igual a pipeline para todas as categorias do mesmo tema de forma igual. Não precisa ser uma pipeline para todas as categorias do tema.
+
+25:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu só preciso ter ela em lista para filtrar ela de uma forma um pouco melhor. Isso. eu só queria entender se precisava ser dentro, que aí a gente ia ter que construir mais uma, entendeu?  Mas não precisa. É só o tema com ela e aí só as frentes que o mesmo cliente pode ter várias frentes daquele mesmo tema.  Por isso que hoje está errado para nós, porque realmente a nossa frente é o tema agora, nesse momento. É que está ao contrário.  A gente não tem o tema e a frente. A gente só tem a frente. Não temos o tema ainda dentro.  Então, a gente vai criar esse protocolo.
+
+25:52 - Dr. Thiago Correia
+  É, basicamente é isso. porque quando a gente fala de divisões de categoria, tipo o SF ou... Sem sucesso. Portaria, são só um trecho da petição, um trecho do arquivo que vai mudar, só que o andamento administrativo dessa solicitação é todo igual, ele vai entrar do mesmo jeito.  Agora, quando tu vai lá no outro tema, o tema de indenização, aí não, o andamento administrativo muda, porque até o sistema do Ministério da Saúde que eu faço é outro.  Então, a pipeline já muda o total de um tema para outro. Então, eu acho que é, se a gente pega a ideia do tema como universo próprio, arredonda, porque tudo que for do tema envolve para aquele tema, tem as diferenças de categoria dentro do tema, mas tudo aplica para tudo dentro do tema, só que do mesmo jeito.  para o outro tema já muda, já muda tudo, né? Se o cara é senso cínico ou portaria, quando a gente tá falando do mesmo município, no mesmo vínculo, para outro tema, é uma informação que não muda nada.  E aí, tudo isso vinculado à pessoa, né? Então, quando a gente abre aqui o... O Matheus aqui, por exemplo, tem aqui o caso do cara, e aí o que teria que, que eu acho que o Iago pediu para não ter, que seria aqui em casos, quando a gente vai falando daquela situação de caso que não está fechado, que é, nesse caso ele é um lead, ele pediu para ter um, para assim, um local diferente, né, não ficar junto.
+
+27:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ah, tipo, aguardando a assinatura do caso, algo do tipo assim.
+
+27:26 - Dr. Thiago Correia
+  Ele pediu para não constar nessa aba, pelo que ele tinha passado naquele dia, ele não estava junto, mas...
+
+27:32 - Matheus Torquato
+  E aí também vai ter que mexer na estrutura também, quando entra no cadastro da pessoa, vai ter que dividir por tema, né, então ele pode ter, tipo assim, três casos diferentes, de três temas diferentes, pode acontecer também, né?  Pode, pode, pode. Então vai ter que ter a ramificação de tema aí também, então tipo, tema tal, tema tal, aí dentro de cada um está no caso tal.
+
+27:55 - Dr. Thiago Correia
+  O cliente, o mesmo cliente com processo. Ele tem quatro processos, cara, três do mesmo tempo e um de outro, só que é um dos clientes, quatro casos deles, do mesmo cliente aqui, aqui nessa parte, seria interessante a gente já pensar algumas dessas informações como interessantes de forma, um controle maior, porque, por exemplo, eu tenho aqui um estagiário, aí o cara abre aqui o cadastro docente, ele sabe quanto o cliente me pagou, sabe, tudo, não é interessante ser uma informação tão aberta, Não, a gente bota só para administrador, né?  Eu acho que como se fosse dentro disso aqui, o painel financeiro do cliente, sabe? E só deixar para administrador.  Isso aí tem acesso às informações do financeiro, que é um outro menu, né? Então só quem tem acesso a esse painel dentro da página do cara.  Acho que fica interessante. Aqui tem que ter o que tem que ter para todos. É aquela informação, tipo, está devendo, não está, está em dias, né?  É interessante ver que seria dessa parte aqui, seria mais isso. Deu para entender essa parte aí? Deu.
+
+29:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Deu. Tranquilo.
+
+29:21 - Matheus Torquato
+  O funil do financeiro se mantém como está. Pode estar tudo junto.
+
+29:26 - Dr. Thiago Correia
+  Tipo, eu colocaria o funil do financeiro como se fosse um outro menu, só dele, sabe? Tiraria ele de uma pipeline, né?
+
+29:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Seria, por exemplo, como ele está comercial e inteligência, seria uma área chamada financeiro, porque dentro dele tem tanto a pipeline, quanto o financeiro dos clientes, quanto separar um módulo financeiro, eu acho, né?  Sim, sim.
+
+29:54 - Matheus Torquato
+  Mas só que a pipeline do financeiro vai ser a mesma coisa, porque a pipeline financeira seria a intenção... A unificada de todos os casos, está tudo ali.  É, todos os temas e todas as frentes.
+
+30:04 - Dr. Thiago Correia
+  o nosso trelo, essa parte, não?
+
+30:07 - Matheus Torquato
+  Mostraram para vocês? Não, do financeiro, não.
+
+30:11 - Dr. Thiago Correia
+  Isso, é que essa pipeline nem substituiria o trelo aqui, nesse sentido.
+
+30:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tem uma documentação também que o Iago colocou, Matheus, que a gente vai se basear para também ajeitar algumas coisas.  É, o termo de acerto e tal.
+
+30:26 - Dr. Thiago Correia
+  É, o termo de acerto, o senhor está falando com 15%. Então, é isso aqui que é o financeiro hoje, é uma bagunça, né, na pipeline, assim.  Então, ele vem, ele tem as etapas próprias desse caso. Só que o... Então, eu acho que dá para ser mantido, assim, nesse sentido.
+
+30:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ser uma pipeline só.
+
+30:44 - Dr. Thiago Correia
+  Isso, até para vocês entenderem a dor, se eu pego, sei lá, esse cara aqui.
+
+30:49 - Matheus Torquato
+  Mas também vai poder filtrar por tema, por nome, por caso ali na pipeline financeira. Então, também dá para se basear assim, não precisa...  Ele vai estar tudo, mas você pode se organizar também, como você quiser ver. tudo, pode se organizar também. Essa aqui é a dor, porque quando eu quero...
+
+31:02 - Dr. Thiago Correia
+  Tem um milhão de lugares com esse mesmo cliente, né? E aí com várias informações que eu tenho que repetir nesses lugares, porque não é interligado, né?  Então eu preciso, para analisar o caso desse cara, para saber se essa cobrança do financeiro dele está certa, porra, bicho, eu tenho que analisar tanta coisa para chegar na informação, sabe?  Então é um universinho próprio ali, mas... Cadê, meu Deus? É um universinho próprio ali, mas o principal é, quando a gente clica aqui, já vem daquela informação, que é o caso daquele cara que passou pelo operacional, as informações já vão estar aqui, né?  Sim, nos logs ali, né?
+
+31:38 - Matheus Torquato
+  Linha do tempo, vai ter tudo. Isso, isso.
+
+31:41 - Dr. Thiago Correia
+  Então aqui seria... Aqui, ó, esse painel aqui, muito legal, que é o painel do financeiro desse cliente relacionado a esse caso, né?  Seria, quando a gente estava falando ali do painel do anterior, do cliente, seria um painel, como assim, do financeiro, só que a presença...  Tentando todas as informações de todos os casos desse cliente, deu para eu pegar.
+
+32:07 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, por exemplo, essa parte de gerar a fatura, visualizar com conta azul, tudo ficaria no painel financeiro do cliente.  Não dentro, porque hoje, realmente, como está dentro de um painel geral, o estagiário vai ver a parte financeira. Então, por isso que a gente vai ter que desacoplar, entendeu, Matheus?  Sim.
+
+32:27 - Dr. Thiago Correia
+  E acho que não precisa mudar da forma que vocês passaram aqui, de deixar, assim, como algo mais especificado, com questões melhores ali sobre o caso, de forma específica dentro do tema.  Só acho que é ter um espelhamento, que é um painel geral do cliente ali, da parte financeira, um espelhamento desses detalhamentos de cada caso dele juntos.  Qual que é o, as parcelas, qual que é o valor do mix PLA, né? Certo.
+
+32:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tchau. Então, vai dar para a gente puxar. Já tenho mais alguns dados dele nesse processo. Aqui, sobre a parte de tarefas, você consegue dar uma pincelada para mim?  Você acha que... Consigo, consigo.
+
+33:14 - Dr. Thiago Correia
+  A gente precisa, porque a Yara já pega e faz tudo de uma vez só, e aí a marca na segunda ou na terça com o Yara.  Essa parte das tarefas, eu não projetei nada, assim, de uma ideia mais estruturada, mas eu vou passar para vocês qual que a ideia, como que a gente faz hoje, e aí eu acho que talvez fica até melhor para vocês dessa forma, né?  Mais cru para vocês conseguirem desenvolver melhor. A gente tem uma situação que já está pensada para o sistema, que é o sistema depois ter a possibilidade de, pegando as intimações, as tarefas que têm que ser feitas, ter um IA que vai fazer essa análise e sugestão do que vai ser feito, e...  distribuir isso para pessoal internamente, né? Acho que isso já existe hoje dentro da ideia. Só que o que eu passei para a Iago é a gente conseguir antecipar essa parte da distribuição dessa tarefa, não precisando que, pensando que a IA vai levar um tempo para poder chegar na sugestão, mas mantendo a parte humana, substituir o que não precisa ser humano.  Então, como funciona hoje? Hoje, quando tem uma movimentação em um processo, por exemplo, isso vem aqui para um painel do Proiores, que chega todas essas intimações e movimentações de processo, e aí puxa um horror de coisa, né?  Só hoje, o pessoal já viu hoje, processadas nesse período. Então chega aqui hoje, só que essa mesma intimação que chegou do processo tal aqui, ela provavelmente está repetida.  Obrigado. Obrigado. Essa parte você tinha me falado, que ela se repete várias vezes dentro do mesmo processo. O pessoal tem que pegar isso aqui, abrir o processo, ver qual é o andamento, se vai ser distribuído, se for distribuído, e isso aqui a gente já tinha passado para vocês, mas como funciona essa distribuição?  É bem arcaico o manual mesmo. A galera pega lá a movimentação que aconteceu no processo e fala, vamos fazer um recurso nesse processo.  Aí vem aqui na agenda do dia de quantas coisas foram distribuídas e coloca, olha, a última tarefa foi para a Sara, então a próxima vem para a Thaís e coloca aquele recurso daquele processo que acabou de vir aqui.  Por que isso aqui? Isso aqui é para a distribuição secuânime, você não tem uma pessoa fazendo mil coisas e outra dez.  Então para a distribuição secuânime precisa dessa, aí depende dessa planilha. Só que colocou aqui, agora precisa ir lá de novo no ProIuris, colocar a tarefa na agenda da pessoa.  Colocar qual que é o tipo de tarefa que vai ser feito, o processo que isso é vinculado, e colocar tudo isso aqui, para agora a pessoa fazer a tarefa e você ter isso distribuído, então o que eu queria ver se a gente já consegue antecipar independentemente da IA, seria o sistema pela API, né, puxar essas movimentações que o sistema já classifica, ele já ia puxar isso aqui, aí ele já fazia uma primeira segregação, que é, dessas intimações, desses movimentos que chegaram hoje, quando são repetidas, isso, já excluí as que são repetidas, aí ele deixou ali uma lista de 100 intimações para serem vistas, monta essa lista, esse local que a controladoria vai olhar e falar, eu tenho que olhar esses 100 processos, eles vão olhar, não precisa da IA nesse primeiro momento, entender o que é e sugerir, é só dela fazer essa segregação, a pessoa...  e falar, olha, esse processo não precisa fazer nada, esse precisa fazer nada, esse precisa fazer. Aí a pessoa chega aqui, chega lá no nosso sistema, vamos supor que...
+
+37:07 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E vincula uma pessoa.
+
+37:09 - Dr. Thiago Correia
+  Eu queria que essa distribuição também saísse desse manual. Eu queria que a gente conseguisse... Então, vincula a pessoa no sistema.
+
+37:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tipo, como eu fiz assim, por exemplo, vai ali num caso, entra dentro de um usuário. Porque aí seria na controladoria, né?  Mas vai ali num pipeline operacional e pega o Matheus, exemplo. Pode ser em cliente, mais fácil. Desce um pouquinho, entra no caso.  Aí tem uma área chamada tarefas, lá embaixo. No caso, seria assim. A controladoria, certo? Vai ter um painel dela chamada controladoria, que é a que se conecta com o ProIuris.  Então, todo dia, 8 horas da manhã... Qual é o horário que sai o ProIuris? Ele sai o dia todo.  Então vamos botar ali para ele puxar a cada uma hora, duas horas, por exemplo, a gente vai ter precisado de uma base disso, sabe?  Cuidado no final do dia, no dia seguinte a pessoa olha, sabe? Pode ser também. A gente pode fazer assim, todo dia, 8 horas da manhã, a gente pega o do dia antigo, ou por exemplo, todo dia, 6 horas da noite, gente pega o do dia atual para amanhã de manhã eles conseguirem fazer a divisão do processo.
+
+38:26 - Dr. Thiago Correia
+  Puxou de madrugada, tipo, o que saiu até o dia de ontem, puxou de madrugada já, que é mais para os sistemas, né?  Beleza.
+
+38:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí a gente vai fazer o seguinte, quando cair no painel controladoria, certo? Vai cair caso tal, dia tal, intimação tal.  Caso tal, dia tal, intimação tal. Caso tal, intimação, dia tal. Isso daqui vai ter lá cliente vinculada, vai ter lá Tiago, por exemplo.  Clicou no documento da intimação, vai abrir a intimação. A gente vai ter... É... vai ter... ... ... Confirmar essa intimação ou arquivar essa intimação, por exemplo.  Ah, só arquivar, porque não precisa de nada. Sim, confirmar. Confirmamos a intimação, então automaticamente a gente já sabe qual é o contrato, qual é o caso, no caso, caso, e a intimação vinculada àquele caso daquele cliente.  E vai ter lá, passar a tarefa para, igual está aí, clica ali em nova tarefa, que aí no caso vai ser meio que automático, só que aí quando você clicar em nova tarefa, aí vai ter o tipo, a prioridade, o título já vai vir automaticamente, provavelmente pela própria requisição, a descrição, que eu acho importante colocar, e o responsável e a data de vencimento, por exemplo.  Aí, quando você marcar o responsável, você vai marcar um responsável daquela área, pode botar a área também, se você quiser, separado mais ou menos, a data de vencimento e vai criar a tarefa.  Criando essa tarefa, vai cair para a pessoa responsável, no usuário dela ali, pessoa responsável. A controladoria vai ficar vendo se aquela pessoa terminou ou não aquela tarefa, que a pessoa vai ter que dar um ok na tarefa, por exemplo, para encerrar a tarefa.  Pode ser nesse processo? Eu acho que é quase isso aí.
+
+40:10 - Dr. Thiago Correia
+  Eu só não sei se, porque você está falando mais amplo já, eu não sei se neste momento já dá para a gente vincular aqui, em caso específico, mas seria o ideal, sim, nesse sentido, só que precisa ter uma separação, acho que não precisa separar o que é administrativo, judicial, vem tudo para cá.
+
+40:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, ele vai vir tudo para a tarefa do caso, e aí a gente vai acompanhando com aquelas notinhas, como a gente tinha falado.  Por exemplo, se ele for concluir a tarefa, é obrigado colocar uma observação para vocês conseguirem saber o que foi feito na tarefa.  Ah, deu atraso de tarefa, lá na controladoria já bate que a tarefa foi, vai estar atrasada, por exemplo, dentro desse processo, que aí vai ter um módulo, por exemplo, agora a gente não tem aí um módulo comercial, operacional, vai ter um módulo...  módulo financeiro, vamos ter o módulo controladoria e vamos ter o módulo inteligência, é diferente, que é uma inteligência onde vai ter dashboard, agente de IA, não sei o que, lá, lá, lá.
+
+41:10 - Dr. Thiago Correia
+  Eu acho que desse jeito fica bom, fica bom sim, só que tem essa observação de que nesse primeiro momento, eu não sei se vai estar pronto o suficiente para a gente já colocar essas tarefas aqui.  Mas se a gente conseguir...
+
+41:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Como a gente vai ter na controladoria, qualquer coisa a gente pode fazer, por exemplo, de uma forma um pouco mais simples, nesse início.  A gente pode, com base na intimação, identificar quem é o cliente, que a gente consegue ver pelo nome da intimação, né?  Então, a gente vai identificar quem é o cliente. Quando clicar no cliente, por exemplo, ela clicou lá para aprovar aquela intimação e vincular uma tarefa.  Vai estar vinculada ao cliente, aí ela vai ter que selecionar qual é a frente ou o caso, por exemplo, para poder vincular no caso, entendeu?  Para ficar mais humanizado. Pode ser? Sim, sim.
+
+41:58 - Dr. Thiago Correia
+  O que eu tinha pensado... O é que o sistema hoje já tem vários desses dados, né? Qual é o tema e tudo isso tem no cadastro dos processos aqui.  A gente tem essas opções, depois a gente teria que ver para te mostrar como que fica no cadastro do processo, mas eu tinha pensado de início que quando fizesse essa segregação e a pessoa olhasse ali, essa aqui vai fazer uma tarefa e a tarefa que vai ser feita é tal, isso aí dependeria da IA depois, né?  Mas vai ser feita a tarefa tal. Ela clicasse ali meio que distribuir, o sistema sozinho fosse identificar para quem vai, que é isso aqui que é manual hoje, que eu queria tirar, que eu precisava tirar isso aqui com um pouco de mais pressa, porque isso aqui, isso aqui é absurdo, a pessoa precisava fazer isso aqui.
+
+42:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, ela não vai fazer manual, no caso a controladoria teria que escolher a pessoa, mas para tirar essa escolha da pessoa...  sistema fizesse essa distribuição.
+
+42:55 - Dr. Thiago Correia
+  Aí a gente vai ter, você vai ter que me passar como é que eu posso...
+
+42:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  De distribuição, a gente... A randomização, né? Tem, tem uma... Porque, pelo que eu vejo, é a mesma coisa, só que é um processo randômico.  Randômico, no caso, que eu digo assim, sequencial, né? Primeiro um, depois outro, três. Um, dois, três.
+
+43:09 - Dr. Thiago Correia
+  É sequencial para ser meio que igualitário, mas tem algumas regras de meio que fura fila, sabe? Se isso aqui for uma tarefa complexa, aí ela tem uma fila própria.  Vai um para cá, não importa quem é o próximo. Vai o próximo do que é a tarefa complexa. Essa regrinha, ela tem mais ou menos na cabeça.  Hoje a gente tem essa regra na cabeça de como é que funciona. Aí eu vou ter que te mandar ela por escrito, provavelmente, para te explicar como seria.  Mas não seria nem algo de IA identificar, é algo que é assim, ó...
+
+43:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, é... Se for... Acho que é meio que a automação, na verdade. Se for processual, é... Por exemplo, ah, identifica...  Como é que a gente identifica quando é negativa? Quando é, por exemplo, urgente? Ah, por conta desse processo aqui.  Quando é que a gente identifica quando é meio urgente? Ah, quando é desse jeito aqui. A gente só precisa conseguir identificar.  Porque, assim, se for... Para código, preciso ter algo específico. Se tiver que contextualizar para conseguir identificar se ela é urgente ou não urgente, aí eu preciso de A.
+
+44:08 - Dr. Thiago Correia
+  Dá para dentro dessa situação da distribuição, a pessoa ter essa caixinha que ela marca, sabe, urgente, humano aqui, urgente, e aí o sistema vai ter essa identidade.  Autodistribui, pode ser. Tem algumas caixinhas que seriam essas caixinhas de urgente, complexo e específico.
+
+44:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, porque aí a gente poderia fazer o seguinte. Tem a regra geral, que é, vai ser distribuído de forma igualitária entre essas pessoas.
+
+44:41 - Dr. Thiago Correia
+  E aí vai ter o processo que específico, a gente está falando tipo, processo tal, só tal pessoa faz. E aí tu vai marcar isso, né, que é...  Isso dentro do... É porque aí vai ser dentro do usuário.
+
+44:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque, ó, a gente vai criar um usuário, vai dar permissão ao usuário. Então, permissão financeira, permissão advogado, permissão, tal, tal.  Beleza. Dentro Então, controladoria, quando ela for vincular o usuário à controladoria, ela vai ter uma caixinha onde ela vai marcar esse cara ver tais tipos de processo, por exemplo, ou tais frentes, eu não sei se todo mundo trabalha com todas as frentes, então é algo que a gente tem que definir, e ele pode pegar dessas frentes processos urgentíssimos, superimportantes e básicos, por exemplo, porque aí a gente tem uma regra, a gente precisa ter essa regra lógica, né, meio que como é que eu faço para entender que esse cara faz parte de urgentíssimo, entendeu?
+
+45:35 - Dr. Thiago Correia
+  Até para entender com vocês como ficaria melhor, por exemplo, eu estou com essa ideia mais ou menos pronta de como seria esse menu, essa aba, esse módulo de distribuição de tarefas, se eu parasse aqui e fizesse não com dados reais, mas fizesse aqui pelo menos um...  Um louvabo da vida, já já...
+
+45:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, é, isso.
+
+46:00 - Dr. Thiago Correia
+  Eu até fiz um aqui para a parte financeira de inadimplência, por exemplo. É melhor para vocês terem essa ideia visual mais pronta ou não?  Sim, melhor. Nos ajuda.
+
+46:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aquele outro que eu fiz...
+
+46:15 - Dr. Thiago Correia
+  Que bom, essa parte aí de inadimplência.
+
+46:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente já consegue pegar e jogar ele no financeiro. Aquele que você fez, que você me mandou, que é de uma frente de caso.  Isso, que é lá do tema indenização.
+
+46:26 - Dr. Thiago Correia
+  Ali já está pensado de forma mais ampla, só que já tem os dados do cliente. Aquele ali, teoria, se você me falasse, Thiago, a gente quando vai encontrar que consegue usar e tudo, já tem a base de dados pronta para ter todos os casos daquele tema prontos no sistema.
+
+46:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Já nos facilita na hora de importar a noção, né? Isso, isso.
+
+46:44 - Dr. Thiago Correia
+  E aí a gente conseguiria, por exemplo, numa ideia daquela caso dê certo, pegar e vincular esses casos que já vão estar no sistema, porque estão na base.  E já vai estar projetado lá dentro o módulo do indenização, do operacional, chegar no Proiuris e vincular esse caso.  O judicial que já existe no Proiuris, nesse caso desse cliente que já vai estar na base, que já estaria ali de itemização, e aí quando você estiver falando dessa situação de distribuir a tarefa para a controladoria, já teria tudo o que precisa ter, que é a informação Proiuris e a informação do caso, sabe?
+
+47:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Entendi.
+
+47:19 - Dr. Thiago Correia
+  Só que lógico, eu estou sonhando aqui, eu e minha esquizofrenia.
+
+47:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, mas dá para fazer, assim, até porque a gente tem bastante, assim, digo, bastante tempo de parceria entre nós, então a gente consegue ir implementando conforme a necessidade de vocês, entendeu?  No acordo que a gente fez, a gente tem seis anexos, mas nós não temos limites nesse desenvolvimento, entendeu? Então, assim, a ideia é a gente iniciar com algo funcional, né?  Então, por isso que a gente está tentando encaixar o mais rápido possível para que vocês comecem a utilizar. Mas, assim, Adavio, criei uma pipeline financeira, o time financeiro não...  Se gostou e a gente está no mês 6, a gente quer mudar. Isso não vai ser impeditório para vocês, entendeu?  Na nossa parceria, no contrato que eu fiz com o Iago, isso já existe. Então, a gente vai ter muitas implementações e mudanças no decorrer do sistema, entendeu?  Nós não temos, assim, escopo de final, entendeu? É basicamente, é uma porta para o infinito. Aí a gente vai produzir conforme a necessidade.
+
+48:27 - Dr. Thiago Correia
+  Se para vocês, assim, conseguindo trazer uma ideia um pouco mais projetada visualmente, ficar melhor, eu posso fazer isso de estruturar mais ou menos essa ideia de como seria essa situação da distribuição na controladoria das tarefas e trago para vocês e aí vocês veem como adapta para o sistema.  Pronto, pode ser.
+
+48:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aí, o que a gente pode fazer agora? Como a gente vai ter que ajustar essas partes das cambãs e aquilo que o Iago nos mandou, a gente vai fazendo essa parte, dentro desse processo...  Eu e o Matheus aqui vamos desvincular os módulos, então vamos tirar o módulo financeiro, vamos já criar um módulo de controladoria, já deixar ele pré-esquematizado mais de acordo com o que vocês desejam de módulos separados, até porque eu acho, Matheus, sabe o a gente pode fazer?  Como a vai criar em processos de módulos dentro daquele painel, quando a gente criar o usuário, aí você me diz aí, Thiago, acho que dá para a gente criar o usuário e marcar quais são os módulos que aquele usuário pode ver, por exemplo.  Então, Dr. Thiago, pode ver financeiro, pode ver controladoria, pode ver operacional e pode ver comercial, por exemplo.
+
+49:37 - Matheus Torquato
+  Matheus, só comercial. Eu estava pensando em fazer ver, editar e não ver.
+
+49:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, a gente vincula o próprio usuário, porque hoje a gente fez mais ou menos pelas seleções, né? Eu acho que, na realidade, pelo usuário, talvez facilite um pouco mais nesse processo.
+
+49:55 - Matheus Torquato
+  A gente pode deixar tudo que é vinculado ao valor só para o financeiro e o administrativo. É isso, é exatamente isso.  citar as abas que a pessoa vai ver, ou editar, ou não ver. aí a gente bloqueia, entendeu?
+
+50:08 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, por exemplo, controladoria, só o controladoria e administração que tem acesso. O financeiro não tem acesso à controladoria. Aí a bum, bloqueia aquele módulo.  Igual a gente fez com aqueles esconder menu, lembra, lá no Precifica? No Precifica, mesma coisa.
+
+50:20 - Matheus Torquato
+  É, a mesma coisa que a gente fez no Precifica.
+
+50:24 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí seria mais ou menos essa ideia.
+
+50:26 - Dr. Thiago Correia
+  E aí, eu até tinha trago esse aqui, que eu fiz como HTML mesmo. Nem cheguei a mexer logo com esse aqui.  Eu fiz como HTML, só para entender justamente isso visualmente para vocês. Dessa forma fica melhor uma ideia mais crua.  Porque aqui, por exemplo, essa aba aqui seria como se fosse uma opção de relatório dentro do financeiro. Dentro do módulo financeiro, eu quero saber quais clientes estão inadimplentes.  Para a tomada de alguma decisão. Então, isso aqui seria como se fosse um relatório para ser dentro do módulo do financeiro.  Aí, era justamente só para entender isso, para vocês trazendo dessa forma, fica melhor para explicar, porque aqui, por exemplo, já seria uma situação de um tema que está lá no operacional, que é relacionado ao financeiro, mas está lá no operacional, vai estar lá nas pipelines do operacional, que é um tema sobre a nossa cobrança de honorários contra clientes que não pagam, um tema de uma frente específica de atuação, nossos concessos contra os clientes que não pagam.  Então, esse cara aqui tem um caso, só que esse caso, na verdade, somos nós contra eles, ele é um cadastro lá.  Aí, eu nem cheguei, esses dados aqui são todos falsos, na verdade.
+
+51:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, aí a gente, que nesse caso, ele não vai entrar, por exemplo, dentro do pipeline operacional, ele entra na parte financeira de cobrança, ou ele entra também nesse caso do operacional.  Isso aqui seria dentro do...
+
+52:00 - Dr. Thiago Correia
+  Dentro do operacional, né? Também seria dentro do operacional. Essa situação aqui seria um relatório dentro do financeiro, opção de relatório lá, né?  Eu quero ver todos os meus clientes inadimplentes, opção de relatório, opção de visualização, que aí já tem um filtro de quem está devendo há mais de 90 dias, algo assim, né?  E aqui eu já estaria falando de um tema de atuação de casos, um tema de casos, que seriam os casos desse cara que estão cobrando, mas isso aqui já seria algo lá do operacional, da pipeline do operacional.  E aí o que fica interessante para mostrar para vocês isso aqui é, quando eu estou nesse, aqui nos temas de vocês, seria como se tivesse aqui um outro tema, que seria clientes inadimplentes, que é um tema...
+
+52:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, aí seria um outro tema, mas por isso que eu quero deixar aberto, para a gente conseguir... E alterar temas, entendeu?
+
+53:03 - Dr. Thiago Correia
+  Sim, aí seria um outro tema, que aqui estariam os casos desse tema, que seriam essa galera que eu decidi cobrar na justiça.  Aí as informações que aparecem aqui, os filtros rápidos que aparecem aqui, são exclusivos a esse tema. Então, teria aqui esses filtrinhos, né?  Eu quero saber quem é o caso que está aqui, que a classificação dele é 1% SF, porque o débito dele comigo vem de um caso, do PSF.  Então, é só uma classificação dentro desse tema, né? Não se isso aqui deixou mais difícil de entender.
+
+53:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, não, porque, assim, a ideia é que a gente tem que ter um único corpo, mas aí eu entendi, isso daí seria um algo a mais para esse tema, entendeu?  Aí a gente consegue criar como, por exemplo, campos personalizados para este tema. Então, colocar lá alguma coisa nesse sentido, entendeu?  A gente constrói. Porque, na realidade, isso aí vai ser como se o CRM, né? É um CRM isso, basicamente.  Um RP, né? Na realidade, porque como a gente vai gerar valores, né? Vai gerar notas, aí é um RP.  Mas é mais esse controle do lead, onde é que ele se encontra, em qual local ele se encontra, mas a gente monta.  Mas eu acho que foi bom, porque aí a gente conseguiu entender a estrutura.
+
+54:23 - Dr. Thiago Correia
+  Só para fechar e deixar mais claro também essa questão da diferença entre temas, quando a gente abre aqui o...  Em vez de criar casos, ele vai criar temas. É, quando a gente abre aqui o caso do Matheus, relacionados ao tema mais médicos, né?  O tema de atuação mais médicos. Os campos que vão aparecer aqui, eles são campos que são projetados para os casos...  Desse tema. Então, não adianta eu só ter opção de casos, de campos personalizados. personalizados, de forma geral, eu preciso ter os campos de cada tema, de cada frente de tema.
+
+55:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exato, esse é uma camada dentro, né?
+
+55:13 - Matheus Torquato
+  painel de ter o tema e os casos dentro do tema no... Não, mas por exemplo, dentro do tema, eu tenho o tema aqui, certo?
+
+55:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu tenho o tema 1%. Sim. Aí, dentro do tema 1%, eu tenho o ESF. O ESF é que tem campos personalizados, não isso?  Nem precisa.
+
+55:31 - Dr. Thiago Correia
+  Antes disso, coloca o caso no meio. Entre o tema e o tipo. Entre o tema ESF e o tipo 1% FIES.  Coloca o caso no meio. Agora me perdi. Aqui, está o tema ESF. Tá.
+
+55:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O tema 1%, na realidade, né? Que é o FIES. está aqui o caso do ESF. Ok. Que está abaixo desse tema.  Isso.
+
+55:56 - Dr. Thiago Correia
+  Esse caso, ele pode ser 1% ou ele... Pode ser DGM, Censo 5, Portaria, e essa classificação, DGM, Censo 5, Portaria, é um campo do caso.  Então, é um campo personalizado do caso, que é exatamente como eu falei, eu tenho o tema, é o padrão SF.
+
+56:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, aí quando, por exemplo, vamos lá, entrar ali na Pipeline, por último, o último, só para a gente encerrar, para a gente conseguir entender.  Entrou na Pipeline, aí eu vou escolher 1%. Sim. Cair no 1%, eu tenho todos os meus casos aqui, tanto o ESF, quanto o DGM, quanto, é, é, eu esqueci o nome do outro ali, depois você me manda um print, tá bom?  É, é, consenso, e aí, por exemplo, quando eu clicar em consenso, o consenso tem os campos personalizados dele, tipo, assinatura do médico, lá, lá, lá, assinatura do responsável, lá, lá, lá.  Já no ESF, eu tenho, por exemplo, declaração de ESF, lê, lê, lê. Então, são coisas diferentes, no tema 1%.  Mas cada caso tem a sua diferença, sua peculiaridade.
+
+57:04 - Dr. Thiago Correia
+  Isso, só que na grande maioria das vezes, essas categorias dentro de tema vão ser quase tudo iguais.
+
+57:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas é bom a gente deixar um algo a mais, por exemplo, você pode editar esse campo. Isso, pode ter, exatamente.
+
+57:18 - Dr. Thiago Correia
+  Então isso aí, essa classificação de tipo, de categoria, ela é só um campo dentro do caso 1%. E aí esse painel do caso 1% é padrão a todos.  É padrão a todos os casos daquele tema. Então quando você está lá na organização, esse campo tipo é padrão a todos.  Só vai mudar o que está dentro do campo tipo. Isso, fica até interessante eu fazer um, como se fosse uma hierarquia desses temas atuais.  eu acho que ajuda, ajuda.
+
+57:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vou fazer essa Seja num Scalidraum, por exemplo, da forma que a gente fez ali. Não, isso aí você não vai entender não.
+
+57:57 - Dr. Thiago Correia
+  O artista aqui não... Não vai conseguir desenhar direito, não, mas eu vou fazer, mas manda o pau de fazer para você, pô, eu vou fazer, faz ali mais ou menos, manda ele criar um MD, que dá para fazer mais bonitinho ali, uma coisa que mostra assim, quais são os temas, quais são os casos, os tipos de casos e esses casos, para ficar mais claro, com todos os temas que a gente tem hoje, tentar fazer essa segregação aí, fica mais clara no futuro, pelo menos eu vou fazer uns cinco, só para a gente ter uma ideia, só para entender, senão fica muito...
+
+58:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá bom, não, mas eu consegui entender, eu vou começar a montar nesse processo, vou tentar trazer campos personalizados para tudo, para basicamente tudo, que eu digo assim, para vocês conseguirem editar, porque pode ser que você queira mudar, mudou aqui a portaria do DGM, agora em vez de ser gerar documento, é processar documento, por exemplo, então, para a gente poder ter essa opção de editar aquela determinada camada, mas a gente, se você me mandar padrões, eu já consigo meio e eu...  Você criar tudo automático, entendeu?
+
+59:01 - Dr. Thiago Correia
+  E só para me fixar aqui o que eu tenho que trazer, para a nossa próxima conversa eu tenho que trazer essa parte do, se eu não me engano, que ficou aqui para eu fazer, do visual, da ideia da controladoria, de algo um pouco mais visual, mais direcionado.
+
+59:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Do financeiro, puder me enviar aquele lá. E esse dos casos separados, como eu já tenho o que você fez, eu vou usar ele como um pré-modelo para mim, de base.
+
+59:33 - Dr. Thiago Correia
+  Beleza, vou trazer esse e só para mim ver se eu já trago algo disso, do de indenização que eu fiz lá aquele outro.  É algo para a gente deixar mais para frente. Eu já vou puxar ele agora, porque eu não já vou movimentar agora.
+
+59:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque assim, para mim, não faz de certa forma diferença eu criar 1% e criar indenização, por exemplo. É a mesma coisa na lógica.  O processo é igual. Então, quando eu criar um, eu consigo replicar todos no mesmo processo. Beleza.
+
+1:00:06 - Dr. Thiago Correia
+  É porque esse aí, esse de indenização, ele não tem urgência nenhuma, viu? Comparado com outros, porque ele Já estou conseguindo utilizar esse painel, né?
+
+1:00:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Utilizar.
+
+1:00:14 - Dr. Thiago Correia
+  Só que a única coisa dele que tem é a gente validando a metodologia, eu consigo aplicar para os outros.  Pronto, está beleza. Mas isso mais importante é essa parte da distribuição da aplicação aqui de planilha... De tarefa, né?
+
+1:00:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Se você conseguir me trazer mais ou menos como é que você quer. Essa parte, principalmente, de assim... Adavio, eu divido assim, a camada de divisão é super urgente, só pode ir para a Thaís, por exemplo...  Deixar já estruturado... É, porque como eu vou fazer por código... É porque você tem uma reunião, né? Desculpa. Como eu vou fazer por código, eu preciso...  O código, ele trabalha assim. São três coisas para a gente aprender. Uma, ou ele trabalha like operator. O que é like operator?  É contém. Então, por exemplo, contém o nome Thiago é urgentíssimo. Então, vou Esse é like operator. Outra é equals.  Então é Thiago, Thiago com TH. Se for Thiago com I, morreu, não consigo mais. Ou diferente de, é diferente de Thiago.  Então essas são as únicas formas de filtro. Agora, por exemplo, eu tenho que ver se dentro desse nome aparece um homem chamado Thiago.  Aí eu preciso de A. Aí eu preciso contextualizar. Entendi. Não, eu acho que não precisa de A para essa parte, não.
+
+1:01:27 - Dr. Thiago Correia
+  Aí eu vou fazer esse da controladoria de forma estruturada, principalmente como funciona a distribuição, como que seria a projeção da Mas eu já vou trazer ele para o módulo para baixo, que hoje ele está ali diferente.
+
+1:01:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então eu já entendi como é que ele funciona. Aí a gente já faz essa integração com o Proiuris nesse processo.
+
+1:01:44 - Dr. Thiago Correia
+  Isso, que aí eu vou trazer nesse sentido. Do financeiro, essa parte de inadimplentes é interessante. Vai ser praticamente um caso, por enquanto, né?  Essa parte de inadimplentes aqui seria um relatório e aí... E aí ficaria um caso, não teria urgência, só que eu fiquei de entregar para a Iago essa situação que a gente está precisando resolver esse problema dos nardplantes, eu fiquei de entregar isso aqui meio que como um sisteminha, como eu fiz lá com a indenização, só que na hora que eu fui pegar para fazer, eu meio que vi que precisa da API do Proiores, ou do Ponta Azul, para funcionar direito, e aí a API já é outro rolê, né?  Então eu falei, olha, eu acho que não compensa tanto eu fazer um rolê todo de uma API, algo mais direcionado como aquele, porque é melhor passar a ideia para o Adavio e ele já fazer dentro da implantação da API.
+
+1:02:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim, a gente já implementa agora.
+
+1:02:38 - Dr. Thiago Correia
+  É porque eu trouxe aqui mais arcaico, porque eu não consegui mexer bem, eu vou fazer algo um pouco mais simples aqui, provavelmente nem como sistema mesmo, só para a gente começar a usar, porque eu estou devendo para Iago e para a Patrícia isso aqui, mas vou trazer também estruturado, de uma forma, assim como de controladoria, porque isso aqui, assim, se puxar da API, qual é  Os dados aqui do débito, ele já conseguiria fazer, aí eu vou trazer também esses dois estruturados e do Mais Médicos, depois você vai conseguindo mexer, só para validar a ideia de como é que eu faço para os outros temas, conforme a gente for andando aí.  Beleza, combinado.
+
+1:03:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vou mandar um áudio lá no grupo para o Iago, só para ele saber que a gente teve a reunião, que a gente já leu alguns processos e que a gente vai montar algumas estruturas e vou tentar marcar com ele na segunda-feira, uma hora da tarde.  Beleza, combinado. Segunda-feira é bom porque eu tenho final de semana para fazer esse troço que tenho. É, eu também, do mesmo jeito, por isso que eu quero marcar na segunda, que aí eu vou pegar de agora para cima e a gente termina durante o final de semana, bom?  Se você conseguir adiantar as coisas, você vai me mandando. Então, de forma que você vai fazendo, a gente vai se ajustando.  Beleza, então, combinado. Qualquer coisa, se você precisar também, eu posso te mandar o Fathom depois, que é a minha Iazinha, se você quiser o que você conversou comigo e tudo mais, eu te mando para te facilitar, se você precisar.  Beleza, beleza.
+
+1:03:57 - Dr. Thiago Correia
+  Como foi pouca coisa, eu estou na cabeça aqui, mas... E qualquer coisa eu te pergunto aí também.
+
+1:04:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá bom.
+
+1:04:02 - Dr. Thiago Correia
+  É porque antes o Iago estava mais direcionado, né? Agora, como a gente começou já a pegar um pouco mais junto aí, eu consigo trazer um pouco mais desse, do que é a dor do dia a dia, né?
+
+1:04:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, que é isso que o Iago quer que a gente faça, entendeu? Esse é o objetivo dele, então...
+
+1:04:17 - Dr. Thiago Correia
+  E evoluindo bastante aí. Com você me facilita o processo.
+
+1:04:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Beleza. Fechado. Valeu, Adavio. Tchau. Valeu, tamo junto.
