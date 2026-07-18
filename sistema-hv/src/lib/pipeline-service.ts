@@ -423,22 +423,88 @@ export async function listCasesByServiceType(serviceTypeId: string, viewerUserId
   return data ?? [];
 }
 
+// R5-04 (B5) — Resolve o service_type_id de um caso ATIVO, replicando a lógica do
+// trigger system_fn_sync_stage_ids (ADR-007): se a coluna já está preenchida usa-a;
+// senão deriva do case_type (slug do tipo). Carrega o caso com a guarda
+// `deleted_at IS NULL` (C3) para nunca mover/consultar um caso soft-deletado.
+// Retorna também organization_id/case_type para o caller. Lança 404 se o caso não
+// existir (ou estiver soft-deletado) e 422 se não houver tipo resolvível.
+async function loadActiveCaseWithServiceType(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  caseId: string,
+) {
+  const { data: caso, error } = await sb
+    .from("system_cases")
+    .select("id, organization_id, case_type, service_type_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (error || !caso) throw new PipelineServiceError("Caso não encontrado", 404);
+
+  let serviceTypeId = caso.service_type_id ?? null;
+  if (!serviceTypeId && caso.case_type) {
+    const { data: st } = await sb
+      .from("system_service_types")
+      .select("id")
+      .eq("organization_id", caso.organization_id)
+      .eq("slug", caso.case_type)
+      .is("deleted_at", null)
+      .single();
+    serviceTypeId = st?.id ?? null;
+  }
+  if (!serviceTypeId) {
+    throw new PipelineServiceError(
+      "Caso sem tipo de serviço resolvido — defina a categoria antes de mover a etapa.",
+      422,
+    );
+  }
+  return { ...caso, serviceTypeId };
+}
+
+// R5-04 (B5) — Carrega a etapa-destino GARANTINDO que ela pertence ao
+// service_type_id do caso e ao kind esperado. Sem isso, o Kanban poderia oferecer
+// (ou o RPC receber) uma etapa de OUTRO tipo cujo slug não existe para este caso —
+// a projeção do trigger deixaria stage_*_id NULL silenciosamente. Devolve 422
+// legível em vez de 500 opaco / NULL silencioso.
+async function loadStageForServiceType(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  stageId: string,
+  serviceTypeId: string,
+  kind: StageKind,
+  invalidMsg: string,
+) {
+  const { data: stage, error } = await sb
+    .from("system_pipeline_stages")
+    .select("slug, kind, service_type_id")
+    .eq("id", stageId)
+    .eq("service_type_id", serviceTypeId)
+    .eq("kind", kind)
+    .is("deleted_at", null)
+    .single();
+  if (error || !stage) throw new PipelineServiceError(invalidMsg, 422);
+  return stage;
+}
+
 // Move o caso para uma etapa op. Dual-write: grava macrostatus_op = slug
 // (o trigger projeta stage_op_id) — mantém a bifurcação atual funcionando.
 export async function moveCaseToStageOp(caseId: string, stageId: string) {
   const sb = getSupabaseAdmin();
-  const { data: stage, error: sErr } = await sb
-    .from("system_pipeline_stages")
-    .select("slug, kind")
-    .eq("id", stageId)
-    .single();
-  if (sErr || !stage || stage.kind !== "op")
-    throw new PipelineServiceError("Etapa operacional inválida", 422);
+  // C3 + AC-3: carrega o caso ATIVO (deleted_at IS NULL) e resolve o tipo.
+  const caso = await loadActiveCaseWithServiceType(sb, caseId);
+  // AC-2: a etapa-destino tem de pertencer ao tipo deste caso.
+  const stage = await loadStageForServiceType(
+    sb,
+    stageId,
+    caso.serviceTypeId,
+    "op",
+    "Etapa operacional inválida para o tipo deste caso.",
+  );
 
   const { data, error } = await sb
     .from("system_cases")
     .update({ macrostatus_op: stage.slug })
     .eq("id", caseId)
+    .is("deleted_at", null)
     .select("id, stage_op_id, macrostatus_op")
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
@@ -450,18 +516,22 @@ export async function moveCaseToStageOp(caseId: string, stageId: string) {
 // Move o caso para uma etapa financeira (dual-write via slug).
 export async function moveCaseToStageFin(caseId: string, stageId: string) {
   const sb = getSupabaseAdmin();
-  const { data: stage, error: sErr } = await sb
-    .from("system_pipeline_stages")
-    .select("slug, kind")
-    .eq("id", stageId)
-    .single();
-  if (sErr || !stage || stage.kind !== "fin")
-    throw new PipelineServiceError("Etapa financeira inválida", 422);
+  // C3 + AC-3: carrega o caso ATIVO (deleted_at IS NULL) e resolve o tipo.
+  const caso = await loadActiveCaseWithServiceType(sb, caseId);
+  // AC-2: a etapa-destino tem de pertencer ao tipo deste caso.
+  const stage = await loadStageForServiceType(
+    sb,
+    stageId,
+    caso.serviceTypeId,
+    "fin",
+    "Etapa financeira inválida para o tipo deste caso.",
+  );
 
   const { data, error } = await sb
     .from("system_cases")
     .update({ macrostatus_fin: stage.slug })
     .eq("id", caseId)
+    .is("deleted_at", null)
     .select("id, stage_fin_id, macrostatus_fin")
     .single();
   if (error || !data) throw new PipelineServiceError(error?.message ?? "Falha ao mover caso", 500);
