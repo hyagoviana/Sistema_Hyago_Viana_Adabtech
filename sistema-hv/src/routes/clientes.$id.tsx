@@ -20,10 +20,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
+import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useAuth } from "@/lib/auth";
+import { permissaoEfetiva } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
@@ -64,6 +68,14 @@ function ClienteDetalhe() {
   const deleteMutation = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // R4-01 — gate de $ na ficha do cliente. Único booleano trocável.
+  // Usa a infra efetiva de R3-01 (permissaoEfetiva): combina o PAPEL com
+  // overrides por usuário×módulo. Com a tabela de overrides vazia isto é
+  // IDÊNTICO ao papel (regressão zero) — apenas ganha overrides quando existirem.
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
   const clienteLabel = resolveEntityLabel(cliente?.full_name, {
@@ -262,7 +274,23 @@ function ClienteDetalhe() {
 
       <OrnamentalDivider />
 
-      <ClientFinanceiroSection clientId={cliente.id} />
+      {/* R4-01 — gate de $ (AC-2/AC-4): sem `financeiro:view` o componente que
+          busca valores (useAllParcelas) NÃO é montado. Mostra só um selo textual
+          sem nenhum valor $. Selo "Em dia/Devendo" é opcional aqui (R4-04 entrega
+          o sinal binário); no MVP fica "—". */}
+      {podeVerFinanceiro ? (
+        <ClientFinanceiroSection clientId={cliente.id} />
+      ) : (
+        <div>
+          <h2 className="text-[19px] font-semibold text-[var(--navy)] mb-4">
+            Financeiro do cliente
+          </h2>
+          <div className="card-hero p-4 flex items-center justify-between gap-4">
+            <span className="text-[13px] text-muted-foreground">Situação financeira</span>
+            <Badge className="bg-muted text-muted-foreground text-[11px]">—</Badge>
+          </div>
+        </div>
+      )}
 
       <OrnamentalDivider />
 

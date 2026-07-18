@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --project-id sptfmfeoikukrhbekitl --schema public > src/lib/supabase/types.ts",
@@ -19,6 +20,7 @@
     "test:financeiro": "tsx scripts/test-financeiro.ts",
     "seed:cases": "tsx scripts/seed-cases-demo.ts",
     "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts",
+    "test:rbac": "tsx src/lib/rbac.test.ts",
     "test:webhook-replay": "tsx scripts/zapsign-webhook-replay.ts"
   },
   "dependencies": {

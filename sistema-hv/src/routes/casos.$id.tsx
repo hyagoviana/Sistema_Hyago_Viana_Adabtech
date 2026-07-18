@@ -49,8 +49,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useMyModulePerms } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
-import { can } from "@/lib/rbac";
+import { can, permissaoEfetiva } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { useClient } from "@/hooks/useClients";
@@ -99,6 +100,13 @@ function CasoDetalhe() {
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = can(role, "casos.manage");
+  // R4-02 — gate de $ no bloco financeiro da ficha do caso (TermoPanel +
+  // AsaasCobrancasPanel). Usa a infra efetiva de R3-01 (permissaoEfetiva):
+  // combina o PAPEL com overrides por usuário×módulo. Com a tabela de overrides
+  // vazia isto é IDÊNTICO ao papel (regressão zero). Sem `financeiro:view` o
+  // bloco não é montado, então os hooks de $ (termo/parcelas) nem disparam.
+  const { data: perms } = useMyModulePerms();
+  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
   // Autofill B/C — tabelas de referência (município / perfil).
   const { data: municipios } = useMunicipios();
   const { data: perfis } = usePerfis();
@@ -375,7 +383,13 @@ function CasoDetalhe() {
               </Button>
             )}
 
-            {finBifurcated && (
+            {/* R4-02 — gate de $ (AC-1/AC-2/AC-4): sem `financeiro:view` o bloco
+                do termo (honorários/parcelas) e o de cobranças NÃO são montados,
+                então os hooks de $ (termo/useParcelas) nem disparam. O botão
+                "Enviar para o financeiro" e o bloco `removido_do_operacional`
+                acima são de FLUXO (não de $) e continuam gate-ados por
+                `podeFinanceiro`. */}
+            {finBifurcated && podeVerFinanceiro && (
               <div className="pt-4 border-t border-[rgba(30,32,68,0.08)] space-y-6">
                 <TermoPanel caseId={caso.id} />
                 <div className="pt-4 border-t border-[rgba(30,32,68,0.08)]">

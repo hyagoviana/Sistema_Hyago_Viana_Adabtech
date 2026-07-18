@@ -167,3 +167,176 @@ export function canSeeRoute(role: Role | null | undefined, to: string): boolean 
   if (nav === "all") return true;
   return nav.includes(to);
 }
+
+// ============================================================================
+// R3-01 — Permissão EFETIVA por MÓDULO (infra aditiva, regressão zero).
+// ----------------------------------------------------------------------------
+// Camada NOVA que combina o PAPEL (base, derivada de ROLE_NAV/ROLE_CAPABILITIES)
+// com OVERRIDES opcionais por usuário×módulo (`none`/`view`/`edit`). Enquanto não
+// houver override, `permissaoEfetiva` reproduz EXATAMENTE o comportamento de
+// `can`/`canSeeRoute` (provado por teste de tabela — ver rbac.test.ts / AC-4).
+// Nada aqui remove/altera as funções acima: R3-02/R3-03 migram os call-sites
+// incrementalmente.
+// ============================================================================
+
+/** Módulos canônicos do sistema (doc-mestre §4.3). */
+export const MODULES = [
+  "comercial",
+  "operacional",
+  "financeiro",
+  "controladoria",
+  "inteligencia",
+  "marketing",
+  "sistema", // config + permissões
+] as const;
+
+export type Module = (typeof MODULES)[number];
+
+/** Nível de acesso a um módulo. Ordem crescente: none < view < edit. */
+export type ModuleAccess = "none" | "view" | "edit";
+
+/** Ação verificada num módulo. `edit` implica `view`. */
+export type ModuleAction = "view" | "edit";
+
+export const MODULE_LABELS: Record<Module, string> = {
+  comercial: "Comercial",
+  operacional: "Operacional",
+  financeiro: "Financeiro",
+  controladoria: "Controladoria",
+  inteligencia: "Inteligência",
+  marketing: "Marketing",
+  sistema: "Sistema",
+};
+
+// ---------------------------------------------------------------------------
+// Derivação base papel→módulo→acesso (espelha ROLE_NAV/ROLE_CAPABILITIES).
+//
+// Correspondência ROTA↔MÓDULO (fonte: ROLE_NAV) — usada para o nível `view`:
+//   comercial      → /comercial, /comercial/leads, /comercial/funil,
+//                    /comercial/assinaturas, /whatsapp
+//   operacional    → /casos, /pipeline
+//   financeiro     → /casos/financeiro, /relatorio-financeiro
+//   controladoria  → /controladoria
+//   inteligencia   → /inteligencia/leads
+//   marketing      → /marketing
+//   sistema        → /configuracoes, /permissoes (admin)
+//
+// Correspondência CAPABILITY↔MÓDULO (fonte: ROLE_CAPABILITIES) — nível `edit`:
+//   comercial      → clientes.manage
+//   operacional    → casos.manage
+//   financeiro     → financeiro.manage
+//   controladoria  → casos.manage
+//   inteligencia   → (sem cap dedicada hoje ⇒ edit = view)
+//   marketing      → (sem cap dedicada hoje ⇒ edit = view)
+//   sistema        → config.manage / usuarios.manage
+//
+// Regra de derivação, para cada (papel, módulo):
+//   - `view` se o papel enxerga QUALQUER rota do módulo (canSeeRoute) — ou nav="all".
+//   - `edit` se, ALÉM do view, o papel tem a capability de edição do módulo (can).
+//   - módulos sem cap dedicada (inteligencia/marketing): edit = view (não há gate
+//     de escrita mais estrito hoje; espelhar `can` seria impossível pois não existe).
+//   - `none` se o papel não enxerga nenhuma rota do módulo.
+// ---------------------------------------------------------------------------
+
+// Rota REPRESENTATIVA de cada módulo (a primeira que aparece em ROLE_NAV). Serve
+// para derivar `view` via canSeeRoute e para o teste de regressão.
+const MODULE_VIEW_ROUTE: Record<Module, string> = {
+  comercial: "/comercial",
+  operacional: "/casos",
+  financeiro: "/casos/financeiro",
+  controladoria: "/controladoria",
+  inteligencia: "/inteligencia/leads",
+  marketing: "/marketing",
+  sistema: "/configuracoes",
+};
+
+// Capability de EDIÇÃO de cada módulo (null ⇒ sem cap dedicada; edit = view).
+const MODULE_EDIT_CAP: Record<Module, Capability | null> = {
+  comercial: "clientes.manage",
+  operacional: "casos.manage",
+  financeiro: "financeiro.manage",
+  controladoria: "casos.manage",
+  inteligencia: null,
+  marketing: null,
+  sistema: "config.manage",
+};
+
+function deriveRoleModuleAccess(role: Role, module: Module): ModuleAccess {
+  const canView = canSeeRoute(role, MODULE_VIEW_ROUTE[module]);
+  if (!canView) return "none";
+  const editCap = MODULE_EDIT_CAP[module];
+  if (editCap === null) return "edit"; // sem gate de escrita separado ⇒ view == edit
+  return can(role, editCap) ? "edit" : "view";
+}
+
+/**
+ * Mapa base papel→módulo→acesso, derivado de ROLE_NAV/ROLE_CAPABILITIES.
+ * É a FONTE ÚNICA da permissão base por módulo. Congelado no load do módulo.
+ */
+export const ROLE_MODULE_ACCESS: Record<Role, Record<Module, ModuleAccess>> = Object.fromEntries(
+  ROLES.map((role) => [
+    role,
+    Object.fromEntries(MODULES.map((m) => [m, deriveRoleModuleAccess(role, m)])) as Record<
+      Module,
+      ModuleAccess
+    >,
+  ]),
+) as Record<Role, Record<Module, ModuleAccess>>;
+
+// ---------------------------------------------------------------------------
+// Régua BASE do módulo `financeiro` — decisão do dono (2026-07-18), épico R4.
+//
+// O `financeiro` é a PRIMEIRA aba com régua de NEGÓCIO própria, MAIS restrita
+// que a navegação atual (ROLE_NAV). Como advogados têm `/casos/financeiro` no
+// NAV, a derivação padrão lhes daria `financeiro:view` — o que vazaria os
+// valores $ do cliente. A régua correta para o módulo que expõe dinheiro é:
+//   - só `admin` e `financeiro` acessam por padrão (edit);
+//   - TODOS os demais papéis = `none` (não veem $).
+// Quem precisar recebe OVERRIDE por usuário (`view`/`edit`) via
+// `system_user_module_perms`, que `permissaoEfetiva` aplica com precedência
+// total sobre a régua base. Sobrescrevemos APENAS o módulo `financeiro`; os
+// demais continuam espelhando o NAV/capabilities (regressão zero preservada).
+// ---------------------------------------------------------------------------
+for (const role of ROLES) {
+  ROLE_MODULE_ACCESS[role].financeiro =
+    role === "admin" || role === "financeiro" ? "edit" : "none";
+}
+
+/** `true` se o nível de acesso `access` cobre a ação `action` (edit ⊇ view). */
+function accessAllows(access: ModuleAccess, action: ModuleAction): boolean {
+  if (access === "none") return false;
+  if (action === "view") return true; // view e edit permitem ver
+  return access === "edit"; // só edit permite editar
+}
+
+/**
+ * Permissão EFETIVA de um usuário sobre um módulo/ação — FONTE ÚNICA (R3-01).
+ *
+ * Precedência: **override > papel**.
+ *  - Se existe override para o módulo → decide SÓ pelo override.
+ *  - Se não existe → cai no mapa base do papel (regressão zero).
+ *  - `role` nulo/desconhecido ⇒ `false` (mesma postura de `can`/`canSeeRoute`).
+ *
+ * Função PURA: os overrides já vêm carregados (sem I/O) para ser testável e
+ * usável tanto no client quanto no server.
+ *
+ * @param role      papel do usuário (`system_users.role`).
+ * @param overrides overrides do usuário (`{ [module]: access }`) — pode ser vazio.
+ * @param module    módulo consultado.
+ * @param action    ação (`view`/`edit`).
+ */
+export function permissaoEfetiva(
+  role: Role | null | undefined,
+  overrides: Partial<Record<Module, ModuleAccess>> | null | undefined,
+  module: Module,
+  action: ModuleAction,
+): boolean {
+  if (!role) return false;
+  const override = overrides?.[module];
+  if (override !== undefined) {
+    // Override tem precedência total — ignora o papel (aditivo p/ ambos lados).
+    return accessAllows(override, action);
+  }
+  // Sem override: cai no papel (comportamento atual, AC-4).
+  return accessAllows(ROLE_MODULE_ACCESS[role][module], action);
+}

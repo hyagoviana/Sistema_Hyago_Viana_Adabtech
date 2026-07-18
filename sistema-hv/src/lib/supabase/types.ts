@@ -1075,6 +1075,33 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_consent_records"]["Insert"]>;
         Relationships: [];
       };
+      system_user_module_perms: {
+        Row: {
+          id: string;
+          user_id: string;
+          module: string;
+          access: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          module: string;
+          access?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_user_module_perms"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_user_module_perms_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "system_users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       system_clients_active: {
