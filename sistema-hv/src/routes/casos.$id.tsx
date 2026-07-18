@@ -419,6 +419,8 @@ function CasoDetalhe() {
             (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
           }
           canEdit={podeGerirCaso}
+          temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+          frenteSlug={caso.frente_slug}
         />
       </div>
 

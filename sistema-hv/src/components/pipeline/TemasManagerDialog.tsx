@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
+import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
 import {
   useCreateFrente,
   useCreateTema,
@@ -356,6 +357,28 @@ function FrentesEditor({ temaId }: { temaId: string }) {
           />
         </div>
       )}
+
+      {/* R2-07 — CAMPOS PERSONALIZADOS por tema/frente (o "form builder" da ficha
+          do caso). Painel padrão do tema (frente NULL) + um bloco por frente. O
+          VALOR por caso é gravado em canonical_fields na ficha, não aqui. */}
+      <div className="mt-4 space-y-3">
+        <div className="text-[13px] font-semibold text-[var(--navy)]">
+          Campos personalizados do caso
+        </div>
+        <TemaFieldDefsEditor
+          temaId={temaId}
+          frenteSlug={null}
+          title="Campos do tema (todas as frentes)"
+        />
+        {(frentes as Frente[] | undefined)?.map((f) => (
+          <TemaFieldDefsEditor
+            key={f.id}
+            temaId={temaId}
+            frenteSlug={f.slug}
+            title={`Campos da frente: ${f.label}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

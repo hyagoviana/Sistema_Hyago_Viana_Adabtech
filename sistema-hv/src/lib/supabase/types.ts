@@ -537,6 +537,57 @@ export type Database = {
           },
         ];
       };
+      system_tema_field_defs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          tema_id: string;
+          frente_slug: string | null;
+          key: string;
+          label: string;
+          type: string;
+          options: Json | null;
+          ordem: number;
+          required: boolean;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          tema_id: string;
+          frente_slug?: string | null;
+          key: string;
+          label: string;
+          type: string;
+          options?: Json | null;
+          ordem?: number;
+          required?: boolean;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_tema_field_defs"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_tema_field_defs_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "system_organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_tema_field_defs_tema_id_fkey";
+            columns: ["tema_id"];
+            referencedRelation: "system_temas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_pipeline_stages: {
         Row: {
           id: string;
@@ -1258,6 +1309,10 @@ export type Database = {
       };
       system_tema_frentes_active: {
         Row: Database["public"]["Tables"]["system_tema_frentes"]["Row"];
+        Relationships: [];
+      };
+      system_tema_field_defs_active: {
+        Row: Database["public"]["Tables"]["system_tema_field_defs"]["Row"];
         Relationships: [];
       };
       system_pipeline_stages_active: {
