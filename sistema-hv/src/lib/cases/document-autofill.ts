@@ -2,6 +2,7 @@
 // cliente/caso. Lógica PURA (sem React) — usada tanto no front (GenerateDialog)
 // quanto no servidor (geração da procuração ao criar caso comercial).
 
+import { FIES_FIELD_DEFS, FIES_KEY_VALOR_CENTAVOS } from "@/lib/cases/fies-fields";
 import { formatCpfCnpj } from "@/lib/format";
 
 export type TemplateField = {
@@ -250,6 +251,24 @@ export function buildAutoFillFromClient(
   for (const [k, v] of Object.entries(canonRaw)) {
     if (typeof v === "string" && v) canonical[k] = v;
     else if (typeof v === "number") canonical[k] = String(v);
+  }
+
+  // R5-06 (A2) — expõe os campos FIES também sob RÓTULO amigável, para casar com
+  // placeholders humanos ("Instituição Financeira", "Situação", "Ano do
+  // contrato", "Valor"). O canonicalLookup casa por nome normalizado, e as chaves
+  // técnicas (fies_*) não bateriam sozinhas. O valor monetário (centavos) é
+  // formatado em R$ para o documento.
+  for (const def of FIES_FIELD_DEFS) {
+    const raw = canonRaw[def.key];
+    if (raw === null || raw === undefined || raw === "") continue;
+    if (def.key === FIES_KEY_VALOR_CENTAVOS) {
+      const cents = typeof raw === "number" ? raw : parseInt(String(raw), 10);
+      if (Number.isFinite(cents)) {
+        canonical[def.label] = `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
+      }
+      continue;
+    }
+    canonical[def.label] = String(raw);
   }
 
   // Endereço completo: "Rua X, nº Y, Complemento, Bairro, Cidade - UF".

@@ -20,6 +20,8 @@ import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
+import { FiesFields } from "@/components/cases/FiesFields";
+import { isCasoFies } from "@/lib/cases/fies-fields";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { TermoPanel } from "@/components/cases/TermoPanel";
@@ -419,6 +421,18 @@ function CasoDetalhe() {
           canEdit={podeGerirCaso}
         />
       </div>
+
+      {/* R5-06 (A2) — campos ESTRUTURADOS do contrato FIES (só p/ casos FIES).
+          Grava nos mesmos canonical_fields; não duplica armazenamento. */}
+      {isCasoFies(caso.case_type) && (
+        <FiesFields
+          caseId={caso.id}
+          canonicalFields={
+            (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
+          }
+          canEdit={podeGerirCaso}
+        />
+      )}
 
       <OrnamentalDivider />
 

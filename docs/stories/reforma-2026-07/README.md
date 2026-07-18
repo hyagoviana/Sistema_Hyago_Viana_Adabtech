@@ -36,7 +36,9 @@
 
 | **R5-05** | ✅ **Concluída** (dev+qa) | Bug A1: decisão do dono = **lista curada editável ampliada**. Listas centralizadas em `src/lib/br/instituicoes.ts` (92 faculdades + 64 hospitais, sem duplicatas), datalist com digitação livre. Sem tabela/migration. *Evolução futura aprovada: edição via UI (tabela `system_*`).* |
 
-Fila R5: R5-06 (campos FIES — cruza R2), R5-07 (termo 15%/R$500 editável), R5-08 (variáveis de documentos). Depois **R2** (TEMA/CASO/TIPO).
+| **R5-06** | ✅ **Concluída** (dev+qa+architect) | Item A2: 4 campos FIES estruturados (Instituição {Caixa/BB}, Valor centavos, Situação {Ativo/Inativo/Liquidado}, Ano {≤2017 / 2018+}) via `FiesFields` (só casos FIES por `isCasoFies`), gravando em `canonical_fields` (reuso S2-07, sem migration). Autofill+busca herdados. Ressalva do arq. corrigida (filtrar chaves FIES do bloco livre). Defs migram p/ R2. |
+
+Fila R5: R5-07 (termo 15%/R$500 editável), R5-08 (variáveis de documentos). Depois **R2** (TEMA/CASO/TIPO).
 > 🧹 **Dívida técnica sinalizada pelo QA:** ~22 erros de typecheck pré-existentes (types de `system_case_checklist_item_assignees`/`system_stage_checklist_def_assignees` não regenerados + `service_type_id` nullable) — merecem uma story de saneamento (`npm run db:types`). Não introduzidos pela reforma.
 > ⚠️ **Pré-condição p/ R2-03 (do Arquiteto):** se R2 tornar as etapas op globais/sentinela (como fin/comercial), a guarda de R5-04 (`loadStageForServiceType` por `service_type_id`) **e** o trigger `system_fn_sync_stage_ids` devem ser revistos JUNTOS. Enquanto etapas op forem por `service_type_id`, ambos são consistentes.
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).

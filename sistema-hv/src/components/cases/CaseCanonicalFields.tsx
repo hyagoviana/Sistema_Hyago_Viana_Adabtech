@@ -6,6 +6,7 @@ import { Eyebrow } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUpdateCaseCanonicalFields } from "@/hooks/useCases";
+import { FIES_FIELD_KEYS } from "@/lib/cases/fies-fields";
 
 // Bloco "Dados do serviço" — campos canônicos do CASO (ex.: nº FIES).
 // Distinto dos custom fields de CLIENTE. MVP: pares chave/valor livres.
@@ -19,7 +20,11 @@ export function CaseCanonicalFields({
   canEdit: boolean;
 }) {
   const updateMut = useUpdateCaseCanonicalFields();
-  const entries = Object.entries(canonicalFields ?? {});
+  // Campos FIES (R5-06) têm UI estruturada própria (FiesFields) e gravam no
+  // mesmo canonical_fields; filtra-os aqui para não duplicar a edição nem
+  // permitir corromper o domínio fechado pelo bloco de pares livres.
+  const fiesKeys = FIES_FIELD_KEYS as readonly string[];
+  const entries = Object.entries(canonicalFields ?? {}).filter(([k]) => !fiesKeys.includes(k));
 
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
