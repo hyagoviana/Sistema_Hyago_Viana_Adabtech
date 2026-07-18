@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
+import { useFrentes, useTemas } from "@/hooks/useTemas";
 import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/lib/auth";
 import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
@@ -62,11 +63,19 @@ type Props = {
 export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const { data: clients } = useClientsList();
   const { data: serviceTypes } = useServiceTypes();
+  // R2-05 — TEMA→FRENTE é o fluxo principal quando há temas cadastrados. Categorias
+  // legadas (service_types sem tema) continuam como fallback.
+  const { data: temas } = useTemas();
   const { data: users } = useUsers();
   const { profile, role } = useAuth();
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);
   const [respPopOpen, setRespPopOpen] = useState(false);
+  // Tema selecionado (dirige o select de frente e o dual-write). Vazio = usar o
+  // caminho legado por categoria (case_type).
+  const [temaId, setTemaId] = useState<string>("");
+  const { data: frentes } = useFrentes(temaId || undefined);
+  const hasTemas = (temas ?? []).length > 0;
 
   // Advogados ativos (titular/associado) selecionáveis como responsáveis.
   const advogados = (users ?? []).filter(
@@ -82,6 +91,8 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     defaultValues: {
       client_id: presetClientId ?? "",
       case_type: firstType,
+      tema_id: null,
+      frente_slug: null,
       proximo_passo: "",
       responsavel: "",
       responsavelIds: iAmAdvogado && myId ? [myId] : [],
@@ -91,9 +102,12 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
 
   useEffect(() => {
     if (open) {
+      setTemaId("");
       form.reset({
         client_id: presetClientId ?? "",
         case_type: serviceTypes?.[0]?.slug ?? "",
+        tema_id: null,
+        frente_slug: null,
         proximo_passo: "",
         responsavel: "",
         responsavelIds: iAmAdvogado && myId ? [myId] : [],
@@ -104,8 +118,13 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
 
   async function onSubmit(data: CaseCreateInput) {
     try {
+      // R2-05 — quando o caso nasce por TEMA, `case_type` é um placeholder (o slug
+      // do tema): o servidor (createCase) resolve o service_type INTERNO do tema e
+      // sobrescreve `case_type` com o slug interno. `tema_id`+`frente_slug` vão no
+      // dual-write. Sem tema, usa o `case_type` do select de categoria (legado).
       const created = await create.mutateAsync({
         ...data,
+        tema_id: temaId || null,
         // ITEM 5: entra no COMERCIAL (aguardando assinatura), não no operacional.
         comercial: true,
         procuracao_template_id: undefined,
@@ -195,30 +214,100 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               }}
             />
 
-            <FormField
-              control={form.control}
-              name="case_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {(serviceTypes ?? []).map((t) => (
-                        <SelectItem key={t.id} value={t.slug}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* R2-05 — TEMA (fluxo principal quando há temas). Escolher um tema
+                dirige o select de FRENTE e o dual-write (tema_id + case_type do
+                service_type interno, resolvido no servidor). */}
+            {hasTemas && (
+              <FormItem>
+                <FormLabel>Tema {temaId ? "*" : ""}</FormLabel>
+                <Select
+                  value={temaId}
+                  onValueChange={(v) => {
+                    setTemaId(v);
+                    // Placeholder de case_type (o servidor sobrescreve pelo slug do
+                    // service_type interno do tema). Usa o slug do tema p/ passar o
+                    // schema (case_type min(1)) e refletir a intenção.
+                    const tema = (temas ?? []).find((t) => t.id === v);
+                    if (tema) form.setValue("case_type", tema.slug);
+                    // Reseta a frente ao trocar de tema.
+                    form.setValue("frente_slug", null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tema (ou use uma categoria abaixo)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(temas ?? []).map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+
+            {/* Frente do tema (só quando um tema está escolhido). Documentos e
+                checklist do caso são puxados por esta frente (R2-04). */}
+            {temaId && (
+              <FormField
+                control={form.control}
+                name="frente_slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frente</FormLabel>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={(v) => field.onChange(v || null)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a frente (opcional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(frentes ?? []).map((f) => (
+                          <SelectItem key={f.id} value={f.slug}>
+                            {f.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Categoria legada (fallback). Só é o campo principal quando NÃO há
+                temas; com temas, aparece como alternativa para tipos legados sem
+                tema e fica oculta quando um tema já foi escolhido. */}
+            {!temaId && (
+              <FormField
+                control={form.control}
+                name="case_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{hasTemas ? "Ou categoria (legado)" : "Tipo *"}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(serviceTypes ?? []).map((t) => (
+                          <SelectItem key={t.id} value={t.slug}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

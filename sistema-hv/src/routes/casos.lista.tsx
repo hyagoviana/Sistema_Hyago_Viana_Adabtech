@@ -31,19 +31,21 @@ function CasosLista() {
   const [page, setPage] = useState(0);
   const { data, isLoading, isError, error } = useCasesList();
 
-  // Busca CLIENT-SIDE por cliente, categoria (label), etapa (label), código e
-  // município — instantânea (sem ida ao servidor).
+  // Busca CLIENT-SIDE por cliente, categoria (label), etapa (label), código,
+  // município e FRENTE (R2-05) — instantânea (sem ida ao servidor).
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return data ?? [];
     return (data ?? []).filter((c) => {
       const tipo = (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type).toLowerCase();
       const op = (MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op).toLowerCase();
+      const frente = ((c as { frente_slug?: string | null }).frente_slug ?? "").toLowerCase();
       return (
         c.case_code.toLowerCase().includes(q) ||
         (c.client_name ?? "").toLowerCase().includes(q) ||
         tipo.includes(q) ||
         op.includes(q) ||
+        frente.includes(q) ||
         (c.municipio ?? "").toLowerCase().includes(q)
       );
     });
@@ -115,6 +117,7 @@ function CasosLista() {
                   "Código",
                   "Cliente",
                   "Tipo",
+                  "Frente",
                   "Operacional",
                   "Financeiro",
                   "Município",
@@ -130,14 +133,14 @@ function CasosLista() {
               {isLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-[rgba(152,120,20,0.08)]">
-                    <td colSpan={7} className="px-4 py-3">
+                    <td colSpan={8} className="px-4 py-3">
                       <Skeleton className="h-6" />
                     </td>
                   </tr>
                 ))
               ) : sliced.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
                     Nenhum caso encontrado.
                   </td>
                 </tr>
@@ -169,6 +172,9 @@ function CasosLista() {
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground">
                       {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+                    </td>
+                    <td className="px-4 py-3 text-[12px] text-muted-foreground">
+                      {(c as { frente_slug?: string | null }).frente_slug ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-[12px]">
                       {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}

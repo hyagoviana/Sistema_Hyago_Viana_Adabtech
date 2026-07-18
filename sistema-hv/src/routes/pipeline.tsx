@@ -326,6 +326,8 @@ function DynamicKanban({
   onBack: () => void;
 }) {
   const [kind, setKind] = useState<"op" | "fin">("op");
+  // R2-05 — filtro por FRENTE (só operacional). "" = todas as frentes.
+  const [frenteFilter, setFrenteFilter] = useState<string>("");
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
@@ -341,7 +343,7 @@ function DynamicKanban({
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
   // Operacional esconde os casos "somente financeiro" (S19 / ADR-016) — filtro SÓ aqui,
   // nunca na fonte/view, senão o caso sumiria das duas pipelines.
-  const cases =
+  const baseCases =
     kind === "fin"
       ? (allCases ?? []).filter((c) => c.macrostatus_fin && c.macrostatus_fin !== "NAO_APLICAVEL")
       : (allCases ?? []).filter(
@@ -352,8 +354,41 @@ function DynamicKanban({
             !(c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at,
         );
 
+  const caseFrente = (c: unknown) => (c as { frente_slug?: string | null }).frente_slug ?? null;
+
+  // R2-05 — lista de frentes disponíveis para o filtro: as frentes presentes nos
+  // casos do board + as frentes declaradas nas etapas (system_pipeline_stages.frente_slug).
+  const frenteOptions = Array.from(
+    new Set(
+      [
+        ...baseCases.map((c) => caseFrente(c)),
+        ...(stages ?? []).map((s) => (s as { frente_slug?: string | null }).frente_slug ?? null),
+      ].filter((v): v is string => !!v),
+    ),
+  ).sort();
+
+  // R2-05 — o filtro de frente só se aplica ao operacional (etapas condicionais por
+  // frente são um conceito op). No financeiro, ignora.
+  const applyFrente = kind === "op" && frenteFilter !== "";
+  const cases = applyFrente ? baseCases.filter((c) => caseFrente(c) === frenteFilter) : baseCases;
+
+  // R2-05 — colunas: oculta etapas CONDICIONAIS vazias de outra frente. Regra:
+  // uma etapa com `frente_slug` (condicional) só aparece se (a) pertence à frente
+  // filtrada OU (b) há algum caso do board nela. Etapas comuns (frente_slug NULL)
+  // sempre aparecem. Sem filtro de frente, oculta condicionais de OUTRA frente
+  // apenas quando estão vazias (mantém progresso visível).
+  const casesInSlug = (slug: string) => cases.some((c) => c.macrostatus_op === slug);
   const columns: KanbanColumn<string>[] = (stages ?? [])
     .filter((s) => !(kind === "fin" && s.slug === "NAO_APLICAVEL"))
+    .filter((s) => {
+      if (kind !== "op") return true;
+      const stageFrente = (s as { frente_slug?: string | null }).frente_slug ?? null;
+      if (!stageFrente) return true; // etapa comum — sempre visível
+      // Etapa condicional: visível se é da frente filtrada, ou (sem/qualquer
+      // filtro) se há caso nela.
+      if (applyFrente && stageFrente === frenteFilter) return true;
+      return casesInSlug(s.slug);
+    })
     .map((s) => ({ id: s.slug, label: s.label, toneColor: roleColor(s.stage_role) }));
 
   function handleMove(id: string, toSlug: string) {
@@ -407,6 +442,37 @@ function DynamicKanban({
                 </button>
               ))}
             </div>
+            {/* R2-05 — filtro por FRENTE (só no operacional; oculta colunas
+                condicionais de outras frentes quando uma frente é escolhida). */}
+            {kind === "op" && frenteOptions.length > 0 && (
+              <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
+                <button
+                  type="button"
+                  onClick={() => setFrenteFilter("")}
+                  className={
+                    frenteFilter === ""
+                      ? "px-3 py-1.5 bg-[var(--gold)] text-white"
+                      : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
+                  }
+                >
+                  Todas as frentes
+                </button>
+                {frenteOptions.map((fr) => (
+                  <button
+                    key={fr}
+                    type="button"
+                    onClick={() => setFrenteFilter(fr)}
+                    className={
+                      frenteFilter === fr
+                        ? "px-3 py-1.5 bg-[var(--gold)] text-white"
+                        : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)] border-l border-[var(--border)]"
+                    }
+                  >
+                    {fr}
+                  </button>
+                ))}
+              </div>
+            )}
             <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
               <Settings2 size={14} />
               Editar etapas

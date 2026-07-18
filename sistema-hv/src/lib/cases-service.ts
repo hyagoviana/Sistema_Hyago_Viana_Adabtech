@@ -45,7 +45,15 @@ export function caseCodePrefix(nameOrSlug: string): string {
   return cleaned || "CASO";
 }
 
-async function nextCaseCode(caseType: string): Promise<string> {
+// R2-05 — o prefixo do case_code deriva do NOME do TEMA quando o caso nasce por
+// tema (dual-write). Como cada tema tem 1 service_type interno espelho (Opção 1,
+// design R2-03) e `createServiceType` usou o NOME do tema, o nome do service_type
+// interno JÁ é o nome do tema — então a resolução por `case_type`→service_type.name
+// abaixo naturalmente rende o prefixo do tema. Quando `temaId` é informado,
+// buscamos o nome direto em `system_temas` (fonte canônica) por robustez; senão
+// caímos no nome do service_type pelo slug (categorias legadas). Só afeta casos
+// NOVOS — códigos existentes NÃO são reescritos.
+async function nextCaseCode(caseType: string, temaId?: string | null): Promise<string> {
   const sb = getSupabaseAdmin();
   // Busca o NOME da categoria pelo slug (o slug é imutável/legado; o nome é o que
   // o usuário vê e renomeia). Fallback: deriva do próprio slug.
@@ -57,6 +65,17 @@ async function nextCaseCode(caseType: string): Promise<string> {
     .limit(1);
   const name = stRows?.[0]?.name;
   if (name) prefix = caseCodePrefix(name);
+
+  // Prioridade ao NOME do TEMA (fonte canônica) quando o caso nasce por tema.
+  if (temaId) {
+    const { data: temaRow } = await sb
+      .from("system_temas")
+      .select("name")
+      .eq("id", temaId)
+      .limit(1)
+      .maybeSingle();
+    if (temaRow?.name) prefix = caseCodePrefix(temaRow.name);
+  }
 
   const year = new Date().getFullYear();
   const { data, error } = await sb.rpc("nextval_seq_system_case_code");
@@ -89,7 +108,30 @@ export async function createCase(
     throw new CaseServiceError("Cliente não encontrado ou desativado", 404);
   }
 
-  const code = await nextCaseCode(input.case_type);
+  // R2-05 — quando o caso nasce por TEMA, o motor continua sendo o service_type
+  // INTERNO espelho do tema (Opção 1, design R2-03). Resolvemos server-side o slug
+  // desse service_type e o usamos como `case_type` (fonte do dual-write: o trigger
+  // deriva service_type_id do slug). Assim o front só precisa mandar `tema_id` —
+  // não precisa conhecer o slug interno. Coexistência: sem `tema_id`, usa-se o
+  // `case_type` recebido (caminho legado por categoria).
+  let caseType = input.case_type;
+  if (input.tema_id) {
+    const { data: temaSt } = await sb
+      .from("system_service_types")
+      .select("slug")
+      .eq("tema_id", input.tema_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (!temaSt?.slug) {
+      throw new CaseServiceError(
+        "Tema sem pipeline configurada (service_type interno ausente). Recadastre o tema.",
+        422,
+      );
+    }
+    caseType = temaSt.slug;
+  }
+
+  const code = await nextCaseCode(caseType, input.tema_id);
 
   // Busca a primeira etapa operacional do service_type para não usar slug hardcoded
   let defaultOpStatus: string = input.macrostatus_op ?? "ONBOARDING";
@@ -97,7 +139,7 @@ export async function createCase(
     const { data: stType } = await sb
       .from("system_service_types")
       .select("id")
-      .eq("slug", input.case_type)
+      .eq("slug", caseType)
       .is("deleted_at", null)
       .single();
     if (stType) {
@@ -140,7 +182,7 @@ export async function createCase(
     const { data: stTypeCom } = await sb
       .from("system_service_types")
       .select("id")
-      .eq("slug", input.case_type)
+      .eq("slug", caseType)
       .is("deleted_at", null)
       .single();
     if (stTypeCom) {
@@ -163,7 +205,15 @@ export async function createCase(
       organization_id: DEFAULT_ORG_ID,
       client_id: input.client_id,
       case_code: code,
-      case_type: input.case_type,
+      case_type: caseType,
+      // R2-05 — dual-write TEMA→FRENTE (ADITIVO ao case_type/service_type_id, que
+      // seguem governados pelo trigger). `tema_id` agrupa o caso na UI/relatórios
+      // (Kanban/Lista por tema); `frente_slug` é a frente do tema (docs/checklist
+      // puxam por ela — R2-04). Ambos NULL no caminho legado por categoria. O motor
+      // (trigger system_fn_sync_stage_ids) segue resolvendo stage_op_id por
+      // service_type_id derivado do case_type — NÃO tocado.
+      tema_id: input.tema_id ?? null,
+      frente_slug: input.frente_slug ?? null,
       macrostatus_op: defaultOpStatus,
       macrostatus_fin: defaultFinStatus,
       macrostatus_comercial: defaultComercialStatus,

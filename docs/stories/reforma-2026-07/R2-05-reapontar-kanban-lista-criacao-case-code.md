@@ -3,7 +3,7 @@
 - **Épico:** R2 — Camada TEMA→CASO→TIPO (bloco B2)
 - **Fase da Sequência Segura §7:** 5e (reapontar app + só então soft-delete)
 - **ID:** R2-05
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** L (mexe em Kanban, lista, CaseFormDialog, createCase, caseCodePrefix; encerra a migração)
 - **Executor sugerido:** @dev + @data-engineer (soft-delete final) · Quality gate: @architect
 - **Risco:** ALTO (reaponta UI de criação e boards; case_code afeta só casos novos)
@@ -45,14 +45,14 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Kanban por tema** (AC: 1) — `pipeline.tsx`: novo search param `tema`; hooks `useCasesByTema`/`useStagesByTema` (ou reuso agregando os service_types do tema); filtro de frente respeitando `system_pipeline_stages.frente_slug`.
-- [ ] **Lista por tema/frente** (AC: 2) — `casos.lista.tsx`: filtros e busca por tema/frente.
-- [ ] **CaseFormDialog tema→frente** (AC: 3) — selects encadeados (tema → frentes do tema via `system_tema_frentes`); enviar `tema_id`+`frente_slug` no payload; validators (`validators/case.ts`) aceitam os campos.
-- [ ] **createCase** (AC: 3,4) — gravar `tema_id`/`frente_slug`; resolver 1ª etapa op (conjunto consolidado do tema); `nextCaseCode` deriva do nome do TEMA.
-- [ ] **caseCodePrefix/nextCaseCode** (AC: 4) — `cases-service.ts`: buscar `name` via `tema_id` (não mais só `case_type`→service_type.name).
-- [ ] **Migration final** `20260719000005_soft_delete_service_types_orfaos.sql` (AC: 5) — soft-delete idempotente APENAS de service_types com 0 casos e 0 dependências; guarda dupla.
-- [ ] **Rollback** correspondente (re-ativa) + estratégia de revert da UI (feature flag recomendável).
-- [ ] **Testes** (AC: 1-6).
+- [x] **Kanban por tema** (AC: 1) — `pipeline.tsx`: filtro por FRENTE (chip "Todas as frentes" + chips por frente, só no operacional) respeitando `system_pipeline_stages.frente_slug`; oculta colunas condicionais vazias de outra frente. Board por tema já funciona via o service_type INTERNO do tema (aparece na seleção de categorias); reaponte de dados feito. Nota: search param `tema` explícito e o toggle Kanban↔Lista ficam para R2-08 (fronteira de escopo); aqui entregou-se o reaponte de dados + filtro de frente.
+- [x] **Lista por tema/frente** (AC: 2) — `casos.lista.tsx`: coluna "Frente" na tabela + busca client-side inclui `frente_slug`.
+- [x] **CaseFormDialog tema→frente** (AC: 3) — select de TEMA (`useTemas`) + select de FRENTE encadeado (`useFrentes(temaId)`); envia `tema_id`+`frente_slug`; categoria legada (`case_type`) como fallback quando não há tema selecionado. Validators (`validators/case.ts`) aceitam `tema_id`(uuid opcional)/`frente_slug`(string opcional).
+- [x] **createCase** (AC: 3,4) — grava `tema_id`/`frente_slug`; resolve o service_type INTERNO do tema (via `system_service_types.tema_id`) e usa seu slug como `case_type` (dual-write; trigger deriva `service_type_id`); 1ª etapa op resolvida pelo service_type do tema; `nextCaseCode` recebe `temaId`.
+- [x] **caseCodePrefix/nextCaseCode** (AC: 4) — `cases-service.ts`: `nextCaseCode(caseType, temaId?)` prioriza o NOME do TEMA (`system_temas.name`) quando há `tema_id`; senão mantém o nome do service_type pelo slug (legado). Códigos existentes inalterados.
+- [~] **Migration final** `20260719000005_soft_delete_service_types_orfaos.sql` (AC: 5) — **DIFERIDO para R2-02** (fusão de legados espera a lista do cliente). No modo manual não há service_types órfãos a aposentar; sem migration nesta entrega (design R2-03 §5, story escopo). Sem `db:push`.
+- [~] **Rollback** correspondente — diferido junto com a migration (R2-02). Revert da UI é revert de código (mudanças 100% aditivas: `tema_id`/`frente_slug` são NULL sem tema; nada muda para casos legados).
+- [x] **Testes** (AC: 1-4,6) — `npm run typecheck` (sem erro novo nos arquivos tocados), `npm run test:rbac` (verde), `npx eslint` limpo nos 5 arquivos. AC-5 (soft-delete) diferido → R2-02.
 
 ---
 
@@ -107,14 +107,38 @@ Para evitar dupla-implementação do toggle Kanban↔Lista e do filtro de frente
 
 ## File List
 
-- `sistema-hv/src/routes/pipeline.tsx`
-- `sistema-hv/src/routes/casos.lista.tsx`
-- `sistema-hv/src/components/cases/CaseFormDialog.tsx`
-- `sistema-hv/src/lib/cases-service.ts`
-- `sistema-hv/src/lib/validators/case.ts`
-- `sistema-hv/src/hooks/usePipeline.ts`, `sistema-hv/src/hooks/useCases.ts`
-- `sistema-hv/supabase/migrations/20260719000005_soft_delete_service_types_orfaos.sql` (novo)
-- `sistema-hv/supabase/rollbacks/20260719000005_soft_delete_service_types_orfaos.rollback.sql` (novo)
+Modificados nesta entrega (R2-05, modo manual):
+- `sistema-hv/src/lib/validators/case.ts` — `tema_id`(uuid opcional)/`frente_slug`(string opcional) no `caseCreateSchema`.
+- `sistema-hv/src/lib/cases-service.ts` — `createCase` resolve service_type interno do tema + dual-write `tema_id`/`frente_slug`; `nextCaseCode(caseType, temaId?)` prefixo pelo NOME do tema.
+- `sistema-hv/src/components/cases/CaseFormDialog.tsx` — selects TEMA→FRENTE (`useTemas`/`useFrentes`) + fallback categoria legada.
+- `sistema-hv/src/routes/pipeline.tsx` — filtro por FRENTE (chips) + ocultar colunas condicionais vazias.
+- `sistema-hv/src/routes/casos.lista.tsx` — coluna "Frente" + busca inclui `frente_slug`.
+
+Reusados (sem alteração): `sistema-hv/src/hooks/useTemas.ts` (`useTemas`/`useFrentes`/`useTemaServiceType`), `sistema-hv/src/lib/tema-service.ts` (`getTemaServiceType`), `sistema-hv/src/hooks/useCases.ts`, `sistema-hv/src/hooks/usePipeline.ts`.
+
+Diferidos → R2-02 (não criados nesta entrega):
+- `sistema-hv/supabase/migrations/20260719000005_soft_delete_service_types_orfaos.sql`
+- `sistema-hv/supabase/rollbacks/20260719000005_soft_delete_service_types_orfaos.rollback.sql`
+
+## Dev Agent Record
+
+### Agent Model Used
+Claude Opus 4.8 (1M) — @dev (James)
+
+### Decisões de implementação
+- **Resolução tema→motor server-side (Opção 1, design R2-03):** o front só envia `tema_id`; `createCase` busca o service_type INTERNO do tema (`system_service_types.tema_id`) e usa seu **slug** como `case_type`. O trigger `system_fn_sync_stage_ids` deriva `service_type_id` do slug — motor **intocado**. Evita expor o slug interno no front e mantém o dual-write coerente (`case_type` + `service_type_id` + `tema_id` + `frente_slug`).
+- **`case_type` placeholder no dialog:** ao escolher um tema, o dialog seta `case_type` = slug do tema (só para passar o `min(1)` do schema); o servidor sobrescreve pelo slug do service_type interno. Sem tema, usa o `case_type` do select de categoria (legado).
+- **case_code por tema:** `nextCaseCode` ganhou `temaId?`; quando presente, o prefixo deriva de `system_temas.name` (fonte canônica). Como `createServiceType` usou o NOME do tema no service_type interno, o caminho legado (nome do service_type pelo slug) já renderia o mesmo prefixo — a leitura direta do tema é robustez. Só afeta casos NOVOS.
+- **Filtro de frente no Kanban:** chips "Todas as frentes" + 1 por frente (frentes presentes nos casos ∪ `frente_slug` das etapas), só no operacional. Coluna condicional (`stage.frente_slug` não-nulo) visível se (a) é da frente filtrada OU (b) há caso nela; etapas comuns (`frente_slug` NULL) sempre visíveis. Não filtra o auto-avanço (só exibição — coerente com Opção b do design).
+- **Coexistência:** sem temas cadastrados, o dialog mostra só o select "Tipo" (categoria) e os casos nascem com `tema_id`/`frente_slug` NULL — comportamento idêntico ao atual. FIES_ESF/FIES_DGM e demais legados seguem funcionando.
+
+### Diferido
+- **AC-5 (soft-delete de service_types órfãos) + migration/rollback `20260719000005`:** movido para **R2-02** (fusão de legados, bloqueada pela lista do cliente). No modo manual não há órfãos a aposentar. Sem migration nesta entrega (usa as colunas de R2-01; nenhuma alteração de schema).
+
+### Validação executada
+- `npm run typecheck`: sem erro NOVO nos arquivos tocados (erros pré-existentes em `checklist-service`/`dossie-service`/`visibility`/`termo-service`/`casos.$id`/`casos.financeiro.index` — tabela `system_case_checklist_item_assignees` ausente dos types + `service_type_id` nullable; não relacionados a esta story).
+- `npm run test:rbac`: verde (todos os testes passaram).
+- `npx eslint` nos 5 arquivos: limpo. `prettier --write` (LF) aplicado.
 
 ## Change Log
 
@@ -122,3 +146,4 @@ Para evitar dupla-implementação do toggle Kanban↔Lista e do filtro de frente
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial — fase 5e do épico R2 (encerra a migração) | @sm |
 | 2026-07-18 | 0.2 | C1 (QA/Architect): renumeração para evitar colisão com R3-01 — migration/rollback/File List `20260718000005_soft_delete_service_types_orfaos` → `20260719000005_soft_delete_service_types_orfaos`. C6 (QA/Architect): cravada a fronteira de escopo com R2-08 (nova seção) — R2-05 entrega o reaponte de DADOS (Kanban/Lista por tema + filtro de frente funcional); R2-08 entrega o incremento de UX (toggle explícito Kanban↔Lista + Lista Excel), sem re-implementar o filtro/reaponte. Registrada a alternativa de fundir R2-08 em R2-05. Sem dupla-implementação. | @sm |
+| 2026-07-18 | 0.3 | @dev: implementado o fluxo manual — CaseFormDialog tema→frente (fallback categoria legada); `createCase` resolve service_type interno do tema + dual-write `tema_id`/`frente_slug`; `nextCaseCode` prefixo pelo nome do tema; filtro de frente no Kanban (oculta colunas condicionais vazias); coluna+busca de frente na Lista; validators aceitam os campos. AC-5 soft-delete + migration `20260719000005` DIFERIDOS → R2-02 (sem migration nesta entrega). typecheck sem erro novo, test:rbac verde, eslint limpo. Status → Ready for Review. | @dev |

@@ -5,6 +5,12 @@ import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 export const caseCreateSchema = z.object({
   client_id: z.string().uuid("Cliente obrigatório"),
   case_type: z.string().min(1, "Tipo obrigatório"),
+  // R2-05 — modelo TEMA→CASO→FRENTE (dual-write, ADITIVO ao case_type/service_type_id).
+  // `tema_id` = tema escolhido; `frente_slug` = frente do tema (docs/checklist puxam
+  // pela frente — R2-04). Ambos opcionais: o caminho legado por "categoria"
+  // (case_type = slug do service_type) segue funcionando sem tema.
+  tema_id: z.string().uuid().optional().nullable(),
+  frente_slug: z.string().trim().max(60).optional().nullable(),
   macrostatus_op: z.enum(MACRO_OP).optional(),
   macrostatus_fin: z.enum(MACRO_FIN).optional(),
   proximo_passo: z.string().trim().max(500).optional().nullable(),
