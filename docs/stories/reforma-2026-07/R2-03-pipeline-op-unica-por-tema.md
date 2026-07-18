@@ -3,7 +3,7 @@
 - **Épico:** R2 — Camada TEMA→CASO→TIPO (bloco B2)
 - **Fase da Sequência Segura §7:** 5c (unificar pipeline op + migrar macrostatus_op)
 - **ID:** R2-03
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** L (consolida etapas divergentes + backfill de `macrostatus_op` + decisão de etapa condicional; o item mais sensível do épico junto de R2-02)
 - **Executor sugerido:** @data-engineer + @architect (decisão de etapas) · Quality gate: @architect
 - **Risco:** CRÍTICO (mexe em `system_pipeline_stages` op, `macrostatus_op`, projeção `stage_op_id` e gates de checklist ancorados em `stage_slug`)
@@ -51,20 +51,19 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Decisão de etapas** (AC: 1,2) — @architect define, por tema, o conjunto op canônico e quais são condicionais por frente (mín.: `DGM_ENVIADA`→frente DGM no FIES/1%). Registrar no Change Log.
-- [ ] **[C2] Auto-avanço vs etapa condicional de frente** (AC: 8) — as funções de auto-avanço `system_fn_avancar_se_checklist_ok` (`20260703000003_fn_avancar_checklist.sql:71-79`) e `system_fn_avancar_fin` (`20260704000001_fn_avancar_fin.sql:73-87`) escolhem a **próxima etapa** por `service_type_id`+`ordem` **SEM** filtrar `frente_slug`. Se uma etapa condicional de outra frente (ex.: `DGM_ENVIADA`, `frente_slug='DGM'`) estiver no conjunto do tema, um caso de OUTRA frente (ex.: ESF) pode **parar nela** ao auto-avançar. Escolher UMA das opções e **travar a decisão no Change Log**:
-  - **(a) Patch das duas funções** — na query de próxima etapa, pular condicionais de outra frente: `AND (frente_slug IS NULL OR frente_slug = <frente do caso>)` (o caso traz `frente_slug` — R2-02). Aplicar em AMBAS as funções, via migration idempotente + rollback (`npx tsx scripts/db-apply-pg.ts`). **Recriar `system_cases_active` NÃO é necessário** (só função). Cuidado: as funções passam a depender de `system_cases.frente_slug` estar populado (garantido por R2-02).
-  - **(b) Decisão de arquitetura "etapas condicionais viram etapas comuns do tema"** — sem `frente_slug` em `system_pipeline_stages` (nenhuma etapa é condicional de frente); o gap é eliminado na raiz e as funções de auto-avanço **não** são tocadas. Trade-off: `DGM_ENVIADA` fica visível como coluna do tema para todas as frentes (filtro só de exibição no Kanban, se desejado, sem afetar o auto-avanço).
-- [ ] **Migration** `20260719000003_pipeline_op_unica_por_tema.sql` (AC: 1-6)
-  - [ ] `ALTER TABLE system_pipeline_stages ADD COLUMN IF NOT EXISTS frente_slug TEXT`.
-  - [ ] Upsert do conjunto op canônico para TODOS os service_types de cada tema (VALUES por tema, join em `system_service_types` por `tema_id`), `ON CONFLICT (service_type_id, kind, slug) DO UPDATE SET label/ordem/stage_role/frente_slug, active=TRUE, deleted_at=NULL` (molde `20260609000001:96-101`).
-  - [ ] De-para de `macrostatus_op` legado → consolidado (`UPDATE system_cases SET macrostatus_op = CASE ... END WHERE deleted_at IS NULL AND macrostatus_op IN (...)`).
-  - [ ] Reexecutar projeção: `UPDATE system_cases SET macrostatus_op = macrostatus_op WHERE deleted_at IS NULL` (dispara `system_fn_sync_stage_ids` para reapontar `stage_op_id`).
-  - [ ] Reancorar checklist defs se algum slug mudou: `UPDATE system_stage_checklist_defs SET stage_slug = <novo> WHERE stage_slug = <antigo>` (idempotente).
-  - [ ] Soft-delete de slugs op verdadeiramente obsoletos SOMENTE após confirmar 0 casos apontando (molde `20260609000001:133-139`).
-- [ ] **Rollback** `20260719000003_pipeline_op_unica_por_tema.rollback.sql` (AC: 7) — de-para simétrico.
-- [ ] **App (leitura)** — `useStages`/`listStages` (`pipeline-service.ts:228-238`) podem passar a filtrar `frente_slug IS NULL OR frente_slug = <frente do caso>` no Kanban — **implementação da UI fica em R2-05**; aqui só garantir que a coluna existe e é lida corretamente.
-- [ ] **Validação** (AC: 3,4) — 0 órfãos de etapa; 0 `stage_op_id` NULL indevido.
+- [x] **Decisão de etapas** (AC: 1,2) — TRAVADA no design (Opção 1 + Opção b): tema manual nasce com o conjunto op **genérico padrão** de `createServiceType` (NOVO/EM_ANDAMENTO/GANHO/ENCERRADO/CANCELADO), 100% editável; **todas as etapas são comuns do tema** (`frente_slug` NULL). Registrado no Change Log v0.3.
+- [x] **[C2] Auto-avanço vs etapa condicional de frente** (AC: 8) — **Opção (b) escolhida** (design §2.2/§7): etapas do tema manual são comuns; **nenhuma** etapa recebe `frente_slug` no seeding → as funções `system_fn_avancar_se_checklist_ok` e `system_fn_avancar_fin_se_ok` **NÃO são tocadas**, o gap é eliminado na raiz. A coluna `frente_slug` é criada (exibição-only, R2-05), nunca consultada pelo auto-avanço. Opção (a) fica como contingência documentada para a fusão do legado `DGM_ENVIADA` (R2-02). *(Nota: nome real da fn fin é `system_fn_avancar_fin_se_ok`, corrigido no design §2.1.)*
+- [x] **Migration** `20260719000003_pipeline_op_unica_por_tema.sql` (AC: 2, 6) — **SÓ a coluna aditiva** (design §5). Consolidação/backfill/de-para/reancoragem/soft-delete de legados → **R2-02** (bloqueado pela lista do cliente).
+  - [x] `ALTER TABLE system_pipeline_stages ADD COLUMN IF NOT EXISTS frente_slug TEXT` (+ COMMENT "exibição-only").
+  - [~] Upsert do conjunto op canônico para service_types legados — **R2-02** (fusão FIES_ESF+FIES_DGM; depende da lista).
+  - [~] De-para de `macrostatus_op` legado → consolidado — **R2-02**.
+  - [~] Reexecutar projeção (`UPDATE ... SET macrostatus_op=macrostatus_op`) — **R2-02** (não há consolidação aqui).
+  - [~] Reancorar checklist defs por slug — **R2-02** (nenhum slug renomeia no tema manual).
+  - [~] Soft-delete de slugs obsoletos — **R2-02**.
+- [x] **Rollback** `20260719000003_pipeline_op_unica_por_tema.rollback.sql` (AC: 7) — `DROP COLUMN IF EXISTS frente_slug` (simétrico à migration aditiva).
+- [x] **Seeding do tema (Opção 1)** — `createTema` cria o `system_service_type` interno espelho via `createServiceType` e vincula `tema_id`; guarda de colisão de slug (`_T`/`_T2`…) para não estourar UNIQUE; compensação (soft-delete do tema) se o seeding falhar (R-1). `deleteTema` soft-deleta o service_type interno via `deleteServiceType` (guarda de casos por `service_type_id`/`case_type` → 409). Helper `getTemaServiceType`. `frente_slug` em types.ts.
+- [~] **App (leitura)** — `useStages`/`listStages` filtrar por `frente_slug` no Kanban — **R2-05** (aqui só a coluna existe + está nos types).
+- [~] **Validação de dados** (AC: 3,4) — 0 órfãos / 0 `stage_op_id` NULL — pertence ao backfill de **R2-02**; no tema manual não há de-para de `macrostatus_op`.
 
 ---
 
@@ -107,9 +106,35 @@
 
 ## File List
 
-- `sistema-hv/supabase/migrations/20260719000003_pipeline_op_unica_por_tema.sql` (novo)
-- `sistema-hv/supabase/rollbacks/20260719000003_pipeline_op_unica_por_tema.rollback.sql` (novo)
+- `sistema-hv/supabase/migrations/20260719000003_pipeline_op_unica_por_tema.sql` (novo — só `frente_slug` aditivo)
+- `sistema-hv/supabase/rollbacks/20260719000003_pipeline_op_unica_por_tema.rollback.sql` (novo — `DROP COLUMN`)
 - `sistema-hv/src/lib/supabase/types.ts` (`frente_slug` em `system_pipeline_stages`)
+- `sistema-hv/src/lib/tema-service.ts` (seeding do service_type interno em `createTema` + guarda de colisão de slug `uniqueServiceTypeSlug` + `getTemaServiceType` + `deleteTema` soft-deleta o service_type interno)
+
+## Dev Agent Record
+
+**Agente:** @dev (James) · **Data:** 2026-07-18 · **Modelo:** design R2-03-design-pipeline-tema.md (Opção 1 + Opção b).
+
+### Decisões de implementação
+- **Opção 1 (service_type interno espelho 1:1):** `createTema` chama `createServiceType({name, slug, ordem})` (que já semeia op/fin/comercial) e faz `UPDATE system_service_types SET tema_id = tema.id`. O motor (trigger, checklist, moveCase*) fica **intocado** — casos rodam por `service_type_id` como hoje.
+- **Guarda de colisão de slug (R-3):** `uniqueServiceTypeSlug` deriva o slug do service_type interno do MESMO slug do tema; se já houver service_type ATIVO com esse slug (ex.: legado "COVID"), **sufixa** `_T`/`_T2`… (respeitando o teto de 40 chars). NÃO reutiliza o legado — o tema precisa do seu próprio motor com etapas espelho recém-semeadas. O slug do tema (`system_temas`) é independente e mantém sua própria UNIQUE.
+- **Compensação (R-1, atomicidade):** supabase-js não tem transação multi-statement; se o seeding falhar, o tema recém-criado é **soft-deletado** (+ tombstone do slug) e lança 500 legível — evita tema órfão sem pipeline.
+- **`deleteTema`:** além da guarda por `tema_id`, chama `deleteServiceType(serviceType.id)` que traz a MESMA guarda de casos por `service_type_id` OU `case_type=slug` (→ 409) — cobre o alerta do arquiteto (R2-06) de que casos podem chegar via o service_type do motor, não só via `tema_id`.
+- **Opção b (etapa comum):** nenhuma etapa recebe `frente_slug` no seeding; as 2 funções de auto-avanço **não foram tocadas**. `frente_slug` é criada só como coluna de exibição (consumida em R2-05).
+- **Coexistência (não resolvida por decisão):** "Nova categoria" legada (service_type solto, `tema_id` NULL) e "Temas" (service_type interno) coexistem; unificação da UI é refinamento R2-05/R2-06 — documentado no header de `tema-service.ts`.
+
+### NÃO tocado (restrições cumpridas)
+- `system_fn_sync_stage_ids` / `trg_system_cases_bifurcacao` / `trg_system_cases_sync_stages` — intocados.
+- `system_fn_avancar_se_checklist_ok` / `system_fn_avancar_fin_se_ok` — intocadas (Opção b).
+- `case_type` / `macrostatus_*` — não deletados. `system_cases` / `system_cases_active` — não tocados (migration não recria a view; AC-6/R-7 ok).
+- **Sem** consolidação/backfill/de-para/reancoragem de legados (isso é R2-02).
+- Migration **NÃO aplicada** no banco (aguarda revisão do owner).
+
+### Validação
+- `npm run typecheck`: **0 erros novos** em `tema-service.ts`/`pipeline-service.ts`/`types.ts`. Erros pré-existentes remanescem (dossie-service/termo-service/visibility/casos routes — `system_case_checklist_item_assignees` fora dos types gerados + narrowings `string | null`), não relacionados a este story.
+- `npx eslint src/lib/tema-service.ts src/lib/supabase/types.ts`: **limpo** (exit 0).
+- `npm run test:rbac`: **verde** (todos passaram).
+- `prettier --write` aplicado aos `.ts` (LF); SQL não tem parser no prettier (esperado).
 
 ## Change Log
 
@@ -117,3 +142,4 @@
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial — fase 5c do épico R2; decisão A (mesmos slugs por tema, trigger intocado) proposta | @sm |
 | 2026-07-18 | 0.2 | C1 (QA/Architect): renumeração para evitar colisão com R3-01 — migration/rollback/File List `20260718000003_pipeline_op_unica_por_tema` → `20260719000003_pipeline_op_unica_por_tema`. C2 (QA — CRÍTICO): funções de auto-avanço `system_fn_avancar_se_checklist_ok` (`20260703000003_fn_avancar_checklist.sql:71-79`) e `system_fn_avancar_fin` (`20260704000001_fn_avancar_fin.sql:73-87`) escolhem próxima etapa por `service_type_id`+`ordem` sem filtrar `frente_slug` → caso de outra frente pode parar em etapa condicional (ex.: ESF parando em `DGM_ENVIADA`). Adicionada task C2 com 2 opções (a: patch das duas funções com filtro de frente / b: promover condicionais a etapas comuns), AC-8 e caso de Testing (ESF não para em DGM ao auto-avançar). Decisão a travar neste Change Log no planejamento. | @sm |
+| 2026-07-18 | 0.3 | **DECISÃO TRAVADA (design R2-03-design-pipeline-tema.md):** **Opção 1** (1 TEMA ⇔ 1 `system_service_type` interno espelho 1:1 — `createTema` semeia o service_type interno via `createServiceType` e vincula `tema_id`; motor/trigger intocados; casos rodam por `service_type_id`) + **Opção b / C2** (etapas do tema são comuns — nenhuma etapa recebe `frente_slug` no seeding → funções de auto-avanço **NÃO tocadas**, gap eliminado na raiz; `frente_slug` criada só p/ exibição em R2-05). **IMPLEMENTADO (@dev):** `createTema` (seeding + guarda de colisão de slug `_T` + compensação R-1), `deleteTema` (soft-delete do service_type interno via `deleteServiceType` c/ guarda de casos), helper `getTemaServiceType`, migration ADITIVA (só `frente_slug` + COMMENT) + rollback (DROP COLUMN), `frente_slug` em types.ts. **NÃO** consolida/faz backfill de legados (isso é R2-02, bloqueado pela lista). typecheck (0 erros novos) / eslint (limpo) / test:rbac (verde). Migration **não aplicada** (aguarda revisão). Status → Ready for Review. | @dev (James) |

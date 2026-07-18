@@ -545,6 +545,7 @@ export type Database = {
           color: string | null;
           ordem: number;
           active: boolean;
+          frente_slug: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -560,6 +561,7 @@ export type Database = {
           color?: string | null;
           ordem?: number;
           active?: boolean;
+          frente_slug?: string | null;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;

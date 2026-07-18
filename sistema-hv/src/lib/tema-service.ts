@@ -6,9 +6,17 @@
 //
 // Molde de CRUD + guarda de exclusão: pipeline-service.ts (createServiceType /
 // deleteServiceType:141-225). NÃO toca system_cases / view / trigger (AC-6).
+//
+// R2-03 (Opção 1 — service_type interno espelho 1:1): createTema/deleteTema agora
+// criam/soft-deletam um system_service_type INTERNO (o "motor") vinculado por
+// tema_id, reusando createServiceType/deleteServiceType. COEXISTÊNCIA: a tela legada
+// "Nova categoria" (cria service_type solto, sem tema_id) e "Temas" (cria
+// service_type interno) convivem — a unificação da UI é refinamento futuro
+// (R2-05/R2-06); NÃO unificar aqui.
 
 import slugify from "slugify";
 
+import { createServiceType, deleteServiceType } from "./pipeline-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
 
@@ -38,6 +46,53 @@ function toSlug(s: string): string {
       .replace(/^_+|_+$/g, "")
       .slice(0, 40) || "TEMA"
   );
+}
+
+// Deriva um slug de service_type ÚNICO a partir de `base`, com GUARDA DE COLISÃO
+// (§6/R-3 do design R2-03). system_service_types tem UNIQUE(organization_id, slug)
+// entre linhas ativas — criar o service_type interno de um tema "COVID" quando já
+// existe um service_type legado "COVID" estouraria um 500 opaco. Estratégia: se o
+// slug `base` já está ocupado por um service_type ATIVO, sufixamos (`_T`, `_T2`…)
+// até achar um livre — NUNCA reutilizamos o legado (o motor precisa de um
+// service_type próprio do tema, com o conjunto de etapas espelho recém-semeado).
+async function uniqueServiceTypeSlug(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  base: string,
+): Promise<string> {
+  const taken = async (slug: string) => {
+    const { data } = await sb
+      .from("system_service_types")
+      .select("id")
+      .eq("organization_id", DEFAULT_ORG)
+      .eq("slug", slug)
+      .is("deleted_at", null)
+      .maybeSingle();
+    return !!data;
+  };
+
+  if (!(await taken(base))) return base;
+  // Sufixa mantendo o teto de 40 chars do toSlug.
+  for (let i = 1; i < 100; i++) {
+    const suffix = i === 1 ? "_T" : `_T${i}`;
+    const candidate = `${base.slice(0, 40 - suffix.length)}${suffix}`;
+    if (!(await taken(candidate))) return candidate;
+  }
+  // Fallback improvável: sufixo por timestamp (sempre único).
+  return `${base.slice(0, 30)}_T${Date.now().toString(36)}`;
+}
+
+// Puxa o service_type INTERNO (motor) de um tema — o vínculo é
+// system_service_types.tema_id = tema.id (Opção 1, 1:1). Usado pela camada de
+// casos/Kanban (R2-05) para resolver o service_type_id a partir do tema.
+export async function getTemaServiceType(temaId: string) {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_service_types")
+    .select("*")
+    .eq("tema_id", temaId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return data ?? null;
 }
 
 // ------------------------------------------------------------------- Temas
@@ -82,9 +137,48 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
     .single();
   if (error || !data) throw new TemaServiceError(error?.message ?? "Falha ao criar tema", 500);
 
-  // TODO(R2-03): semear a pipeline op inicial do tema (modelo de etapas por tema).
-  // AC-4 depende do modelo de etapas por tema — encaixa aqui, espelhando o seeding
-  // de createServiceType (pipeline-service.ts:60-109) adaptado ao tema.
+  // R2-03 (Opção 1 — service_type interno espelho 1:1). O motor inteiro (trigger
+  // system_fn_sync_stage_ids, checklist, useStages, moveCase*) resolve por
+  // service_type_id — um TEMA não é service_type. Então criamos TAMBÉM um
+  // system_service_type INTERNO vinculado (service_type.tema_id = tema.id), que
+  // já nasce com o conjunto completo de etapas op/fin/comercial via createServiceType
+  // (pipeline-service.ts). O tema é a "cara" (UX/agrupamento); o service_type interno
+  // é o motor. Casos rodam por service_type_id exatamente como hoje.
+  //
+  // R-3 (guarda de colisão de slug): o slug do service_type interno é derivado do
+  // MESMO nome do tema; se já existir um service_type ativo com esse slug (ex.: tema
+  // "COVID" vs service_type legado COVID), sufixamos (_T, _T2…) para não estourar a
+  // UNIQUE(organization_id, slug). O slug do TEMA (tabela system_temas) é independente.
+  //
+  // R-1 (atomicidade): sem transação multi-statement no supabase-js; se o seeding do
+  // service_type falhar, COMPENSAMOS soft-deletando o tema recém-criado (+ tombstone
+  // do slug) para não deixar um tema órfão sem pipeline (que não aceitaria casos).
+  try {
+    const stSlug = await uniqueServiceTypeSlug(sb, slug);
+    const serviceType = await createServiceType({
+      name,
+      slug: stSlug,
+      ordem: input.ordem ?? 0,
+    });
+    // Vincula o service_type interno ao tema (Opção 1, 1:1).
+    const { error: linkErr } = await sb
+      .from("system_service_types")
+      .update({ tema_id: data.id })
+      .eq("id", serviceType.id);
+    if (linkErr) throw new TemaServiceError(linkErr.message, 500);
+  } catch (seedErr) {
+    // Compensação: reverte o tema para não ficar órfão sem motor.
+    await sb
+      .from("system_temas")
+      .update({
+        deleted_at: new Date().toISOString(),
+        active: false,
+        slug: `${slug}__del_${Date.now().toString(36)}`,
+      })
+      .eq("id", data.id);
+    const msg = seedErr instanceof Error ? seedErr.message : "Falha ao semear a pipeline do tema";
+    throw new TemaServiceError(`Falha ao criar a pipeline do tema: ${msg}`, 500);
+  }
 
   return data;
 }
@@ -136,6 +230,17 @@ export async function deleteTema(id: string) {
       "Não é possível excluir: há casos vinculados a este tema. Remaneje-os antes.",
       409,
     );
+  }
+
+  // R2-03 (Opção 1) — o tema tem um service_type INTERNO (motor) vinculado por
+  // tema_id. Ao excluir o tema, soft-deletamos também esse service_type reusando
+  // deleteServiceType, que já traz a MESMA guarda de casos (por service_type_id OU
+  // case_type=slug → 409) e cascata de etapas/pastas/modelos. Isso cobre o alerta do
+  // arquiteto (R2-06): casos podem chegar via service_type_id do motor, não só via
+  // tema_id — deleteServiceType captura esse caminho e recusa a exclusão se houver.
+  const serviceType = await getTemaServiceType(id);
+  if (serviceType) {
+    await deleteServiceType(serviceType.id); // propaga 409 se houver casos no motor
   }
 
   // Soft-delete das frentes do tema e depois do tema. Tombstone do slug para
