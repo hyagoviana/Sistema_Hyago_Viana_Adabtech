@@ -323,9 +323,9 @@ export async function createFrente(input: {
     .single();
   if (error || !data) throw new TemaServiceError(error?.message ?? "Falha ao criar frente", 500);
 
-  // TODO(R2-04): vincular pasta(s) do Drive + modelos por frente
-  // (system_service_type_folders ganha `frente_slug` em R2-04). AC-3 depende disso —
-  // o CategoryFoldersEditor será reusado passando `frenteSlug` quando a coluna existir.
+  // Vínculo de pasta/modelos por frente (R2-04): feito na UI do editor de tema
+  // (CategoryFoldersEditor reusado com `frenteSlug`), gravando `frente_slug` em
+  // system_service_type_folders — não no ato de criar a frente.
 
   return data;
 }

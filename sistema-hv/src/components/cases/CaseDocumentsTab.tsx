@@ -86,6 +86,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
 export function CaseDocumentsTab({
   caseId,
   caseType,
+  frenteSlug,
   clientName,
   clientCpf,
   municipio,
@@ -93,6 +94,8 @@ export function CaseDocumentsTab({
 }: {
   caseId: string;
   caseType: string;
+  // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
+  frenteSlug?: string | null;
   clientName?: string;
   clientCpf?: string;
   municipio?: string;
@@ -432,6 +435,7 @@ export function CaseDocumentsTab({
         open={genOpen}
         onOpenChange={setGenOpen}
         caseType={caseType}
+        frenteSlug={frenteSlug}
         pending={generate.isPending}
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
         onGenerate={async (templateId, title, values, docKind) => {
@@ -521,6 +525,7 @@ function GenerateDialog({
   open,
   onOpenChange,
   caseType,
+  frenteSlug,
   pending,
   onGenerate,
   autoFill,
@@ -530,6 +535,8 @@ function GenerateDialog({
   // (2026-07-09) — usado para resolver as pastas (caso/procuração) DA CATEGORIA
   // do caso; os seletores passam a listar só os modelos dessas pastas.
   caseType?: string;
+  // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
+  frenteSlug?: string | null;
   pending: boolean;
   onGenerate: (
     templateId: string,
@@ -550,8 +557,9 @@ function GenerateDialog({
   // busca suas pastas de caso e de procuração vinculadas.
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso");
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  // R2-04 — pastas por frente do caso (frente + comuns). Sem frente → todas do tema.
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug);
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
   const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
 
   // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
@@ -684,6 +692,8 @@ function GenerateDialog({
           serviceTypeId,
           kind: "caso",
           name: nome,
+          // R2-04 — se o caso tem frente, a nova pasta nasce vinculada a ela.
+          frenteSlug: frenteSlug ?? null,
         });
         await uploadTemplate.mutateAsync({
           serviceTypeId,

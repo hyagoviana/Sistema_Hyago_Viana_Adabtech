@@ -136,6 +136,7 @@ export type Database = {
           expected_doc_pattern: string | null;
           active: boolean;
           assigned_to: string | null;
+          frente_slug: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -153,6 +154,7 @@ export type Database = {
           expected_doc_pattern?: string | null;
           active?: boolean;
           assigned_to?: string | null;
+          frente_slug?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -449,6 +451,7 @@ export type Database = {
           drive_folder_id: string;
           name: string;
           ordem: number;
+          frente_slug: string | null;
           created_by: string | null;
           created_at: string;
           deleted_at: string | null;
@@ -461,6 +464,7 @@ export type Database = {
           drive_folder_id: string;
           name: string;
           ordem?: number;
+          frente_slug?: string | null;
           created_by?: string | null;
           created_at?: string;
           deleted_at?: string | null;

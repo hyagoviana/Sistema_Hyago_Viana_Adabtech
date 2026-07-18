@@ -6,6 +6,7 @@ import {
   createTemaFn,
   deleteFrenteFn,
   deleteTemaFn,
+  getTemaServiceTypeFn,
   listFrentesFn,
   listTemasFn,
   updateFrenteFn,
@@ -52,6 +53,18 @@ export function useDeleteTema() {
       qc.invalidateQueries({ queryKey: ["temas"] });
       qc.invalidateQueries({ queryKey: ["tema-frentes"] });
     },
+  });
+}
+
+// R2-04 — id do service_type INTERNO do tema (motor onde as pastas por frente
+// são vinculadas). Retorna { id } | null.
+export function useTemaServiceType(temaId: string | null | undefined) {
+  const fn = useServerFn(getTemaServiceTypeFn);
+  return useQuery({
+    queryKey: ["tema-service-type", temaId],
+    queryFn: () => fn({ data: { temaId: temaId as string } }),
+    enabled: !!temaId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

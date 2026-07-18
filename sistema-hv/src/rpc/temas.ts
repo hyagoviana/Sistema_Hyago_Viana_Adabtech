@@ -7,6 +7,7 @@ import {
   createTema,
   deleteFrente,
   deleteTema,
+  getTemaServiceType,
   listFrentes,
   listTemas,
   updateFrente,
@@ -85,6 +86,17 @@ export const updateTemaFn = createServerFn({ method: "POST" })
 export const deleteTemaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handleAdmin(() => deleteTema(data.id)));
+
+// R2-04 — service_type INTERNO (motor) do tema. Usado pelo editor de vínculo de
+// pastas por frente (as pastas são gravadas nesse service_type + frente_slug).
+export const getTemaServiceTypeFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ temaId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const st = await getTemaServiceType(data.temaId);
+      return st ? { id: st.id as string } : null;
+    }),
+  );
 
 // ------------------------------------------------------------------- Frentes
 export const listFrentesFn = createServerFn({ method: "GET" })

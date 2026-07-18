@@ -35,21 +35,38 @@ export type ServiceTypeFolder = {
   drive_folder_id: string;
   name: string;
   ordem: number;
+  frente_slug: string | null;
 };
 
-// Lista as pastas de uma categoria (opcionalmente filtrando por kind).
+// (R2-04) Lista as pastas de uma categoria (opcionalmente filtrando por kind).
+// `frenteSlug` (opcional):
+//   • undefined → gestão/admin: devolve TODAS as pastas (comuns + de todas as
+//     frentes) — usado pelo editor de vínculo de pastas.
+//   • string    → resolução por caso de uma frente: pastas dessa frente OU comuns
+//     (frente_slug IS NULL). NUNCA esconde as pastas comuns do tema.
+//   • null      → caso SEM frente: só as pastas comuns (frente_slug IS NULL). O
+//     fallback por case_type (nos modelos) preserva os casos legados.
 export async function listTypeFolders(
   serviceTypeId: string,
   kind?: FolderKind,
+  frenteSlug?: string | null,
 ): Promise<ServiceTypeFolder[]> {
   const sb = getSupabaseAdmin();
   let q = sb
     .from("system_service_type_folders_active")
-    .select("id, service_type_id, kind, drive_folder_id, name, ordem")
+    .select("id, service_type_id, kind, drive_folder_id, name, ordem, frente_slug")
     .eq("service_type_id", serviceTypeId)
     .order("kind", { ascending: true })
     .order("ordem", { ascending: true });
   if (kind) q = q.eq("kind", kind);
+  // frenteSlug informado (mesmo null) → filtra por frente + comuns. undefined
+  // (parâmetro omitido) → sem filtro de frente (gestão vê tudo).
+  if (frenteSlug !== undefined) {
+    q =
+      frenteSlug === null
+        ? q.is("frente_slug", null)
+        : q.or(`frente_slug.eq.${frenteSlug},frente_slug.is.null`);
+  }
   const { data, error } = await q;
   if (error) throw new ServiceTypeFoldersError(error.message, 500);
   return (data ?? []) as ServiceTypeFolder[];
@@ -59,35 +76,69 @@ export async function listTypeFolders(
 export async function listTypeFolderIds(
   serviceTypeId: string,
   kind: FolderKind,
+  frenteSlug?: string | null,
 ): Promise<string[]> {
-  const rows = await listTypeFolders(serviceTypeId, kind);
+  const rows = await listTypeFolders(serviceTypeId, kind, frenteSlug);
   return rows.map((r) => r.drive_folder_id);
 }
 
 // Vincula uma pasta EXISTENTE (id do Drive) à categoria. Idempotente por UNIQUE.
+// `frenteSlug` (R2-04): NULL/omisso = vale para todo o tema; setado = só a frente.
+// O UNIQUE (service_type_id, kind, drive_folder_id, COALESCE(frente_slug,'')) permite
+// a MESMA pasta vinculada ao tema todo E a uma frente específica (linhas distintas).
 export async function linkExistingFolder(input: {
   serviceTypeId: string;
   kind: FolderKind;
   driveFolderId: string;
   name: string;
+  frenteSlug?: string | null;
 }): Promise<ServiceTypeFolder> {
   const sb = getSupabaseAdmin();
-  const existing = await listTypeFolders(input.serviceTypeId, input.kind);
+  const frenteSlug = input.frenteSlug ?? null;
+  const cols = "id, service_type_id, kind, drive_folder_id, name, ordem, frente_slug";
+
+  // Idempotência manual: o UNIQUE parcial usa COALESCE(frente_slug,''), uma
+  // EXPRESSÃO — o ON CONFLICT do PostgREST (upsert) só casa lista de colunas
+  // literais, não expressão. Então checamos o vínculo ativo do mesmo escopo
+  // (service_type_id + kind + drive_folder_id + frente) e atualizamos o nome, ou
+  // inserimos. Igual à semântica anterior do upsert (ignoreDuplicates:false).
+  let dup = sb
+    .from("system_service_type_folders")
+    .select("id")
+    .eq("service_type_id", input.serviceTypeId)
+    .eq("kind", input.kind)
+    .eq("drive_folder_id", input.driveFolderId)
+    .is("deleted_at", null);
+  dup = frenteSlug === null ? dup.is("frente_slug", null) : dup.eq("frente_slug", frenteSlug);
+  const { data: existingLink } = await dup.maybeSingle();
+
+  if (existingLink) {
+    const { data, error } = await sb
+      .from("system_service_type_folders")
+      .update({ name: input.name })
+      .eq("id", (existingLink as { id: string }).id)
+      .select(cols)
+      .single();
+    if (error || !data)
+      throw new ServiceTypeFoldersError(error?.message ?? "Falha ao vincular pasta", 500);
+    return data as ServiceTypeFolder;
+  }
+
+  // ordem = nº de pastas já vinculadas ao MESMO escopo (kind + frente).
+  const existing = await listTypeFolders(input.serviceTypeId, input.kind, frenteSlug);
   const ordem = existing.length;
   const { data, error } = await sb
     .from("system_service_type_folders")
-    .upsert(
-      {
-        organization_id: DEFAULT_ORG,
-        service_type_id: input.serviceTypeId,
-        kind: input.kind,
-        drive_folder_id: input.driveFolderId,
-        name: input.name,
-        ordem,
-      },
-      { onConflict: "service_type_id,kind,drive_folder_id", ignoreDuplicates: false },
-    )
-    .select("id, service_type_id, kind, drive_folder_id, name, ordem")
+    .insert({
+      organization_id: DEFAULT_ORG,
+      service_type_id: input.serviceTypeId,
+      kind: input.kind,
+      drive_folder_id: input.driveFolderId,
+      name: input.name,
+      ordem,
+      frente_slug: frenteSlug,
+    })
+    .select(cols)
     .single();
   if (error || !data)
     throw new ServiceTypeFoldersError(error?.message ?? "Falha ao vincular pasta", 500);
@@ -99,6 +150,7 @@ export async function createAndLinkFolder(input: {
   serviceTypeId: string;
   kind: FolderKind;
   name: string;
+  frenteSlug?: string | null;
 }): Promise<ServiceTypeFolder> {
   const name = input.name.trim();
   if (!name) throw new ServiceTypeFoldersError("Informe o nome da pasta", 422);
@@ -109,6 +161,7 @@ export async function createAndLinkFolder(input: {
     kind: input.kind,
     driveFolderId: folder.id,
     name: folder.name,
+    frenteSlug: input.frenteSlug ?? null,
   });
 }
 

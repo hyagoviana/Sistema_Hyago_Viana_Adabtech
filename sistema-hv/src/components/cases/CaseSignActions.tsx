@@ -63,6 +63,7 @@ export function CaseSignActions({
   caseId,
   clientId,
   caseType,
+  frenteSlug,
   clientName,
   clientCpf,
   municipio,
@@ -71,6 +72,8 @@ export function CaseSignActions({
   caseId: string;
   clientId: string;
   caseType: string;
+  // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
+  frenteSlug?: string | null;
   clientName?: string;
   clientCpf?: string;
   municipio?: string;
@@ -106,6 +109,7 @@ export function CaseSignActions({
         caseId={caseId}
         clientId={clientId}
         caseType={caseType}
+        frenteSlug={frenteSlug}
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
         defaultSignerName={clientName}
         defaultSignerEmail={autoFillExtra?.email}
@@ -122,6 +126,7 @@ function SendFlowDialog({
   caseId,
   clientId,
   caseType,
+  frenteSlug,
   autoFill,
   defaultSignerName,
   defaultSignerEmail,
@@ -131,6 +136,7 @@ function SendFlowDialog({
   caseId: string;
   clientId: string;
   caseType: string;
+  frenteSlug?: string | null;
   autoFill: AutoFillData;
   defaultSignerName?: string;
   defaultSignerEmail?: string;
@@ -144,7 +150,8 @@ function SendFlowDialog({
   // que caía no fallback e puxava TODOS os modelos sem tipo).
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  // R2-04 — pasta de procuração por frente do caso (frente + comuns).
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
   const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
   const { data: templates } = useTemplatesByFolders(procFolderIds);
   const { data: docs } = useCaseDocuments(caseId);

@@ -21,10 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  useFinalizeCaseDocument,
-  useGenerateCaseDocument,
-} from "@/hooks/useCaseDocuments";
+import { useFinalizeCaseDocument, useGenerateCaseDocument } from "@/hooks/useCaseDocuments";
 import {
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
@@ -57,6 +54,7 @@ export function GenerateCaseDocumentFlow({
   onOpenChange,
   caseId,
   caseType,
+  frenteSlug,
   autoFill,
   initialMode,
 }: {
@@ -66,6 +64,8 @@ export function GenerateCaseDocumentFlow({
   // ITEM 4 (2026-07-07) — mantido por compat com callers; o caminho "Documento de
   // caso" agora seleciona por PASTA (source_folder_id), não mais por case_type.
   caseType?: string;
+  // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
+  frenteSlug?: string | null;
   autoFill: AutoFillData;
   // ITEM 2 — quando o chamador já sabe o modo (ex.: ficha do cliente já escolheu
   // "Documento do caso" e o caso), pula a pergunta Procuração vs Caso.
@@ -94,6 +94,7 @@ export function GenerateCaseDocumentFlow({
         pending={generate.isPending}
         autoFill={autoFill}
         caseType={caseType}
+        frenteSlug={frenteSlug}
         initialMode={initialMode}
         onGenerate={async (templateId, title, values, docKind) => {
           try {
@@ -108,7 +109,10 @@ export function GenerateCaseDocumentFlow({
         }}
       />
 
-      <Dialog open={!!editorUrl} onOpenChange={(v) => !v && (setEditorUrl(null), setEditorDocId(null))}>
+      <Dialog
+        open={!!editorUrl}
+        onOpenChange={(v) => !v && (setEditorUrl(null), setEditorDocId(null))}
+      >
         <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>Editar documento</DialogTitle>
@@ -182,6 +186,7 @@ function PickDialog({
   onGenerate,
   autoFill,
   caseType,
+  frenteSlug,
   initialMode,
 }: {
   open: boolean;
@@ -195,6 +200,7 @@ function PickDialog({
   ) => void;
   autoFill: AutoFillData;
   caseType?: string;
+  frenteSlug?: string | null;
   initialMode?: GenMode;
 }) {
   const [mode, setMode] = useState<GenMode | null>(initialMode ?? null);
@@ -208,8 +214,9 @@ function PickDialog({
   // Resolve o tipo do caso pelo slug e busca suas pastas de caso e de procuração.
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso");
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao");
+  // R2-04 — pastas por frente do caso (frente + comuns). Sem frente → todas do tema.
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug);
+  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
   const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
 
   // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
@@ -493,7 +500,9 @@ function PickDialog({
           <Button
             disabled={!templateId || pending || loadingFields}
             onClick={() => {
-              const faltando = fields.filter((f) => f.required && !String(values[f.key] ?? "").trim());
+              const faltando = fields.filter(
+                (f) => f.required && !String(values[f.key] ?? "").trim(),
+              );
               if (faltando.length) {
                 toast.error(`Preencha: ${faltando.map((f) => f.label).join(", ")}`);
                 return;

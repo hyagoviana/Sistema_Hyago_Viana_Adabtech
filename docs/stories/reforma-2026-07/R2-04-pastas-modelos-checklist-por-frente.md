@@ -3,7 +3,7 @@
 - **Épico:** R2 — Camada TEMA→CASO→TIPO (bloco B2)
 - **Fase da Sequência Segura §7:** 5d (migrar pastas/modelos/checklist)
 - **ID:** R2-04
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** L (vincula pastas Drive + modelos + checklist à frente, preservando fallback por case_type)
 - **Executor sugerido:** @data-engineer (schema) + @dev (serviço/hooks) · Quality gate: @architect
 - **Risco:** ALTO (documentos/Drive são caminho crítico do onboarding; espalha em geração de doc, ZapSign, checklist)
@@ -33,7 +33,7 @@
 
 ## Acceptance Criteria
 
-1. `system_service_type_folders` ganha `frente_slug TEXT NULL`; as 3 pastas de caso do FIES_ESF recebem `frente_slug` (`ESF`/`CENSO`/`PORTARIA`) coerente com R2-02; pastas de procuração e demais temas ficam com `frente_slug=NULL` (vale para o tema todo) até o cliente refinar.
+1. `system_service_type_folders` ganha `frente_slug TEXT NULL`. **[Dev v0.3]** O UPDATE das 3 pastas de caso do FIES_ESF (`ESF`/`CENSO`/`PORTARIA`) foi **movido para R2-02/fusão** (por instrução do épico: "NÃO popular pastas legadas — espera a lista"). A migration só cria a coluna; todas as linhas nascem `frente_slug=NULL` (vale p/ o tema todo) até o cliente refinar.
 2. `system_stage_checklist_defs` ganha `frente_slug TEXT NULL` (aditivo; NULL = def comum do tema). Índice/UNIQUE ajustados para incluir `frente_slug` **sem** quebrar defs existentes. **[C4] Padrão obrigatório:** o índice UNIQUE usa `COALESCE(frente_slug,'')` (NULLs contam como valores distintos no Postgres → duplicatas silenciosas se `frente_slug` entrar cru no UNIQUE) — alinhado com o padrão de R2-07 (`UNIQUE(tema_id, COALESCE(frente_slug,''), key) WHERE deleted_at IS NULL`).
 3. Serviço de resolução de pastas/modelos passa a filtrar por `(service_type_id/tema, frente_slug do caso OU frente_slug NULL)`; **fallback por `case_type` preservado** quando não houver vínculo por frente.
 4. Instanciação/reconciliação de checklist considera `frente_slug` (def com frente só instancia para casos daquela frente; def sem frente instancia para todas).
@@ -45,18 +45,20 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Migration** `20260719000004_folders_checklist_por_frente.sql` (AC: 1,2,7)
-  - [ ] `ALTER TABLE system_service_type_folders ADD COLUMN IF NOT EXISTS frente_slug TEXT`.
-  - [ ] `UPDATE` das 3 pastas de caso do FIES_ESF com `frente_slug` (ESF/CENSO/PORTARIA) — coerente com o mapa de R2-02; idempotente (`WHERE frente_slug IS NULL`).
-  - [ ] Ajustar `UNIQUE(service_type_id, kind, drive_folder_id)` para tolerar frente via índice único parcial `UNIQUE(service_type_id, kind, drive_folder_id, COALESCE(frente_slug,'')) WHERE deleted_at IS NULL` — **[C4] `COALESCE(frente_slug,'')` obrigatório** (NULLs são distintos no Postgres; sem `COALESCE` o UNIQUE permite duplicatas silenciosas de pasta sem frente). Padrão idêntico ao de R2-07.
-  - [ ] `ALTER TABLE system_stage_checklist_defs ADD COLUMN IF NOT EXISTS frente_slug TEXT`; revisar `system_stage_checklist_defs_uq` incluindo `COALESCE(frente_slug,'')` (mesmo padrão C4) sem quebrar defs com frente NULL.
-  - [ ] Recriar views `_active` das 2 tabelas expondo `frente_slug`.
-- [ ] **Rollback** `20260719000004_folders_checklist_por_frente.rollback.sql`.
-- [ ] **Serviço (leitura de pastas/modelos)** (AC: 3) — no resolvedor de pastas por categoria (consumido por `useTypeFolders`/`useTemplatesByFolders`, `GenerateCaseDocumentFlow`, `CaseSignActions`, `CaseDocumentsTab`), incluir filtro por `frente_slug` do caso (OU NULL) mantendo fallback `case_type`.
-- [ ] **Checklist** (AC: 4) — `instanciarChecklist`/`listCaseChecklistItems` (`checklist-service.ts`) consideram `frente_slug` da def vs frente do caso.
-- [ ] **Exclusão de categoria** (AC: 5) — revisar `deleteServiceType` (`pipeline-service.ts:141-225`) para cascata coerente com os novos vínculos.
-- [ ] **Types** — `frente_slug` nas 2 tabelas.
-- [ ] **Testes** (AC: 3,4).
+- [x] **Migration** `20260719000004_folders_checklist_por_frente.sql` (AC: 1,2,7)
+  - [x] `ALTER TABLE system_service_type_folders ADD COLUMN IF NOT EXISTS frente_slug TEXT`.
+  - [~] `UPDATE` das 3 pastas de caso do FIES_ESF com `frente_slug` (ESF/CENSO/PORTARIA) — **movido para R2-02/fusão** (espera a lista definitiva do cliente). A migration só cria a COLUNA; NÃO popula legados, conforme instrução do épico. Coluna nasce NULL para todos.
+  - [x] Ajustar `UNIQUE(service_type_id, kind, drive_folder_id)` para índice único parcial `UNIQUE(service_type_id, kind, drive_folder_id, COALESCE(frente_slug,'')) WHERE deleted_at IS NULL` — **[C4]** aplicado. Constraint antigo (auto-nomeado do CREATE TABLE) dropado via DO-block por catálogo (idempotente).
+  - [x] `ALTER TABLE system_stage_checklist_defs ADD COLUMN IF NOT EXISTS frente_slug TEXT`; `system_stage_checklist_defs_uq` recriado incluindo `COALESCE(frente_slug,'')` (mesmo padrão C4).
+  - [x] Recriar views `_active` das 2 tabelas expondo `frente_slug`.
+  - [x] Atualizar `system_fn_instanciar_checklist` para filtrar por `frente_slug` (AC-4 no SQL — a fn lê o `frente_slug` do caso).
+- [x] **Rollback** `20260719000004_folders_checklist_por_frente.rollback.sql` (restaura UNIQUEs anteriores, dropa colunas, restaura fn 20260710000003).
+- [x] **Serviço (leitura de pastas/modelos)** (AC: 3) — `listTypeFolders`/`listTypeFolderIds` (`service-type-folders-service.ts`) aceitam `frenteSlug` e filtram `frente_slug = <frente> OR frente_slug IS NULL`; `useTypeFolders`/RPC propagam; `GenerateCaseDocumentFlow`/`CaseSignActions`/`CaseDocumentsTab` passam `caso.frente_slug`. **Fallback `case_type`** preservado (só atua quando não há pastas → modelos legados nunca somem).
+- [x] **UI de vínculo por frente** (destrava R2-06 AC-3) — `CategoryFoldersEditor` ganhou dropdown de frente ("Todo o tema"=NULL) e grava `frente_slug`; integrado no `FrentesEditor` do `TemasManagerDialog` (via `useTemaServiceType`). TODOs removidos.
+- [x] **Checklist** (AC: 4) — instanciação por frente feita na fn `system_fn_instanciar_checklist` (usada por `instanciarChecklist` e pela reconciliação on-read de `listCaseChecklistItems`): def com frente só instancia p/ casos daquela frente; def NULL p/ todas. Reconciliação on-read preservada.
+- [x] **Exclusão de categoria** (AC: 5) — `deleteServiceType` (`pipeline-service.ts:169-197`) já cascateia por `service_type_id` → pega os vínculos por frente automaticamente. Confirmado, sem alteração necessária.
+- [x] **Types** — `frente_slug` em `system_service_type_folders` e `system_stage_checklist_defs` (`supabase/types.ts`).
+- [~] **Testes** (AC: 3,4) — validação via `typecheck` (sem erro novo), `test:rbac` (verde), `eslint`/`prettier`. Testes automatizados dedicados por frente ficam para quando houver dados de frente (R2-02) — não há harness de DB nesta base.
 
 ---
 
@@ -100,10 +102,37 @@
 
 - `sistema-hv/supabase/migrations/20260719000004_folders_checklist_por_frente.sql` (novo)
 - `sistema-hv/supabase/rollbacks/20260719000004_folders_checklist_por_frente.rollback.sql` (novo)
-- `sistema-hv/src/lib/checklist-service.ts`
-- `sistema-hv/src/lib/pipeline-service.ts` (`deleteServiceType`)
-- resolvedor de pastas/modelos por categoria (hooks + componentes de documentos)
-- `sistema-hv/src/lib/supabase/types.ts`
+- `sistema-hv/src/lib/service-type-folders-service.ts` (`listTypeFolders`/`listTypeFolderIds`/`linkExistingFolder`/`createAndLinkFolder` c/ `frenteSlug`)
+- `sistema-hv/src/rpc/service-type-folders.ts` (`frenteSlug` nos 3 fns)
+- `sistema-hv/src/hooks/useServiceTypeFolders.ts` (`useTypeFolders`/`useCreateTypeFolder`/`useLinkTypeFolder` c/ `frenteSlug`)
+- `sistema-hv/src/rpc/temas.ts` (`getTemaServiceTypeFn`)
+- `sistema-hv/src/hooks/useTemas.ts` (`useTemaServiceType`)
+- `sistema-hv/src/components/pipeline/CategoryFoldersEditor.tsx` (dropdown de frente; grava `frente_slug`; TODO(R2-04) removido)
+- `sistema-hv/src/components/pipeline/TemasManagerDialog.tsx` (`FrentesEditor` reusa `CategoryFoldersEditor`; TODOs removidos)
+- `sistema-hv/src/components/cases/GenerateCaseDocumentFlow.tsx` (prop `frenteSlug`)
+- `sistema-hv/src/components/cases/CaseSignActions.tsx` (prop `frenteSlug`)
+- `sistema-hv/src/components/cases/CaseDocumentsTab.tsx` (prop `frenteSlug`)
+- `sistema-hv/src/routes/casos.$id.tsx` (passa `caso.frente_slug` aos componentes)
+- `sistema-hv/src/lib/supabase/types.ts` (`frente_slug` nas 2 tabelas)
+- `sistema-hv/src/lib/checklist-service.ts` (sem mudança de código — a lógica por frente vive na fn SQL `system_fn_instanciar_checklist`, chamada por `instanciarChecklist`/`listCaseChecklistItems`)
+- `sistema-hv/src/lib/pipeline-service.ts` (`deleteServiceType` — confirmado sem alteração; cascata por `service_type_id` já cobre frentes)
+
+## Dev Agent Record
+
+**Agente:** James (@dev) · Modelo: Opus 4.8 · Data: 2026-07-18
+
+**Decisões / notas de implementação:**
+- **Checklist por frente na FN SQL, não no TS.** `instanciarChecklist` e a reconciliação on-read de `listCaseChecklistItems` chamam a mesma RPC `system_fn_instanciar_checklist`. Alterar só a fn (que passou a ler `system_cases.frente_slug` e filtrar `d.frente_slug IS NULL OR d.frente_slug = v_frente`) cobre AC-4 nos dois caminhos sem duplicar lógica no TS. Preserva idempotência (ON CONFLICT), herança de `assigned_to` e a propagação N:N de responsáveis.
+- **`onConflict` com índice de expressão.** O UNIQUE parcial usa `COALESCE(frente_slug,'')`, uma EXPRESSÃO — o `upsert(...onConflict)` do PostgREST só casa lista de colunas literais. `linkExistingFolder` passou a fazer check-then-insert/update manual (mesma semântica idempotente do upsert anterior) para não depender do onConflict.
+- **Fallback `case_type` preservado.** O filtro por frente é aditivo em `system_service_type_folders`; quando o caso não tem frente, `useTypeFolders` recebe `frenteSlug` `undefined`/`null` e o serviço de modelos (`document-templates-service`) só recai em `case_type` quando não há pastas — modelos legados nunca somem. Sem tocar `listDocumentTemplates`.
+- **UI de vínculo por frente:** `CategoryFoldersEditor` ganhou prop `frentes` opcional; quando presente, cada seção (caso/procuração) mostra dropdown "Todo o tema" (NULL) + frentes e grava `frente_slug` na nova pasta. Reusado no `FrentesEditor` via `useTemaServiceType` (novo RPC `getTemaServiceTypeFn` → `getTemaServiceType` já existente).
+- **Não toca cases/trigger:** a migration só adiciona colunas em `system_service_type_folders` e `system_stage_checklist_defs`. NÃO altera `system_cases`, NÃO recria `system_cases_active`, NÃO recria o trigger de bifurcação (AC-6 confirmado).
+- **Migration NÃO aplicada** (por instrução) — aguarda revisão + `db-apply-pg`.
+
+**Validação:**
+- `npm run typecheck` — nenhum erro NOVO (22 erros pré-existentes idênticos ao HEAD; a única linha nova é o deslocamento +1 do erro pré-existente de `MoveCaseFinDialog` em `casos.$id.tsx`).
+- `npm run test:rbac` — 🎉 todos verdes.
+- `npx eslint` nos arquivos tocados — limpo; `prettier --write` (LF) aplicado.
 
 ## Change Log
 
@@ -111,3 +140,4 @@
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial — fase 5d do épico R2 | @sm |
 | 2026-07-18 | 0.2 | C1 (QA/Architect): renumeração para evitar colisão com R3-01 — migration/rollback/File List `20260718000004_folders_checklist_por_frente` → `20260719000004_folders_checklist_por_frente`. C4 (Architect): padronizado `COALESCE(frente_slug,'')` nos índices UNIQUE de `system_service_type_folders` e `system_stage_checklist_defs` (NULLs distintos no Postgres → duplicatas silenciosas), alinhado ao padrão já usado em R2-07. Atualizados AC-2, task de migration e risco de regressão. | @sm |
+| 2026-07-18 | 0.3 | Implementação (@dev): migration aditiva (colunas + UNIQUEs COALESCE + views + fn de instanciação por frente); serviço/hooks/RPC de pastas por frente c/ fallback `case_type`; UI de vínculo por frente no `CategoryFoldersEditor`/`FrentesEditor`; checklist por frente via `system_fn_instanciar_checklist`; `deleteServiceType` confirmado sem alteração; types. UPDATE FIES_ESF movido p/ R2-02. typecheck/test:rbac/eslint OK. Migration NÃO aplicada. Status → Ready for Review. | @dev |

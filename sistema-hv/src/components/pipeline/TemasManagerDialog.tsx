@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import {
   useCreateFrente,
   useCreateTema,
@@ -25,6 +26,7 @@ import {
   useDeleteTema,
   useFrentes,
   useTemas,
+  useTemaServiceType,
   useUpdateFrente,
   useUpdateTema,
 } from "@/hooks/useTemas";
@@ -215,6 +217,8 @@ function FrentesEditor({ temaId }: { temaId: string }) {
   const createFrente = useCreateFrente(temaId);
   const updateFrente = useUpdateFrente(temaId);
   const deleteFrente = useDeleteFrente(temaId);
+  // R2-04 — service_type interno do tema (onde as pastas por frente são vinculadas).
+  const { data: temaServiceType } = useTemaServiceType(temaId);
 
   const [newLabel, setNewLabel] = useState("");
   const [editing, setEditing] = useState<Frente | null>(null);
@@ -338,10 +342,20 @@ function FrentesEditor({ temaId }: { temaId: string }) {
         )}
       </div>
 
-      {/* TODO(R2-04): por frente, vincular pasta(s) do Drive + modelos
-          (reusar CategoryFoldersEditor com prop `frenteSlug` quando a coluna
-          `frente_slug` existir em system_service_type_folders).
-          TODO(R2-03): pipeline op por tema (semear etapas do modelo por tema). */}
+      {/* R2-04 — vínculo de pasta(s) do Drive + modelos POR FRENTE. As pastas são
+          gravadas no service_type interno do tema (motor) + frente_slug (ou NULL =
+          "Todo o tema"). Reusa o CategoryFoldersEditor. */}
+      {temaServiceType?.id && (frentes ?? []).length > 0 && (
+        <div className="mt-3">
+          <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">
+            Pastas e modelos por frente
+          </div>
+          <CategoryFoldersEditor
+            serviceTypeId={temaServiceType.id}
+            frentes={(frentes as Frente[]).map((f) => ({ slug: f.slug, label: f.label }))}
+          />
+        </div>
+      )}
     </div>
   );
 }

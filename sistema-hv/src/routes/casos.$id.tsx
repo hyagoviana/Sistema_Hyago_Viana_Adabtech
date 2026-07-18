@@ -443,6 +443,7 @@ function CasoDetalhe() {
       <CaseDocumentsTab
         caseId={caso.id}
         caseType={caso.case_type}
+        frenteSlug={caso.frente_slug}
         clientName={cliente?.full_name}
         clientCpf={cliente?.cpf_cnpj}
         municipio={caso.municipio ?? undefined}
@@ -545,6 +546,7 @@ function CasoDetalhe() {
         onOpenChange={setGenFlowOpen}
         caseId={caso.id}
         caseType={caso.case_type}
+        frenteSlug={caso.frente_slug}
         autoFill={docAutoFill}
       />
 

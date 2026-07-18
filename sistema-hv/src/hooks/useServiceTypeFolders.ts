@@ -17,15 +17,29 @@ export type ServiceTypeFolder = {
   drive_folder_id: string;
   name: string;
   ordem: number;
+  frente_slug: string | null;
 };
 
 // Lista as pastas de uma categoria (opcionalmente filtrando por kind).
-export function useTypeFolders(serviceTypeId: string | null | undefined, kind?: FolderKind) {
+// `frenteSlug` (R2-04): passe a frente do CASO p/ ver pastas da frente + comuns.
+// `undefined` (padrão, ex.: editor de vínculo) = todas as pastas do tema.
+export function useTypeFolders(
+  serviceTypeId: string | null | undefined,
+  kind?: FolderKind,
+  frenteSlug?: string | null,
+) {
   const fn = useServerFn(listTypeFoldersFn);
   return useQuery({
-    queryKey: ["service-type-folders", serviceTypeId ?? "none", kind ?? "all"],
+    queryKey: [
+      "service-type-folders",
+      serviceTypeId ?? "none",
+      kind ?? "all",
+      frenteSlug === undefined ? "all-frentes" : (frenteSlug ?? "no-frente"),
+    ],
     queryFn: () =>
-      fn({ data: { serviceTypeId: serviceTypeId!, kind } }) as Promise<ServiceTypeFolder[]>,
+      fn({ data: { serviceTypeId: serviceTypeId!, kind, frenteSlug } }) as Promise<
+        ServiceTypeFolder[]
+      >,
     enabled: !!serviceTypeId,
     staleTime: 60 * 1000,
   });
@@ -37,12 +51,17 @@ function invalidate(qc: ReturnType<typeof useQueryClient>) {
 }
 
 // Cria uma pasta NOVA no Drive e vincula à categoria.
+// `frenteSlug` (R2-04, opcional): vincula a pasta só a uma frente do tema.
 export function useCreateTypeFolder() {
   const fn = useServerFn(createTypeFolderFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { serviceTypeId: string; kind: FolderKind; name: string }) =>
-      fn({ data: vars }),
+    mutationFn: (vars: {
+      serviceTypeId: string;
+      kind: FolderKind;
+      name: string;
+      frenteSlug?: string | null;
+    }) => fn({ data: vars }),
     onSuccess: () => invalidate(qc),
   });
 }
@@ -57,6 +76,7 @@ export function useLinkTypeFolder() {
       kind: FolderKind;
       driveFolderId: string;
       name: string;
+      frenteSlug?: string | null;
     }) => fn({ data: vars }),
     onSuccess: () => invalidate(qc),
   });
