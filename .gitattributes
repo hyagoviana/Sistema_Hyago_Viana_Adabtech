@@ -1,0 +1,28 @@
+# Normaliza fins de linha: texto sempre LF no repositório (evita ruído de
+# CRLF do Windows/OneDrive que polui o eslint/prettier). Working tree fica LF.
+* text=auto eol=lf
+
+# Arquivos que devem manter LF explicitamente (código/config)
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.jsx  text eol=lf
+*.json text eol=lf
+*.sql  text eol=lf
+*.md   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Binários — nunca normalizar/diffar como texto
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
+*.woff  binary
+*.woff2 binary

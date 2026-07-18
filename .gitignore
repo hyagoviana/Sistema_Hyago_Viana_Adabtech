@@ -1,5 +1,6 @@
 _legacy/
 sistema-hv/.tmp_verify.sql
+sistema-hv/tmp/
 
 # Credenciais soltas / backups sensiveis (nao commitar)
 /env
