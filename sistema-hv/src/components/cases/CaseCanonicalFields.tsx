@@ -16,6 +16,7 @@ import {
 import { useUpdateCaseCanonicalFields } from "@/hooks/useCases";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { FIES_FIELD_KEYS } from "@/lib/cases/fies-fields";
+import { VINCULO_FIELD_KEYS } from "@/lib/cases/vinculo-fields";
 import { maskBrlReais, normalizeBrl } from "@/lib/format";
 
 // Bloco "Dados do serviço" — campos canônicos do CASO (ex.: nº FIES).
@@ -65,15 +66,20 @@ export function CaseCanonicalFields({
   const { data: defsData } = useTemaFieldDefs(temaId ?? null, frenteSlug ?? null);
   const defs = (defsData as TemaFieldDef[] | undefined) ?? [];
 
-  // Campos FIES (R5-06) têm UI estruturada própria (FiesFields) e gravam no
-  // mesmo canonical_fields; filtra-os aqui para não duplicar a edição.
-  const fiesKeys = FIES_FIELD_KEYS as readonly string[];
+  // Campos FIES (R5-06) e de VÍNCULO (R1-05) têm UI estruturada própria
+  // (FiesFields / VinculoFields) e gravam no mesmo canonical_fields; filtra-os
+  // aqui para não duplicar a edição.
+  const structuredKeys = new Set<string>([
+    ...(FIES_FIELD_KEYS as readonly string[]),
+    ...(VINCULO_FIELD_KEYS as readonly string[]),
+  ]);
   const defKeys = new Set(defs.map((d) => d.key));
 
   const cf = canonicalFields ?? {};
-  // Chaves LIVRES remanescentes = tudo que não é FIES e não tem def. Mantidas
-  // visíveis/editáveis no modo chave/valor para NUNCA perder valores já gravados.
-  const freeEntries = Object.entries(cf).filter(([k]) => !fiesKeys.includes(k) && !defKeys.has(k));
+  // Chaves LIVRES remanescentes = tudo que não é estruturado (FIES/vínculo) e não
+  // tem def. Mantidas visíveis/editáveis no modo chave/valor para NUNCA perder
+  // valores já gravados.
+  const freeEntries = Object.entries(cf).filter(([k]) => !structuredKeys.has(k) && !defKeys.has(k));
 
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");

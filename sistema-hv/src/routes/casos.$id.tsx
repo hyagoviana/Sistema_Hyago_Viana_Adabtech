@@ -22,6 +22,7 @@ import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
 import { FiesFields } from "@/components/cases/FiesFields";
 import { isCasoFies } from "@/lib/cases/fies-fields";
+import { VinculoFields } from "@/components/cases/VinculoFields";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { TermoPanel } from "@/components/cases/TermoPanel";
@@ -435,6 +436,17 @@ function CasoDetalhe() {
           canEdit={podeGerirCaso}
         />
       )}
+
+      {/* R1-05 (N2) — vínculo/papel da pessoa NESTE caso. Município (coluna) +
+          vinculo_* (canonical_fields). Do CASO, nunca da pessoa. */}
+      <VinculoFields
+        caseId={caso.id}
+        municipio={caso.municipio ?? undefined}
+        canonicalFields={
+          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
+        }
+        canEdit={podeGerirCaso}
+      />
 
       <OrnamentalDivider />
 

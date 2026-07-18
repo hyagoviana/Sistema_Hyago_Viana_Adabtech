@@ -2,7 +2,7 @@
 
 - **Sprint/Epic:** Reforma 2026-07 · **R1 — Modelo Pessoa/Lead/Cliente por caso** (bloco B1)
 - **ID:** R1-05
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (campos de vínculo no caso — JSONB reaproveitando padrão de S2-07; UI na ficha do caso)
 - **Executor sugerido:** @data-engineer (migration se necessária) + @dev (serviço/UI) · Quality gate: @architect
 
@@ -43,13 +43,14 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Decisão de armazenamento** (AC:1) — confirmar com o owner: JSONB `canonical_fields` (default, sem migration) vs colunas dedicadas. Registrar a escolha.
-- [ ] **Serviço** (AC:1,2,5) — reusar `updateCaseCanonicalFields` (`cases-service.ts:1076`) para gravar `vinculo_empregaticio`/`papel`; `municipio` continua via `updateCase`. Merge por caso (não sobrescreve outro caso).
-- [ ] **UI ficha do caso** (AC:3) — bloco "Vínculo no caso" (reusar padrão de `CaseCanonicalFields`/"Dados do serviço" de S2-07) para exibir/editar município + vínculo + papel.
-- [ ] **CaseFormDialog** (AC:3) — opcional: expor vínculo empregatício/papel na criação (município já está).
-- [ ] **Autofill** (AC:4) — mapear as chaves de vínculo em `document-autofill.ts` para placeholders correspondentes (quando existirem no modelo).
-- [ ] **(Condicional) Migration** — só se colunas dedicadas: `ALTER TABLE system_cases ADD COLUMN ...` + **RECRIAR `system_cases_active`** + índice + rollback.
-- [ ] **Testes** (AC:1-6) — ver Testing; `npx tsc --noEmit` / `npm run lint` verdes.
+- [x] **Decisão de armazenamento** (AC:1) — **TRAVADA: `canonical_fields` (JSONB, sem migration)**. `municipio` fica na coluna dedicada existente; `vinculo_empregaticio`/`vinculo_papel` vão para `canonical_fields` com namespace `vinculo_*`. Sem colunas dedicadas ⇒ sem recriar view/trigger.
+- [x] **Serviço** (AC:1,2,5) — reuso de `updateCaseCanonicalFields` (`cases-service.ts:1076`) para gravar `vinculo_empregaticio`/`vinculo_papel` (merge por caso); `municipio` via `updateCase` (coluna). Nenhuma gravação em `system_clients`.
+- [x] **UI ficha do caso** (AC:3) — bloco **"Vínculo no caso"** (`VinculoFields.tsx`) na ficha (`casos.$id.tsx`), padrão visual de `FiesFields`: município (coluna) + vínculo empregatício + papel (canonical `vinculo_*`).
+- [x] **CaseFormDialog** (AC:3) — não alterado (opcional; município já existe na criação). Vínculo/papel editáveis na ficha do caso.
+- [x] **Autofill** (AC:4) — `document-autofill.ts` expõe `vinculo_empregaticio`/`vinculo_papel` sob rótulo amigável (padrão dos aliases FIES); município segue via coluna, sem quebrar placeholders atuais.
+- [x] **Filtro `VINCULO_FIELD_KEYS`** — `CaseCanonicalFields` filtra as chaves de vínculo (junto com `FIES_FIELD_KEYS`) para não duplicar no bloco de campos livres.
+- [x] **(Condicional) Migration** — **N/A**: decisão = `canonical_fields`; nenhuma coluna nova, view/trigger intocados.
+- [x] **Testes** (AC:1-6) — `npm run typecheck` (0 erros novos: 22 antes = 22 depois), `npx eslint` limpo, `npm run test:rbac` verde.
 
 ---
 
@@ -87,16 +88,36 @@
 - **Cruzamento com R2 (TEMA/FRENTE):** **parcial.** O vínculo pode variar por **frente/tipo** dentro de um tema (ex.: campo "município" faz sentido em ESF/DGM). Se R2 introduzir **campos personalizados por frente**, o vínculo por caso deve conviver com eles (mesma tabela `canonical_fields` ou defs por frente). Deixar o namespace `vinculo_*` estável para não colidir com os campos de frente de R2.
 - **Cruzamento com R5 (permissões, se existir):** vínculo não é dado financeiro ($) — sem gate financeiro necessário.
 
+## Dev Agent Record
+
+**Agent:** @dev (James) · **Data:** 2026-07-18
+
+**Decisão de armazenamento (registrada):** `system_cases.canonical_fields` (JSONB, S2-07) — **sem migration**.
+- `municipio` → coluna dedicada `system_cases.municipio` (não migrada; via `updateCase`).
+- `vinculo_empregaticio` / `vinculo_papel` → `canonical_fields`, namespace **`vinculo_*`** (via `updateCaseCanonicalFields`, merge por caso).
+- Nenhuma coluna nova ⇒ `system_cases_active` e `trg_system_cases_bifurcacao` **intocados** (AC-6 N/A).
+
+**Por-caso / nunca-pessoa (AC-1/2/5):** grava só em `system_cases`. Duas gravações independentes por caso (merge JSONB por `case_id`). Zero escrita em `system_clients.custom_fields` / `professional_data`.
+
+**Namespace anti-colisão:** `vinculo_*` não colide com `fies_*` (R5-06) nem com defs de tema/frente (R2-07). `CaseCanonicalFields` filtra `VINCULO_FIELD_KEYS` (junto de `FIES_FIELD_KEYS`) para o vínculo não duplicar no bloco de campos livres.
+
+**Validação:**
+- `npm run typecheck` — 22 erros pré-existentes = 22 depois (0 novo; nenhum nos arquivos tocados; verificado via `git stash`).
+- `npx eslint` (arquivos tocados) — limpo; `prettier --write` (LF) aplicado.
+- `npm run test:rbac` — todos verdes.
+
 ## File List
 
-- `sistema-hv/src/lib/cases-service.ts` (reuso de `updateCaseCanonicalFields`)
-- `sistema-hv/src/routes/casos.$id.tsx` (bloco "Vínculo no caso")
-- `sistema-hv/src/components/cases/CaseFormDialog.tsx` (opcional)
-- `sistema-hv/src/lib/cases/document-autofill.ts` (mapear chaves de vínculo)
-- `sistema-hv/supabase/migrations/2026071x000002_case_vinculo.sql` (condicional) + rollback
+- `sistema-hv/src/lib/cases/vinculo-fields.ts` (**novo** — defs + `VINCULO_FIELD_KEYS`, namespace `vinculo_*`)
+- `sistema-hv/src/components/cases/VinculoFields.tsx` (**novo** — bloco "Vínculo no caso")
+- `sistema-hv/src/routes/casos.$id.tsx` (plug do bloco `VinculoFields` após FIES)
+- `sistema-hv/src/components/cases/CaseCanonicalFields.tsx` (filtra `VINCULO_FIELD_KEYS`)
+- `sistema-hv/src/lib/cases/document-autofill.ts` (rótulo amigável p/ `vinculo_*` no autofill)
+- `sistema-hv/src/lib/cases-service.ts` (reuso de `updateCaseCanonicalFields` — sem alteração de código)
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial (N2 / B1) | @sm |
+| 2026-07-18 | 0.2 | Implementado: defs `vinculo-fields.ts`, bloco `VinculoFields` (município coluna + `vinculo_*` canonical), filtro em `CaseCanonicalFields`, autofill. Armazenamento = `canonical_fields` (sem migration). Status → Ready for Review. | @dev (James) |

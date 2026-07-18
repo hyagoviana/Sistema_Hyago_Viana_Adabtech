@@ -3,6 +3,7 @@
 // quanto no servidor (geração da procuração ao criar caso comercial).
 
 import { FIES_FIELD_DEFS, FIES_KEY_VALOR_CENTAVOS } from "@/lib/cases/fies-fields";
+import { VINCULO_FIELD_DEFS } from "@/lib/cases/vinculo-fields";
 import { formatCpfCnpj } from "@/lib/format";
 
 export type TemplateField = {
@@ -330,6 +331,17 @@ export function buildAutoFillFromClient(
       }
       continue;
     }
+    canonical[def.label] = String(raw);
+  }
+
+  // R1-05 (N2) — expõe os campos de VÍNCULO do CASO (chaves técnicas vinculo_*)
+  // também sob RÓTULO amigável, para casar com placeholders humanos ("Vínculo
+  // empregatício/institucional", "Papel da pessoa no caso"). O canonicalLookup
+  // casa por nome normalizado; as chaves técnicas não bateriam sozinhas. O
+  // vínculo é do CASO (canonical_fields), independente por caso.
+  for (const def of VINCULO_FIELD_DEFS) {
+    const raw = canonRaw[def.key];
+    if (raw === null || raw === undefined || raw === "") continue;
     canonical[def.label] = String(raw);
   }
 
