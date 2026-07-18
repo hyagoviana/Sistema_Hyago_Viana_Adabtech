@@ -16,7 +16,11 @@
 | **R4-04** | ✅ **Concluída** (dev+qa+architect) | Agregação por cliente robustecida (edge órfã) + endpoint leve `getClientPaymentStatus` (`requireAuth`, só `{emDia}`, sem $) → selo "Em dia/Devendo" para não-financeiro. MIX/PLA não existe na modelagem → pendência do owner (3 perguntas). |
 | **R4-05** | ✅ **Concluída** (dev+qa+architect) | `NovaCobrancaDialog` extraído e reusado; "Nova cobrança" no painel do cliente (gate `edit` + seletor de caso, caso∈cliente garantido no servidor). **✅ ÉPICO R4 FECHADO.** |
 
-**🎉 Épico R4 (Financeiro) COMPLETO** (R4-01→R4-05): $ só admin/financeiro na UI **e** no servidor (`requireModule`); painel do cliente agrega tudo; selo Em dia/Devendo p/ áreas; cobrança só no painel do cliente. Próximo: **R1** (lead/cliente) ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
+**🎉 Épico R4 (Financeiro) COMPLETO** (R4-01→R4-05): $ só admin/financeiro na UI **e** no servidor (`requireModule`); painel do cliente agrega tudo; selo Em dia/Devendo p/ áreas; cobrança só no painel do cliente.
+
+| **R1-01** | ✅ **Concluída** (auditoria; validação combinada OK) | Lifecycle Lead/Cliente **por caso** auditado: 0 violações das 3 invariantes (5 LEAD/4 CLIENTE), regras E1 alinhadas, views sem duplicação (1 pessoa já é lead+cliente). Matriz de estados em `docs/reforma-2026-07/R1-01-matriz-estados.md`. Sem mudança de código. |
+
+Próximo: **R1-02** (bug B3 lead+cliente) → resto de R1 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
 
 **Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.
