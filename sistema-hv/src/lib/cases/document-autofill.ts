@@ -63,6 +63,60 @@ function normKey(s: string): string {
     .toLowerCase();
 }
 
+// Autofill D — ALIASES de placeholder → campo canônico do caso.
+// Root cause R5-08 (D1/D2): as Declarações ESF trazem "Posto de Saúde",
+// "Unidade de Saúde", "UBS", "CBO", "CNES" com REDAÇÕES diferentes do rótulo do
+// campo canônico gravado no caso. Como esses dados variam POR CASO/VÍNCULO, a
+// fonte natural é `canonical_fields` (campo do serviço). Aqui mapeamos as
+// variações comuns de um placeholder para o MESMO grupo de chaves canônicas, de
+// modo que qualquer redação encontre o dado sem exigir texto idêntico no modelo.
+// Cada valor é uma lista de nomes canônicos ACEITOS (normalizados por normKey).
+const CANONICAL_ALIASES: { match: RegExp; keys: string[] }[] = [
+  {
+    // Unidade/Posto de Saúde / UBS / ESF (nome da unidade onde atua).
+    match:
+      /\b(unidade de sa[uú]de|posto de sa[uú]de|ubs|unidade b[aá]sica|estabelecimento de sa[uú]de|nome da unidade|unidade de lota[cç][aã]o|lota[cç][aã]o)\b/,
+    keys: [
+      "unidade de saude",
+      "posto de saude",
+      "ubs",
+      "unidade basica de saude",
+      "estabelecimento de saude",
+      "nome da unidade",
+      "unidade de lotacao",
+      "lotacao",
+    ],
+  },
+  {
+    // CBO — Classificação Brasileira de Ocupações.
+    match: /\bcbo\b|classifica[cç][aã]o brasileira de ocupa[cç][oõ]es/,
+    keys: ["cbo", "codigo cbo", "classificacao brasileira de ocupacoes"],
+  },
+  {
+    // CNES — Cadastro Nacional de Estabelecimentos de Saúde.
+    match: /\bcnes\b|cadastro nacional de estabelecimentos de sa[uú]de/,
+    keys: ["cnes", "codigo cnes", "cadastro nacional de estabelecimentos de saude"],
+  },
+];
+
+// Casa o placeholder com um campo canônico do CASO por um dos aliases acima.
+function canonicalAliasLookup(
+  fieldKey: string,
+  label: string,
+  canonical?: Record<string, string>,
+): string | undefined {
+  if (!canonical) return undefined;
+  const hay = `${fieldKey} ${label}`.toLowerCase();
+  for (const alias of CANONICAL_ALIASES) {
+    if (!alias.match.test(hay)) continue;
+    const wanted = new Set(alias.keys);
+    for (const [ck, cv] of Object.entries(canonical)) {
+      if (cv && wanted.has(normKey(ck))) return cv;
+    }
+  }
+  return undefined;
+}
+
 // Autofill D — casa o placeholder com um campo canônico do CASO pelo nome.
 function canonicalLookup(fieldKey: string, canonical?: Record<string, string>): string | undefined {
   if (!canonical) return undefined;
@@ -206,6 +260,14 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
   if (key === "uf" || key === "estado" || key === "state") return data.state;
 
   const canon = () => canonicalLookup(field.key, data.canonical);
+
+  // Autofill D (R5-08) — aliases de saúde (Unidade/Posto/UBS, CBO, CNES).
+  // Resolve ANTES do fallback genérico: campos que variam por caso/vínculo e cuja
+  // redação no modelo raramente bate exatamente com o rótulo do campo canônico.
+  // NUNCA emite o token literal — só devolve o valor do canonical, ou undefined.
+  const alias = canonicalAliasLookup(field.key, field.label ?? "", data.canonical);
+  if (alias !== undefined) return alias;
+
   // Autofill B — dados do município (tabela). Fallback: campo canônico do caso.
   if (match(/\bpopula[cç][aã]o\b/) && !match(/percentual/)) return data.populacao ?? canon();
   if (match(/\bdensidade\b/)) return data.densidade ?? canon();
