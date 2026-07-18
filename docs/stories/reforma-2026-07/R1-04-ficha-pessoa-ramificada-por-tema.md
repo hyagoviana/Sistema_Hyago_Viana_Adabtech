@@ -2,7 +2,7 @@
 
 - **Sprint/Epic:** Reforma 2026-07 · **R1 — Modelo Pessoa/Lead/Cliente por caso** (bloco B1)
 - **ID:** R1-04
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (agrupamento por tema na ficha; UI condicionada à existência de R2)
 - **Executor sugerido:** @dev (UI) + @architect (contrato com R2) · Quality gate: @qa
 
@@ -46,11 +46,11 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Adaptador de tema** (AC:4) — criar `getCaseTemaKey(case)` e `getCaseTemaLabel(case, serviceTypeNameBySlug)` em `src/lib/cases/` (hoje: `case_type` + nome do service_type; TODO explícito marcando o ponto de troca para o `tema_id` de R2).
-- [ ] **Resolver nomes de tema** (AC:3) — buscar `system_service_types (slug,name)` uma vez (hook/derivação) para rotular; fallback ao slug.
-- [ ] **Agrupar na ficha** (AC:1,2,6) — em `ClientCasesSection`, agrupar por `getCaseTemaKey`; dentro de cada tema, reusar a partição LEAD/CLIENTE de R1-03.
-- [ ] **Ponto de extensão R2** (AC:4,5) — comentar claramente onde o adaptador troca para o TEMA; garantir que a assinatura do adaptador não muda.
-- [ ] **Testes** (AC:1-6) — ver Testing; `npx tsc --noEmit` / `npm run lint` verdes.
+- [x] **Adaptador de tema** (AC:4) — criado `getCaseTemaKey(caso)` e `getCaseTemaLabel(caso, maps)` em `src/lib/cases/case-tema.ts`. **R2 já aplicado**, então o adaptador usa o `tema_id` REAL quando presente (`tema:{id}`), cai para `case_type` legado (`ct:{slug}`) e, sem nenhum, `__none__`.
+- [x] **Resolver nomes de tema** (AC:3) — mapas leves derivados de `useTemas` (tema_id→name) e `useServiceTypes` (slug→name), montados UMA vez na ficha (ambos com cache de 5min). Fallback: `CASE_TYPE_LABELS` → slug.
+- [x] **Agrupar na ficha** (AC:1,2,6) — em `ClientCasesSection`, `groupCasesByTema` (nível 1 = TEMA, header + rótulo + contagem); dentro de cada tema, `TemaSection` reusa `partitionCasesByLifecycle` de R1-03 (Efetivados/Aguardando/Perdidos).
+- [x] **Ponto de extensão R2** (AC:4,5) — comentado no topo de `case-tema.ts` que a troca `case_type→tema_id` **já está feita** (R2 aplicado). A UI consome só o adaptador; a assinatura (`getCaseTemaKey`/`getCaseTemaLabel`) é o contrato estável.
+- [x] **Testes** (AC:1-6) — `src/lib/cases/case-tema.test.ts` (contrato: key/label/fallback + "trocar impl não muda a superfície"). `tsc --noEmit` sem erro novo; `eslint` sem erro; `test:rbac` verde.
 
 ---
 
@@ -87,11 +87,29 @@
 
 ## File List
 
-- `sistema-hv/src/lib/cases/case-tema.ts` (novo — adaptador de tema)
-- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (agrupamento por tema)
+- `sistema-hv/src/lib/cases/case-tema.ts` (novo — adaptador de tema: `getCaseTemaKey`/`getCaseTemaLabel` + `SEM_TEMA_KEY`)
+- `sistema-hv/src/lib/cases/case-tema.test.ts` (novo — teste de contrato do adaptador, standalone via `tsx`)
+- `sistema-hv/src/components/cases/ClientCasesSection.tsx` (agrupamento por tema × partição por lifecycle)
+
+## Dev Agent Record
+
+**Agent:** @dev (James) · **Data:** 2026-07-18
+
+**Abordagem**
+- **Adaptador `case-tema.ts`** — único ponto que a UI consulta para chave/rótulo do tema. Como **R2 já está aplicado** (`system_cases.tema_id` + `system_temas`), a troca `case_type→tema_id` **já está feita aqui**: `getCaseTemaKey` retorna `tema:{tema_id}` (temas reais de R2, com prioridade), senão `ct:{case_type}` (legado), senão `__none__`. Chaves namespaced para nunca colidir um UUID de tema com um slug de case_type. `getCaseTemaLabel` resolve o nome amigável: tema→`system_temas.name`; case_type→`system_service_types.name` (mapa) ou `CASE_TYPE_LABELS`; fallback ao slug; `"Sem tema"` para `__none__`.
+- **Resolução de nomes sem query nova** — na ficha, `useTemas` e `useServiceTypes` (ambos já existentes, cache de 5min, compartilhados no app) são reduzidos a dois `Record` (`temaNameById`, `serviceTypeNameBySlug`) via `Object.fromEntries`, montados UMA vez em `useMemo`. Nenhuma query por caso.
+- **Agrupamento na ficha** — `groupCasesByTema` (nível 1 = TEMA) preserva a ordem original dos casos e joga `__none__` para o final (casos legados nunca somem). Cada grupo vira um `TemaSection` (header + rótulo + contagem) que **reusa `partitionCasesByLifecycle` de R1-03** para as subseções Efetivados/Aguardando/Perdidos. O card e o `Link to="/casos/$id"` ficaram intactos.
+- **Client-side, sem migration** — nenhuma tabela/view/trigger tocada; só a query existente `useCasesList({ client_id })` + os dois mapas de nomes. `case_type` preservado.
+
+**Validação**
+- `npx tsx src/lib/cases/case-tema.test.ts` → 12/12 asserções OK (key/label/fallback + contrato "trocar impl não muda a superfície").
+- `npm run typecheck` → **sem erro novo**. Os 6 arquivos com erro (`checklist-service`, `dossie-service`, `termo-service`, `visibility`, `casos.$id`, `casos.financeiro.index`) já falhavam no baseline (confirmado stashando as mudanças); nenhum é arquivo tocado por esta story.
+- `npm run test:rbac` → 🎉 todos passaram.
+- `npx eslint` nos 3 arquivos → 0 erros; 1 warning `react-refresh/only-export-components` **pré-existente** (o export de `partitionCasesByLifecycle` de R1-03). `prettier --write --end-of-line lf` → tudo `unchanged`.
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial (N1 / B1; dependência explícita de R2) | @sm |
+| 2026-07-18 | 0.2 | Implementado: adaptador `case-tema.ts` (**já usa o `tema_id` real de R2**, com fallback case_type→"Sem tema") + agrupamento tema→lifecycle na ficha reusando R1-03 + teste de contrato. Client-side, sem migration. Status → Ready for Review. | @dev |

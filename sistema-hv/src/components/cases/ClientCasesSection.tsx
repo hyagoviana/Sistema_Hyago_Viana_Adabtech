@@ -8,6 +8,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
+import { useServiceTypes } from "@/hooks/usePipeline";
+import { useTemas } from "@/hooks/useTemas";
+import {
+  getCaseTemaKey,
+  getCaseTemaLabel,
+  SEM_TEMA_KEY,
+  type CaseTemaLabelMaps,
+} from "@/lib/cases/case-tema";
 import {
   CASE_TYPE_LABELS,
   MACRO_OP_LABELS,
@@ -47,6 +55,36 @@ export function partitionCasesByLifecycle<T>(cases: readonly T[]): {
   return { clientes, leads, perdidos };
 }
 
+/**
+ * R1-04 — agrupa os casos (já carregados) por TEMA (nível 1), via o adaptador
+ * `getCaseTemaKey`. Client-side, sem query nova. Preserva a ordem original dos
+ * casos dentro de cada tema (mais recente primeiro). "Sem tema" (SEM_TEMA_KEY),
+ * quando existir, vai SEMPRE ao final para que casos legados nunca sumam.
+ */
+function groupCasesByTema<T extends { tema_id?: string | null; case_type?: string | null }>(
+  cases: readonly T[],
+): { key: string; items: T[] }[] {
+  const order: string[] = [];
+  const byKey = new Map<string, T[]>();
+  for (const c of cases) {
+    const key = getCaseTemaKey(c);
+    let bucket = byKey.get(key);
+    if (!bucket) {
+      bucket = [];
+      byKey.set(key, bucket);
+      order.push(key);
+    }
+    bucket.push(c);
+  }
+  // "Sem tema" por último; demais preservam a ordem de primeira aparição.
+  order.sort((a, b) => {
+    if (a === SEM_TEMA_KEY) return 1;
+    if (b === SEM_TEMA_KEY) return -1;
+    return 0;
+  });
+  return order.map((key) => ({ key, items: byKey.get(key)! }));
+}
+
 type Props = {
   clientId: string;
   // ITEM 1 (2026-07-07) — mantidos por compat com os callers (ficha do cliente
@@ -63,9 +101,22 @@ export function ClientCasesSection({ clientId }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const cases = useMemo(() => data ?? [], [data]);
 
-  // R1-03 — separa os casos JÁ carregados em grupos por lifecycle (client-side,
-  // sem query nova). A ordem original (mais recente primeiro) é preservada.
-  const { clientes, leads, perdidos } = useMemo(() => partitionCasesByLifecycle(cases), [cases]);
+  // R1-04 — nomes dos grupos (nível 1 = TEMA). Carregados UMA vez, sem query por
+  // caso: temas de R2 (tema_id → name) e service_types legados (slug → name).
+  // Ambos os hooks têm cache de 5min e são compartilhados com o resto do app.
+  const { data: temas } = useTemas();
+  const { data: serviceTypes } = useServiceTypes();
+  const temaLabelMaps: CaseTemaLabelMaps = useMemo(
+    () => ({
+      temaNameById: Object.fromEntries((temas ?? []).map((t) => [t.id, t.name])),
+      serviceTypeNameBySlug: Object.fromEntries((serviceTypes ?? []).map((s) => [s.slug, s.name])),
+    }),
+    [temas, serviceTypes],
+  );
+
+  // R1-04 — nível 1: agrupa os casos JÁ carregados por TEMA (via adaptador),
+  // client-side. "Sem tema" fica ao final; casos legados nunca somem.
+  const temaGroups = useMemo(() => groupCasesByTema(cases), [cases]);
 
   return (
     <>
@@ -97,12 +148,17 @@ export function ClientCasesSection({ clientId }: Props) {
           Esse cliente ainda não tem casos. Clique em "Novo caso" pra começar.
         </div>
       ) : (
-        // R1-03 — grupos por lifecycle. Ordem: efetivados (CLIENTE) → aguardando
-        // assinatura (LEAD) → perdidos (PERDIDO, ao final). Grupo vazio some.
-        <div className="space-y-6">
-          <CaseGroup title="Casos efetivados" items={clientes} />
-          <CaseGroup title="Aguardando assinatura" items={leads} />
-          <CaseGroup title="Perdidos" items={perdidos} />
+        // R1-04 — nível 1: um bloco por TEMA (header + rótulo amigável +
+        // contagem). Dentro de cada tema, R1-03 particiona por lifecycle.
+        <div className="space-y-8">
+          {temaGroups.map(({ key, items }) => (
+            <TemaSection
+              key={key}
+              label={getCaseTemaLabel(items[0], temaLabelMaps)}
+              count={items.length}
+              items={items}
+            />
+          ))}
         </div>
       )}
 
@@ -114,6 +170,35 @@ export function ClientCasesSection({ clientId }: Props) {
 // R1-03 — item da lista já carregada (mesma forma retornada por useCasesList).
 // Derivado do hook para não duplicar/importar o tipo do serviço.
 type CaseListItem = NonNullable<ReturnType<typeof useCasesList>["data"]>[number];
+
+// R1-04 — nível 1: um bloco por TEMA. Header com o rótulo amigável do tema
+// (via adaptador) + contagem total do tema; abaixo, a partição por lifecycle de
+// R1-03 (Efetivados / Aguardando / Perdidos). O tema NUNCA some (mesmo com só
+// casos perdidos), mas as subseções vazias somem (CaseGroup retorna null).
+function TemaSection({
+  label,
+  count,
+  items,
+}: {
+  label: string;
+  count: number;
+  items: CaseListItem[];
+}) {
+  const { clientes, leads, perdidos } = partitionCasesByLifecycle(items);
+  return (
+    <section>
+      <div className="flex items-baseline gap-2 mb-3 pb-1 border-b border-[var(--border)]">
+        <h3 className="font-display text-[17px] font-semibold text-[var(--navy)]">{label}</h3>
+        <span className="text-[12px] text-muted-foreground">({count})</span>
+      </div>
+      <div className="space-y-5">
+        <CaseGroup title="Casos efetivados" items={clientes} />
+        <CaseGroup title="Aguardando assinatura" items={leads} />
+        <CaseGroup title="Perdidos" items={perdidos} />
+      </div>
+    </section>
+  );
+}
 
 // R1-03 — uma SEÇÃO por lifecycle (cabeçalho + contagem). Grupo vazio some.
 // Reutiliza o MESMO card/<li> de cada item (nada de reescrever o card nem
