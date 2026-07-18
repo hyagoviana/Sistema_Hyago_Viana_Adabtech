@@ -3,7 +3,7 @@
 - **Épico:** R2 — Camada TEMA→CASO→TIPO (bloco B2 do doc-mestre)
 - **Fase da Sequência Segura §7:** 5a (criar entidades aditivas)
 - **ID:** R2-01
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (2 tabelas novas + colunas aditivas nullable + views/grants/RLS)
 - **Executor sugerido:** @data-engineer (migration) + @architect (revisão de modelagem) · Quality gate: @architect
 - **Risco:** MÉDIO (aditivo puro; nada de dual-write é tocado, mas define o contrato de todas as fases seguintes)
@@ -53,18 +53,18 @@
 
 ## Tasks / Subtasks
 
-- [ ] **Decisão de modelagem** (AC: —) — confirmar Opção A com @architect; registrar no Change Log.
-- [ ] **Migration** `20260719000001_tema_frente_modelagem.sql` (AC: 1-5)
-  - [ ] `CREATE TABLE IF NOT EXISTS system_temas` (`id`, `organization_id` FK, `name`, `slug` UNIQUE por org, `active`, `ordem`, `created_by`, timestamps, `deleted_at`). Trigger `updated_at` + auditoria + view `system_temas_active`.
-  - [ ] `CREATE TABLE IF NOT EXISTS system_tema_frentes` (`id`, `organization_id` FK, `tema_id` FK `ON DELETE CASCADE`, `slug`, `label`, `ordem`, `active`, timestamps, `deleted_at`, `UNIQUE(tema_id, slug) WHERE deleted_at IS NULL`). View `_active`.
-  - [ ] RLS por org (molde `s13_espinha:166-176`) + grants (`service_role` ALL; `anon`/`authenticated` SELECT/INSERT/UPDATE/DELETE; views SELECT nos 3 roles).
-  - [ ] `ALTER TABLE system_service_types ADD COLUMN IF NOT EXISTS tema_id UUID REFERENCES system_temas(id)`.
-  - [ ] `ALTER TABLE system_cases ADD COLUMN IF NOT EXISTS tema_id UUID REFERENCES system_temas(id)` + `ADD COLUMN IF NOT EXISTS frente_slug TEXT`.
-  - [ ] Índices parciais: `idx_system_cases_tema (tema_id) WHERE deleted_at IS NULL`, `idx_system_service_types_tema (tema_id)`.
-  - [ ] **RECRIAR `system_cases_active` (DROP+CREATE)** — copiar a `SELECT` vigente de `20260703000004:25-67` e **acrescentar** `c.tema_id`, `c.frente_slug`; grants nos 3 roles. **Não** perder nenhuma coluna.
-- [ ] **Rollback** `20260719000001_tema_frente_modelagem.rollback.sql` (AC: 7).
-- [ ] **Types** — regenerar/editar `src/lib/supabase/types.ts` para `system_temas`, `system_tema_frentes`, `system_cases.tema_id/frente_slug`, `system_service_types.tema_id`.
-- [ ] **Validação** (AC: 6) — queries de contagem antes/depois; `npx tsc --noEmit` verde.
+- [x] **Decisão de modelagem** (AC: —) — Opção A confirmada e travada; registrada no Change Log v0.3.
+- [x] **Migration** `20260719000001_tema_frente_modelagem.sql` (AC: 1-5)
+  - [x] `CREATE TABLE IF NOT EXISTS system_temas` (`id`, `organization_id` FK, `name`, `slug` UNIQUE por org [índice parcial], `active`, `ordem`, `created_by`, timestamps, `deleted_at`). Trigger `updated_at` + auditoria + view `system_temas_active`.
+  - [x] `CREATE TABLE IF NOT EXISTS system_tema_frentes` (`id`, `organization_id` FK, `tema_id` FK `ON DELETE CASCADE`, `slug`, `label`, `ordem`, `active`, timestamps, `deleted_at`, `UNIQUE(tema_id, slug) WHERE deleted_at IS NULL`). View `_active`.
+  - [x] RLS por org (molde `s13_espinha:166-176`) + grants (`service_role` ALL; `anon`/`authenticated` SELECT/INSERT/UPDATE/DELETE; views SELECT nos 3 roles).
+  - [x] `ALTER TABLE system_service_types ADD COLUMN IF NOT EXISTS tema_id UUID REFERENCES system_temas(id)`.
+  - [x] `ALTER TABLE system_cases ADD COLUMN IF NOT EXISTS tema_id UUID REFERENCES system_temas(id)` + `ADD COLUMN IF NOT EXISTS frente_slug TEXT`.
+  - [x] Índices parciais: `idx_system_cases_tema (tema_id) WHERE deleted_at IS NULL`, `idx_system_service_types_tema (tema_id)`.
+  - [x] **RECRIAR `system_cases_active` (DROP+CREATE)** — base = def **VIGENTE** extraída do banco (`pg_get_viewdef`, não da 20260703000004 que estava desatualizada) + `c.tema_id`, `c.frente_slug`; grants nos 3 roles. Nenhuma coluna perdida.
+- [x] **Rollback** `20260719000001_tema_frente_modelagem.rollback.sql` (AC: 7).
+- [x] **Types** — editado `src/lib/supabase/types.ts`: `system_temas`, `system_tema_frentes` (+ views `_active`), `system_cases.tema_id/frente_slug`, `system_service_types.tema_id`.
+- [x] **Validação** (AC: 6) — diff coluna-a-coluna da view (41 vigentes + 2 novas = 43); `npm run typecheck` sem erro novo (22 erros pré-existentes, 0 referentes a tema/frente). Migration NÃO aplicada (aguarda revisão do arquiteto).
 
 ---
 
@@ -102,9 +102,27 @@
 
 ## File List
 
-- `sistema-hv/supabase/migrations/20260719000001_tema_frente_modelagem.sql` (novo)
-- `sistema-hv/supabase/rollbacks/20260719000001_tema_frente_modelagem.rollback.sql` (novo)
-- `sistema-hv/src/lib/supabase/types.ts` (tipos das novas entidades/colunas)
+- `sistema-hv/supabase/migrations/20260719000001_tema_frente_modelagem.sql` (novo) ✅
+- `sistema-hv/supabase/rollbacks/20260719000001_tema_frente_modelagem.rollback.sql` (novo) ✅
+- `sistema-hv/src/lib/supabase/types.ts` (tipos: `system_temas`, `system_tema_frentes`, views `_active`, `system_cases.tema_id/frente_slug`, `system_service_types.tema_id`) ✅
+
+## Dev Agent Record
+
+**Agent:** @data-engineer (Opus 4.8) · **Data:** 2026-07-18 · **Status final:** Ready for Review
+
+### Decisão registrada
+**Opção A (travada):** `system_temas` criada como tabela NOVA independente; `system_service_types` e `system_cases` recebem apenas coluna(s) aditiva(s) `tema_id` (nullable) — e `frente_slug` no caso. Núcleo (`service_types`, `case_type`, `macrostatus_*`, dual-write) 100% intocado. Sem backfill/default/CHECK. Fusão futura ESF+DGM = 2 service_types apontando pro mesmo tema.
+
+### Passo crítico executado (view vigente)
+Em vez de confiar na migration `20260703000004` (desatualizada), extraí a def **VIGENTE** de `system_cases_active` via `pg_get_viewdef('system_cases_active'::regclass, true)`. A def vigente tem **41 colunas** (39 `c.*` + `client_name` + `client_cpf_cnpj`) — inclui `macrostatus_comercial`, `stage_comercial_id`, `procuracao_assinada_at` que NÃO existiam na 20260703000004. A recriação preserva as 41 colunas na ordem exata + acrescenta `c.tema_id` e `c.frente_slug` (43 no total). `system_cases.responsavel_user_id` existe na tabela mas NÃO era exposto na view vigente → mantido fora (fidelidade à def vigente).
+
+### Molde de tabela adotado
+Config-tables (`system_temas`/`system_tema_frentes`) seguem o molde `s13_espinha` (service_types): RLS habilitada + 4 policies por org (`organization_id = system_current_organization_id()`), trigger `updated_at` (`system_update_updated_at_column`), trigger de auditoria (`system_fn_audit`), views `_active` (`SELECT * WHERE deleted_at IS NULL`), grants (`service_role` ALL; `anon`/`authenticated` S/I/U/D; views SELECT nos 3 roles). Idempotência via `IF NOT EXISTS` / `DROP POLICY IF EXISTS` / `DROP TRIGGER IF EXISTS` / `DROP VIEW IF EXISTS`.
+
+### Validação
+- **NÃO aplicada no banco** (sem `db-apply-pg`), sem commit/push — apenas arquivos criados. Aguarda revisão do arquiteto.
+- Trigger `trg_system_cases_sync_stages` / `system_fn_sync_stage_ids` e `trg_system_cases_bifurcacao`: **intocados** (não recriados). CHECKs de lifecycle: **não** removidos.
+- `npm run typecheck`: 22 erros — **idênticos ao baseline** (medido com `git stash` de types.ts). Zero erros referentes a `tema`/`frente`/`system_temas`/`system_tema_frentes`. Erros pré-existentes vêm de `system_case_checklist_item_assignees`/`system_user_module_perms` ausentes no types.ts manual + narrowing de nullable, todos anteriores a esta story.
 
 ## Change Log
 
@@ -112,3 +130,4 @@
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial — fase 5a do épico R2 (doc-mestre §7 item 5) | @sm |
 | 2026-07-18 | 0.2 | C1 (QA/Architect): resolvida colisão de timestamp de migration com R3-01. R3-01 (passo 1 da Sequência Segura) mantém `20260718000001`; o bloco R2 foi renumerado para a faixa `20260719000001+`. Esta story: migration/rollback/File List/Dev Notes de `20260718000001_tema_frente_modelagem` → `20260719000001_tema_frente_modelagem`. | @sm |
+| 2026-07-18 | 0.3 | Implementação (@data-engineer): criados migration + rollback `20260719000001_tema_frente_modelagem` e tipos. **Opção A** registrada. View `system_cases_active` recriada a partir da def VIGENTE do banco (41 col → 43 c/ `tema_id`+`frente_slug`), não da 20260703000004 desatualizada. RLS+audit+updated_at por molde `s13_espinha`. NÃO aplicado no banco, trigger/CHECKs intocados, typecheck sem erro novo. Status → Ready for Review. | @data-engineer |

@@ -418,6 +418,7 @@ export type Database = {
           slug: string;
           active: boolean;
           ordem: number;
+          tema_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -430,6 +431,7 @@ export type Database = {
           slug: string;
           active?: boolean;
           ordem?: number;
+          tema_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -465,6 +467,71 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["system_service_type_folders"]["Insert"]>;
         Relationships: [];
+      };
+      system_temas: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          slug: string;
+          active: boolean;
+          ordem: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          slug: string;
+          active?: boolean;
+          ordem?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_temas"]["Insert"]>;
+        Relationships: [];
+      };
+      system_tema_frentes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          tema_id: string;
+          slug: string;
+          label: string;
+          ordem: number;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          tema_id: string;
+          slug: string;
+          label: string;
+          ordem?: number;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_tema_frentes"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_tema_frentes_tema_id_fkey";
+            columns: ["tema_id"];
+            referencedRelation: "system_temas";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       system_pipeline_stages: {
         Row: {
@@ -645,6 +712,8 @@ export type Database = {
           macrostatus_comercial: string | null;
           stage_comercial_id: string | null;
           procuracao_assinada_at: string | null;
+          tema_id: string | null;
+          frente_slug: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -686,6 +755,8 @@ export type Database = {
           macrostatus_comercial?: string | null;
           stage_comercial_id?: string | null;
           procuracao_assinada_at?: string | null;
+          tema_id?: string | null;
+          frente_slug?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1173,6 +1244,14 @@ export type Database = {
       };
       system_service_type_folders_active: {
         Row: Database["public"]["Tables"]["system_service_type_folders"]["Row"];
+        Relationships: [];
+      };
+      system_temas_active: {
+        Row: Database["public"]["Tables"]["system_temas"]["Row"];
+        Relationships: [];
+      };
+      system_tema_frentes_active: {
+        Row: Database["public"]["Tables"]["system_tema_frentes"]["Row"];
         Relationships: [];
       };
       system_pipeline_stages_active: {

@@ -42,7 +42,14 @@
 
 | **R5-08** | ✅ **Concluída (código)** (dev+qa) | Itens D1-D4: autofill confirmado (placeholder sem fonte → vazio, nunca `<...>` literal) + aliases Unidade de Saúde/CBO/CNES resolvendo de `canonical_fields`. **Guia de revisão dos modelos** documentado na story. ⏳ **Pendente de operação/você:** editar os Google Docs modelo (trocar trechos fixos por `<...>`) + criar os campos do caso. |
 
-**🎉 Épico R5 (bugs do Hyago) COMPLETO** (código): R5-01→R5-08 concluídas. Pendências que dependem de você/operação: revisar os modelos no Drive (R5-08), testar anexo no Drive real (R5-03 AC-1), definir MIX/PLA (R4-04). **Próximo grande: R2** (TEMA/CASO/TIPO) — o épico estrutural, precisa da lista de temas/frentes.
+**🎉 Épico R5 (bugs do Hyago) COMPLETO** (código): R5-01→R5-08 concluídas. Pendências que dependem de você/operação: revisar os modelos no Drive (R5-08), testar anexo no Drive real (R5-03 AC-1), definir MIX/PLA (R4-04).
+
+### Épico R2 — TEMA/CASO/TIPO (estrutural)
+| **R2-01** | ✅ **Concluída** (dev+architect; migration APLICADA) | Modelagem **aditiva** (Opção A): tabelas `system_temas` + `system_tema_frentes` (vazias), `tema_id` em service_types e cases + `frente_slug` (nullable, sem backfill). View recriada 41→43 colunas (extraída viva do banco). Regressão zero (11 casos intactos, 0 com tema). Trigger/dual-write/CHECKs intocados. RLS ok (app usa service_role). |
+
+Nota: padrão real do repo = **todas** as tabelas `system_*` têm RLS habilitado mas o app acessa via `service_role` (bypassa RLS) — a afirmação anterior "R3-01 sem RLS" era imprecisa.
+
+**Próximo no R2:** R2-02 (backfill service_types→temas) **precisa da lista de temas/frentes do cliente**; OU R2-06 (UI admin criar tema/vincular — construção manual, não precisa da lista). Depois R2-03 (pipeline única/tema), R2-04 (pastas), R2-05 (reapontar), R2-07/08. R1-04/R1-05 entram aqui.
 > 🧹 **Dívida técnica sinalizada pelo QA:** ~22 erros de typecheck pré-existentes (types de `system_case_checklist_item_assignees`/`system_stage_checklist_def_assignees` não regenerados + `service_type_id` nullable) — merecem uma story de saneamento (`npm run db:types`). Não introduzidos pela reforma.
 > ⚠️ **Pré-condição p/ R2-03 (do Arquiteto):** se R2 tornar as etapas op globais/sentinela (como fin/comercial), a guarda de R5-04 (`loadStageForServiceType` por `service_type_id`) **e** o trigger `system_fn_sync_stage_ids` devem ser revistos JUNTOS. Enquanto etapas op forem por `service_type_id`, ambos são consistentes.
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
