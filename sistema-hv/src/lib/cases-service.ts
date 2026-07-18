@@ -1190,6 +1190,144 @@ export async function softDeleteCase(id: string, triggeredBy?: string) {
 }
 
 // ----------------------------------------------------------------------------
+// R2 — VINCULAR CASO EXISTENTE a um TEMA (mover caso p/ o tema).
+// ----------------------------------------------------------------------------
+// Opção 1 (design R2-03): cada TEMA tem um service_type INTERNO espelho 1:1
+// (getTemaServiceType). O motor (trigger system_fn_sync_stage_ids, checklist,
+// Kanban) roda por `service_type_id`, que é derivado de `case_type` (slug). Então
+// vincular = reatribuir o `case_type` do caso ao slug do service_type interno do
+// tema + gravar `tema_id`/`frente_slug` (ADITIVOS). DUAL-WRITE VIVO: nunca
+// apagamos case_type/macrostatus_* — só reatribuímos.
+//
+// macrostatus_op (evitar órfão de etapa): o service_type mudou, então a etapa op
+// atual pode não existir na nova pipeline. Regra: se o slug de `macrostatus_op`
+// EXISTE em system_pipeline_stages do service_type interno (kind='op', ativo) →
+// mantém (preserva progresso). Se NÃO existe → reseta para a 1ª etapa op (menor
+// `ordem`). Idem para `macrostatus_fin` — mas só quando o caso já bifurcou
+// (macrostatus_fin <> 'NAO_APLICAVEL'); se NAO_APLICAVEL, deixa como está (o caso
+// não está no financeiro). O trigger reprojeta service_type_id/stage_op_id a
+// partir de case_type/macrostatus_op — NÃO tocado.
+export async function moverCasoParaTema(
+  caseId: string,
+  temaId: string,
+  frenteSlug?: string | null,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id, case_type, tema_id, frente_slug, macrostatus_op, macrostatus_fin")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Resolve o service_type INTERNO (motor) do tema (Opção 1, 1:1).
+  const { data: temaSt } = await sb
+    .from("system_service_types")
+    .select("id, slug")
+    .eq("tema_id", temaId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!temaSt?.slug || !temaSt.id) {
+    throw new CaseServiceError(
+      "Tema sem pipeline configurada (service_type interno ausente). Recadastre o tema.",
+      422,
+    );
+  }
+  const newCaseType = temaSt.slug;
+  const serviceTypeId = temaSt.id;
+
+  // Etapas op (ativas) do service_type interno — p/ decidir manter vs resetar.
+  const { data: opStages } = await sb
+    .from("system_pipeline_stages")
+    .select("slug, ordem")
+    .eq("service_type_id", serviceTypeId)
+    .eq("kind", "op")
+    .is("deleted_at", null)
+    .order("ordem", { ascending: true });
+  const opSlugs = new Set((opStages ?? []).map((s) => s.slug));
+  const firstOpSlug = opStages?.[0]?.slug ?? null;
+
+  // macrostatus_op: mantém se existe na nova pipeline; senão reseta p/ a 1ª etapa.
+  const opResetado = !!caso.macrostatus_op && !opSlugs.has(caso.macrostatus_op);
+  const newMacroOp =
+    caso.macrostatus_op && opSlugs.has(caso.macrostatus_op)
+      ? caso.macrostatus_op
+      : (firstOpSlug ?? caso.macrostatus_op);
+
+  // macrostatus_fin: só reprojeta se o caso já bifurcou (<> NAO_APLICAVEL). Se
+  // NAO_APLICAVEL, mantém — o caso não está no financeiro. Se bifurcado e a etapa
+  // fin não existir na nova pipeline, reseta p/ a 1ª etapa fin.
+  let newMacroFin = caso.macrostatus_fin;
+  let finResetado = false;
+  if (caso.macrostatus_fin && caso.macrostatus_fin !== "NAO_APLICAVEL") {
+    const { data: finStages } = await sb
+      .from("system_pipeline_stages")
+      .select("slug, ordem")
+      .eq("service_type_id", serviceTypeId)
+      .eq("kind", "fin")
+      .is("deleted_at", null)
+      .order("ordem", { ascending: true });
+    const finSlugs = new Set((finStages ?? []).map((s) => s.slug));
+    if (!finSlugs.has(caso.macrostatus_fin)) {
+      const firstFinSlug = finStages?.[0]?.slug ?? null;
+      if (firstFinSlug) {
+        newMacroFin = firstFinSlug;
+        finResetado = true;
+      }
+    }
+  }
+
+  // Reatribui (nunca apaga) case_type/macrostatus_* + grava tema_id/frente_slug.
+  // service_type_id = null é OBRIGATÓRIO: o trigger system_fn_sync_stage_ids só
+  // reprojeta service_type_id quando ele é NULL (IF NEW.service_type_id IS NULL).
+  // Como aqui o caso MUDA de tipo, sem zerar o service_type_id o trigger manteria
+  // o tipo antigo (stale) e resolveria stage_op_id = NULL (órfão de etapa, caso
+  // some do Kanban). Zerando, o trigger reprojeta service_type_id (do novo
+  // case_type) e daí stage_op_id — dual-write correto.
+  const patch: CaseUpdateRow = {
+    case_type: newCaseType,
+    service_type_id: null,
+    tema_id: temaId,
+    frente_slug: frenteSlug ?? null,
+    macrostatus_op: newMacroOp,
+    macrostatus_fin: newMacroFin,
+  };
+
+  const { data, error } = await sb
+    .from("system_cases")
+    .update(patch)
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data) {
+    throw new CaseServiceError(error?.message ?? "Falha ao vincular caso ao tema", 500);
+  }
+
+  await sb.from("system_case_events").insert({
+    case_id: caseId,
+    organization_id: caso.organization_id,
+    action: "vinculado_a_tema",
+    diff: {
+      tema_id: temaId,
+      frente_slug: frenteSlug ?? null,
+      from_case_type: caso.case_type,
+      to_case_type: newCaseType,
+      op_resetado: opResetado,
+      fin_resetado: finResetado,
+      from_macrostatus_op: caso.macrostatus_op,
+      to_macrostatus_op: newMacroOp,
+    },
+    triggered_by: triggeredBy ?? null,
+  });
+
+  return { case: data, opResetado, finResetado };
+}
+
+// ----------------------------------------------------------------------------
 // MOVE STATUS (atalho usado pelo dialog Mover do Kanban operacional)
 // ----------------------------------------------------------------------------
 // `to` é o SLUG da etapa op (configurável por categoria) — texto livre desde a

@@ -4,7 +4,7 @@
 // Construção MANUAL (MVP): CRUD de tema + CRUD de frente do tema selecionado.
 
 import { useState } from "react";
-import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, FolderOpen, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
+import { useCreateTypeFolder, useTypeFolders } from "@/hooks/useServiceTypeFolders";
 import {
   useCreateFrente,
   useCreateTema,
@@ -343,6 +344,11 @@ function FrentesEditor({ temaId }: { temaId: string }) {
         )}
       </div>
 
+      {/* R2 — PASTA DO TEMA no Drive. Cria+vincula uma pasta no service_type
+          interno do tema (kind='caso', frente_slug=NULL = pasta do tema todo).
+          Reusa createAndLinkFolder (useCreateTypeFolder). */}
+      {temaServiceType?.id && <TemaDriveFolder serviceTypeId={temaServiceType.id} />}
+
       {/* R2-04 — vínculo de pasta(s) do Drive + modelos POR FRENTE. As pastas são
           gravadas no service_type interno do tema (motor) + frente_slug (ou NULL =
           "Todo o tema"). Reusa o CategoryFoldersEditor. */}
@@ -379,6 +385,69 @@ function FrentesEditor({ temaId }: { temaId: string }) {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+// R2 — PASTA DO TEMA no Drive. Cria (createAndLinkFolder, kind='caso',
+// frente_slug=NULL) e vincula uma pasta ao service_type INTERNO do tema. NULL =
+// pasta do tema todo (as pastas por frente ficam no CategoryFoldersEditor acima).
+// Lista as pastas comuns (frente NULL) já vinculadas e oferece o botão de criar.
+function TemaDriveFolder({ serviceTypeId }: { serviceTypeId: string }) {
+  // frenteSlug=null → só as pastas COMUNS do tema (frente_slug IS NULL).
+  const { data: folders, isLoading } = useTypeFolders(serviceTypeId, "caso", null);
+  const createFolder = useCreateTypeFolder();
+
+  async function criarPasta() {
+    const name = window.prompt("Nome da pasta do tema no Drive:", "Pasta do tema");
+    if (!name?.trim()) return;
+    try {
+      await createFolder.mutateAsync({
+        serviceTypeId,
+        kind: "caso",
+        name: name.trim(),
+        frenteSlug: null,
+      });
+      toast.success("Pasta do tema criada no Drive");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao criar pasta do tema");
+    }
+  }
+
+  const temaFolders = (folders ?? []).filter((f) => f.frente_slug === null);
+
+  return (
+    <div className="mt-3 rounded-lg border border-[var(--border)] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-[13px] font-semibold text-[var(--navy)]">Pasta do tema no Drive</div>
+        <Button variant="outline" size="sm" onClick={criarPasta} disabled={createFolder.isPending}>
+          <Plus size={14} />
+          {createFolder.isPending ? "Criando…" : "Criar pasta do tema"}
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="text-muted-foreground text-[13px]">Carregando…</div>
+      ) : temaFolders.length === 0 ? (
+        <div className="text-muted-foreground text-[12px]">
+          Nenhuma pasta do tema ainda. Crie uma para agrupar os documentos deste tema no Drive.
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {temaFolders.map((f) => (
+            <a
+              key={f.id}
+              href={`https://drive.google.com/drive/folders/${f.drive_folder_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-[13px] text-[var(--navy)] hover:border-[var(--gold)] transition-colors"
+            >
+              <FolderOpen size={14} className="text-[var(--gold-700)] shrink-0" />
+              <span className="min-w-0 flex-1 truncate">{f.name}</span>
+              <ExternalLink size={12} className="text-muted-foreground shrink-0" />
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

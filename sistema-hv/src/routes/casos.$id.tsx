@@ -5,6 +5,7 @@ import {
   ExternalLink,
   FileSignature,
   FolderOpen,
+  Layers,
   Phone,
   Trash2,
   UserCheck,
@@ -29,6 +30,7 @@ import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
+import { LinkCaseToTemaDialog } from "@/components/cases/LinkCaseToTemaDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -127,6 +129,8 @@ function CasoDetalhe() {
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [entrarOpen, setEntrarOpen] = useState(false);
+  // R2 — popup "Vincular a um tema" (reatribui a pipeline do caso p/ o tema).
+  const [linkTemaOpen, setLinkTemaOpen] = useState(false);
   // ITEM 2 — popup "Enviar contrato e procuração" (mesmo do "Gerar documento").
   const [genFlowOpen, setGenFlowOpen] = useState(false);
 
@@ -288,6 +292,13 @@ function CasoDetalhe() {
           <Button variant="outline" size="sm" onClick={() => setGenFlowOpen(true)}>
             <FileSignature size={14} className="mr-1.5" /> Enviar contrato e procuração
           </Button>
+          {/* R2 — vincular o caso a um TEMA (reatribui a pipeline). Gate: quem
+              pode gerir caso (casos.manage). */}
+          {podeGerirCaso && (
+            <Button variant="outline" size="sm" onClick={() => setLinkTemaOpen(true)}>
+              <Layers size={14} className="mr-1.5" /> Vincular a um tema
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
             <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
           </Button>
@@ -490,6 +501,15 @@ function CasoDetalhe() {
         caseCode={caso.case_code}
         currentFinSlug={caso.macrostatus_fin}
         serviceTypeId={caso.service_type_id}
+      />
+
+      {/* R2 — vincular o caso a um TEMA (reatribui case_type/pipeline + tema/frente). */}
+      <LinkCaseToTemaDialog
+        open={linkTemaOpen}
+        onOpenChange={setLinkTemaOpen}
+        caseId={caso.id}
+        caseCode={caso.case_code}
+        currentTemaId={(caso as { tema_id?: string | null }).tema_id ?? null}
       />
 
       <Dialog open={entrarOpen} onOpenChange={setEntrarOpen}>

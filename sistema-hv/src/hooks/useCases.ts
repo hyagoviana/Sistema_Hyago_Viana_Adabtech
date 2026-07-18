@@ -22,6 +22,7 @@ import {
   marcarCasoPerdidoFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
+  moverCasoParaTemaFn,
   previewProcuracaoFn,
   promoverCasoManualFn,
   softDeleteCaseFn,
@@ -271,6 +272,23 @@ export function useDeleteCase() {
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.all }),
+  });
+}
+
+// R2 — vincula um caso a um TEMA (reatribui a pipeline p/ o service_type interno
+// do tema; a etapa op pode ser resetada se não houver equivalente). Invalida o
+// caso (detalhe/listas/eventos) para refletir a nova pipeline/etapa.
+export function useMoverCasoParaTema() {
+  const fn = useServerFn(moverCasoParaTemaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; temaId: string; frenteSlug?: string | null }) =>
+      fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
+    },
   });
 }
 

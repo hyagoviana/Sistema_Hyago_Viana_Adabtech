@@ -22,13 +22,14 @@ import {
   marcarCasoPerdido,
   moveCaseStatus,
   moveCaseStatusFin,
+  moverCasoParaTema,
   previewProcuracao,
   promoverCasoManual,
   softDeleteCase,
   updateCase,
   updateCaseCanonicalFields,
 } from "@/lib/cases-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 import {
   caseCreateSchema,
   caseUpdateSchema,
@@ -41,6 +42,28 @@ const idSchema = z.object({ id: z.string().uuid() });
 async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   try {
     const { id: userId } = await requireAuth();
+    return await fn(userId);
+  } catch (err: unknown) {
+    if (err instanceof AuthError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
+    if (err instanceof CaseServiceError) {
+      setResponseStatus(err.status);
+      throw new Error(err.message);
+    }
+    setResponseStatus(500);
+    throw err;
+  }
+}
+
+// Guard de GESTÃO de caso (casos.manage) — usa a régua efetiva por módulo
+// (requireModule("operacional","edit") mapeia p/ casos.manage no rbac). Mesma
+// postura dos demais RPCs de mutação de caso, mas com gate explícito (o vínculo
+// a tema muda pipeline/etapa, então não é auth-only).
+async function handleManage<T>(fn: (userId: string) => Promise<T>): Promise<T> {
+  try {
+    const { id: userId } = await requireModule("operacional", "edit");
     return await fn(userId);
   } catch (err: unknown) {
     if (err instanceof AuthError) {
@@ -215,6 +238,23 @@ export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) => handle((userId) => softDeleteCase(data.id, userId)));
+
+// R2 — VINCULAR CASO a um TEMA (reatribui case_type p/ o service_type interno do
+// tema + grava tema_id/frente_slug; reseta a etapa op se não houver equivalente).
+// Gate: casos.manage (handleManage). frenteSlug opcional/nullable.
+const moverParaTemaSchema = z.object({
+  id: z.string().uuid(),
+  temaId: z.string().uuid(),
+  frenteSlug: z.string().nullish(),
+});
+
+export const moverCasoParaTemaFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => moverParaTemaSchema.parse(data))
+  .handler(async ({ data }) =>
+    handleManage((userId) =>
+      moverCasoParaTema(data.id, data.temaId, data.frenteSlug ?? null, userId),
+    ),
+  );
 
 // ----------------------------------------------------------------------------
 // S3-03 — Conferência financeira (dupla checagem). Auth-only, sem requireRole.
