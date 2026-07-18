@@ -43,8 +43,9 @@ export const Route = createFileRoute("/api/contaazul/callback")({
         } catch (err) {
           console.error("contaazul/callback:", err);
           const msg = err instanceof Error ? err.message : "Erro desconhecido";
+          const body = (err as { safeBody?: string })?.safeBody ?? "";
           return new Response(
-            html("Falha na autorização", `Erro ao trocar o code por token: ${msg}`),
+            html("Falha na autorização", `Erro ao trocar o code por token: ${msg}<br><br><small>redirect_uri usado: ${redirectUri}</small><br><small>Detalhes: ${body}</small>`),
             { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } },
           );
         }
