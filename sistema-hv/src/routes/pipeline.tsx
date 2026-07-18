@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, FolderKanban, Layers, Pencil, Plus, Settings2, Tag } from "lucide-react";
+import { ArrowLeft, FolderKanban, Layers, List, Pencil, Plus, Settings2, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -53,6 +53,8 @@ function slugifyCat(s: string): string {
 const searchSchema = z.object({
   cat: z.string().uuid().optional().catch(undefined),
   catName: z.string().optional().catch(undefined),
+  // R2-08 — frente ativa (semeada ao voltar da Lista via toggle "Kanban").
+  frente: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/pipeline")({
@@ -74,7 +76,7 @@ function roleColor(role: string): string {
 }
 
 function PipelinePage() {
-  const { cat, catName } = Route.useSearch();
+  const { cat, catName, frente } = Route.useSearch();
   const navigate = useNavigate();
 
   const onPick = (t: { id: string; name: string }) =>
@@ -82,7 +84,13 @@ function PipelinePage() {
   const onBack = () => navigate({ to: "/pipeline", search: {} });
 
   if (cat) {
-    return <DynamicKanban serviceType={{ id: cat, name: catName ?? "—" }} onBack={onBack} />;
+    return (
+      <DynamicKanban
+        serviceType={{ id: cat, name: catName ?? "—" }}
+        initialFrente={frente ?? ""}
+        onBack={onBack}
+      />
+    );
   }
   return <ServiceTypeSelection onPick={onPick} />;
 }
@@ -320,14 +328,18 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
 
 function DynamicKanban({
   serviceType,
+  initialFrente = "",
   onBack,
 }: {
   serviceType: { id: string; name: string };
+  initialFrente?: string;
   onBack: () => void;
 }) {
+  const navigate = useNavigate();
   const [kind, setKind] = useState<"op" | "fin">("op");
   // R2-05 — filtro por FRENTE (só operacional). "" = todas as frentes.
-  const [frenteFilter, setFrenteFilter] = useState<string>("");
+  // R2-08 — semeado por ?frente= ao voltar da Lista via toggle.
+  const [frenteFilter, setFrenteFilter] = useState<string>(initialFrente);
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
@@ -473,6 +485,24 @@ function DynamicKanban({
                 ))}
               </div>
             )}
+            {/* R2-08 — alterna Kanban→Lista no contexto da categoria, levando a
+                frente ativa (a Lista filtra pelo MESMO service_type_id do board). */}
+            <Btn
+              variant="ghost"
+              onClick={() =>
+                navigate({
+                  to: "/casos/lista",
+                  search: {
+                    cat: serviceType.id,
+                    catName: serviceType.name,
+                    ...(frenteFilter ? { frente: frenteFilter } : {}),
+                  },
+                })
+              }
+            >
+              <List size={14} />
+              Ver em lista
+            </Btn>
             <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
               <Settings2 size={14} />
               Editar etapas

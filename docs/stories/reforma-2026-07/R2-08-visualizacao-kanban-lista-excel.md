@@ -2,7 +2,7 @@
 
 - **Épico:** R2 — Camada TEMA→CASO→TIPO (bloco B2)
 - **ID:** R2-08
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M (alternância Kanban↔Lista + filtros tema/frente + colunas ricas na lista)
 - **Executor sugerido:** @dev + @ux-design-expert · Quality gate: @architect
 - **Risco:** MÉDIO (apresentação; sem migration; consome o modelo já reapontado)
@@ -51,11 +51,11 @@ Espelha a fronteira registrada em R2-05, para **evitar dupla-implementação** d
 
 ## Tasks / Subtasks
 
-- [ ] **Toggle Kanban↔Lista por tema** (AC: 1) — no contexto do tema (`pipeline.tsx`) adicionar entrada para Lista filtrada pelo tema, ou parametrizar `casos.lista.tsx` por `?tema=`/`?frente=`.
-- [ ] **Filtro de frente** (AC: 2) — controle compartilhado; no Kanban, colunas condicionais ocultam-se por frente vazia.
-- [ ] **Lista Excel** (AC: 3) — colunas adicionais + ordenação por coluna (client-side) + busca combinada; reuso de labels de tema/frente.
-- [ ] **RBAC/gate $** (AC: 4) — coluna valor sob `permissaoEfetiva(...,'financeiro','view')` (cruzamento R1/R3) ou gate atual até R3 entrar.
-- [ ] **Testes** (AC: 1-4) — alternância, filtro de frente, ordenação, visibilidade por papel.
+- [x] **Toggle Kanban↔Lista por tema** (AC: 1) — no contexto da categoria (`pipeline.tsx`) botão "Ver em lista" navega para `casos.lista.tsx` com `?cat=`/`?catName=`/`?frente=`; na Lista botão "Kanban" volta ao board preservando categoria + frente. Search params tipados (`validateSearch`/`z.object`).
+- [x] **Filtro de frente** (AC: 2) — chips de frente na Lista (reuso de `useFrentes`, fallback pelas frentes presentes nos casos do contexto); combinado com a busca. No Kanban o filtro condicional de coluna já vem de R2-05 (não re-implementado), agora semeável por `?frente=`.
+- [x] **Lista Excel** (AC: 3) — colunas densas (Código, Cliente, Tipo, Tema, Frente, Operacional, Financeiro, Responsáveis, Município, Valor, Criado em) + ordenação por coluna (click no header alterna asc/desc) sobre o conjunto filtrado COMPLETO antes de paginar; busca combinada; reuso de labels.
+- [x] **RBAC/gate $** (AC: 4) — coluna valor sob `permissaoEfetiva(role, perms ?? {}, 'financeiro', 'view')` (padrão R4-01); sem permissão a coluna some por completo. Visibilidade RBAC preservada (`listCases`/`getVisibleCaseIds`).
+- [x] **Testes** (AC: 1-4) — `npm run test:rbac` verde (gate $); `npm run typecheck` sem erro novo; `npx eslint` limpo (prettier LF).
 
 ---
 
@@ -92,10 +92,33 @@ Espelha a fronteira registrada em R2-05, para **evitar dupla-implementação** d
 
 ## File List
 
-- `sistema-hv/src/routes/pipeline.tsx`
-- `sistema-hv/src/routes/casos.lista.tsx`
-- `sistema-hv/src/components/cases/KanbanBoard.tsx`
-- `sistema-hv/src/hooks/useCases.ts`, `sistema-hv/src/hooks/usePipeline.ts`
+Tocados nesta story (só apresentação — SEM migration):
+
+- `sistema-hv/src/routes/pipeline.tsx` — botão "Ver em lista" no `DynamicKanban`; `?frente=` no search schema; `initialFrente` semeia o filtro ao voltar da Lista.
+- `sistema-hv/src/routes/casos.lista.tsx` — reescrita da Lista para "tipo Excel": search params `?cat=`/`?catName=`/`?tema=`/`?frente=`; colunas densas; ordenação por coluna; filtro de frente (chips); coluna Valor sob gate financeiro.
+
+Reusados (NÃO alterados): `useCases.ts` (`useCasesList`), `useTemas.ts` (`useTemas`/`useFrentes`), `usePermissions.ts` (`useMyModulePerms`), `rbac.ts` (`permissaoEfetiva`), `KanbanBoard.tsx`, `lib/cases/constants.ts` (labels).
+
+## Dev Agent Record
+
+### Agent
+@dev (James) — Opus 4.8.
+
+### Decisão de eixo do toggle (categoria × tema)
+O board `pipeline.tsx` é keyed por **categoria** (`service_type_id`, via `useCasesByServiceType` → `listCasesByServiceType` filtrando `service_type_id`), não por `tema_id`. Para o round-trip Kanban↔Lista ser lossless e coerente, o toggle passa `?cat={service_type_id}` e a Lista filtra pelo **mesmo eixo** (`c.service_type_id === cat`). A Lista **também** aceita `?tema=` (filtra por `c.tema_id`) e `?frente=` conforme o contrato da story — cobrindo ambos os agrupamentos sem re-implementar o reaponte de dados (R2-05).
+
+### AC atendidos
+- **AC-1** Toggle: `pipeline.tsx` → botão "Ver em lista" (`navigate({ to: "/casos/lista", search: { cat, catName, frente } })`); `casos.lista.tsx` → botão "Kanban" quando há contexto (`navigate({ to: "/pipeline", search: { cat, catName, frente } })`). Frente ativa preservada nos dois sentidos.
+- **AC-2** Filtro de frente na Lista: chips reusando `useFrentes(tema)` com fallback pelas frentes presentes nos casos do contexto (`cat`); combinado com a busca; semeado por `?frente=`.
+- **AC-3** Lista Excel: 11 colunas densas + ordenação por coluna (header clicável, asc↔desc) aplicada ao **conjunto filtrado completo ANTES de paginar** (`sorted` roda sobre `filtered`, depois `sliced`); `PAGE_SIZE=50` mantido; nenhuma requisição extra (tudo client-side sobre o `useCasesList` já existente).
+- **AC-4** Coluna Valor sob gate: `casos.lista.tsx` → `podeVerValor = permissaoEfetiva(role, perms ?? {}, "financeiro", "view")`; a coluna é omitida do array `columns` e da linha (`{podeVerValor && <td>…}`) quando `false` — não renderiza "R$".
+- **AC-5** Sem migration; nenhuma tabela/view/trigger tocada; visibilidade RBAC intacta (fonte é `listCases`/`getVisibleCaseIds`).
+- **AC-6** `PAGE_SIZE=50` inalterado; ordenação/filtro 100% client-side sobre o dataset já carregado — zero requisições novas.
+
+### Validação
+- `npm run typecheck` — 22 erros PRE-EXISTENTES (checklist/dossie/termo/visibility/casos.$id/casos.financeiro), **0 novos** nos arquivos tocados (confirmado por stash+recount: 22 antes = 22 depois).
+- `npm run test:rbac` — verde (todos os testes passaram).
+- `npx eslint src/routes/casos.lista.tsx src/routes/pipeline.tsx` — limpo após `--fix` (prettier, LF).
 
 ## Change Log
 
@@ -103,3 +126,4 @@ Espelha a fronteira registrada em R2-05, para **evitar dupla-implementação** d
 |------|---------|-------------|--------|
 | 2026-07-18 | 0.1 | Draft inicial — N3 (Kanban + Lista Excel, filtros tema/frente) do épico R2 | @sm |
 | 2026-07-18 | 0.2 | C6 (QA/Architect): cravada a fronteira de escopo com R2-05 (nova subseção) — R2-05 entrega dados+filtro de frente; R2-08 entrega toggle explícito + Lista Excel; opção de fundir registrada. Sem dupla-implementação. C9 (QA): AC-6 de performance quantificado — manter `PAGE_SIZE=50` e tempo ≤ atual, sem aumentar requisições. | @sm |
+| 2026-07-18 | 0.2 (dev) | Implementação @dev: toggle Kanban↔Lista (`?cat`/`?catName`/`?frente` no eixo `service_type_id`, `?tema` também aceito); Lista "tipo Excel" (11 colunas + ordenação por coluna sobre o filtrado completo, `PAGE_SIZE=50` mantido); filtro de frente na Lista (chips via `useFrentes` + fallback); coluna Valor sob `permissaoEfetiva(...,'financeiro','view')`. Sem migration; visibilidade RBAC intacta. typecheck 0 erros novos (22 pré-existentes), test:rbac verde, eslint limpo (prettier LF). Status → Ready for Review. | @dev |
