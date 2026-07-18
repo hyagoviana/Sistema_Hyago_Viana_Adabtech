@@ -156,9 +156,13 @@ export function ClientRoster({
     let res = data;
     if (tipoFilter !== "Todos os tipos") res = res.filter((c) => c.tipo === tipoFilter);
     const term = search.trim();
-    // Refino por campo: só quando há termo E campos específicos marcados.
-    if (term && searchFields.length > 0) {
-      const fields = SEARCH_FIELDS.filter((f) => searchFields.includes(f.key));
+    if (term) {
+      // Sem chip marcado → busca ampla sobre todos os campos padrão.
+      // Com chip(s) marcado(s) → restringe aos campos escolhidos.
+      const fields =
+        searchFields.length > 0
+          ? SEARCH_FIELDS.filter((f) => searchFields.includes(f.key))
+          : SEARCH_FIELDS;
       res = res.filter((c) => fields.some((f) => matchField(c, term, f)));
     }
     return res;

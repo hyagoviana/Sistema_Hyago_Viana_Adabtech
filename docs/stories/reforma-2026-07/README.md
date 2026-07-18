@@ -24,7 +24,12 @@
 
 | **R1-03** | ✅ **Concluída** (dev+qa) | Aba de casos do cliente particionada em seções por lifecycle (Efetivados/Aguardando assinatura/Perdidos), client-side, sem query nova. Função `partitionCasesByLifecycle` exportada (reuso em R1-04). *UX: confirmar com Hyago a ordem dos grupos (hoje Efetivados primeiro).* |
 
-Próximo: **R1-04** (ficha ramificada por TEMA — depende de R2, entra atrás de adaptador) → R1-05 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
+**R1-04/R1-05 adiados** (dependem de R2 — entram junto do TEMA). Prosseguindo por **R5 (bugs do Hyago)** por decisão do dono.
+
+### Épico R5 — bugs do Hyago
+| **R5-01** | ✅ **Concluída** (dev+qa) | Bug B1: lupa do roster só filtrava com "chip" de campo marcado. Agora termo sem chip faz match amplo (nome/CPF/e-mail/município/profissional/custom). Client-side, sem migration. |
+
+Fila R5: R5-02 (RG), R5-03 (anexar doc — diagnóstico), R5-04 (mover etapa), R5-05 (base grad/residência — spike owner), R5-06 (campos FIES — cruza R2), R5-07 (termo 15%/R$500 editável), R5-08 (variáveis de documentos). Depois **R2** (TEMA/CASO/TIPO).
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
 
 **Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.
