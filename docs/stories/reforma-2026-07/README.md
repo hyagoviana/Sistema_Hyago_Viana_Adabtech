@@ -20,7 +20,9 @@
 
 | **R1-01** | ✅ **Concluída** (auditoria; validação combinada OK) | Lifecycle Lead/Cliente **por caso** auditado: 0 violações das 3 invariantes (5 LEAD/4 CLIENTE), regras E1 alinhadas, views sem duplicação (1 pessoa já é lead+cliente). Matriz de estados em `docs/reforma-2026-07/R1-01-matriz-estados.md`. Sem mudança de código. |
 
-Próximo: **R1-02** (bug B3 lead+cliente) → resto de R1 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
+| **R1-02** | ✅ **Concluída** (auditoria; validação combinada OK) | Bug B3: **sem dado incoerente** — os 3 casos flagados são clientes legítimos (doc combinado "Contrato e procuração" assinado, `doc_kind='procuracao'` do S9-12; regra `webhook.ts:158` qualquer-doc-assinado⇒CLIENTE). NÃO criou migration (rebaixaria clientes reais). A percepção "lead E cliente" do Hyago é **UX do roster** (aba Leads = lista-mestra) → resolvida em **R1-03**. |
+
+Próximo: **R1-03** (aba casos separa leads / raiz da percepção do Hyago) → R1-04/05 ∥ **R5** (bugs Hyago), depois **R2** (TEMA/CASO/TIPO).
 > Cleanup opcional pendente: unificar `PROVIDER_BADGE` (ClientFinanceiroSection) com `PROVIDER_LABELS`; remover `INADIMPLENTE` morto no predicado do selo (R4-04).
 
 **Pendência do owner (R4-04):** definir se "MIX/PLA" existe (o quê / de qual campo / obrigatório?) — hoje só há forma de pagamento `PARCELADO`/`A_VISTA`.
