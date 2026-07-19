@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Briefcase, Users, FileText, Loader2 } from "lucide-react";
+import { Search, Briefcase, Users, FileText, Tag, LayoutGrid, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -10,11 +10,15 @@ const ICON: Record<SearchResultType, LucideIcon> = {
   caso: Briefcase,
   cliente: Users,
   documento: FileText,
+  tema: Tag,
+  pagina: LayoutGrid,
 };
 const TYPE_LABEL: Record<SearchResultType, string> = {
   caso: "Caso",
   cliente: "Cliente",
   documento: "Documento",
+  tema: "Tema",
+  pagina: "Página",
 };
 
 // Busca GLOBAL da topbar (lupa "Buscar caso, cliente, documento…"). Pesquisa em
@@ -101,15 +105,21 @@ export function GlobalSearch() {
                 >
                   <Icon size={15} className="text-[var(--gold-700)] shrink-0" strokeWidth={1.7} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-medium text-[#1a1a1f] truncate">{r.label}</div>
+                    <div className="text-[13px] font-medium text-[#1a1a1f] truncate">
+                      {r.label}
+                      <span className="ml-1.5 text-[10px] uppercase tracking-wider text-[var(--ink-400)] font-normal">
+                        {TYPE_LABEL[r.type]}
+                      </span>
+                    </div>
                     {r.sublabel && (
                       <div className="text-[11.5px] text-[var(--ink-400)] truncate">
                         {r.sublabel}
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-[var(--ink-400)] shrink-0">
-                    {TYPE_LABEL[r.type]}
+                  {/* Ramificação — onde a busca leva. */}
+                  <span className="text-[10.5px] text-[var(--ink-400)] shrink-0 text-right max-w-[140px] truncate">
+                    {r.ramificacao} ›
                   </span>
                 </button>
               );
