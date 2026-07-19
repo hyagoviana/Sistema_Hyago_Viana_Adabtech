@@ -56,3 +56,51 @@ export async function getUserModulePerms(
   }
   return perms;
 }
+
+/**
+ * Grava os OVERRIDES de módulo do usuário `userId` (R3, 2026-07-19). O admin
+ * define, por módulo, um dos três estados:
+ *   - `null`/ausente  → REMOVE o override (o usuário cai no padrão do papel);
+ *   - "none"/"view"/"edit" → UPSERT do override.
+ * A ausência de override (sem linha) é o "padrão do papel" — por isso os módulos
+ * marcados como `null` são DELETADOS em vez de gravados. Invalida o cache do
+ * usuário para o próximo `getUserModulePerms` refletir a mudança na hora.
+ *
+ * Só deve ser chamado por caller já autorizado (admin) — o gate fica no RPC.
+ */
+export async function setUserModulePerms(
+  userId: string,
+  input: Partial<Record<Module, ModuleAccess | null>>,
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+
+  const toUpsert: { user_id: string; module: string; access: ModuleAccess }[] = [];
+  const toDelete: string[] = [];
+  for (const [mod, access] of Object.entries(input)) {
+    if (!MODULE_SET.has(mod)) continue;
+    if (access && ACCESS_SET.has(access)) {
+      toUpsert.push({ user_id: userId, module: mod, access });
+    } else {
+      // null / undefined / valor inválido ⇒ volta ao padrão do papel (sem linha).
+      toDelete.push(mod);
+    }
+  }
+
+  if (toUpsert.length > 0) {
+    const { error } = await sb
+      .from("system_user_module_perms")
+      .upsert(toUpsert, { onConflict: "user_id,module" });
+    if (error) throw new Error(error.message);
+  }
+  if (toDelete.length > 0) {
+    const { error } = await sb
+      .from("system_user_module_perms")
+      .delete()
+      .eq("user_id", userId)
+      .in("module", toDelete);
+    if (error) throw new Error(error.message);
+  }
+
+  // Reflete na leitura imediatamente (o TTL de 1 min não deve esconder a mudança).
+  permsCache.delete(userId);
+}

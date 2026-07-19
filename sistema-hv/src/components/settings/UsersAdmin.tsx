@@ -27,6 +27,7 @@ import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
 
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
+import { UserModulePermsEditor } from "./UserModulePermsEditor";
 import { UserReportDialog } from "./UserReportDialog";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -252,7 +253,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       />
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar usuário</DialogTitle>
           </DialogHeader>
@@ -299,6 +300,20 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <p className="text-[11px] text-muted-foreground mt-1">
                     O cargo do administrador e o seu próprio não podem ser alterados aqui.
                   </p>
+                )}
+              </div>
+
+              {/* Permissões por aba do usuário (R3, 2026-07-19) — carrega/salva com
+                  botão próprio, desacoplado do "Salvar" de perfil/cargo acima. Não
+                  exibido para admin nem para você mesmo: um override só rebaixaria
+                  (o admin já tem acesso total) e evita auto-bloqueio. */}
+              <div className="border-t border-[var(--border)] pt-3">
+                {editing.isSelf || editing.originalRole === "admin" ? (
+                  <p className="text-[11.5px] text-muted-foreground">
+                    Permissões por aba não se aplicam ao administrador nem ao seu próprio usuário.
+                  </p>
+                ) : (
+                  <UserModulePermsEditor userId={editing.id} />
                 )}
               </div>
             </div>
