@@ -16,9 +16,9 @@ import {
   useAllBifurcatedCases,
   useCasesByServiceType,
   useMoveCaseStageFin,
-  useServiceTypes,
   useStages,
 } from "@/hooks/usePipeline";
+import { useTemas } from "@/hooks/useTemas";
 
 // #16 — o financeiro agora abre DIRETO num funil ÚNICO editável. Mantemos o
 // parâmetro `type` (deep-link legado) para abrir a esteira de um tipo específico,
@@ -219,10 +219,12 @@ function FinanceiroKanban({
 
 function FinanceiroKanbanTodos() {
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  // T4 (2026-07-19) — filtro por TEMA (não mais por tipo legado), alinhado ao
+  // seletor do operacional. "" = todos os temas.
+  const [temaFilter, setTemaFilter] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
   const { data: allCases, isLoading, isError, error } = useAllBifurcatedCases();
-  const { data: serviceTypes } = useServiceTypes();
+  const { data: temas } = useTemas();
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
 
@@ -248,9 +250,9 @@ function FinanceiroKanbanTodos() {
 
   const filtered = useMemo(() => {
     let cases = allCases ?? [];
-    // Filtro por TIPO de serviço (a "tag" do card = case_type/slug do tipo).
-    if (typeFilter) {
-      cases = cases.filter((c) => c.case_type === typeFilter);
+    // Filtro por TEMA (o "guarda-chuva" do caso). "" = todos.
+    if (temaFilter) {
+      cases = cases.filter((c) => (c as { tema_id?: string | null }).tema_id === temaFilter);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -259,7 +261,7 @@ function FinanceiroKanbanTodos() {
       );
     }
     return cases;
-  }, [allCases, search, typeFilter]);
+  }, [allCases, search, temaFilter]);
 
   const total = (allCases ?? []).length;
 
@@ -334,16 +336,16 @@ function FinanceiroKanbanTodos() {
             className="w-full pl-9 pr-4 py-2.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
           />
         </div>
-        {/* Filtro por TIPO (a "tag" do card) — integra com a busca acima. */}
+        {/* Filtro por TEMA — integra com a busca acima. */}
         <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
+          value={temaFilter}
+          onChange={(e) => setTemaFilter(e.target.value)}
           className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
         >
-          <option value="">Todos os tipos</option>
-          {(serviceTypes ?? []).map((st) => (
-            <option key={st.id} value={st.slug}>
-              {st.name}
+          <option value="">Todos os temas</option>
+          {(temas ?? []).map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
             </option>
           ))}
         </select>
