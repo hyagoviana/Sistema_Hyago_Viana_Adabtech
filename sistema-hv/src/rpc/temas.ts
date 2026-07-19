@@ -7,6 +7,7 @@ import {
   createTema,
   deleteFrente,
   deleteTema,
+  ensureTemaFolder,
   getTemaServiceType,
   listFrentes,
   listTemas,
@@ -86,6 +87,12 @@ export const updateTemaFn = createServerFn({ method: "POST" })
 export const deleteTemaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handleAdmin(() => deleteTema(data.id)));
+
+// T2 (2026-07-19) — cria/garante a pasta-raiz do tema no Drive (idempotente).
+// Admin-only. Usado pelo botão "Criar pasta do tema" dos temas ainda sem pasta.
+export const ensureTemaFolderFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ temaId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handleAdmin(() => ensureTemaFolder(data.temaId)));
 
 // R2-04 — service_type INTERNO (motor) do tema. Usado pelo editor de vínculo de
 // pastas por frente (as pastas são gravadas nesse service_type + frente_slug).

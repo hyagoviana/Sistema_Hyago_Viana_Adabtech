@@ -26,6 +26,7 @@ import {
   useCreateTema,
   useDeleteFrente,
   useDeleteTema,
+  useEnsureTemaFolder,
   useFrentes,
   useTemas,
   useTemaServiceType,
@@ -191,6 +192,8 @@ export function TemasManagerDialog({
               </div>
             </div>
 
+            {selected && <TemaDriveRootFolder temaId={selected.id} />}
+
             {selected && <FrentesEditor temaId={selected.id} />}
           </div>
 
@@ -210,6 +213,55 @@ export function TemasManagerDialog({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+// T2 — pasta-raiz do tema no Drive (dentro da pasta "tema"). Mostra o link se já
+// existe; senão, botão para criar (idempotente). Lê o tema atual da lista já
+// carregada (useTemas), que traz drive_folder_id/url.
+function TemaDriveRootFolder({ temaId }: { temaId: string }) {
+  const { data: temas } = useTemas();
+  const ensure = useEnsureTemaFolder();
+  const tema = (temas ?? []).find((t) => t.id === temaId) as
+    | { drive_folder_id?: string | null; drive_folder_url?: string | null }
+    | undefined;
+  const url = tema?.drive_folder_url ?? null;
+  const hasFolder = !!tema?.drive_folder_id;
+
+  async function criar() {
+    try {
+      const res = await ensure.mutateAsync(temaId);
+      toast.success(res.created ? "Pasta do tema criada no Drive." : "A pasta do tema já existia.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao criar a pasta do tema");
+    }
+  }
+
+  return (
+    <div className="border-t border-[var(--border)] pt-4">
+      <Label>Pasta do tema no Drive</Label>
+      <div className="mt-1.5">
+        {hasFolder ? (
+          <a
+            href={url ?? "#"}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
+          >
+            <ExternalLink size={14} /> Abrir pasta do tema
+          </a>
+        ) : (
+          <Button variant="outline" onClick={criar} disabled={ensure.isPending}>
+            <FolderOpen size={14} />
+            {ensure.isPending ? "Criando…" : "Criar pasta do tema"}
+          </Button>
+        )}
+      </div>
+      <p className="text-[11px] text-muted-foreground mt-1.5">
+        Cada tema tem uma pasta própria dentro da pasta &quot;tema&quot; do Drive. É onde os casos e
+        documentos do tema ficam organizados.
+      </p>
+    </div>
   );
 }
 

@@ -546,6 +546,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          drive_folder_id: string | null;
+          drive_folder_url: string | null;
         };
         Insert: {
           id?: string;
@@ -558,6 +560,8 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
+          drive_folder_id?: string | null;
+          drive_folder_url?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_temas"]["Insert"]>;
         Relationships: [];

@@ -164,6 +164,21 @@ export async function createFolder(name: string, parentId?: string): Promise<Dri
   }
 }
 
+// Renomeia uma pasta (ou arquivo) no Drive. Best-effort para o caller: usado ao
+// renomear um TEMA para manter a pasta do tema com o nome atual (T2).
+export async function renameFolder(fileId: string, name: string): Promise<void> {
+  const drive = getDriveClient();
+  try {
+    await drive.files.update({
+      fileId,
+      requestBody: { name },
+      ...writeParams(),
+    });
+  } catch (err) {
+    throw new DriveError(`Falha ao renomear a pasta ${fileId}.`, err);
+  }
+}
+
 export async function uploadFile(opts: {
   parentId: string;
   name: string;

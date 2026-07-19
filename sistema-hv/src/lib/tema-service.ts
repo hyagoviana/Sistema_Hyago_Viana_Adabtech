@@ -16,6 +16,7 @@
 
 import slugify from "slugify";
 
+import { createFolder, renameFolder } from "./google/drive";
 import { createServiceType, deleteServiceType } from "./pipeline-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
@@ -24,6 +25,13 @@ type TemaUpdate = Database["public"]["Tables"]["system_temas"]["Update"];
 type FrenteUpdate = Database["public"]["Tables"]["system_tema_frentes"]["Update"];
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
+
+// T2 (2026-07-19) — pasta-raiz de TODOS os temas no Drive (a pasta "tema"). Cada
+// tema cria a sua subpasta aqui, com o nome do tema. Configurável por env; o
+// default é a pasta que o dono indicou. A Service Account precisa ter acesso de
+// Editor a esta pasta para criar as subpastas.
+const TEMAS_ROOT_FOLDER_ID =
+  process.env.GOOGLE_DRIVE_TEMAS_ROOT_FOLDER_ID?.trim() || "1PtxXwOMn0ibNRXyzAQN-79mHUJc8w4Ro";
 
 export class TemaServiceError extends Error {
   constructor(
@@ -210,7 +218,57 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
     throw new TemaServiceError(`Falha ao criar a pipeline do tema: ${msg}`, 500);
   }
 
+  // T2 — cria a pasta-raiz do tema no Drive (dentro da pasta "tema"). BEST-EFFORT:
+  // se a Service Account não tiver acesso à pasta pai, o tema fica sem pasta e o
+  // admin cria depois pelo botão "Criar pasta do tema" (ensureTemaFolder). Não
+  // derruba a criação do tema (que já tem o motor/pipeline).
+  try {
+    const folder = await createFolder(name, TEMAS_ROOT_FOLDER_ID);
+    const { data: withFolder } = await sb
+      .from("system_temas")
+      .update({ drive_folder_id: folder.id, drive_folder_url: folder.url })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (withFolder) return withFolder;
+  } catch (folderErr) {
+    console.error(
+      "tema-service: falha ao criar pasta do tema no Drive:",
+      folderErr instanceof Error ? folderErr.message : folderErr,
+    );
+  }
+
   return data;
+}
+
+// T2 — garante a pasta-raiz do tema no Drive (idempotente). Usado pelos temas já
+// existentes sem pasta (ex.: os 5 fictícios criados antes do T2) e como retry se
+// a criação na hora falhou. Se já existe, devolve a pasta atual sem recriar.
+export async function ensureTemaFolder(temaId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: tema, error } = await sb
+    .from("system_temas_active")
+    .select("*")
+    .eq("id", temaId)
+    .maybeSingle();
+  if (error || !tema) throw new TemaServiceError("Tema não encontrado", 404);
+
+  const existing = (tema as { drive_folder_id?: string | null }).drive_folder_id;
+  if (existing) {
+    return {
+      id: existing,
+      url: (tema as { drive_folder_url?: string | null }).drive_folder_url ?? null,
+      created: false,
+    };
+  }
+
+  const folder = await createFolder(tema.name, TEMAS_ROOT_FOLDER_ID);
+  const { error: upErr } = await sb
+    .from("system_temas")
+    .update({ drive_folder_id: folder.id, drive_folder_url: folder.url })
+    .eq("id", temaId);
+  if (upErr) throw new TemaServiceError(upErr.message, 500);
+  return { id: folder.id, url: folder.url, created: true };
 }
 
 export async function updateTema(
@@ -231,6 +289,22 @@ export async function updateTema(
     .select()
     .single();
   if (error || !data) throw new TemaServiceError(error?.message ?? "Falha ao atualizar tema", 500);
+
+  // T2 — mantém a pasta do tema no Drive com o nome atual (best-effort). Não
+  // derruba o rename se o Drive falhar.
+  if (patch.name !== undefined && clean.name) {
+    const folderId = (data as { drive_folder_id?: string | null }).drive_folder_id;
+    if (folderId) {
+      try {
+        await renameFolder(folderId, clean.name);
+      } catch (folderErr) {
+        console.error(
+          "tema-service: falha ao renomear a pasta do tema no Drive:",
+          folderErr instanceof Error ? folderErr.message : folderErr,
+        );
+      }
+    }
+  }
   return data;
 }
 

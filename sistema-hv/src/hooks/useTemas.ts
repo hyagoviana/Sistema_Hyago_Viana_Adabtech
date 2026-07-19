@@ -6,6 +6,7 @@ import {
   createTemaFn,
   deleteFrenteFn,
   deleteTemaFn,
+  ensureTemaFolderFn,
   getTemaServiceTypeFn,
   listFrentesFn,
   listTemasFn,
@@ -53,6 +54,17 @@ export function useDeleteTema() {
       qc.invalidateQueries({ queryKey: ["temas"] });
       qc.invalidateQueries({ queryKey: ["tema-frentes"] });
     },
+  });
+}
+
+// T2 — cria/garante a pasta-raiz do tema no Drive. Invalida ["temas"] para o
+// link da pasta aparecer na hora.
+export function useEnsureTemaFolder() {
+  const fn = useServerFn(ensureTemaFolderFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (temaId: string) => fn({ data: { temaId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
   });
 }
 
