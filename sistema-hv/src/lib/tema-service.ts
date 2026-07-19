@@ -106,7 +106,22 @@ export async function listTemas() {
     .select("*")
     .order("ordem", { ascending: true });
   if (error) throw new TemaServiceError(error.message, 500);
-  return data ?? [];
+  const temas = data ?? [];
+  if (temas.length === 0) return temas;
+
+  // T1 (2026-07-19) — resolve o service_type INTERNO (motor) de cada tema, para o
+  // seletor do Kanban abrir a esteira certa a partir do tema (sem N queries no
+  // clique). Campo ADITIVO: consumidores que só usam id/name/slug seguem intactos.
+  const { data: sts } = await sb
+    .from("system_service_types")
+    .select("id, tema_id")
+    .not("tema_id", "is", null)
+    .is("deleted_at", null);
+  const stByTema = new Map<string, string>();
+  for (const s of sts ?? []) {
+    if (s.tema_id) stByTema.set(s.tema_id, s.id);
+  }
+  return temas.map((t) => ({ ...t, service_type_id: stByTema.get(t.id) ?? null }));
 }
 
 export async function createTema(input: { name: string; slug?: string; ordem?: number }) {

@@ -122,6 +122,12 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   }, [open, presetClientId, form, serviceTypes, iAmAdvogado, myId]);
 
   async function onSubmit(data: CaseCreateInput) {
+    // T1 (2026-07-19) — com temas cadastrados, o tema é OBRIGATÓRIO (o caso nasce
+    // sempre por tema). Sem isso, o default de case_type cairia num tipo legado.
+    if (hasTemas && !temaId) {
+      toast.error("Selecione um tema para o caso.");
+      return;
+    }
     try {
       // R2-05 — quando o caso nasce por TEMA, `case_type` é um placeholder (o slug
       // do tema): o servidor (createCase) resolve o service_type INTERNO do tema e
@@ -229,10 +235,13 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
 
             {/* R2-05 — TEMA (fluxo principal quando há temas). Escolher um tema
                 dirige o select de FRENTE e o dual-write (tema_id + case_type do
-                service_type interno, resolvido no servidor). */}
+                service_type interno, resolvido no servidor).
+                T1 (2026-07-19) — com temas cadastrados, o caso nasce SEMPRE por
+                tema: o tema é obrigatório e a "categoria legada" some (o dono só
+                quer os temas no seletor). Sem temas, cai no tipo legado (abaixo). */}
             {hasTemas && (
               <FormItem>
-                <FormLabel>Tema {temaId ? "*" : ""}</FormLabel>
+                <FormLabel>Tema *</FormLabel>
                 <Select
                   value={temaId}
                   onValueChange={(v) => {
@@ -292,10 +301,10 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               />
             )}
 
-            {/* Categoria legada (fallback). Só é o campo principal quando NÃO há
-                temas; com temas, aparece como alternativa para tipos legados sem
-                tema e fica oculta quando um tema já foi escolhido. */}
-            {!temaId && (
+            {/* Categoria legada (fallback). SÓ aparece quando NÃO há temas
+                cadastrados. Com temas, o caso nasce sempre por TEMA→FRENTE (o dono
+                não quer os tipos legados no seletor de criação — T1, 2026-07-19). */}
+            {!hasTemas && (
               <FormField
                 control={form.control}
                 name="case_type"

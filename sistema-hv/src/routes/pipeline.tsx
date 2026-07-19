@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, FolderKanban, Layers, List, Pencil, Plus, Settings2, Tag } from "lucide-react";
+import { ArrowLeft, FolderKanban, Layers, List, Plus, Settings2, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
-import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
@@ -27,25 +26,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   useCasesByServiceType,
-  useCreateServiceType,
-  useDeleteServiceType,
   useMoveCaseStageFin,
   useMoveCaseStageOp,
-  useServiceTypes,
   useStages,
-  useUpdateServiceType,
 } from "@/hooks/usePipeline";
+import { useTemas } from "@/hooks/useTemas";
 import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
-
-function slugifyCat(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 40);
-}
 
 // (item 2, 2026-07-09) — a categoria selecionada vive na URL (search param `cat`).
 // Assim, clicar em "Pipeline Operacional" no menu (Link sem search) VOLTA ao
@@ -96,72 +82,17 @@ function PipelinePage() {
 }
 
 function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: string }) => void }) {
-  const { data: types, isLoading } = useServiceTypes();
-  const createCat = useCreateServiceType();
-  const updateCat = useUpdateServiceType();
-  const deleteCat = useDeleteServiceType();
+  // T1 (2026-07-19) — o seletor do Pipeline mostra SÓ os TEMAS (o dono não quer os
+  // tipos legados aqui). Cada tema abre a esteira do seu service_type interno
+  // (motor). Casos de tipos antigos ainda não vinculados a um tema seguem
+  // acessíveis na Lista de casos até serem vinculados pela ficha.
+  const { data: temas, isLoading } = useTemas();
   const { role } = useAuth();
   const canManage = can(role, "config.manage");
-
-  async function excluirCategoria() {
-    if (!renaming) return;
-    if (
-      !window.confirm(
-        `Excluir a categoria "${renaming.name}"?\n\nIsto remove as etapas, os modelos e as pastas do Drive vinculadas. Só é possível se não houver casos vinculados. Esta ação não pode ser desfeita.`,
-      )
-    )
-      return;
-    try {
-      await deleteCat.mutateAsync(renaming.id);
-      toast.success("Categoria excluída");
-      setRenaming(null);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao excluir categoria");
-    }
-  }
-  const [newOpen, setNewOpen] = useState(false);
+  const navigate = useNavigate();
   const [createCaseOpen, setCreateCaseOpen] = useState(false);
   // R2-06 — gestão de TEMAS/FRENTES (admin-only).
   const [temasOpen, setTemasOpen] = useState(false);
-  const [catName, setCatName] = useState("");
-  // Renomear um tipo existente (grava name no banco).
-  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
-  const [renameValue, setRenameValue] = useState("");
-
-  async function criarCategoria() {
-    const name = catName.trim();
-    if (!name) return;
-    try {
-      const created = await createCat.mutateAsync({
-        name,
-        slug: slugifyCat(name) || `CAT_${(types?.length ?? 0) + 1}`,
-      });
-      toast.success("Categoria criada — agora vincule os documentos de caso e procurações");
-      setCatName("");
-      setNewOpen(false);
-      // Abre o editor da categoria recém-criada para já subir os modelos.
-      if (created?.id) {
-        setRenaming({ id: created.id, name: created.name });
-        setRenameValue(created.name);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao criar categoria");
-    }
-  }
-
-  async function salvarNome() {
-    if (!renaming) return;
-    const name = renameValue.trim();
-    if (!name || name === renaming.name) return;
-    try {
-      await updateCat.mutateAsync({ id: renaming.id, patch: { name } });
-      toast.success("Nome da categoria atualizado");
-      // Mantém o editor aberto (o usuário pode continuar vinculando pastas).
-      setRenaming({ id: renaming.id, name });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao renomear");
-    }
-  }
 
   return (
     <div className="page-container !pb-10">
@@ -169,16 +100,16 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
       <PageHeader
         eyebrow="Operação"
         title="Pipeline Operacional"
-        subtitle="Escolha o tipo de caso para abrir a esteira específica."
+        subtitle="Escolha o tema para abrir a esteira."
         aside={
           <div className="flex items-center gap-2">
             <Btn variant="gold" onClick={() => setCreateCaseOpen(true)}>
               <Plus size={14} />
               Novo caso
             </Btn>
-            <Btn variant="ghost" onClick={() => setNewOpen(true)}>
-              <Plus size={14} />
-              Nova categoria
+            <Btn variant="ghost" onClick={() => navigate({ to: "/casos/lista", search: {} })}>
+              <List size={14} />
+              Ver todos em lista
             </Btn>
             {canManage && (
               <Btn variant="ghost" onClick={() => setTemasOpen(true)}>
@@ -195,133 +126,53 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
 
       <CaseFormDialog open={createCaseOpen} onOpenChange={setCreateCaseOpen} />
 
-      <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova categoria de pipeline</DialogTitle>
-            <DialogDescription>
-              Crie uma nova esteira (ex.: Trabalhista, Possessória). Ela nasce com etapas padrão que
-              você edita depois.
-            </DialogDescription>
-          </DialogHeader>
-          <div>
-            <Label>Nome da categoria</Label>
-            <Input
-              value={catName}
-              onChange={(e) => setCatName(e.target.value)}
-              placeholder="Ex.: Trabalhista"
-              onKeyDown={(e) => e.key === "Enter" && criarCategoria()}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={criarCategoria} disabled={createCat.isPending || !catName.trim()}>
-              {createCat.isPending ? "Criando…" : "Criar categoria"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {isLoading ? (
-        <div className="text-muted-foreground text-sm">Carregando casos…</div>
-      ) : (types ?? []).length === 0 ? (
+        <div className="text-muted-foreground text-sm">Carregando temas…</div>
+      ) : (temas ?? []).length === 0 ? (
         <Alert>
-          <AlertDescription>Nenhum tipo de caso cadastrado.</AlertDescription>
+          <AlertDescription className="flex items-center gap-2">
+            <Layers size={15} /> Nenhum tema cadastrado ainda.{" "}
+            {canManage ? 'Crie o primeiro em "Temas".' : "Peça a um administrador para criar."}
+          </AlertDescription>
         </Alert>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(types ?? []).map((t) => (
-            <div
-              key={t.id}
-              className="card-hero relative p-6 hover:border-[var(--gold)] transition-colors group"
-            >
-              <button
-                type="button"
-                onClick={() => onPick({ id: t.id, name: t.name })}
-                className="flex items-center gap-3 text-left w-full"
+          {(temas ?? []).map((t) => {
+            const stId = (t as { service_type_id?: string | null }).service_type_id ?? null;
+            return (
+              <div
+                key={t.id}
+                className="card-hero relative p-6 hover:border-[var(--gold)] transition-colors group"
               >
-                <div
-                  className="w-11 h-11 rounded-lg flex items-center justify-center text-white shrink-0"
-                  style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}
-                >
-                  <FolderKanban size={20} />
-                </div>
-                <div>
-                  <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
-                  <div className="text-[12px] text-muted-foreground">Abrir esteira →</div>
-                </div>
-              </button>
-              {canManage && (
                 <button
                   type="button"
-                  title="Renomear pipeline"
-                  onClick={() => {
-                    setRenaming({ id: t.id, name: t.name });
-                    setRenameValue(t.name);
-                  }}
-                  className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-opacity"
+                  disabled={!stId}
+                  onClick={() => stId && onPick({ id: stId, name: t.name })}
+                  className="flex items-center gap-3 text-left w-full disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Pencil size={14} />
+                  <div
+                    className="w-11 h-11 rounded-lg flex items-center justify-center text-white shrink-0"
+                    style={{ background: "linear-gradient(135deg, #d4a832, #987814)" }}
+                  >
+                    <FolderKanban size={20} />
+                  </div>
+                  <div>
+                    <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
+                    <div className="text-[12px] text-muted-foreground">
+                      {stId ? "Abrir esteira →" : "Sem pipeline (recadastre o tema)"}
+                    </div>
+                  </div>
                 </button>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Renomear pipeline (grava system_service_types.name no banco) */}
-      <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Editar categoria</DialogTitle>
-            <DialogDescription>
-              Renomeie a categoria e vincule os modelos de documento de caso e de procuração. Tudo é
-              salvo no banco e no Drive.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nome da categoria</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && salvarNome()}
-                />
-                <Button
-                  variant="outline"
-                  onClick={salvarNome}
-                  disabled={
-                    updateCat.isPending ||
-                    !renameValue.trim() ||
-                    renameValue.trim() === renaming?.name
-                  }
-                >
-                  {updateCat.isPending ? "Salvando…" : "Salvar nome"}
-                </Button>
-              </div>
-            </div>
-
-            {renaming && <CategoryFoldersEditor serviceTypeId={renaming.id} />}
-          </div>
-          <DialogFooter className="sm:justify-between">
-            <Button
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
-              onClick={excluirCategoria}
-              disabled={deleteCat.isPending}
-            >
-              {deleteCat.isPending ? "Excluindo…" : "Excluir categoria"}
-            </Button>
-            <Button variant="outline" onClick={() => setRenaming(null)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <p className="text-[11.5px] text-muted-foreground mt-6 max-w-2xl">
+        Só os temas aparecem aqui. Casos de tipos antigos, ainda não vinculados a um tema, continuam
+        acessíveis pela Lista de casos — vincule-os a um tema pela ficha do caso.
+      </p>
     </div>
   );
 }
