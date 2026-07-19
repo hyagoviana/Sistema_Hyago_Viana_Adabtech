@@ -292,8 +292,8 @@ export function CategoryFoldersEditor({
       <FolderKindSection
         serviceTypeId={serviceTypeId}
         kind="procuracao"
-        title="Contratação"
-        description="Documentos de assinatura (procuração/contrato → ZapSign) — pasta Contratação."
+        title="Procurações"
+        description="Documentos de assinatura (procuração/contrato → ZapSign) — pasta Procurações."
         frentes={frentes}
       />
     </div>

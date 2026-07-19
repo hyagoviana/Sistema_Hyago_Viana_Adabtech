@@ -102,7 +102,7 @@ export function TemasManagerDialog({
     if (!selected) return;
     if (
       !window.confirm(
-        `Excluir o tema "${selected.name}"?\n\nIsto remove também as frentes dele. Só é possível se não houver casos vinculados a este tema. Esta ação não pode ser desfeita.`,
+        `Excluir o tema "${selected.name}"?\n\nIsto remove as frentes dele e envia a PASTA do tema no Drive para a lixeira (com as subpastas Casos/Procurações). Só é possível se não houver casos vinculados a este tema. Esta ação não pode ser desfeita.`,
       )
     )
       return;
@@ -233,7 +233,7 @@ export function TemasManagerDialog({
 }
 
 // Pasta-raiz do tema no Drive (dentro da pasta "tema"). Mostra o link se já existe;
-// permite CRIAR uma nova (com subpastas Casos/Contratação) OU VINCULAR uma pasta que
+// permite CRIAR uma nova (com subpastas Casos/Procurações) OU VINCULAR uma pasta que
 // o owner já criou em 1PtxXw. Lê o tema atual da lista já carregada (useTemas).
 function TemaDriveRootFolder({ temaId }: { temaId: string }) {
   const { data: temas } = useTemas();
@@ -261,7 +261,7 @@ function TemaDriveRootFolder({ temaId }: { temaId: string }) {
     if (!pick) return;
     try {
       await linkFolder.mutateAsync({ temaId, driveFolderId: pick });
-      toast.success("Pasta do tema vinculada (subpastas Casos/Contratação garantidas).");
+      toast.success("Pasta do tema vinculada (subpastas Casos/Procurações garantidas).");
       setPick("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao vincular a pasta");
@@ -315,7 +315,8 @@ function TemaDriveRootFolder({ temaId }: { temaId: string }) {
 
       <p className="text-[11px] text-muted-foreground">
         Cada tema tem uma pasta própria dentro da pasta &quot;tema&quot; do Drive, com as subpastas{" "}
-        <b>Casos</b> e <b>Contratação</b>. Renomear o tema renomeia a pasta.
+        <b>Casos</b> e <b>Procurações</b>. Renomear o tema renomeia a pasta; excluir o tema exclui a
+        pasta no Drive.
       </p>
     </div>
   );

@@ -16,7 +16,13 @@
 
 import slugify from "slugify";
 
-import { createFolder, getFileMeta, listFoldersInFolder, renameFolder } from "./google/drive";
+import {
+  createFolder,
+  deleteFile,
+  getFileMeta,
+  listFoldersInFolder,
+  renameFolder,
+} from "./google/drive";
 import { createServiceType, deleteServiceType } from "./pipeline-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
@@ -34,9 +40,9 @@ const TEMAS_ROOT_FOLDER_ID =
   process.env.GOOGLE_DRIVE_TEMAS_ROOT_FOLDER_ID?.trim() || "1PtxXwOMn0ibNRXyzAQN-79mHUJc8w4Ro";
 
 // Nomes fixos das subpastas dentro da pasta de cada tema (owner, 2026-07-19).
-// "Casos" = documentos de caso; "Contratação" = documentos de assinatura (→ ZapSign).
+// "Casos" = documentos de caso; "Procurações" = documentos de assinatura (→ ZapSign).
 const SUB_CASOS = "Casos";
-const SUB_CONTRATACAO = "Contratação";
+const SUB_PROCURACOES = "Procurações";
 
 // Garante as subpastas "Casos" e "Contratação" dentro da pasta do tema (idempotente:
 // reaproveita as que já existem por nome, cria as que faltam). Best-effort — devolve
@@ -72,7 +78,7 @@ async function ensureTemaSubfolders(
   };
   return {
     casosId: await resolve(SUB_CASOS),
-    contratacaoId: await resolve(SUB_CONTRATACAO),
+    contratacaoId: await resolve(SUB_PROCURACOES),
   };
 }
 
@@ -407,7 +413,7 @@ export async function deleteTema(id: string) {
 
   const { data: tema } = await sb
     .from("system_temas")
-    .select("slug")
+    .select("slug, drive_folder_id")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
@@ -455,6 +461,21 @@ export async function deleteTema(id: string) {
     entity_type: "tema",
     entity_id: id,
   });
+
+  // Owner (2026-07-19) — excluir o tema exclui a pasta dele no Drive (vai para a
+  // lixeira; leva junto as subpastas Casos/Procurações). Best-effort: se o Drive
+  // falhar, o tema já foi soft-deletado no banco (não reverte).
+  const folderId = (tema as { drive_folder_id?: string | null }).drive_folder_id;
+  if (folderId) {
+    try {
+      await deleteFile(folderId);
+    } catch (err) {
+      console.error(
+        "tema-service: falha ao excluir a pasta do tema no Drive:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 
   return { ok: true as const, id };
 }
