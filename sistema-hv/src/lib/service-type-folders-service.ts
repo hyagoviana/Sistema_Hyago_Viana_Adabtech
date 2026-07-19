@@ -38,6 +38,43 @@ export type ServiceTypeFolder = {
   frente_slug: string | null;
 };
 
+// T3 (2026-07-19) — espelha a pasta do caso/procuração DENTRO da pasta do tema no
+// Drive (organização física pedida pelo owner: `1PtxXw/Tema-X/…`). Resolve a pasta
+// do tema via service_type interno (tema_id → system_temas.drive_folder_id) e cria
+// uma subpasta com o mesmo nome. BEST-EFFORT: se o tema não tem pasta (T2 não
+// rodado) ou o Drive falha, NÃO derruba o vínculo (a fonte de verdade é o banco).
+// Chamado só na criação de um vínculo NOVO (não no update idempotente).
+async function mirrorFolderIntoTema(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  serviceTypeId: string,
+  folderName: string,
+): Promise<void> {
+  try {
+    const { data: st } = await sb
+      .from("system_service_types")
+      .select("tema_id")
+      .eq("id", serviceTypeId)
+      .maybeSingle();
+    const temaId = (st as { tema_id?: string | null } | null)?.tema_id;
+    if (!temaId) return; // service_type legado (sem tema) — nada a espelhar.
+
+    const { data: tema } = await sb
+      .from("system_temas")
+      .select("drive_folder_id")
+      .eq("id", temaId)
+      .maybeSingle();
+    const temaFolderId = (tema as { drive_folder_id?: string | null } | null)?.drive_folder_id;
+    if (!temaFolderId) return; // tema ainda sem pasta no Drive (rodar "Criar pasta do tema").
+
+    await createFolder(folderName, temaFolderId);
+  } catch (err) {
+    console.error(
+      "service-type-folders: falha ao espelhar a pasta dentro do tema:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 // (R2-04) Lista as pastas de uma categoria (opcionalmente filtrando por kind).
 // `frenteSlug` (opcional):
 //   • undefined → gestão/admin: devolve TODAS as pastas (comuns + de todas as
@@ -142,6 +179,11 @@ export async function linkExistingFolder(input: {
     .single();
   if (error || !data)
     throw new ServiceTypeFoldersError(error?.message ?? "Falha ao vincular pasta", 500);
+
+  // T3 — vínculo NOVO criado: espelha a pasta dentro da pasta do tema no Drive
+  // (organização física pedida pelo owner). Best-effort, não derruba o vínculo.
+  await mirrorFolderIntoTema(sb, input.serviceTypeId, input.name);
+
   return data as ServiceTypeFolder;
 }
 
