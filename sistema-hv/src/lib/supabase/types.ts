@@ -1274,7 +1274,8 @@ export type Database = {
           id: string;
           user_id: string;
           module: string;
-          access: string;
+          access: string | null;
+          can_view_values: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -1282,7 +1283,8 @@ export type Database = {
           id?: string;
           user_id: string;
           module: string;
-          access?: string;
+          access?: string | null;
+          can_view_values?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };

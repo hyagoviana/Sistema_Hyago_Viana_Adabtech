@@ -298,8 +298,7 @@ export const ROLE_MODULE_ACCESS: Record<Role, Record<Module, ModuleAccess>> = Ob
 // demais continuam espelhando o NAV/capabilities (regressão zero preservada).
 // ---------------------------------------------------------------------------
 for (const role of ROLES) {
-  ROLE_MODULE_ACCESS[role].financeiro =
-    role === "admin" || role === "financeiro" ? "edit" : "none";
+  ROLE_MODULE_ACCESS[role].financeiro = role === "admin" || role === "financeiro" ? "edit" : "none";
 }
 
 /** `true` se o nível de acesso `access` cobre a ação `action` (edit ⊇ view). */
@@ -339,4 +338,38 @@ export function permissaoEfetiva(
   }
   // Sem override: cai no papel (comportamento atual, AC-4).
   return accessAllows(ROLE_MODULE_ACCESS[role][module], action);
+}
+
+// Fase B (2026-07-19) — módulos que EXIBEM valores em R$ e, portanto, têm a chave
+// "ver valores" no editor de permissões. Hoje TODO valor do sistema (financeiro,
+// painel financeiro do cadastro do cliente, valor do caso na Lista) é gateado pelo
+// módulo `financeiro`; `controladoria` entra quando ganhar valores. Amplie aqui.
+export const MODULE_HAS_VALUES: Partial<Record<Module, boolean>> = {
+  financeiro: true,
+  controladoria: true,
+};
+
+/**
+ * O usuário pode VER VALORES (R$) no módulo? (Fase B, chave "ver valores".)
+ *
+ * Precedência:
+ *  1. Se há override EXPLÍCITO da chave de valores (`valueOverrides[module]` =
+ *     true/false) → decide só por ele (o admin ligou/desligou na mão).
+ *  2. Senão → PADRÃO: vê valores se tem acesso efetivo (view+) ao módulo, via
+ *     `permissaoEfetiva` (papel + overrides de acesso). Isso REPRODUZ exatamente
+ *     o gate atual (`permissaoEfetiva(role, perms, 'financeiro', 'view')`) —
+ *     enquanto ninguém setar a chave, o comportamento é idêntico (regressão zero).
+ *
+ * @param valueOverrides overrides da chave de valores por módulo (`{ [module]: boolean }`).
+ */
+export function podeVerValores(
+  role: Role | null | undefined,
+  moduleOverrides: Partial<Record<Module, ModuleAccess>> | null | undefined,
+  valueOverrides: Partial<Record<Module, boolean>> | null | undefined,
+  module: Module = "financeiro",
+): boolean {
+  if (!role) return false;
+  const ov = valueOverrides?.[module];
+  if (ov !== undefined) return ov;
+  return permissaoEfetiva(role, moduleOverrides, module, "view");
 }

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import type { Module, ModuleAccess } from "@/lib/rbac";
 import {
   getMyModulePermsFn,
+  getMyModuleValuesFn,
   getUserModulePermsFn,
   setUserModulePermsFn,
 } from "@/rpc/permissions";
@@ -23,6 +24,19 @@ export function useMyModulePerms() {
 }
 
 /**
+ * Fase B — overrides da chave "ver valores" do usuário logado. Consumido pelos
+ * gates de $ (via `podeVerValores`). `{}` ⇒ cai no padrão do papel.
+ */
+export function useMyModuleValues() {
+  const fn = useServerFn(getMyModuleValuesFn);
+  return useQuery({
+    queryKey: ["my-module-values"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
  * ADMIN — overrides por módulo de um usuário específico (para editar na tela de
  * permissões). Só busca quando há `userId`.
  */
@@ -36,18 +50,20 @@ export function useUserModulePerms(userId: string | null | undefined) {
   });
 }
 
-/** ADMIN — grava os overrides por módulo de um usuário. */
+/** ADMIN — grava os overrides por módulo de um usuário (acesso + chave de valores). */
 export function useSetUserModulePerms() {
   const fn = useServerFn(setUserModulePermsFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: {
       userId: string;
-      perms: Partial<Record<Module, ModuleAccess | null>>;
+      access?: Partial<Record<Module, ModuleAccess | null>>;
+      values?: Partial<Record<Module, boolean | null>>;
     }) => fn({ data: vars }),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ["user-module-perms", vars.userId] });
       qc.invalidateQueries({ queryKey: ["my-module-perms"] });
+      qc.invalidateQueries({ queryKey: ["my-module-values"] });
     },
   });
 }

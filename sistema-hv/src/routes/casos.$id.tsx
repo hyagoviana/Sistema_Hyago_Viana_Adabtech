@@ -54,9 +54,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
-import { can, permissaoEfetiva } from "@/lib/rbac";
+import { can, podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { useClient } from "@/hooks/useClients";
@@ -111,7 +111,8 @@ function CasoDetalhe() {
   // vazia isto é IDÊNTICO ao papel (regressão zero). Sem `financeiro:view` o
   // bloco não é montado, então os hooks de $ (termo/parcelas) nem disparam.
   const { data: perms } = useMyModulePerms();
-  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
+  const { data: values } = useMyModuleValues();
+  const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
   // Autofill B/C — tabelas de referência (município / perfil).
   const { data: municipios } = useMunicipios();
   const { data: perfis } = usePerfis();

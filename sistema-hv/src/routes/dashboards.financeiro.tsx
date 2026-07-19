@@ -5,9 +5,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardFinanceiro } from "@/hooks/useFinanceiro";
-import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
-import { permissaoEfetiva } from "@/lib/rbac";
+import { podeVerValores } from "@/lib/rbac";
 
 export const Route = createFileRoute("/dashboards/financeiro")({
   component: DashboardFinanceiro,
@@ -40,7 +40,8 @@ function DashboardFinanceiro() {
   // evita renderizar a casca visual com totais para quem não tem financeiro:view.
   const { role } = useAuth();
   const { data: perms } = useMyModulePerms();
-  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
+  const { data: values } = useMyModuleValues();
+  const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
 
   if (!podeVerFinanceiro) {
     return (
@@ -120,9 +121,7 @@ function DashboardFinanceiroContent() {
               Parcelas vencidas ({data?.qtd_vencidas ?? 0})
             </div>
             {(data?.vencidas ?? []).length === 0 ? (
-              <div className="text-[13px] text-muted-foreground">
-                Nenhuma parcela vencida. 🎉
-              </div>
+              <div className="text-[13px] text-muted-foreground">Nenhuma parcela vencida. 🎉</div>
             ) : (
               <ul className="space-y-2 text-[13px]">
                 {(data?.vencidas ?? []).map((v) => (

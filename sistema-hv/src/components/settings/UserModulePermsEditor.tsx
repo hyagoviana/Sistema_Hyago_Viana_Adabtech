@@ -13,7 +13,7 @@ import { ModulePermsGrid, type ModulePermsValue } from "./ModulePermsGrid";
 export function UserModulePermsEditor({ userId }: { userId: string }) {
   const { data, isLoading } = useUserModulePerms(userId);
   const save = useSetUserModulePerms();
-  const [perms, setPerms] = useState<ModulePermsValue>({});
+  const [perms, setPerms] = useState<ModulePermsValue>({ access: {}, values: {} });
   const [dirty, setDirty] = useState(false);
 
   // Sincroniza o estado local com o que veio do servidor (e após salvar, quando a
@@ -21,14 +21,14 @@ export function UserModulePermsEditor({ userId }: { userId: string }) {
   // momentos, as edições do usuário (que só mexem em `perms`) não são perdidas.
   useEffect(() => {
     if (data) {
-      setPerms(data);
+      setPerms({ access: data.access ?? {}, values: data.values ?? {} });
       setDirty(false);
     }
   }, [data]);
 
   async function handleSave() {
     try {
-      await save.mutateAsync({ userId, perms });
+      await save.mutateAsync({ userId, access: perms.access, values: perms.values });
       toast.success("Permissões por aba atualizadas.");
       setDirty(false);
     } catch (err) {

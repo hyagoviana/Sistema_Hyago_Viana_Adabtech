@@ -39,13 +39,13 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
   const [role, setRole] = useState<Role>("operacional");
   // Overrides por aba definidos JÁ no convite (2026-07-19). Vazio = tudo no
   // padrão do papel escolhido.
-  const [modulePerms, setModulePerms] = useState<ModulePermsValue>({});
+  const [modulePerms, setModulePerms] = useState<ModulePermsValue>({ access: {}, values: {} });
 
   function reset() {
     setEmail("");
     setFullName("");
     setRole("operacional");
-    setModulePerms({});
+    setModulePerms({ access: {}, values: {} });
   }
 
   async function handleConfirm() {
@@ -64,10 +64,16 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
       // Grava os overrides por aba definidos no convite. O usuário já existe em
       // system_users (status INVITED), então o user_id está disponível. Se essa
       // etapa falhar, o convite já foi enviado — avisamos sem reverter.
-      const hasOverrides = Object.values(modulePerms).some((v) => v != null);
+      const hasOverrides =
+        Object.values(modulePerms.access).some((v) => v != null) ||
+        Object.values(modulePerms.values).some((v) => v != null);
       if (created?.id && hasOverrides) {
         try {
-          await setPerms.mutateAsync({ userId: created.id, perms: modulePerms });
+          await setPerms.mutateAsync({
+            userId: created.id,
+            access: modulePerms.access,
+            values: modulePerms.values,
+          });
         } catch {
           toast.warning(
             "Convite enviado, mas não consegui salvar as permissões por aba. Ajuste na tela de Permissões.",

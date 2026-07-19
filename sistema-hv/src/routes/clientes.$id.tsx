@@ -26,9 +26,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClientPaymentStatus } from "@/hooks/useFinanceiro";
 import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
-import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
-import { permissaoEfetiva } from "@/lib/rbac";
+import { podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
 import { PROGRAMA_LABELS } from "@/lib/validators/client";
@@ -76,7 +76,8 @@ function ClienteDetalhe() {
   // IDÊNTICO ao papel (regressão zero) — apenas ganha overrides quando existirem.
   const { role } = useAuth();
   const { data: perms } = useMyModulePerms();
-  const podeVerFinanceiro = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
+  const { data: values } = useMyModuleValues();
+  const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
   const clienteLabel = resolveEntityLabel(cliente?.full_name, {

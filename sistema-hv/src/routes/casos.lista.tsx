@@ -7,10 +7,10 @@ import { Breadcrumb, Btn, Eyebrow, PageHeader } from "@/components/hv/primitives
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
-import { useMyModulePerms } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useFrentes, useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
-import { permissaoEfetiva } from "@/lib/rbac";
+import { podeVerValores } from "@/lib/rbac";
 import {
   CASE_TYPE_LABELS,
   MACRO_FIN_LABELS,
@@ -106,7 +106,8 @@ function CasosLista() {
   // tabela de overrides vazia é IDÊNTICO ao papel (regressão zero).
   const { role } = useAuth();
   const { data: perms } = useMyModulePerms();
-  const podeVerValor = permissaoEfetiva(role, perms ?? {}, "financeiro", "view");
+  const { data: values } = useMyModuleValues();
+  const podeVerValor = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
 
   // Mapa id→nome de tema para exibir a coluna Tema e ordenar por rótulo.
   const temaName = useMemo(() => {
