@@ -285,15 +285,15 @@ export function CategoryFoldersEditor({
       <FolderKindSection
         serviceTypeId={serviceTypeId}
         kind="caso"
-        title="Documentos de caso"
-        description="Modelos de documento usados nos casos desta categoria."
+        title="Casos"
+        description="Modelos de documento usados nos casos deste tema (pasta Casos)."
         frentes={frentes}
       />
       <FolderKindSection
         serviceTypeId={serviceTypeId}
         kind="procuracao"
-        title="Procurações"
-        description="Modelos de procuração desta categoria."
+        title="Contratação"
+        description="Documentos de assinatura (procuração/contrato → ZapSign) — pasta Contratação."
         frentes={frentes}
       />
     </div>

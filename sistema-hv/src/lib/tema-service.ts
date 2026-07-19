@@ -16,7 +16,7 @@
 
 import slugify from "slugify";
 
-import { createFolder, renameFolder } from "./google/drive";
+import { createFolder, getFileMeta, listFoldersInFolder, renameFolder } from "./google/drive";
 import { createServiceType, deleteServiceType } from "./pipeline-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
@@ -32,6 +32,55 @@ const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 // Editor a esta pasta para criar as subpastas.
 const TEMAS_ROOT_FOLDER_ID =
   process.env.GOOGLE_DRIVE_TEMAS_ROOT_FOLDER_ID?.trim() || "1PtxXwOMn0ibNRXyzAQN-79mHUJc8w4Ro";
+
+// Nomes fixos das subpastas dentro da pasta de cada tema (owner, 2026-07-19).
+// "Casos" = documentos de caso; "Contratação" = documentos de assinatura (→ ZapSign).
+const SUB_CASOS = "Casos";
+const SUB_CONTRATACAO = "Contratação";
+
+// Garante as subpastas "Casos" e "Contratação" dentro da pasta do tema (idempotente:
+// reaproveita as que já existem por nome, cria as que faltam). Best-effort — devolve
+// null nos ids se o Drive falhar (o tema continua utilizável).
+async function ensureTemaSubfolders(
+  temaFolderId: string,
+): Promise<{ casosId: string | null; contratacaoId: string | null }> {
+  let existing: { id: string; name: string }[];
+  try {
+    existing = await listFoldersInFolder(temaFolderId);
+  } catch (err) {
+    console.error(
+      "tema-service: falha ao listar subpastas do tema:",
+      err instanceof Error ? err.message : err,
+    );
+    return { casosId: null, contratacaoId: null };
+  }
+  const byName = new Map(existing.map((f) => [f.name.trim().toLowerCase(), f.id]));
+  // Resolve cada subpasta de forma INDEPENDENTE: se criar uma falhar, a outra não
+  // é perdida (evita partial-write que descartaria o id já resolvido).
+  const resolve = async (name: string): Promise<string | null> => {
+    const found = byName.get(name.toLowerCase());
+    if (found) return found;
+    try {
+      return (await createFolder(name, temaFolderId)).id;
+    } catch (err) {
+      console.error(
+        `tema-service: falha ao criar subpasta "${name}":`,
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
+  };
+  return {
+    casosId: await resolve(SUB_CASOS),
+    contratacaoId: await resolve(SUB_CONTRATACAO),
+  };
+}
+
+// Lista as pastas dentro da raiz "tema" (1PtxXw) — para o admin ESCOLHER qual pasta
+// é a de um tema (vincular pasta que ele já criou no Drive).
+export async function listTemasRootFolders() {
+  return listFoldersInFolder(TEMAS_ROOT_FOLDER_ID);
+}
 
 export class TemaServiceError extends Error {
   constructor(
@@ -224,9 +273,15 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
   // derruba a criação do tema (que já tem o motor/pipeline).
   try {
     const folder = await createFolder(name, TEMAS_ROOT_FOLDER_ID);
+    const subs = await ensureTemaSubfolders(folder.id);
     const { data: withFolder } = await sb
       .from("system_temas")
-      .update({ drive_folder_id: folder.id, drive_folder_url: folder.url })
+      .update({
+        drive_folder_id: folder.id,
+        drive_folder_url: folder.url,
+        drive_casos_folder_id: subs.casosId,
+        drive_contratacao_folder_id: subs.contratacaoId,
+      })
       .eq("id", data.id)
       .select()
       .single();
@@ -241,9 +296,38 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
   return data;
 }
 
-// T2 — garante a pasta-raiz do tema no Drive (idempotente). Usado pelos temas já
-// existentes sem pasta (ex.: os 5 fictícios criados antes do T2) e como retry se
-// a criação na hora falhou. Se já existe, devolve a pasta atual sem recriar.
+// T-Drive — vincula ao tema uma pasta que o admin JÁ criou no Drive (escolhida na
+// UI dentre as subpastas de 1PtxXw). Garante as subpastas Casos/Contratação e grava
+// os ids. Usado quando o owner prefere apontar para a pasta que ele mesmo criou.
+export async function linkTemaFolder(temaId: string, driveFolderId: string) {
+  const sb = getSupabaseAdmin();
+  const { data: tema } = await sb
+    .from("system_temas_active")
+    .select("id")
+    .eq("id", temaId)
+    .maybeSingle();
+  if (!tema) throw new TemaServiceError("Tema não encontrado", 404);
+
+  const meta = await getFileMeta(driveFolderId).catch(() => null);
+  const url = (meta as { webViewLink?: string | null } | null)?.webViewLink ?? null;
+  const subs = await ensureTemaSubfolders(driveFolderId);
+
+  const { error } = await sb
+    .from("system_temas")
+    .update({
+      drive_folder_id: driveFolderId,
+      drive_folder_url: url,
+      drive_casos_folder_id: subs.casosId,
+      drive_contratacao_folder_id: subs.contratacaoId,
+    })
+    .eq("id", temaId);
+  if (error) throw new TemaServiceError(error.message, 500);
+  return { id: driveFolderId, url };
+}
+
+// T2 — garante a pasta-raiz do tema no Drive + as subpastas Casos/Contratação
+// (idempotente). Se a pasta já existe, NÃO recria a raiz, mas AINDA garante as
+// subpastas (para os temas criados antes das subpastas existirem).
 export async function ensureTemaFolder(temaId: string) {
   const sb = getSupabaseAdmin();
   const { data: tema, error } = await sb
@@ -253,22 +337,28 @@ export async function ensureTemaFolder(temaId: string) {
     .maybeSingle();
   if (error || !tema) throw new TemaServiceError("Tema não encontrado", 404);
 
-  const existing = (tema as { drive_folder_id?: string | null }).drive_folder_id;
-  if (existing) {
-    return {
-      id: existing,
-      url: (tema as { drive_folder_url?: string | null }).drive_folder_url ?? null,
-      created: false,
-    };
+  let folderId = (tema as { drive_folder_id?: string | null }).drive_folder_id ?? null;
+  let folderUrl = (tema as { drive_folder_url?: string | null }).drive_folder_url ?? null;
+  let created = false;
+  if (!folderId) {
+    const folder = await createFolder(tema.name, TEMAS_ROOT_FOLDER_ID);
+    folderId = folder.id;
+    folderUrl = folder.url;
+    created = true;
   }
 
-  const folder = await createFolder(tema.name, TEMAS_ROOT_FOLDER_ID);
+  const subs = await ensureTemaSubfolders(folderId);
   const { error: upErr } = await sb
     .from("system_temas")
-    .update({ drive_folder_id: folder.id, drive_folder_url: folder.url })
+    .update({
+      drive_folder_id: folderId,
+      drive_folder_url: folderUrl,
+      drive_casos_folder_id: subs.casosId,
+      drive_contratacao_folder_id: subs.contratacaoId,
+    })
     .eq("id", temaId);
   if (upErr) throw new TemaServiceError(upErr.message, 500);
-  return { id: folder.id, url: folder.url, created: true };
+  return { id: folderId, url: folderUrl, created };
 }
 
 export async function updateTema(

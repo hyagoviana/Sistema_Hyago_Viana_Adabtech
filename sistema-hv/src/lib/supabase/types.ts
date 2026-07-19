@@ -548,6 +548,8 @@ export type Database = {
           deleted_at: string | null;
           drive_folder_id: string | null;
           drive_folder_url: string | null;
+          drive_casos_folder_id: string | null;
+          drive_contratacao_folder_id: string | null;
         };
         Insert: {
           id?: string;
@@ -562,6 +564,8 @@ export type Database = {
           deleted_at?: string | null;
           drive_folder_id?: string | null;
           drive_folder_url?: string | null;
+          drive_casos_folder_id?: string | null;
+          drive_contratacao_folder_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_temas"]["Insert"]>;
         Relationships: [];

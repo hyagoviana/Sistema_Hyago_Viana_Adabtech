@@ -47,6 +47,7 @@ export type ServiceTypeFolder = {
 async function mirrorFolderIntoTema(
   sb: ReturnType<typeof getSupabaseAdmin>,
   serviceTypeId: string,
+  kind: FolderKind,
   folderName: string,
 ): Promise<void> {
   try {
@@ -60,13 +61,23 @@ async function mirrorFolderIntoTema(
 
     const { data: tema } = await sb
       .from("system_temas")
-      .select("drive_folder_id")
+      .select("drive_folder_id, drive_casos_folder_id, drive_contratacao_folder_id")
       .eq("id", temaId)
       .maybeSingle();
-    const temaFolderId = (tema as { drive_folder_id?: string | null } | null)?.drive_folder_id;
-    if (!temaFolderId) return; // tema ainda sem pasta no Drive (rodar "Criar pasta do tema").
+    const t = tema as {
+      drive_folder_id?: string | null;
+      drive_casos_folder_id?: string | null;
+      drive_contratacao_folder_id?: string | null;
+    } | null;
+    // Documento de caso → subpasta "Casos"; procuração/contrato → "Contratação".
+    // Fallback para a pasta-raiz do tema se a subpasta ainda não existe.
+    const target =
+      kind === "procuracao"
+        ? (t?.drive_contratacao_folder_id ?? t?.drive_folder_id)
+        : (t?.drive_casos_folder_id ?? t?.drive_folder_id);
+    if (!target) return; // tema ainda sem pasta no Drive.
 
-    await createFolder(folderName, temaFolderId);
+    await createFolder(folderName, target);
   } catch (err) {
     console.error(
       "service-type-folders: falha ao espelhar a pasta dentro do tema:",
@@ -180,9 +191,9 @@ export async function linkExistingFolder(input: {
   if (error || !data)
     throw new ServiceTypeFoldersError(error?.message ?? "Falha ao vincular pasta", 500);
 
-  // T3 — vínculo NOVO criado: espelha a pasta dentro da pasta do tema no Drive
-  // (organização física pedida pelo owner). Best-effort, não derruba o vínculo.
-  await mirrorFolderIntoTema(sb, input.serviceTypeId, input.name);
+  // T3 — vínculo NOVO criado: espelha a pasta dentro da subpasta certa do tema no
+  // Drive (Casos ou Contratação). Best-effort, não derruba o vínculo.
+  await mirrorFolderIntoTema(sb, input.serviceTypeId, input.kind, input.name);
 
   return data as ServiceTypeFolder;
 }

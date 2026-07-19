@@ -3,8 +3,8 @@
 // Gate: renderizado só quando `can(role,"config.manage")` (ver pipeline.tsx).
 // Construção MANUAL (MVP): CRUD de tema + CRUD de frente do tema selecionado.
 
-import { useState } from "react";
-import { ExternalLink, FolderOpen, Layers, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, FolderOpen, Layers, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,10 @@ import {
   useDeleteTema,
   useEnsureTemaFolder,
   useFrentes,
+  useLinkTemaFolder,
   useTemas,
   useTemaServiceType,
+  useTemasRootFolders,
   useUpdateFrente,
   useUpdateTema,
 } from "@/hooks/useTemas";
@@ -40,9 +42,12 @@ type Frente = { id: string; label: string; slug: string; ordem: number; active: 
 export function TemasManagerDialog({
   open,
   onOpenChange,
+  openTemaId,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  // Quando setado ao abrir, abre DIRETO no editor deste tema (lápis no card).
+  openTemaId?: string | null;
 }) {
   const { data: temas, isLoading } = useTemas();
   const createTema = useCreateTema();
@@ -52,6 +57,17 @@ export function TemasManagerDialog({
   const [newName, setNewName] = useState("");
   const [selected, setSelected] = useState<Tema | null>(null);
   const [renameValue, setRenameValue] = useState("");
+
+  // Abre direto no editor do tema indicado (lápis no card do Pipeline).
+  useEffect(() => {
+    if (open && openTemaId && temas) {
+      const t = (temas as Tema[]).find((x) => x.id === openTemaId);
+      if (t) {
+        setSelected(t);
+        setRenameValue(t.name);
+      }
+    }
+  }, [open, openTemaId, temas]);
 
   async function criarTema() {
     const name = newName.trim();
@@ -216,12 +232,16 @@ export function TemasManagerDialog({
   );
 }
 
-// T2 — pasta-raiz do tema no Drive (dentro da pasta "tema"). Mostra o link se já
-// existe; senão, botão para criar (idempotente). Lê o tema atual da lista já
-// carregada (useTemas), que traz drive_folder_id/url.
+// Pasta-raiz do tema no Drive (dentro da pasta "tema"). Mostra o link se já existe;
+// permite CRIAR uma nova (com subpastas Casos/Contratação) OU VINCULAR uma pasta que
+// o owner já criou em 1PtxXw. Lê o tema atual da lista já carregada (useTemas).
 function TemaDriveRootFolder({ temaId }: { temaId: string }) {
   const { data: temas } = useTemas();
   const ensure = useEnsureTemaFolder();
+  const linkFolder = useLinkTemaFolder();
+  const { data: rootFolders } = useTemasRootFolders();
+  const [pick, setPick] = useState("");
+
   const tema = (temas ?? []).find((t) => t.id === temaId) as
     | { drive_folder_id?: string | null; drive_folder_url?: string | null }
     | undefined;
@@ -237,11 +257,24 @@ function TemaDriveRootFolder({ temaId }: { temaId: string }) {
     }
   }
 
+  async function vincular() {
+    if (!pick) return;
+    try {
+      await linkFolder.mutateAsync({ temaId, driveFolderId: pick });
+      toast.success("Pasta do tema vinculada (subpastas Casos/Contratação garantidas).");
+      setPick("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao vincular a pasta");
+    }
+  }
+
+  const busy = ensure.isPending || linkFolder.isPending;
+
   return (
-    <div className="border-t border-[var(--border)] pt-4">
+    <div className="border-t border-[var(--border)] pt-4 space-y-2">
       <Label>Pasta do tema no Drive</Label>
-      <div className="mt-1.5">
-        {hasFolder ? (
+      <div className="mt-1.5 flex items-center gap-3">
+        {hasFolder && (
           <a
             href={url ?? "#"}
             target="_blank"
@@ -250,16 +283,39 @@ function TemaDriveRootFolder({ temaId }: { temaId: string }) {
           >
             <ExternalLink size={14} /> Abrir pasta do tema
           </a>
-        ) : (
-          <Button variant="outline" onClick={criar} disabled={ensure.isPending}>
-            <FolderOpen size={14} />
-            {ensure.isPending ? "Criando…" : "Criar pasta do tema"}
-          </Button>
         )}
+        <Button variant="outline" size="sm" onClick={criar} disabled={busy}>
+          <FolderOpen size={14} />
+          {ensure.isPending ? "…" : hasFolder ? "Recriar/garantir" : "Criar pasta do tema"}
+        </Button>
       </div>
-      <p className="text-[11px] text-muted-foreground mt-1.5">
-        Cada tema tem uma pasta própria dentro da pasta &quot;tema&quot; do Drive. É onde os casos e
-        documentos do tema ficam organizados.
+
+      {/* Vincular uma pasta que o owner JÁ criou dentro de "tema" (1PtxXw). */}
+      {(rootFolders ?? []).length > 0 && (
+        <div className="flex items-center gap-1.5">
+          <select
+            value={pick}
+            onChange={(e) => setPick(e.target.value)}
+            disabled={busy}
+            className="flex-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
+          >
+            <option value="">Vincular pasta que você já criou no Drive…</option>
+            {(rootFolders ?? []).map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+          <Button variant="outline" size="sm" onClick={vincular} disabled={busy || !pick}>
+            <Link2 size={13} className="mr-1" />
+            Vincular
+          </Button>
+        </div>
+      )}
+
+      <p className="text-[11px] text-muted-foreground">
+        Cada tema tem uma pasta própria dentro da pasta &quot;tema&quot; do Drive, com as subpastas{" "}
+        <b>Casos</b> e <b>Contratação</b>. Renomear o tema renomeia a pasta.
       </p>
     </div>
   );

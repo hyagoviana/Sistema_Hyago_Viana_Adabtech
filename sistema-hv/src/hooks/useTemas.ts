@@ -8,8 +8,10 @@ import {
   deleteTemaFn,
   ensureTemaFolderFn,
   getTemaServiceTypeFn,
+  linkTemaFolderFn,
   listFrentesFn,
   listTemasFn,
+  listTemasRootFoldersFn,
   updateFrenteFn,
   updateTemaFn,
 } from "@/rpc/temas";
@@ -64,6 +66,29 @@ export function useEnsureTemaFolder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (temaId: string) => fn({ data: { temaId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
+  });
+}
+
+export type TemaRootFolder = { id: string; name: string; url: string };
+
+// Pastas dentro da raiz "tema" (1PtxXw) — para escolher a pasta de um tema.
+export function useTemasRootFolders(enabled = true) {
+  const fn = useServerFn(listTemasRootFoldersFn);
+  return useQuery({
+    queryKey: ["temas-root-folders"],
+    queryFn: () => fn() as Promise<TemaRootFolder[]>,
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
+// Vincula ao tema uma pasta existente do Drive (a que o owner já criou).
+export function useLinkTemaFolder() {
+  const fn = useServerFn(linkTemaFolderFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { temaId: string; driveFolderId: string }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
   });
 }

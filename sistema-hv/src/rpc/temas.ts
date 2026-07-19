@@ -9,8 +9,10 @@ import {
   deleteTema,
   ensureTemaFolder,
   getTemaServiceType,
+  linkTemaFolder,
   listFrentes,
   listTemas,
+  listTemasRootFolders,
   updateFrente,
   updateTema,
 } from "@/lib/tema-service";
@@ -93,6 +95,19 @@ export const deleteTemaFn = createServerFn({ method: "POST" })
 export const ensureTemaFolderFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ temaId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handleAdmin(() => ensureTemaFolder(data.temaId)));
+
+// Lista as pastas dentro da raiz "tema" (1PtxXw) — para o admin escolher qual é a
+// pasta de um tema (vincular a que ele já criou). Admin-only.
+export const listTemasRootFoldersFn = createServerFn({ method: "GET" }).handler(async () =>
+  handleAdmin(() => listTemasRootFolders()),
+);
+
+// Vincula ao tema uma pasta existente do Drive (escolhida na UI). Admin-only.
+export const linkTemaFolderFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ temaId: z.string().uuid(), driveFolderId: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) => handleAdmin(() => linkTemaFolder(data.temaId, data.driveFolderId)));
 
 // R2-04 — service_type INTERNO (motor) do tema. Usado pelo editor de vínculo de
 // pastas por frente (as pastas são gravadas nesse service_type + frente_slug).

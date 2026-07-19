@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, FolderKanban, Layers, List, Plus, Settings2, Tag } from "lucide-react";
+import { ArrowLeft, FolderKanban, Layers, List, Pencil, Plus, Settings2, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
-import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
@@ -90,9 +89,15 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
   const { role } = useAuth();
   const canManage = can(role, "config.manage");
   const navigate = useNavigate();
-  const [createCaseOpen, setCreateCaseOpen] = useState(false);
-  // R2-06 — gestão de TEMAS/FRENTES (admin-only).
+  // R2-06 — gestão de TEMAS/FRENTES (admin-only). `editTemaId` abre o editor direto
+  // no tema clicado (lápis no card); null = abre no modo criar ("Novo tema").
   const [temasOpen, setTemasOpen] = useState(false);
+  const [editTemaId, setEditTemaId] = useState<string | null>(null);
+
+  function openTemas(temaId: string | null) {
+    setEditTemaId(temaId);
+    setTemasOpen(true);
+  }
 
   return (
     <div className="page-container !pb-10">
@@ -103,16 +108,18 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
         subtitle="Escolha o tema para abrir a esteira."
         aside={
           <div className="flex items-center gap-2">
-            <Btn variant="gold" onClick={() => setCreateCaseOpen(true)}>
-              <Plus size={14} />
-              Novo caso
-            </Btn>
+            {canManage && (
+              <Btn variant="gold" onClick={() => openTemas(null)}>
+                <Plus size={14} />
+                Novo tema
+              </Btn>
+            )}
             <Btn variant="ghost" onClick={() => navigate({ to: "/casos/lista", search: {} })}>
               <List size={14} />
               Ver todos em lista
             </Btn>
             {canManage && (
-              <Btn variant="ghost" onClick={() => setTemasOpen(true)}>
+              <Btn variant="ghost" onClick={() => openTemas(null)}>
                 <Tag size={14} />
                 Temas
               </Btn>
@@ -121,10 +128,18 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
         }
       />
 
-      {/* R2-06 — gestão de temas/frentes (admin-only, gate acima) */}
-      {canManage && <TemasManagerDialog open={temasOpen} onOpenChange={setTemasOpen} />}
-
-      <CaseFormDialog open={createCaseOpen} onOpenChange={setCreateCaseOpen} />
+      {/* R2-06 — gestão de temas/frentes (admin-only, gate acima). `openTemaId`
+          abre direto no editor do tema (lápis no card). */}
+      {canManage && (
+        <TemasManagerDialog
+          open={temasOpen}
+          onOpenChange={(o) => {
+            setTemasOpen(o);
+            if (!o) setEditTemaId(null);
+          }}
+          openTemaId={editTemaId}
+        />
+      )}
 
       {isLoading ? (
         <div className="text-muted-foreground text-sm">Carregando temas…</div>
@@ -163,6 +178,16 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                     </div>
                   </div>
                 </button>
+                {canManage && (
+                  <button
+                    type="button"
+                    title="Editar tema (nome, frentes, pastas)"
+                    onClick={() => openTemas(t.id)}
+                    className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-opacity"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
               </div>
             );
           })}
