@@ -194,6 +194,9 @@ export const clientCreateSchema = z
     // Valores dos campos customizados (Melhoria 1). Validação fina contra as
     // definições (obrigatoriedade/opções) acontece no service.
     custom_fields: z.record(z.string(), z.unknown()).optional().nullable(),
+    // Chave "É um cliente" (2026-07-19) — quando true, o cadastro já nasce como
+    // CLIENTE (marcado_cliente_at); default off = fica em Leads.
+    is_cliente: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     // PF (CPF, 11 dígitos) exige RG. PJ (CNPJ) não.

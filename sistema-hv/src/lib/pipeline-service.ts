@@ -624,19 +624,27 @@ export async function listComercialBoard(viewerUserId?: string): Promise<Comerci
   const { data: clients, error: cErr } = await clientsQ;
   if (cErr) throw new PipelineServiceError(cErr.message, 500);
 
-  return (clients ?? [])
-    .filter((cli) => !clienteIds.has(cli.id))
-    .map((cli) => ({
-      id: cli.id,
-      client_id: cli.id,
-      case_code: "—",
-      case_type: "",
-      macrostatus_comercial:
-        (cli as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "NOVO",
-      created_at: cli.created_at,
-      client_name: cli.full_name,
-      is_registration: true,
-    }));
+  return (
+    (clients ?? [])
+      // Sai do funil comercial quem já é CLIENTE: por caso assinado OU marcado
+      // manualmente (chave no cadastro / botão "Tornar cliente") — 2026-07-19.
+      .filter(
+        (cli) =>
+          !clienteIds.has(cli.id) &&
+          !(cli as { marcado_cliente_at?: string | null }).marcado_cliente_at,
+      )
+      .map((cli) => ({
+        id: cli.id,
+        client_id: cli.id,
+        case_code: "—",
+        case_type: "",
+        macrostatus_comercial:
+          (cli as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "NOVO",
+        created_at: cli.created_at,
+        client_name: cli.full_name,
+        is_registration: true,
+      }))
+  );
 }
 
 // Visão consolidada de todos os leads (para o índice/resumo do CRM).

@@ -47,6 +47,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          marcado_cliente_at: string | null;
         };
         Insert: {
           id?: string;
@@ -69,6 +70,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
+          marcado_cliente_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_clients"]["Insert"]>;
         Relationships: [

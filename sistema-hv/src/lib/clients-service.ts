@@ -46,11 +46,18 @@ function buildFolderName(fullName: string, cpfCnpj: string): string {
 export async function createClient(input: ClientCreateOutput) {
   const sb = getSupabaseAdmin();
 
+  // Chave "É um cliente" (2026-07-19) — NÃO é coluna do banco: quando ligada, a
+  // pessoa já nasce marcada como cliente (marcado_cliente_at). Separada do resto
+  // do payload para não ir no INSERT como coluna inexistente.
+  const { is_cliente, ...clientInput } = input as ClientCreateOutput & {
+    is_cliente?: boolean;
+  };
+
   // 0) Valida ENTREGABILIDADE do e-mail (evita typo tipo "gmaill.com" que faz o
   //    link da ZapSign nunca chegar). Bloqueia só quando o domínio claramente não
   //    recebe e-mail; em erro transitório de DNS faz fail-open (não trava cadastro).
-  if (input.email) {
-    const chk = await checkEmailDeliverability(input.email);
+  if (clientInput.email) {
+    const chk = await checkEmailDeliverability(clientInput.email);
     if (!chk.ok) {
       const extra = chk.suggestion ? ` Você quis dizer ${chk.suggestion}?` : "";
       throw new ClientServiceError(
@@ -63,10 +70,15 @@ export async function createClient(input: ClientCreateOutput) {
 
   // 1) INSERT cliente (cpf_cnpj já vem canônico do Zod transform)
   //    person_type é derivado do tamanho do CPF/CNPJ (11 = PF, 14 = PJ).
-  const person_type = input.cpf_cnpj.length === 14 ? "PJ" : "PF";
+  const person_type = clientInput.cpf_cnpj.length === 14 ? "PJ" : "PF";
   const { data: client, error } = await sb
     .from("system_clients")
-    .insert({ ...input, organization_id: DEFAULT_ORG_ID, person_type } as ClientInsert)
+    .insert({
+      ...clientInput,
+      organization_id: DEFAULT_ORG_ID,
+      person_type,
+      ...(is_cliente ? { marcado_cliente_at: new Date().toISOString() } : {}),
+    } as ClientInsert)
     .select()
     .single();
 
@@ -282,6 +294,31 @@ export async function updateClient(id: string, input: ClientUpdateOutput) {
 }
 
 // ----------------------------------------------------------------------------
+// TORNAR CLIENTE — marca um LEAD como CLIENTE manualmente (botão na ficha). Só
+// grava o carimbo `marcado_cliente_at`; a pessoa passa a aparecer em Clientes.
+// ----------------------------------------------------------------------------
+export async function tornarCliente(id: string) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_clients")
+    .update({ marcado_cliente_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select()
+    .single();
+  if (error || !data)
+    throw new ClientServiceError(error?.message ?? "Cliente não encontrado", "DB_ERROR", 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: data.organization_id,
+    action: "client.tornar_cliente",
+    entity_type: "client",
+    entity_id: data.id,
+  });
+  return data;
+}
+
+// ----------------------------------------------------------------------------
 // SOFT-DELETE (com cascata em documentos)
 // ----------------------------------------------------------------------------
 export async function softDeleteClient(id: string) {
@@ -396,15 +433,9 @@ export async function hardDeleteClient(id: string) {
   if (caseIds.length > 0) {
     for (const table of CASE_CHILD_TABLES) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (sb.from(table as any) as any)
-        .delete()
-        .in("case_id", caseIds);
+      const { error } = await (sb.from(table as any) as any).delete().in("case_id", caseIds);
       if (error && !isMissingTable(error)) {
-        throw new ClientServiceError(
-          `Falha ao apagar ${table}: ${error.message}`,
-          "DB_ERROR",
-          500,
-        );
+        throw new ClientServiceError(`Falha ao apagar ${table}: ${error.message}`, "DB_ERROR", 500);
       }
     }
 
@@ -424,11 +455,7 @@ export async function hardDeleteClient(id: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (sb.from(table as any) as any).delete().eq("client_id", id);
     if (error && !isMissingTable(error)) {
-      throw new ClientServiceError(
-        `Falha ao apagar ${table}: ${error.message}`,
-        "DB_ERROR",
-        500,
-      );
+      throw new ClientServiceError(`Falha ao apagar ${table}: ${error.message}`, "DB_ERROR", 500);
     }
   }
 
@@ -569,7 +596,8 @@ async function listAllActiveRegistrations(): Promise<ClientWithLifecycleMeta[]> 
   if (ccErr) throw new ClientServiceError(ccErr.message, "DB_ERROR", 500);
   const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
 
-  // Cadastros ativos que AINDA NÃO são clientes.
+  // Cadastros ativos que AINDA NÃO são clientes. Também EXCLUI os MARCADOS
+  // manualmente como cliente (chave no cadastro / botão na ficha) — 2026-07-19.
   const { data: clients, error: cErr } = await sb
     .from("system_clients")
     .select("*")
@@ -578,7 +606,11 @@ async function listAllActiveRegistrations(): Promise<ClientWithLifecycleMeta[]> 
 
   const now = Date.now();
   const out: ClientWithLifecycleMeta[] = (clients ?? [])
-    .filter((cli) => !clienteIds.has(cli.id))
+    .filter(
+      (cli) =>
+        !clienteIds.has(cli.id) &&
+        !(cli as { marcado_cliente_at?: string | null }).marcado_cliente_at,
+    )
     .map((cli) => {
       const meta = leadMeta.get(cli.id);
       const base = meta?.ultimo || new Date(cli.created_at).getTime();
@@ -634,6 +666,19 @@ export async function listClientsByLifecycle(
       byClient.set(c.client_id, { count: 1, ultimo: ts });
     }
   }
+  // (2026-07-19) A aba CLIENTE inclui também as pessoas MARCADAS manualmente como
+  // cliente (chave no cadastro / botão "Tornar cliente"), mesmo SEM caso assinado.
+  if (tab === "cliente") {
+    const { data: marcados } = await sb
+      .from("system_clients")
+      .select("id")
+      .is("deleted_at", null)
+      .not("marcado_cliente_at", "is", null);
+    for (const m of marcados ?? []) {
+      if (!byClient.has(m.id)) byClient.set(m.id, { count: 0, ultimo: 0 });
+    }
+  }
+
   if (byClient.size === 0) return [];
 
   const { data: clients, error: cErr } = await sb

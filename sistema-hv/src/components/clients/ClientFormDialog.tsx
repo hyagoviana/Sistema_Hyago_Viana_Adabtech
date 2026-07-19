@@ -388,6 +388,25 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Chave "É um cliente" (2026-07-19) — só na criação. Ligada: nasce em
+                Clientes; desligada (padrão): fica em Leads. */}
+            {mode === "create" && (
+              <label className="flex items-center gap-2.5 rounded-md border border-[var(--border)] p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!form.watch("is_cliente")}
+                  onChange={(e) => form.setValue("is_cliente", e.target.checked)}
+                  className="h-4 w-4 accent-[var(--gold)]"
+                />
+                <span className="text-[13px] text-[var(--navy)]">
+                  É um cliente{" "}
+                  <span className="text-muted-foreground">
+                    (ligado cria direto em Clientes; desligado fica em Leads)
+                  </span>
+                </span>
+              </label>
+            )}
+
             {/* Identificação — campos imutáveis após o cadastro */}
             <FormField
               control={form.control}

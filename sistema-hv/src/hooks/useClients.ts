@@ -11,6 +11,7 @@ import {
   listClientsByLifecycleFn,
   listClientsFn,
   resyncDriveFn,
+  tornarClienteFn,
   updateClientFn,
 } from "@/rpc/clients";
 
@@ -100,6 +101,19 @@ export function useDeleteClient() {
 
 export function useResyncDrive() {
   const fn = useServerFn(resyncDriveFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.lists() });
+    },
+  });
+}
+
+// Botão "Tornar esse lead um cliente" — marca a pessoa como cliente.
+export function useTornarCliente() {
+  const fn = useServerFn(tornarClienteFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),

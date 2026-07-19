@@ -11,6 +11,7 @@ import {
   listClients,
   listClientsByLifecycle,
   resyncClientDriveFolder,
+  tornarCliente,
   updateClient,
 } from "@/lib/clients-service";
 import { checkEmailDeliverability } from "@/lib/email-verify";
@@ -94,3 +95,8 @@ export const hardDeleteClientFn = createServerFn({ method: "POST" })
 export const resyncDriveFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) => handle(() => resyncClientDriveFolder(data.id)));
+
+// TORNAR CLIENTE — botão "Tornar esse lead um cliente" na ficha.
+export const tornarClienteFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => handle(() => tornarCliente(data.id)));

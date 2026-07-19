@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClientPaymentStatus } from "@/hooks/useFinanceiro";
-import { useClient, useDeleteClient, useResyncDrive } from "@/hooks/useClients";
+import { useClient, useDeleteClient, useResyncDrive, useTornarCliente } from "@/hooks/useClients";
 import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { podeVerValores } from "@/lib/rbac";
@@ -67,6 +67,7 @@ function ClienteDetalhe() {
   const { data: casesData } = useCasesList({ client_id: id });
   const resyncMutation = useResyncDrive();
   const deleteMutation = useDeleteClient();
+  const tornarClienteMutation = useTornarCliente();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -153,6 +154,23 @@ function ClienteDetalhe() {
           </h1>
         </div>
         <div className="flex gap-2 self-start mt-2">
+          {/* Tornar cliente — só enquanto for LEAD (não marcado como cliente). */}
+          {!(cliente as { marcado_cliente_at?: string | null }).marcado_cliente_at && (
+            <Button
+              size="sm"
+              disabled={tornarClienteMutation.isPending}
+              onClick={async () => {
+                try {
+                  await tornarClienteMutation.mutateAsync(cliente.id);
+                  toast.success("Cadastro agora é um cliente.");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha ao tornar cliente");
+                }
+              }}
+            >
+              Tornar esse lead um cliente
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil size={14} className="mr-1.5" /> Editar
           </Button>
