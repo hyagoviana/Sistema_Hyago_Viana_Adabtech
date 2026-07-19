@@ -56,6 +56,7 @@ Este guia reúne **tudo** que já está no ar para você testar de uma vez. Marq
 
 **T3 — casos/procurações vinculáveis (N:N)** *(depende do pré-requisito do Drive):*
 - [ ] No editor do tema, seções **"Documentos de caso"** e **"Procurações"** têm um dropdown **"Vincular pasta existente do Drive…"** que lista as subpastas de "modelos"/"procuração" → escolher uma e **Vincular**.
+- [ ] Ao vincular/criar, o sistema **também cria a subpasta dentro da pasta do tema** no Drive (`1PtxXw/Tema-X/…`) — confira no Drive que a pasta apareceu lá *(depende de o tema já ter pasta: rode "Criar pasta do tema" antes)*.
 - [ ] A **mesma pasta** pode ser vinculada a **vários temas** (vincule a mesma pasta em 2 temas diferentes).
 - [ ] Cada pasta vinculada tem um **X** para **desvincular** (confirma que **não apaga** no Drive).
 
