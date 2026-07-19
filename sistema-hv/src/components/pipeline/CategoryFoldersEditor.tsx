@@ -4,7 +4,7 @@
 // existente OU criando uma pasta nova (caso → "07- Modelos"; procuração →
 // "08- Contratos e procurações"). O upload extrai as variáveis automaticamente.
 
-import { FolderPlus, Upload } from "lucide-react";
+import { FolderPlus, Link2, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +14,10 @@ import { Label } from "@/components/ui/label";
 import {
   type FolderKind,
   useCreateTypeFolder,
+  useLinkTypeFolder,
+  useRootModelFolders,
   useTypeFolders,
+  useUnlinkTypeFolder,
   useUploadTypeTemplate,
 } from "@/hooks/useServiceTypeFolders";
 
@@ -42,17 +45,62 @@ function FolderKindSection({
   // undefined = ver TODAS as pastas (comuns + de todas as frentes) na gestão.
   const { data: folders, isLoading } = useTypeFolders(serviceTypeId, kind, undefined);
   const createFolder = useCreateTypeFolder();
+  const link = useLinkTypeFolder();
+  const unlink = useUnlinkTypeFolder();
   const upload = useUploadTypeTemplate();
+  // T3 — subpastas existentes no Drive (modelos/procuração) para vincular ao tema.
+  const { data: driveFolders } = useRootModelFolders(kind);
   const fileRef = useRef<HTMLInputElement>(null);
   const [dest, setDest] = useState<string>(NEW);
   const [newName, setNewName] = useState("");
+  // T3 — pasta existente do Drive escolhida para vincular.
+  const [linkPick, setLinkPick] = useState<string>("");
   // R2-04 — frente escolhida para a NOVA pasta (ALL_FRENTES = NULL/tema todo).
   const [frenteSel, setFrenteSel] = useState<string>(ALL_FRENTES);
   const hasFrentes = (frentes ?? []).length > 0;
   const frenteSlug = frenteSel === ALL_FRENTES ? null : frenteSel;
 
   const list = folders ?? [];
-  const busy = createFolder.isPending || upload.isPending;
+  const busy = createFolder.isPending || upload.isPending || link.isPending || unlink.isPending;
+  // Pastas do Drive ainda NÃO vinculadas a este tema (evita duplicar vínculo).
+  const linkedIds = new Set(list.map((f) => f.drive_folder_id));
+  const available = (driveFolders ?? []).filter((d) => !linkedIds.has(d.id));
+
+  async function handleLink() {
+    const picked = (driveFolders ?? []).find((d) => d.id === linkPick);
+    if (!picked) {
+      toast.error("Escolha uma pasta do Drive para vincular");
+      return;
+    }
+    try {
+      await link.mutateAsync({
+        serviceTypeId,
+        kind,
+        driveFolderId: picked.id,
+        name: picked.name,
+        frenteSlug,
+      });
+      toast.success(`Pasta "${picked.name}" vinculada ao tema`);
+      setLinkPick("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao vincular pasta");
+    }
+  }
+
+  async function handleUnlink(id: string, name: string) {
+    if (
+      !window.confirm(
+        `Desvincular a pasta "${name}" deste tema?\n\n(A pasta NÃO é apagada no Drive.)`,
+      )
+    )
+      return;
+    try {
+      await unlink.mutateAsync(id);
+      toast.success("Pasta desvinculada");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao desvincular");
+    }
+  }
   // Se o destino escolhido não existe mais (ou é a 1ª carga), cai no 1º da lista.
   const effectiveDest = dest === NEW || list.some((f) => f.drive_folder_id === dest) ? dest : NEW;
 
@@ -111,8 +159,41 @@ function FolderKindSection({
                   · {frenteLabel(f.frente_slug)}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={() => handleUnlink(f.id, f.name)}
+                disabled={busy}
+                title="Desvincular do tema (não apaga no Drive)"
+                className="ml-0.5 text-muted-foreground hover:text-destructive disabled:opacity-40"
+              >
+                <X size={12} />
+              </button>
             </span>
           ))}
+        </div>
+      )}
+
+      {/* T3 — vincular uma pasta EXISTENTE do Drive (N:N: a mesma pasta pode ir
+          para vários temas). Respeita a frente escolhida abaixo. */}
+      {available.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          <select
+            value={linkPick}
+            onChange={(e) => setLinkPick(e.target.value)}
+            disabled={busy}
+            className="flex-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
+          >
+            <option value="">Vincular pasta existente do Drive…</option>
+            {available.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+          <Button size="sm" variant="outline" disabled={busy || !linkPick} onClick={handleLink}>
+            <Link2 size={13} className="mr-1" />
+            Vincular
+          </Button>
         </div>
       )}
 

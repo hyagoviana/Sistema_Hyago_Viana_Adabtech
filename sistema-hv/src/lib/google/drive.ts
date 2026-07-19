@@ -269,3 +269,28 @@ export async function listFilesInFolder(parentId: string, pageSize = 100) {
     throw new DriveError(`Falha ao listar arquivos da pasta ${parentId}.`, err);
   }
 }
+
+// Lista SÓ as subpastas (folders) de um pai — usado para o admin escolher qual
+// pasta de "modelos"/"procuração" vincular a um tema (T3).
+export async function listFoldersInFolder(
+  parentId: string,
+  pageSize = 200,
+): Promise<{ id: string; name: string; url: string }[]> {
+  const drive = getDriveClient();
+  try {
+    const res = await drive.files.list({
+      q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: "files(id, name, webViewLink)",
+      orderBy: "name",
+      pageSize,
+      ...searchParams(),
+    });
+    return (res.data.files ?? []).map((f) => ({
+      id: f.id!,
+      name: f.name ?? "",
+      url: f.webViewLink ?? "",
+    }));
+  } catch (err) {
+    throw new DriveError(`Falha ao listar subpastas da pasta ${parentId}.`, err);
+  }
+}

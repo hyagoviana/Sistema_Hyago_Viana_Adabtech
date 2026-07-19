@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   createAndLinkFolder,
   linkExistingFolder,
+  listRootModelFolders,
   listTypeFolders,
   unlinkFolder,
 } from "@/lib/service-type-folders-service";
@@ -85,3 +86,9 @@ export const linkTypeFolderFn = createServerFn({ method: "POST" })
 export const unlinkTypeFolderFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => unlinkFolder(data.id)));
+
+// T3 — lista as subpastas existentes na raiz de "modelos"/"procuração" do Drive,
+// para o admin escolher qual vincular ao tema.
+export const listRootModelFoldersFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ kind: kindSchema }).parse(d))
+  .handler(async ({ data }) => handle(() => listRootModelFolders(data.kind)));

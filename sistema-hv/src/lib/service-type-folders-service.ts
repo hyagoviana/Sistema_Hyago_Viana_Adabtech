@@ -3,7 +3,7 @@
 // Cada tipo pode ter VÁRIAS pastas de caso (ex.: FIES ESF) e de procuração.
 // Fonte de verdade: system_service_type_folders (migration 20260709000030).
 
-import { createFolder } from "./google/drive";
+import { createFolder, listFoldersInFolder } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -163,6 +163,18 @@ export async function createAndLinkFolder(input: {
     name: folder.name,
     frenteSlug: input.frenteSlug ?? null,
   });
+}
+
+// T3 — lista as SUBPASTAS existentes na raiz de "modelos" (kind='caso') ou
+// "procuração" (kind='procuracao'), para o admin escolher qual VINCULAR a um tema.
+// São os "casos"/procurações que o dono já organizou no Drive. N:N: a mesma pasta
+// pode ser vinculada a vários temas (cada vínculo é uma linha em
+// system_service_type_folders com o service_type interno do tema).
+export async function listRootModelFolders(
+  kind: FolderKind,
+): Promise<{ id: string; name: string; url: string }[]> {
+  const parent = kind === "procuracao" ? PROCURACAO_ROOT_FOLDER_ID : MODELS_ROOT_FOLDER_ID;
+  return listFoldersInFolder(parent);
 }
 
 // Desvincula (soft-delete) uma pasta da categoria. NÃO apaga a pasta no Drive.

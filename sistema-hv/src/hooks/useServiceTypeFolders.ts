@@ -4,11 +4,26 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   createTypeFolderFn,
   linkTypeFolderFn,
+  listRootModelFoldersFn,
   listTypeFoldersFn,
   unlinkTypeFolderFn,
 } from "@/rpc/service-type-folders";
 
 export type FolderKind = "caso" | "procuracao";
+
+export type DriveFolderOption = { id: string; name: string; url: string };
+
+// T3 — subpastas existentes na raiz de "modelos"/"procuração" (para vincular ao
+// tema). `enabled` (default true) permite adiar a chamada ao Drive se preciso.
+export function useRootModelFolders(kind: FolderKind, enabled = true) {
+  const fn = useServerFn(listRootModelFoldersFn);
+  return useQuery({
+    queryKey: ["root-model-folders", kind],
+    queryFn: () => fn({ data: { kind } }) as Promise<DriveFolderOption[]>,
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
 
 export type ServiceTypeFolder = {
   id: string;
