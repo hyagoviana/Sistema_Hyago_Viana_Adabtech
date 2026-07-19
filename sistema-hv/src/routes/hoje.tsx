@@ -16,6 +16,7 @@ import { CASE_TYPE_LABELS, MACRO_OP_LABELS } from "@/lib/cases/constants";
 import type { CaseType, MacroOp } from "@/lib/cases/constants";
 import { useCasesList } from "@/hooks/useCases";
 import { useClientsList } from "@/hooks/useClients";
+import { useTemas } from "@/hooks/useTemas";
 import { useAllTasks, useAllDeadlines } from "@/hooks/useDossie";
 import { useAuth } from "@/lib/auth";
 
@@ -64,8 +65,21 @@ function HojePage() {
   const { session } = useAuth();
   const { data: casos, isLoading } = useCasesList();
   const { data: clientes, isLoading: isLoadingClients } = useClientsList();
+  const { data: temas } = useTemas();
   const { data: tasks } = useAllTasks();
   const { data: deadlines } = useAllDeadlines();
+
+  // Nome do tema por id (2026-07-19) — para agrupar por TEMA em vez do tipo legado.
+  const temaNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of temas ?? []) m.set(t.id, t.name);
+    return m;
+  }, [temas]);
+  // Rótulo de um caso: nome do TEMA quando há; senão o tipo legado (transição).
+  const labelTemaOuTipo = (c: { tema_id?: string | null; case_type: string }) =>
+    c.tema_id
+      ? (temaNameById.get(c.tema_id) ?? "Tema")
+      : (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type);
 
   const meta = session?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
   const nome = meta?.full_name || meta?.name || "";
@@ -90,20 +104,26 @@ function HojePage() {
     [lista],
   );
 
-  // Casos por tipo
-  const casosPorTipo = useMemo(() => {
-    const map: Record<string, number> = {};
+  // Clientes por TEMA (2026-07-19) — quantos CLIENTES distintos têm caso em cada
+  // tema. Casos sem tema (legados) caem em "Sem tema". Substitui o antigo "casos
+  // por tipo" (tipos legados), alinhando o painel ao modelo de temas.
+  const clientesPorTema = useMemo(() => {
+    const byTema = new Map<string, { label: string; clients: Set<string> }>();
     for (const c of lista) {
-      map[c.case_type] = (map[c.case_type] ?? 0) + 1;
+      const temaId = (c as { tema_id?: string | null }).tema_id ?? null;
+      const key = temaId ?? "__none__";
+      if (!byTema.has(key)) {
+        byTema.set(key, {
+          label: temaId ? (temaNameById.get(temaId) ?? "Tema") : "Sem tema",
+          clients: new Set<string>(),
+        });
+      }
+      byTema.get(key)!.clients.add(c.client_id);
     }
-    return Object.entries(map)
-      .map(([tipo, qtd]) => ({
-        tipo,
-        label: CASE_TYPE_LABELS[tipo as CaseType] ?? tipo,
-        qtd,
-      }))
+    return Array.from(byTema.values())
+      .map((v) => ({ label: v.label, qtd: v.clients.size }))
       .sort((a, b) => b.qtd - a.qtd);
-  }, [lista]);
+  }, [lista, temaNameById]);
 
   // Casos por status operacional (top 5)
   const casosPorStatus = useMemo(() => {
@@ -164,8 +184,8 @@ function HojePage() {
     [deadlines],
   );
 
-  // Máximo para as barras de "casos por tipo" (cara de gráfico).
-  const maxTipo = Math.max(1, ...casosPorTipo.map((t) => t.qtd));
+  // Máximo para as barras de "clientes por tema" (cara de gráfico).
+  const maxTema = Math.max(1, ...clientesPorTema.map((t) => t.qtd));
 
   // Masthead — data por extenso + frase-resumo com dados REAIS (omite zeros).
   const dataExtenso = (() => {
@@ -300,22 +320,28 @@ function HojePage() {
       {/* Distribuição: por tipo (barras) + por status (donut) — grid 1.15fr .85fr */}
       <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-4 mb-4">
         <SectionCard
-          title="Casos por tipo"
-          count={totalAtivos}
-          countSuffix="ativos"
+          title="Clientes por tema"
+          count={totalClientes}
+          countSuffix={totalClientes === 1 ? "cliente" : "clientes"}
           to="/pipeline"
           cta="Ver pipeline →"
         >
           {isLoading ? (
             <ListSkeleton />
-          ) : casosPorTipo.length === 0 ? (
+          ) : clientesPorTema.length === 0 ? (
             <Empty icon={Scale} to="/casos/lista" action="Ver casos">
               Nenhum caso cadastrado ainda.
             </Empty>
           ) : (
             <div>
-              {casosPorTipo.map((t, i) => (
-                <DistBar key={t.tipo} label={t.label} value={t.qtd} max={maxTipo} dim={i >= 3} />
+              {clientesPorTema.map((t, i) => (
+                <DistBar
+                  key={`${t.label}-${i}`}
+                  label={t.label}
+                  value={t.qtd}
+                  max={maxTema}
+                  dim={i >= 3}
+                />
               ))}
             </div>
           )}
@@ -467,7 +493,7 @@ function HojePage() {
                     <span className="text-muted-foreground font-normal"> · {c.client_name}</span>
                   </div>
                   <div className="text-[12px] text-muted-foreground mt-0.5 truncate">
-                    {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type} ·{" "}
+                    {labelTemaOuTipo(c)} ·{" "}
                     {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
                   </div>
                 </div>
