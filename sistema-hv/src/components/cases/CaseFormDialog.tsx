@@ -71,6 +71,10 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);
   const [respPopOpen, setRespPopOpen] = useState(false);
+  // Situação inicial do caso (cadastro exclusivo, 2026-07-19). "lead" (padrão) =
+  // nasce no Comercial aguardando assinatura; "cliente" = nasce já assinado, direto
+  // no Operacional. A virada automática lead→cliente ao assinar segue valendo.
+  const [situacaoInicial, setSituacaoInicial] = useState<"lead" | "cliente">("lead");
   // Tema selecionado (dirige o select de frente e o dual-write). Vazio = usar o
   // caminho legado por categoria (case_type).
   const [temaId, setTemaId] = useState<string>("");
@@ -103,6 +107,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   useEffect(() => {
     if (open) {
       setTemaId("");
+      setSituacaoInicial("lead");
       form.reset({
         client_id: presetClientId ?? "",
         case_type: serviceTypes?.[0]?.slug ?? "",
@@ -122,14 +127,22 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
       // do tema): o servidor (createCase) resolve o service_type INTERNO do tema e
       // sobrescreve `case_type` com o slug interno. `tema_id`+`frente_slug` vão no
       // dual-write. Sem tema, usa o `case_type` do select de categoria (legado).
+      const comoCliente = situacaoInicial === "cliente";
       const created = await create.mutateAsync({
         ...data,
         tema_id: temaId || null,
-        // ITEM 5: entra no COMERCIAL (aguardando assinatura), não no operacional.
-        comercial: true,
+        // ITEM 5: por padrão entra no COMERCIAL (aguardando assinatura). Quando o
+        // usuário marca "Cliente (já assinado)", nasce direto como CLIENTE no
+        // operacional (cadastro exclusivo, 2026-07-19).
+        comercial: !comoCliente,
+        iniciar_como_cliente: comoCliente,
         procuracao_template_id: undefined,
       });
-      toast.success(`Caso ${created.case_code} criado — no Comercial (aguardando assinatura)`);
+      toast.success(
+        comoCliente
+          ? `Caso ${created.case_code} criado — Cliente (no Operacional)`
+          : `Caso ${created.case_code} criado — no Comercial (aguardando assinatura)`,
+      );
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
@@ -308,6 +321,29 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                 )}
               />
             )}
+
+            {/* Situação inicial (cadastro exclusivo, 2026-07-19) — Lead (padrão) ou
+                Cliente (já assinado). A pessoa aparece só em Leads OU só em Clientes;
+                se depois um caso dela for assinado, vira Cliente automaticamente. */}
+            <FormItem>
+              <FormLabel>Situação inicial *</FormLabel>
+              <Select
+                value={situacaoInicial}
+                onValueChange={(v) => setSituacaoInicial(v as "lead" | "cliente")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lead">
+                    Lead — vai para o Comercial (aguardando assinatura)
+                  </SelectItem>
+                  <SelectItem value="cliente">
+                    Cliente — já assinado (vai direto ao Operacional)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
 
             <FormField
               control={form.control}

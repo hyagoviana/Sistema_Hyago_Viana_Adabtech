@@ -164,7 +164,12 @@ export async function createCase(
   // procuração ao ZapSign (sendCaseDocumentToZapsign, quando doc_kind='procuracao').
   // `comercial` continua governando apenas se preparamos o DOC de procuração
   // (placeholder/geração), não a flag de "aguardando assinatura".
-  const comercial = input.comercial === true;
+  //
+  // Cadastro exclusivo (2026-07-19) — atalho "criar já como CLIENTE": pula o funil
+  // comercial e vai direto ao operacional (lifecycle='CLIENTE' + assinatura
+  // liberada no próprio insert). Cliente e comercial são mutuamente exclusivos.
+  const iniciarComoCliente = input.iniciar_como_cliente === true;
+  const comercial = input.comercial === true && !iniciarComoCliente;
 
   // REGRA (2026-07-08) — criar/vincular um caso NÃO o coloca na pipeline
   // financeira. Reverte o AJUSTE B (2026-07-07), que semeava a 1ª etapa fin em
@@ -227,6 +232,16 @@ export async function createCase(
       // essa flag, e eles aparecem no board COMERCIAL. A promoção para operacional
       // acontece por (a) assinatura (webhook/manual) ou (b) "Enviar para operacional".
       aguardando_assinatura_at: comercial ? new Date().toISOString() : null,
+      // Cadastro exclusivo (2026-07-19) — nascer JÁ CLIENTE: carimba lifecycle e a
+      // assinatura do contrato no ato (respeita o CHECK: assinatura_liberada_at
+      // preenchido ⟹ lifecycle <> 'LEAD'). Assim a pessoa entra direto em Clientes.
+      ...(iniciarComoCliente
+        ? {
+            lifecycle: "CLIENTE" as const,
+            assinatura_liberada_at: new Date().toISOString(),
+            assinatura_liberada_by: triggeredBy ?? null,
+          }
+        : {}),
       // (2026-07-09) — quem criou (base da visibilidade "meus casos").
       created_by: triggeredBy ?? null,
     })
@@ -247,9 +262,14 @@ export async function createCase(
   await sb.from("system_case_events").insert({
     case_id: created.id,
     organization_id: DEFAULT_ORG_ID,
-    action: comercial ? "created_comercial" : "created",
+    action: comercial ? "created_comercial" : iniciarComoCliente ? "created_cliente" : "created",
     to_macrostatus_op: created.macrostatus_op,
-    diff: { case_type: created.case_type, client_id: created.client_id, comercial },
+    diff: {
+      case_type: created.case_type,
+      client_id: created.client_id,
+      comercial,
+      iniciar_como_cliente: iniciarComoCliente,
+    },
     triggered_by: triggeredBy ?? null,
   });
 

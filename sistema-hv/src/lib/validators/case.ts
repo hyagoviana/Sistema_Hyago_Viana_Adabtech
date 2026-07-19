@@ -23,14 +23,24 @@ export const caseCreateSchema = z.object({
   // Melhoria 3: quando true, o caso nasce em fase comercial (aguardando
   // assinatura da procuração) e não entra no Kanban operacional até liberar.
   comercial: z.boolean().optional(),
+  // Cadastro exclusivo (2026-07-19) — atalho no "Novo caso": quando true, o caso
+  // nasce JÁ como CLIENTE (contrato assinado), pulando o funil comercial e indo
+  // direto ao operacional. Default (false/ausente) = nasce LEAD e segue o fluxo
+  // normal (a virada automática para CLIENTE ao assinar continua valendo).
+  iniciar_como_cliente: z.boolean().optional(),
   // Procuração escolhida no ato da criação comercial. Quando presente, o sistema
   // gera o documento já preenchido com os dados do cliente (em vez do placeholder).
   procuracao_template_id: z.string().uuid().optional().nullable(),
 });
 
-export const caseUpdateSchema = caseCreateSchema
-  .partial()
-  .omit({ client_id: true, case_type: true, comercial: true, procuracao_template_id: true });
+export const caseUpdateSchema = caseCreateSchema.partial().omit({
+  client_id: true,
+  case_type: true,
+  comercial: true,
+  procuracao_template_id: true,
+  // Só faz sentido na criação (nasce lead/cliente); não é campo editável do caso.
+  iniciar_como_cliente: true,
+});
 
 export type CaseCreateInput = z.input<typeof caseCreateSchema>;
 export type CaseCreateOutput = z.output<typeof caseCreateSchema>;

@@ -526,11 +526,14 @@ export type ClientWithLifecycleMeta = ClientRow & {
   ultimo_movimento: string | null;
 };
 
-// AJUSTE A (2026-07-07) — Leads = banco-mestre de TODOS os cadastros ativos.
-// A aba "Leads" lista TODO cadastro ativo (system_clients, deleted_at IS NULL),
-// INCLUSIVE quem já virou cliente. Promover um lead a cliente NÃO o remove daqui:
-// ele fica em Leads E aparece também em Clientes. (Antes esta função excluía
-// clientes/perdidos — o que fazia o cadastro "sumir" do Leads ao virar cliente.)
+// EXCLUSIVIDADE Lead↔Cliente (2026-07-19, decisão do owner) — uma pessoa aparece
+// OU em Leads OU em Clientes, NUNCA nas duas. A aba "Leads" lista os cadastros
+// ativos que AINDA NÃO são clientes (nenhum caso lifecycle='CLIENTE'). Assim que
+// um caso é assinado (promoverCasoOperacional → lifecycle='CLIENTE', via webhook
+// ZapSign ou botão manual), a pessoa SOME de Leads e passa a aparecer só em
+// Clientes — automático, sem cadastro duplicado. Mesma régua que o board comercial
+// (listComercialBoard) já usa para não mostrar quem graduou.
+// (Reverte o "AJUSTE A" de 2026-07-07, que fazia Leads ser banco-mestre de todos.)
 //
 // Enriquecimento mantido: casos_no_lifecycle conta os casos LEAD ativos da pessoa
 // e dias_parado usa o último movimento do caso LEAD mais recente; sem caso LEAD,
@@ -558,7 +561,15 @@ async function listAllActiveRegistrations(): Promise<ClientWithLifecycleMeta[]> 
     }
   }
 
-  // TODOS os cadastros ativos — sem excluir clientes nem perdidos.
+  // Quem já é CLIENTE (>=1 caso lifecycle='CLIENTE') é EXCLUÍDO de Leads.
+  const { data: clienteCases, error: ccErr } = await sb
+    .from("system_cases_active")
+    .select("client_id")
+    .eq("lifecycle", "CLIENTE");
+  if (ccErr) throw new ClientServiceError(ccErr.message, "DB_ERROR", 500);
+  const clienteIds = new Set((clienteCases ?? []).map((c) => c.client_id));
+
+  // Cadastros ativos que AINDA NÃO são clientes.
   const { data: clients, error: cErr } = await sb
     .from("system_clients")
     .select("*")
@@ -566,17 +577,19 @@ async function listAllActiveRegistrations(): Promise<ClientWithLifecycleMeta[]> 
   if (cErr) throw new ClientServiceError(cErr.message, "DB_ERROR", 500);
 
   const now = Date.now();
-  const out: ClientWithLifecycleMeta[] = (clients ?? []).map((cli) => {
-    const meta = leadMeta.get(cli.id);
-    const base = meta?.ultimo || new Date(cli.created_at).getTime();
-    const dias = base ? Math.max(0, Math.floor((now - base) / 86_400_000)) : 0;
-    return {
-      ...(cli as ClientRow),
-      casos_no_lifecycle: meta?.count ?? 0,
-      dias_parado: dias,
-      ultimo_movimento: base ? new Date(base).toISOString() : null,
-    };
-  });
+  const out: ClientWithLifecycleMeta[] = (clients ?? [])
+    .filter((cli) => !clienteIds.has(cli.id))
+    .map((cli) => {
+      const meta = leadMeta.get(cli.id);
+      const base = meta?.ultimo || new Date(cli.created_at).getTime();
+      const dias = base ? Math.max(0, Math.floor((now - base) / 86_400_000)) : 0;
+      return {
+        ...(cli as ClientRow),
+        casos_no_lifecycle: meta?.count ?? 0,
+        dias_parado: dias,
+        ultimo_movimento: base ? new Date(base).toISOString() : null,
+      };
+    });
   // Mais parados primeiro.
   out.sort((a, b) => b.dias_parado - a.dias_parado);
   return out;
@@ -590,10 +603,10 @@ export async function listClientsByLifecycle(
 ): Promise<ClientWithLifecycleMeta[]> {
   const sb = getSupabaseAdmin();
 
-  // AJUSTE A (2026-07-07) — aba LEADS = banco-mestre: TODO cadastro ativo,
-  // INCLUSIVE quem já virou cliente. O cliente aparece em Leads E em Clientes;
-  // não some do Leads ao ser promovido. A aba "cliente" abaixo é o subset de
-  // quem tem >=1 caso CLIENTE.
+  // EXCLUSIVIDADE (2026-07-19) — aba LEADS lista os cadastros ativos que AINDA NÃO
+  // são clientes (sem caso lifecycle='CLIENTE'); a régua fica em
+  // listAllActiveRegistrations(). A aba "cliente" abaixo é o subset de quem tem
+  // >=1 caso CLIENTE. Uma pessoa aparece só numa das duas.
   if (tab === "lead") {
     return listAllActiveRegistrations();
   }
