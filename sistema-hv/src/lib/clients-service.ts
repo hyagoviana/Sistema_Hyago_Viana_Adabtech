@@ -4,7 +4,7 @@
 import slugify from "slugify";
 
 import { checkEmailDeliverability } from "./email-verify";
-import { createFolder, DriveError } from "./google/drive";
+import { createFolder, deleteFile, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database, Json } from "./supabase/types";
 import type { ClientCreateOutput, ClientUpdateOutput } from "./validators/client";
@@ -401,7 +401,7 @@ export async function hardDeleteClient(id: string) {
   // Confere existência (para 404 coerente com o soft-delete anterior).
   const { data: client, error: findErr } = await sb
     .from("system_clients")
-    .select("id, organization_id")
+    .select("id, organization_id, drive_folder_id")
     .eq("id", id)
     .maybeSingle();
   if (findErr) throw new ClientServiceError(findErr.message, "DB_ERROR", 500);
@@ -462,6 +462,20 @@ export async function hardDeleteClient(id: string) {
   // 4) O cliente.
   const { error: delClientErr } = await sb.from("system_clients").delete().eq("id", id);
   if (delClientErr) throw new ClientServiceError(delClientErr.message, "DB_ERROR", 500);
+
+  // 5) Pasta do cliente no Drive → lixeira (best-effort, 2026-07-19). Excluir o
+  //    cliente não deve deixar pasta órfã na pasta de clientes do Drive.
+  const folderId = (client as { drive_folder_id?: string | null }).drive_folder_id;
+  if (folderId) {
+    try {
+      await deleteFile(folderId);
+    } catch (err) {
+      console.error(
+        "clients-service: falha ao excluir a pasta do cliente no Drive:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 
   return { ok: true as const, id };
 }
