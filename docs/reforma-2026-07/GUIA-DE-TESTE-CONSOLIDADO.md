@@ -44,12 +44,24 @@ Este guia reúne **tudo** que já está no ar para você testar de uma vez. Marq
 ## 4. 📂 Menu Financeiro — NOVO
 - [ ] No menu lateral existe o grupo **"Financeiro"** entre **Comercial** e **Inteligência**, com **Pipeline Financeira** e **Relatório Financeiro**.
 
-## 5. 🗂️ Temas — T1 (só os 5 temas) e T2 (pasta no Drive) — NOVO
+## 5. 🗂️ Temas — T1 a T4 (redesenho completo) — NOVO
+**T1 — só os 5 temas:**
 - [ ] Em **Pipeline Operacional**, os cards são os **temas** (Tema 1..5), **não** os tipos antigos (COVID/FIES sumiram daqui).
 - [ ] Botão **"Ver todos em lista"** abre a Lista com todos os casos (inclusive os de tipos antigos ainda não vinculados a um tema).
 - [ ] **Novo Caso** com temas cadastrados: o **Tema é obrigatório** (Tema → Frente); a "categoria legada" não aparece mais.
 - [ ] Em **Temas** (admin): **renomear** um tema, criar **frentes**, definir **campos**.
-- [ ] **[Depende do pré-requisito do Drive]** No editor do tema, botão **"Criar pasta do tema"** → cria a subpasta no Drive e mostra **"Abrir pasta do tema"**. Renomear o tema **renomeia a pasta** no Drive.
+
+**T2 — pasta do tema no Drive** *(depende do pré-requisito do Drive):*
+- [ ] No editor do tema, botão **"Criar pasta do tema"** → cria a subpasta no Drive e mostra **"Abrir pasta do tema"**. Renomear o tema **renomeia a pasta** no Drive.
+
+**T3 — casos/procurações vinculáveis (N:N)** *(depende do pré-requisito do Drive):*
+- [ ] No editor do tema, seções **"Documentos de caso"** e **"Procurações"** têm um dropdown **"Vincular pasta existente do Drive…"** que lista as subpastas de "modelos"/"procuração" → escolher uma e **Vincular**.
+- [ ] A **mesma pasta** pode ser vinculada a **vários temas** (vincule a mesma pasta em 2 temas diferentes).
+- [ ] Cada pasta vinculada tem um **X** para **desvincular** (confirma que **não apaga** no Drive).
+
+**T4 — filtros:**
+- [ ] Na **Pipeline Financeira**, o filtro do topo é **"Todos os temas"** (não mais "tipos"); filtra os cards por tema.
+- [ ] No **Operacional**, o filtro de **frente** (chips) segue funcionando dentro do tema.
 
 ## 6. 📊 Aba Hoje (Painel) — ATUALIZADA
 - [ ] O bloco antes "Casos por tipo" agora é **"Clientes por tema"**: cada barra é um tema, o número é a **quantidade de clientes** naquele tema (casos sem tema = "Sem tema").
@@ -68,10 +80,6 @@ Este guia reúne **tudo** que já está no ar para você testar de uma vez. Marq
 - [ ] **Geração de documento**: Caso › Documentos › **"Gerar documento"** → escolhe modelo, campos preenchem. *(Depende de revisar os modelos no Drive: trocar texto fixo por `<...>`.)*
 
 ---
-
-## ⏭️ Ainda em construção (não precisa testar agora)
-- **Temas T3** — "casos" e procurações como pastas vinculáveis a vários temas (N:N). *(Depende do pré-requisito do Drive validado.)*
-- **Temas T4** — filtros na pipeline por tema/frente (incl. o filtro de tipo do financeiro).
 
 ## 📌 Pendências suas / do escritório (não são bugs)
 - Compartilhar a pasta do Drive com a Service Account (pré-requisito acima).
