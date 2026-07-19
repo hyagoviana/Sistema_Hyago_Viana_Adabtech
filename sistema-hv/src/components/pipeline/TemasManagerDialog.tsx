@@ -94,6 +94,13 @@ export function TemasManagerDialog({
     }
   }
 
+  // Fecha o editor. Se o editor foi aberto DIRETO pelo lápis do card (openTemaId),
+  // fechar o editor fecha o gerenciador inteiro (não volta para a lista de temas).
+  function closeEditor() {
+    setSelected(null);
+    if (openTemaId) onOpenChange(false);
+  }
+
   async function excluirTema() {
     if (!selected) return;
     if (
@@ -113,8 +120,9 @@ export function TemasManagerDialog({
 
   return (
     <>
-      {/* Lista de temas + criar tema */}
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Lista de temas + criar tema. NÃO abre quando veio do lápis (openTemaId):
+          nesse caso só o editor deve aparecer. */}
+      <Dialog open={open && !openTemaId} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Temas</DialogTitle>
@@ -172,7 +180,7 @@ export function TemasManagerDialog({
       </Dialog>
 
       {/* Editor do tema selecionado (nome + frentes) */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+      <Dialog open={!!selected} onOpenChange={(o) => !o && closeEditor()}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar tema</DialogTitle>
@@ -217,7 +225,7 @@ export function TemasManagerDialog({
             >
               {deleteTema.isPending ? "Excluindo…" : "Excluir tema"}
             </Button>
-            <Button variant="outline" onClick={() => setSelected(null)}>
+            <Button variant="outline" onClick={closeEditor}>
               Fechar
             </Button>
           </DialogFooter>
