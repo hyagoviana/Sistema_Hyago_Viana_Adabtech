@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -240,8 +241,8 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                 tema: o tema é obrigatório e a "categoria legada" some (o dono só
                 quer os temas no seletor). Sem temas, cai no tipo legado (abaixo). */}
             {hasTemas && (
-              <FormItem>
-                <FormLabel>Tema *</FormLabel>
+              <div className="space-y-2">
+                <Label>Tema *</Label>
                 <Select
                   value={temaId}
                   onValueChange={(v) => {
@@ -256,7 +257,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tema (ou use uma categoria abaixo)" />
+                    <SelectValue placeholder="Selecione o tema" />
                   </SelectTrigger>
                   <SelectContent>
                     {(temas ?? []).map((t) => (
@@ -266,7 +267,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
-              </FormItem>
+              </div>
             )}
 
             {/* Frente do tema (só quando um tema está escolhido). Documentos e
@@ -334,8 +335,8 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
             {/* Situação inicial (cadastro exclusivo, 2026-07-19) — Lead (padrão) ou
                 Cliente (já assinado). A pessoa aparece só em Leads OU só em Clientes;
                 se depois um caso dela for assinado, vira Cliente automaticamente. */}
-            <FormItem>
-              <FormLabel>Situação inicial *</FormLabel>
+            <div className="space-y-2">
+              <Label>Situação inicial *</Label>
               <Select
                 value={situacaoInicial}
                 onValueChange={(v) => setSituacaoInicial(v as "lead" | "cliente")}
@@ -352,7 +353,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </FormItem>
+            </div>
 
             <FormField
               control={form.control}
