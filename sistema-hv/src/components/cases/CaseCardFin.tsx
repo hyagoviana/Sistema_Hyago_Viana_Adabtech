@@ -17,7 +17,7 @@ type Props = {
     macrostatus_fin: string;
     status_fin_changed_at: string;
     client_name: string;
-    service_type_id: string;
+    service_type_id: string | null;
   };
 };
 

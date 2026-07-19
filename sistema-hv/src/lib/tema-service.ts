@@ -60,12 +60,15 @@ async function uniqueServiceTypeSlug(
   base: string,
 ): Promise<string> {
   const taken = async (slug: string) => {
+    // A UNIQUE(organization_id, slug) de system_service_types é FULL (não parcial):
+    // um slug de service_type soft-deletado (deleted_at != null) AINDA ocupa o índice
+    // e colidiria no INSERT. Por isso NÃO filtramos deleted_at aqui — consideramos
+    // ativos E soft-deletados como "tomados".
     const { data } = await sb
       .from("system_service_types")
       .select("id")
       .eq("organization_id", DEFAULT_ORG)
       .eq("slug", slug)
-      .is("deleted_at", null)
       .maybeSingle();
     return !!data;
   };
@@ -153,6 +156,7 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
   // R-1 (atomicidade): sem transação multi-statement no supabase-js; se o seeding do
   // service_type falhar, COMPENSAMOS soft-deletando o tema recém-criado (+ tombstone
   // do slug) para não deixar um tema órfão sem pipeline (que não aceitaria casos).
+  let createdServiceTypeId: string | null = null;
   try {
     const stSlug = await uniqueServiceTypeSlug(sb, slug);
     const serviceType = await createServiceType({
@@ -160,6 +164,7 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
       slug: stSlug,
       ordem: input.ordem ?? 0,
     });
+    createdServiceTypeId = serviceType.id;
     // Vincula o service_type interno ao tema (Opção 1, 1:1).
     const { error: linkErr } = await sb
       .from("system_service_types")
@@ -167,6 +172,16 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
       .eq("id", serviceType.id);
     if (linkErr) throw new TemaServiceError(linkErr.message, 500);
   } catch (seedErr) {
+    // Se o service_type interno já foi criado mas o vínculo (ou o restante) falhou,
+    // ele ficaria ATIVO e ÓRFÃO (sem tema). Soft-deletamos direto (sem passar por
+    // deleteServiceType, que traz guarda de casos + poderia mascarar o erro real com
+    // um 409). O service_type recém-criado ainda não tem casos, então é seguro.
+    if (createdServiceTypeId) {
+      await sb
+        .from("system_service_types")
+        .update({ deleted_at: new Date().toISOString(), active: false })
+        .eq("id", createdServiceTypeId);
+    }
     // Compensação: reverte o tema para não ficar órfão sem motor.
     await sb
       .from("system_temas")

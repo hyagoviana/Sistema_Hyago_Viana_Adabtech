@@ -128,7 +128,7 @@ export async function listAllParcelas(filters?: {
 // `requireModule('financeiro','view')` — ver `getClientPaymentStatusFn`.
 //
 // Regra: `emDia = false` (Devendo) se EXISTE ao menos uma parcela do cliente
-// considerada em atraso — status `VENCIDA`/`INADIMPLENTE`, OU pendente com
+// considerada em atraso — status `VENCIDA`, OU pendente com
 // vencimento já passado. Caso contrário `emDia = true` (Em dia). Cliente sem
 // nenhuma parcela também é "Em dia" (nada devendo).
 export async function getClientPaymentStatus(clientId: string): Promise<{ emDia: boolean }> {
@@ -156,7 +156,10 @@ export async function getClientPaymentStatus(clientId: string): Promise<{ emDia:
 
   const hoje = new Date().toISOString().slice(0, 10);
   const devendo = (parcelas ?? []).some((p) => {
-    if (p.status === "VENCIDA" || p.status === "INADIMPLENTE") return true;
+    // OBS: `INADIMPLENTE` é macrostatus de CASO, NÃO status de PARCELA (o CHECK de
+    // system_parcelas só admite PENDENTE/PAGA/VENCIDA/RENEGOCIADA/CANCELADA), então
+    // não há comparação com ele aqui — seria ramo morto.
+    if (p.status === "VENCIDA") return true;
     // Pendente com vencimento no passado = em atraso.
     if (p.status === "PENDENTE" && p.vencimento && p.vencimento < hoje) return true;
     return false;

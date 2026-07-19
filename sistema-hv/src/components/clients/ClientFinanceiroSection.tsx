@@ -3,7 +3,7 @@ import { Loader2, Plus, Receipt } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { NovaCobrancaDialog } from "@/components/cases/NovaCobrancaDialog";
+import { NovaCobrancaDialog, PROVIDER_LABELS } from "@/components/cases/NovaCobrancaDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,11 +41,6 @@ const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   VENCIDA: { label: "Vencida", cls: "bg-red-600 text-white" },
   CANCELADA: { label: "Cancelada", cls: "bg-muted text-muted-foreground" },
   RENEGOCIADA: { label: "Renegociada", cls: "bg-blue-100 text-blue-800" },
-};
-
-const PROVIDER_BADGE: Record<string, { label: string; cls: string }> = {
-  conta_azul: { label: "Conta Azul", cls: "bg-blue-50 text-blue-700" },
-  asaas: { label: "Asaas", cls: "bg-emerald-50 text-emerald-700" },
 };
 
 export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
@@ -133,7 +128,7 @@ export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
 
             {items.map((p) => {
               const meta = STATUS_BADGE[p.status] ?? STATUS_BADGE.PENDENTE;
-              const provMeta = p.provider ? PROVIDER_BADGE[p.provider] : null;
+              const provMeta = p.provider ? PROVIDER_LABELS[p.provider] : null;
 
               return (
                 <div

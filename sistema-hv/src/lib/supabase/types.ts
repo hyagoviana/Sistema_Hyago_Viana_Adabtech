@@ -218,6 +218,68 @@ export type Database = {
           },
         ];
       };
+      system_case_checklist_item_assignees: {
+        Row: {
+          id: string;
+          item_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          item_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_case_checklist_item_assignees"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "system_case_checklist_item_assignees_item_id_fkey";
+            columns: ["item_id"];
+            referencedRelation: "system_case_checklist_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_case_checklist_item_assignees_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "system_users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      system_stage_checklist_def_assignees: {
+        Row: {
+          id: string;
+          def_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          def_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_stage_checklist_def_assignees"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "system_stage_checklist_def_assignees_def_id_fkey";
+            columns: ["def_id"];
+            referencedRelation: "system_stage_checklist_defs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_stage_checklist_def_assignees_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "system_users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_case_honorarios: {
         Row: {
           id: string;

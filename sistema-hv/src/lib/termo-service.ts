@@ -170,7 +170,7 @@ export async function deleteTermoRascunho(termoId: string, triggeredBy?: string)
     entity_type: "termo",
     entity_id: termoId,
     diff: { case_id: termo.case_id, doc_id: doc?.id ?? null },
-    triggered_by: triggeredBy ?? null,
+    actor_id: triggeredBy ?? null,
   });
 
   return { ok: true as const, id: termoId, docDeleted: !!doc?.id };
@@ -608,17 +608,50 @@ export async function estornarParcela(parcelaId: string) {
 // Por-extenso simples (inteiros; usado só nos principais valores). Para reais
 // arredonda p/ o inteiro mais próximo — o valor exato em número já vai no doc.
 const _UNI = [
-  "zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove",
-  "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete",
-  "dezoito", "dezenove",
+  "zero",
+  "um",
+  "dois",
+  "três",
+  "quatro",
+  "cinco",
+  "seis",
+  "sete",
+  "oito",
+  "nove",
+  "dez",
+  "onze",
+  "doze",
+  "treze",
+  "quatorze",
+  "quinze",
+  "dezesseis",
+  "dezessete",
+  "dezoito",
+  "dezenove",
 ];
 const _DEZ = [
-  "", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta",
-  "oitenta", "noventa",
+  "",
+  "",
+  "vinte",
+  "trinta",
+  "quarenta",
+  "cinquenta",
+  "sessenta",
+  "setenta",
+  "oitenta",
+  "noventa",
 ];
 const _CEM = [
-  "", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos",
-  "setecentos", "oitocentos", "novecentos",
+  "",
+  "cento",
+  "duzentos",
+  "trezentos",
+  "quatrocentos",
+  "quinhentos",
+  "seiscentos",
+  "setecentos",
+  "oitocentos",
+  "novecentos",
 ];
 
 function _ate999(n: number): string {
@@ -645,11 +678,15 @@ function inteiroPorExtenso(n: number): string {
   const milhares = Math.floor((n % 1_000_000) / 1000);
   const resto = n % 1000;
   const parts: string[] = [];
-  if (milhoes > 0)
-    parts.push(`${_ate999(milhoes)} ${milhoes === 1 ? "milhão" : "milhões"}`);
+  if (milhoes > 0) parts.push(`${_ate999(milhoes)} ${milhoes === 1 ? "milhão" : "milhões"}`);
   if (milhares > 0) parts.push(`${milhares === 1 ? "mil" : `${_ate999(milhares)} mil`}`);
   if (resto > 0) parts.push(_ate999(resto));
-  return parts.join(", ").replace(/,([^,]*)$/, " e$1").trim() || "zero";
+  return (
+    parts
+      .join(", ")
+      .replace(/,([^,]*)$/, " e$1")
+      .trim() || "zero"
+  );
 }
 
 // Reais por extenso (arredonda centavos ao real). Ex.: 150000 → "mil e quinhentos reais".
@@ -713,10 +750,7 @@ function reparcelar(
 // NOME, "TERMO ACERTO PARCIAL" ou "TERMO ACERTO COMPLEMENTAR" (case-insensitive,
 // acentos/hífen ignorados). Ajustar aqui se o owner mudar a convenção.
 function templateNameMatches(name: string, tipo: "PARCIAL" | "COMPLEMENTAR"): boolean {
-  const norm = name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toUpperCase();
+  const norm = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
   return norm.includes("TERMO") && norm.includes("ACERTO") && norm.includes(tipo);
 }
 
@@ -742,8 +776,18 @@ async function resolveTermoTemplateId(tipo: "PARCIAL" | "COMPLEMENTAR"): Promise
 // Data por extenso em pt-BR (ex.: "3 de julho de 2026").
 function dataPorExtenso(d = new Date()): string {
   const meses = [
-    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
   ];
   return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
 }
@@ -821,7 +865,9 @@ function buildTermoValues(
       : numDoc(saldoEpocaCalcCentavos);
   // saldo atual (PARCIAL) = saldo depois; override do extra tem prioridade.
   const saldoAtualValue =
-    extras.saldoAtualCentavos != null ? numDoc(extras.saldoAtualCentavos) : numDoc(termo.saldo_depois_centavos);
+    extras.saldoAtualCentavos != null
+      ? numDoc(extras.saldoAtualCentavos)
+      : numDoc(termo.saldo_depois_centavos);
   // percentual do abatimento = efetivo / saldo à época × 100 (ex.: "31.82%").
   // Denominador ≤ 0 → sem base p/ o cálculo → cai no override (ou vazio).
   const percentualAbatimentoValue =
@@ -981,7 +1027,10 @@ export async function gerarDocumentoTermo(input: {
     .select()
     .single();
   if (upErr || !updated) {
-    throw new TermoServiceError(upErr?.message ?? "Falha ao gravar link do documento no termo", 500);
+    throw new TermoServiceError(
+      upErr?.message ?? "Falha ao gravar link do documento no termo",
+      500,
+    );
   }
 
   return { termo: updated, docId: doc.id, editUrl: editable };

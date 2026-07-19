@@ -25,7 +25,7 @@ type Props = {
   caseId: string;
   caseCode: string;
   currentFinSlug: string;
-  serviceTypeId: string;
+  serviceTypeId: string | null;
 };
 
 export function MoveCaseFinDialog({
@@ -36,8 +36,10 @@ export function MoveCaseFinDialog({
   currentFinSlug,
   serviceTypeId,
 }: Props) {
-  const { data: stages } = useStages(serviceTypeId, "fin");
-  const move = useMoveCaseStageFin(serviceTypeId);
+  // `serviceTypeId` pode ser null (caso sem tipo vinculado); "" desativa a query
+  // (useStages usa `enabled: !!serviceTypeId`) e a lista de etapas fica vazia.
+  const { data: stages } = useStages(serviceTypeId ?? "", "fin");
+  const move = useMoveCaseStageFin(serviceTypeId ?? "");
 
   // Filter out NAO_APLICAVEL stages
   const eligible = (stages ?? []).filter((s) => s.slug !== "NAO_APLICAVEL");
