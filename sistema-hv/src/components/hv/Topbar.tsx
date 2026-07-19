@@ -1,11 +1,9 @@
-import { useRouterState, useNavigate, Link } from "@tanstack/react-router";
-import { Plus, Bell, ChevronDown } from "lucide-react";
+import { useRouterState, Link } from "@tanstack/react-router";
+import { Plus, Bell } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
 import { getRouteTitle, useRouteTitle } from "@/lib/route-title";
-import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
-import { ProcuracaoFormDialog } from "@/components/cases/ProcuracaoFormDialog";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { GlobalSearch } from "@/components/hv/GlobalSearch";
 
@@ -55,12 +53,8 @@ export function Topbar() {
       return labelMap[s] ?? s;
     }),
   ];
-  const [openNew, setOpenNew] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [caseDialogOpen, setCaseDialogOpen] = useState(false);
-  const [procDialogOpen, setProcDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
-  const navigate = useNavigate();
   const { session } = useAuth();
   const email = session?.user?.email ?? "";
   const initial = (email[0] ?? "?").toUpperCase();
@@ -93,51 +87,19 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <div className="relative">
-          <button
-            onClick={() => setOpenNew((v) => !v)}
-            onBlur={() => setTimeout(() => setOpenNew(false), 150)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px active:scale-[.98]"
-            style={{
-              background: "var(--hv-gold-grad)",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.38), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 5px rgba(138,103,42,0.35), 0 8px 20px -6px rgba(138,103,42,0.5)",
-            }}
-          >
-            <Plus size={13} strokeWidth={2} />
-            Novo
-            <ChevronDown size={12} strokeWidth={2} />
-          </button>
-          {openNew && (
-            <div
-              className="absolute right-0 top-9 w-44 rounded-xl py-1 z-50"
-              style={{
-                background: "var(--card)",
-                border: "1px solid rgba(120,96,30,0.14)",
-                boxShadow: "0 12px 28px -10px rgba(60,50,20,0.22)",
-              }}
-            >
-              {[
-                { label: "Caso", action: () => setCaseDialogOpen(true) },
-                { label: "Procuração", action: () => setProcDialogOpen(true) },
-                { label: "Cliente", action: () => setClientDialogOpen(true) },
-                { label: "Documento", action: () => navigate({ to: "/modelos" }) },
-              ].map((it) => (
-                <button
-                  key={it.label}
-                  className="w-full text-left px-3 py-1.5 text-[13px] text-[#1a1a1f] hover:bg-[var(--ink-50)]"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    it.action();
-                    setOpenNew(false);
-                  }}
-                >
-                  {it.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* + Novo — cria um cadastro de CLIENTE (única opção, owner 2026-07-19). */}
+        <button
+          onClick={() => setClientDialogOpen(true)}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px active:scale-[.98]"
+          style={{
+            background: "var(--hv-gold-grad)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.38), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 5px rgba(138,103,42,0.35), 0 8px 20px -6px rgba(138,103,42,0.5)",
+          }}
+        >
+          <Plus size={13} strokeWidth={2} />
+          Novo cliente
+        </button>
 
         <div className="relative">
           <button
@@ -179,8 +141,6 @@ export function Topbar() {
         </Link>
       </div>
 
-      <CaseFormDialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen} />
-      <ProcuracaoFormDialog open={procDialogOpen} onOpenChange={setProcDialogOpen} />
       <ClientFormDialog open={clientDialogOpen} onOpenChange={setClientDialogOpen} mode="create" />
     </header>
   );
