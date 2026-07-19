@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate, Link } from "@tanstack/react-router";
-import { Search, Plus, Bell, ChevronDown } from "lucide-react";
+import { Plus, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
@@ -7,6 +7,7 @@ import { getRouteTitle, useRouteTitle } from "@/lib/route-title";
 import { CaseFormDialog } from "@/components/cases/CaseFormDialog";
 import { ProcuracaoFormDialog } from "@/components/cases/ProcuracaoFormDialog";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
+import { GlobalSearch } from "@/components/hv/GlobalSearch";
 
 const labelMap: Record<string, string> = {
   hoje: "Hoje",
@@ -88,17 +89,7 @@ export function Topbar() {
       </nav>
 
       <div className="flex-1 flex justify-center">
-        <div className="flex items-center gap-2 w-full max-w-md h-9 px-3 rounded-lg bg-[#edece8] border border-[rgba(80,70,45,0.12)] transition-shadow focus-within:border-[var(--gold)] focus-within:shadow-[0_0_0_3px_var(--ring)]">
-          <Search size={14} className="text-[var(--ink-400)]" strokeWidth={1.6} />
-          <input
-            type="text"
-            placeholder="Buscar caso, cliente, documento…"
-            className="flex-1 bg-transparent outline-none text-[13px] font-medium text-[#1a1a1f] placeholder:text-[var(--ink-400)] placeholder:font-medium"
-          />
-          <kbd className="text-[10px] font-mono text-[var(--ink-400)] px-1.5 py-0.5 rounded border border-[var(--border)] bg-white">
-            ⌘K
-          </kbd>
-        </div>
+        <GlobalSearch />
       </div>
 
       <div className="flex items-center gap-1.5">
