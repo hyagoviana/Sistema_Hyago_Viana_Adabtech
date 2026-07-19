@@ -373,3 +373,45 @@ export function podeVerValores(
   if (ov !== undefined) return ov;
   return permissaoEfetiva(role, moduleOverrides, module, "view");
 }
+
+// Fase B/Sidebar (2026-07-19) — mapa de cada rota do MENU → MÓDULO. Serve para o
+// menu respeitar os overrides por aba (permissaoEfetiva), não só o papel base.
+// Rotas sem módulo (ex.: /hoje) caem em `canSeeRoute` (papel).
+export const ROUTE_MODULE: Partial<Record<string, Module>> = {
+  "/pipeline": "operacional",
+  "/casos": "operacional",
+  "/casos/financeiro": "financeiro",
+  "/relatorio-financeiro": "financeiro",
+  "/clientes": "operacional",
+  "/comercial/assinaturas": "comercial",
+  "/tarefas": "operacional",
+  "/inteligencia/leads": "comercial",
+  "/comercial": "comercial",
+  "/comercial/leads": "comercial",
+  "/controladoria": "controladoria",
+  "/peticionamento": "inteligencia",
+  "/whatsapp": "comercial",
+  "/dashboards": "inteligencia",
+  "/marketing": "marketing",
+  "/design-system": "sistema",
+  "/referencias": "sistema",
+  "/permissoes": "sistema",
+  "/configuracoes": "sistema",
+};
+
+/**
+ * O usuário pode VER a rota `to` no menu, considerando os OVERRIDES por módulo?
+ * Se a rota tem módulo mapeado → decide por `permissaoEfetiva(module, 'view')`
+ * (respeita não-ver/visualizar/editar). Se não tem módulo (ex.: /hoje) → cai no
+ * papel base (`canSeeRoute`). É o gate que o Sidebar deve usar (não `canSeeRoute`).
+ */
+export function canSeeRouteEfetiva(
+  role: Role | null | undefined,
+  overrides: Partial<Record<Module, ModuleAccess>> | null | undefined,
+  to: string,
+): boolean {
+  if (!role) return false;
+  const module = ROUTE_MODULE[to];
+  if (!module) return canSeeRoute(role, to);
+  return permissaoEfetiva(role, overrides, module, "view");
+}

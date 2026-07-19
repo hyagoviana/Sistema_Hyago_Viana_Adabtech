@@ -31,7 +31,8 @@ import { signOut, useAuth } from "@/lib/auth";
 import { useCasesList, useComercialCases } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
 import { useExceptions } from "@/hooks/useExceptions";
-import { canSeeRoute, ROLE_LABELS } from "@/lib/rbac";
+import { canSeeRouteEfetiva, ROLE_LABELS } from "@/lib/rbac";
+import { useMyModulePerms } from "@/hooks/usePermissions";
 
 // Monograma H·V oficial (SVG) — copiado da referência de design v3 (hvmark).
 function HvMark({ className }: { className?: string }) {
@@ -183,6 +184,7 @@ export function Sidebar() {
     .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
   const { session, role } = useAuth();
+  const { data: perms } = useMyModulePerms();
   const { data: casos } = useCasesList();
   // ITEM 1 (2026-07-07) — o badge de "Assinaturas" deve refletir EXATAMENTE a
   // lista da aba (casos cujo documento foi enviado ao ZapSign), não todo caso com
@@ -231,7 +233,9 @@ export function Sidebar() {
           ...g,
           items: g.items.filter(
             (it) =>
-              canSeeRoute(role, it.to) &&
+              // Respeita os OVERRIDES por aba (não-ver/visualizar/editar), não só o
+              // papel base. "Não ver" numa aba some do menu.
+              canSeeRouteEfetiva(role, perms ?? {}, it.to) &&
               // Permissões é exclusivo do admin (mesmo papéis "all" não veem).
               (it.to !== "/permissoes" || role === "admin"),
           ),
