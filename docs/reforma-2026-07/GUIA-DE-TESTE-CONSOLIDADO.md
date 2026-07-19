@@ -10,75 +10,211 @@ Este guia reúne **tudo** que já está no ar para você testar de uma vez. Marq
 
 ## ⚙️ Pré-requisito (só para a parte de Temas no Drive)
 - [ ] **Compartilhar a pasta "tema"** do Drive (`1PtxXwOMn0ibNRXyzAQN-79mHUJc8w4Ro`) **como Editor** com a conta de robô: `hv-drive@hv-sistema.iam.gserviceaccount.com`. Sem isso, "Criar pasta do tema" dá erro.
+retorno: 
+
 
 ---
 
 ## 1. 🔍 Busca global (lupa do topo) — NOVA
 - [ ] Na **lupa do topo** ("Buscar caso, cliente, documento…"), digite parte de um **código de caso** → aparece um dropdown com o caso; clicar abre a ficha.
+retorno: essa lupa no top só acha cliente e mais nada, não acha nenhum tema, nem documento nem caso mais anda precisa tudo estar vinculado nessa lupa até as abas e tudo mais, ess elupa serve para pesquisar tudoq  esta no sistema, e deve ter ramificação escrita aonde a pesquisa vai levar 
+
 - [ ] Digite parte de um **nome de cliente** (com e sem acento) → aparece o cliente; clicar abre a ficha.
+retorno: 
+
 - [ ] Digite parte do **título de um documento** → aparece o documento; clicar abre o caso dele.
+retorno: 
+
 - [ ] Digite algo inexistente → "Nada encontrado".
+retorno: 
+
 - [ ] (Como colaborador que só vê alguns casos) a busca **não** deve retornar casos/clientes que ele não pode ver.
+retorno: 
 
-## 2. 👥 Cadastro — Lead ↔ Cliente exclusivo — NOVO
+
+## 2. 👥 Cadastro — Lead ↔ Cliente exclusivo — NOVO retorno: limpar a pasta https://drive.google.com/drive/u/0/folders/1Mb7P243I_5EZ3T8WQl_kq2seqcm3JMgx é aqui aonde cria a pasta do cliente, e esta cheiod e cliente que já foi excluído, quando tem exlcusão de cliente exlcui na pasta no drive e no banco de dados, e não consegui testar aqui porque não consigo jogar o cadastro para cliente, pois não consigo vincular documentos 
 - [ ] Uma pessoa aparece **só em Leads** OU **só em Clientes** (nunca nas duas). Quem tem ao menos 1 caso **assinado** está em **Clientes** e sumiu de **Leads**.
-- [ ] Ao **assinar** um caso de um lead, ele **vira cliente automaticamente** (some de Leads).
-- [ ] **Novo Caso** tem o campo **"Situação inicial"**: **Lead** (padrão, vai ao Comercial aguardando assinatura) ou **Cliente** (já assinado, entra direto no Operacional).
-- [ ] Criar caso como **Cliente** → a pessoa aparece em Clientes e o caso no Operacional (sem passar pelo Comercial).
-- [ ] No seletor de cliente do Novo Caso, aparecem **todos** (leads e clientes) para vincular.
-- *(Observação: uma pessoa cujos casos foram todos marcados "Perdido" volta a aparecer em Leads — me diga se prefere que não.)*
+retorno: 
 
-## 3. 🔐 Permissões por aba (convite e edição) — NOVO
+- [ ] Ao **assinar** um caso de um lead, ele **vira cliente automaticamente** (some de Leads).
+retorno: 
+
+- [ ] **Novo Caso** tem o campo **"Situação inicial"**: **Lead** (padrão, vai ao Comercial aguardando assinatura) ou **Cliente** (já assinado, entra direto no Operacional).
+retorno: 
+
+- [ ] Criar caso como **Cliente** → a pessoa aparece em Clientes e o caso no Operacional (sem passar pelo Comercial).
+retorno: 
+
+- [ ] No seletor de cliente do Novo Caso, aparecem **todos** (leads e clientes) para vincular.
+retorno: 
+
+- *(Observação: uma pessoa cujos casos foram todos marcados "Perdido" volta a aparecer em Leads — me diga se prefere que não.)*
+retorno: 
+
+
+## 3. 🔐 Permissões por aba (convite e edição) — NOVO na parte de permissões ele não esta funcionando pois eu setei essas permissões aqui para um cargo de operacional Editar usuário
+E-mail (login)
+mtorquato1910@gmail.com
+Nome completo
+Matheus Torquato
+Telefone
+(00) 00000-0000
+Cargo
+Operacional
+Permissões por aba
+
+Por aba: o que o colaborador pode fazer. Nas abas com valores (R$), a 2ª chave liga/desliga a exibição dos valores. "Padrão" segue o cargo escolhido.
+
+Comercial
+
+Não ver
+Operacional
+
+Não ver
+Financeiro
+
+Visualizar
+
+Ver R$
+Controladoria
+
+Editar
+
+Valores: padrão
+Inteligência
+
+Não ver
+Marketing
+
+Visualizar
+Sistema
+
+Editar
+Salvar permissões
+Cancelar
+Salvar
+
+e la no painel desse colaborador ficou com essas abar aqui Operação
+Hoje
+Pipeline Operacional
+Clientes
+Tarefas
+Sistema
+Configurações
+
+nada haver com o que eu tinha colocado de permissão para ele 
 - [ ] **Convidar** colaborador (Sistema › Permissões › Convidar): abaixo do **Papel** aparece **"Permissões por aba"**, com um seletor por aba: **Padrão do papel / Não ver / Visualizar / Editar**.
+retorno: 
+
 - [ ] Nas abas com valores (**Financeiro**, **Controladoria**) aparece um **2º seletor**: **Valores: padrão / Ver R$ / Ocultar R$**.
+retorno: 
+
 - [ ] Enviar o convite com permissões definidas → depois, ao editar o colaborador, as permissões aparecem salvas.
+retorno: 
+
 - [ ] **Editar** um colaborador existente (ícone lápis) → seção **"Permissões por aba"** com botão **"Salvar permissões"** próprio.
+retorno: 
+
 - [ ] O editor de permissões **não** aparece para o admin nem para você mesmo (evita auto-bloqueio).
+retorno: 
+
 - [ ] **Teste real do Matheus:** dê a ele "Não ver" em alguma aba → ao entrar como ele, a aba correspondente some do menu.
+retorno: 
+
 
 ### 3b. Chave "ver valores"
 - [ ] Colaborador com **Financeiro = Visualizar** mas **Valores = Ocultar R$** → ele abre a aba financeira mas **não vê os números** (vê "Em dia/Devendo" ou nada).
+retorno: 
+
 - [ ] Colaborador com **Valores = Ver R$** → vê os valores mesmo que o papel base não permitisse.
+retorno: 
+
 - [ ] Com tudo em "padrão" → comportamento igual ao de antes (admin/financeiro veem valores; os demais não).
+retorno: 
+
 
 ## 4. 📂 Menu Financeiro — NOVO
 - [ ] No menu lateral existe o grupo **"Financeiro"** entre **Comercial** e **Inteligência**, com **Pipeline Financeira** e **Relatório Financeiro**.
+retorno: está correto
+
 
 ## 5. 🗂️ Temas — T1 a T4 (redesenho completo) — NOVO
-**T1 — só os 5 temas:**
+**T1 — só os 5 temas:** ( não consigo testar pois não consegui colocar o cadastro como cliente, mas a parte de pastas e criar os casos e as procurações dentro do tema estão corretos agora 
 - [ ] Em **Pipeline Operacional**, os cards são os **temas** (Tema 1..5), **não** os tipos antigos (COVID/FIES sumiram daqui).
+retorno: 
+
 - [ ] Botão **"Ver todos em lista"** abre a Lista com todos os casos (inclusive os de tipos antigos ainda não vinculados a um tema).
+retorno: 
+
 - [ ] **Novo Caso** com temas cadastrados: o **Tema é obrigatório** (Tema → Frente); a "categoria legada" não aparece mais.
+retorno: 
+
 - [ ] Em **Temas** (admin): **renomear** um tema, criar **frentes**, definir **campos**.
+retorno: 
+
 
 **T2 — pasta do tema no Drive** *(depende do pré-requisito do Drive):*
 - [ ] No editor do tema, botão **"Criar pasta do tema"** → cria a subpasta no Drive e mostra **"Abrir pasta do tema"**. Renomear o tema **renomeia a pasta** no Drive.
+retorno: 
+
 
 **T3 — casos/procurações vinculáveis (N:N)** *(depende do pré-requisito do Drive):*
 - [ ] No editor do tema, seções **"Documentos de caso"** e **"Procurações"** têm um dropdown **"Vincular pasta existente do Drive…"** que lista as subpastas de "modelos"/"procuração" → escolher uma e **Vincular**.
+retorno: 
+
 - [ ] Ao vincular/criar, o sistema **também cria a subpasta dentro da pasta do tema** no Drive (`1PtxXw/Tema-X/…`) — confira no Drive que a pasta apareceu lá *(depende de o tema já ter pasta: rode "Criar pasta do tema" antes)*.
+retorno: 
+
 - [ ] A **mesma pasta** pode ser vinculada a **vários temas** (vincule a mesma pasta em 2 temas diferentes).
+retorno: 
+
 - [ ] Cada pasta vinculada tem um **X** para **desvincular** (confirma que **não apaga** no Drive).
+retorno: 
+
 
 **T4 — filtros:**
 - [ ] Na **Pipeline Financeira**, o filtro do topo é **"Todos os temas"** (não mais "tipos"); filtra os cards por tema.
+retorno: 
+
 - [ ] No **Operacional**, o filtro de **frente** (chips) segue funcionando dentro do tema.
+retorno: 
+
 
 ## 6. 📊 Aba Hoje (Painel) — ATUALIZADA
 - [ ] O bloco antes "Casos por tipo" agora é **"Clientes por tema"**: cada barra é um tema, o número é a **quantidade de clientes** naquele tema (casos sem tema = "Sem tema").
+retorno: 
+
 - [ ] "Casos recentes" mostra o **nome do tema** (não mais o tipo antigo).
+retorno: 
+
 
 ## 7. 🐛 Bugs corrigidos (1ª leva)
 - [ ] **Mover card na Pipeline Financeira** (arrastar entre colunas) → funciona, sem erro 422. Confira também no **Operacional** e **Comercial**.
+retorno: 
+
 - [ ] **Lupa de Clientes** (dentro da aba Clientes) filtra por nome/CPF/município, **ignorando acento**.
+retorno: 
+
 - [ ] **RG** aceita o número completo (não corta o último dígito).
+retorno: 
+
 
 ## 8. 📎 Itens que faltavam detalhe (1ª leva)
 - [ ] **Anexar documento**: Caso › aba **Documentos** › **"Anexar documento"**. Se o cliente não tem pasta no Drive, aparece mensagem clara (use "Sincronizar pasta do Drive" na ficha do cliente).
+retorno: 
+
 - [ ] **Campos FIES**: em caso de tipo FIES, o bloco **"Dados do contrato FIES"** aparece e salva (recarregue para conferir).
+retorno: 
+
 - [ ] **Termo de acerto**: Caso › **Termo de Acerto** › **"Elaborar"** → **Honorários (%)** e **Valor da parcela (R$)** são editáveis (15%/R$500 é só o padrão inicial).
+retorno: 
+
 - [ ] **Instituição de graduação / hospital**: Clientes › Editar › **"Formação, FIES e Residência"** → listas ampliadas com digitação livre.
+retorno: 
+
 - [ ] **Geração de documento**: Caso › Documentos › **"Gerar documento"** → escolhe modelo, campos preenchem. *(Depende de revisar os modelos no Drive: trocar texto fixo por `<...>`.)*
+retorno: 
+
 
 ---
 
