@@ -2,12 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { CaseFormDialog } from "./CaseFormDialog";
+import { CaseFormDialog, type CreatedCaseLite } from "./CaseFormDialog";
+import { GenerateCaseDocumentFlow } from "./GenerateCaseDocumentFlow";
 import { Badge } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
+import { useClient } from "@/hooks/useClients";
+import { buildAutoFillFromClient } from "@/lib/cases/document-autofill";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { useTemas } from "@/hooks/useTemas";
 import {
@@ -94,11 +97,18 @@ type Props = {
   clientCpf?: string;
   clientEmail?: string;
   clientPhone?: string;
+  // 2026-07-19 — cadastro já é CLIENTE? Define a situação inicial do caso sem
+  // seletor no popup (CLIENTE → Operacional; LEAD → Comercial).
+  clienteEhCliente?: boolean;
 };
 
-export function ClientCasesSection({ clientId }: Props) {
+export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
   const { data, isLoading, isError, error } = useCasesList({ client_id: clientId });
+  const { data: fullClient } = useClient(clientId);
   const [createOpen, setCreateOpen] = useState(false);
+  // Caso recém-criado cujos documentos (pasta de casos/procurações do tema) o
+  // usuário vai escolher/gerar logo após criar — reusa o fluxo do caso.
+  const [genFor, setGenFor] = useState<CreatedCaseLite | null>(null);
   const cases = useMemo(() => data ?? [], [data]);
 
   // R1-04 — nomes dos grupos (nível 1 = TEMA). Carregados UMA vez, sem query por
@@ -125,7 +135,7 @@ export function ClientCasesSection({ clientId }: Props) {
           Casos do cliente
         </h2>
         <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus size={14} className="mr-1.5" /> Novo caso
+          <Plus size={14} className="mr-1.5" /> Novo tema
         </Button>
       </div>
 
@@ -145,7 +155,7 @@ export function ClientCasesSection({ clientId }: Props) {
         </div>
       ) : cases.length === 0 ? (
         <div className="card-editorial !p-8 text-center text-muted-foreground text-sm">
-          Esse cliente ainda não tem casos. Clique em "Novo caso" pra começar.
+          Esse cliente ainda não tem casos. Clique em "Novo tema" pra começar.
         </div>
       ) : (
         // R1-04 — nível 1: um bloco por TEMA (header + rótulo amigável +
@@ -162,7 +172,28 @@ export function ClientCasesSection({ clientId }: Props) {
         </div>
       )}
 
-      <CaseFormDialog open={createOpen} onOpenChange={setCreateOpen} presetClientId={clientId} />
+      <CaseFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        presetClientId={clientId}
+        clienteEhCliente={clienteEhCliente}
+        onCreated={(created) => setGenFor(created)}
+      />
+
+      {/* 2026-07-19 — logo após criar o caso, abre o MESMO fluxo do caso para
+          escolher a PASTA e o DOCUMENTO (caso ou procuração) do tema, preencher as
+          variáveis, abrir o Word editável e enviar ao ZapSign. Reusa 100% do fluxo
+          já existente na ficha do caso (pastas filtradas pelo tipo do tema). */}
+      {genFor && (
+        <GenerateCaseDocumentFlow
+          open={!!genFor}
+          onOpenChange={(v) => !v && setGenFor(null)}
+          caseId={genFor.id}
+          caseType={genFor.case_type}
+          frenteSlug={genFor.frente_slug}
+          autoFill={buildAutoFillFromClient(fullClient ?? {}, genFor)}
+        />
+      )}
     </>
   );
 }

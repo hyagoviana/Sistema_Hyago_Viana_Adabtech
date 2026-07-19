@@ -119,6 +119,12 @@ function ClienteDetalhe() {
   if (!cliente) throw notFound();
 
   const cases = casesData ?? [];
+  // 2026-07-19 — o cadastro é CLIENTE quando foi marcado manualmente
+  // (marcado_cliente_at) OU já tem um caso efetivado (lifecycle CLIENTE). Define a
+  // situação inicial dos novos casos sem seletor no popup ("Novo tema").
+  const ehCliente =
+    Boolean((cliente as { marcado_cliente_at?: string | null }).marcado_cliente_at) ||
+    cases.some((c) => (c as { lifecycle?: string | null }).lifecycle === "CLIENTE");
   const totalCasos = cases.length;
   const receitaTotalCentavos = cases.reduce(
     (sum, c) => sum + (typeof c.valor_centavos === "number" ? c.valor_centavos : 0),
@@ -290,6 +296,7 @@ function ClienteDetalhe() {
         clientCpf={cliente.cpf_cnpj ?? undefined}
         clientEmail={cliente.email ?? undefined}
         clientPhone={cliente.phone ?? undefined}
+        clienteEhCliente={ehCliente}
       />
 
       <OrnamentalDivider />

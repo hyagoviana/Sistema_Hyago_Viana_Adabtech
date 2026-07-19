@@ -49,10 +49,27 @@ import { useAuth } from "@/lib/auth";
 import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
 import { caseCreateSchema, type CaseCreateInput } from "@/lib/validators/case";
 
+// Caso recém-criado devolvido ao chamador (para abrir a geração de documentos
+// do tema logo em seguida — escolher pasta/documento de caso e procuração).
+export type CreatedCaseLite = {
+  id: string;
+  case_type: string;
+  frente_slug: string | null;
+  case_code?: string;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   presetClientId?: string;
+  // Cadastro exclusivo (2026-07-19) — a "situação inicial" do caso NÃO é mais
+  // escolhida no popup (era redundante): ela é derivada do estado do CADASTRO.
+  // Cadastro já é CLIENTE → o caso nasce direto no Operacional; cadastro é LEAD
+  // → nasce no Comercial (aguardando assinatura).
+  clienteEhCliente?: boolean;
+  // Chamado após criar o caso, para o chamador abrir a geração de documentos
+  // (pasta de casos/procurações do tema → documento → variáveis → Word → ZapSign).
+  onCreated?: (created: CreatedCaseLite) => void;
 };
 
 // Novo caso — ITEM 5 (2026-07-06): o caso NÃO entra direto no operacional. Ele
@@ -61,7 +78,13 @@ type Props = {
 // operacional acontece por assinatura (webhook/manual) OU pelo botão "Enviar para
 // operacional" no board Comercial. O contrato/procuração e o envio ao ZapSign
 // ficam na ficha do caso.
-export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
+export function CaseFormDialog({
+  open,
+  onOpenChange,
+  presetClientId,
+  clienteEhCliente,
+  onCreated,
+}: Props) {
   const { data: clients } = useClientsList();
   const { data: serviceTypes } = useServiceTypes();
   // R2-05 — TEMA→FRENTE é o fluxo principal quando há temas cadastrados. Categorias
@@ -72,10 +95,6 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);
   const [respPopOpen, setRespPopOpen] = useState(false);
-  // Situação inicial do caso (cadastro exclusivo, 2026-07-19). "lead" (padrão) =
-  // nasce no Comercial aguardando assinatura; "cliente" = nasce já assinado, direto
-  // no Operacional. A virada automática lead→cliente ao assinar segue valendo.
-  const [situacaoInicial, setSituacaoInicial] = useState<"lead" | "cliente">("lead");
   // Tema selecionado (dirige o select de frente e o dual-write). Vazio = usar o
   // caminho legado por categoria (case_type).
   const [temaId, setTemaId] = useState<string>("");
@@ -108,7 +127,6 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
   useEffect(() => {
     if (open) {
       setTemaId("");
-      setSituacaoInicial("lead");
       form.reset({
         client_id: presetClientId ?? "",
         case_type: serviceTypes?.[0]?.slug ?? "",
@@ -134,23 +152,28 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
       // do tema): o servidor (createCase) resolve o service_type INTERNO do tema e
       // sobrescreve `case_type` com o slug interno. `tema_id`+`frente_slug` vão no
       // dual-write. Sem tema, usa o `case_type` do select de categoria (legado).
-      const comoCliente = situacaoInicial === "cliente";
+      // Situação inicial DERIVADA do cadastro (2026-07-19) — sem seletor no popup.
+      // Cadastro já é CLIENTE → o caso nasce direto no Operacional; cadastro LEAD →
+      // nasce no Comercial (aguardando assinatura). A virada automática lead→cliente
+      // ao assinar segue valendo.
+      const comoCliente = clienteEhCliente === true;
       const created = await create.mutateAsync({
         ...data,
         tema_id: temaId || null,
-        // ITEM 5: por padrão entra no COMERCIAL (aguardando assinatura). Quando o
-        // usuário marca "Cliente (já assinado)", nasce direto como CLIENTE no
-        // operacional (cadastro exclusivo, 2026-07-19).
         comercial: !comoCliente,
         iniciar_como_cliente: comoCliente,
         procuracao_template_id: undefined,
       });
-      toast.success(
-        comoCliente
-          ? `Caso ${created.case_code} criado — Cliente (no Operacional)`
-          : `Caso ${created.case_code} criado — no Comercial (aguardando assinatura)`,
-      );
+      toast.success(`Caso ${created.case_code} criado — agora escolha os documentos`);
       onOpenChange(false);
+      // Abre a geração de documentos do tema (pasta de casos/procurações →
+      // documento → variáveis → Word → ZapSign) para este caso recém-criado.
+      onCreated?.({
+        id: created.id,
+        case_type: created.case_type,
+        frente_slug: (created as { frente_slug?: string | null }).frente_slug ?? null,
+        case_code: created.case_code,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
     }
@@ -160,11 +183,11 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Novo caso</DialogTitle>
+          <DialogTitle>Novo tema</DialogTitle>
           <DialogDescription>
-            O código do caso é gerado automaticamente. Cliente é obrigatório. O caso entra no
-            Comercial (aguardando assinatura); vai ao Operacional quando o documento for assinado ou
-            você usar "Enviar para operacional" no board Comercial.
+            Escolha o tema (e a frente) deste cadastro. Ao criar, você escolhe a pasta e o documento
+            de caso/procuração do tema para gerar. A situação (Comercial × Operacional) é definida
+            pelo estado do cadastro — não precisa selecionar aqui.
           </DialogDescription>
         </DialogHeader>
 
@@ -332,28 +355,9 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
               />
             )}
 
-            {/* Situação inicial (cadastro exclusivo, 2026-07-19) — Lead (padrão) ou
-                Cliente (já assinado). A pessoa aparece só em Leads OU só em Clientes;
-                se depois um caso dela for assinado, vira Cliente automaticamente. */}
-            <div className="space-y-2">
-              <Label>Situação inicial *</Label>
-              <Select
-                value={situacaoInicial}
-                onValueChange={(v) => setSituacaoInicial(v as "lead" | "cliente")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lead">
-                    Lead — vai para o Comercial (aguardando assinatura)
-                  </SelectItem>
-                  <SelectItem value="cliente">
-                    Cliente — já assinado (vai direto ao Operacional)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Situação inicial REMOVIDA (2026-07-19) — era redundante: a situação
+                do caso é derivada do estado do cadastro (LEAD → Comercial; CLIENTE →
+                Operacional). Ver `clienteEhCliente` no onSubmit. */}
 
             <FormField
               control={form.control}
@@ -474,7 +478,7 @@ export function CaseFormDialog({ open, onOpenChange, presetClientId }: Props) {
                 Cancelar
               </Button>
               <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Criando…" : "Criar caso"}
+                {create.isPending ? "Criando…" : "Criar e escolher documentos"}
               </Button>
             </DialogFooter>
           </form>
