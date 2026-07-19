@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
-import { useFrentes, useTemas } from "@/hooks/useTemas";
+import { useTemas } from "@/hooks/useTemas";
 import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/lib/auth";
 import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
@@ -98,7 +98,6 @@ export function CaseFormDialog({
   // Tema selecionado (dirige o select de frente e o dual-write). Vazio = usar o
   // caminho legado por categoria (case_type).
   const [temaId, setTemaId] = useState<string>("");
-  const { data: frentes } = useFrentes(temaId || undefined);
   const hasTemas = (temas ?? []).length > 0;
 
   // Advogados ativos (titular/associado) selecionáveis como responsáveis.
@@ -293,37 +292,9 @@ export function CaseFormDialog({
               </div>
             )}
 
-            {/* Frente do tema (só quando um tema está escolhido). Documentos e
-                checklist do caso são puxados por esta frente (R2-04). */}
-            {temaId && (
-              <FormField
-                control={form.control}
-                name="frente_slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frente</FormLabel>
-                    <Select
-                      value={field.value ?? ""}
-                      onValueChange={(v) => field.onChange(v || null)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a frente (opcional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {(frentes ?? []).map((f) => (
-                          <SelectItem key={f.id} value={f.slug}>
-                            {f.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            {/* Frente REMOVIDA do popup (2026-07-19) — o owner não quer escolher
+                frente aqui. Sem frente, as pastas de caso/procuração listadas na
+                geração de documentos são as de "todo o tema". */}
 
             {/* Categoria legada (fallback). SÓ aparece quando NÃO há temas
                 cadastrados. Com temas, o caso nasce sempre por TEMA→FRENTE (o dono
@@ -359,23 +330,8 @@ export function CaseFormDialog({
                 do caso é derivada do estado do cadastro (LEAD → Comercial; CLIENTE →
                 Operacional). Ver `clienteEhCliente` no onSubmit. */}
 
-            <FormField
-              control={form.control}
-              name="proximo_passo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Próximo passo</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: Protocolar petição inicial"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* "Próximo passo" REMOVIDO do popup (2026-07-19) — não é necessário na
+                criação do caso. Pode ser preenchido depois na ficha do caso. */}
 
             <div className="grid grid-cols-2 gap-3">
               <FormField
