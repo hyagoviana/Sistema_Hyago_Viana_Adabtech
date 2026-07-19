@@ -4,7 +4,7 @@
 // Construção MANUAL (MVP): CRUD de tema + CRUD de frente do tema selecionado.
 
 import { useEffect, useState } from "react";
-import { ExternalLink, FolderOpen, Layers, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,18 +20,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
-import { useCreateTypeFolder, useTypeFolders } from "@/hooks/useServiceTypeFolders";
 import {
   useCreateFrente,
   useCreateTema,
   useDeleteFrente,
   useDeleteTema,
-  useEnsureTemaFolder,
   useFrentes,
-  useLinkTemaFolder,
   useTemas,
   useTemaServiceType,
-  useTemasRootFolders,
   useUpdateFrente,
   useUpdateTema,
 } from "@/hooks/useTemas";
@@ -123,8 +119,8 @@ export function TemasManagerDialog({
           <DialogHeader>
             <DialogTitle>Temas</DialogTitle>
             <DialogDescription>
-              Um tema agrupa frentes de atuação. Crie o tema e, dentro dele, as frentes. Vínculo de
-              pastas/modelos e pipeline por tema entram nas próximas fases.
+              Ao criar um tema, o sistema já cria a pasta dele no Drive (com as subpastas Casos e
+              Procurações). Depois, no editor, vincule os casos e procurações.
             </DialogDescription>
           </DialogHeader>
 
@@ -181,7 +177,8 @@ export function TemasManagerDialog({
           <DialogHeader>
             <DialogTitle>Editar tema</DialogTitle>
             <DialogDescription>
-              Renomeie o tema e gerencie as frentes de atuação dele.
+              Renomeie o tema e vincule os casos e procurações (das pastas "modelos" e "procuração")
+              — ou crie novos e anexe o documento.
             </DialogDescription>
           </DialogHeader>
 
@@ -208,8 +205,6 @@ export function TemasManagerDialog({
               </div>
             </div>
 
-            {selected && <TemaDriveRootFolder temaId={selected.id} />}
-
             {selected && <FrentesEditor temaId={selected.id} />}
           </div>
 
@@ -229,96 +224,6 @@ export function TemasManagerDialog({
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-// Pasta-raiz do tema no Drive (dentro da pasta "tema"). Mostra o link se já existe;
-// permite CRIAR uma nova (com subpastas Casos/Procurações) OU VINCULAR uma pasta que
-// o owner já criou em 1PtxXw. Lê o tema atual da lista já carregada (useTemas).
-function TemaDriveRootFolder({ temaId }: { temaId: string }) {
-  const { data: temas } = useTemas();
-  const ensure = useEnsureTemaFolder();
-  const linkFolder = useLinkTemaFolder();
-  const { data: rootFolders } = useTemasRootFolders();
-  const [pick, setPick] = useState("");
-
-  const tema = (temas ?? []).find((t) => t.id === temaId) as
-    | { drive_folder_id?: string | null; drive_folder_url?: string | null }
-    | undefined;
-  const url = tema?.drive_folder_url ?? null;
-  const hasFolder = !!tema?.drive_folder_id;
-
-  async function criar() {
-    try {
-      const res = await ensure.mutateAsync(temaId);
-      toast.success(res.created ? "Pasta do tema criada no Drive." : "A pasta do tema já existia.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao criar a pasta do tema");
-    }
-  }
-
-  async function vincular() {
-    if (!pick) return;
-    try {
-      await linkFolder.mutateAsync({ temaId, driveFolderId: pick });
-      toast.success("Pasta do tema vinculada (subpastas Casos/Procurações garantidas).");
-      setPick("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao vincular a pasta");
-    }
-  }
-
-  const busy = ensure.isPending || linkFolder.isPending;
-
-  return (
-    <div className="border-t border-[var(--border)] pt-4 space-y-2">
-      <Label>Pasta do tema no Drive</Label>
-      <div className="mt-1.5 flex items-center gap-3">
-        {hasFolder && (
-          <a
-            href={url ?? "#"}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] text-[var(--gold-700)] hover:text-[var(--gold)] font-medium"
-          >
-            <ExternalLink size={14} /> Abrir pasta do tema
-          </a>
-        )}
-        <Button variant="outline" size="sm" onClick={criar} disabled={busy}>
-          <FolderOpen size={14} />
-          {ensure.isPending ? "…" : hasFolder ? "Recriar/garantir" : "Criar pasta do tema"}
-        </Button>
-      </div>
-
-      {/* Vincular uma pasta que o owner JÁ criou dentro de "tema" (1PtxXw). */}
-      {(rootFolders ?? []).length > 0 && (
-        <div className="flex items-center gap-1.5">
-          <select
-            value={pick}
-            onChange={(e) => setPick(e.target.value)}
-            disabled={busy}
-            className="flex-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
-          >
-            <option value="">Vincular pasta que você já criou no Drive…</option>
-            {(rootFolders ?? []).map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-          <Button variant="outline" size="sm" onClick={vincular} disabled={busy || !pick}>
-            <Link2 size={13} className="mr-1" />
-            Vincular
-          </Button>
-        </div>
-      )}
-
-      <p className="text-[11px] text-muted-foreground">
-        Cada tema tem uma pasta própria dentro da pasta &quot;tema&quot; do Drive, com as subpastas{" "}
-        <b>Casos</b> e <b>Procurações</b>. Renomear o tema renomeia a pasta; excluir o tema exclui a
-        pasta no Drive.
-      </p>
-    </div>
   );
 }
 
@@ -453,22 +358,21 @@ function FrentesEditor({ temaId }: { temaId: string }) {
         )}
       </div>
 
-      {/* R2 — PASTA DO TEMA no Drive. Cria+vincula uma pasta no service_type
-          interno do tema (kind='caso', frente_slug=NULL = pasta do tema todo).
-          Reusa createAndLinkFolder (useCreateTypeFolder). */}
-      {temaServiceType?.id && <TemaDriveFolder serviceTypeId={temaServiceType.id} />}
-
-      {/* R2-04 — vínculo de pasta(s) do Drive + modelos POR FRENTE. As pastas são
-          gravadas no service_type interno do tema (motor) + frente_slug (ou NULL =
-          "Todo o tema"). Reusa o CategoryFoldersEditor. */}
-      {temaServiceType?.id && (frentes ?? []).length > 0 && (
+      {/* Casos e Procurações do tema — SEMPRE visível (não depende de ter frentes).
+          Vincular pastas existentes de "modelos"/"procuração" OU criar novas +
+          anexar o Word (ZapSign). Se houver frentes, dá pra direcionar a pasta a uma
+          frente; sem frentes, vale para o tema todo. */}
+      {temaServiceType?.id && (
         <div className="mt-3">
           <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">
-            Pastas e modelos por frente
+            Casos e Procurações do tema
           </div>
           <CategoryFoldersEditor
             serviceTypeId={temaServiceType.id}
-            frentes={(frentes as Frente[]).map((f) => ({ slug: f.slug, label: f.label }))}
+            frentes={(frentes as Frente[] | undefined)?.map((f) => ({
+              slug: f.slug,
+              label: f.label,
+            }))}
           />
         </div>
       )}
@@ -494,69 +398,6 @@ function FrentesEditor({ temaId }: { temaId: string }) {
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-// R2 — PASTA DO TEMA no Drive. Cria (createAndLinkFolder, kind='caso',
-// frente_slug=NULL) e vincula uma pasta ao service_type INTERNO do tema. NULL =
-// pasta do tema todo (as pastas por frente ficam no CategoryFoldersEditor acima).
-// Lista as pastas comuns (frente NULL) já vinculadas e oferece o botão de criar.
-function TemaDriveFolder({ serviceTypeId }: { serviceTypeId: string }) {
-  // frenteSlug=null → só as pastas COMUNS do tema (frente_slug IS NULL).
-  const { data: folders, isLoading } = useTypeFolders(serviceTypeId, "caso", null);
-  const createFolder = useCreateTypeFolder();
-
-  async function criarPasta() {
-    const name = window.prompt("Nome da pasta do tema no Drive:", "Pasta do tema");
-    if (!name?.trim()) return;
-    try {
-      await createFolder.mutateAsync({
-        serviceTypeId,
-        kind: "caso",
-        name: name.trim(),
-        frenteSlug: null,
-      });
-      toast.success("Pasta do tema criada no Drive");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao criar pasta do tema");
-    }
-  }
-
-  const temaFolders = (folders ?? []).filter((f) => f.frente_slug === null);
-
-  return (
-    <div className="mt-3 rounded-lg border border-[var(--border)] p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="text-[13px] font-semibold text-[var(--navy)]">Pasta do tema no Drive</div>
-        <Button variant="outline" size="sm" onClick={criarPasta} disabled={createFolder.isPending}>
-          <Plus size={14} />
-          {createFolder.isPending ? "Criando…" : "Criar pasta do tema"}
-        </Button>
-      </div>
-      {isLoading ? (
-        <div className="text-muted-foreground text-[13px]">Carregando…</div>
-      ) : temaFolders.length === 0 ? (
-        <div className="text-muted-foreground text-[12px]">
-          Nenhuma pasta do tema ainda. Crie uma para agrupar os documentos deste tema no Drive.
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {temaFolders.map((f) => (
-            <a
-              key={f.id}
-              href={`https://drive.google.com/drive/folders/${f.drive_folder_id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-[13px] text-[var(--navy)] hover:border-[var(--gold)] transition-colors"
-            >
-              <FolderOpen size={14} className="text-[var(--gold-700)] shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{f.name}</span>
-              <ExternalLink size={12} className="text-muted-foreground shrink-0" />
-            </a>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
