@@ -79,6 +79,16 @@ const SEARCH_FIELDS: SearchField[] = [
   { key: "adicionais", label: "Campos adicionais", extract: (c) => jsonStr(c.custom_fields) },
 ];
 
+// Normaliza para busca: remove acentos (NFD + strip diacríticos) e baixa a caixa,
+// para "São"/"Sao"/"sao" e "José"/"jose" casarem. Sem isso, a lupa parecia "não
+// funcionar" ao buscar nomes/municípios acentuados.
+function norm(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
 function matchField(c: Client, term: string, f: SearchField): boolean {
   const val = f.extract(c);
   if (f.digitsOnly) {
@@ -86,7 +96,7 @@ function matchField(c: Client, term: string, f: SearchField): boolean {
     if (!td) return false;
     return val.replace(/\D/g, "").includes(td);
   }
-  return val.toLowerCase().includes(term.toLowerCase());
+  return norm(val).includes(norm(term));
 }
 
 // ----------------------------------------------------------------------------

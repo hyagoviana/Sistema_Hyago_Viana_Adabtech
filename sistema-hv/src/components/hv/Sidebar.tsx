@@ -76,8 +76,6 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { to: "/hoje", label: "Hoje", icon: Home },
       { to: "/pipeline", label: "Pipeline Operacional", icon: Briefcase },
-      { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign },
-      { to: "/relatorio-financeiro", label: "Relatório Financeiro", icon: Receipt },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/comercial/assinaturas", label: "Assinatura", icon: FileSignature, tone: "gold" },
       { to: "/tarefas", label: "Tarefas", icon: CheckSquare },
@@ -89,6 +87,15 @@ const groups: { label: string; items: Item[] }[] = [
       { to: "/inteligencia/leads", label: "Cadastro", icon: UserPlus },
       { to: "/comercial", label: "Comercial", icon: TrendingUp },
       { to: "/comercial/leads", label: "Pipeline Comercial", icon: LayoutGrid },
+    ],
+  },
+  // Financeiro (2026-07-19) — grupo próprio entre Comercial e Inteligência. As
+  // sub-abas Cobranças e Inadimplência continuam dentro da Pipeline Financeira.
+  {
+    label: "Financeiro",
+    items: [
+      { to: "/casos/financeiro", label: "Pipeline Financeira", icon: DollarSign },
+      { to: "/relatorio-financeiro", label: "Relatório Financeiro", icon: Receipt },
     ],
   },
   {

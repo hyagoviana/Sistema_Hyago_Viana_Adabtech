@@ -466,6 +466,15 @@ async function loadActiveCaseWithServiceType(
 // (ou o RPC receber) uma etapa de OUTRO tipo cujo slug não existe para este caso —
 // a projeção do trigger deixaria stage_*_id NULL silenciosamente. Devolve 422
 // legível em vez de 500 opaco / NULL silencioso.
+//
+// FIX 2026-07-19 (bug do 422 ao mover card na financeira): o board financeiro é
+// ÚNICO (#16) — as colunas vêm do FUNIL SENTINELA (GLOBAL_FUNNEL_SERVICE_TYPE_ID),
+// então o stageId que chega no move é do sentinela, NÃO do service_type real do
+// caso. A validação original (só service_type do caso) rejeitava tudo com 422.
+// Aceitamos as etapas do funil sentinela também: o dual-write grava
+// macrostatus_* = slug e o trigger projeta stage_*_id pelo slug no tipo do caso
+// (o funil único compartilha os mesmos slugs). Continua barrando etapa de um
+// tipo ALHEIO (nem o do caso, nem o sentinela).
 async function loadStageForServiceType(
   sb: ReturnType<typeof getSupabaseAdmin>,
   stageId: string,
@@ -477,7 +486,7 @@ async function loadStageForServiceType(
     .from("system_pipeline_stages")
     .select("slug, kind, service_type_id")
     .eq("id", stageId)
-    .eq("service_type_id", serviceTypeId)
+    .in("service_type_id", [serviceTypeId, GLOBAL_FUNNEL_SERVICE_TYPE_ID])
     .eq("kind", kind)
     .is("deleted_at", null)
     .single();
