@@ -453,7 +453,10 @@
       "Bash(echo \"TSC_EXIT=$?\")",
       "Bash(grep -iE \"^clientes|^casos.\\\\\\\\$\")",
       "Bash(vercel ls *)",
-      "Bash(vercel teams *)"
+      "Bash(vercel teams *)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel inspect *)",
+      "Bash(vercel --prod --yes)"
     ]
   }
 }
