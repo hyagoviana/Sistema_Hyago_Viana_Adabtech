@@ -92,6 +92,10 @@ function CasosLista() {
   const [page, setPage] = useState(0);
   // R2-08 — filtro de frente na Lista (chips). Semeado pelo search param.
   const [frenteFilter, setFrenteFilter] = useState<string>(frente ?? "");
+  // Ajuste A1 (2026-07-20, Adavio) — filtros rápidos no topo: por TEMA (seed do
+  // search param) e por ETAPA operacional. Independentes do contexto de origem.
+  const [temaFilter, setTemaFilter] = useState<string>(tema ?? "");
+  const [etapaFilter, setEtapaFilter] = useState<string>("");
   // Ordenação por coluna (default: mais recentes primeiro, como o servidor já
   // devolve por created_at desc).
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -99,7 +103,7 @@ function CasosLista() {
 
   const { data, isLoading, isError, error } = useCasesList();
   const { data: temas } = useTemas();
-  const { data: frentes } = useFrentes(tema ?? null);
+  const { data: frentes } = useFrentes(temaFilter || null);
 
   // R4-01 / R2-08 (AC-4) — a coluna "valor" só aparece sob gate financeiro.
   // Único booleano trocável; overrides por usuário via permissaoEfetiva. Com a
@@ -116,12 +120,21 @@ function CasosLista() {
     return m;
   }, [temas]);
 
-  const temaSelecionado = tema ? (temaName.get(tema) ?? null) : null;
+  const temaSelecionado = temaFilter ? (temaName.get(temaFilter) ?? null) : null;
   // Rótulo do contexto de origem (categoria do Kanban ou tema) para título/botão.
   const contextoLabel = catName ?? temaSelecionado ?? null;
   const temContexto = !!cat || !!tema;
 
   const rows: CaseRow[] = useMemo(() => (data ?? []) as CaseRow[], [data]);
+
+  // Ajuste A1 — etapas operacionais presentes nos casos (para o filtro rápido).
+  const etapaOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) if (r.macrostatus_op) set.add(r.macrostatus_op);
+    return Array.from(set)
+      .map((s) => ({ value: s, label: MACRO_OP_LABELS[s as MacroOp] ?? s }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [rows]);
 
   // Frentes ofertadas no filtro: as declaradas no tema (via useFrentes) ou, sem
   // tema, as presentes nos próprios casos.
@@ -145,7 +158,9 @@ function CasosLista() {
     return rows.filter((c) => {
       // `cat` (categoria do Kanban) filtra pelo MESMO eixo do board: service_type_id.
       if (cat && c.service_type_id !== cat) return false;
-      if (tema && c.tema_id !== tema) return false;
+      // Ajuste A1 — filtros rápidos por tema e etapa operacional.
+      if (temaFilter && c.tema_id !== temaFilter) return false;
+      if (etapaFilter && c.macrostatus_op !== etapaFilter) return false;
       if (frenteFilter && (c.frente_slug ?? "") !== frenteFilter) return false;
       if (!q) return true;
       const tipo = (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type).toLowerCase();
@@ -166,7 +181,7 @@ function CasosLista() {
         (c.municipio ?? "").toLowerCase().includes(q)
       );
     });
-  }, [rows, search, cat, tema, frenteFilter, temaName]);
+  }, [rows, search, cat, temaFilter, etapaFilter, frenteFilter, temaName]);
 
   // Ordenação sobre o filtrado COMPLETO (antes de paginar) — igual a busca atual.
   const sorted = useMemo(() => {
@@ -305,6 +320,43 @@ function CasosLista() {
           />
         </div>
 
+        {/* Ajuste A1 (2026-07-20) — filtros rápidos: Tema e Etapa operacional. */}
+        {(temas ?? []).length > 0 && (
+          <select
+            value={temaFilter}
+            onChange={(e) => {
+              setTemaFilter(e.target.value);
+              setFrenteFilter("");
+              setPage(0);
+            }}
+            className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+          >
+            <option value="">Todos os temas</option>
+            {(temas ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        )}
+        {etapaOptions.length > 0 && (
+          <select
+            value={etapaFilter}
+            onChange={(e) => {
+              setEtapaFilter(e.target.value);
+              setPage(0);
+            }}
+            className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+          >
+            <option value="">Todas as etapas</option>
+            {etapaOptions.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        )}
+
         {/* R2-08 — filtro de frente (chips), disponível quando há frentes. */}
         {frenteOptions.length > 0 && (
           <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
@@ -399,14 +451,17 @@ function CasosLista() {
                 </tr>
               ) : (
                 sliced.map((c) => (
+                  // Ajuste A3 (2026-07-20) — a LINHA inteira é clicável (antes só o código).
                   <tr
                     key={c.id}
-                    className="border-b border-[rgba(152,120,20,0.08)] hover:bg-[var(--bg-subtle)] transition-colors"
+                    onClick={() => navigate({ to: "/casos/$id", params: { id: c.id } })}
+                    className="border-b border-[rgba(152,120,20,0.08)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground whitespace-nowrap">
                       <Link
                         to="/casos/$id"
                         params={{ id: c.id }}
+                        onClick={(e) => e.stopPropagation()}
                         className="hover:text-[var(--gold-700)]"
                       >
                         {c.case_code}

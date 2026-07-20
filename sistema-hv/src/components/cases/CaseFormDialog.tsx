@@ -100,9 +100,10 @@ export function CaseFormDialog({
   const [temaId, setTemaId] = useState<string>("");
   const hasTemas = (temas ?? []).length > 0;
 
-  // Advogados ativos (titular/associado) selecionáveis como responsáveis.
+  // Responsáveis selecionáveis: advogados (titular/associado) + ADMIN (ajuste A8,
+  // 2026-07-20 — o admin deve aparecer no seletor). Só usuários ATIVOS.
   const advogados = (users ?? []).filter(
-    (u) => isAdvogado(u.role as Role) && u.status === "ACTIVE",
+    (u) => (isAdvogado(u.role as Role) || u.role === "admin") && u.status === "ACTIVE",
   );
   const iAmAdvogado = isAdvogado(role);
   const myId = profile?.id ?? null;

@@ -213,7 +213,9 @@ function DynamicKanban({
   onBack: () => void;
 }) {
   const navigate = useNavigate();
-  const [kind, setKind] = useState<"op" | "fin">("op");
+  // A5 — `kind` fica fixo em "op" (o toggle foi removido); mantido como união de
+  // tipos para preservar o narrowing das checagens `kind === "fin"` existentes.
+  const [kind] = useState<"op" | "fin">("op");
   // R2-05 — filtro por FRENTE (só operacional). "" = todas as frentes.
   // R2-08 — semeado por ?frente= ao voltar da Lista via toggle.
   const [frenteFilter, setFrenteFilter] = useState<string>(initialFrente);
@@ -316,22 +318,9 @@ function DynamicKanban({
         }
         aside={
           <div className="flex items-center gap-2">
-            <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
-              {(["op", "fin"] as const).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setKind(k)}
-                  className={
-                    kind === k
-                      ? "px-3 py-1.5 bg-[var(--navy)] text-white"
-                      : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
-                  }
-                >
-                  {k === "op" ? "Operacional" : "Financeiro"}
-                </button>
-              ))}
-            </div>
+            {/* Ajuste A5 (2026-07-20, Adavio) — REMOVIDO o toggle Operacional/Financeiro:
+                dentro do Pipeline Operacional só aparece o operacional (o Financeiro é
+                módulo/aba própria em /casos/financeiro). `kind` fica fixo em "op". */}
             {/* R2-05 — filtro por FRENTE (só no operacional; oculta colunas
                 condicionais de outras frentes quando uma frente é escolhida). */}
             {kind === "op" && frenteOptions.length > 0 && (

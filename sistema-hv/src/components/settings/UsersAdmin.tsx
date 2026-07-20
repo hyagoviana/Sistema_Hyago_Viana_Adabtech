@@ -161,7 +161,14 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                         </span>
                       )}
                     </div>
-                    <div className="text-[11.5px] text-muted-foreground truncate">{u.email}</div>
+                    <div className="text-[11.5px] text-muted-foreground truncate">
+                      {u.email}
+                      {/* Ajuste A6 (2026-07-20) — mostra o telefone que o colaborador
+                          preencheu no onboarding, sem precisar abrir "Editar". */}
+                      {(u as { phone?: string | null }).phone
+                        ? ` · ${(u as { phone?: string | null }).phone}`
+                        : ""}
+                    </div>
                   </div>
                 </button>
 
