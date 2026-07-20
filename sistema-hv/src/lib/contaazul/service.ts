@@ -104,8 +104,11 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
   } else {
     let existing: CAPessoa | null = null;
     try {
+      console.log("contaazul: buscando pessoa por documento:", client.cpf_cnpj);
       existing = await findPessoaByDocumento(client.cpf_cnpj);
-    } catch {
+      console.log("contaazul: pessoa encontrada?", existing ? existing.id : "não");
+    } catch (findErr) {
+      console.warn("contaazul: erro ao buscar pessoa por documento:", findErr instanceof Error ? findErr.message : findErr);
       // Ignora e tenta criar
     }
 
@@ -113,11 +116,13 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       caCustomerId = existing.id;
     } else {
       try {
+        console.log("contaazul: criando pessoa com payload:", JSON.stringify(caData));
         const newPessoa = await createPessoa(caData);
         caCustomerId = newPessoa.id;
         created = true;
       } catch (err) {
         if (err instanceof ContaAzulError) {
+          console.error("contaazul: erro ao criar pessoa:", err.status, err.safeBody, err.message);
           throw new ContaAzulServiceError(
             `Erro ao criar pessoa no Conta Azul: ${err.message}`,
             err.status ?? 500,
