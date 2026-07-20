@@ -391,6 +391,8 @@ export type Database = {
           zapsign_doc_token: string | null;
           zapsign_sign_url: string | null;
           doc_kind: string | null;
+          // C1 (2026-07-20) — valores dos placeholders usados na geração.
+          values: Json | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -416,6 +418,7 @@ export type Database = {
           zapsign_doc_token?: string | null;
           zapsign_sign_url?: string | null;
           doc_kind?: string | null;
+          values?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

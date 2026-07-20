@@ -627,7 +627,8 @@ function pctToNumber(v: string | undefined | null): number | null {
 }
 
 // Extrai honorários estruturados do map de placeholders (fallback da opção A).
-function honorariosFromValues(values: Record<string, string>): CaseHonorariosInput {
+// C1 (2026-07-20) — exportada para o handler de assinatura capturar do documento.
+export function honorariosFromValues(values: Record<string, string>): CaseHonorariosInput {
   return {
     percentualHonorarios: pctToNumber(values.percentual_honorarios),
     valorParcelaCentavos: brlToCentavos(values.valor_parcela),
@@ -639,7 +640,7 @@ function honorariosFromValues(values: Record<string, string>): CaseHonorariosInp
 }
 
 // Best-effort: grava/atualiza os honorários do caso. NUNCA derruba a criação.
-async function upsertCaseHonorarios(
+export async function upsertCaseHonorarios(
   caseId: string,
   organizationId: string,
   honorarios: CaseHonorariosInput,

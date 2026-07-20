@@ -1,0 +1,16 @@
+-- ============================================================================
+-- Sistema HV — Migration — Guardar os VALORES (variáveis) usados ao gerar um
+-- documento, para o Termo puxar do CONTRATO ASSINADO (ajuste C1, 2026-07-20).
+-- ----------------------------------------------------------------------------
+-- O documento é gerado a partir de um modelo Word preenchendo placeholders. Até
+-- aqui esses valores só viviam no navegador. Agora persistimos em
+-- `system_case_documents.values` (JSONB, mapa placeholder→valor). Quando o
+-- documento (contrato/procuração) é ASSINADO, o servidor extrai % de honorários /
+-- valor da parcela desse mapa e grava em system_case_honorarios — daí o Termo de
+-- Acerto abre pré-preenchido sem conferência manual do contrato.
+--
+-- A view system_case_documents_active NÃO precisa expor `values` (nada a lê de
+-- lá; a captura usa getCaseDocument, que lê a TABELA com SELECT *). Coluna
+-- aditiva e nullable — regressão zero.
+-- ============================================================================
+ALTER TABLE system_case_documents ADD COLUMN IF NOT EXISTS values JSONB;
