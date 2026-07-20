@@ -391,16 +391,16 @@ export async function updateTema(
   // rótulos (fallback do getCaseTemaLabel, seletor de categoria, etc.). Sem isso o
   // nome ANTIGO do tema aparecia no topo do caso. Best-effort (não derruba o rename).
   if (patch.name !== undefined && clean.name) {
-    try {
-      await sb
-        .from("system_service_types")
-        .update({ name: clean.name })
-        .eq("tema_id", id)
-        .is("deleted_at", null);
-    } catch (stErr) {
+    // O supabase-js resolve com `{ error }` (não lança) — checar o erro retornado.
+    const { error: stErr } = await sb
+      .from("system_service_types")
+      .update({ name: clean.name })
+      .eq("tema_id", id)
+      .is("deleted_at", null);
+    if (stErr) {
       console.error(
         "tema-service: falha ao renomear o service_type interno do tema:",
-        stErr instanceof Error ? stErr.message : stErr,
+        stErr.message,
       );
     }
   }

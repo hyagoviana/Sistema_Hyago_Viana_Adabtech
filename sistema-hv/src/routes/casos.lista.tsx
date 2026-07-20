@@ -123,7 +123,9 @@ function CasosLista() {
   const temaSelecionado = temaFilter ? (temaName.get(temaFilter) ?? null) : null;
   // Rótulo do contexto de origem (categoria do Kanban ou tema) para título/botão.
   const contextoLabel = catName ?? temaSelecionado ?? null;
-  const temContexto = !!cat || !!tema;
+  // Coerência (QA 2026-07-20): título/botão-voltar seguem o filtro EFETIVO de tema
+  // (temaFilter), não mais o search param bruto — evita título e dropdown discordarem.
+  const temContexto = !!cat || !!temaFilter;
 
   const rows: CaseRow[] = useMemo(() => (data ?? []) as CaseRow[], [data]);
 
