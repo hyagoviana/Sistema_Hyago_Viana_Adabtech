@@ -5,6 +5,7 @@ import {
   contaAzulPingFn,
   createContaAzulChargeFn,
   syncClientToContaAzulFn,
+  syncContaAzulPagamentosFn,
 } from "@/rpc/contaazul";
 
 // ─── Sync Cliente → Conta Azul ───────────────────────────────────────────────
@@ -39,6 +40,21 @@ export function useCreateContaAzulCharge() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
       qc.invalidateQueries({ queryKey: ["parcelas"] });
+    },
+  });
+}
+
+// ─── Sync de Pagamentos (manual — o cron das 08:30 chama o mesmo motor) ──────
+
+export function useSyncContaAzulPagamentos() {
+  const fn = useServerFn(syncContaAzulPagamentosFn);
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (caseId?: string) => fn({ data: caseId ? { caseId } : {} }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
     },
   });
 }

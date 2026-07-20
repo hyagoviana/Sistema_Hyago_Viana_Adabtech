@@ -8,6 +8,7 @@ import {
   generateCaseDocumentFromTemplate,
   softDeleteCaseDocument,
 } from "./case-documents-service";
+import { criarBaixa, listContasFinanceiras, type CAMetodoPagamento } from "./contaazul/client";
 import { createDocWithText, docUrl, exportPdf } from "./google/docs";
 import { uploadFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
@@ -569,7 +570,56 @@ export async function darBaixaParcela(
     entity_id: parcelaId,
     diff: { valor_pago_centavos: input.valorPagoCentavos, metodo: input.metodoPagamento ?? null },
   });
+
+  // Conta Azul (2026-07-20) — reflete a baixa MANUAL no Conta Azul quando a parcela
+  // tem cobrança lá (provider='conta_azul' + id da parcela CA já reconciliado). Assim
+  // o CA não diverge do sistema. BEST-EFFORT: se o CA falhar (ou a parcela ainda não
+  // foi reconciliada), a baixa LOCAL permanece — só loga o erro.
+  const prov = data as { provider?: string | null; provider_ext_id?: string | null };
+  if (prov.provider === "conta_azul" && prov.provider_ext_id) {
+    try {
+      const contas = await listContasFinanceiras().catch(() => ({ itens: [] as { id: string }[] }));
+      const contaFinanceiraId = contas.itens?.[0]?.id ?? null;
+      if (contaFinanceiraId) {
+        await criarBaixa(prov.provider_ext_id, {
+          data_pagamento: (input.dataPagamento ?? new Date().toISOString()).slice(0, 10),
+          composicao_valor: { valor_bruto: input.valorPagoCentavos / 100 },
+          conta_financeira: contaFinanceiraId,
+          metodo_pagamento: toCAMetodoPagamento(input.metodoPagamento),
+          observacao: "Baixa registrada pelo Sistema HV",
+        });
+      }
+    } catch (err) {
+      console.error(
+        "darBaixaParcela: parcela baixada localmente, mas falhou refletir no Conta Azul:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
   return data;
+}
+
+// Mapeia o método (texto livre da baixa manual) para o enum de método do Conta
+// Azul. Sem correspondência clara → OUTRO; vazio → undefined (CA usa o default).
+function toCAMetodoPagamento(free: string | null | undefined): CAMetodoPagamento | undefined {
+  if (!free) return undefined;
+  const s = free.toLowerCase();
+  if (s.includes("pix")) return "CARTEIRA_DIGITAL";
+  if (s.includes("boleto")) return "BOLETO_BANCARIO";
+  if (s.includes("transf") || s.includes("ted") || s.includes("doc"))
+    return "TRANSFERENCIA_BANCARIA";
+  if (s.includes("dinheiro") || s.includes("espécie") || s.includes("especie")) return "DINHEIRO";
+  if (s.includes("débito") || s.includes("debito")) return "CARTAO_DEBITO";
+  if (
+    s.includes("crédito") ||
+    s.includes("credito") ||
+    s.includes("cartão") ||
+    s.includes("cartao")
+  )
+    return "CARTAO_CREDITO";
+  if (s.includes("cheque")) return "CHEQUE";
+  return "OUTRO";
 }
 
 // Estorno da baixa (reverte PAGA → PENDENTE). Idempotente (só sobre PAGA).

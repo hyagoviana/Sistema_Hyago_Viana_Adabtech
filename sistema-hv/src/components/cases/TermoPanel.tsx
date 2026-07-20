@@ -1,4 +1,13 @@
-import { Copy, ExternalLink, Loader2, Plus, QrCode, Receipt, Trash2 } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  Loader2,
+  Plus,
+  QrCode,
+  Receipt,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -24,7 +33,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { maskBrlReais, maskPercentBr, normalizeBrl, normalizePercentBr } from "@/lib/format";
 import { usePixQrCode, useCancelCharge } from "@/hooks/useAsaas";
-import { useCreateContaAzulCharge } from "@/hooks/useContaAzul";
+import { useCreateContaAzulCharge, useSyncContaAzulPagamentos } from "@/hooks/useContaAzul";
 import {
   useAceitarTermo,
   useApresentarTermo,
@@ -104,6 +113,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const { data: parcelas } = useParcelas(caseId);
   const darBaixa = useDarBaixaParcela(caseId);
   const estornar = useEstornarParcela(caseId);
+  const syncCa = useSyncContaAzulPagamentos();
   const [open, setOpen] = useState(false);
   const [baixaFor, setBaixaFor] = useState<{ id: string; valor: number; numero: number } | null>(
     null,
@@ -313,20 +323,44 @@ export function TermoPanel({ caseId }: { caseId: string }) {
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Parcelas
             </div>
-            <button
-              type="button"
-              disabled={delAllParcelas.isPending}
-              onClick={() => {
-                if (!window.confirm("Excluir TODAS as parcelas deste caso?")) return;
-                delAllParcelas.mutate(undefined, {
-                  onSuccess: (r) => toast.success(`${r.count} parcela(s) excluída(s)`),
-                  onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
-                });
-              }}
-              className="text-[11px] text-destructive hover:underline disabled:opacity-40"
-            >
-              Excluir todas
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Conta Azul (2026-07-20) — força a checagem de pagamentos do CA para
+                  este caso (o cron das 08:30 faz isso todo dia automaticamente). */}
+              <button
+                type="button"
+                disabled={syncCa.isPending}
+                onClick={() =>
+                  syncCa.mutate(caseId, {
+                    onSuccess: (r) =>
+                      toast.success(
+                        r?.ok
+                          ? `Conta Azul sincronizado — ${r.atualizadas} parcela(s) baixada(s)`
+                          : (r?.nota ?? "Sync concluído"),
+                      ),
+                    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha no sync"),
+                  })
+                }
+                className="text-[11px] text-[var(--navy)] hover:underline disabled:opacity-40 inline-flex items-center gap-1"
+                title="Buscar pagamentos no Conta Azul e baixar as parcelas pagas"
+              >
+                <RefreshCw size={11} className={syncCa.isPending ? "animate-spin" : ""} />
+                Sincronizar Conta Azul
+              </button>
+              <button
+                type="button"
+                disabled={delAllParcelas.isPending}
+                onClick={() => {
+                  if (!window.confirm("Excluir TODAS as parcelas deste caso?")) return;
+                  delAllParcelas.mutate(undefined, {
+                    onSuccess: (r) => toast.success(`${r.count} parcela(s) excluída(s)`),
+                    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                  });
+                }}
+                className="text-[11px] text-destructive hover:underline disabled:opacity-40"
+              >
+                Excluir todas
+              </button>
+            </div>
           </div>
           <ul className="space-y-1 text-[13px]">
             {(parcelas ?? []).map((p) => {

@@ -456,7 +456,9 @@
       "Bash(vercel teams *)",
       "Bash(vercel whoami *)",
       "Bash(vercel inspect *)",
-      "Bash(vercel --prod --yes)"
+      "Bash(vercel --prod --yes)",
+      "Bash(vercel build *)",
+      "Bash(vercel deploy *)"
     ]
   }
 }
