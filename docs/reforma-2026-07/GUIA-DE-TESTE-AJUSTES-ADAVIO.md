@@ -59,8 +59,20 @@ retorno:
 
 retorno:
 
+## A11 — Filtro de pastas no vínculo de caso do tema
+- [ ] No editor do tema, seção **Casos → "Vincular pasta existente"**: **não** aparecem mais pastas de **procuração/contrato/termo/financeiro** (só as de caso). *(A reorganização final das pastas 07/08 no Drive é do escritório.)*
+
+retorno:
+
+## C1 — Termo puxa valores do contrato assinado
+- [ ] Gere um documento (contrato/procuração) preenchendo **% de honorários** e **valor da parcela** (o modelo precisa ter esses placeholders: `percentual_honorarios`, `valor_parcela`).
+- [ ] **Confirme a assinatura** do documento.
+- [ ] Abra **Elaborar Termo de Acerto** → os campos **Honorários (%)** e **Valor da parcela** já vêm **pré-preenchidos com os valores do contrato assinado** (editáveis).
+- [ ] Um documento **não assinado** NÃO deve alimentar o termo.
+
+retorno:
+
 ---
 ### Fora deste teste
-- **C1** (termo puxar valores do contrato assinado) — pendente, próxima rodada.
-- **A11** (filtrar pastas 07/08/termo no vínculo de caso) — confirmar se é você (Adavio) ou nós.
+- **B1** (variáveis) depende dos modelos Word com `<…>`.
 - **Conta Azul** — o Adavio conduz.
