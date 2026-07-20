@@ -95,7 +95,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     } catch (err) {
       if (err instanceof ContaAzulError) {
         throw new ContaAzulServiceError(
-          `Erro ao atualizar pessoa no Conta Azul: ${err.message}`,
+          `Erro ao atualizar pessoa no Conta Azul: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`,
           err.status ?? 500,
         );
       }
@@ -124,7 +124,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
         if (err instanceof ContaAzulError) {
           console.error("contaazul: erro ao criar pessoa:", err.status, err.safeBody, err.message);
           throw new ContaAzulServiceError(
-            `Erro ao criar pessoa no Conta Azul: ${err.message}`,
+            `Erro ao criar pessoa no Conta Azul: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`,
             err.status ?? 500,
           );
         }
@@ -225,7 +225,7 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
       nota: caso.case_code,
       conta_financeira: contaFinanceiraId,
       detalhe_valor: { valor_bruto: valorParcelaCentavos / 100 },
-      metodo_pagamento: input.paymentMethod || undefined,
+      metodo_pagamento: mapPaymentMethod(input.paymentMethod),
     });
   }
 
@@ -460,6 +460,22 @@ function caReadNum(obj: Record<string, unknown>, keys: string[]): number | undef
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Mapeia os valores da UI para os valores que a API do Conta Azul aceita.
+const CA_PAYMENT_METHOD_MAP: Record<string, string> = {
+  PIX: "PIX_PAGAMENTO_INSTANTANEO",
+  BOLETO: "BOLETO_BANCARIO",
+  TRANSFERENCIA: "TRANSFERENCIA_BANCARIA",
+  // Estes já coincidem com o enum do CA:
+  CARTAO_CREDITO: "CARTAO_CREDITO",
+  DINHEIRO: "DINHEIRO",
+  OUTRO: "OUTRO",
+};
+
+function mapPaymentMethod(method: string | undefined): string | undefined {
+  if (!method) return undefined;
+  return CA_PAYMENT_METHOD_MAP[method] ?? method;
+}
 
 function addMonths(dateStr: string, months: number): string {
   const d = new Date(dateStr + "T00:00:00");

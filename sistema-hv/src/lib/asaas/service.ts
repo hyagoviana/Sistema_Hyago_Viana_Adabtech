@@ -86,7 +86,7 @@ export async function syncClientToAsaas(clientId: string): Promise<{
       await updateCustomer(asaasCustomerId, asaasData);
     } catch (err) {
       if (err instanceof AsaasError) {
-        throw new AsaasServiceError(`Erro ao atualizar cliente no Asaas: ${err.message}`, err.status ?? 500);
+        throw new AsaasServiceError(`Erro ao atualizar cliente no Asaas: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`, err.status ?? 500);
       }
       throw err;
     }
@@ -108,7 +108,7 @@ export async function syncClientToAsaas(clientId: string): Promise<{
         created = true;
       } catch (err) {
         if (err instanceof AsaasError) {
-          throw new AsaasServiceError(`Erro ao criar cliente no Asaas: ${err.message}`, err.status ?? 500);
+          throw new AsaasServiceError(`Erro ao criar cliente no Asaas: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`, err.status ?? 500);
         }
         throw err;
       }
@@ -198,7 +198,7 @@ export async function createCharge(input: CreateChargeInput): Promise<{
     payment = await createPayment(paymentData);
   } catch (err) {
     if (err instanceof AsaasError) {
-      throw new AsaasServiceError(`Erro ao criar cobrança no Asaas: ${err.message}`, err.status ?? 500);
+      throw new AsaasServiceError(`Erro ao criar cobrança no Asaas: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`, err.status ?? 500);
     }
     throw err;
   }
