@@ -14,6 +14,7 @@ import type { ModuleAction } from "@/lib/rbac";
 
 // R4-03 — mapeamento de erro compartilhado (AuthError→status; 403 já tratado).
 function mapError(err: unknown): never {
+  console.error("contaazul-rpc: mapError:", err instanceof Error ? err.message : err);
   if (err instanceof AuthError) {
     setResponseStatus(err.status);
     throw new Error(err.message);

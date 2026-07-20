@@ -91,8 +91,11 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
+      console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(caUpdate));
       await updatePessoa(caCustomerId, caUpdate);
+      console.log("contaazul: pessoa atualizada com sucesso");
     } catch (err) {
+      console.error("contaazul: ERRO ao atualizar pessoa:", err instanceof ContaAzulError ? { status: err.status, body: err.safeBody, msg: err.message } : err);
       if (err instanceof ContaAzulError) {
         throw new ContaAzulServiceError(
           `Erro ao atualizar pessoa no Conta Azul: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`,
