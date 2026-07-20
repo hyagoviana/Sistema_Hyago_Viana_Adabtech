@@ -18,6 +18,7 @@ import {
   DocsError,
 } from "./google/docs";
 import { getSupabaseAdmin } from "./supabase/server";
+import type { Json } from "./supabase/types";
 import { createDocument, type ZapSignSignerInput } from "./zapsign/client";
 
 export class CaseDocumentServiceError extends Error {
@@ -397,6 +398,9 @@ export async function generateCaseDocumentFromTemplate(opts: {
       google_doc_id: docId,
       goes_to_zapsign: tpl.goes_to_zapsign,
       ...(opts.docKind ? { doc_kind: opts.docKind } : {}),
+      // C1 (2026-07-20) — guarda os valores preenchidos; usados para pré-preencher
+      // o Termo QUANDO este documento for ASSINADO (ver confirmarAssinatura...).
+      values: (opts.values ?? {}) as unknown as Json,
     })
     .select()
     .single();
@@ -737,8 +741,12 @@ export async function confirmarAssinaturaManualDocumento(docId: string, userId: 
   // Dispara o gatilho de ciclo de vida do caso conforme o tipo do documento.
   // Import dinâmico evita ciclo entre case-documents-service e cases-service.
   if (doc.case_id) {
-    const { promoverCasoOperacional, registrarProcuracaoAssinada } =
-      await import("./cases-service");
+    const {
+      promoverCasoOperacional,
+      registrarProcuracaoAssinada,
+      honorariosFromValues,
+      upsertCaseHonorarios,
+    } = await import("./cases-service");
     // Procuração assinada: registra o marco comercial (procuracao_assinada_at + GANHO).
     if (doc.doc_kind === "procuracao") {
       await registrarProcuracaoAssinada(doc.case_id, { via: "manual", userId });
@@ -747,6 +755,27 @@ export async function confirmarAssinaturaManualDocumento(docId: string, userId: 
     // ou documento de caso — promove o cadastro a CLIENTE (passa a aparecer na aba
     // Clientes, não fica só em Lead). Idempotente (no-op se já é CLIENTE).
     await promoverCasoOperacional(doc.case_id, { via: "manual", userId });
+
+    // C1 (2026-07-20, Adavio) — SÓ ao ASSINAR o contrato/procuração é que os valores
+    // preenchidos no documento (%, parcela) "valem": capturamos do documento e
+    // gravamos em system_case_honorarios, de onde o Termo de Acerto abre
+    // pré-preenchido. Evita conferir o contrato na mão. Best-effort.
+    if ((doc.doc_kind === "contrato" || doc.doc_kind === "procuracao") && doc.values) {
+      try {
+        const vals = doc.values as Record<string, string>;
+        await upsertCaseHonorarios(
+          doc.case_id,
+          doc.organization_id,
+          honorariosFromValues(vals),
+          userId,
+        );
+      } catch (err) {
+        console.error(
+          "confirmarAssinaturaManualDocumento: falha ao capturar honorários do doc assinado:",
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
   }
 
   return { ok: true as const, id: doc.id };

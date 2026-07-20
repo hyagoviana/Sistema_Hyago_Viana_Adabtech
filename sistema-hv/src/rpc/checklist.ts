@@ -20,7 +20,7 @@ import {
   updateAdhocChecklistItem,
   updateChecklistDef,
 } from "@/lib/checklist-service";
-import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule, requireRole } from "@/lib/supabase/auth-guard";
 
 const ADMIN_ONLY = ["admin"] as const;
 
@@ -135,7 +135,7 @@ export const marcarItemChecklistFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
+      const { id: userId } = await requireModule("operacional", "edit");
       return marcarItemChecklist(data.itemId, data.done, userId);
     }),
   );
@@ -147,7 +147,7 @@ export const setChecklistItemAssigneeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return setChecklistItemAssignee(data.itemId, data.assignedTo);
     }),
   );
@@ -159,7 +159,7 @@ export const setChecklistItemAssigneesFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return setChecklistItemAssignees(data.itemId, data.userIds);
     }),
   );
@@ -171,7 +171,7 @@ export const setChecklistDefAssigneesFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return setChecklistDefAssignees(data.defId, data.userIds);
     }),
   );
@@ -195,7 +195,7 @@ export const createAdhocChecklistItemFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return createAdhocChecklistItem(data);
     }),
   );
@@ -214,7 +214,7 @@ export const updateAdhocChecklistItemFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return updateAdhocChecklistItem(data.itemId, data.patch);
     }),
   );
@@ -223,7 +223,7 @@ export const deleteAdhocChecklistItemFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ itemId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return deleteAdhocChecklistItem(data.itemId);
     }),
   );
@@ -235,7 +235,7 @@ export const instanciarChecklistFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return instanciarChecklist(data.caseId, data.stageSlug);
     }),
   );
@@ -253,7 +253,7 @@ export const sugerirChecklistPorUploadFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      await requireAuth();
+      await requireModule("operacional", "edit");
       return sugerirChecklistPorUpload(data.caseId, data.fileName, data.driveFileId);
     }),
   );

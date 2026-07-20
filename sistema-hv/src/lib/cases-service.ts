@@ -627,7 +627,8 @@ function pctToNumber(v: string | undefined | null): number | null {
 }
 
 // Extrai honorários estruturados do map de placeholders (fallback da opção A).
-function honorariosFromValues(values: Record<string, string>): CaseHonorariosInput {
+// C1 (2026-07-20) — exportada para o handler de assinatura capturar do documento.
+export function honorariosFromValues(values: Record<string, string>): CaseHonorariosInput {
   return {
     percentualHonorarios: pctToNumber(values.percentual_honorarios),
     valorParcelaCentavos: brlToCentavos(values.valor_parcela),
@@ -639,7 +640,7 @@ function honorariosFromValues(values: Record<string, string>): CaseHonorariosInp
 }
 
 // Best-effort: grava/atualiza os honorários do caso. NUNCA derruba a criação.
-async function upsertCaseHonorarios(
+export async function upsertCaseHonorarios(
   caseId: string,
   organizationId: string,
   honorarios: CaseHonorariosInput,
@@ -981,22 +982,25 @@ export async function promoverCasoOperacional(
     patch.aguardando_assinatura_at = null;
   }
 
-  // ITEM 2b (2026-07-07) — o caso promovido deve cair na 1ª etapa OPERACIONAL do
-  // TIPO dele. Normalmente já nasce lá (createCase), então isto é defensivo: só
-  // corrige se `macrostatus_op` estiver NULO. Se já estiver numa etapa op válida
-  // (ex.: movido manualmente pra frente), NÃO regride — preserva o progresso.
-  if (!caso.macrostatus_op && (caso as { service_type_id?: string | null }).service_type_id) {
-    const { data: firstOpStage } = await sb
+  // ITEM 2b (2026-07-07) + Ajuste A9 (2026-07-20, Adavio) — o caso promovido tem
+  // que cair numa etapa OPERACIONAL VÁLIDA do tipo dele, senão o card fica sem
+  // coluna e SOME do Kanban operacional. Antes só corrigíamos quando
+  // `macrostatus_op` era NULO; agora também quando o valor atual NÃO é uma etapa op
+  // válida do service_type (ex.: fallback "ONBOARDING" que não existe na esteira do
+  // tema). Se já está numa etapa op válida, NÃO regride (preserva o progresso).
+  const stId = (caso as { service_type_id?: string | null }).service_type_id;
+  if (stId) {
+    const { data: opStages } = await sb
       .from("system_pipeline_stages")
       .select("slug")
-      .eq("service_type_id", (caso as { service_type_id: string }).service_type_id)
+      .eq("service_type_id", stId)
       .eq("kind", "op")
       .is("deleted_at", null)
-      .order("ordem", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (firstOpStage?.slug) {
-      patch.macrostatus_op = firstOpStage.slug;
+      .order("ordem", { ascending: true });
+    const slugs = (opStages ?? []).map((s) => s.slug);
+    const atual = caso.macrostatus_op;
+    if (slugs.length > 0 && (!atual || !slugs.includes(atual))) {
+      patch.macrostatus_op = slugs[0];
     }
   }
 

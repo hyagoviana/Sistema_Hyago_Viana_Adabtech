@@ -22,22 +22,28 @@ import {
   listTermos,
   recusarTermo,
 } from "@/lib/termo-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
-async function handle<T>(fn: () => Promise<T>): Promise<T> {
-  try {
-    await requireAuth();
-    return await fn();
-  } catch (err: unknown) {
-    if (err instanceof AuthError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
+function run<T>(guard: () => Promise<unknown>, fn: () => Promise<T>): Promise<T> {
+  return (async () => {
+    try {
+      await guard();
+      return await fn();
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      const status = (err as { status?: number })?.status;
+      setResponseStatus(typeof status === "number" ? status : 500);
+      throw err instanceof Error ? new Error(err.message) : err;
     }
-    const status = (err as { status?: number })?.status;
-    setResponseStatus(typeof status === "number" ? status : 500);
-    throw err instanceof Error ? new Error(err.message) : err;
-  }
+  })();
 }
+
+// Leitura: qualquer autenticado. Escrita (A7, 2026-07-20): exige financeiro:edit.
+const handle = <T>(fn: () => Promise<T>) => run(() => requireAuth(), fn);
+const handleWrite = <T>(fn: () => Promise<T>) => run(() => requireModule("financeiro", "edit"), fn);
 
 const calcSchema = z.object({
   saldoAntesCentavos: z.number().int().nonnegative(),
@@ -77,12 +83,12 @@ const createSchema = calcSchema.extend({
 
 export const createTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
-  .handler(async ({ data }) => handle(() => createTermo(data)));
+  .handler(async ({ data }) => handleWrite(() => createTermo(data)));
 
 export const deleteTermoRascunhoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) =>
-    handle(async () => {
+    handleWrite(async () => {
       const { id: userId } = await requireAuth();
       return deleteTermoRascunho(data.termoId, userId);
     }),
@@ -90,7 +96,7 @@ export const deleteTermoRascunhoFn = createServerFn({ method: "POST" })
 
 export const enviarParaConferenciaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => enviarParaConferencia(data.termoId)));
+  .handler(async ({ data }) => handleWrite(() => enviarParaConferencia(data.termoId)));
 
 // S6-04 — gera o documento editável do termo (2 opções) e grava drive_url no
 // snapshot RASCUNHO. remanescenteAnteriorCentavos é input de tela (COMPLEMENTAR).
@@ -112,7 +118,7 @@ export const gerarDocumentoTermoFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) =>
-    handle(async () => {
+    handleWrite(async () => {
       const { id: userId } = await requireAuth();
       return gerarDocumentoTermo({
         termoId: data.termoId,
@@ -132,25 +138,27 @@ export const conferirTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ termoId: z.string().uuid(), conferidoPorId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) => handle(() => conferirTermo(data.termoId, data.conferidoPorId)));
+  .handler(async ({ data }) => handleWrite(() => conferirTermo(data.termoId, data.conferidoPorId)));
 
 export const aprovarTermoManualFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ termoId: z.string().uuid(), aprovadoPorId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) => handle(() => aprovarTermoManual(data.termoId, data.aprovadoPorId)));
+  .handler(async ({ data }) =>
+    handleWrite(() => aprovarTermoManual(data.termoId, data.aprovadoPorId)),
+  );
 
 export const apresentarTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => apresentarTermo(data.termoId)));
+  .handler(async ({ data }) => handleWrite(() => apresentarTermo(data.termoId)));
 
 export const aceitarTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => aceitarTermo(data.termoId)));
+  .handler(async ({ data }) => handleWrite(() => aceitarTermo(data.termoId)));
 
 export const recusarTermoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => recusarTermo(data.termoId)));
+  .handler(async ({ data }) => handleWrite(() => recusarTermo(data.termoId)));
 
 export const listParcelasFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
@@ -168,7 +176,7 @@ export const darBaixaParcelaFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) =>
-    handle(() =>
+    handleWrite(() =>
       darBaixaParcela(data.parcelaId, {
         valorPagoCentavos: data.valorPagoCentavos,
         dataPagamento: data.dataPagamento,
@@ -179,13 +187,13 @@ export const darBaixaParcelaFn = createServerFn({ method: "POST" })
 
 export const estornarParcelaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ parcelaId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => estornarParcela(data.parcelaId)));
+  .handler(async ({ data }) => handleWrite(() => estornarParcela(data.parcelaId)));
 
 // (item 5) — excluir parcela / todas as parcelas do caso.
 export const deleteParcelaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ parcelaId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => deleteParcela(data.parcelaId)));
+  .handler(async ({ data }) => handleWrite(() => deleteParcela(data.parcelaId)));
 
 export const deleteAllParcelasFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => deleteAllParcelasDoCaso(data.caseId)));
+  .handler(async ({ data }) => handleWrite(() => deleteAllParcelasDoCaso(data.caseId)));

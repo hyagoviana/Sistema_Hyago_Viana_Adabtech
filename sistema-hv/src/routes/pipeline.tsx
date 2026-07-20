@@ -1,6 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, FolderKanban, Layers, List, Pencil, Plus, Settings2, Tag } from "lucide-react";
+import {
+  ArrowLeft,
+  FolderKanban,
+  Layers,
+  List,
+  Pencil,
+  Plus,
+  Search,
+  Settings2,
+  Tag,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -213,10 +223,14 @@ function DynamicKanban({
   onBack: () => void;
 }) {
   const navigate = useNavigate();
-  const [kind, setKind] = useState<"op" | "fin">("op");
+  // A5 — `kind` fica fixo em "op" (o toggle foi removido); mantido como união de
+  // tipos para preservar o narrowing das checagens `kind === "fin"` existentes.
+  const [kind] = useState<"op" | "fin">("op");
   // R2-05 — filtro por FRENTE (só operacional). "" = todas as frentes.
   // R2-08 — semeado por ?frente= ao voltar da Lista via toggle.
   const [frenteFilter, setFrenteFilter] = useState<string>(initialFrente);
+  // Ajuste A4 (2026-07-20, Adavio) — busca rápida no Kanban (cliente/código).
+  const [search, setSearch] = useState("");
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
@@ -260,7 +274,18 @@ function DynamicKanban({
   // R2-05 — o filtro de frente só se aplica ao operacional (etapas condicionais por
   // frente são um conceito op). No financeiro, ignora.
   const applyFrente = kind === "op" && frenteFilter !== "";
-  const cases = applyFrente ? baseCases.filter((c) => caseFrente(c) === frenteFilter) : baseCases;
+  const afterFrente = applyFrente
+    ? baseCases.filter((c) => caseFrente(c) === frenteFilter)
+    : baseCases;
+  // Ajuste A4 — busca rápida por nome do cliente ou código do caso.
+  const q = search.trim().toLowerCase();
+  const cases = q
+    ? afterFrente.filter((c) => {
+        const nome = (c as { client_name?: string | null }).client_name ?? "";
+        const code = (c as { case_code?: string | null }).case_code ?? "";
+        return nome.toLowerCase().includes(q) || code.toLowerCase().includes(q);
+      })
+    : afterFrente;
 
   // R2-05 — colunas: oculta etapas CONDICIONAIS vazias de outra frente. Regra:
   // uma etapa com `frente_slug` (condicional) só aparece se (a) pertence à frente
@@ -316,21 +341,21 @@ function DynamicKanban({
         }
         aside={
           <div className="flex items-center gap-2">
-            <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
-              {(["op", "fin"] as const).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setKind(k)}
-                  className={
-                    kind === k
-                      ? "px-3 py-1.5 bg-[var(--navy)] text-white"
-                      : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
-                  }
-                >
-                  {k === "op" ? "Operacional" : "Financeiro"}
-                </button>
-              ))}
+            {/* Ajuste A5 (2026-07-20, Adavio) — REMOVIDO o toggle Operacional/Financeiro:
+                dentro do Pipeline Operacional só aparece o operacional (o Financeiro é
+                módulo/aba própria em /casos/financeiro). `kind` fica fixo em "op". */}
+            {/* Ajuste A4 (2026-07-20) — busca rápida por cliente/código no Kanban. */}
+            <div className="relative">
+              <Search
+                size={13}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gold)]"
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar cliente ou código…"
+                className="w-48 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
+              />
             </div>
             {/* R2-05 — filtro por FRENTE (só no operacional; oculta colunas
                 condicionais de outras frentes quando uma frente é escolhida). */}

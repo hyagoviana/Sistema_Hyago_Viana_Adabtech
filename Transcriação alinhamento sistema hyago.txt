@@ -1,0 +1,375 @@
+Adavio Tittoni [01:31:31]: Fala, beleza? Deixa eu só tomar um coco aqui rapidinho.
+
+Matheus Torquato [01:35:00]: Como é uma merda, só que essa galera de marketing adora como, mano. Não sei por quê, eu não gosto, é uma merda.
+
+Adavio Tittoni [01:38:20]: Beleza, boa. E aí, bebê?
+
+Matheus Torquato [01:39:20]: Tô aqui na merda.
+
+Adavio Tittoni [01:40:50]: Tá mal ainda? Compartilhar a tela contigo para você ver o Sisteminha, tá vendo minha tela aí?
+
+Matheus Torquato [01:43:50]: Tô vendo. Beleza, vamos lá.
+
+Adavio Tittoni [01:45:40]: Tá, essa parte de cadastro já tá funcionando normal, tipo, tá só em cliente, tá vendo? Ele não tá mais Depois que ele sai de lead, já cai para cliente, fica só em cliente, não fica duplicado, tá vendo? Então deu certo, eu testei, funcionou zero bala. A parte dos temas, como que tá funcionando agora nesse momento, tá? Eu já criei um para testar, aí eu posso editar o nome e tal, ele vai editar dentro da pasta aqui, né?
+
+Matheus Torquato [01:50:30]: Tá vendo?
+
+Adavio Tittoni [01:51:00]: Aqui já o tema, ele cai aqui.
+
+Matheus Torquato [01:51:21]: Certo, tá vendo?
+
+Adavio Tittoni [01:51:41]: Aí eu criando um tema, ele vai cair dentro de tema, ele já cria um tema aqui, quer ver? Ó, vou criar um para você ver. Novo tema, vou criar aqui tema teste, vou criar um. Aí o que que ele já faz, tá? Criou um tema teste, criou aqui a pasta. O que que ele faz? Ele já cria uma pasta de caso e uma pasta de procuração, que é onde vai cair as coisas ali, né, as documentações. Isso. Aí que eu posso fazer, posso vir aqui, aqui a parte de caso, né, posso vincular algum caso que já exista. Ele tá puxando esses aqui, não tá certo, os 7, 8 e o termo financeiro, eles não pode, até o 6 só. Mas enfim, depois eu vou ajustar. Então eu posso vincular algum caso que já exista, vim aqui vincular.
+
+Matheus Torquato [02:00:20]: Tá vendo?
+
+Adavio Tittoni [02:00:21]: Ele cai aqui em cima. Eu posso apagar, posso colocar outro se eu quiser, e posso criar um novo, tá? Criar um aqui.
+
+Matheus Torquato [02:02:01]: Aí cria uma nova pasta.
+
+Adavio Tittoni [02:02:20]: Vou criar uma pasta tipo abatimento teste, e eu posso anexar os Word. Eu vou até pegar um aqui já de exemplo. Batimento hoje, vou pegar um aqui, vou anexar aqui. Tendo que ele criou o abatimento teste. Aí o que ele faz, ele aqui nas pastas, né, dentro de temas, ele vem tema teste, vai ser o caso abatimento teste, tá aqui, né?
+
+Matheus Torquato [02:10:51]: Beleza.
+
+Adavio Tittoni [02:11:01]: Aí o que ele faz também, tá aqui dentro de modelos, que ele criou aquela pasta lá, né? Ele também criou o abatimento teste, tá vendo? Dentro de modelos e dentro do tema. Por que que eu criei dentro de, dentro do caso também? Ele meio que faz igual, porque se eu quiser vincular, o atendimento teste já vai estar aqui, não vai aparecer. Mas eu vou já deixar assim, vou só vincular uma procuração aqui, funciona a mesma coisa a procuração, tá? E vou fechar. Aí eu fico com 2, tá? Mas se eu quiser vincular, por exemplo, aqui no tema 10 eu vinculei lá naquele, no tema teste, né? Mas se eu quiser vincular também aqui o abatimento teste que eu criei no tema, no tema teste, eu também consigo, tá? Então consigo criar várias replicações, né? Exatamente. Então, tipo, como eu não sei como que vai funcionar o caso dentro do tema tal, então se você criar uma vez um caso ou uma procuração dentro de qualquer tema, eu ele também cria dentro do modelo, né, que eu posso usar em outros temas aquele mesmo caso, aquela mesma documentação de procuração, entendeu? Aí eu entro aqui, ele fica já na todas, todos os, as coisas aqui desse tema aí nesse local. Exatamente.
+
+Matheus Torquato [02:25:11]: Aí ele tem ver em lista, né, que eu tô vendo ali em cima, que era uma parada que eles tinham pedido. Aí só que aí quando for ver em lista Tem que colocar uns filtros que eles querem, tipo filtro por tipo.
+
+Adavio Tittoni [02:28:10]: É, dá para colocar aqui, tipo, tipo não vai dar, sei lá, deixa eu ver.
+
+Matheus Torquato [02:29:41]: Ou caso, tá ligado? Aí ele quer que seja tipo assim, ó.
+
+Adavio Tittoni [02:30:51]: Que não tá clicando no nome do cara. Ah, é aqui no tema que clica. É que eles não têm nenhum, tem aqui, ó, o COVID, né, contratação COVID. E esse aqui tá em qual? Tá em COVID também.
+
+Matheus Torquato [02:33:10]: Então vai puxar os dois, porque eu acho que ele não tá filtrando, tá ligado?
+
+Adavio Tittoni [02:34:11]: Tem que colocar, você clicar, viu, tudo também, né? Você clicar, viu, tudo e também ter aqui os filtros, ter ali qual foi o caso, né, o nome do caso e tal, tal, tal, né?
+
+Matheus Torquato [02:35:41]: E ele quer que tenha tipo em cima para ele poder selecionar os filtros rápidos, entendeu? Sim, tá, beleza.
+
+Adavio Tittoni [02:37:01]: Vou aqui também, né, tem que ter no Kanban, né? É, tá, beleza. Isso no pipeline operacional, beleza. E tá gravando aqui exatamente para eu fazer essas alterações. Então tem mais filtros no pipeline operacional, no Kanban, e também no ver em lista, né?
+
+Matheus Torquato [02:40:21]: Beleza.
+
+Adavio Tittoni [02:40:31]: O ver em lista também, eu vi aqui que tem pouca informação aqui, tá faltando o resto, né, que é o pasta modelo e tal. Precisa ter todas essas informações aqui também.
+
+Matheus Torquato [02:42:11]: É, precisa deixar bem ajustado no ver em lista.
+
+Adavio Tittoni [02:43:00]: Tem operacional e financeiro, eu vou tirar também essas opções, não precisa. Dentro de pipeline operacional, dentro do tema, é só, só aparece pipeline operacional, não pode ter esse financeiro aqui do lado.
+
+Matheus Torquato [02:44:40]: Até porque financeiro não vai aparecer mais, né? Financeiro vai ser um módulo diferente, né?
+
+Adavio Tittoni [02:45:50]: Já tá aqui separado dentro da aba financeira, tá vendo? E também eu preciso que dentro da lista seja clicável qualquer canto aqui para ver o tema inteiro, né? Ele tá só quando eu clico no código que ele abre, mas eu quero que seja em tudo.
+
+Matheus Torquato [02:48:50]: É, cara, clica em qualquer lugar e abre, né?
+
+Adavio Tittoni [02:49:11]: Abre a linha, né? Porque eu quero da linha, ele abre o negócio inteiro.
+
+Matheus Torquato [02:49:41]: Fechou, tá?
+
+Adavio Tittoni [02:50:10]: Aí isso aqui ficou assim. A parte de permissões, eu até setei aqui as permissões. É aqui que ficou. O que que eu fiz? Tem aqui as opções ver, não ver, tal, quando você vai contratar, vai chamar alguém, né, convidar alguém. E a parte que tem valores, eu coloquei isso aqui, ó: ver ou ocultar, ou valores padrão. Que daí ele pode ocultar para essa pessoa ver o financeiro ou não. Às vezes a pessoa do financeiro, mas É um assistente, então não quero que esse cara veja valores. Então não setei exclusivamente para quem tem acesso ao financeiro ver valor, entendeu?
+
+Matheus Torquato [02:55:00]: Entendi.
+
+Adavio Tittoni [02:55:01]: Então ele pode fazer aqui também, tá? E tá dando certo, quer ver? Ó, que nem aqui, eu vou mostrar para você. Aqui o comercial tá como não ver, o operacional tá como visualizar. Então visualizar não pode editar. Então até vou entrar aqui no que eu fiz, ó. Esse aqui é o que eu criei, tá? Então, ó, comercial ele nem vê, tá vendo? Mas o financeiro, ele é o financeiro que ele pode editar.
+
+Matheus Torquato [02:58:40]: Acho que é o financeiro.
+
+Adavio Tittoni [02:59:00]: Então, por exemplo, o financeiro, já esqueci, operacional, ele pode visualizar. Então, pessoal, tá aqui, tá vendo? Eu tenho os clientes.
+
+Matheus Torquato [03:00:30]: Então entra aqui, ó, aqui, se você tá na conta grande, pô, você não tá na outra conta. Essa conta tem tudo.
+
+Adavio Tittoni [03:02:20]: É nessa daí, ele tá no cliente, tá vendo que ele não consegue editar nada, nem aparece nem nada para editar, tá vendo?
+
+Matheus Torquato [03:03:30]: Só consegue visualizar, né?
+
+Adavio Tittoni [03:03:41]: É, consegue visualizar só, mas editar não, entendeu? Aí se eu coloco, por exemplo, vou aqui, vou mudar, vou mudar a permissão desse colaborador para operacional, ele pode editar operacional. Ah, para salvar tem que vir aqui, ó. Editar e salvar permissões. Aí depois salvar, aí ele salva alteração. Aí eu posso entrar aqui, dar um atualizar a página. Agora já consegue editar, tá vendo?
+
+Matheus Torquato [03:10:10]: Boa!
+
+Adavio Tittoni [03:10:11]: A novo tema e tudo mais, entendeu? Sim, fica correto. Aí ele pode setar como ele quiser essa página, não precisa se limitar ao que a gente vai deixar pronto, entendeu?
+
+Matheus Torquato [03:12:01]: Ele pode ir ajustando o usuário da forma que ele queira. Sim, mas o usuário ainda é vinculado, tipo assim, a financeiro, jurídico, advogado.
+
+Adavio Tittoni [03:13:51]: Ele vai dar, se você criar um aqui e não mexer em nada nesses pontos, ele já vai estar vinculado. Mas o ideal é você, é ele fazer isso Porque como a gente não sabe como que ele vai tratar esse funcionário, entendeu? Não passou para gente como vai ser hierarquia. Então o ideal é ele mexer aqui, leva como prioridade isso daqui, entendeu?
+
+Matheus Torquato [03:17:50]: Tá, entendi.
+
+Adavio Tittoni [03:18:10]: Aí o usuário faz aquele processo, colocar um telefone, criar uma senha e tal. Uma coisa que eu percebi também, que depois que o telefone que o usuário criou usa, ele grava lá o colaborador novo, não tá aparecendo Aqui no editar usuário tem que aparecer o número que ele colocar lá no, quando terminar de preencher o cadastro, o colaborador novo. Então tem que atualizar isso aqui também. O que mais? Deixa eu ver aqui. Ah, mexi aqui nas coisas. Aqui eu não mexi em nada porque tava funcionando.
+
+Matheus Torquato [03:23:40]: Então só trouxe ele para pipeline financeira agora, né?
+
+Adavio Tittoni [03:24:20]: Aí o que que ele me trouxe aqui que tá faltando, tá? Só um minutinho, só um minutinho. Pronto, minha sobrinha tava chorando horrores ali, mas pegou ela já.
+
+Matheus Torquato [03:29:10]: Pegaram ela?
+
+Adavio Tittoni [03:29:21]: Já peguei aqui. O que que ele me trouxe que tá faltando para terminar o sistema? Que seria, ele anotou aqui em cima, o SINC com a conta azul, tá? Que tava faltando, tá? Essa parte, essa parte de fundir eu não fiz, que eu não sei o que que é essa parte de fundir o ESF com DGM.
+
+Matheus Torquato [03:33:51]: É essa parte aí dos temas. Ah, então deu certo, já deu certo.
+
+Adavio Tittoni [03:35:30]: Tornar 15%, R$500 editáveis no termo. Isso aqui eu já fiz também. E fechar o gate de escrita checklist no termo servidor profissional.
+
+Matheus Torquato [03:37:01]: Isso que eu nem fiz.
+
+Adavio Tittoni [03:37:20]: Aí que precisa fazer mais, fechar essa parte da conta azul, né?
+
+Matheus Torquato [03:38:01]: Eu já fiz aqui, é porque eu não subi aquele dia. Tá, eu preciso que você faça um pull e aí depois eu faço de novo.
+
+Adavio Tittoni [03:39:20]: Tá, tem mais alguma coisa que você vê que precisava ser feito no sistema? Que às vezes eu não lembro e tal.
+
+Matheus Torquato [03:40:00]: Tem a parte das tarefas lá que eles querem que você testou a parte dos documentos.
+
+Adavio Tittoni [03:41:00]: Qual parte do documento?
+
+Matheus Torquato [03:41:01]: Reclamando que tinha documento que não era preenchido com cadastro do cliente. Vai lá no cliente, abre o cliente. O teu não, porque o teu não tem nada preenchido. Por isso que eu tinha falado, manda aí preencher tudo. Do cara no cadastro. É por causa que tipo tem lá embaixo, né? Ele falou que RG também tem um número, não tá dando para digitar os números.
+
+Adavio Tittoni [03:45:50]: Não, eu já corrigi isso aqui, ó, até com ponto e traço agora.
+
+Matheus Torquato [03:46:20]: Tá, beleza.
+
+Adavio Tittoni [03:46:30]: Uma coisa eu coloquei também, quando o cara for cadastrar uma pessoa e se ele colocar que é um cliente, automaticamente já cai para cliente, não cai em lead, entendeu? E também tem um botão, quando você cadastra vai ter um botão aqui em cima, mandar para cliente. Então também vai ter isso, tá?
+
+Matheus Torquato [03:49:31]: Aí abre ali o cliente, que tipo, aí tem, tá vendo, ó, CRM, não sei o quê, lá lá lá, ano, residência, tá? A gente tem que pedir para uma IA preencher tudo isso aí, mocada, e gerar um documento, porque eu acho que esses dados que não estão batendo lá, tá ligado? Tipo, não é nem que não bateu lá, é porque ele não tá vendo e aí ele não entende.
+
+Adavio Tittoni [03:53:50]: Ah tá, não entendi. Tipo, tá bom, porque ele colocou assim, ó, vamos preencher um teste para ver. Deixa eu apagar esse do Iago.
+
+Matheus Torquato [03:55:20]: É por isso que eu tinha uma, porque aí vai preencher direitinho ali, né? Vou pegar aqui, a gente preenche que já Que ele tinha mandado aqui, ó.
+
+Adavio Tittoni [04:03:11]: Esse tipo, o que que é mesmo? O que que esse negócio de tipo precisa ter?
+
+Matheus Torquato [04:03:50]: Acho que é bom botar aí, sei lá, para aparecer. CRM, UF CRM vínculo.
+
+Adavio Tittoni [04:06:10]: Estudo de graduação, que é um formato 2018.
+
+Matheus Torquato [04:09:31]: Aqui ele botou assim, ó, campo lupa hoje ainda não funciona, que é o campo lá de cima, né?
+
+Adavio Tittoni [04:11:21]: Preenche tudo, tá? Aí ele criou um lead, certo?
+
+Matheus Torquato [04:12:21]: Vai lá no campo lupa, vai no início, no campo lupa, e pesquisa meu nome, a data, para a gente testar.
+
+Adavio Tittoni [04:13:11]: Aqui tudo funciona já na lupa, tá? Quer ver? Ó, se eu colocar tipo assim É caso, vou colocar um nome do tipo esse.
+
+Matheus Torquato [04:14:50]: Ô caralho, bota COVID, tá vendo?
+
+Adavio Tittoni [04:15:30]: É que tem um contrato COVID aberto, entendeu?
+
+Matheus Torquato [04:16:00]: Feito.
+
+Adavio Tittoni [04:16:10]: Então tipo, se eu colocar Dávia, vai ter o seu nome, vai ter seu nome. Mas se eu colocar, por exemplo, uma aba tipo controladoria, vai ter a página, tá vendo? Que é página. Então tipo assim, ele vai ter as coisas que estão feitas, não Tipo, existe também aqui, por exemplo, abatimento militar. Por exemplo, não vai estar aqui porque não tem ninguém abatimento militar.
+
+Matheus Torquato [04:20:00]: Sim, sim, entendi.
+
+Adavio Tittoni [04:20:20]: Mas ele pesquisa tudo, tudo, tipo, que eu quiser. Ó, vou colocar meu CPF, esse ele puxa. Ó, puxou o Mateus, tá vendo?
+
+Matheus Torquato [04:22:01]: Beleza. Isso era a primeira coisa que tinha aqui. Eu vou dizendo aqui para a gente ir testando, tá? Aí o RG com espaço de digitação, né, número a menos e tal. Beleza. Então, após assinatura, cadastro, lead continua como lead, depois ele vira cliente. Aí estava errado, né? Aí você já ajeitou aí. Anexar documentos dentro do usuário.
+
+Adavio Tittoni [04:28:11]: Anexei aqui o requerimento. Vamos ver se tem como baixar. Vamos ver se tem como baixar. Tem como baixar. Vamos ver aqui se caiu na sua pasta clientes. A W, esse monte de coisa aqui, que porra é essa?
+
+Matheus Torquato [04:30:41]: Essa tá fora, né?
+
+Adavio Tittoni [04:32:21]: Aquele mesmo tá aqui. Beleza, tá escrito que a gente tinha escrito, né?
+
+Matheus Torquato [04:35:11]: É, não, beleza. Mas pera aí, aí tem aqui, ó, status mover. Erro na hora de tentar mover a etapa do Kanban.
+
+Adavio Tittoni [04:36:31]: Já ajustei também, dá para mover agora certinho. Tava com uma trava, eu não sei por quê. Comigo tava funcionando, mas vai para o usuário normal.
+
+Matheus Torquato [04:38:20]: É que você tá no seu usuário master, tá ligado? Entra no usuário normal. Qual a base, né?
+
+Adavio Tittoni [04:41:21]: Porque ele pode digitar, daí por isso que ele pode fazer isso.
+
+Matheus Torquato [04:41:51]: Você perguntou qual é a base de dados que utiliza para instituição de graduação e residência hospitalar. Não sabemos, né? A gente pegou daí. Ela te dá umas opções ali, né? Eu vi que tem umas opções quando você cadastra, tipo assim.
+
+Adavio Tittoni [04:44:30]: Qual que é o negócio mesmo?
+
+Matheus Torquato [04:44:50]: Essa parte ali da residência, hospital, é, e essa instituição. Vê se dá para digitar fora da base.
+
+Adavio Tittoni [04:46:30]: Então não tem muito problema não, só uma base, mas pode digitar, tipo, mas quiser botar uma base, a gente fala com ele na reunião, tipo, você quer que dá para digitar, mas quer que tira? Até, ó, até vou editar aqui o seu, quer ver? Vou editar esse aqui, vou colocar um nome aleatório. Salvou, tá vendo? Também dá para salvar se quiser.
+
+Matheus Torquato [04:52:51]: Tá aí, ó, na hora de dados do contrato, na hora que vai gerar um contrato. Ele disse que tá pedindo instituição financeira, valor, situação, ano do contrato do FIES. E tipo, a gente preencheu essas coisas aí, não foi?
+
+Adavio Tittoni [04:55:50]: Sim, vamos ver se vai dar certo agora. Tem que vincular um tema. Ó, aqui eu vinculo um tema, tipo, eu tenho que vincular primeiro o tema. Depois que eu vincular o tema, ele vai mostrar para mim que ele tá do zero. Sobre aquele, exatamente. Posso colocar as pessoas aqui, não tá selecionando advogado, é porque não tem advogado.
+
+Matheus Torquato [05:00:10]: Mas é, tá certo.
+
+Adavio Tittoni [05:00:21]: Não, mas deveria buscar, porque pelo menos administrador deveria aparecer aqui. Ah não, acho que é só advogado, né? Deixa eu ver se eu mudar a permissão para advogado aqui da titular. Já tá, já salvou o papel. É o que tava, apareceu já. Beleza, aí vamos ver. Ele pediu procuração ou documento do caso. Vamos ver do caso, é o que que tava, o que que era que tem esses daí, era o FIES, né? Tá, deixa eu vir com FIES aqui.
+
+Matheus Torquato [05:07:40]: É 1%, mano. É isso aí, SF, DGM.
+
+Adavio Tittoni [05:09:10]: Tá, beleza, eu pulei já. Eu posso entrar aqui também, né, como eu já tirei, né, posso gerar um documento e Caso, ó, aí tem muita coisa aí que não tá puxando, tá ligado? Essas coisas não tem lá, número da médica, isso que tem, né? Sim, realmente.
+
+Matheus Torquato [05:16:51]: Que naíve, pediu mais de seus dados pessoais do médico, ele puxou, tá ligado? Só nesse. Então, tipo, é algum problema dos outros documentos, tá ligado? Pera aí rapidão.
+
+Adavio Tittoni [05:20:00]: Tá.
+
+Matheus Torquato [05:29:51]: Aí tem que usar a mesma ideia.
+
+Adavio Tittoni [05:30:40]: Só fazer um trem aqui rapidinho. Rapidão.
+
+Matheus Torquato [05:35:20]: Ele tá falando que fica inconsistente no preenchimento.
+
+Adavio Tittoni [05:36:01]: Sim, mas tá certo, não tá puxando, né? Precisa que tenha, esteja puxando tudo. Então é tipo todas as informações que estão aqui no cadastramento são essa parte aqui, né, de vínculo instituição, tal, FIES, dados de contato FIES, tal. Tudo isso que tá preenchido precisa olhar os documentos e está, e fazer a vinculação, né, até mesmo para novos documentos, né. Então esses novos documentos que me preocupa um pouco quando eles forem anexar, para não dar, vai dar para não dar quebra, né.
+
+Matheus Torquato [05:45:11]: Então tem que dar certo, tem que ter um motor, tá ligado, que Leia e mude.
+
+Adavio Tittoni [05:46:20]: Precisa fazer uma alteração, ele pode fazer um documento ali, sei lá, para deixar tudo certo, né?
+
+Matheus Torquato [05:47:30]: É isso. Eu vou ter que entrar numa live, velho. Agora? 2 já tá. Porque eu dou então, mano. Os cara quer me botar em live. Olha como eu tô, minha cara.
+
+Adavio Tittoni [05:50:20]: BJ é assim mesmo, porque não é CLT, né? Então foda-se, os cara faz qualquer coisa.
+
+Matheus Torquato [05:52:01]: É, os cara também aí, tá?
+
+Adavio Tittoni [05:52:50]: Aí tem mais alguma? Pode continuar a lista aí para a gente fazer.
+
+Matheus Torquato [05:54:00]: Beleza, essa parte aí não. Financeiro: elaborar termo de acerto, o percentual 15% do Aproveita, vou passar o de 15%, né?
+
+Adavio Tittoni [05:55:41]: Eu não testei ainda, mas vamos testar, ver se vai dar. Deixa eu jogar ali para enviar para financeiro, aplicar, beleza. Cai na parte financeira, elaborar. 15%, valor da parcela, isso aqui, né?
+
+Matheus Torquato [05:59:00]: É, mas muda aí de 15%.
+
+Adavio Tittoni [05:59:30]: 15 para o quê?
+
+Matheus Torquato [06:00:00]: Para 18. E muda o valor de 500 para outra coisa.
+
+Adavio Tittoni [06:01:11]: Não deixa calcular e revisar.
+
+Matheus Torquato [06:04:00]: 18, eu não sei se tá certo, né?
+
+Adavio Tittoni [06:05:41]: Tem que pedir para ele validar o cálculo lá.
+
+Matheus Torquato [06:06:21]: Cadê?
+
+Adavio Tittoni [06:06:30]: Ele fala só aqui 18%.
+
+Matheus Torquato [06:08:11]: Sou sempre fixo na calculadora. Cadê que calculei de novo?
+
+Adavio Tittoni [06:09:21]: É, tem aqui, ó, aqui, ó.
+
+Matheus Torquato [06:12:20]: Não entendi não. Cancela aí, gera de novo e tenta se conectar com a conta azul aí, velho, porque eu acho que já tá rolando. Mas depois a gente tenta. Pera aí, tá?
+
+Adavio Tittoni [06:14:30]: Você quer gerar o quê de novo?
+
+Matheus Torquato [06:14:51]: Porque ele abre em 15%, beleza. 15% e 500 está como se fosse sempre fixo na calculadora. O certo é deixar a possibilidade de alterar a informação. Ah, eu acho que ele não tava conseguindo. O objetivo é que, como essa informação foi preenchida no preenchimento do contrato, esteja atrelado no caso neste momento, para que se evite o trabalho manual de conferir o contrato. Como vai ter a integração com o sistema financeiro, esse preenchimento no momento da assinatura vai ajudar lá também. Caralho, aí é doideira!
+
+Adavio Tittoni [06:21:41]: Pera aí, fala de novo para ver se eu entendo.
+
+Matheus Torquato [06:22:21]: É o seguinte, o que eles querem é que quando gera isso daí, a gente vai ter que armazenar algo no banco.
+
+Adavio Tittoni [06:23:40]: Só um minutinho aqui.
+
+Matheus Torquato [06:30:50]: Só um minutinho, cara.
+
+Adavio Tittoni [06:37:21]: Boa, beleza. Pode falar.
+
+Matheus Torquato [06:37:50]: Então, seguinte, ele falou que é o seguinte: o certo é deixar a possibilidade de alterar a informação. Beleza, já tá alterando a informação agora, né? O objetivo é como se essa informação foi preenchida no tipo, ele falou que quando preencheu o contrato já preencheu essa informação, que então aí deve vir o valor do contrato. Só que tipo assim, é meio impossível para nós porque a gente faz isso via documento do Word, tá ligado? Não é uma informação carregada dentro do nosso sistema.
+
+Adavio Tittoni [06:44:30]: É, tem que colocar a lógica do cálculo.
+
+Matheus Torquato [06:45:20]: Não é nem a lógica do cálculo, isso daí tá funcionando. O que ele precisa é tipo assim, se eu preenchi no contrato, apareça aqui. Só que a gente não tem um campo de preenchimento de contrato que a gente faz não lá. Documento, um documento Word.
+
+Adavio Tittoni [06:48:41]: É, mas ainda tem que colocar um banco de dados quando preenche o Word, salvar as variáveis do Word.
+
+Matheus Torquato [06:49:40]: Mas não tem como isso, que a gente abre um modal.
+
+Adavio Tittoni [06:50:30]: Mas quando não escreve na variação, quando escreve na variação que a gente armazena, é isso que eu tô falando. Porque assim, o valor ele escreve na variação, ele salva. Só que ele só leva em consideração aqueles que foram assinados, que eles podem preencher um valor e não tá assinado e não levar isso em consideração para ir para o valor, entendeu? Sim, tem que estar de acordo para poder ir para o valor, entendeu? E apareceu o valor aqui dentro do termo de aceite. Beleza, eu vou fazer isso aqui. Quer testar aqui a conta azul para ver?
+
+Matheus Torquato [06:57:20]: Vai, testa aí. Mas era bom testar no do Thiago. Vai, bota aí sincronizar conta azul. Eu tenho aqui acesso na conta azul. Sincronizou já, cliente sincronizado na conta azul.
+
+Adavio Tittoni [06:59:31]: Vamos ver, o valor tem que ser o valor que tá aqui, puxa aqui, né, do termo de aceite, né? Já tem que conversar com o termo de aceite, né? Não tem? É que o valor que for no termo de aceite fechado, que tá aqui aprovado, ah, foi aprovado o termo de aceite. Quando ele gerar a cobrança, automaticamente já deve ser preenchido aqui com o valor, a parcela e tudo mais, entendeu? Ele só altera a forma de pagamento, entendeu? Tá, 500. Que que você quer que seja?
+
+Matheus Torquato [07:06:31]: Pix, cartão? Pera aí, deixa eu ver primeiro assim. Tu fez no nome de quem? Oi, tu fez no nome de quem? Quem é o cliente aí, eu ou você? Eu. Mateus, como é que tá aí? Mateus Torquato?
+
+Adavio Tittoni [07:13:41]: É Mateus Torquato.
+
+Matheus Torquato [07:14:41]: Não, não criou.
+
+Adavio Tittoni [07:15:00]: Vai lá. Não, mas eu não mandei ainda.
+
+Matheus Torquato [07:15:41]: Mas se ele sincronizou com os clientes da conta, vai mandar aí um, vai.
+
+Adavio Tittoni [07:16:41]: Ah tá, ele sincronizou, ele deveria ter passado já, né?
+
+Matheus Torquato [07:17:11]: Passado o cliente, pelo menos.
+
+Adavio Tittoni [07:17:40]: Pixel cartão.
+
+Matheus Torquato [07:19:01]: Deu erro, mas acho que é porque não tem o seu usuário, entendeu?
+
+Adavio Tittoni [07:20:00]: Sincronizar. Ó, deu erro de novo.
+
+Matheus Torquato [07:20:20]: Não existe o seu usuário, eu acho. Como ele não criou, você bota para sincronizar, bota para sincronizar aí.
+
+Adavio Tittoni [07:21:41]: Eu coloquei, foi o que deu, porque ele não encontra o seu usuário.
+
+Matheus Torquato [07:22:31]: Sincroniza com Asa. Deixa eu olhar aqui, é porque eu acho que eu não subi. Você já subiu aí?
+
+Adavio Tittoni [07:25:21]: Subiu o quê?
+
+Matheus Torquato [07:26:11]: Subiu o quê no GitHub? O que você tá fazendo aí? Eu tenho que esperar você subir para poder fazer.
+
+Adavio Tittoni [07:27:10]: Não tem nada aqui para subir, tudo atualizado. Você vai subir aí? Eu dou um— ele tem que—
+
+Matheus Torquato [07:36:51]: é melhor você terminar para eu poder subir, entendeu? Porque a sua coisa das operações que a gente fez aqui, né, que a gente conversou aqui, né? Não, mas aí tem— e aí o preenchimento dos documentos, você rodou agora, não foi?
+
+Adavio Tittoni [07:39:50]: Preenchimento dos documentos, não rodei nada, a gente só Tô conversando contigo e tá gravando aqui, eu ia rodar depois.
+
+Matheus Torquato [07:41:01]: Ah, eu achei que você tava rodando. Não, então eu posso fazer um tour aqui.
+
+Adavio Tittoni [07:41:40]: Não tá rodando nada, é isso que eu tô te falando.
+
+Matheus Torquato [07:42:00]: Ah não, então vou subir aqui o que eu tinha feito.
+
+Adavio Tittoni [07:42:30]: Só é porque assim, eu tô mostrando para você o que foi feito para depois eu ir para as correções, mas não subi nada ainda. A gente testar, depois a gente mexe aqui. Pode subir, vai fazer o, vai rodar no Vercel aqui.
+
+Matheus Torquato [07:47:31]: Nossa, o biaqueno, gente. Deixa eu ver. Doi?
+
+Adavio Tittoni [07:58:31]: Não, não, não.
+
+Matheus Torquato [08:06:01]: Vamos colocar aqui. Ah, ele tá falando que não tem, mas o número não tá criando cliente, né? Oi, não tá criando cliente. Tô ajeitando aqui.
+
+Adavio Tittoni [08:31:50]: Vou no banheiro ali enquanto você vai mexendo aí rapidão. Depois eu libero aqui para ter acesso lá.
+
+Matheus Torquato [08:58:10]: Vou rodar meu time.
+
+Adavio Tittoni [10:22:41]: E aí, tá dando boa, cara?
+
+Matheus Torquato [10:23:31]: Tá subindo aqui. Tô sumindo, viu?
+
+Adavio Tittoni [11:14:01]: Então daí pode ver, tá terminando de subir, já tá no versão aqui rodando. Ainda não foi para o versão. Aí tá, ele tá rodando ainda.
+
+Matheus Torquato [17:00]: Foi aqui já. Agora eu posso testar aqui? Pode. Deu erro ainda. Atualiza aí. É, dá erro ainda. Quer que eu te mando o erro do post para você ver?
+
+Adavio Tittoni [22:51]: Manda aí, vou mandar no WhatsApp. Mas tá falando que o deploy não funcionou, que esse erro de deploy, o deploy não funcionou aqui.
+
+Matheus Torquato [36:41]: Para mim deu vídeo. Para mim deu um erro aqui.
+
+Adavio Tittoni [39:40]: Esse aqui, então, Ctrl+Shift+R aí para ver.
+
+Matheus Torquato [40:41]: Deu esse aqui que você fez? Deu certo. Será que eu tenho que criar um novo? Deixa eu fazer o seguinte. Cadê você aqui no pipeline? Tornei você um cliente. Você tá aqui, a gente tem que vincular algum caso, eu acho, para dar certo. Isso aqui é um problema, você viu, né? Que eu tornei você um cliente só tendo o tema vinculado, não tem nenhum caso, ele não caiu na pipeline operacional, tá vendo? Ele tem que cair. Ah, tá. Eu também preciso ver essa correção, porque daí que aconteceu aqui agora que eu acabei de ver. Eu tenho, fiz o cadastro e transformei você em um cliente, só que eu só tinha vinculado o tema para você, não tinha colocado nenhum caso, você não tinha nenhum caso assinado. Eu criei agora aqui o caso tal, já vou confirmar assinatura. E mas ele não caiu na pipeline operacional, entendeu?
+
+Adavio Tittoni [01:00:21]: Sempre quando se tornar, e nem assinou, né?
+
+Matheus Torquato [01:00:51]: É, mas eu só tinha vinculado o tema, mas ele não entrou nenhuma pipeline, entendeu? Então o que que precisa acontecer?
+
+Adavio Tittoni [01:01:50]: Não, mas ele não pode virar cliente sem ter assinado.
+
+Matheus Torquato [01:02:40]: Não, mas eu tornei, tornei aqui no botão mesmo.
+
+Adavio Tittoni [01:03:10]: Ah, tá, entendi.
+
+Matheus Torquato [01:03:40]: Deixa eu, tá, já tá aqui. Deixa eu mandar você para o financeiro. Beleza, mandei você para financeira. Ó, sincronizou contra azul, mas não fez nada, não mexeu, acho. Sincronizei, vê se deu certo. É o David Toy.
+
+Adavio Tittoni [01:09:20]: Não, vai ali em network, vai lá em sincronismo de novo. Ah, deu um 400. Agora vou ter que dar uma paradinha, mano, que vou ter que dar aula já já. Da aula não, daqui na porra da live lá.
+
+Matheus Torquato [01:18:11]: Mas quer que eu tento ver isso aí?
+
+Adavio Tittoni [01:18:51]: Não, porque aqui eu tô com acesso a conta azul, eu já tô subindo aqui, mas a gente volta à tarde, tá?
+
+Matheus Torquato [01:20:11]: Então eu vou fazendo as alterações que eu gravei aqui para dar certo.
+
+Adavio Tittoni [01:22:00]: Beleza, fechou, fechou. Tem que comer alguma coisa que eu tô fraco, velho.
+
+Matheus Torquato [01:23:21]: Tá, beleza, mas se cuide aí, tá?
+
+Adavio Tittoni [01:23:50]: É nós, daqui a tarde a gente faz de novo, fechou?
+
+Matheus Torquato [01:24:20]: Valeu, valeu, valeu, tamo junto. Uma outra coisa também, só para anotar aqui que eu reparei, eu Criei um tema e eu editei o nome desse tema, só que aí eu vinculei esse tema editado a um cliente. Beleza, já tava com o nome do tema novo, tava com a edição nova. Só que quando eu entro dentro do tema para vincular um caso, em cima tá o nome do cliente traço o nome do tema antigo, não atualizou para o tema novo também. Então isso aqui também precisa alterar.
