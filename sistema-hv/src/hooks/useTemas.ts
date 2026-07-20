@@ -43,7 +43,12 @@ export function useUpdateTema() {
       id: string;
       patch: { name?: string; ordem?: number; active?: boolean };
     }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
+    // A10 (2026-07-20) — o rename também renomeia o service_type interno; invalida
+    // ambos os caches para os rótulos (nome do tema no topo do caso) atualizarem.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["temas"] });
+      qc.invalidateQueries({ queryKey: ["service-types"] });
+    },
   });
 }
 

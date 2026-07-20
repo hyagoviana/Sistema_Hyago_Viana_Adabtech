@@ -386,6 +386,25 @@ export async function updateTema(
     .single();
   if (error || !data) throw new TemaServiceError(error?.message ?? "Falha ao atualizar tema", 500);
 
+  // Ajuste A10 (2026-07-20, Adavio) — ao renomear o TEMA, renomeia TAMBÉM o
+  // service_type INTERNO espelho (Opção 1), que carrega o `name` usado em vários
+  // rótulos (fallback do getCaseTemaLabel, seletor de categoria, etc.). Sem isso o
+  // nome ANTIGO do tema aparecia no topo do caso. Best-effort (não derruba o rename).
+  if (patch.name !== undefined && clean.name) {
+    try {
+      await sb
+        .from("system_service_types")
+        .update({ name: clean.name })
+        .eq("tema_id", id)
+        .is("deleted_at", null);
+    } catch (stErr) {
+      console.error(
+        "tema-service: falha ao renomear o service_type interno do tema:",
+        stErr instanceof Error ? stErr.message : stErr,
+      );
+    }
+  }
+
   // T2 — mantém a pasta do tema no Drive com o nome atual (best-effort). Não
   // derruba o rename se o Drive falhar.
   if (patch.name !== undefined && clean.name) {
