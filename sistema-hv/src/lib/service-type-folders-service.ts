@@ -227,7 +227,16 @@ export async function listRootModelFolders(
   kind: FolderKind,
 ): Promise<{ id: string; name: string; url: string }[]> {
   const parent = kind === "procuracao" ? PROCURACAO_ROOT_FOLDER_ID : MODELS_ROOT_FOLDER_ID;
-  return listFoldersInFolder(parent);
+  const folders = await listFoldersInFolder(parent);
+  // Ajuste A11 (2026-07-20, Adavio) — ao vincular pasta de CASO, não oferecer
+  // pastas que são claramente de procuração/contrato/termo/financeiro (não são
+  // modelos de caso). Filtro defensivo por nome; a organização definitiva das
+  // pastas no Drive é do escritório.
+  if (kind === "caso") {
+    const bloqueia = /(procura[çc][aã]o|contrato|termo|financeir)/i;
+    return folders.filter((f) => !bloqueia.test(f.name));
+  }
+  return folders;
 }
 
 // Desvincula (soft-delete) uma pasta da categoria. NÃO apaga a pasta no Drive.
