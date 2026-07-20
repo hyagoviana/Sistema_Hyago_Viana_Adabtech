@@ -451,7 +451,9 @@
       "Bash(xargs grep -l \"assinatura_liberada_at\")",
       "Bash(xargs grep -l \"system_service_type_folders\\\\|system_temas\\\\|system_tema_frentes\")",
       "Bash(echo \"TSC_EXIT=$?\")",
-      "Bash(grep -iE \"^clientes|^casos.\\\\\\\\$\")"
+      "Bash(grep -iE \"^clientes|^casos.\\\\\\\\$\")",
+      "Bash(vercel ls *)",
+      "Bash(vercel teams *)"
     ]
   }
 }
