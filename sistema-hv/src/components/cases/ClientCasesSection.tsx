@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient } from "@/hooks/useClients";
+import { usePodeEditarAlgum } from "@/hooks/usePermissions";
 import { buildAutoFillFromClient } from "@/lib/cases/document-autofill";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { useTemas } from "@/hooks/useTemas";
@@ -105,6 +106,7 @@ type Props = {
 export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
   const { data, isLoading, isError, error } = useCasesList({ client_id: clientId });
   const { data: fullClient } = useClient(clientId);
+  const podeEditar = usePodeEditarAlgum(["comercial", "operacional"]);
   const [createOpen, setCreateOpen] = useState(false);
   // Caso recém-criado cujos documentos (pasta de casos/procurações do tema) o
   // usuário vai escolher/gerar logo após criar — reusa o fluxo do caso.
@@ -134,9 +136,11 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
         <h2 className="font-display text-[24px] font-semibold text-[var(--navy)]">
           Casos do cliente
         </h2>
-        <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus size={14} className="mr-1.5" /> Novo tema
-        </Button>
+        {podeEditar && (
+          <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus size={14} className="mr-1.5" /> Novo tema
+          </Button>
+        )}
       </div>
 
       {isError && (

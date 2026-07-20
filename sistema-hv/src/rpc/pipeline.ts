@@ -25,22 +25,44 @@ import {
   updateStage,
   voltarAoOperacional,
 } from "@/lib/pipeline-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAnyModule, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
-async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
-  try {
-    const { id: userId } = await requireAuth();
-    return await fn(userId);
-  } catch (err: unknown) {
-    if (err instanceof AuthError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
+function run<T>(
+  guard: () => Promise<{ id: string }>,
+  fn: (userId: string) => Promise<T>,
+): Promise<T> {
+  return (async () => {
+    try {
+      const { id: userId } = await guard();
+      return await fn(userId);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      const status = (err as { status?: number })?.status;
+      setResponseStatus(typeof status === "number" ? status : 500);
+      throw err instanceof Error ? new Error(err.message) : err;
     }
-    const status = (err as { status?: number })?.status;
-    setResponseStatus(typeof status === "number" ? status : 500);
-    throw err instanceof Error ? new Error(err.message) : err;
-  }
+  })();
 }
+
+// Leitura: qualquer autenticado.
+const handle = <T>(fn: (userId: string) => Promise<T>) => run(() => requireAuth(), fn);
+// Escrita por MÓDULO (2026-07-19) — barra colaborador com "view".
+const handleOp = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireModule("operacional", "edit"), fn);
+const handleFin = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireModule("financeiro", "edit"), fn);
+const handleComercial = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireModule("comercial", "edit"), fn);
+// Fronteira op↔financeiro (entrar/voltar/bifurcar): quem edita o OPERACIONAL
+// (dono do caso) OU o FINANCEIRO pode empurrar o caso — não quebra o S19.
+const handleOpOrFin = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireAnyModule(["operacional", "financeiro"], "edit"), fn);
+// Config de pipeline (tipos/etapas) = módulo sistema (admin/config).
+const handleSistema = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireModule("sistema", "edit"), fn);
 
 const kindSchema = z.enum(["op", "fin", "comercial"]);
 
@@ -68,13 +90,13 @@ export const moveCaseToStageOpFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) => handle(() => moveCaseToStageOp(data.caseId, data.stageId)));
+  .handler(async ({ data }) => handleOp(() => moveCaseToStageOp(data.caseId, data.stageId)));
 
 export const moveCaseToStageFinFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ caseId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) => handle(() => moveCaseToStageFin(data.caseId, data.stageId)));
+  .handler(async ({ data }) => handleFin(() => moveCaseToStageFin(data.caseId, data.stageId)));
 
 // ------------------------------------------------------------- Leads (comercial)
 export const listLeadsByServiceTypeFn = createServerFn({ method: "GET" })
@@ -98,26 +120,27 @@ export const moveLeadStageComercialFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), stageId: z.string().uuid() }).parse(d),
   )
-  .handler(async ({ data }) => handle(() => moveLeadStageComercial(data.clientId, data.stageId)));
+  .handler(async ({ data }) =>
+    handleComercial(() => moveLeadStageComercial(data.clientId, data.stageId)),
+  );
 
 export const bifurcarCaseFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => bifurcarCaseToFinanceiro(data.caseId)));
+  .handler(async ({ data }) => handleOpOrFin(() => bifurcarCaseToFinanceiro(data.caseId)));
 
 // S19 — entrada no financeiro pelo popup (Duplicar / Somente-financeiro).
-// TODO(ADR-015): gate RBAC server-side (`financeiro.manage`) quando a fundação de
-// auth server-side (S20-0) existir; hoje o gate é só na UI, como nas demais mutations.
+// Gate RBAC server-side (financeiro:edit) — 2026-07-19 (antes só UI).
 export const entrarFinanceiroFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ caseId: z.string().uuid(), removerOperacional: z.boolean() }).parse(d),
   )
   .handler(async ({ data }) =>
-    handle(() => entrarNoFinanceiro(data.caseId, data.removerOperacional)),
+    handleOpOrFin(() => entrarNoFinanceiro(data.caseId, data.removerOperacional)),
   );
 
 export const voltarOperacionalFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => voltarAoOperacional(data.caseId)));
+  .handler(async ({ data }) => handleOpOrFin(() => voltarAoOperacional(data.caseId)));
 
 export const setAcertoParcialFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -131,7 +154,7 @@ export const setAcertoParcialFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) =>
-    handle(() =>
+    handleFin(() =>
       setAcertoParcial(data.caseId, {
         acerto_parcial: data.acerto_parcial,
         tem_pendencia_judicial: data.tem_pendencia_judicial,
@@ -146,7 +169,7 @@ export const createServiceTypeFn = createServerFn({ method: "POST" })
       .object({ name: z.string().min(1), slug: z.string().min(1), ordem: z.number().optional() })
       .parse(d),
   )
-  .handler(async ({ data }) => handle(() => createServiceType(data)));
+  .handler(async ({ data }) => handleSistema(() => createServiceType(data)));
 
 export const updateServiceTypeFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -161,11 +184,11 @@ export const updateServiceTypeFn = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => handle(() => updateServiceType(data.id, data.patch)));
+  .handler(async ({ data }) => handleSistema(() => updateServiceType(data.id, data.patch)));
 
 export const deleteServiceTypeFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => deleteServiceType(data.id)));
+  .handler(async ({ data }) => handleSistema(() => deleteServiceType(data.id)));
 
 const createStageSchema = z.object({
   service_type_id: z.string().uuid(),
@@ -180,7 +203,7 @@ const createStageSchema = z.object({
 export const createStageFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createStageSchema.parse(d))
   .handler(async ({ data }) =>
-    handle(() =>
+    handleSistema(() =>
       createStage({
         service_type_id: data.service_type_id,
         kind: data.kind,
@@ -208,12 +231,12 @@ export const updateStageFn = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => handle(() => updateStage(data.id, data.patch)));
+  .handler(async ({ data }) => handleSistema(() => updateStage(data.id, data.patch)));
 
 export const reorderStagesFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()) }).parse(d))
-  .handler(async ({ data }) => handle(() => reorderStages(data.ids)));
+  .handler(async ({ data }) => handleSistema(() => reorderStages(data.ids)));
 
 export const softDeleteStageFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => softDeleteStage(data.id)));
+  .handler(async ({ data }) => handleSistema(() => softDeleteStage(data.id)));

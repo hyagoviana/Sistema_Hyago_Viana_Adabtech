@@ -29,7 +29,7 @@ import {
   updateCase,
   updateCaseCanonicalFields,
 } from "@/lib/cases-service";
-import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireAnyModule, requireModule } from "@/lib/supabase/auth-guard";
 import {
   caseCreateSchema,
   caseUpdateSchema,
@@ -57,27 +57,39 @@ async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
   }
 }
 
-// Guard de GESTÃO de caso (casos.manage) — usa a régua efetiva por módulo
-// (requireModule("operacional","edit") mapeia p/ casos.manage no rbac). Mesma
-// postura dos demais RPCs de mutação de caso, mas com gate explícito (o vínculo
-// a tema muda pipeline/etapa, então não é auth-only).
-async function handleManage<T>(fn: (userId: string) => Promise<T>): Promise<T> {
-  try {
-    const { id: userId } = await requireModule("operacional", "edit");
-    return await fn(userId);
-  } catch (err: unknown) {
-    if (err instanceof AuthError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
+// Guards de ESCRITA por MÓDULO (2026-07-19) — respeitam a régua efetiva
+// (papel + overrides por usuário). Um colaborador com "view" no módulo é barrado
+// (403) ao tentar criar/editar/mover, mesmo que a UI escape. Fábrica única para
+// não duplicar o tratamento de erro.
+function makeGuarded(guard: () => Promise<{ id: string }>) {
+  return async function <T>(fn: (userId: string) => Promise<T>): Promise<T> {
+    try {
+      const { id: userId } = await guard();
+      return await fn(userId);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      if (err instanceof CaseServiceError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err;
     }
-    if (err instanceof CaseServiceError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
-    }
-    setResponseStatus(500);
-    throw err;
-  }
+  };
 }
+
+// operacional:edit (casos.manage) — mutações operacionais do caso.
+const handleManage = makeGuarded(() => requireModule("operacional", "edit"));
+// financeiro:edit — mutações na pipeline/conferência financeira.
+const handleFin = makeGuarded(() => requireModule("financeiro", "edit"));
+// comercial:edit — ações do funil comercial (procuração comercial).
+const handleComercial = makeGuarded(() => requireModule("comercial", "edit"));
+// Entidade COMPARTILHADA (comercial OU operacional) — criar caso / gerar documento
+// / ações de lifecycle (liberar/promover/perdido) acontecem em ambas as abas.
+const handleBiz = makeGuarded(() => requireAnyModule(["comercial", "operacional"], "edit"));
 
 // ----------------------------------------------------------------------------
 // Queries
@@ -111,7 +123,7 @@ export const listCaseEventsFn = createServerFn({ method: "GET" })
 
 export const createCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => caseCreateSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => createCase(data, userId)));
+  .handler(async ({ data }) => handleBiz((userId) => createCase(data, userId)));
 
 // Responsáveis (advogados) vinculados a um caso — para carregar ao editar.
 export const listCaseResponsaveisFn = createServerFn({ method: "GET" })
@@ -136,7 +148,7 @@ export const previewProcuracaoFn = createServerFn({ method: "GET" })
 export const createComercialProcuracaoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createComercialProcuracaoSchema.parse(data))
   .handler(async ({ data }) =>
-    handle((userId) =>
+    handleComercial((userId) =>
       createComercialCaseAndGenerateProcuracao(
         {
           case: data.case,
@@ -163,7 +175,7 @@ const generateContratoSchema = z.object({
 export const generateContratoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => generateContratoSchema.parse(data))
   .handler(async ({ data }) =>
-    handle((userId) =>
+    handleBiz((userId) =>
       generateContratoFromTemplate(
         data.case_id,
         data.template_id ?? null,
@@ -187,7 +199,7 @@ const generateProcuracaoSchema = z.object({
 export const generateProcuracaoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => generateProcuracaoSchema.parse(data))
   .handler(async ({ data }) =>
-    handle((userId) =>
+    handleBiz((userId) =>
       generateProcuracaoFromTemplate(
         data.case_id,
         data.template_id,
@@ -205,7 +217,7 @@ const updateInputSchema = z.object({
 
 export const updateCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => updateCase(data.id, data.input, userId)));
+  .handler(async ({ data }) => handleManage((userId) => updateCase(data.id, data.input, userId)));
 
 // S2-07 — campos canônicos do CASO (merge no JSONB canonical_fields).
 const canonicalFieldsSchema = z.object({
@@ -216,7 +228,7 @@ const canonicalFieldsSchema = z.object({
 export const updateCaseCanonicalFieldsFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => canonicalFieldsSchema.parse(data))
   .handler(async ({ data }) =>
-    handle((userId) => updateCaseCanonicalFields(data.id, data.patch, userId)),
+    handleManage((userId) => updateCaseCanonicalFields(data.id, data.patch, userId)),
   );
 
 // (2026-07-09) — `to` é o SLUG da etapa op. Aceita qualquer slug (as etapas são
@@ -227,17 +239,17 @@ const moveSchema = z.object({ id: z.string().uuid(), to: z.string().min(1) });
 
 export const moveCaseStatusFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => moveCaseStatus(data.id, data.to, userId)));
+  .handler(async ({ data }) => handleManage((userId) => moveCaseStatus(data.id, data.to, userId)));
 
 const moveFinSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_FIN) });
 
 export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveFinSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => moveCaseStatusFin(data.id, data.to, userId)));
+  .handler(async ({ data }) => handleFin((userId) => moveCaseStatusFin(data.id, data.to, userId)));
 
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => softDeleteCase(data.id, userId)));
+  .handler(async ({ data }) => handleManage((userId) => softDeleteCase(data.id, userId)));
 
 // R2 — VINCULAR CASO a um TEMA (reatribui case_type p/ o service_type interno do
 // tema + grava tema_id/frente_slug; reseta a etapa op se não houver equivalente).
@@ -271,11 +283,13 @@ const enviarConferenciaFinSchema = z.object({
 
 export const enviarConferenciaFinFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => enviarConferenciaFinSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => enviarConferenciaFin(data.id, data.to, userId)));
+  .handler(async ({ data }) =>
+    handleFin((userId) => enviarConferenciaFin(data.id, data.to, userId)),
+  );
 
 export const aprovarConferenciaFinFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => aprovarConferenciaFin(data.id, userId)));
+  .handler(async ({ data }) => handleFin((userId) => aprovarConferenciaFin(data.id, userId)));
 
 // ----------------------------------------------------------------------------
 // Comercial (Melhoria 3)
@@ -293,7 +307,7 @@ export const listComercialDocumentsFn = createServerFn({ method: "GET" }).handle
 export const liberarCasoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
   .handler(async ({ data }) =>
-    handle((userId) => liberarCasoComercial(data.id, { via: "manual", userId })),
+    handleBiz((userId) => liberarCasoComercial(data.id, { via: "manual", userId })),
   );
 
 // ----------------------------------------------------------------------------
@@ -302,7 +316,7 @@ export const liberarCasoFn = createServerFn({ method: "POST" })
 // ----------------------------------------------------------------------------
 export const promoverCasoManualFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => promoverCasoManual(data.id, userId)));
+  .handler(async ({ data }) => handleBiz((userId) => promoverCasoManual(data.id, userId)));
 
 const marcarPerdidoSchema = z.object({
   id: z.string().uuid(),
@@ -311,4 +325,6 @@ const marcarPerdidoSchema = z.object({
 
 export const marcarCasoPerdidoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => marcarPerdidoSchema.parse(data))
-  .handler(async ({ data }) => handle((userId) => marcarCasoPerdido(data.id, data.motivo, userId)));
+  .handler(async ({ data }) =>
+    handleBiz((userId) => marcarCasoPerdido(data.id, data.motivo, userId)),
+  );

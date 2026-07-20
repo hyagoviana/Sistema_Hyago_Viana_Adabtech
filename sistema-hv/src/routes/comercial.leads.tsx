@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { useComercialBoard, useMoveLeadStageComercial, useStages } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
@@ -52,6 +53,7 @@ function LeadsPage() {
   const move = useMoveLeadStageComercial();
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
+  const podeEditar = usePodeEditar("comercial");
   const [editorOpen, setEditorOpen] = useState(false);
 
   useDocumentTitle("Comercial");
@@ -180,7 +182,7 @@ function LeadsPage() {
           getId={(c) => c.id}
           getColumn={(c) => c.macrostatus_comercial ?? "NOVO"}
           renderCard={(c) => <LeadCard lead={c} />}
-          onMove={handleMove}
+          onMove={podeEditar ? handleMove : undefined}
         />
       ) : (
         <LeadsList leads={rows} isLoading={isLoading || stagesLoading} stageLabel={stageLabel} />

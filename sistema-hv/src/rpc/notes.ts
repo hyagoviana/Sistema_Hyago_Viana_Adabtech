@@ -15,7 +15,7 @@ import {
   softDeleteNote,
   updateNote,
 } from "@/lib/notes-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAnyModule, requireAuth } from "@/lib/supabase/auth-guard";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -66,7 +66,7 @@ export const createCaseNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
       return createCaseNote(data.caseId, data.body, userId);
     }),
   );
@@ -77,7 +77,7 @@ export const createClientNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
       return createClientNote(data.clientId, data.body, userId);
     }),
   );
@@ -91,7 +91,7 @@ export const updateNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
       return updateNote(data.target, data.noteId, data.body, userId);
     }),
   );
@@ -102,7 +102,7 @@ export const softDeleteNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAuth();
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
       return softDeleteNote(data.target, data.noteId, userId);
     }),
   );

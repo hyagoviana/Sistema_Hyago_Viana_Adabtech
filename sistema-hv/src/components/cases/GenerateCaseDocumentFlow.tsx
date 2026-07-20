@@ -21,7 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFinalizeCaseDocument, useGenerateCaseDocument } from "@/hooks/useCaseDocuments";
+import {
+  useFinalizeCaseDocument,
+  useGenerateCaseDocument,
+  useSendCaseDocumentToZapsign,
+} from "@/hooks/useCaseDocuments";
 import {
   useSyncProcuracaoTemplates,
   useTemplatePlaceholders,
@@ -73,9 +77,54 @@ export function GenerateCaseDocumentFlow({
 }) {
   const generate = useGenerateCaseDocument(caseId);
   const finalize = useFinalizeCaseDocument(caseId);
+  const sendZap = useSendCaseDocumentToZapsign(caseId);
 
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
+  // Envio ao ZapSign a partir do editor (2026-07-19) — o botão finaliza o
+  // documento (se preciso) e dispara a assinatura. Vale p/ lead ou cliente.
+  const [finalized, setFinalized] = useState(false);
+  const [signerName, setSignerName] = useState("");
+  const [signerEmail, setSignerEmail] = useState("");
+  const [signUrl, setSignUrl] = useState<string | null>(null);
+
+  function closeEditor() {
+    setEditorUrl(null);
+    setEditorDocId(null);
+    setFinalized(false);
+    setSignUrl(null);
+  }
+
+  async function enviarAoZapsign() {
+    if (!editorDocId) return;
+    const nome = signerName.trim();
+    if (!nome) {
+      toast.error("Informe o nome de quem vai assinar");
+      return;
+    }
+    try {
+      // ZapSign exige o documento FINALIZADO (PDF). Finaliza uma vez, se ainda não.
+      if (!finalized) {
+        await finalize.mutateAsync(editorDocId);
+        setFinalized(true);
+      }
+      const res = await sendZap.mutateAsync({
+        docId: editorDocId,
+        signers: [
+          {
+            name: nome,
+            email: signerEmail.trim() || undefined,
+            authMode: "assinaturaTela-tokenEmail",
+            sendAutomaticEmail: true,
+          },
+        ],
+      });
+      setSignUrl(res.signUrl ?? null);
+      toast.success("Enviado ao ZapSign — e-mail de assinatura disparado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar ao ZapSign");
+    }
+  }
   // A permissão de edição do Google Docs propaga com um pequeno atraso; ao abrir o
   // editor, recarregamos o iframe UMA vez para cair direto em modo edição (sem o
   // banner "Seu acesso foi alterado. Atualize a página").
@@ -103,16 +152,18 @@ export function GenerateCaseDocumentFlow({
             toast.success("Documento gerado — abrindo editor");
             setEditorDocId(res.doc.id);
             setEditorUrl(editUrl(res.doc.google_doc_id!));
+            // Pré-preenche o signatário com os dados do cliente do caso.
+            setFinalized(false);
+            setSignUrl(null);
+            setSignerName(autoFill.clientName ?? "");
+            setSignerEmail(autoFill.email ?? "");
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Falha ao gerar");
           }
         }}
       />
 
-      <Dialog
-        open={!!editorUrl}
-        onOpenChange={(v) => !v && (setEditorUrl(null), setEditorDocId(null))}
-      >
+      <Dialog open={!!editorUrl} onOpenChange={(v) => !v && closeEditor()}>
         <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>Editar documento</DialogTitle>
@@ -145,32 +196,64 @@ export function GenerateCaseDocumentFlow({
             />
           )}
 
+          {/* Envio ao ZapSign (2026-07-19) — signatário + botão logo abaixo do
+              editor. Vale para lead ou cliente. */}
+          <div className="mt-1 rounded-md border border-[var(--border)] p-3 space-y-2">
+            <Label className="text-[12px] font-semibold text-[var(--navy)]">
+              Enviar para assinatura (ZapSign)
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Input
+                placeholder="Nome de quem vai assinar"
+                value={signerName}
+                onChange={(e) => setSignerName(e.target.value)}
+              />
+              <Input
+                placeholder="E-mail (opcional)"
+                type="email"
+                value={signerEmail}
+                onChange={(e) => setSignerEmail(e.target.value)}
+              />
+            </div>
+            {signUrl && (
+              <a
+                href={signUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[var(--gold-700)] hover:underline text-xs inline-flex items-center gap-1"
+              >
+                <ExternalLink size={12} /> Link de assinatura
+              </a>
+            )}
+          </div>
+
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditorUrl(null);
-                setEditorDocId(null);
-              }}
-            >
+            <Button variant="outline" onClick={closeEditor}>
               Fechar
             </Button>
             <Button
-              disabled={finalize.isPending}
+              variant="outline"
+              disabled={finalize.isPending || finalized}
               onClick={async () => {
                 if (!editorDocId) return;
                 try {
                   await finalize.mutateAsync(editorDocId);
+                  setFinalized(true);
                   toast.success("Documento finalizado (PDF na pasta do caso)");
-                  setEditorUrl(null);
-                  setEditorDocId(null);
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Falha");
                 }
               }}
             >
               {finalize.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
-              Concluí a edição (Finalizar)
+              {finalized ? "Finalizado" : "Concluí a edição (Finalizar)"}
+            </Button>
+            <Button
+              disabled={finalize.isPending || sendZap.isPending || !signerName.trim()}
+              onClick={enviarAoZapsign}
+            >
+              {sendZap.isPending ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : null}
+              Enviar ao ZapSign
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -54,7 +54,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { can, podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
@@ -104,7 +104,9 @@ function CasoDetalhe() {
   const promover = usePromoverCasoManual();
   const { role } = useAuth();
   const podeFinanceiro = can(role, "financeiro.manage");
-  const podeGerirCaso = can(role, "casos.manage");
+  // 2026-07-19 — régua EFETIVA (papel + overrides por usuário) para os botões de
+  // escrita OPERACIONAIS respeitarem "visualizar × editar" (foco do reporte).
+  const podeGerirCaso = usePodeEditar("operacional");
   // R4-02 — gate de $ no bloco financeiro da ficha do caso (TermoPanel +
   // AsaasCobrancasPanel). Usa a infra efetiva de R3-01 (permissaoEfetiva):
   // combina o PAPEL com overrides por usuário×módulo. Com a tabela de overrides
@@ -264,8 +266,8 @@ function CasoDetalhe() {
           >
             {lcMeta.label}
           </span>
-          {/* S1-03 — qualquer usuário autenticado promove/marca perdido (sem gate por cargo) */}
-          {lifecycle !== "CLIENTE" && lifecycle !== "PERDIDO" && (
+          {/* 2026-07-19 — promover exige poder editar o operacional (respeita override). */}
+          {podeGerirCaso && lifecycle !== "CLIENTE" && lifecycle !== "PERDIDO" && (
             <Button
               variant="outline"
               size="sm"
@@ -300,17 +302,21 @@ function CasoDetalhe() {
               <Layers size={14} className="mr-1.5" /> Vincular a um tema
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
-            <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 size={14} className="mr-1.5" /> Excluir
-          </Button>
+          {podeGerirCaso && (
+            <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
+              <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
+            </Button>
+          )}
+          {podeGerirCaso && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={14} className="mr-1.5" /> Excluir
+            </Button>
+          )}
         </div>
       </header>
 

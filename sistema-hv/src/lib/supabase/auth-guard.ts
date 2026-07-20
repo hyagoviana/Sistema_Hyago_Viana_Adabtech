@@ -214,3 +214,35 @@ export async function requireModule(
   }
   return { id: user.id, email: user.email, role: data.role };
 }
+
+/**
+ * Guard de MÓDULO server-side para entidades COMPARTILHADAS entre módulos —
+ * autoriza se o usuário tiver a permissão efetiva (`action`) em QUALQUER um dos
+ * `modules`. Usado por escritas que acontecem em mais de uma aba: p.ex. criar/
+ * editar CLIENTE (aba Comercial/Cadastro OU aba Clientes/Operacional) e criar
+ * CASO (ficha do cliente OU funil comercial). Assim, um colaborador com "view"
+ * no comercial (e sem edição no operacional) é barrado, mas um usuário que pode
+ * editar em qualquer uma das abas continua funcionando (regressão zero p/ quem
+ * já editava). Mesmo fluxo de `requireModule` (auth → role/status → overrides).
+ */
+export async function requireAnyModule(
+  modules: readonly Module[],
+  action: ModuleAction,
+): Promise<{ id: string; email: string; role: string }> {
+  const user = await requireAuth();
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_users")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw new AuthError("Falha ao verificar permissões", 500);
+  if (!data || data.status?.toUpperCase() !== "ACTIVE")
+    throw new AuthError("Usuário inativo ou sem perfil", 403);
+
+  const overrides = await getUserModulePerms(user.id);
+  const ok = modules.some((m) => permissaoEfetiva(data.role as Role, overrides, m, action));
+  if (!ok) throw new AuthError("Você não tem permissão para esta ação", 403);
+  return { id: user.id, email: user.email, role: data.role };
+}

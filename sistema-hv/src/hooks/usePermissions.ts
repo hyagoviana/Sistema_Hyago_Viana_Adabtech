@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import type { Module, ModuleAccess } from "@/lib/rbac";
+import { useAuth } from "@/lib/auth";
+import { permissaoEfetiva, type Module, type ModuleAccess } from "@/lib/rbac";
 import {
   getMyModulePermsFn,
   getMyModuleValuesFn,
@@ -34,6 +35,26 @@ export function useMyModuleValues() {
     queryFn: () => fn(),
     staleTime: 5 * 60 * 1000,
   });
+}
+
+/**
+ * Gate de EDIÇÃO no FRONT (2026-07-19) — o usuário logado pode ESCREVER (criar/
+ * editar/mover/excluir) no módulo? Combina papel + overrides via `permissaoEfetiva`
+ * (mesma régua do servidor `requireModule(module,'edit')`). Use para esconder/
+ * desabilitar botões de escrita; o servidor é a proteção real.
+ */
+export function usePodeEditar(module: Module): boolean {
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  return permissaoEfetiva(role, perms ?? {}, module, "edit");
+}
+
+/** Igual a `usePodeEditar`, mas true se puder editar QUALQUER um dos módulos
+ * (entidades compartilhadas: cliente/caso valem para comercial OU operacional). */
+export function usePodeEditarAlgum(modules: Module[]): boolean {
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  return modules.some((m) => permissaoEfetiva(role, perms ?? {}, m, "edit"));
 }
 
 /**

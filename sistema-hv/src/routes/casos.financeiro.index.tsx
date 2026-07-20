@@ -18,6 +18,7 @@ import {
   useMoveCaseStageFin,
   useStages,
 } from "@/hooks/usePipeline";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemas } from "@/hooks/useTemas";
 
 // #16 — o financeiro agora abre DIRETO num funil ÚNICO editável. Mantemos o
@@ -77,6 +78,7 @@ function FinanceiroKanban({
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, "fin");
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveFin = useMoveCaseStageFin(serviceType.id);
+  const podeEditar = usePodeEditar("financeiro");
 
   // Só casos bifurcados (macrostatus_fin != NAO_APLICAVEL)
   const bifurcated = useMemo(
@@ -208,7 +210,7 @@ function FinanceiroKanban({
           getId={(c) => c.id}
           getColumn={(c) => c.macrostatus_fin}
           renderCard={(c) => <CaseCardFin caso={c} />}
-          onMove={handleMove}
+          onMove={podeEditar ? handleMove : undefined}
         />
       )}
     </div>
@@ -235,6 +237,7 @@ function FinanceiroKanbanTodos() {
     "fin",
   );
   const moveFin = useMoveCaseStageFin(GLOBAL_FUNNEL_SERVICE_TYPE_ID);
+  const podeEditar = usePodeEditar("financeiro");
 
   const columns: KanbanColumn<string>[] = useMemo(
     () =>
@@ -371,7 +374,7 @@ function FinanceiroKanbanTodos() {
           getId={(c) => c.id}
           getColumn={(c) => c.macrostatus_fin}
           renderCard={(c) => <CaseCardFin caso={c} />}
-          onMove={handleMove}
+          onMove={podeEditar ? handleMove : undefined}
         />
       )}
     </div>

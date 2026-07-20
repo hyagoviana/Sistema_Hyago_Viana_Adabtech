@@ -29,6 +29,7 @@ import {
   useMoveCaseStageOp,
   useStages,
 } from "@/hooks/usePipeline";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemas } from "@/hooks/useTemas";
 import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
 
@@ -222,6 +223,7 @@ function DynamicKanban({
   const moveFin = useMoveCaseStageFin(serviceType.id);
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
+  const podeEditar = usePodeEditar("operacional");
   const [editorOpen, setEditorOpen] = useState(false);
   // Ponto 6 — vincular/trocar a pasta de modelos deste tipo (caso).
   const setFolder = useSetTypeTemplatesFolder();
@@ -485,7 +487,7 @@ function DynamicKanban({
           getId={(c) => c.id}
           getColumn={(c) => (kind === "op" ? c.macrostatus_op : c.macrostatus_fin)}
           renderCard={(c) => <CaseCardReal caso={c} kind={kind} />}
-          onMove={handleMove}
+          onMove={podeEditar ? handleMove : undefined}
         />
       )}
     </div>

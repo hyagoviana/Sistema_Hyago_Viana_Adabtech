@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClientPaymentStatus } from "@/hooks/useFinanceiro";
 import { useClient, useDeleteClient, useResyncDrive, useTornarCliente } from "@/hooks/useClients";
-import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues, usePodeEditarAlgum } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
@@ -79,6 +79,8 @@ function ClienteDetalhe() {
   const { data: perms } = useMyModulePerms();
   const { data: values } = useMyModuleValues();
   const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
+  // Editar/excluir/tornar cliente = escrita de cadastro (comercial OU operacional).
+  const podeEditarCadastro = usePodeEditarAlgum(["comercial", "operacional"]);
 
   // S4-06 — título da aba por NOME (full_name), nunca UUID.
   const clienteLabel = resolveEntityLabel(cliente?.full_name, {
@@ -159,36 +161,39 @@ function ClienteDetalhe() {
             {cliente.full_name}
           </h1>
         </div>
-        <div className="flex gap-2 self-start mt-2">
-          {/* Tornar cliente — só enquanto for LEAD (não marcado como cliente). */}
-          {!(cliente as { marcado_cliente_at?: string | null }).marcado_cliente_at && (
-            <Button
-              size="sm"
-              disabled={tornarClienteMutation.isPending}
-              onClick={async () => {
-                try {
-                  await tornarClienteMutation.mutateAsync(cliente.id);
-                  toast.success("Cadastro agora é um cliente.");
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Falha ao tornar cliente");
-                }
-              }}
-            >
-              Tornar esse lead um cliente
+        {/* Ações de escrita só para quem pode editar o cadastro (2026-07-19). */}
+        {podeEditarCadastro && (
+          <div className="flex gap-2 self-start mt-2">
+            {/* Tornar cliente — só enquanto for LEAD (não marcado como cliente). */}
+            {!(cliente as { marcado_cliente_at?: string | null }).marcado_cliente_at && (
+              <Button
+                size="sm"
+                disabled={tornarClienteMutation.isPending}
+                onClick={async () => {
+                  try {
+                    await tornarClienteMutation.mutateAsync(cliente.id);
+                    toast.success("Cadastro agora é um cliente.");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Falha ao tornar cliente");
+                  }
+                }}
+              >
+                Tornar esse lead um cliente
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil size={14} className="mr-1.5" /> Editar
             </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil size={14} className="mr-1.5" /> Editar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 size={14} className="mr-1.5" /> Excluir
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={14} className="mr-1.5" /> Excluir
+            </Button>
+          </div>
+        )}
       </header>
 
       {cliente.drive_sync_failed && (
