@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useComercialDocuments, useConfirmarAssinaturaDoc } from "@/hooks/useCases";
+import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/comercial/assinaturas")({
   component: ComercialAssinaturas,
@@ -30,6 +31,7 @@ function ComercialAssinaturas() {
   // Confirmar a assinatura por DOCUMENTO — mesmo efeito do webhook do ZapSign:
   // procuração assinada → GANHO comercial; contrato assinado → CLIENTE (operacional).
   const confirmar = useConfirmarAssinaturaDoc();
+  const podeEditar = usePodeEditar("comercial");
 
   const docs = useMemo(() => data ?? [], [data]);
   const [query, setQuery] = useState("");
@@ -137,14 +139,16 @@ function ComercialAssinaturas() {
                   <ExternalLink size={13} /> Link ZapSign
                 </a>
               )}
-              <Btn
-                variant="outline"
-                onClick={() => handleConfirmar(d.id, d.title, d.doc_kind)}
-                disabled={confirmar.isPending}
-              >
-                <CheckCircle2 size={14} />
-                Confirmar assinatura
-              </Btn>
+              {podeEditar && (
+                <Btn
+                  variant="outline"
+                  onClick={() => handleConfirmar(d.id, d.title, d.doc_kind)}
+                  disabled={confirmar.isPending}
+                >
+                  <CheckCircle2 size={14} />
+                  Confirmar assinatura
+                </Btn>
+              )}
               {d.case_id && (
                 <Link
                   to="/casos/$id"

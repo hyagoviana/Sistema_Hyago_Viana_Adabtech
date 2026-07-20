@@ -67,7 +67,7 @@ const TASK_TYPES = [
   { value: "JUDICIAL", label: "Judicial" },
 ];
 
-function TasksSection({ caseId }: { caseId: string }) {
+function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean }) {
   const { data: tasks, isLoading } = useCaseTasks(caseId);
   const { data: users } = useUsers();
   const create = useCreateCaseTask(caseId);
@@ -82,9 +82,7 @@ function TasksSection({ caseId }: { caseId: string }) {
   const [dueDate, setDueDate] = useState("");
   const [taskType, setTaskType] = useState("GERAL");
 
-  const activeUsers = (users ?? []).filter(
-    (u: { status: string }) => u.status === "ACTIVE",
-  );
+  const activeUsers = (users ?? []).filter((u: { status: string }) => u.status === "ACTIVE");
 
   function resetForm() {
     setTitle("");
@@ -125,9 +123,11 @@ function TasksSection({ caseId }: { caseId: string }) {
     <section>
       <div className="flex items-center justify-between mb-3">
         <SectionTitle>Tarefas</SectionTitle>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus size={14} className="mr-1" /> Nova tarefa
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Plus size={14} className="mr-1" /> Nova tarefa
+          </Button>
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -279,11 +279,7 @@ function TasksSection({ caseId }: { caseId: string }) {
                         <span
                           className="inline-flex items-center gap-1"
                           style={{
-                            color: overdue
-                              ? "var(--danger)"
-                              : soon
-                                ? "var(--warning)"
-                                : undefined,
+                            color: overdue ? "var(--danger)" : soon ? "var(--warning)" : undefined,
                             fontWeight: overdue || soon ? 600 : undefined,
                           }}
                         >
@@ -317,7 +313,7 @@ function TasksSection({ caseId }: { caseId: string }) {
 }
 
 // ----------------------------------------------------------------- Prazos ----
-function DeadlinesSection({ caseId }: { caseId: string }) {
+function DeadlinesSection({ caseId, canEdit }: { caseId: string; canEdit: boolean }) {
   const { data: deadlines, isLoading } = useCaseDeadlines(caseId);
   const { data: users } = useUsers();
   const create = useCreateCaseDeadline(caseId);
@@ -329,9 +325,7 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
   const [fatal, setFatal] = useState("");
   const [responsible, setResponsible] = useState<string>("__none__");
 
-  const activeUsers = (users ?? []).filter(
-    (u: { status: string }) => u.status === "ACTIVE",
-  );
+  const activeUsers = (users ?? []).filter((u: { status: string }) => u.status === "ACTIVE");
   const userMap = new Map((users ?? []).map((u) => [u.id, u.full_name ?? u.email]));
 
   function resetForm() {
@@ -361,9 +355,11 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
     <section>
       <div className="flex items-center justify-between mb-3">
         <SectionTitle>Prazos</SectionTitle>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus size={14} className="mr-1" /> Novo prazo
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Plus size={14} className="mr-1" /> Novo prazo
+          </Button>
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -456,13 +452,17 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className={`text-[14px] text-[var(--navy)] truncate ${fulfilled ? "opacity-50" : ""}`}>
+                    <div
+                      className={`text-[14px] text-[var(--navy)] truncate ${fulfilled ? "opacity-50" : ""}`}
+                    >
                       {d.title}
                     </div>
                     <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground mt-0.5 flex-wrap">
                       <span>
                         Data fatal: {fmtDate(d.fatal_date)}
-                        {overdue && <span className="text-[var(--danger)] font-medium"> · vencido</span>}
+                        {overdue && (
+                          <span className="text-[var(--danger)] font-medium"> · vencido</span>
+                        )}
                       </span>
                       {ownerName && (
                         <span className="inline-flex items-center gap-1">
@@ -503,7 +503,7 @@ function DeadlinesSection({ caseId }: { caseId: string }) {
 // ------------------------------------------------------------ Comunicações ----
 const CHANNELS = ["WHATSAPP", "EMAIL", "TELEFONE", "PRESENCIAL", "PORTAL", "OUTRO"];
 
-function CommsSection({ caseId }: { caseId: string }) {
+function CommsSection({ caseId, canEdit }: { caseId: string; canEdit: boolean }) {
   const { data: comms, isLoading } = useCaseCommunications(caseId);
   const create = useCreateCaseCommunication(caseId);
   const del = useDeleteCaseCommunication(caseId);
@@ -525,29 +525,35 @@ function CommsSection({ caseId }: { caseId: string }) {
     <section>
       <SectionTitle>Comunicações</SectionTitle>
       <div className="card-editorial p-4">
-        <div className="flex gap-2 mb-4">
-          <Select value={channel} onValueChange={setChannel}>
-            <SelectTrigger className="w-[140px] shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CHANNELS.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c.charAt(0) + c.slice(1).toLowerCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder="Resumo da conversa…"
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-          />
-          <Button onClick={add} disabled={create.isPending || !summary.trim()} className="shrink-0">
-            <Plus size={15} className="mr-1" /> Registrar
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="flex gap-2 mb-4">
+            <Select value={channel} onValueChange={setChannel}>
+              <SelectTrigger className="w-[140px] shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CHANNELS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c.charAt(0) + c.slice(1).toLowerCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Resumo da conversa…"
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+            />
+            <Button
+              onClick={add}
+              disabled={create.isPending || !summary.trim()}
+              className="shrink-0"
+            >
+              <Plus size={15} className="mr-1" /> Registrar
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
@@ -581,12 +587,12 @@ function CommsSection({ caseId }: { caseId: string }) {
   );
 }
 
-export function CaseDossie({ caseId }: { caseId: string }) {
+export function CaseDossie({ caseId, canEdit = true }: { caseId: string; canEdit?: boolean }) {
   return (
     <div className="space-y-8">
-      <TasksSection caseId={caseId} />
-      <DeadlinesSection caseId={caseId} />
-      <CommsSection caseId={caseId} />
+      <TasksSection caseId={caseId} canEdit={canEdit} />
+      <DeadlinesSection caseId={caseId} canEdit={canEdit} />
+      <CommsSection caseId={caseId} canEdit={canEdit} />
     </div>
   );
 }

@@ -19,28 +19,39 @@ import {
   listAllDeadlines,
   listWorkItems,
 } from "@/lib/dossie-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
 const caseIdSchema = z.object({ caseId: z.string().uuid() });
 const idSchema = z.object({ id: z.string().uuid() });
 
-async function handle<T>(fn: (userId: string) => Promise<T>): Promise<T> {
-  try {
-    const { id } = await requireAuth();
-    return await fn(id);
-  } catch (err: unknown) {
-    if (err instanceof AuthError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
+function run<T>(
+  guard: () => Promise<{ id: string }>,
+  fn: (userId: string) => Promise<T>,
+): Promise<T> {
+  return (async () => {
+    try {
+      const { id } = await guard();
+      return await fn(id);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      if (err instanceof DossieServiceError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err;
     }
-    if (err instanceof DossieServiceError) {
-      setResponseStatus(err.status);
-      throw new Error(err.message);
-    }
-    setResponseStatus(500);
-    throw err;
-  }
+  })();
 }
+
+// Leitura: qualquer autenticado.
+const handle = <T>(fn: (userId: string) => Promise<T>) => run(() => requireAuth(), fn);
+// Escrita (criar/editar/excluir tarefa/prazo/comunicação) = operacional:edit.
+const handleWrite = <T>(fn: (userId: string) => Promise<T>) =>
+  run(() => requireModule("operacional", "edit"), fn);
 
 // Agregação "Tarefas": tarefas + checklist do colaborador, com RBAC + filtros.
 const workItemsSchema = z
@@ -72,15 +83,17 @@ export const createCaseTaskFn = createServerFn({ method: "POST" })
       due_date?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle((userId) => createCaseTask(data, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => createCaseTask(data, userId)));
 
 export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
-  .handler(async ({ data }) => handle((userId) => setCaseTaskStatus(data.id, data.status, userId)));
+  .handler(async ({ data }) =>
+    handleWrite((userId) => setCaseTaskStatus(data.id, data.status, userId)),
+  );
 
 export const deleteCaseTaskFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle((userId) => deleteCaseTask(data.id, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => deleteCaseTask(data.id, userId)));
 
 // ----------------------------------------------------------------- Prazos ----
 export const listCaseDeadlinesFn = createServerFn({ method: "GET" })
@@ -98,15 +111,17 @@ export const createCaseDeadlineFn = createServerFn({ method: "POST" })
       responsible?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle((userId) => createCaseDeadline(data, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => createCaseDeadline(data, userId)));
 
 export const setCaseDeadlineStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
-  .handler(async ({ data }) => handle((userId) => setCaseDeadlineStatus(data.id, data.status, userId)));
+  .handler(async ({ data }) =>
+    handleWrite((userId) => setCaseDeadlineStatus(data.id, data.status, userId)),
+  );
 
 export const deleteCaseDeadlineFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle((userId) => deleteCaseDeadline(data.id, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => deleteCaseDeadline(data.id, userId)));
 
 // ------------------------------------------------------------ Comunicações ----
 export const listCaseCommunicationsFn = createServerFn({ method: "GET" })
@@ -123,11 +138,11 @@ export const createCaseCommunicationFn = createServerFn({ method: "POST" })
       contact?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handle((userId) => createCaseCommunication(data, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => createCaseCommunication(data, userId)));
 
 export const deleteCaseCommunicationFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data }) => handle((userId) => deleteCaseCommunication(data.id, userId)));
+  .handler(async ({ data }) => handleWrite((userId) => deleteCaseCommunication(data.id, userId)));
 
 // ----------------------------------------------------- Agregação global ----
 export const listAllTasksFn = createServerFn({ method: "GET" }).handler(async () =>

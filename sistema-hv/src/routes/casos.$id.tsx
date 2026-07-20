@@ -468,7 +468,7 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
-      <CaseDossie caseId={caso.id} />
+      <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
 
       <OrnamentalDivider />
 

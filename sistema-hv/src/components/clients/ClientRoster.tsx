@@ -83,10 +83,7 @@ const SEARCH_FIELDS: SearchField[] = [
 // para "São"/"Sao"/"sao" e "José"/"jose" casarem. Sem isso, a lupa parecia "não
 // funcionar" ao buscar nomes/municípios acentuados.
 function norm(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 function matchField(c: Client, term: string, f: SearchField): boolean {
@@ -114,6 +111,7 @@ export function ClientRoster({
   fixedLifecycle,
   entityNoun = "cadastro",
   entityNounPlural = "cadastros",
+  canEdit = true,
 }: {
   eyebrow: string;
   title: string;
@@ -124,6 +122,8 @@ export function ClientRoster({
   fixedLifecycle?: LifecycleTab;
   entityNoun?: string;
   entityNounPlural?: string;
+  /** 2026-07-19 — pode criar/editar/excluir cadastro? (permissão do módulo da aba). */
+  canEdit?: boolean;
 }) {
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
@@ -209,10 +209,12 @@ export function ClientRoster({
                 Info/Cadastro
               </Btn>
             )}
-            <Btn variant="gold" onClick={() => setCreateOpen(true)}>
-              <Plus size={14} />
-              Novo cadastro
-            </Btn>
+            {canEdit && (
+              <Btn variant="gold" onClick={() => setCreateOpen(true)}>
+                <Plus size={14} />
+                Novo cadastro
+              </Btn>
+            )}
           </div>
         }
       />
@@ -426,13 +428,15 @@ export function ClientRoster({
                   className="text-[var(--gold)] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"
                 />
               </Link>
-              <div className="absolute top-3 right-3">
-                <ClientCardMenu
-                  clientId={c.id}
-                  clientName={c.full_name}
-                  onEdit={() => setEditClient(c)}
-                />
-              </div>
+              {canEdit && (
+                <div className="absolute top-3 right-3">
+                  <ClientCardMenu
+                    clientId={c.id}
+                    clientName={c.full_name}
+                    onEdit={() => setEditClient(c)}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
