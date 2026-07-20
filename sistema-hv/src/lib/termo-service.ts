@@ -8,7 +8,14 @@ import {
   generateCaseDocumentFromTemplate,
   softDeleteCaseDocument,
 } from "./case-documents-service";
-import { criarBaixa, listContasFinanceiras, type CAMetodoPagamento } from "./contaazul/client";
+import { syncClientToContaAzul } from "./contaazul/service";
+import {
+  criarBaixa,
+  criarContaAReceber,
+  listContasFinanceiras,
+  type CAContaReceberParcela,
+  type CAMetodoPagamento,
+} from "./contaazul/client";
 import { createDocWithText, docUrl, exportPdf } from "./google/docs";
 import { uploadFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
@@ -478,6 +485,76 @@ export async function aceitarTermo(termoId: string) {
 
   // Move o caso para ATIVO (cobrança ativa).
   await sb.from("system_cases").update({ macrostatus_fin: "ATIVO" }).eq("id", termo.case_id);
+
+  // ── Sync automático: cria cliente + cobrança no Conta Azul (best-effort) ──
+  try {
+    // Busca client_id e case_code do caso
+    const { data: caso } = await sb
+      .from("system_cases")
+      .select("client_id, case_code")
+      .eq("id", termo.case_id)
+      .single();
+
+    if (caso?.client_id) {
+      // 1) Sincroniza a pessoa (cliente) no Conta Azul
+      const { contaAzulCustomerId } = await syncClientToContaAzul(caso.client_id);
+
+      // 2) Busca conta financeira (Receba Fácil / Conta PJ)
+      const contas = await listContasFinanceiras().catch(() => ({
+        itens: [] as { id: string }[],
+        itens_totais: 0,
+      }));
+      const contaFinanceiraId = contas.itens?.[0]?.id ?? null;
+
+      if (contaFinanceiraId) {
+        // 3) Monta parcelas para o Conta Azul
+        const descricaoBase = `Honorários advocatícios — ${caso.case_code}`;
+        const parcelasPayload: CAContaReceberParcela[] = rows.map((r, i) => ({
+          descricao:
+            rows.length > 1
+              ? `${descricaoBase} (${i + 1}/${rows.length})`
+              : descricaoBase,
+          data_vencimento: r.vencimento,
+          nota: caso.case_code,
+          conta_financeira: contaFinanceiraId,
+          detalhe_valor: { valor_bruto: r.valor_centavos / 100 },
+        }));
+
+        const valorTotalReais = rows.reduce((s, r) => s + r.valor_centavos, 0) / 100;
+
+        // 4) Cria a conta a receber no Conta Azul
+        await criarContaAReceber({
+          data_competencia: rows[0].vencimento,
+          valor: valorTotalReais,
+          observacao: descricaoBase,
+          descricao: descricaoBase,
+          contato: contaAzulCustomerId,
+          conta_financeira: contaFinanceiraId,
+          condicao_pagamento: { parcelas: parcelasPayload },
+        });
+
+        // 5) Marca as parcelas locais como provider "conta_azul" para o cron de sync
+        await sb
+          .from("system_parcelas")
+          .update({ provider: "conta_azul" })
+          .eq("termo_id", termoId);
+
+        console.log(
+          `contaazul: cobrança criada automaticamente para caso ${caso.case_code} (${rows.length} parcelas)`,
+        );
+      } else {
+        console.warn(
+          "contaazul: conta financeira não encontrada — cobrança não criada automaticamente",
+        );
+      }
+    }
+  } catch (err) {
+    // Best-effort: não impede a aceitação do termo se o Conta Azul falhar
+    console.error(
+      "contaazul: falha ao sincronizar automaticamente na aceitação do termo:",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   // Conta real de parcelas geradas (À VISTA = 1; PARCELADO = N).
   return { ok: true as const, parcelas: rows.length };
