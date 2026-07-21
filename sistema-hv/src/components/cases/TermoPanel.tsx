@@ -46,6 +46,7 @@ import {
   useDeleteAllParcelas,
   useDeleteParcela,
   useDeleteTermo,
+  useDeleteTermoAdmin,
   useEnviarConferencia,
   useEstornarParcela,
   useGerarDocumentoTermo,
@@ -99,7 +100,8 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
 };
 
 export function TermoPanel({ caseId }: { caseId: string }) {
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  const isAdmin = role === "admin";
   const { data: termos } = useTermos(caseId);
   const enviar = useEnviarConferencia(caseId);
   const conferir = useConferirTermo(caseId);
@@ -108,6 +110,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
   const aceitar = useAceitarTermo(caseId);
   const recusar = useRecusarTermo(caseId);
   const del = useDeleteTermo(caseId);
+  const delAdmin = useDeleteTermoAdmin(caseId);
   const delParcela = useDeleteParcela(caseId);
   const delAllParcelas = useDeleteAllParcelas(caseId);
   const { data: parcelas } = useParcelas(caseId);
@@ -309,6 +312,31 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                         <ExternalLink size={12} className="mr-1" /> PDF
                       </Button>
                     </a>
+                  )}
+                  {isAdmin && t.status !== "RASCUNHO" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
+                      disabled={delAdmin.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Excluir este termo (${meta.label})? Isso remove o termo, o documento no Drive e todas as parcelas vinculadas. Esta ação é irreversível.`,
+                          )
+                        )
+                          return;
+                        delAdmin.mutate(t.id, {
+                          onSuccess: (r) =>
+                            toast.success(
+                              `Termo excluído — ${r?.parcelasRemovidas ?? 0} parcela(s) removida(s)`,
+                            ),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        });
+                      }}
+                    >
+                      <Trash2 size={13} className="mr-1" /> Excluir (admin)
+                    </Button>
                   )}
                 </div>
               </li>

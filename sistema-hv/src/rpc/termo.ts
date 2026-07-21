@@ -12,6 +12,7 @@ import {
   darBaixaParcela,
   deleteAllParcelasDoCaso,
   deleteParcela,
+  deleteTermoAdmin,
   deleteTermoRascunho,
   enviarParaConferencia,
   estornarParcela,
@@ -22,7 +23,7 @@ import {
   listTermos,
   recusarTermo,
 } from "@/lib/termo-service";
-import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule, requireRole } from "@/lib/supabase/auth-guard";
 
 function run<T>(guard: () => Promise<unknown>, fn: () => Promise<T>): Promise<T> {
   return (async () => {
@@ -92,6 +93,19 @@ export const deleteTermoRascunhoFn = createServerFn({ method: "POST" })
       const { id: userId } = await requireAuth();
       return deleteTermoRascunho(data.termoId, userId);
     }),
+  );
+
+// Exclusão administrativa — permite excluir termos em qualquer status (só admin).
+export const deleteTermoAdminFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ termoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    run(
+      () => requireRole(["admin"]),
+      async () => {
+        const { id: userId } = await requireAuth();
+        return deleteTermoAdmin(data.termoId, userId);
+      },
+    ),
   );
 
 export const enviarParaConferenciaFn = createServerFn({ method: "POST" })

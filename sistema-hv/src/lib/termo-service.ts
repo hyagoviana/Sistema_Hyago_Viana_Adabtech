@@ -184,6 +184,65 @@ export async function deleteTermoRascunho(termoId: string, triggeredBy?: string)
   return { ok: true as const, id: termoId, docDeleted: !!doc?.id };
 }
 
+/**
+ * Exclusão administrativa de termo em QUALQUER status (inclusive aprovado/aceito).
+ * Remove parcelas vinculadas, documento do Drive e o snapshot. Registra audit log.
+ * Só deve ser chamada por usuários com role admin.
+ */
+export async function deleteTermoAdmin(termoId: string, triggeredBy: string) {
+  const sb = getSupabaseAdmin();
+  const termo = await getTermo(termoId);
+
+  // Remove documento do Drive (soft delete).
+  const { data: doc } = await sb
+    .from("system_case_documents")
+    .select("id")
+    .eq("case_id", termo.case_id)
+    .eq("doc_kind", "TERMO_ACERTO")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (doc?.id) {
+    await softDeleteCaseDocument(doc.id, `termo.admin_delete:${termoId}`, {
+      cascadeTermo: false,
+    });
+  }
+
+  // Remove parcelas vinculadas ao termo.
+  const { data: parcelasRemovidas } = await sb
+    .from("system_parcelas")
+    .delete()
+    .eq("termo_id", termoId)
+    .select("id");
+
+  // Remove o snapshot (qualquer status).
+  const { error } = await sb
+    .from("system_termo_snapshots")
+    .delete()
+    .eq("id", termoId);
+  if (error) throw new TermoServiceError(error.message, 500);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: termo.organization_id,
+    action: "termo.admin_delete",
+    entity_type: "termo",
+    entity_id: termoId,
+    diff: {
+      case_id: termo.case_id,
+      status: termo.status,
+      doc_id: doc?.id ?? null,
+      parcelas_removidas: parcelasRemovidas?.length ?? 0,
+    },
+    actor_id: triggeredBy,
+  });
+
+  return {
+    ok: true as const,
+    id: termoId,
+    docDeleted: !!doc?.id,
+    parcelasRemovidas: parcelasRemovidas?.length ?? 0,
+  };
+}
+
 // Cria snapshot v(n+1) em RASCUNHO a partir do cálculo.
 export async function createTermo(input: {
   caseId: string;
