@@ -283,7 +283,7 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
 
   // 5) Cria a cobrança (conta a receber) no Conta Azul. Se falhar, NÃO cria as
   //    parcelas locais (evita divergência). Resposta é assíncrona (protocolo).
-  const receber = await criarContaAReceber({
+  const contaAReceberPayload = {
     data_competencia: input.dueDate,
     valor: valorCentavos / 100,
     observacao: descricaoBase,
@@ -291,7 +291,22 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
     contato: contaAzulCustomerId,
     conta_financeira: contaFinanceiraId,
     condicao_pagamento: { parcelas: parcelasPayload },
-  });
+  };
+  console.log("contaazul: criando conta a receber, payload:", JSON.stringify(contaAReceberPayload));
+  let receber;
+  try {
+    receber = await criarContaAReceber(contaAReceberPayload);
+    console.log("contaazul: conta a receber criada:", JSON.stringify(receber));
+  } catch (err) {
+    console.error("contaazul: ERRO ao criar conta a receber:", err instanceof ContaAzulError ? { status: err.status, body: err.safeBody, msg: err.message } : err);
+    if (err instanceof ContaAzulError) {
+      throw new ContaAzulServiceError(
+        `Erro ao criar conta a receber: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`,
+        err.status ?? 500,
+      );
+    }
+    throw err;
+  }
 
   // 6) Aguarda brevemente e busca as parcelas recém-criadas no CA para obter
   //    os IDs (a API é assíncrona, mas geralmente cria em <2s).
