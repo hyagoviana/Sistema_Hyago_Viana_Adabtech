@@ -183,7 +183,8 @@ function EditTemplateFieldsDialog({
     if (!template) return;
     const clean = fields.map((f) => ({
       key: f.key,
-      label: (f.label || f.key).trim(),
+      // Rótulo em branco/whitespace → cai na própria chave (evita violar min(1)).
+      label: f.label?.trim() || f.key,
       source: f.source,
       required: !!f.required,
       ...(f.source === "auto" && f.auto_field ? { auto_field: f.auto_field } : {}),
