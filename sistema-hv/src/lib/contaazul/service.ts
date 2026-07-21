@@ -108,7 +108,14 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     observacao: "Cliente sincronizado via Sistema HV",
     perfis: [{ tipo_perfil: "Cliente" }],
     enderecos: enderecosArr.length > 0 ? enderecosArr : [],
-    inscricoes: [],
+    inscricoes: [
+      {
+        indicador_inscricao_estadual: "NAO CONTRIBUINTE",
+        inscricao_estadual: "",
+        inscricao_municipal: "",
+        inscricao_suframa: "",
+      },
+    ],
     outros_contatos: [],
     contato_cobranca_faturamento: {
       emails: client.email ? [client.email] : [],
