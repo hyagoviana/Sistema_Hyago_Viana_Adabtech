@@ -88,21 +88,31 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       ? { cpf: client.cpf_cnpj }
       : { cnpj: client.cpf_cnpj };
 
-  // Payload conforme doc oficial da API v2 Conta Azul.
-  const caPayload = {
+  // Payload completo conforme doc oficial da API v2 Conta Azul.
+  // TODOS os campos são obrigatórios no PUT — enviamos tudo sempre.
+  const caPayload: Record<string, unknown> = {
     ativo: true,
+    agencia_publica: false,
+    optante_simples: false,
     codigo: client.cpf_cnpj,
     nome: client.full_name,
+    nome_fantasia: "",
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
     ...cpfOrCnpj,
     ...(tipoPessoa === "Física"
       ? { rg: c.rg, data_nascimento: c.birth_date }
-      : {}),
-    email: client.email ?? undefined,
-    telefone_celular: client.phone ?? undefined,
-    telefone_comercial: client.phone ?? undefined,
+      : { cnpj: client.cpf_cnpj }),
+    email: client.email ?? "",
+    telefone_celular: client.phone ?? "",
+    telefone_comercial: client.phone ?? "",
+    observacao: "Cliente sincronizado via Sistema HV",
     perfis: [{ tipo_perfil: "Cliente" }],
-    ...(enderecosArr.length > 0 ? { enderecos: enderecosArr } : {}),
+    enderecos: enderecosArr.length > 0 ? enderecosArr : [],
+    inscricoes: [],
+    outros_contatos: [],
+    contato_cobranca_faturamento: {
+      emails: client.email ? [client.email] : [],
+    },
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
