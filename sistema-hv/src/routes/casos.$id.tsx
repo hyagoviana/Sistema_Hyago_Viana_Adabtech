@@ -62,11 +62,14 @@ import { usePublishRouteTitle } from "@/lib/route-title";
 import { useClient } from "@/hooks/useClients";
 import { useMunicipios, usePerfis } from "@/hooks/useReferencias";
 import {
+  augmentWithHonorarios,
   augmentWithMunicipio,
   augmentWithPerfil,
+  augmentWithResponsaveis,
   buildAutoFillFromClient,
 } from "@/lib/cases/document-autofill";
-import { useCase, useCaseEvents, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
+import { useCaseHonorarios } from "@/hooks/useTermo";
+import { useCase, useCaseEvents, useCaseResponsaveis, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
@@ -115,9 +118,11 @@ function CasoDetalhe() {
   const { data: perms } = useMyModulePerms();
   const { data: values } = useMyModuleValues();
   const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
-  // Autofill B/C — tabelas de referência (município / perfil).
+  // Autofill B/C/E/F — tabelas de referência (município / perfil / honorários / responsáveis).
   const { data: municipios } = useMunicipios();
   const { data: perfis } = usePerfis();
+  const { data: honorarios } = useCaseHonorarios(id);
+  const { data: responsaveis } = useCaseResponsaveis(id);
 
   // S4-06 — título da aba por NOME (case_code), nunca UUID.
   useDocumentTitle(
@@ -222,6 +227,8 @@ function CasoDetalhe() {
     ? (perfis ?? []).find((p) => p.nome.trim().toLowerCase() === perfilNum.trim().toLowerCase())
     : undefined;
   docAutoFill = augmentWithPerfil(docAutoFill, perfilRow);
+  docAutoFill = augmentWithHonorarios(docAutoFill, honorarios);
+  docAutoFill = augmentWithResponsaveis(docAutoFill, responsaveis);
 
   return (
     <div className="page-container">

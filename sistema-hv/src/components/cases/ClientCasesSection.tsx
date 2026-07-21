@@ -12,10 +12,12 @@ import { useCasesList } from "@/hooks/useCases";
 import { useClient } from "@/hooks/useClients";
 import { usePodeEditarAlgum } from "@/hooks/usePermissions";
 import {
+  augmentWithHonorarios,
   augmentWithMunicipio,
   augmentWithPerfil,
   buildAutoFillFromClient,
 } from "@/lib/cases/document-autofill";
+import { useCaseHonorarios } from "@/hooks/useTermo";
 import { useMunicipios, usePerfis } from "@/hooks/useReferencias";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { useTemas } from "@/hooks/useTemas";
@@ -118,6 +120,8 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
   // Caso recém-criado cujos documentos (pasta de casos/procurações do tema) o
   // usuário vai escolher/gerar logo após criar — reusa o fluxo do caso.
   const [genFor, setGenFor] = useState<CreatedCaseLite | null>(null);
+  // Honorários do caso recém-criado (para pré-preencher documentos financeiros).
+  const { data: honorarios } = useCaseHonorarios(genFor?.id ?? "");
   const cases = useMemo(() => data ?? [], [data]);
 
   // R1-04 — nomes dos grupos (nível 1 = TEMA). Carregados UMA vez, sem query por
@@ -221,6 +225,7 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
                 )
               : undefined;
             af = augmentWithPerfil(af, perfilRow);
+            af = augmentWithHonorarios(af, honorarios);
             return af;
           })()}
         />

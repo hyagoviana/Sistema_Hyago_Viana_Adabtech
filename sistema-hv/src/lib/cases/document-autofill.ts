@@ -128,7 +128,8 @@ function canonicalLookup(fieldKey: string, canonical?: Record<string, string>): 
   return undefined;
 }
 
-/** Mescla os dados de um município (tabela) no AutoFillData. Puro. */
+/** Mescla os dados de um município (tabela) no AutoFillData. Puro.
+ *  Injeta TAMBÉM no canonical com rótulos PT para canonicalLookup. */
 export function augmentWithMunicipio(
   data: AutoFillData,
   m?: {
@@ -142,6 +143,35 @@ export function augmentWithMunicipio(
   } | null,
 ): AutoFillData {
   if (!m) return data;
+  const canonical = { ...(data.canonical ?? {}) };
+  if (m.populacao) {
+    canonical["População"] = m.populacao;
+    canonical["População do Município"] = m.populacao;
+  }
+  if (m.densidade) {
+    canonical["Densidade"] = m.densidade;
+    canonical["Densidade Demográfica"] = m.densidade;
+  }
+  if (m.salario_medio) {
+    canonical["Salário Médio"] = m.salario_medio;
+    canonical["Salário"] = m.salario_medio;
+  }
+  if (m.percentual) {
+    canonical["Percentual"] = m.percentual;
+    canonical["Percentual do Município"] = m.percentual;
+  }
+  if (m.ibge) {
+    canonical["IBGE"] = m.ibge;
+    canonical["Código IBGE"] = m.ibge;
+  }
+  if (m.secretario_nome) {
+    canonical["Secretário"] = m.secretario_nome;
+    canonical["Secretário de Saúde"] = m.secretario_nome;
+    canonical["Nome do Secretário"] = m.secretario_nome;
+  }
+  if (m.secretario_cargo) {
+    canonical["Cargo do Secretário"] = m.secretario_cargo;
+  }
   return {
     ...data,
     populacao: m.populacao ?? data.populacao,
@@ -151,20 +181,107 @@ export function augmentWithMunicipio(
     ibge: m.ibge ?? data.ibge,
     secretario: m.secretario_nome ?? data.secretario,
     secretarioCargo: m.secretario_cargo ?? data.secretarioCargo,
+    canonical,
   };
 }
 
-/** Mescla o texto de um perfil (tabela) no AutoFillData. Puro. */
+/** Mescla o texto de um perfil (tabela) no AutoFillData. Puro.
+ *  Injeta TAMBÉM no canonical com rótulos PT para canonicalLookup. */
 export function augmentWithPerfil(
   data: AutoFillData,
   p?: { nome?: string | null; texto?: string | null } | null,
 ): AutoFillData {
   if (!p) return data;
+  const canonical = { ...(data.canonical ?? {}) };
+  if (p.nome) {
+    canonical["Perfil"] = p.nome;
+    canonical["Número do Perfil"] = p.nome;
+  }
+  if (p.texto) {
+    canonical["Informações sobre o Perfil"] = p.texto;
+    canonical["Texto do Perfil"] = p.texto;
+  }
   return {
     ...data,
     numeroPerfil: p.nome ?? data.numeroPerfil,
     perfilTexto: p.texto ?? data.perfilTexto,
+    canonical,
   };
+}
+
+/** Mescla dados de honorários do caso no AutoFillData. Puro.
+ *  Injeta no canonical com rótulos PT para canonicalLookup. */
+export function augmentWithHonorarios(
+  data: AutoFillData,
+  h?: {
+    percentual_honorarios?: number | null;
+    valor_parcela_centavos?: number | null;
+    desconto_avista_pct?: number | null;
+    forma_pagamento?: string | null;
+    honorarios_total_centavos?: number | null;
+  } | null,
+): AutoFillData {
+  if (!h) return data;
+  const canonical = { ...(data.canonical ?? {}) };
+  if (h.percentual_honorarios != null) {
+    const pct = `${h.percentual_honorarios}%`.replace(".", ",");
+    canonical["Percentual de Honorários"] = pct;
+    canonical["Honorários Percentual"] = pct;
+    canonical["% Honorários"] = pct;
+  }
+  if (h.valor_parcela_centavos != null) {
+    const v = `R$ ${(h.valor_parcela_centavos / 100).toFixed(2).replace(".", ",")}`;
+    canonical["Valor da Parcela"] = v;
+    canonical["Parcela"] = v;
+  }
+  if (h.desconto_avista_pct != null) {
+    const d = `${h.desconto_avista_pct}%`.replace(".", ",");
+    canonical["Desconto à Vista"] = d;
+    canonical["Desconto"] = d;
+  }
+  if (h.forma_pagamento) {
+    canonical["Forma de Pagamento"] = h.forma_pagamento;
+    canonical["Pagamento"] = h.forma_pagamento;
+  }
+  if (h.honorarios_total_centavos != null) {
+    const t = `R$ ${(h.honorarios_total_centavos / 100).toFixed(2).replace(".", ",")}`;
+    canonical["Total de Honorários"] = t;
+    canonical["Honorários Total"] = t;
+    canonical["Valor dos Honorários"] = t;
+  }
+  return { ...data, canonical };
+}
+
+/** Mescla dados dos responsáveis (advogados) do caso no AutoFillData. Puro.
+ *  Injeta no canonical com rótulos PT para canonicalLookup. */
+export function augmentWithResponsaveis(
+  data: AutoFillData,
+  responsaveis?: Array<{
+    full_name: string | null;
+    email: string;
+    role: string;
+  }> | null,
+): AutoFillData {
+  if (!responsaveis?.length) return data;
+  const canonical = { ...(data.canonical ?? {}) };
+  // Primeiro responsável = advogado principal
+  const principal = responsaveis[0];
+  if (principal.full_name) {
+    canonical["Advogado"] = principal.full_name;
+    canonical["Advogado Responsável"] = principal.full_name;
+    canonical["Nome do Advogado"] = principal.full_name;
+  }
+  if (principal.email) {
+    canonical["Email do Advogado"] = principal.email;
+    canonical["E-mail do Advogado"] = principal.email;
+  }
+  // Todos os responsáveis juntos (para documentos que listam a equipe)
+  const nomes = responsaveis.map((r) => r.full_name || r.email).filter(Boolean);
+  if (nomes.length > 1) {
+    canonical["Advogados"] = nomes.join(", ");
+    canonical["Equipe Responsável"] = nomes.join(", ");
+  }
+  return { ...data, canonical };
 }
 
 function formatCep(cep?: string): string {
