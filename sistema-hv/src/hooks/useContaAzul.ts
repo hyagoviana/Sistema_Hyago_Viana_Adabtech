@@ -37,6 +37,7 @@ export function useCreateContaAzulCharge() {
       dueDate: string;
       description?: string;
       installmentCount?: number;
+      parcelaId?: string;
     }) => fn({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });

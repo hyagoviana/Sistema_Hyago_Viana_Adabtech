@@ -67,6 +67,7 @@ const createChargeSchema = z.object({
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   description: z.string().optional(),
   installmentCount: z.number().int().min(1).optional(),
+  parcelaId: z.string().uuid().optional(),
 });
 
 export const createContaAzulChargeFn = createServerFn({ method: "POST" })

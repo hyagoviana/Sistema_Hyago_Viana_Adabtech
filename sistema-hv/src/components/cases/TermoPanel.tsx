@@ -393,6 +393,8 @@ export function TermoPanel({ caseId }: { caseId: string }) {
           <ul className="space-y-1 text-[13px]">
             {(parcelas ?? []).map((p) => {
               const isAsaas = p.provider === "asaas" && !!p.provider_ext_id;
+              const isCA = p.provider === "conta_azul";
+              const hasProvider = isAsaas || isCA;
               const statusBadgeCls =
                 p.status === "PAGA"
                   ? "bg-green-600 text-white"
@@ -413,8 +415,8 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                     {brl(p.valor_centavos)}
                     <Badge className={statusBadgeCls}>{p.status}</Badge>
 
-                    {/* Asaas: link boleto/fatura */}
-                    {isAsaas && p.boleto_url && p.status !== "PAGA" && (
+                    {/* Link boleto/fatura (Asaas e Conta Azul) */}
+                    {hasProvider && p.boleto_url && p.status !== "PAGA" && (
                       <a
                         href={p.boleto_url}
                         target="_blank"
@@ -439,13 +441,16 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       </button>
                     )}
 
-                    {/* Asaas badge */}
+                    {/* Provider badge */}
                     {isAsaas && (
                       <Badge className="bg-blue-100 text-blue-800 text-[10px]">Asaas</Badge>
                     )}
+                    {isCA && (
+                      <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">Conta Azul</Badge>
+                    )}
 
-                    {/* Cobrar via Asaas (parcela sem provider vinculado) */}
-                    {!isAsaas && p.status !== "PAGA" && p.status !== "CANCELADA" && (
+                    {/* Cobrar (parcela sem provider vinculado) */}
+                    {!hasProvider && p.status !== "PAGA" && p.status !== "CANCELADA" && (
                       <button
                         type="button"
                         onClick={() =>
@@ -1026,6 +1031,7 @@ function CobrancaAsaasDialog({
         dueDate: parcela.vencimento,
         description: descricao.trim() || undefined,
         installmentCount: 1,
+        parcelaId: parcela.id,
       },
       {
         onSuccess: () => {

@@ -211,6 +211,8 @@ export type CreateContaAzulChargeInput = {
   dueDate: string; // YYYY-MM-DD
   description?: string;
   installmentCount?: number;
+  /** Quando vem do botão "cobrar" de uma parcela existente, vincula em vez de criar nova. */
+  parcelaId?: string;
 };
 
 /**
@@ -369,29 +371,48 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
   }
 
   // 8) Espelha as parcelas no banco (o relatório lê de system_parcelas).
+  //    Quando vem de uma parcela existente (parcelaId), ATUALIZA em vez de criar nova.
   const parcelaIds: string[] = [];
   for (let i = 0; i < qtdParcelas; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: parcela, error: pErr } = await (sb.from("system_parcelas") as any)
-      .insert({
-        organization_id: DEFAULT_ORG,
-        case_id: input.caseId,
-        termo_id: termoId,
-        numero: i + 1,
-        valor_centavos: valorParcelaCentavos,
-        vencimento: vencimentos[i],
-        status: "PENDENTE",
-        provider: "conta_azul",
-        provider_ext_id: caParcelaIds[i] ?? null,
-        boleto_url: cobrancaUrls[i] ?? null,
-      })
-      .select("id")
-      .single();
-    if (pErr) {
-      console.error("contaazul-service: erro ao inserir parcela:", pErr.message);
-      continue;
+    const providerData = {
+      provider: "conta_azul" as const,
+      provider_ext_id: caParcelaIds[i] ?? null,
+      boleto_url: cobrancaUrls[i] ?? null,
+    };
+
+    if (input.parcelaId && qtdParcelas === 1) {
+      // Atualiza a parcela existente (veio do botão "cobrar")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: uErr } = await (sb.from("system_parcelas") as any)
+        .update(providerData)
+        .eq("id", input.parcelaId);
+      if (uErr) {
+        console.error("contaazul-service: erro ao atualizar parcela:", uErr.message);
+      } else {
+        parcelaIds.push(input.parcelaId);
+      }
+    } else {
+      // Cria nova parcela (veio de "Nova cobrança" ou parcelamento)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: parcela, error: pErr } = await (sb.from("system_parcelas") as any)
+        .insert({
+          organization_id: DEFAULT_ORG,
+          case_id: input.caseId,
+          termo_id: termoId,
+          numero: i + 1,
+          valor_centavos: valorParcelaCentavos,
+          vencimento: vencimentos[i],
+          status: "PENDENTE",
+          ...providerData,
+        })
+        .select("id")
+        .single();
+      if (pErr) {
+        console.error("contaazul-service: erro ao inserir parcela:", pErr.message);
+        continue;
+      }
+      if (parcela) parcelaIds.push(parcela.id);
     }
-    if (parcela) parcelaIds.push(parcela.id);
   }
 
   await sb.from("system_audit_log").insert({
