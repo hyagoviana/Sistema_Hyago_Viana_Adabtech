@@ -65,23 +65,27 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       }
     : {};
 
-  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + documento (obrigatórios).
+  const cpfOrCnpj =
+    tipoPessoa === "Física"
+      ? { cpf: client.cpf_cnpj }
+      : { cnpj: client.cpf_cnpj };
+
+  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + cpf/cnpj (obrigatórios).
   const caData = {
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
-    documento: client.cpf_cnpj,
+    ...cpfOrCnpj,
     email: client.email ?? undefined,
     telefone: client.phone ?? undefined,
     perfis: ["Cliente"],
     ...enderecoObj,
   };
 
-  // ATUALIZAÇÃO (PUT): o Conta Azul exige tipo_pessoa + documento em toda
-  // requisição (são obrigatórios mesmo no PUT). Só `perfis` é rejeitado.
+  // ATUALIZAÇÃO (PUT): mesmo payload, sem `perfis` (rejeitado pela API).
   const caUpdate = {
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
-    documento: client.cpf_cnpj,
+    ...cpfOrCnpj,
     email: client.email ?? undefined,
     telefone: client.phone ?? undefined,
     ...enderecoObj,

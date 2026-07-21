@@ -269,11 +269,12 @@ export type CAPessoa = {
 
 export type CAPessoaCreate = {
   nome: string;
-  documento?: string;
+  cpf?: string;
+  cnpj?: string;
   email?: string;
   telefone?: string;
   tipo_pessoa: "Física" | "Jurídica";
-  perfis: string[];
+  perfis?: string[];
   endereco?: {
     cep?: string;
     logradouro?: string;
