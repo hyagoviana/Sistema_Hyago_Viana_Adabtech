@@ -13,6 +13,7 @@ type Props = {
     id: string;
     case_code: string;
     case_type: string;
+    caso_pasta_nome?: string | null;
     macrostatus_op: string;
     macrostatus_fin?: string | null;
     service_type_id?: string | null;
@@ -35,7 +36,9 @@ export function CaseCardReal({ caso, compact = true, kind = "op" }: Props) {
   const [moveOpen, setMoveOpen] = useState(false);
   const isFin = kind === "fin";
   const dias = daysSince(caso.status_changed_at);
-  const tipoLabel = CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
+  const tipoLabel = caso.caso_pasta_nome
+    ?? CASE_TYPE_LABELS[caso.case_type as CaseType]
+    ?? caso.case_type;
   const tone = dias > 30 ? "danger" : dias > 15 ? "warning" : "success";
 
   function stopAll(e: React.MouseEvent | React.PointerEvent) {
