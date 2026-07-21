@@ -71,8 +71,9 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       ? { cpf: client.cpf_cnpj }
       : { cnpj: client.cpf_cnpj };
 
-  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + cpf/cnpj (obrigatórios).
+  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + cpf/cnpj + codigo (obrigatórios).
   const caData = {
+    codigo: client.cpf_cnpj,
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
     ...cpfOrCnpj,
@@ -100,7 +101,9 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     try {
       // GET obrigatório: a API exige `codigo` no PUT, que só vem do registro existente.
       const existingPessoa = await getPessoa(caCustomerId);
-      const updatePayload = { ...caUpdate, codigo: existingPessoa.codigo ?? existingPessoa.id };
+      // codigo pode vir vazio — nesse caso gera um a partir do CPF/CNPJ.
+      const codigo = existingPessoa.codigo || client.cpf_cnpj;
+      const updatePayload = { ...caUpdate, codigo };
       console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
       await updatePessoa(caCustomerId, updatePayload);
       console.log("contaazul: pessoa atualizada com sucesso");
