@@ -74,13 +74,17 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   // Payload conforme doc oficial da API v2 Conta Azul.
   // POST e PUT usam o mesmo shape (PUT inclui perfis também).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clientAny = client as any;
   const caPayload = {
     ativo: true,
     codigo: client.cpf_cnpj,
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
     ...cpfOrCnpj,
-    ...(tipoPessoa === "Física" ? { rg: "N/I" } : {}),
+    ...(tipoPessoa === "Física"
+      ? { rg: "N/I", data_nascimento: clientAny.birth_date || "1990-01-01" }
+      : {}),
     email: client.email ?? undefined,
     telefone_celular: client.phone ?? undefined,
     perfis: [{ tipo_perfil: "Cliente" }],
