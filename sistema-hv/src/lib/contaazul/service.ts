@@ -10,6 +10,7 @@ import {
   criarContaAReceber,
   findPessoaByDocumento,
   getAccessToken,
+  getPessoa,
   listContasFinanceiras,
   updatePessoa,
   type CAContaAReceberItem,
@@ -97,8 +98,11 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(caUpdate));
-      await updatePessoa(caCustomerId, caUpdate);
+      // GET obrigatório: a API exige `codigo` no PUT, que só vem do registro existente.
+      const existingPessoa = await getPessoa(caCustomerId);
+      const updatePayload = { ...caUpdate, codigo: existingPessoa.codigo ?? existingPessoa.id };
+      console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
+      await updatePessoa(caCustomerId, updatePayload);
       console.log("contaazul: pessoa atualizada com sucesso");
     } catch (err) {
       console.error("contaazul: ERRO ao atualizar pessoa:", err instanceof ContaAzulError ? { status: err.status, body: err.safeBody, msg: err.message } : err);

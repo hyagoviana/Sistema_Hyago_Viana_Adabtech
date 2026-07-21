@@ -247,7 +247,10 @@ async function request<T>(
 
 export type CAPessoa = {
   id: string;
+  codigo?: string;
   nome: string;
+  cpf?: string;
+  cnpj?: string;
   documento?: string;
   email?: string;
   telefone?: string;
