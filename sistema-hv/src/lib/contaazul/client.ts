@@ -197,7 +197,7 @@ export async function getAccessToken(): Promise<string> {
 // ─── HTTP helper ─────────────────────────────────────────────────────────────
 
 async function request<T>(
-  method: "GET" | "POST" | "PUT" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body?: unknown,
   queryParams?: Record<string, string>,
@@ -305,6 +305,11 @@ export async function getPessoa(id: string): Promise<CAPessoa> {
 
 export async function updatePessoa(id: string, input: Partial<CAPessoaCreate>): Promise<CAPessoa> {
   return request<CAPessoa>("PUT", `v1/pessoas/${id}`, input);
+}
+
+/** PATCH — atualiza parcialmente (só os campos enviados). Preferível ao PUT. */
+export async function patchPessoa(id: string, input: Partial<CAPessoaCreate>): Promise<CAPessoa> {
+  return request<CAPessoa>("PATCH", `v1/pessoas/${id}`, input);
 }
 
 export async function findPessoaByDocumento(documento: string): Promise<CAPessoa | null> {

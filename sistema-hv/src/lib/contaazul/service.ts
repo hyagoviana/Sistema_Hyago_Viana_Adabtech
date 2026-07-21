@@ -12,7 +12,7 @@ import {
   getAccessToken,
   getPessoa,
   listContasFinanceiras,
-  updatePessoa,
+  patchPessoa,
   type CAContaAReceberItem,
   type CAContaReceberParcela,
   type CAPessoa,
@@ -128,15 +128,17 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      // GET primeiro: preserva `codigo` e `rg` existentes se houver.
-      const existingPessoa = await getPessoa(caCustomerId);
-      const updatePayload = {
-        ...caPayload,
-        codigo: existingPessoa.codigo || client.cpf_cnpj,
-        ...(tipoPessoa === "Física" && existingPessoa.rg ? { rg: existingPessoa.rg } : {}),
+      // PATCH — atualiza parcialmente, só os campos que temos. Não exige todos
+      // os obrigatórios como o PUT (ver API-REFERENCE.md).
+      const patchPayload: Record<string, unknown> = {
+        nome: client.full_name,
+        email: client.email ?? undefined,
+        telefone_celular: client.phone ?? undefined,
+        telefone_comercial: client.phone ?? undefined,
       };
-      console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
-      await updatePessoa(caCustomerId, updatePayload);
+      if (enderecosArr.length > 0) patchPayload.enderecos = enderecosArr;
+      console.log("contaazul: PATCH pessoa", caCustomerId, "payload:", JSON.stringify(patchPayload));
+      await patchPessoa(caCustomerId, patchPayload);
       console.log("contaazul: pessoa atualizada com sucesso");
     } catch (err) {
       console.error("contaazul: ERRO ao atualizar pessoa:", err instanceof ContaAzulError ? { status: err.status, body: err.safeBody, msg: err.message } : err);
