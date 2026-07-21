@@ -11,12 +11,17 @@ import {
   Settings2,
   Tag,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { CaseCardReal } from "@/components/cases/CaseCardReal";
+import {
+  CaseFiltersPanel,
+  applyCaseFilters,
+  type CaseFilterValues,
+} from "@/components/cases/CaseFiltersPanel";
 import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
@@ -226,11 +231,25 @@ function DynamicKanban({
   // A5 — `kind` fica fixo em "op" (o toggle foi removido); mantido como união de
   // tipos para preservar o narrowing das checagens `kind === "fin"` existentes.
   const [kind] = useState<"op" | "fin">("op");
-  // R2-05 — filtro por FRENTE (só operacional). "" = todas as frentes.
-  // R2-08 — semeado por ?frente= ao voltar da Lista via toggle.
-  const [frenteFilter, setFrenteFilter] = useState<string>(initialFrente);
   // Ajuste A4 (2026-07-20, Adavio) — busca rápida no Kanban (cliente/código).
   const [search, setSearch] = useState("");
+  // Painel de filtros dinâmicos (fixos + campos canônicos do tema).
+  const [panelFilters, setPanelFilters] = useState<CaseFilterValues>({
+    etapaOp: "",
+    etapaFin: "",
+    responsavel: "",
+    municipio: "",
+    frente: initialFrente,
+    canonical: {},
+  });
+  // Resolve o tema_id a partir do service_type_id (lookup reverso nos temas).
+  const { data: temas } = useTemas();
+  const temaId = useMemo(() => {
+    for (const t of temas ?? []) {
+      if ((t as { service_type_id?: string | null }).service_type_id === serviceType.id) return t.id;
+    }
+    return null;
+  }, [temas, serviceType.id]);
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
@@ -271,21 +290,32 @@ function DynamicKanban({
     ),
   ).sort();
 
-  // R2-05 — o filtro de frente só se aplica ao operacional (etapas condicionais por
-  // frente são um conceito op). No financeiro, ignora.
+  // Aplica filtros do painel (frente, etapas, responsável, município, canonical).
+  const frenteFilter = panelFilters.frente;
   const applyFrente = kind === "op" && frenteFilter !== "";
-  const afterFrente = applyFrente
-    ? baseCases.filter((c) => caseFrente(c) === frenteFilter)
-    : baseCases;
+  const afterPanel = applyCaseFilters(
+    baseCases as (typeof baseCases[number] & { canonical_fields?: Record<string, unknown> | null })[],
+    panelFilters,
+  );
   // Ajuste A4 — busca rápida por nome do cliente ou código do caso.
   const q = search.trim().toLowerCase();
   const cases = q
-    ? afterFrente.filter((c) => {
+    ? afterPanel.filter((c) => {
         const nome = (c as { client_name?: string | null }).client_name ?? "";
         const code = (c as { case_code?: string | null }).case_code ?? "";
-        return nome.toLowerCase().includes(q) || code.toLowerCase().includes(q);
+        const mun = (c as { municipio?: string | null }).municipio ?? "";
+        const resp = (c as { responsavel?: string | null }).responsavel ?? "";
+        const canon = (c as { canonical_fields?: Record<string, unknown> | null }).canonical_fields;
+        const canonText = canon ? JSON.stringify(canon).toLowerCase() : "";
+        return (
+          nome.toLowerCase().includes(q) ||
+          code.toLowerCase().includes(q) ||
+          mun.toLowerCase().includes(q) ||
+          resp.toLowerCase().includes(q) ||
+          canonText.includes(q)
+        );
       })
-    : afterFrente;
+    : afterPanel;
 
   // R2-05 — colunas: oculta etapas CONDICIONAIS vazias de outra frente. Regra:
   // uma etapa com `frente_slug` (condicional) só aparece se (a) pertence à frente
@@ -341,10 +371,7 @@ function DynamicKanban({
         }
         aside={
           <div className="flex items-center gap-2">
-            {/* Ajuste A5 (2026-07-20, Adavio) — REMOVIDO o toggle Operacional/Financeiro:
-                dentro do Pipeline Operacional só aparece o operacional (o Financeiro é
-                módulo/aba própria em /casos/financeiro). `kind` fica fixo em "op". */}
-            {/* Ajuste A4 (2026-07-20) — busca rápida por cliente/código no Kanban. */}
+            {/* Busca rápida por cliente/código no Kanban. */}
             <div className="relative">
               <Search
                 size={13}
@@ -353,41 +380,10 @@ function DynamicKanban({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar cliente ou código…"
-                className="w-48 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
+                placeholder="Buscar cliente, código, município…"
+                className="w-56 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
               />
             </div>
-            {/* R2-05 — filtro por FRENTE (só no operacional; oculta colunas
-                condicionais de outras frentes quando uma frente é escolhida). */}
-            {kind === "op" && frenteOptions.length > 0 && (
-              <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
-                <button
-                  type="button"
-                  onClick={() => setFrenteFilter("")}
-                  className={
-                    frenteFilter === ""
-                      ? "px-3 py-1.5 bg-[var(--gold)] text-white"
-                      : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
-                  }
-                >
-                  Todas as frentes
-                </button>
-                {frenteOptions.map((fr) => (
-                  <button
-                    key={fr}
-                    type="button"
-                    onClick={() => setFrenteFilter(fr)}
-                    className={
-                      frenteFilter === fr
-                        ? "px-3 py-1.5 bg-[var(--gold)] text-white"
-                        : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)] border-l border-[var(--border)]"
-                    }
-                  >
-                    {fr}
-                  </button>
-                ))}
-              </div>
-            )}
             {/* R2-08 — alterna Kanban→Lista no contexto da categoria, levando a
                 frente ativa (a Lista filtra pelo MESMO service_type_id do board). */}
             <Btn
@@ -489,6 +485,16 @@ function DynamicKanban({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Painel de filtros dinâmicos (fixos + campos canônicos do tema) */}
+      <CaseFiltersPanel
+        temaId={temaId}
+        cases={baseCases as (typeof baseCases[number] & { canonical_fields?: Record<string, unknown> | null })[]}
+        filters={panelFilters}
+        onChange={setPanelFilters}
+        frenteOptions={frenteOptions.map((s) => ({ slug: s, label: s }))}
+        hideFixed={["etapaOp"]}
+      />
 
       {isError && (
         <Alert variant="destructive" className="mb-4">

@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { z } from "zod";
 
 import { Breadcrumb, Btn, Eyebrow, PageHeader } from "@/components/hv/primitives";
+import {
+  CaseFiltersPanel,
+  applyCaseFilters,
+  type CaseFilterValues,
+} from "@/components/cases/CaseFiltersPanel";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
@@ -66,6 +71,7 @@ type CaseRow = {
   valor_centavos: number | null;
   responsavel: string | null;
   created_at: string | null;
+  canonical_fields: Record<string, unknown> | null;
 };
 
 // Colunas ordenáveis. `valor` só existe quando o gate financeiro permite.
@@ -90,12 +96,17 @@ function CasosLista() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  // R2-08 — filtro de frente na Lista (chips). Semeado pelo search param.
-  const [frenteFilter, setFrenteFilter] = useState<string>(frente ?? "");
-  // Ajuste A1 (2026-07-20, Adavio) — filtros rápidos no topo: por TEMA (seed do
-  // search param) e por ETAPA operacional. Independentes do contexto de origem.
+  // Tema selecionado (seed do search param ou dropdown).
   const [temaFilter, setTemaFilter] = useState<string>(tema ?? "");
-  const [etapaFilter, setEtapaFilter] = useState<string>("");
+  // Painel de filtros dinâmicos (fixos + canonical do tema).
+  const [panelFilters, setPanelFilters] = useState<CaseFilterValues>({
+    etapaOp: "",
+    etapaFin: "",
+    responsavel: "",
+    municipio: "",
+    frente: frente ?? "",
+    canonical: {},
+  });
   // Ordenação por coluna (default: mais recentes primeiro, como o servidor já
   // devolve por created_at desc).
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -129,14 +140,14 @@ function CasosLista() {
 
   const rows: CaseRow[] = useMemo(() => (data ?? []) as CaseRow[], [data]);
 
-  // Ajuste A1 — etapas operacionais presentes nos casos (para o filtro rápido).
-  const etapaOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of rows) if (r.macrostatus_op) set.add(r.macrostatus_op);
-    return Array.from(set)
-      .map((s) => ({ value: s, label: MACRO_OP_LABELS[s as MacroOp] ?? s }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [rows]);
+  // Resolve o nome do tipo de caso: usa CASE_TYPE_LABELS para slugs legados,
+  // e o nome do tema para cases criados via tema (cujo slug é ex.: "TEMA_1").
+  const resolveTipo = (c: CaseRow): string => {
+    const label = CASE_TYPE_LABELS[c.case_type as CaseType];
+    if (label) return label;
+    if (c.tema_id) return temaName.get(c.tema_id) ?? c.case_type;
+    return c.case_type;
+  };
 
   // Frentes ofertadas no filtro: as declaradas no tema (via useFrentes) ou, sem
   // tema, as presentes nos próprios casos.
@@ -144,8 +155,6 @@ function CasosLista() {
     if (frentes && frentes.length > 0) {
       return frentes.map((f) => ({ slug: f.slug, label: f.label }));
     }
-    // Sem tema (ex.: veio da categoria do Kanban): as frentes presentes nos casos
-    // do contexto (respeita o filtro de categoria para não ofertar frentes de fora).
     const scope = cat ? rows.filter((r) => r.service_type_id === cat) : rows;
     const slugs = Array.from(
       new Set(scope.map((r) => r.frente_slug).filter((v): v is string => !!v)),
@@ -153,24 +162,30 @@ function CasosLista() {
     return slugs.map((s) => ({ slug: s, label: s }));
   }, [frentes, rows, cat]);
 
-  // Filtro combinado: search param `tema` + chip de frente + busca client-side.
-  // Aplicado sobre o CONJUNTO COMPLETO antes de ordenar/paginar (AC-3/AC-6).
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  // Pré-filtro: cat (categoria do Kanban) e tema (dropdown).
+  const preFiltered = useMemo(() => {
     return rows.filter((c) => {
-      // `cat` (categoria do Kanban) filtra pelo MESMO eixo do board: service_type_id.
       if (cat && c.service_type_id !== cat) return false;
-      // Ajuste A1 — filtros rápidos por tema e etapa operacional.
       if (temaFilter && c.tema_id !== temaFilter) return false;
-      if (etapaFilter && c.macrostatus_op !== etapaFilter) return false;
-      if (frenteFilter && (c.frente_slug ?? "") !== frenteFilter) return false;
-      if (!q) return true;
-      const tipo = (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type).toLowerCase();
+      return true;
+    });
+  }, [rows, cat, temaFilter]);
+
+  // Filtro combinado: painel de filtros dinâmicos + busca textual.
+  const filtered = useMemo(() => {
+    const afterPanel = applyCaseFilters(preFiltered, panelFilters);
+    const q = search.trim().toLowerCase();
+    if (!q) return afterPanel;
+    return afterPanel.filter((c) => {
+      const tipo = resolveTipo(c).toLowerCase();
       const op = (MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op).toLowerCase();
       const fin = (
         MACRO_FIN_LABELS[c.macrostatus_fin as MacroFin] ?? c.macrostatus_fin
       ).toLowerCase();
       const temaLabel = (c.tema_id ? (temaName.get(c.tema_id) ?? "") : "").toLowerCase();
+      const canonText = c.canonical_fields
+        ? JSON.stringify(c.canonical_fields).toLowerCase()
+        : "";
       return (
         c.case_code.toLowerCase().includes(q) ||
         (c.client_name ?? "").toLowerCase().includes(q) ||
@@ -180,10 +195,11 @@ function CasosLista() {
         temaLabel.includes(q) ||
         (c.frente_slug ?? "").toLowerCase().includes(q) ||
         (c.responsavel ?? "").toLowerCase().includes(q) ||
-        (c.municipio ?? "").toLowerCase().includes(q)
+        (c.municipio ?? "").toLowerCase().includes(q) ||
+        canonText.includes(q)
       );
     });
-  }, [rows, search, cat, temaFilter, etapaFilter, frenteFilter, temaName]);
+  }, [preFiltered, panelFilters, search, temaName]);
 
   // Ordenação sobre o filtrado COMPLETO (antes de paginar) — igual a busca atual.
   const sorted = useMemo(() => {
@@ -195,7 +211,7 @@ function CasosLista() {
         case "client_name":
           return (c.client_name ?? "").toLowerCase();
         case "case_type":
-          return (CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type).toLowerCase();
+          return resolveTipo(c).toLowerCase();
         case "tema":
           return (c.tema_id ? (temaName.get(c.tema_id) ?? "") : "").toLowerCase();
         case "frente_slug":
@@ -248,7 +264,7 @@ function CasosLista() {
   const columns: { key: SortKey; label: string }[] = [
     { key: "case_code", label: "Código" },
     { key: "client_name", label: "Cliente" },
-    { key: "case_type", label: "Tipo" },
+    { key: "case_type", label: "Tipo de Caso" },
     { key: "tema", label: "Tema" },
     { key: "frente_slug", label: "Frente" },
     { key: "macrostatus_op", label: "Operacional" },
@@ -285,7 +301,7 @@ function CasosLista() {
                     to: "/pipeline",
                     search: {
                       ...(cat ? { cat, catName: catName ?? undefined } : {}),
-                      ...(frenteFilter ? { frente: frenteFilter } : {}),
+                      ...(panelFilters.frente ? { frente: panelFilters.frente } : {}),
                     },
                   })
                 }
@@ -305,8 +321,9 @@ function CasosLista() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 min-w-[240px] max-w-md">
+      {/* Barra de busca + seletor de tema */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="relative flex-1 min-w-[240px] max-w-lg">
           <Search
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gold)]"
@@ -317,18 +334,16 @@ function CasosLista() {
               setSearch(e.target.value);
               setPage(0);
             }}
-            placeholder="Buscar por cliente, categoria, etapa, tema, frente, código…"
+            placeholder="Buscar por cliente, tipo, etapa, código, responsável, município, dados do caso…"
             className="w-full pl-9 pr-4 py-2.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
           />
         </div>
-
-        {/* Ajuste A1 (2026-07-20) — filtros rápidos: Tema e Etapa operacional. */}
         {(temas ?? []).length > 0 && (
           <select
             value={temaFilter}
             onChange={(e) => {
               setTemaFilter(e.target.value);
-              setFrenteFilter("");
+              setPanelFilters((f) => ({ ...f, frente: "" }));
               setPage(0);
             }}
             className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
@@ -341,61 +356,19 @@ function CasosLista() {
             ))}
           </select>
         )}
-        {etapaOptions.length > 0 && (
-          <select
-            value={etapaFilter}
-            onChange={(e) => {
-              setEtapaFilter(e.target.value);
-              setPage(0);
-            }}
-            className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
-          >
-            <option value="">Todas as etapas</option>
-            {etapaOptions.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {/* R2-08 — filtro de frente (chips), disponível quando há frentes. */}
-        {frenteOptions.length > 0 && (
-          <div className="flex rounded-md border border-[var(--border)] overflow-hidden text-[12px]">
-            <button
-              type="button"
-              onClick={() => {
-                setFrenteFilter("");
-                setPage(0);
-              }}
-              className={
-                frenteFilter === ""
-                  ? "px-3 py-1.5 bg-[var(--gold)] text-white"
-                  : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)]"
-              }
-            >
-              Todas as frentes
-            </button>
-            {frenteOptions.map((fr) => (
-              <button
-                key={fr.slug}
-                type="button"
-                onClick={() => {
-                  setFrenteFilter(fr.slug);
-                  setPage(0);
-                }}
-                className={
-                  frenteFilter === fr.slug
-                    ? "px-3 py-1.5 bg-[var(--gold)] text-white"
-                    : "px-3 py-1.5 text-muted-foreground hover:bg-[var(--muted)] border-l border-[var(--border)]"
-                }
-              >
-                {fr.label}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Painel de filtros dinâmicos (fixos + campos do tema) */}
+      <CaseFiltersPanel
+        temaId={temaFilter || null}
+        cases={preFiltered}
+        filters={panelFilters}
+        onChange={(f) => {
+          setPanelFilters(f);
+          setPage(0);
+        }}
+        frenteOptions={frenteOptions}
+      />
 
       {isError && (
         <Alert variant="destructive" className="mb-4">
@@ -481,7 +454,7 @@ function CasosLista() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+                      {resolveTipo(c)}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
                       {c.tema_id ? (temaName.get(c.tema_id) ?? "—") : "—"}
