@@ -309,9 +309,10 @@ export async function updatePessoa(id: string, input: Partial<CAPessoaCreate>): 
 
 export async function findPessoaByDocumento(documento: string): Promise<CAPessoa | null> {
   const result = await request<CAPessoaList>("GET", "v1/pessoas", undefined, {
-    documento,
+    documentos: documento,
   });
-  return result.items.length > 0 ? result.items[0] : null;
+  const items = result.items ?? (result as unknown as { itens?: CAPessoa[] }).itens ?? [];
+  return items.length > 0 ? items[0] : null;
 }
 
 export async function listPessoas(params?: Record<string, string>): Promise<CAPessoaList> {

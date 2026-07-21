@@ -72,8 +72,10 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       ? { cpf: client.cpf_cnpj }
       : { cnpj: client.cpf_cnpj };
 
-  // Campos base compartilhados entre POST e PUT (conforme doc da API v2).
-  const caBase = {
+  // Payload conforme doc oficial da API v2 Conta Azul.
+  // POST e PUT usam o mesmo shape (PUT inclui perfis também).
+  const caPayload = {
+    ativo: true,
     codigo: client.cpf_cnpj,
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
@@ -81,17 +83,9 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     ...(tipoPessoa === "Física" ? { rg: "N/I" } : {}),
     email: client.email ?? undefined,
     telefone_celular: client.phone ?? undefined,
+    perfis: [{ tipo_perfil: "Cliente" }],
     ...(enderecosArr.length > 0 ? { enderecos: enderecosArr } : {}),
   };
-
-  // CRIAÇÃO (POST): base + perfis.
-  const caData = {
-    ...caBase,
-    perfis: [{ tipo_perfil: "Cliente" }],
-  };
-
-  // ATUALIZAÇÃO (PUT): base (sem perfis — imutável no PUT).
-  const caUpdate = { ...caBase };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let caCustomerId = (client as any).contaazul_customer_id as string | null;
@@ -99,12 +93,12 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      // GET primeiro: preserva `codigo` e `rg` existentes.
+      // GET primeiro: preserva `codigo` e `rg` existentes se houver.
       const existingPessoa = await getPessoa(caCustomerId);
       const updatePayload = {
-        ...caUpdate,
+        ...caPayload,
         codigo: existingPessoa.codigo || client.cpf_cnpj,
-        ...(tipoPessoa === "Física" ? { rg: existingPessoa.rg || "N/I" } : {}),
+        ...(tipoPessoa === "Física" && existingPessoa.rg ? { rg: existingPessoa.rg } : {}),
       };
       console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
       await updatePessoa(caCustomerId, updatePayload);
@@ -134,8 +128,8 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       caCustomerId = existing.id;
     } else {
       try {
-        console.log("contaazul: criando pessoa com payload:", JSON.stringify(caData));
-        const newPessoa = await createPessoa(caData);
+        console.log("contaazul: criando pessoa com payload:", JSON.stringify(caPayload));
+        const newPessoa = await createPessoa(caPayload);
         caCustomerId = newPessoa.id;
         created = true;
       } catch (err) {
