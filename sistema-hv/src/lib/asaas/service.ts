@@ -10,6 +10,7 @@ import {
   findCustomerByCpfCnpj,
   getPayment,
   getPixQrCode,
+  listInstallmentPayments,
   listPaymentsByCustomer,
   updateCustomer,
   AsaasError,
@@ -185,7 +186,7 @@ export async function createCharge(input: CreateChargeInput): Promise<{
     ...(input.installmentCount && input.installmentCount > 1
       ? {
           installmentCount: input.installmentCount,
-          installmentValue: input.value,
+          totalValue: input.value,
         }
       : {}),
     ...(input.discount ? { discount: input.discount } : {}),
@@ -215,12 +216,51 @@ export async function createCharge(input: CreateChargeInput): Promise<{
   const termoId = termo?.id ?? null;
 
   // 5) Criar parcela(s) em system_parcelas
+  //    Se é parcelamento, o Asaas cria N cobranças individuais — precisamos buscar
+  //    os IDs reais de cada uma via GET /installments/{id}/payments para vincular
+  //    corretamente cada parcela local ao seu payment_id individual.
   const totalParcelas = input.installmentCount && input.installmentCount > 1 ? input.installmentCount : 1;
-  const valorCentavos = Math.round(input.value * 100);
   const parcelaIds: string[] = [];
 
-  for (let i = 0; i < totalParcelas; i++) {
-    const vencimento = addMonths(input.dueDate, i);
+  // Monta array com dados de cada parcela (payment_id individual, valor, vencimento, url)
+  type ParcelaData = { paymentId: string; valor: number; vencimento: string; url: string | null };
+  let parcelasData: ParcelaData[];
+
+  if (totalParcelas > 1 && payment.installment) {
+    // Busca as cobranças individuais do parcelamento no Asaas
+    try {
+      const installmentPayments = await listInstallmentPayments(payment.installment);
+      parcelasData = installmentPayments.data
+        .sort((a, b) => (a.installmentNumber ?? 0) - (b.installmentNumber ?? 0))
+        .map((p) => ({
+          paymentId: p.id,
+          valor: Math.round(p.value * 100),
+          vencimento: p.dueDate,
+          url: p.bankSlipUrl ?? p.invoiceUrl ?? null,
+        }));
+    } catch (err) {
+      console.error("asaas-service: erro ao listar parcelas do installment, usando fallback:", err);
+      // Fallback: cria com o ID do payment principal (comportamento anterior)
+      const valorParcelaCentavos = Math.round(Math.round(input.value * 100) / totalParcelas);
+      parcelasData = Array.from({ length: totalParcelas }, (_, i) => ({
+        paymentId: payment.id,
+        valor: valorParcelaCentavos,
+        vencimento: addMonths(input.dueDate, i),
+        url: payment.bankSlipUrl ?? payment.invoiceUrl ?? null,
+      }));
+    }
+  } else {
+    // Cobrança avulsa (1 parcela)
+    parcelasData = [{
+      paymentId: payment.id,
+      valor: Math.round(input.value * 100),
+      vencimento: input.dueDate,
+      url: payment.bankSlipUrl ?? payment.invoiceUrl ?? null,
+    }];
+  }
+
+  for (let i = 0; i < parcelasData.length; i++) {
+    const pd = parcelasData[i];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: parcela, error: pErr } = await (sb.from("system_parcelas") as any)
@@ -229,12 +269,12 @@ export async function createCharge(input: CreateChargeInput): Promise<{
         case_id: input.caseId,
         termo_id: termoId,
         numero: i + 1,
-        valor_centavos: valorCentavos,
-        vencimento,
+        valor_centavos: pd.valor,
+        vencimento: pd.vencimento,
         status: "PENDENTE",
         provider: "asaas",
-        provider_ext_id: payment.id,
-        boleto_url: payment.bankSlipUrl ?? payment.invoiceUrl ?? null,
+        provider_ext_id: pd.paymentId,
+        boleto_url: pd.url,
       })
       .select("id")
       .single();
@@ -399,9 +439,12 @@ export async function syncAsaasPagamentos(caseId?: string): Promise<{
     RECEIVED: "PAGA",
     CONFIRMED: "PAGA",
     RECEIVED_IN_CASH: "PAGA",
+    DUNNING_RECEIVED: "PAGA",
     OVERDUE: "VENCIDA",
     REFUNDED: "CANCELADA",
+    REFUND_REQUESTED: "CANCELADA",
     DELETED: "CANCELADA",
+    CHARGEBACK_REQUESTED: "CANCELADA",
   };
 
   for (const p of pendentes) {

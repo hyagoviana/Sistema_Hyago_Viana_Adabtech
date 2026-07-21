@@ -26,11 +26,13 @@ export type AsaasCustomerCreate = {
 };
 
 export type AsaasCustomer = AsaasCustomerCreate & {
+  object: "customer";
   id: string;
   dateCreated: string;
   deleted: boolean;
   personType: "FISICA" | "JURIDICA";
   city?: number;
+  cityName?: string;
   state?: string;
   country?: string;
   canDelete: boolean;
@@ -41,7 +43,15 @@ export type AsaasCustomer = AsaasCustomerCreate & {
 
 // ─── Payment / Cobrança ──────────────────────────────────────────────────────
 
+/** Tipos aceitos na CRIAÇÃO de cobrança. */
 export type AsaasBillingType = "BOLETO" | "PIX" | "CREDIT_CARD" | "UNDEFINED";
+
+/** Tipos que podem vir na RESPOSTA (inclui formas legadas/manuais). */
+export type AsaasBillingTypeResponse =
+  | AsaasBillingType
+  | "DEBIT_CARD"
+  | "TRANSFER"
+  | "DEPOSIT";
 
 export type AsaasDiscount = {
   value: number;
@@ -58,6 +68,11 @@ export type AsaasFine = {
   type?: "FIXED" | "PERCENTAGE";
 };
 
+export type AsaasPaymentCallback = {
+  successUrl: string;
+  autoRedirect?: boolean;
+};
+
 export type AsaasPaymentCreate = {
   customer: string; // Asaas customer ID
   billingType: AsaasBillingType;
@@ -65,14 +80,18 @@ export type AsaasPaymentCreate = {
   dueDate: string; // YYYY-MM-DD
   description?: string;
   externalReference?: string;
+  /** Número de parcelas (somente parcelamento). */
   installmentCount?: number;
+  /** Valor de CADA parcela (somente parcelamento). Alternativo a totalValue. */
   installmentValue?: number;
+  /** Valor TOTAL a parcelar (somente parcelamento). Alternativo a installmentValue. */
   totalValue?: number;
   discount?: AsaasDiscount;
   interest?: AsaasInterest;
   fine?: AsaasFine;
   postalService?: boolean;
   daysAfterDueDateToRegistrationCancellation?: number;
+  callback?: AsaasPaymentCallback;
 };
 
 export type AsaasPaymentStatus =
@@ -92,19 +111,24 @@ export type AsaasPaymentStatus =
   | "AWAITING_RISK_ANALYSIS";
 
 export type AsaasPayment = {
+  object: "payment";
   id: string;
   dateCreated: string;
   customer: string;
+  subscription?: string;
   installment?: string;
+  checkoutSession?: string;
   paymentLink?: string;
   value: number;
   netValue: number;
   originalValue?: number;
   interestValue?: number;
   description?: string;
-  billingType: AsaasBillingType;
+  billingType: AsaasBillingTypeResponse;
+  canBePaidAfterDueDate?: boolean;
   confirmedDate?: string;
   pixTransaction?: string;
+  pixQrCodeId?: string;
   status: AsaasPaymentStatus;
   dueDate: string;
   originalDueDate: string;
@@ -124,7 +148,11 @@ export type AsaasPayment = {
   bankSlipUrl?: string;
   lastInvoiceViewedDate?: string;
   lastBankSlipViewedDate?: string;
+  discount?: AsaasDiscount;
+  fine?: AsaasFine;
+  interest?: AsaasInterest;
   postalService: boolean;
+  daysAfterDueDateToRegistrationCancellation?: number;
 };
 
 // ─── Pix QR Code ─────────────────────────────────────────────────────────────

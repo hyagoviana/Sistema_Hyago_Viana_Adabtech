@@ -112,7 +112,7 @@ export async function updateCustomer(
   asaasId: string,
   input: Partial<AsaasCustomerCreate>,
 ): Promise<AsaasCustomer> {
-  return request<AsaasCustomer>("POST", `customers/${asaasId}`, input);
+  return request<AsaasCustomer>("PUT", `customers/${asaasId}`, input);
 }
 
 /** Busca um cliente pelo ID do Asaas. */
@@ -142,6 +142,15 @@ export async function listPaymentsByCustomer(
 /** Deleta/cancela uma cobrança. */
 export async function deletePayment(paymentId: string): Promise<{ deleted: boolean; id: string }> {
   return request<{ deleted: boolean; id: string }>("DELETE", `payments/${paymentId}`);
+}
+
+// ─── Installments (Parcelamentos) ───────────────────────────────────────────
+
+/** Lista as cobranças individuais de um parcelamento. */
+export async function listInstallmentPayments(
+  installmentId: string,
+): Promise<AsaasList<AsaasPayment>> {
+  return request<AsaasList<AsaasPayment>>("GET", `installments/${installmentId}/payments`);
 }
 
 // ─── Pix ─────────────────────────────────────────────────────────────────────
