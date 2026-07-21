@@ -76,11 +76,12 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     ...enderecoObj,
   };
 
-  // ATUALIZAÇÃO (PUT): o Conta Azul exige `tipo_pessoa` em toda requisição.
-  // `perfis` é rejeitado no PUT (imutável). Envia tipo_pessoa + dados editáveis.
+  // ATUALIZAÇÃO (PUT): o Conta Azul exige tipo_pessoa + documento em toda
+  // requisição (são obrigatórios mesmo no PUT). Só `perfis` é rejeitado.
   const caUpdate = {
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
+    documento: client.cpf_cnpj,
     email: client.email ?? undefined,
     telefone: client.phone ?? undefined,
     ...enderecoObj,
