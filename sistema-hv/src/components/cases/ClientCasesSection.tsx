@@ -256,8 +256,10 @@ function TemaSection({
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-3 pb-1 border-b border-[var(--border)]">
-        <h3 className="font-display text-[17px] font-semibold text-[var(--navy)]">{label}</h3>
-        <span className="text-[12px] text-muted-foreground">({count})</span>
+        <span className="text-[12px] text-muted-foreground uppercase tracking-wide">
+          {label}
+        </span>
+        <span className="text-[11px] text-muted-foreground">({count})</span>
       </div>
       <div className="space-y-5">
         <CaseGroup title="Casos efetivados" items={clientes} />
@@ -297,14 +299,14 @@ function CaseCard({ c }: { c: CaseListItem }) {
     <li className="card-editorial !p-4">
       <div className="flex items-center gap-4">
         <Link to="/casos/$id" params={{ id: c.id }} className="flex-1 min-w-0 group">
-          <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+          <div className="text-[15px] text-[var(--navy)] font-semibold group-hover:text-[var(--gold-700)] transition-colors">
             {(c as { caso_pasta_nome?: string | null }).caso_pasta_nome
               ?? CASE_TYPE_LABELS[c.case_type as CaseType]
               ?? c.case_type}
-          </span>
-          <div className="text-[15px] text-[var(--navy)] font-semibold mt-0.5 group-hover:text-[var(--gold-700)] transition-colors">
-            {c.case_code}
           </div>
+          <span className="text-[11px] text-muted-foreground tracking-wide mt-0.5">
+            {c.case_code}
+          </span>
           <div className="flex items-center gap-2 mt-1">
             <Badge tone="gold">
               {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
