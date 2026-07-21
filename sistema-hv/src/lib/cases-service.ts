@@ -219,6 +219,8 @@ export async function createCase(
       // service_type_id derivado do case_type — NÃO tocado.
       tema_id: input.tema_id ?? null,
       frente_slug: input.frente_slug ?? null,
+      caso_pasta_nome: input.caso_pasta_nome ?? null,
+      caso_pasta_drive_id: input.caso_pasta_drive_id ?? null,
       macrostatus_op: defaultOpStatus,
       macrostatus_fin: defaultFinStatus,
       macrostatus_comercial: defaultComercialStatus,

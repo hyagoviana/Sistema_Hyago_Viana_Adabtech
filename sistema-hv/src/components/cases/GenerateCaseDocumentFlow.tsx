@@ -61,6 +61,7 @@ export function GenerateCaseDocumentFlow({
   frenteSlug,
   autoFill,
   initialMode,
+  initialFolderId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -74,6 +75,9 @@ export function GenerateCaseDocumentFlow({
   // ITEM 2 — quando o chamador já sabe o modo (ex.: ficha do cliente já escolheu
   // "Documento do caso" e o caso), pula a pergunta Procuração vs Caso.
   initialMode?: GenMode;
+  // Pasta de caso pré-selecionada (drive_folder_id) — pula a etapa de seleção de
+  // pasta e vai direto para a seleção de template dentro dela.
+  initialFolderId?: string | null;
 }) {
   const generate = useGenerateCaseDocument(caseId);
   const finalize = useFinalizeCaseDocument(caseId);
@@ -145,6 +149,7 @@ export function GenerateCaseDocumentFlow({
         caseType={caseType}
         frenteSlug={frenteSlug}
         initialMode={initialMode}
+        initialFolderId={initialFolderId}
         onGenerate={async (templateId, title, values, docKind) => {
           try {
             const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
@@ -271,6 +276,7 @@ function PickDialog({
   caseType,
   frenteSlug,
   initialMode,
+  initialFolderId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -285,13 +291,17 @@ function PickDialog({
   caseType?: string;
   frenteSlug?: string | null;
   initialMode?: GenMode;
+  initialFolderId?: string | null;
 }) {
-  const [mode, setMode] = useState<GenMode | null>(initialMode ?? null);
+  const [mode, setMode] = useState<GenMode | null>(
+    initialMode ?? (initialFolderId ? "caso" : null),
+  );
   const [templateId, setTemplateId] = useState<string>("");
   const [values, setValues] = useState<Record<string, string>>({});
   // ITEM 4 — "Documento de caso": passo 1 = escolher 1 das 6 pastas; passo 2 =
   // só os docs daquela pasta (filtro por source_folder_id).
-  const [folderId, setFolderId] = useState<string | null>(null);
+  // Quando initialFolderId é passado, pula a escolha de pasta.
+  const [folderId, setFolderId] = useState<string | null>(initialFolderId ?? null);
 
   // (2026-07-10) — as pastas são POR CATEGORIA (system_service_type_folders).
   // Resolve o tipo do caso pelo slug e busca suas pastas de caso e de procuração.
@@ -314,12 +324,12 @@ function PickDialog({
 
   useEffect(() => {
     if (open) {
-      setMode(initialMode ?? null);
+      setMode(initialMode ?? (initialFolderId ? "caso" : null));
       setTemplateId("");
       setValues({});
-      setFolderId(null);
+      setFolderId(initialFolderId ?? null);
     }
-  }, [open, initialMode]);
+  }, [open, initialMode, initialFolderId]);
 
   const templates = ((mode === "procuracao" ? procTemplates : folderTemplates) ?? []) as Array<{
     id: string;

@@ -43,7 +43,8 @@ import { cn } from "@/lib/utils";
 import { useClientsList } from "@/hooks/useClients";
 import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
-import { useTemas } from "@/hooks/useTemas";
+import { useTemas, useTemaServiceType } from "@/hooks/useTemas";
+import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
 import { useUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/lib/auth";
 import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
@@ -57,6 +58,9 @@ export type CreatedCaseLite = {
   frente_slug: string | null;
   case_code?: string;
   municipio?: string | null;
+  /** Pasta de caso (drive_folder_id) escolhida na criação — pula a etapa de
+   *  seleção de pasta no fluxo de geração de documentos. */
+  casoFolderId?: string | null;
 };
 
 type Props = {
@@ -99,7 +103,15 @@ export function CaseFormDialog({
   // Tema selecionado (dirige o select de frente e o dual-write). Vazio = usar o
   // caminho legado por categoria (case_type).
   const [temaId, setTemaId] = useState<string>("");
+  // Pasta de caso (drive folder) selecionada dentro do tema.
+  const [casoFolderId, setCasoFolderId] = useState<string>("");
   const hasTemas = (temas ?? []).length > 0;
+
+  // Resolve o service_type interno do tema para carregar as pastas de caso.
+  const selectedTema = (temas ?? []).find((t) => t.id === temaId);
+  const temaServiceTypeId = (selectedTema as { service_type_id?: string | null } | undefined)
+    ?.service_type_id ?? null;
+  const { data: casoFolders } = useTypeFolders(temaServiceTypeId, "caso");
 
   // Responsáveis selecionáveis: advogados (titular/associado) + ADMIN (ajuste A8,
   // 2026-07-20 — o admin deve aparecer no seletor). Só usuários ATIVOS.
@@ -128,6 +140,7 @@ export function CaseFormDialog({
   useEffect(() => {
     if (open) {
       setTemaId("");
+      setCasoFolderId("");
       form.reset({
         client_id: presetClientId ?? "",
         case_type: serviceTypes?.[0]?.slug ?? "",
@@ -148,33 +161,34 @@ export function CaseFormDialog({
       toast.error("Selecione um tema para o caso.");
       return;
     }
+    // Caso (pasta) obrigatório quando o tema tem pastas vinculadas.
+    const folders = casoFolders ?? [];
+    if (hasTemas && temaId && folders.length > 0 && !casoFolderId) {
+      toast.error("Selecione o caso dentro do tema.");
+      return;
+    }
+    // Resolve o nome da pasta selecionada para gravar no caso.
+    const selectedFolder = folders.find((f) => f.drive_folder_id === casoFolderId);
     try {
-      // R2-05 — quando o caso nasce por TEMA, `case_type` é um placeholder (o slug
-      // do tema): o servidor (createCase) resolve o service_type INTERNO do tema e
-      // sobrescreve `case_type` com o slug interno. `tema_id`+`frente_slug` vão no
-      // dual-write. Sem tema, usa o `case_type` do select de categoria (legado).
-      // Situação inicial DERIVADA do cadastro (2026-07-19) — sem seletor no popup.
-      // Cadastro já é CLIENTE → o caso nasce direto no Operacional; cadastro LEAD →
-      // nasce no Comercial (aguardando assinatura). A virada automática lead→cliente
-      // ao assinar segue valendo.
       const comoCliente = clienteEhCliente === true;
       const created = await create.mutateAsync({
         ...data,
         tema_id: temaId || null,
+        caso_pasta_nome: selectedFolder?.name ?? null,
+        caso_pasta_drive_id: casoFolderId || null,
         comercial: !comoCliente,
         iniciar_como_cliente: comoCliente,
         procuracao_template_id: undefined,
       });
       toast.success(`Caso ${created.case_code} criado — agora escolha os documentos`);
       onOpenChange(false);
-      // Abre a geração de documentos do tema (pasta de casos/procurações →
-      // documento → variáveis → Word → ZapSign) para este caso recém-criado.
       onCreated?.({
         id: created.id,
         case_type: created.case_type,
         frente_slug: (created as { frente_slug?: string | null }).frente_slug ?? null,
         case_code: created.case_code,
         municipio: (created as { municipio?: string | null }).municipio ?? null,
+        casoFolderId: casoFolderId || null,
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
@@ -185,11 +199,10 @@ export function CaseFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Novo tema</DialogTitle>
+          <DialogTitle>Novo caso</DialogTitle>
           <DialogDescription>
-            Escolha o tema (e a frente) deste cadastro. Ao criar, você escolhe a pasta e o documento
-            de caso/procuração do tema para gerar. A situação (Comercial × Operacional) é definida
-            pelo estado do cadastro — não precisa selecionar aqui.
+            Escolha o tema e o caso deste cadastro. Ao criar, você escolhe o documento para gerar.
+            A situação (Comercial × Operacional) é definida pelo estado do cadastro.
           </DialogDescription>
         </DialogHeader>
 
@@ -277,8 +290,9 @@ export function CaseFormDialog({
                     // schema (case_type min(1)) e refletir a intenção.
                     const tema = (temas ?? []).find((t) => t.id === v);
                     if (tema) form.setValue("case_type", tema.slug);
-                    // Reseta a frente ao trocar de tema.
+                    // Reseta a frente e o caso ao trocar de tema.
                     form.setValue("frente_slug", null);
+                    setCasoFolderId("");
                   }}
                 >
                   <SelectTrigger>
@@ -295,9 +309,28 @@ export function CaseFormDialog({
               </div>
             )}
 
-            {/* Frente REMOVIDA do popup (2026-07-19) — o owner não quer escolher
-                frente aqui. Sem frente, as pastas de caso/procuração listadas na
-                geração de documentos são as de "todo o tema". */}
+            {/* Seletor de CASO (pasta de caso do tema). Aparece quando o tema
+                selecionado tem pastas de caso vinculadas. */}
+            {hasTemas && temaId && (casoFolders ?? []).length > 0 && (
+              <div className="space-y-2">
+                <Label>Caso *</Label>
+                <Select
+                  value={casoFolderId}
+                  onValueChange={(v) => setCasoFolderId(v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o caso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(casoFolders ?? []).map((f) => (
+                      <SelectItem key={f.id} value={f.drive_folder_id}>
+                        {f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Categoria legada (fallback). SÓ aparece quando NÃO há temas
                 cadastrados. Com temas, o caso nasce sempre por TEMA→FRENTE (o dono

@@ -149,7 +149,7 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
         </h2>
         {podeEditar && (
           <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus size={14} className="mr-1.5" /> Novo tema
+            <Plus size={14} className="mr-1.5" /> Novo caso
           </Button>
         )}
       </div>
@@ -170,7 +170,7 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
         </div>
       ) : cases.length === 0 ? (
         <div className="card-editorial !p-8 text-center text-muted-foreground text-sm">
-          Esse cliente ainda não tem casos. Clique em "Novo tema" pra começar.
+          Esse cliente ainda não tem casos. Clique em "Novo caso" pra começar.
         </div>
       ) : (
         // R1-04 — nível 1: um bloco por TEMA (header + rótulo amigável +
@@ -206,6 +206,7 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
           caseId={genFor.id}
           caseType={genFor.case_type}
           frenteSlug={genFor.frente_slug}
+          initialFolderId={genFor.casoFolderId}
           autoFill={(() => {
             let af = buildAutoFillFromClient(fullClient ?? {}, genFor);
             const municipioRow = (municipios ?? []).find(
@@ -297,7 +298,9 @@ function CaseCard({ c }: { c: CaseListItem }) {
       <div className="flex items-center gap-4">
         <Link to="/casos/$id" params={{ id: c.id }} className="flex-1 min-w-0 group">
           <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
-            {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
+            {(c as { caso_pasta_nome?: string | null }).caso_pasta_nome
+              ?? CASE_TYPE_LABELS[c.case_type as CaseType]
+              ?? c.case_type}
           </span>
           <div className="text-[15px] text-[var(--navy)] font-semibold mt-0.5 group-hover:text-[var(--gold-700)] transition-colors">
             {c.case_code}

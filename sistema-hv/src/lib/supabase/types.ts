@@ -846,6 +846,8 @@ export type Database = {
           procuracao_assinada_at: string | null;
           tema_id: string | null;
           frente_slug: string | null;
+          caso_pasta_nome: string | null;
+          caso_pasta_drive_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -889,6 +891,8 @@ export type Database = {
           procuracao_assinada_at?: string | null;
           tema_id?: string | null;
           frente_slug?: string | null;
+          caso_pasta_nome?: string | null;
+          caso_pasta_drive_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

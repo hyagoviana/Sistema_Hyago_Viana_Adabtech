@@ -65,6 +65,7 @@ type CaseRow = {
   service_type_id: string | null;
   tema_id: string | null;
   frente_slug: string | null;
+  caso_pasta_nome: string | null;
   macrostatus_op: string;
   macrostatus_fin: string;
   municipio: string | null;
@@ -140,9 +141,11 @@ function CasosLista() {
 
   const rows: CaseRow[] = useMemo(() => (data ?? []) as CaseRow[], [data]);
 
-  // Resolve o nome do tipo de caso: usa CASE_TYPE_LABELS para slugs legados,
-  // e o nome do tema para cases criados via tema (cujo slug é ex.: "TEMA_1").
+  // Resolve o nome do tipo de caso: prioriza caso_pasta_nome (pasta de caso
+  // escolhida na criação), depois CASE_TYPE_LABELS para slugs legados, e por
+  // último o nome do tema.
   const resolveTipo = (c: CaseRow): string => {
+    if (c.caso_pasta_nome) return c.caso_pasta_nome;
     const label = CASE_TYPE_LABELS[c.case_type as CaseType];
     if (label) return label;
     if (c.tema_id) return temaName.get(c.tema_id) ?? c.case_type;

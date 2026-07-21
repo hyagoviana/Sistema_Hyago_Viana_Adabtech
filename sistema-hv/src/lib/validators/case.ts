@@ -11,6 +11,9 @@ export const caseCreateSchema = z.object({
   // (case_type = slug do service_type) segue funcionando sem tema.
   tema_id: z.string().uuid().optional().nullable(),
   frente_slug: z.string().trim().max(60).optional().nullable(),
+  // Pasta de caso do tema escolhida na criação (ex.: "01- Abatimento ESF DGM").
+  caso_pasta_nome: z.string().trim().max(200).optional().nullable(),
+  caso_pasta_drive_id: z.string().trim().max(200).optional().nullable(),
   macrostatus_op: z.enum(MACRO_OP).optional(),
   macrostatus_fin: z.enum(MACRO_FIN).optional(),
   proximo_passo: z.string().trim().max(500).optional().nullable(),
