@@ -225,6 +225,22 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
     if (autoField === "dados_pessoais") {
       return buildDadosPessoais(field.key, data);
     }
+    // Novos auto_fields — resolvem via canonical (rótulos PT injetados em
+    // buildAutoFillFromClient). Se o canonical não resolver, tenta o campo direto.
+    if (autoField === "rg") return data.rg ?? canonicalLookup("RG", data.canonical);
+    if (autoField === "estado_civil")
+      return data.estadoCivil ?? canonicalLookup("Estado Civil", data.canonical);
+    if (autoField === "endereco")
+      return data.enderecoCompleto ?? canonicalLookup("Endereço", data.canonical);
+    if (autoField === "cep") return data.cep ?? canonicalLookup("CEP", data.canonical);
+    if (autoField === "data_nascimento")
+      return canonicalLookup("Data de Nascimento", data.canonical);
+    if (autoField === "nacionalidade")
+      return canonicalLookup("Nacionalidade", data.canonical);
+    if (autoField === "orgao_expedidor")
+      return data.rgOrgao ?? canonicalLookup("Órgão Expedidor", data.canonical);
+    if (autoField === "bairro") return canonicalLookup("Bairro", data.canonical);
+    if (autoField === "logradouro") return canonicalLookup("Rua", data.canonical);
   }
 
   // Fallback: match by key content (for manually created templates)
@@ -293,12 +309,16 @@ export function buildAutoFillFromClient(
     rg?: string | null;
     email?: string | null;
     phone?: string | null;
+    birth_date?: string | null;
+    person_type?: string | null;
     address?: unknown;
     professional_data?: unknown;
+    custom_fields?: unknown;
   },
   caso?: {
     municipio?: string | null;
     case_code?: string | null;
+    case_type?: string | null;
     responsavel?: string | null;
     canonical_fields?: unknown;
   },
@@ -345,20 +365,180 @@ export function buildAutoFillFromClient(
     canonical[def.label] = String(raw);
   }
 
-  // Endereço completo: "Rua X, nº Y, Complemento, Bairro, Cidade - UF".
+  // -------------------------------------------------------------------------
+  // DADOS DO CLIENTE expostos com rótulos em PORTUGUÊS no canonical.
+  // O canonicalLookup no final de resolveAutoValue casa por nome normalizado,
+  // então qualquer placeholder no documento escrito em português
+  // (ex.: <RG>, <estado civil>, <endereço>) resolve automaticamente.
+  // -------------------------------------------------------------------------
+
+  // Dados base
+  if (client.full_name) {
+    canonical["Nome"] = client.full_name;
+    canonical["Nome Completo"] = client.full_name;
+    canonical["Nome do Cliente"] = client.full_name;
+    canonical["Nome do Médico"] = client.full_name;
+    canonical["Nome do Profissional"] = client.full_name;
+  }
+  if (client.cpf_cnpj) {
+    canonical["CPF"] = formatCpfCnpj(client.cpf_cnpj);
+    canonical["CPF/CNPJ"] = formatCpfCnpj(client.cpf_cnpj);
+    canonical["Documento"] = formatCpfCnpj(client.cpf_cnpj);
+  }
+  if (client.email) {
+    canonical["E-mail"] = client.email;
+    canonical["Email"] = client.email;
+  }
+  if (client.phone) {
+    canonical["Telefone"] = client.phone;
+    canonical["Celular"] = client.phone;
+    canonical["Fone"] = client.phone;
+  }
+  if (client.rg) {
+    canonical["RG"] = client.rg;
+    canonical["Identidade"] = client.rg;
+  }
+
+  // Tipo de pessoa
+  if (client.person_type) {
+    canonical["Tipo de Pessoa"] = client.person_type === "PJ" ? "Pessoa Jurídica" : "Pessoa Física";
+  }
+
+  // Data de nascimento
+  if (client.birth_date) {
+    // Formata ISO (YYYY-MM-DD) → DD/MM/YYYY
+    const [y, m, d] = client.birth_date.split("-");
+    const formatted = d && m && y ? `${d}/${m}/${y}` : client.birth_date;
+    canonical["Data de Nascimento"] = formatted;
+    canonical["Nascimento"] = formatted;
+  }
+
+  // Dados profissionais
+  const estadoCivil = pick(prof, "estado_civil");
+  const rgOrgao = pick(prof, "rg_orgao");
+  const crm = pick(prof, "crm_numero");
+  const crmUf = pick(prof, "crm_uf");
+  const oab = pick(prof, "oab_numero");
+  const oabUf = pick(prof, "oab_uf");
+  const espec = pick(prof, "especialidade");
+  const vincInst = pick(prof, "vinculo_institucional");
+
+  if (estadoCivil) canonical["Estado Civil"] = estadoCivil;
+  if (rgOrgao) {
+    canonical["Órgão Expedidor"] = rgOrgao;
+    canonical["Orgão Expedidor"] = rgOrgao; // sem acento
+    canonical["RG Órgão"] = rgOrgao;
+  }
+  if (crm) canonical["CRM"] = crm;
+  if (crmUf) canonical["CRM UF"] = crmUf;
+  if (crm && crmUf) canonical["CRM Completo"] = `${crm}/${crmUf}`;
+  if (oab) canonical["OAB"] = oab;
+  if (oabUf) canonical["OAB UF"] = oabUf;
+  if (oab && oabUf) canonical["OAB Completo"] = `${oab}/${oabUf}`;
+  canonical["Especialidade"] = espec || "Sem especialidade";
+  if (vincInst) canonical["Vínculo Institucional"] = vincInst;
+
+  // Campos extras do professional_data (graduação, residência)
+  const instGrad = pick(prof, "instituicao_graduacao");
+  const anoForm = pick(prof, "ano_formatura");
+  const resHosp = pick(prof, "residencia_hospital");
+  const resInicio = pick(prof, "residencia_inicio");
+  const resTermino = pick(prof, "residencia_termino");
+  const resEspec = pick(prof, "residencia_especialidade");
+  const observacoes = pick(prof, "observacoes");
+
+  if (instGrad) {
+    canonical["Instituição de Graduação"] = instGrad;
+    canonical["Universidade"] = instGrad;
+    canonical["Faculdade"] = instGrad;
+  }
+  if (anoForm) {
+    canonical["Ano de Formatura"] = anoForm;
+    canonical["Formatura"] = anoForm;
+  }
+  canonical["Hospital da Residência"] = resHosp || "Sem residência";
+  canonical["Residência Hospital"] = resHosp || "Sem residência";
+  if (resInicio) {
+    canonical["Início da Residência"] = resInicio;
+    canonical["Residência Início"] = resInicio;
+  }
+  if (resTermino) {
+    canonical["Término da Residência"] = resTermino;
+    canonical["Residência Término"] = resTermino;
+  }
+  canonical["Especialidade da Residência"] = resEspec || "Sem residência";
+  canonical["Residência Especialidade"] = resEspec || "Sem residência";
+  if (observacoes) canonical["Observações"] = observacoes;
+
+  // Endereço — componentes individuais + completo
   const street = pick(addr, "street");
   const number = pick(addr, "number");
+  const complement = pick(addr, "complement");
+  const neighborhood = pick(addr, "neighborhood");
+  const addrCity = pick(addr, "city");
+  const addrState = pick(addr, "state");
+  const zipcode = pick(addr, "zipcode");
+
+  if (street) {
+    canonical["Rua"] = street;
+    canonical["Logradouro"] = street;
+  }
+  if (number) canonical["Número"] = number;
+  if (complement) canonical["Complemento"] = complement;
+  if (neighborhood) {
+    canonical["Bairro"] = neighborhood;
+  }
+  if (addrCity) canonical["Cidade"] = addrCity;
+  if (addrState) {
+    canonical["Estado"] = addrState;
+    canonical["UF"] = addrState;
+  }
+  if (zipcode) {
+    canonical["CEP"] = formatCep(zipcode);
+    canonical["Código Postal"] = formatCep(zipcode);
+  }
+
   const endParts = [
     street ? (number ? `${street}, nº ${number}` : street) : undefined,
-    pick(addr, "complement"),
-    pick(addr, "neighborhood"),
-    pick(addr, "city")
-      ? pick(addr, "state")
-        ? `${pick(addr, "city")} - ${pick(addr, "state")}`
-        : pick(addr, "city")
+    complement,
+    neighborhood,
+    addrCity
+      ? addrState
+        ? `${addrCity} - ${addrState}`
+        : addrCity
       : undefined,
   ].filter(Boolean) as string[];
-  const zipcode = pick(addr, "zipcode");
+
+  if (endParts.length) {
+    canonical["Endereço"] = endParts.join(", ");
+    canonical["Endereço Completo"] = endParts.join(", ");
+  }
+
+  // Nacionalidade — hardcoded (não há campo no cadastro, mas é comum em docs).
+  canonical["Nacionalidade"] = "brasileiro(a)";
+
+  // Dados do CASO
+  if (caso?.municipio) {
+    canonical["Município"] = caso.municipio;
+  }
+  if (caso?.case_code) {
+    canonical["Código do Caso"] = caso.case_code;
+    canonical["Número do Caso"] = caso.case_code;
+  }
+  if (caso?.case_type) {
+    canonical["Tipo do Caso"] = caso.case_type;
+  }
+  if (caso?.responsavel) {
+    canonical["Responsável"] = caso.responsavel;
+  }
+
+  // Custom fields do cliente — expostos com as chaves originais (já em PT).
+  const customRaw = (client.custom_fields ?? {}) as Record<string, unknown>;
+  for (const [k, v] of Object.entries(customRaw)) {
+    if (typeof v === "string" && v) canonical[k] = v;
+    else if (typeof v === "number") canonical[k] = String(v);
+    else if (typeof v === "boolean") canonical[k] = v ? "Sim" : "Não";
+  }
 
   return {
     clientName: client.full_name ?? undefined,
@@ -366,20 +546,20 @@ export function buildAutoFillFromClient(
     municipio: caso?.municipio ?? undefined,
     email: client.email ?? undefined,
     phone: client.phone ?? undefined,
-    city: pick(addr, "city"),
-    state: pick(addr, "state"),
-    crm_numero: pick(prof, "crm_numero"),
-    crm_uf: pick(prof, "crm_uf"),
-    oab_numero: pick(prof, "oab_numero"),
-    oab_uf: pick(prof, "oab_uf"),
-    especialidade: pick(prof, "especialidade"),
-    vinculo_institucional: pick(prof, "vinculo_institucional"),
+    city: addrCity,
+    state: addrState,
+    crm_numero: crm,
+    crm_uf: crmUf,
+    oab_numero: oab,
+    oab_uf: oabUf,
+    especialidade: espec,
+    vinculo_institucional: vincInst,
     caseCode: caso?.case_code ?? undefined,
     responsavel: caso?.responsavel ?? undefined,
     // Autofill do bloco "dados pessoais".
     rg: client.rg ?? undefined,
-    rgOrgao: pick(prof, "rg_orgao"),
-    estadoCivil: pick(prof, "estado_civil"),
+    rgOrgao,
+    estadoCivil,
     enderecoCompleto: endParts.length ? endParts.join(", ") : undefined,
     cep: zipcode ? formatCep(zipcode) : undefined,
     canonical: Object.keys(canonical).length ? canonical : undefined,

@@ -146,13 +146,48 @@ function detectAutoField(placeholder: string): string | null {
     lower === "nome" ||
     lower === "nome_cliente" ||
     lower === "nome_do_cliente" ||
-    lower === "client_name"
+    lower === "client_name" ||
+    lower === "nome do médico" ||
+    lower === "nome do profissional"
   )
     return "client_name";
   // CPF
-  if (/\bcpf\b|\bcnpj\b/.test(lower)) return "cpf";
+  if (/\bcpf\b|\bcnpj\b|\bdocumento\b/.test(lower)) return "cpf";
   // Municipality
-  if (/\bmunic[ií]pio\b|\bcidade\b/.test(lower)) return "municipio";
+  if (/\bmunic[ií]pio\b/.test(lower)) return "municipio";
+  // E-mail
+  if (/\be[-_]?mail\b/.test(lower)) return "email";
+  // Phone
+  if (/\b(telefone|celular|fone|phone)\b/.test(lower)) return "phone";
+  // RG
+  if (lower === "rg" || lower === "identidade") return "rg";
+  // Estado civil
+  if (/\bestado civil\b/.test(lower)) return "estado_civil";
+  // CRM
+  if (/\bcrm\b/.test(lower) && !/\buf\b/.test(lower)) return "crm";
+  if (/\bcrm.uf\b|\buf.crm\b/.test(lower)) return "crm_uf";
+  // OAB
+  if (/\boab\b/.test(lower) && !/\buf\b/.test(lower)) return "oab";
+  // Especialidade
+  if (/\bespecialidade\b/.test(lower)) return "especialidade";
+  // Endereço / CEP
+  if (/\bendere[cç]o\b/.test(lower)) return "endereco";
+  if (lower === "cep" || /\bc[oó]digo postal\b/.test(lower)) return "cep";
+  // Data de nascimento
+  if (/\b(data de nascimento|nascimento)\b/.test(lower)) return "data_nascimento";
+  // Cidade / UF / Estado
+  if (/\bcidade\b/.test(lower)) return "cidade";
+  if (lower === "uf" || lower === "estado") return "uf";
+  // Nacionalidade
+  if (/\bnacionalidade\b/.test(lower)) return "nacionalidade";
+  // Órgão expedidor
+  if (/\b[oó]rg[aã]o expedi\w*\b/.test(lower)) return "orgao_expedidor";
+  // Bairro / Logradouro / Complemento / Número
+  if (/\bbairro\b/.test(lower)) return "bairro";
+  if (/\blogradouro\b|\brua\b/.test(lower)) return "logradouro";
+  // Responsável / Código do caso
+  if (/\brespons[aá]vel\b/.test(lower)) return "responsavel";
+  if (/\bc[oó]digo.*caso\b|\bn[uú]mero.*caso\b/.test(lower)) return "case_code";
   return null;
 }
 

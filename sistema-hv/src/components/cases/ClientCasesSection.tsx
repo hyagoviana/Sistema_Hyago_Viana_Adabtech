@@ -11,7 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient } from "@/hooks/useClients";
 import { usePodeEditarAlgum } from "@/hooks/usePermissions";
-import { buildAutoFillFromClient } from "@/lib/cases/document-autofill";
+import {
+  augmentWithMunicipio,
+  augmentWithPerfil,
+  buildAutoFillFromClient,
+} from "@/lib/cases/document-autofill";
+import { useMunicipios, usePerfis } from "@/hooks/useReferencias";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { useTemas } from "@/hooks/useTemas";
 import {
@@ -106,6 +111,8 @@ type Props = {
 export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
   const { data, isLoading, isError, error } = useCasesList({ client_id: clientId });
   const { data: fullClient } = useClient(clientId);
+  const { data: municipios } = useMunicipios();
+  const { data: perfis } = usePerfis();
   const podeEditar = usePodeEditarAlgum(["comercial", "operacional"]);
   const [createOpen, setCreateOpen] = useState(false);
   // Caso recém-criado cujos documentos (pasta de casos/procurações do tema) o
@@ -195,7 +202,27 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
           caseId={genFor.id}
           caseType={genFor.case_type}
           frenteSlug={genFor.frente_slug}
-          autoFill={buildAutoFillFromClient(fullClient ?? {}, genFor)}
+          autoFill={(() => {
+            let af = buildAutoFillFromClient(fullClient ?? {}, genFor);
+            const municipioRow = (municipios ?? []).find(
+              (m) =>
+                m.nome.trim().toLowerCase() ===
+                (genFor.municipio ?? "").trim().toLowerCase(),
+            );
+            af = augmentWithMunicipio(af, municipioRow);
+            const perfilNum = Object.entries(af.canonical ?? {}).find(
+              ([k]) => /perfil/i.test(k) && !/informa/i.test(k),
+            )?.[1];
+            const perfilRow = perfilNum
+              ? (perfis ?? []).find(
+                  (p) =>
+                    p.nome.trim().toLowerCase() ===
+                    perfilNum.trim().toLowerCase(),
+                )
+              : undefined;
+            af = augmentWithPerfil(af, perfilRow);
+            return af;
+          })()}
         />
       )}
     </>

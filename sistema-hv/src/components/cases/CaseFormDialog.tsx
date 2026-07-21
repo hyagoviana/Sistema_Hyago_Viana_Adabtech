@@ -56,6 +56,7 @@ export type CreatedCaseLite = {
   case_type: string;
   frente_slug: string | null;
   case_code?: string;
+  municipio?: string | null;
 };
 
 type Props = {
@@ -173,6 +174,7 @@ export function CaseFormDialog({
         case_type: created.case_type,
         frente_slug: (created as { frente_slug?: string | null }).frente_slug ?? null,
         case_code: created.case_code,
+        municipio: (created as { municipio?: string | null }).municipio ?? null,
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar caso");
