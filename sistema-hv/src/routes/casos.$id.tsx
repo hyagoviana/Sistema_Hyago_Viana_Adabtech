@@ -195,7 +195,9 @@ function CasoDetalhe() {
 
   const dias = daysSince(caso.status_changed_at);
   const diasFin = daysSince(caso.status_fin_changed_at);
-  const tipoLabel = CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
+  const tipoLabel = (caso as { caso_pasta_nome?: string | null }).caso_pasta_nome
+    ?? CASE_TYPE_LABELS[caso.case_type as CaseType]
+    ?? caso.case_type;
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
