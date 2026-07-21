@@ -100,6 +100,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       : {}),
     email: client.email ?? undefined,
     telefone_celular: client.phone ?? undefined,
+    telefone_comercial: client.phone ?? undefined,
     perfis: [{ tipo_perfil: "Cliente" }],
     ...(enderecosArr.length > 0 ? { enderecos: enderecosArr } : {}),
   };
