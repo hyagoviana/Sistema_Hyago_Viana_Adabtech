@@ -99,6 +99,11 @@ const ESPECIALIDADES = [
 // `@/lib/br/instituicoes` (datalist). São só SUGESTÕES — o usuário pode digitar
 // um valor fora da lista (entrada livre), que persiste em professional_data.
 
+// Sentinela gravada em residencia_hospital/especialidade quando o médico não fez
+// residência (owner, 2026-07-21). O motor de documentos renderiza "Não possui"
+// em vez de deixar o placeholder vazio.
+const RESIDENCIA_NAO_POSSUI = "Não possui";
+
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -269,6 +274,32 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
   // UF selecionada governa a lista de municípios.
   const selectedUf = (useWatch({ control: form.control, name: "address.state" }) || "") as string;
   const { data: municipios, isLoading: loadingMunicipios } = useMunicipios(selectedUf);
+
+  // Residência "Não possui" (owner, 2026-07-21) — 1 toggle governa hospital +
+  // especialidade + início/término. Marca os 2 campos com a sentinela e limpa as
+  // datas; ao desmarcar, limpa os 2 campos para reedição.
+  const resHospital = (useWatch({
+    control: form.control,
+    name: "professional_data.residencia_hospital",
+  }) || "") as string;
+  const resEspecialidade = (useWatch({
+    control: form.control,
+    name: "professional_data.residencia_especialidade",
+  }) || "") as string;
+  const semResidencia =
+    resHospital === RESIDENCIA_NAO_POSSUI || resEspecialidade === RESIDENCIA_NAO_POSSUI;
+  const setSemResidencia = (checked: boolean) => {
+    const opts = { shouldDirty: true, shouldValidate: true } as const;
+    if (checked) {
+      form.setValue("professional_data.residencia_hospital", RESIDENCIA_NAO_POSSUI, opts);
+      form.setValue("professional_data.residencia_especialidade", RESIDENCIA_NAO_POSSUI, opts);
+      form.setValue("professional_data.residencia_inicio", "", opts);
+      form.setValue("professional_data.residencia_termino", "", opts);
+    } else {
+      form.setValue("professional_data.residencia_hospital", "", opts);
+      form.setValue("professional_data.residencia_especialidade", "", opts);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -921,6 +952,16 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                 )}
               />
 
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-input accent-primary"
+                  checked={semResidencia}
+                  onChange={(e) => setSemResidencia(e.target.checked)}
+                />
+                Não possui residência médica
+              </label>
+
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -932,6 +973,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                         <Input
                           list="hospitais-residencia"
                           placeholder="Hospital de residência"
+                          disabled={semResidencia}
                           {...field}
                           value={field.value ?? ""}
                         />
@@ -947,6 +989,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                     <FormItem>
                       <FormLabel>Residência — especialidade</FormLabel>
                       <Select
+                        disabled={semResidencia}
                         onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                         value={field.value || "__none__"}
                       >
@@ -957,6 +1000,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                         </FormControl>
                         <SelectContent className="max-h-[300px]">
                           <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value={RESIDENCIA_NAO_POSSUI}>Não possui</SelectItem>
                           {ESPECIALIDADES.map((e) => (
                             <SelectItem key={e} value={e}>
                               {e}
@@ -978,7 +1022,12 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                     <FormItem>
                       <FormLabel>Residência — início</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} value={field.value ?? ""} />
+                        <Input
+                          type="date"
+                          disabled={semResidencia}
+                          {...field}
+                          value={field.value ?? ""}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -991,7 +1040,12 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                     <FormItem>
                       <FormLabel>Residência — término</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} value={field.value ?? ""} />
+                        <Input
+                          type="date"
+                          disabled={semResidencia}
+                          {...field}
+                          value={field.value ?? ""}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

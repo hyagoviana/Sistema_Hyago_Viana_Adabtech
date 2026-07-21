@@ -16,6 +16,22 @@ const MODELS_ROOT_FOLDER_ID =
 const PROCURACAO_ROOT_FOLDER_ID =
   process.env.GOOGLE_DRIVE_PROCURACAO_FOLDER_ID?.trim() || "1ed5kBsyHalUuMoap_0i_KJQ_fFfbiPYd";
 
+// Pastas que NUNCA devem aparecer no seletor de pasta de CASO (owner, 2026-07-21).
+// São pastas que ficam na raiz "07- Modelos" mas não são modelos de caso: a pasta
+// de procurações espelhada, testes, etc. Filtro por ID (robusto — independe do
+// nome, ao contrário do filtro A11). Configurável via env (CSV) e SEMPRE inclui
+// os defaults abaixo. As demais subpastas continuam aparecendo, inclusive novas.
+const CASO_FOLDER_BLOCKLIST = new Set(
+  [
+    "1ed5kBsyHalUuMoap_0i_KJQ_fFfbiPYd", // pasta-mãe de procurações
+    "19wAelW2KUeRsiXRmBFPlhKTptQAPjD7V", // "abatimento teste"
+    "1A_z2nMxeMu9EMU2NTjy0uBsCBqLcMptC", // pasta pedida pelo owner
+    ...(process.env.GOOGLE_DRIVE_CASO_BLOCKED_FOLDER_IDS?.split(",") ?? []),
+  ]
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+
 export type FolderKind = "caso" | "procuracao";
 
 export class ServiceTypeFoldersError extends Error {
@@ -232,9 +248,11 @@ export async function listRootModelFolders(
   // pastas que são claramente de procuração/contrato/termo/financeiro (não são
   // modelos de caso). Filtro defensivo por nome; a organização definitiva das
   // pastas no Drive é do escritório.
+  // + 2026-07-21 (owner): denylist por ID (esconde pastas específicas que o
+  // filtro por nome não pega, ex.: "abatimento teste").
   if (kind === "caso") {
     const bloqueia = /(procura[çc][aã]o|contrato|termo|financeir)/i;
-    return folders.filter((f) => !bloqueia.test(f.name));
+    return folders.filter((f) => !CASO_FOLDER_BLOCKLIST.has(f.id) && !bloqueia.test(f.name));
   }
   return folders;
 }

@@ -228,6 +228,10 @@ export function augmentWithHonorarios(
     canonical["Percentual de Honorários"] = pct;
     canonical["Honorários Percentual"] = pct;
     canonical["% Honorários"] = pct;
+    // Alinhamento (owner, 2026-07-21) — modelos de procuração usam "porcentagem"
+    // / "porcentagem do êxito" para o mesmo % de honorários.
+    canonical["Porcentagem"] = pct;
+    canonical["Porcentagem do Êxito"] = pct;
   }
   if (h.valor_parcela_centavos != null) {
     const v = `R$ ${(h.valor_parcela_centavos / 100).toFixed(2).replace(".", ",")}`;
@@ -241,6 +245,7 @@ export function augmentWithHonorarios(
   }
   if (h.forma_pagamento) {
     canonical["Forma de Pagamento"] = h.forma_pagamento;
+    canonical["Formas de Pagamento"] = h.forma_pagamento;
     canonical["Pagamento"] = h.forma_pagamento;
   }
   if (h.honorarios_total_centavos != null) {
@@ -287,6 +292,31 @@ export function augmentWithResponsaveis(
 function formatCep(cep?: string): string {
   const d = (cep ?? "").replace(/\D/g, "");
   return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : (cep ?? "");
+}
+
+// Autofill E (owner, 2026-07-21) — DATA automática (data de emissão = hoje).
+const MESES_PT = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+function todayNumeric(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+function todayExtenso(): string {
+  const d = new Date();
+  return `${d.getDate()} de ${MESES_PT[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
 // Monta o bloco "dados pessoais" completo (nome, nacionalidade, [estado civil],
@@ -352,8 +382,7 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
     if (autoField === "cep") return data.cep ?? canonicalLookup("CEP", data.canonical);
     if (autoField === "data_nascimento")
       return canonicalLookup("Data de Nascimento", data.canonical);
-    if (autoField === "nacionalidade")
-      return canonicalLookup("Nacionalidade", data.canonical);
+    if (autoField === "nacionalidade") return canonicalLookup("Nacionalidade", data.canonical);
     if (autoField === "orgao_expedidor")
       return data.rgOrgao ?? canonicalLookup("Órgão Expedidor", data.canonical);
     if (autoField === "bairro") return canonicalLookup("Bairro", data.canonical);
@@ -413,6 +442,22 @@ export function resolveAutoValue(field: TemplateField, data: AutoFillData): stri
   // Autofill C — perfil (tabela).
   if (match(/informa[cç][oõ]es sobre o perfil/)) return data.perfilTexto ?? canon();
   if (match(/\bperfil\b/)) return data.numeroPerfil ?? canon();
+
+  // Autofill E (owner, 2026-07-21) — DATA de emissão = hoje. SÓ placeholders de
+  // data "genérica" (assinatura do documento). Datas específicas do caso ("data da
+  // parcela", "data de retorno", "data_assinatura_fies") têm normKey diferente de
+  // "data" e NÃO são tocadas. Se o caso já gravou uma data canônica com esse nome,
+  // ela prevalece (canon() antes de cair no hoje).
+  const nkData = normKey(field.key);
+  if (nkData === "data") return canon() ?? todayNumeric();
+  if (nkData === "data extenso" || nkData === "data por extenso") return canon() ?? todayExtenso();
+  if (nkData === "local e data") {
+    const canonVal = canon();
+    if (canonVal) return canonVal;
+    const local = data.city || data.municipio;
+    return local ? `${local}, ${todayExtenso()}` : todayExtenso();
+  }
+
   // Autofill D — qualquer outro placeholder casa com um campo canônico do caso
   // (UBS, CNES, período de vínculo, período trabalhado, carga horária, unidade…).
   return canon();
@@ -619,11 +664,7 @@ export function buildAutoFillFromClient(
     street ? (number ? `${street}, nº ${number}` : street) : undefined,
     complement,
     neighborhood,
-    addrCity
-      ? addrState
-        ? `${addrCity} - ${addrState}`
-        : addrCity
-      : undefined,
+    addrCity ? (addrState ? `${addrCity} - ${addrState}` : addrCity) : undefined,
   ].filter(Boolean) as string[];
 
   if (endParts.length) {

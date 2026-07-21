@@ -10,6 +10,7 @@
 //     redação do modelo difere do rótulo gravado no caso.
 
 import {
+  augmentWithHonorarios,
   buildAutoFillValues,
   resolveAutoValue,
   type AutoFillData,
@@ -99,6 +100,65 @@ console.log("document-autofill (R5-08):");
   assert(
     "alias sem dado no caso → undefined",
     resolveAutoValue(field("Posto de Saúde"), data) === undefined,
+  );
+}
+
+// --- 5. DATA automática (owner 2026-07-21) ---------------------------------
+{
+  const data: AutoFillData = { clientName: "Fulano", city: "Salvador" };
+  const dNum = resolveAutoValue(field("data - obrigatório"), data);
+  assert(
+    "data genérica → data de hoje (dd/mm/aaaa)",
+    typeof dNum === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(dNum),
+  );
+  const dExt = resolveAutoValue(field("data_extenso"), data);
+  assert(
+    "data por extenso → contém mês por extenso",
+    typeof dExt === "string" && / de [a-zç]+ de \d{4}$/.test(dExt),
+  );
+  const localData = resolveAutoValue(field("Local e data - obrigatório"), data);
+  assert(
+    "local e data → prefixa a cidade",
+    typeof localData === "string" && localData.startsWith("Salvador, "),
+  );
+  // Datas ESPECÍFICAS do caso NÃO são tocadas (sem canonical → undefined).
+  assert(
+    "data da parcela NÃO vira hoje (fica manual)",
+    resolveAutoValue(field("data da parcela - obrigatório"), data) === undefined,
+  );
+  assert(
+    "data de retorno NÃO vira hoje (fica manual)",
+    resolveAutoValue(field("data de retorno"), data) === undefined,
+  );
+  // Data canônica gravada no caso prevalece sobre "hoje".
+  const comCanon: AutoFillData = { canonical: { Data: "01/01/2020" } };
+  assert(
+    "data canônica do caso prevalece sobre hoje",
+    resolveAutoValue(field("data"), comCanon) === "01/01/2020",
+  );
+}
+
+// --- 6. Aliases de honorários (owner 2026-07-21) ---------------------------
+{
+  let data: AutoFillData = { clientName: "Dra. Ana" };
+  data = augmentWithHonorarios(data, {
+    percentual_honorarios: 20,
+    forma_pagamento: "PIX à vista",
+    valor_parcela_centavos: null,
+    desconto_avista_pct: null,
+    honorarios_total_centavos: null,
+  });
+  assert(
+    '"formas de pagamento" (plural) resolve',
+    resolveAutoValue(field("formas de pagamento - obrigatório"), data) === "PIX à vista",
+  );
+  assert(
+    '"porcentagem" resolve o % de honorários',
+    resolveAutoValue(field("porcentagem - obrigatório"), data) === "20%",
+  );
+  assert(
+    '"porcentagem do êxito" resolve o % de honorários',
+    resolveAutoValue(field("porcentagem do êxito - obrigatório"), data) === "20%",
   );
 }
 
