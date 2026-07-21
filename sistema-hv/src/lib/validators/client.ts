@@ -186,6 +186,7 @@ export const clientCreateSchema = z
     cpf_cnpj: cpfCnpjSchema,
     // RG — obrigatório apenas para pessoa física (validado no superRefine).
     rg: textOptional(20),
+    birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)").optional().or(z.literal("")),
     tipo: z.string().trim().max(50).optional().nullable(),
     professional_data: professionalDataSchema,
     email: z.string().trim().email("E-mail inválido").max(200),
@@ -216,6 +217,7 @@ export const clientUpdateSchema = z.object({
   full_name: z.string().trim().min(3, "Nome muito curto").max(200).optional(),
   cpf_cnpj: cpfCnpjSchema.optional(),
   rg: textOptional(20),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)").optional().nullable().or(z.literal("")),
   tipo: z.string().trim().max(50).optional().nullable(),
   professional_data: professionalDataSchema,
   email: z.string().trim().email("E-mail inválido").max(200).optional(),

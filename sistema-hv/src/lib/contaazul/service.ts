@@ -49,8 +49,24 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     throw new ContaAzulServiceError("Cliente não encontrado.", 404);
   }
 
-  const address = client.address as Record<string, string> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = client as any;
   const tipoPessoa = client.cpf_cnpj.length === 14 ? "Jurídica" : "Física";
+
+  // Validação: campos obrigatórios para Pessoa Física na API do Conta Azul.
+  if (tipoPessoa === "Física") {
+    const camposFaltando: string[] = [];
+    if (!c.rg) camposFaltando.push("RG");
+    if (!c.birth_date) camposFaltando.push("Data de nascimento");
+    if (camposFaltando.length > 0) {
+      throw new ContaAzulServiceError(
+        `Preencha os dados do cliente antes de sincronizar: ${camposFaltando.join(", ")}.`,
+        422,
+      );
+    }
+  }
+
+  const address = client.address as Record<string, string> | null;
 
   const enderecosArr = address
     ? [
@@ -73,9 +89,6 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
       : { cnpj: client.cpf_cnpj };
 
   // Payload conforme doc oficial da API v2 Conta Azul.
-  // POST e PUT usam o mesmo shape (PUT inclui perfis também).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clientAny = client as any;
   const caPayload = {
     ativo: true,
     codigo: client.cpf_cnpj,
@@ -83,7 +96,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
     ...cpfOrCnpj,
     ...(tipoPessoa === "Física"
-      ? { rg: "N/I", data_nascimento: clientAny.birth_date || "1990-01-01" }
+      ? { rg: c.rg, data_nascimento: c.birth_date }
       : {}),
     email: client.email ?? undefined,
     telefone_celular: client.phone ?? undefined,

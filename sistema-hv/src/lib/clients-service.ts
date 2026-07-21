@@ -160,7 +160,7 @@ export type FindOrCreateResult = {
 type ClientRow = Database["public"]["Tables"]["system_clients"]["Row"];
 
 // Campos escalares simples elegíveis a merge-em-vazio + detecção de conflito.
-const MERGEABLE_SCALAR_FIELDS = ["full_name", "email", "phone", "rg", "tipo"] as const;
+const MERGEABLE_SCALAR_FIELDS = ["full_name", "email", "phone", "rg", "birth_date", "tipo"] as const;
 
 async function selectActiveByCpf(cpf: string): Promise<ClientRow | null> {
   const sb = getSupabaseAdmin();

@@ -186,6 +186,7 @@ function emptyDefaults(): ClientCreateInput {
     full_name: "",
     cpf_cnpj: "",
     rg: "",
+    birth_date: "",
     tipo: "",
     email: "",
     phone: "",
@@ -278,6 +279,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         full_name: client.full_name,
         cpf_cnpj: formatCpfCnpj(client.cpf_cnpj ?? ""),
         rg: client.rg ? formatRg(client.rg) : "",
+        birth_date: (client as any).birth_date ?? "",
         tipo: client.tipo ?? "",
         email: client.email ?? "",
         phone: client.phone ? formatPhone(client.phone) : "",
@@ -468,6 +470,19 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
 
             {isPF && (
               <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="birth_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de nascimento *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="professional_data.rg_orgao"
