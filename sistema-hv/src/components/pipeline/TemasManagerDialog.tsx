@@ -1,10 +1,9 @@
-// Admin-only — gestão de TEMAS e FRENTES (R2-06). Um TEMA agrupa FRENTES; cada
-// frente vai (em R2-04/R2-03) ganhar pasta/modelos/campos e pipeline por tema.
+// Admin-only — gestão de TEMAS. Um TEMA agrupa os casos/procurações e suas pastas.
 // Gate: renderizado só quando `can(role,"config.manage")` (ver pipeline.tsx).
-// Construção MANUAL (MVP): CRUD de tema + CRUD de frente do tema selecionado.
+// Construção MANUAL: CRUD de tema + vínculo de pastas de Casos/Procurações.
 
 import { useEffect, useState } from "react";
-import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
+import { Layers, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,19 +19,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import {
-  useCreateFrente,
   useCreateTema,
-  useDeleteFrente,
   useDeleteTema,
-  useFrentes,
   useTemas,
   useTemaServiceType,
-  useUpdateFrente,
   useUpdateTema,
 } from "@/hooks/useTemas";
 
 type Tema = { id: string; name: string; slug: string; ordem: number; active: boolean };
-type Frente = { id: string; label: string; slug: string; ordem: number; active: boolean };
 
 export function TemasManagerDialog({
   open,
@@ -69,7 +63,7 @@ export function TemasManagerDialog({
     if (!name) return;
     try {
       const created = (await createTema.mutateAsync({ name })) as Tema;
-      toast.success("Tema criado — agora crie as frentes dele");
+      toast.success("Tema criado — agora vincule os casos e procurações");
       setNewName("");
       if (created?.id) {
         setSelected(created);
@@ -104,7 +98,7 @@ export function TemasManagerDialog({
     if (!selected) return;
     if (
       !window.confirm(
-        `Excluir o tema "${selected.name}"?\n\nIsto remove as frentes dele e envia a PASTA do tema no Drive para a lixeira (com as subpastas Casos/Procurações). Só é possível se não houver casos vinculados a este tema. Esta ação não pode ser desfeita.`,
+        `Excluir o tema "${selected.name}"?\n\nIsto envia a PASTA do tema no Drive para a lixeira (com as subpastas Casos/Procurações). Só é possível se não houver casos vinculados a este tema. Esta ação não pode ser desfeita.`,
       )
     )
       return;
@@ -212,7 +206,7 @@ export function TemasManagerDialog({
               </div>
             </div>
 
-            {selected && <FrentesEditor temaId={selected.id} />}
+            {selected && <TemaCasosSection temaId={selected.id} />}
           </div>
 
           <DialogFooter className="sm:justify-between">
@@ -234,155 +228,27 @@ export function TemasManagerDialog({
   );
 }
 
-// Subseção: CRUD das frentes de UM tema.
-function FrentesEditor({ temaId }: { temaId: string }) {
-  const { data: frentes, isLoading } = useFrentes(temaId);
-  const createFrente = useCreateFrente(temaId);
-  const updateFrente = useUpdateFrente(temaId);
-  const deleteFrente = useDeleteFrente(temaId);
-  // R2-04 — service_type interno do tema (onde as pastas por frente são vinculadas).
+// Subseção: pastas de Casos e Procurações vinculadas ao tema (das pastas
+// "modelos"/"procuração"). Vincular pastas existentes OU criar novas + anexar o
+// Word (ZapSign). As pastas valem para o tema todo.
+function TemaCasosSection({ temaId }: { temaId: string }) {
+  // service_type interno do tema (onde as pastas são vinculadas).
   const { data: temaServiceType } = useTemaServiceType(temaId);
 
-  const [newLabel, setNewLabel] = useState("");
-  const [editing, setEditing] = useState<Frente | null>(null);
-  const [editValue, setEditValue] = useState("");
-
-  async function criarFrente() {
-    const label = newLabel.trim();
-    if (!label) return;
-    try {
-      await createFrente.mutateAsync({ label });
-      toast.success("Frente criada");
-      setNewLabel("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao criar frente");
-    }
-  }
-
-  async function salvarFrente() {
-    if (!editing) return;
-    const label = editValue.trim();
-    if (!label || label === editing.label) {
-      setEditing(null);
-      return;
-    }
-    try {
-      await updateFrente.mutateAsync({ id: editing.id, patch: { label } });
-      toast.success("Frente atualizada");
-      setEditing(null);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao atualizar frente");
-    }
-  }
-
-  async function excluirFrente(f: Frente) {
-    if (!window.confirm(`Excluir a frente "${f.label}"? Só é possível se não houver casos nela.`))
-      return;
-    try {
-      await deleteFrente.mutateAsync(f.id);
-      toast.success("Frente excluída");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao excluir frente");
-    }
+  if (!temaServiceType?.id) {
+    return (
+      <div className="rounded-lg border border-[var(--border)] p-3 text-[13px] text-muted-foreground">
+        Preparando a pasta do tema… reabra em instantes para vincular casos e procurações.
+      </div>
+    );
   }
 
   return (
     <div className="rounded-lg border border-[var(--border)] p-3">
-      <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">Frentes</div>
-
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <Input
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Nova frente (ex.: Aposentadoria)"
-            onKeyDown={(e) => e.key === "Enter" && criarFrente()}
-          />
-        </div>
-        <Button
-          variant="outline"
-          onClick={criarFrente}
-          disabled={createFrente.isPending || !newLabel.trim()}
-        >
-          <Plus size={14} />
-          {createFrente.isPending ? "Criando…" : "Adicionar"}
-        </Button>
+      <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">
+        Casos e Procurações do tema
       </div>
-
-      <div className="mt-3 space-y-1.5">
-        {isLoading ? (
-          <div className="text-muted-foreground text-sm">Carregando frentes…</div>
-        ) : (frentes ?? []).length === 0 ? (
-          <div className="text-muted-foreground text-[13px]">Nenhuma frente ainda.</div>
-        ) : (
-          (frentes as Frente[]).map((f) =>
-            editing?.id === f.id ? (
-              <div key={f.id} className="flex items-center gap-2">
-                <Input
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && salvarFrente()}
-                  autoFocus
-                />
-                <Button variant="outline" size="sm" onClick={salvarFrente}>
-                  Salvar
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>
-                  Cancelar
-                </Button>
-              </div>
-            ) : (
-              <div
-                key={f.id}
-                className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] text-[var(--navy)] truncate">{f.label}</div>
-                  <div className="text-[10.5px] text-muted-foreground">{f.slug}</div>
-                </div>
-                <button
-                  type="button"
-                  title="Renomear frente"
-                  onClick={() => {
-                    setEditing(f);
-                    setEditValue(f.label);
-                  }}
-                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
-                >
-                  <Pencil size={13} />
-                </button>
-                <button
-                  type="button"
-                  title="Excluir frente"
-                  onClick={() => excluirFrente(f)}
-                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ),
-          )
-        )}
-      </div>
-
-      {/* Casos e Procurações do tema — SEMPRE visível (não depende de ter frentes).
-          Vincular pastas existentes de "modelos"/"procuração" OU criar novas +
-          anexar o Word (ZapSign). Se houver frentes, dá pra direcionar a pasta a uma
-          frente; sem frentes, vale para o tema todo. */}
-      {temaServiceType?.id && (
-        <div className="mt-3">
-          <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">
-            Casos e Procurações do tema
-          </div>
-          <CategoryFoldersEditor
-            serviceTypeId={temaServiceType.id}
-            frentes={(frentes as Frente[] | undefined)?.map((f) => ({
-              slug: f.slug,
-              label: f.label,
-            }))}
-          />
-        </div>
-      )}
+      <CategoryFoldersEditor serviceTypeId={temaServiceType.id} />
     </div>
   );
 }

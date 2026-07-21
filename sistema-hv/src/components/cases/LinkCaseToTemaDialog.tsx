@@ -1,7 +1,7 @@
 // R2 — VINCULAR CASO EXISTENTE a um TEMA. Reatribui a pipeline do caso para o
-// service_type INTERNO (motor) do tema (Opção 1, design R2-03) e grava
-// tema_id/frente_slug. A etapa operacional pode ser RESETADA para a 1ª etapa se a
-// etapa atual não existir na pipeline do tema — avisamos o usuário disso.
+// service_type INTERNO (motor) do tema (Opção 1, design R2-03) e grava tema_id.
+// A etapa operacional pode ser RESETADA para a 1ª etapa se a etapa atual não
+// existir na pipeline do tema — avisamos o usuário disso.
 // Gate: casos.manage (o botão que abre este diálogo já é gate-ado na ficha).
 
 import { useEffect, useState } from "react";
@@ -26,10 +26,9 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useMoverCasoParaTema } from "@/hooks/useCases";
-import { useFrentes, useTemas } from "@/hooks/useTemas";
+import { useTemas } from "@/hooks/useTemas";
 
 type Tema = { id: string; name: string };
-type Frente = { slug: string; label: string };
 
 export function LinkCaseToTemaDialog({
   open,
@@ -46,23 +45,12 @@ export function LinkCaseToTemaDialog({
 }) {
   const { data: temas, isLoading: temasLoading } = useTemas();
   const [temaId, setTemaId] = useState<string>(currentTemaId ?? "");
-  const [frenteSlug, setFrenteSlug] = useState<string>(""); // "" = sem frente
-  const { data: frentes } = useFrentes(temaId || null);
   const mover = useMoverCasoParaTema();
 
-  // Ao reabrir, sincroniza com o tema atual do caso e limpa a frente.
+  // Ao reabrir, sincroniza com o tema atual do caso.
   useEffect(() => {
-    if (open) {
-      setTemaId(currentTemaId ?? "");
-      setFrenteSlug("");
-    }
+    if (open) setTemaId(currentTemaId ?? "");
   }, [open, currentTemaId]);
-
-  // Trocar de tema invalida a frente selecionada (frentes são por tema).
-  function onTemaChange(v: string) {
-    setTemaId(v);
-    setFrenteSlug("");
-  }
 
   async function confirmar() {
     if (!temaId) return;
@@ -70,7 +58,7 @@ export function LinkCaseToTemaDialog({
       const res = await mover.mutateAsync({
         id: caseId,
         temaId,
-        frenteSlug: frenteSlug || null,
+        frenteSlug: null,
       });
       if (res?.opResetado) {
         toast.success("Caso vinculado ao tema — a etapa foi reiniciada para a 1ª da pipeline");
@@ -97,7 +85,7 @@ export function LinkCaseToTemaDialog({
         <div className="space-y-4">
           <div>
             <Label>Tema</Label>
-            <Select value={temaId} onValueChange={onTemaChange}>
+            <Select value={temaId} onValueChange={setTemaId}>
               <SelectTrigger>
                 <SelectValue placeholder={temasLoading ? "Carregando…" : "Selecione o tema"} />
               </SelectTrigger>
@@ -110,28 +98,6 @@ export function LinkCaseToTemaDialog({
               </SelectContent>
             </Select>
           </div>
-
-          {temaId && (frentes as Frente[] | undefined)?.length ? (
-            <div>
-              <Label>Frente (opcional)</Label>
-              <Select
-                value={frenteSlug || "__none__"}
-                onValueChange={(v) => setFrenteSlug(v === "__none__" ? "" : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sem frente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Sem frente</SelectItem>
-                  {(frentes as Frente[]).map((f) => (
-                    <SelectItem key={f.slug} value={f.slug}>
-                      {f.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
 
           <Alert>
             <AlertDescription className="text-[12px]">
