@@ -14,6 +14,7 @@ import {
   getAccessToken,
   getCobranca,
   getPessoa,
+  listCategorias,
   listContasFinanceiras,
   patchPessoa,
   type CAContaAReceberItem,
@@ -249,6 +250,16 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
     );
   }
 
+  // 3b) Categoria financeira (obrigatória no rateio).
+  const categorias = await listCategorias().catch(() => ({ itens: [] as { id: string }[] }));
+  const categoriaId = categorias.itens?.[0]?.id ?? null;
+  if (!categoriaId) {
+    throw new ContaAzulServiceError(
+      "Nenhuma categoria financeira no Conta Azul. Crie ao menos uma categoria para gerar cobranças.",
+      422,
+    );
+  }
+
   // 4) Termo (FK) + montagem das parcelas
   const { data: termo } = await sb
     .from("system_termo_snapshots")
@@ -276,7 +287,10 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
       data_vencimento: vencimento,
       nota: caso.case_code,
       conta_financeira: contaFinanceiraId,
-      detalhe_valor: { valor_bruto: valorParcelaCentavos / 100 },
+      detalhe_valor: {
+        valor_bruto: valorParcelaCentavos / 100,
+        valor_liquido: valorParcelaCentavos / 100,
+      },
       metodo_pagamento: mapPaymentMethod(input.paymentMethod),
     });
   }
@@ -290,6 +304,7 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
     descricao: descricaoBase,
     contato: contaAzulCustomerId,
     conta_financeira: contaFinanceiraId,
+    rateio: [{ id_categoria: categoriaId, valor: valorCentavos / 100 }],
     condicao_pagamento: { parcelas: parcelasPayload },
   };
   console.log("contaazul: criando conta a receber, payload:", JSON.stringify(contaAReceberPayload));

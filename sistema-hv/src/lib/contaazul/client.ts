@@ -354,6 +354,19 @@ export async function createServico(input: {
   return request<CAServico>("POST", "v1/servicos", input);
 }
 
+// ─── Categorias financeiras ─────────────────────────────────────────────────
+
+export type CACategoria = {
+  id: string;
+  nome?: string;
+  [k: string]: unknown;
+};
+
+/** Lista categorias financeiras (receita/despesa). */
+export async function listCategorias(): Promise<{ itens: CACategoria[] }> {
+  return request("GET", "v1/categorias");
+}
+
 // ─── Financeiro: contas financeiras + eventos financeiros (contas a receber) ──
 
 export type CAContaFinanceira = {
