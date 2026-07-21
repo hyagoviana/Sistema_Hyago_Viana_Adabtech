@@ -14,16 +14,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import {
-  CaseChecklistPanel,
   ChecklistInconsistencyAlert,
 } from "@/components/cases/CaseChecklistPanel";
-import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
-import { FiesFields } from "@/components/cases/FiesFields";
-import { isCasoFies } from "@/lib/cases/fies-fields";
-import { VinculoFields } from "@/components/cases/VinculoFields";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { TermoPanel } from "@/components/cases/TermoPanel";
@@ -430,50 +425,6 @@ function CasoDetalhe() {
           </div>
         </div>
       </div>
-
-      <OrnamentalDivider />
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* (2026-07-09) — checklist é SÓ do financeiro. Passa apenas a etapa fin
-            (quando o caso já bifurcou); no operacional não há checklist. */}
-        <CaseChecklistPanel
-          caseId={caso.id}
-          canEdit={podeGerirCaso}
-          currentStageSlugs={finBifurcated && caso.macrostatus_fin ? [caso.macrostatus_fin] : []}
-        />
-        <CaseCanonicalFields
-          caseId={caso.id}
-          canonicalFields={
-            (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
-          }
-          canEdit={podeGerirCaso}
-          temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
-          frenteSlug={caso.frente_slug}
-        />
-      </div>
-
-      {/* R5-06 (A2) — campos ESTRUTURADOS do contrato FIES (só p/ casos FIES).
-          Grava nos mesmos canonical_fields; não duplica armazenamento. */}
-      {isCasoFies(caso.case_type) && (
-        <FiesFields
-          caseId={caso.id}
-          canonicalFields={
-            (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
-          }
-          canEdit={podeGerirCaso}
-        />
-      )}
-
-      {/* R1-05 (N2) — vínculo/papel da pessoa NESTE caso. Município (coluna) +
-          vinculo_* (canonical_fields). Do CASO, nunca da pessoa. */}
-      <VinculoFields
-        caseId={caso.id}
-        municipio={caso.municipio ?? undefined}
-        canonicalFields={
-          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields
-        }
-        canEdit={podeGerirCaso}
-      />
 
       <OrnamentalDivider />
 
