@@ -428,7 +428,61 @@ export async function generateCaseDocumentFromTemplate(opts: {
     triggered_by: opts.triggeredBy ?? null,
   });
 
+  // Motor de variáveis (owner, 2026-07-21) — "preenche 1x no caso".
+  // Persiste os valores dos campos MANUAIS DO CASO de volta em
+  // system_cases.canonical_fields, para que a PRÓXIMA geração (caso E procuração,
+  // pois ambos passam por aqui) já venha preenchida. Só campos `source==='manual'`
+  // são congelados: os automáticos do cliente (`source==='auto'`) e os derivados
+  // (município/honorários) re-derivam frescos a cada geração, então NÃO são
+  // gravados. Datas de emissão ("data", "local e data") também não congelam.
+  // Best-effort: falha aqui não derruba a geração do documento.
+  try {
+    await persistManualFieldsToCase(opts.caseId, fields, opts.values ?? {}, opts.triggeredBy);
+  } catch (err) {
+    console.warn(
+      "[motor] Falha ao persistir campos do caso (best-effort):",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   return { doc, editUrl: docUrl(docId) };
+}
+
+// Normaliza a chave do campo p/ detectar as datas de EMISSÃO (que não devem ser
+// congeladas no caso — são sempre a data de geração). Mesma normalização do motor.
+function isEmissaoDateKey(key: string): boolean {
+  const nk = key
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s*-\s*obrigat[oó]rio\s*$/i, "")
+    .replace(/[^a-z0-9]+/gi, " ")
+    .trim()
+    .toLowerCase();
+  return (
+    nk === "data" || nk === "data extenso" || nk === "data por extenso" || nk === "local e data"
+  );
+}
+
+// Grava em canonical_fields do caso os valores dos campos `source==='manual'`
+// preenchidos na geração (exceto datas de emissão). Guarda sob o RÓTULO limpo do
+// campo (sem "- obrigatório"), que o `canonicalLookup` do motor casa por
+// normalização na próxima geração. Import dinâmico evita o ciclo com cases-service.
+async function persistManualFieldsToCase(
+  caseId: string,
+  fields: Array<{ key: string; label?: string; source?: string }>,
+  values: Record<string, string>,
+  triggeredBy?: string,
+): Promise<void> {
+  const patch: Record<string, string> = {};
+  for (const f of fields) {
+    if (f.source !== "manual") continue; // automáticos do cliente ficam de fora
+    if (isEmissaoDateKey(f.key)) continue; // data de emissão não congela
+    const v = String(values?.[f.key] ?? "").trim();
+    if (v) patch[(f.label || f.key).trim()] = v;
+  }
+  if (Object.keys(patch).length === 0) return;
+  const { updateCaseCanonicalFields } = await import("./cases-service");
+  await updateCaseCanonicalFields(caseId, patch, triggeredBy);
 }
 
 // ----------------------------------------------------------------------------

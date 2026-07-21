@@ -40,13 +40,9 @@ export function isCpfCnpjField(...candidates: Array<string | undefined>): boolea
 export function formatPhone(value: string): string {
   const d = onlyDigits(value).slice(0, 11);
   if (d.length <= 10) {
-    return d
-      .replace(/^(\d{2})(\d)/, "($1) $2")
-      .replace(/^\((\d{2})\)\s(\d{4})(\d)/, "($1) $2-$3");
+    return d.replace(/^(\d{2})(\d)/, "($1) $2").replace(/^\((\d{2})\)\s(\d{4})(\d)/, "($1) $2-$3");
   }
-  return d
-    .replace(/^(\d{2})(\d)/, "($1) $2")
-    .replace(/^\((\d{2})\)\s(\d{5})(\d)/, "($1) $2-$3");
+  return d.replace(/^(\d{2})(\d)/, "($1) $2").replace(/^\((\d{2})\)\s(\d{5})(\d)/, "($1) $2-$3");
 }
 
 /**
@@ -133,4 +129,18 @@ export function formatRg(value: string): string {
     .replace(/^([0-9X]{2})\.([0-9X]{3})([0-9X])/, "$1.$2.$3")
     .replace(/^([0-9X]{2})\.([0-9X]{3})\.([0-9X]{3})([0-9X])/, "$1.$2.$3-$4");
   return masked + tail;
+}
+
+/**
+ * Sanitiza a DIGITAÇÃO de RG sem reformatar a cada tecla. Mantém dígitos, o
+ * verificador "X" e os separadores usuais (. e -), com um limite generoso.
+ * Usar no onChange e deixar `formatRg` só para o onBlur — assim o campo controlado
+ * não reposiciona o cursor nem "perde" um dígito durante a digitação rápida
+ * (bug relatado: "não consigo digitar o número no todo"). RG varia por estado.
+ */
+export function sanitizeRgTyping(value: string): string {
+  return (value ?? "")
+    .toUpperCase()
+    .replace(/[^0-9X.-]/g, "")
+    .slice(0, 15);
 }

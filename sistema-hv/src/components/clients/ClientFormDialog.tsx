@@ -36,7 +36,7 @@ import {
 } from "@/components/clients/CustomFieldsSection";
 import { ESTADOS_BR } from "@/lib/br/estados";
 import { HOSPITAIS_RESIDENCIA, INSTITUICOES_GRADUACAO } from "@/lib/br/instituicoes";
-import { formatCep, formatCpfCnpj, formatPhone, formatRg } from "@/lib/format";
+import { formatCep, formatCpfCnpj, formatPhone, formatRg, sanitizeRgTyping } from "@/lib/format";
 import { useClientFieldDefs } from "@/hooks/useClientFields";
 import { useFindOrCreateClient, useUpdateClient } from "@/hooks/useClients";
 import { checkEmailFn } from "@/rpc/clients";
@@ -486,10 +486,15 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                       <FormControl>
                         <Input
                           placeholder="12.345.678-9"
+                          maxLength={15}
                           disabled={mode === "edit" && !!client?.rg}
                           {...field}
                           value={field.value ?? ""}
-                          onChange={(e) => field.onChange(formatRg(e.target.value))}
+                          onChange={(e) => field.onChange(sanitizeRgTyping(e.target.value))}
+                          onBlur={(e) => {
+                            field.onChange(formatRg(e.target.value));
+                            field.onBlur();
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

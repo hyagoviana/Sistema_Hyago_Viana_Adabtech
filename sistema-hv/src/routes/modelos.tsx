@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ import {
   useCreateDocumentTemplate,
   useDeleteDocumentTemplate,
   useDocumentTemplates,
+  useUpdateDocumentTemplate,
   type TemplateFieldInput,
 } from "@/hooks/useDocumentTemplates";
 import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
@@ -37,10 +38,13 @@ export const Route = createFileRoute("/modelos")({
   component: ModelosPage,
 });
 
+type TemplateRow = { id: string; name: string; fields: unknown };
+
 function ModelosPage() {
   const { data: templates, isLoading } = useDocumentTemplates();
   const del = useDeleteDocumentTemplate();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<TemplateRow | null>(null);
 
   return (
     <div className="page-container">
@@ -77,11 +81,23 @@ function ModelosPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-medium text-[var(--navy)]">{t.name}</div>
                   <div className="text-[12px] text-muted-foreground">
-                    {t.case_type ? CASE_TYPE_LABELS[t.case_type as CaseType] ?? t.case_type : "Todos os casos"}{" "}
+                    {t.case_type
+                      ? (CASE_TYPE_LABELS[t.case_type as CaseType] ?? t.case_type)
+                      : "Todos os casos"}{" "}
                     · {Array.isArray(t.fields) ? t.fields.length : 0} campo(s)
                   </div>
                 </div>
-                {t.goes_to_zapsign && <Badge className="bg-[var(--gold-700)] text-white">ZapSign</Badge>}
+                {t.goes_to_zapsign && (
+                  <Badge className="bg-[var(--gold-700)] text-white">ZapSign</Badge>
+                )}
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-[var(--navy)] p-1"
+                  title="Editar campos"
+                  onClick={() => setEditing({ id: t.id, name: t.name, fields: t.fields })}
+                >
+                  <SlidersHorizontal size={15} />
+                </button>
                 <button
                   type="button"
                   className="text-muted-foreground hover:text-destructive p-1"
@@ -104,7 +120,177 @@ function ModelosPage() {
       </div>
 
       <CreateTemplateDialog open={open} onOpenChange={setOpen} />
+      <EditTemplateFieldsDialog
+        key={editing?.id ?? "none"}
+        template={editing}
+        onClose={() => setEditing(null)}
+      />
     </div>
+  );
+}
+
+// Origem de um campo AUTOMÁTICO (auto_field). O sentinela "__label__" = sem
+// auto_field: o motor resolve pelo RÓTULO (campos do caso, financeiro, município).
+const AUTO_FIELD_OPTIONS: { value: string; label: string }[] = [
+  { value: "__label__", label: "Automático pelo rótulo (caso / financeiro / município)" },
+  { value: "dados_pessoais", label: "Dados pessoais (bloco completo)" },
+  { value: "client_name", label: "Nome do cliente" },
+  { value: "cpf", label: "CPF / CNPJ" },
+  { value: "rg", label: "RG" },
+  { value: "orgao_expedidor", label: "Órgão emissor do RG" },
+  { value: "estado_civil", label: "Estado civil" },
+  { value: "email", label: "E-mail" },
+  { value: "phone", label: "Telefone" },
+  { value: "data_nascimento", label: "Data de nascimento" },
+  { value: "nacionalidade", label: "Nacionalidade" },
+  { value: "endereco", label: "Endereço completo" },
+  { value: "logradouro", label: "Rua / Logradouro" },
+  { value: "bairro", label: "Bairro" },
+  { value: "cep", label: "CEP" },
+  { value: "cidade", label: "Cidade" },
+  { value: "estado", label: "Estado / UF" },
+  { value: "municipio", label: "Município" },
+  { value: "crm", label: "CRM" },
+  { value: "crm_uf", label: "UF do CRM" },
+  { value: "oab", label: "OAB" },
+  { value: "oab_uf", label: "UF da OAB" },
+  { value: "especialidade", label: "Especialidade" },
+  { value: "vinculo_institucional", label: "Vínculo institucional" },
+  { value: "case_code", label: "Código do caso" },
+  { value: "responsavel", label: "Responsável" },
+];
+
+// Buraco B (owner, 2026-07-21) — "motor classifica, admin ajusta". Edita a
+// classificação dos campos de um modelo JÁ sincronizado: origem (auto/manual/em
+// branco), qual dado automático (auto_field), rótulo e obrigatoriedade. A `key`
+// (placeholder <campo> do Doc) é imutável — mudá-la quebraria a substituição.
+function EditTemplateFieldsDialog({
+  template,
+  onClose,
+}: {
+  template: TemplateRow | null;
+  onClose: () => void;
+}) {
+  const update = useUpdateDocumentTemplate();
+  const initial = (Array.isArray(template?.fields) ? template?.fields : []) as TemplateFieldInput[];
+  const [fields, setFields] = useState<TemplateFieldInput[]>(initial);
+
+  function patchField(i: number, patch: Partial<TemplateFieldInput>) {
+    setFields((f) => f.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+
+  async function save() {
+    if (!template) return;
+    const clean = fields.map((f) => ({
+      key: f.key,
+      label: (f.label || f.key).trim(),
+      source: f.source,
+      required: !!f.required,
+      ...(f.source === "auto" && f.auto_field ? { auto_field: f.auto_field } : {}),
+    }));
+    try {
+      await update.mutateAsync({ id: template.id, patch: { fields: clean } });
+      toast.success("Campos atualizados");
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar");
+    }
+  }
+
+  return (
+    <Dialog open={!!template} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Campos de “{template?.name}”</DialogTitle>
+          <DialogDescription>
+            Ajuste de onde cada campo é preenchido. <strong>Automático</strong> = o motor puxa
+            sozinho (cliente/caso/financeiro/município). <strong>Manual</strong> = você digita ao
+            gerar e o valor fica salvo no caso (preenche 1× e reusa). <strong>Em branco</strong> =
+            ignora o campo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          {fields.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Este modelo não tem campos (placeholders <code>&lt;campo&gt;</code>). Sincronize o
+              modelo do Drive para extraí-los.
+            </div>
+          ) : (
+            fields.map((f, i) => (
+              <div
+                key={f.key || i}
+                className="grid grid-cols-[1fr,auto] gap-2 items-start rounded-md border border-[var(--border)] p-2.5"
+              >
+                <div className="min-w-0">
+                  <div className="text-[11px] text-muted-foreground truncate" title={f.key}>
+                    &lt;{f.key}&gt;
+                  </div>
+                  <Input
+                    className="mt-1 h-8"
+                    value={f.label ?? ""}
+                    onChange={(e) => patchField(i, { label: e.target.value })}
+                    placeholder="rótulo exibido na geração"
+                  />
+                  {f.source === "auto" && (
+                    <Select
+                      value={f.auto_field || "__label__"}
+                      onValueChange={(v) =>
+                        patchField(i, { auto_field: v === "__label__" ? undefined : v })
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px]">
+                        {AUTO_FIELD_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <Select
+                    value={f.source}
+                    onValueChange={(v) =>
+                      patchField(i, { source: v as TemplateFieldInput["source"] })
+                    }
+                  >
+                    <SelectTrigger className="w-32 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Automático</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="blank">Em branco</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={!!f.required}
+                      onCheckedChange={(v) => patchField(i, { required: !!v })}
+                    />
+                    obrigatório
+                  </label>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={save} disabled={update.isPending || fields.length === 0}>
+            {update.isPending ? "Salvando…" : "Salvar campos"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -175,7 +361,11 @@ function CreateTemplateDialog({
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           <div>
             <Label>Nome *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Declaração COVID" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Declaração COVID"
+            />
           </div>
           <div>
             <Label>Google Doc (ID ou URL) *</Label>
@@ -231,7 +421,12 @@ function CreateTemplateDialog({
                     onChange={(e) => patchField(i, { label: e.target.value })}
                     placeholder="rótulo"
                   />
-                  <Select value={f.source} onValueChange={(v) => patchField(i, { source: v as TemplateFieldInput["source"] })}>
+                  <Select
+                    value={f.source}
+                    onValueChange={(v) =>
+                      patchField(i, { source: v as TemplateFieldInput["source"] })
+                    }
+                  >
                     <SelectTrigger className="w-28">
                       <SelectValue />
                     </SelectTrigger>
