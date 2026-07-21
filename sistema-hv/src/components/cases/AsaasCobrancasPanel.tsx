@@ -32,7 +32,7 @@ import {
   useSyncAsaasPagamentos,
   useSyncClientToAsaas,
 } from "@/hooks/useAsaas";
-import { useSyncClientToContaAzul } from "@/hooks/useContaAzul";
+import { useCancelContaAzulCharge, useSyncClientToContaAzul, useSyncContaAzulPagamentos } from "@/hooks/useContaAzul";
 import { useParcelas } from "@/hooks/useTermo";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
@@ -53,7 +53,9 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
   const syncClient = useSyncClientToContaAzul();
   const syncAsaasClient = useSyncClientToAsaas();
   const syncAsaasPagamentos = useSyncAsaasPagamentos();
+  const syncCAPagamentos = useSyncContaAzulPagamentos();
   const cancelCharge = useCancelCharge();
+  const cancelCACharge = useCancelContaAzulCharge();
   const [novaOpen, setNovaOpen] = useState(false);
   const [pixFor, setPixFor] = useState<string | null>(null);
 
@@ -161,6 +163,7 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
             const meta = STATUS_BADGE[p.status] ?? STATUS_BADGE.PENDENTE;
             const isActive = p.status !== "PAGA" && p.status !== "CANCELADA";
             const isAsaas = p.provider === "asaas" && !!p.provider_ext_id;
+            const isCA = p.provider === "conta_azul";
 
             return (
               <div
@@ -192,9 +195,9 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
                 <Badge className={`${meta.cls} text-[10px]`}>{meta.label}</Badge>
 
                 <span className="flex items-center gap-1.5">
-                  {/* Fatura/Boleto (Asaas) */}
-                  {isAsaas && p.boleto_url && isActive && (
-                    <a href={p.boleto_url} target="_blank" rel="noreferrer" title="Ver fatura">
+                  {/* Link da cobrança (ambos: Asaas e Conta Azul) */}
+                  {p.boleto_url && isActive && (
+                    <a href={p.boleto_url} target="_blank" rel="noreferrer" title="Ver fatura/cobrança">
                       <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-[var(--navy)]">
                         <ExternalLink size={13} />
                       </Button>
@@ -228,6 +231,25 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
                         })
                       }
                       title="Cancelar cobrança"
+                    >
+                      <XCircle size={13} />
+                    </Button>
+                  )}
+
+                  {/* Cancelar (Conta Azul) */}
+                  {isCA && isActive && p.provider_ext_id && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-[var(--danger)]"
+                      disabled={cancelCACharge.isPending}
+                      onClick={() =>
+                        cancelCACharge.mutate(p.id, {
+                          onSuccess: () => toast.success("Cobrança cancelada no Conta Azul"),
+                          onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
+                        })
+                      }
+                      title="Cancelar cobrança Conta Azul"
                     >
                       <XCircle size={13} />
                     </Button>

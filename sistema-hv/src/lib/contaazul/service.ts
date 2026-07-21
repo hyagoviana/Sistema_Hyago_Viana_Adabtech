@@ -8,8 +8,11 @@ import {
   ContaAzulError,
   createPessoa,
   criarContaAReceber,
+  deleteCobranca,
   findPessoaByDocumento,
+  gerarCobranca,
   getAccessToken,
+  getCobranca,
   getPessoa,
   listContasFinanceiras,
   patchPessoa,
@@ -290,7 +293,52 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
     condicao_pagamento: { parcelas: parcelasPayload },
   });
 
-  // 6) Espelha as parcelas no banco (o relatório lê de system_parcelas).
+  // 6) Aguarda brevemente e busca as parcelas recém-criadas no CA para obter
+  //    os IDs (a API é assíncrona, mas geralmente cria em <2s).
+  let caParcelaIds: string[] = [];
+  const tipoCobranca = mapPaymentMethodToCobrancaTipo(input.paymentMethod);
+  try {
+    await sleep(2000); // espera a API processar
+    const resultado = await buscarContasAReceber({
+      data_vencimento_de: vencimentos[0],
+      data_vencimento_ate: vencimentos[vencimentos.length - 1],
+      status: ["EM_ABERTO"],
+      ids_clientes: [contaAzulCustomerId],
+    });
+    const itens = resultado.itens ?? [];
+    // Filtra parcelas que batem com o case_code e valores
+    for (const it of itens) {
+      const texto = `${it.nota ?? ""} ${it.descricao ?? ""} ${it.observacao ?? ""}`.toUpperCase();
+      if (caso.case_code && texto.includes(caso.case_code.toUpperCase())) {
+        caParcelaIds.push(String(it.id));
+      }
+    }
+    console.log("contaazul: parcelas encontradas no CA:", caParcelaIds.length);
+  } catch (err) {
+    console.warn("contaazul: não conseguiu buscar parcelas no CA (best-effort):", err instanceof Error ? err.message : err);
+  }
+
+  // 7) Gera cobranças (boleto/pix/link) para cada parcela encontrada no CA.
+  const cobrancaUrls: string[] = [];
+  if (tipoCobranca && caParcelaIds.length > 0) {
+    for (const caParcelaId of caParcelaIds) {
+      try {
+        const cobranca = await gerarCobranca({
+          conta_bancaria: contaFinanceiraId,
+          descricao_fatura: descricaoBase,
+          id_parcela: caParcelaId,
+          data_vencimento: input.dueDate,
+          tipo: tipoCobranca,
+        });
+        console.log("contaazul: cobrança gerada:", cobranca.id, cobranca.url, cobranca.status);
+        if (cobranca.url) cobrancaUrls.push(cobranca.url);
+      } catch (err) {
+        console.warn("contaazul: erro ao gerar cobrança (best-effort):", err instanceof Error ? err.message : err);
+      }
+    }
+  }
+
+  // 8) Espelha as parcelas no banco (o relatório lê de system_parcelas).
   const parcelaIds: string[] = [];
   for (let i = 0; i < qtdParcelas; i++) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -304,6 +352,8 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
         vencimento: vencimentos[i],
         status: "PENDENTE",
         provider: "conta_azul",
+        provider_ext_id: caParcelaIds[i] ?? null,
+        boleto_url: cobrancaUrls[i] ?? null,
       })
       .select("id")
       .single();
@@ -324,6 +374,7 @@ export async function createContaAzulCharge(input: CreateContaAzulChargeInput): 
       payment_method: input.paymentMethod,
       value: input.value,
       installments: qtdParcelas,
+      cobranca_urls: cobrancaUrls,
     } as unknown as Json,
   });
 
@@ -526,8 +577,71 @@ function mapPaymentMethod(method: string | undefined): string | undefined {
   return CA_PAYMENT_METHOD_MAP[method] ?? method;
 }
 
+// Mapeia método de pagamento da UI para o tipo de cobrança do CA.
+function mapPaymentMethodToCobrancaTipo(
+  method: string | undefined,
+): "LINK_PAGAMENTO" | "PIX_COBRANCA" | "BOLETO" | null {
+  if (!method) return null;
+  const map: Record<string, "LINK_PAGAMENTO" | "PIX_COBRANCA" | "BOLETO"> = {
+    PIX: "PIX_COBRANCA",
+    BOLETO: "BOLETO",
+    CARTAO_CREDITO: "LINK_PAGAMENTO",
+    TRANSFERENCIA: "LINK_PAGAMENTO",
+    DINHEIRO: "LINK_PAGAMENTO",
+    OUTRO: "LINK_PAGAMENTO",
+  };
+  return map[method] ?? "LINK_PAGAMENTO";
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function addMonths(dateStr: string, months: number): string {
   const d = new Date(dateStr + "T00:00:00");
   d.setMonth(d.getMonth() + months);
   return d.toISOString().slice(0, 10);
+}
+
+// ─── Cancelar Cobrança Conta Azul ───────────────────────────────────────────
+
+export async function cancelContaAzulCharge(parcelaId: string): Promise<{ ok: boolean }> {
+  const sb = getSupabaseAdmin();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: parcela } = await (sb.from("system_parcelas") as any)
+    .select("id, provider_ext_id, provider, status")
+    .eq("id", parcelaId)
+    .single();
+
+  if (!parcela) throw new ContaAzulServiceError("Parcela não encontrada.", 404);
+  if (parcela.provider !== "conta_azul") throw new ContaAzulServiceError("Parcela não é do Conta Azul.", 400);
+  if (!parcela.provider_ext_id) throw new ContaAzulServiceError("Parcela sem ID do Conta Azul — sync primeiro.", 400);
+
+  try {
+    await deleteCobranca(parcela.provider_ext_id);
+  } catch (err) {
+    if (err instanceof ContaAzulError) {
+      throw new ContaAzulServiceError(
+        `Erro ao cancelar cobrança: ${err.message}${err.safeBody ? ` | ${err.safeBody}` : ""}`,
+        err.status ?? 500,
+      );
+    }
+    throw err;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (sb.from("system_parcelas") as any)
+    .update({ status: "CANCELADA", updated_at: new Date().toISOString() })
+    .eq("id", parcelaId);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: DEFAULT_ORG,
+    action: "contaazul.charge_cancelled",
+    entity_type: "parcela",
+    entity_id: parcelaId,
+    diff: { provider_ext_id: parcela.provider_ext_id } as unknown as Json,
+  });
+
+  return { ok: true };
 }

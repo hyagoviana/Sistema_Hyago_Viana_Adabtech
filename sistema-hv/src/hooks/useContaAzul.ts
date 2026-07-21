@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  cancelContaAzulChargeFn,
   contaAzulPingFn,
   createContaAzulChargeFn,
   syncClientToContaAzulFn,
@@ -55,6 +56,21 @@ export function useSyncContaAzulPagamentos() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["parcelas"] });
       qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+// ─── Cancelar Cobrança ──────────────────────────────────────────────────────
+
+export function useCancelContaAzulCharge() {
+  const fn = useServerFn(cancelContaAzulChargeFn);
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (parcelaId: string) => fn({ data: { parcelaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+      qc.invalidateQueries({ queryKey: ["parcelas"] });
     },
   });
 }

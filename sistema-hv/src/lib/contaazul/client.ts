@@ -539,6 +539,67 @@ export async function buscarContasAReceber(
   );
 }
 
+// ─── Cobranças (Boleto / Pix / Link) ────────────────────────────────────────
+
+export type CAGerarCobrancaInput = {
+  conta_bancaria: string; // uuid — tipo COBRANCAS_CONTA_AZUL ou CONTA_CORRENTE
+  descricao_fatura: string;
+  id_parcela: string; // uuid da parcela no Conta Azul
+  data_vencimento: string; // YYYY-MM-DD
+  tipo: "LINK_PAGAMENTO" | "PIX_COBRANCA" | "BOLETO";
+  atributos?: {
+    desconto_antecipado?: {
+      valor?: number;
+      percentual?: number;
+      dias_antes_vencer?: number;
+    };
+  };
+  maximo_parcelas?: number;
+};
+
+export type CACobrancaResponse = {
+  id: string;
+  url: string;
+  status: string; // REGISTRADO, PAGO, CANCELADO, etc.
+};
+
+/** Gera boleto/pix/link a partir de uma parcela existente. */
+export async function gerarCobranca(
+  input: CAGerarCobrancaInput,
+): Promise<CACobrancaResponse> {
+  return request(
+    "POST",
+    "v1/financeiro/eventos-financeiros/contas-a-receber/gerar-cobranca",
+    input,
+  );
+}
+
+/** Consulta status de uma cobrança. */
+export async function getCobranca(idCobranca: string): Promise<CACobrancaResponse> {
+  return request(
+    "GET",
+    `v1/financeiro/eventos-financeiros/contas-a-receber/cobranca/${idCobranca}`,
+  );
+}
+
+/** Cancela uma cobrança. */
+export async function deleteCobranca(idCobranca: string): Promise<void> {
+  return request(
+    "DELETE",
+    `v1/financeiro/eventos-financeiros/contas-a-receber/cobranca/${idCobranca}`,
+  );
+}
+
+/** Lista parcelas de um evento financeiro. */
+export async function listarParcelasDoEvento(
+  idEvento: string,
+): Promise<{ parcelas: CAContaAReceberItem[] }> {
+  return request(
+    "GET",
+    `v1/financeiro/eventos-financeiros/${idEvento}/parcelas`,
+  );
+}
+
 // ─── Health check ────────────────────────────────────────────────────────────
 
 export async function ping(): Promise<{ ok: true }> {

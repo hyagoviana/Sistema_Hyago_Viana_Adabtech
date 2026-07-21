@@ -3,6 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  cancelContaAzulCharge,
   createContaAzulCharge,
   syncClientToContaAzul,
   syncContaAzulPagamentos,
@@ -81,6 +82,14 @@ const syncPagamentosSchema = z.object({ caseId: z.string().uuid().optional() });
 export const syncContaAzulPagamentosFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => syncPagamentosSchema.parse(data ?? {}))
   .handler(async ({ data }) => handle("edit", () => syncContaAzulPagamentos(data.caseId)));
+
+// ─── Cancelar Cobrança ──────────────────────────────────────────────────────
+
+const cancelChargeSchema = z.object({ parcelaId: z.string().uuid() });
+
+export const cancelContaAzulChargeFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => cancelChargeSchema.parse(data))
+  .handler(async ({ data }) => handle("edit", () => cancelContaAzulCharge(data.parcelaId)));
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 
