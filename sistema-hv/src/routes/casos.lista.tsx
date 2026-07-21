@@ -106,6 +106,7 @@ function CasosLista() {
     responsavel: "",
     municipio: "",
     frente: frente ?? "",
+    caso: "",
     canonical: {},
   });
   // Ordenação por coluna (default: mais recentes primeiro, como o servidor já

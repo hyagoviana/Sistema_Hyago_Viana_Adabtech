@@ -240,6 +240,7 @@ function DynamicKanban({
     responsavel: "",
     municipio: "",
     frente: initialFrente,
+    caso: "",
     canonical: {},
   });
   // Resolve o tema_id a partir do service_type_id (lookup reverso nos temas).

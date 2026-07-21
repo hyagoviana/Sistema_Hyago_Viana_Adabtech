@@ -18,6 +18,7 @@ export type CaseFilterValues = {
   responsavel: string;
   municipio: string;
   frente: string;
+  caso: string;
   canonical: CanonicalFilters;
 };
 
@@ -27,6 +28,7 @@ const EMPTY_FILTERS: CaseFilterValues = {
   responsavel: "",
   municipio: "",
   frente: "",
+  caso: "",
   canonical: {},
 };
 
@@ -36,6 +38,7 @@ type CaseRow = {
   responsavel?: string | null;
   municipio?: string | null;
   frente_slug?: string | null;
+  caso_pasta_nome?: string | null;
   canonical_fields?: Record<string, unknown> | null;
 };
 
@@ -47,7 +50,7 @@ type Props = {
   /** Frentes opcionais para o dropdown (label+slug) */
   frenteOptions?: { slug: string; label: string }[];
   /** Ocultar filtros fixos específicos */
-  hideFixed?: ("etapaOp" | "etapaFin" | "responsavel" | "municipio" | "frente")[];
+  hideFixed?: ("etapaOp" | "etapaFin" | "responsavel" | "municipio" | "frente" | "caso")[];
 };
 
 const selectClass =
@@ -95,6 +98,12 @@ export function CaseFiltersPanel({
     return Array.from(set).sort();
   }, [cases]);
 
+  const casoOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of cases) if (c.caso_pasta_nome) set.add(c.caso_pasta_nome);
+    return Array.from(set).sort();
+  }, [cases]);
+
   // Opções dinâmicas do canonical_fields para cada field def (tipo select)
   const canonicalOptions = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -120,6 +129,7 @@ export function CaseFiltersPanel({
     filters.responsavel ||
     filters.municipio ||
     filters.frente ||
+    filters.caso ||
     Object.values(filters.canonical).some((v) => !!v);
 
   function updateFixed<K extends keyof Omit<CaseFilterValues, "canonical">>(
@@ -181,6 +191,26 @@ export function CaseFiltersPanel({
                   {etapaOpOptions.map((s) => (
                     <option key={s.value} value={s.value}>
                       {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {!hide.has("caso") && casoOptions.length > 0 && (
+              <div>
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
+                  Caso
+                </label>
+                <select
+                  value={filters.caso}
+                  onChange={(e) => updateFixed("caso", e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">Todos</option>
+                  {casoOptions.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -340,6 +370,7 @@ export function applyCaseFilters<T extends CaseRow>(rows: T[], filters: CaseFilt
       if (!mun.includes(filters.municipio.toLowerCase())) return false;
     }
     if (filters.frente && (c.frente_slug ?? "") !== filters.frente) return false;
+    if (filters.caso && (c.caso_pasta_nome ?? "") !== filters.caso) return false;
     // Filtros canônicos (campos dinâmicos do tema)
     for (const [key, val] of Object.entries(filters.canonical)) {
       if (!val) continue;
