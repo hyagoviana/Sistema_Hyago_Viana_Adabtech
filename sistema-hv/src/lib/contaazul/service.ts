@@ -99,11 +99,15 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      // GET obrigatório: a API exige `codigo` no PUT, que só vem do registro existente.
+      // GET primeiro: a API exige TODOS os campos obrigatórios no PUT.
+      // Merge o registro existente com as atualizações para não perder nenhum campo.
       const existingPessoa = await getPessoa(caCustomerId);
-      // codigo pode vir vazio — nesse caso gera um a partir do CPF/CNPJ.
-      const codigo = existingPessoa.codigo || client.cpf_cnpj;
-      const updatePayload = { ...caUpdate, codigo };
+      const updatePayload = { ...existingPessoa, ...caUpdate, codigo: existingPessoa.codigo || client.cpf_cnpj };
+      // Remove campos que o PUT rejeita ou que são read-only
+      delete (updatePayload as Record<string, unknown>).id;
+      delete (updatePayload as Record<string, unknown>).ativo;
+      delete (updatePayload as Record<string, unknown>).data_criacao;
+      delete (updatePayload as Record<string, unknown>).data_alteracao;
       console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
       await updatePessoa(caCustomerId, updatePayload);
       console.log("contaazul: pessoa atualizada com sucesso");
