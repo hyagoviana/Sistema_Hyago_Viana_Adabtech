@@ -251,6 +251,7 @@ export type CAPessoa = {
   nome: string;
   cpf?: string;
   cnpj?: string;
+  rg?: string | null;
   documento?: string;
   email?: string;
   telefone?: string;
