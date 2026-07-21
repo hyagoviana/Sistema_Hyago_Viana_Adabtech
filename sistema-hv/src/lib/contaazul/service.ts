@@ -52,46 +52,46 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
   const address = client.address as Record<string, string> | null;
   const tipoPessoa = client.cpf_cnpj.length === 14 ? "Jurídica" : "Física";
 
-  const enderecoObj = address
-    ? {
-        endereco: {
+  const enderecosArr = address
+    ? [
+        {
           cep: address.zipcode,
           logradouro: address.street,
           numero: address.number,
           complemento: address.complement,
           bairro: address.neighborhood,
           cidade: address.city,
-          uf: address.state,
+          estado: address.state,
+          pais: "Brasil",
         },
-      }
-    : {};
+      ]
+    : [];
 
   const cpfOrCnpj =
     tipoPessoa === "Física"
       ? { cpf: client.cpf_cnpj }
       : { cnpj: client.cpf_cnpj };
 
-  // CRIAÇÃO (POST): inclui perfis + tipo_pessoa + cpf/cnpj + codigo (obrigatórios).
-  const caData = {
+  // Campos base compartilhados entre POST e PUT (conforme doc da API v2).
+  const caBase = {
     codigo: client.cpf_cnpj,
     nome: client.full_name,
     tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
     ...cpfOrCnpj,
+    ...(tipoPessoa === "Física" ? { rg: "N/I" } : {}),
     email: client.email ?? undefined,
-    telefone: client.phone ?? undefined,
-    perfis: ["Cliente"],
-    ...enderecoObj,
+    telefone_celular: client.phone ?? undefined,
+    ...(enderecosArr.length > 0 ? { enderecos: enderecosArr } : {}),
   };
 
-  // ATUALIZAÇÃO (PUT): mesmo payload, sem `perfis` (rejeitado pela API).
-  const caUpdate = {
-    nome: client.full_name,
-    tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
-    ...cpfOrCnpj,
-    email: client.email ?? undefined,
-    telefone: client.phone ?? undefined,
-    ...enderecoObj,
+  // CRIAÇÃO (POST): base + perfis.
+  const caData = {
+    ...caBase,
+    perfis: [{ tipo_perfil: "Cliente" }],
   };
+
+  // ATUALIZAÇÃO (PUT): base (sem perfis — imutável no PUT).
+  const caUpdate = { ...caBase };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let caCustomerId = (client as any).contaazul_customer_id as string | null;
@@ -99,19 +99,12 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   if (caCustomerId) {
     try {
-      // GET primeiro para pegar o `codigo` existente (obrigatório no PUT).
+      // GET primeiro: preserva `codigo` e `rg` existentes.
       const existingPessoa = await getPessoa(caCustomerId);
-      // Payload limpo com todos os campos obrigatórios da API:
-      // codigo, nome, tipo_pessoa, cpf/cnpj, rg (obrigatório pra Física)
       const updatePayload = {
+        ...caUpdate,
         codigo: existingPessoa.codigo || client.cpf_cnpj,
-        nome: client.full_name,
-        tipo_pessoa: tipoPessoa as "Física" | "Jurídica",
-        ...cpfOrCnpj,
         ...(tipoPessoa === "Física" ? { rg: existingPessoa.rg || "N/I" } : {}),
-        email: client.email ?? undefined,
-        telefone: client.phone ?? undefined,
-        ...enderecoObj,
       };
       console.log("contaazul: atualizando pessoa", caCustomerId, "payload:", JSON.stringify(updatePayload));
       await updatePessoa(caCustomerId, updatePayload);
