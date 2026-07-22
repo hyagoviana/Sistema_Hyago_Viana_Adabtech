@@ -6,6 +6,7 @@ import {
   downloadCaseDocumentFn,
   finalizeCaseDocumentFn,
   generateCaseDocumentFn,
+  generateDocumentAsNewCaseFn,
   listCaseDocumentsFn,
   listClientCaseDocumentsFn,
   reopenCaseDocumentFn,
@@ -85,6 +86,26 @@ export function useGenerateCaseDocument(caseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-documents", caseId] });
       qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+    },
+  });
+}
+
+// R2-10 — gera "Documento de caso" criando um CASO NOVO. Retorna o id do novo
+// caso (+ doc). Invalida listas de casos para o novo card aparecer.
+export function useGenerateDocumentAsNewCase() {
+  const fn = useServerFn(generateDocumentAsNewCaseFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      sourceCaseId: string;
+      templateId: string;
+      title?: string;
+      values: Record<string, string>;
+      casoPastaNome?: string | null;
+      casoPastaDriveId?: string | null;
+    }) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 }

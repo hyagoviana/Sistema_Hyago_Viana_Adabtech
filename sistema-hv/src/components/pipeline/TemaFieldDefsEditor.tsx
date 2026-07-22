@@ -8,7 +8,7 @@
 //   • null  → campos do PAINEL PADRÃO do tema (valem para todas as frentes);
 //   • string → campos CONDICIONAIS de uma frente específica.
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -33,14 +33,22 @@ import {
 
 const TYPE_OPTIONS: { value: TemaFieldType; label: string }[] = [
   { value: "text", label: "Texto" },
-  { value: "select", label: "Escolha única" },
+  { value: "multiselect", label: "Múltipla escolha" },
+  { value: "boolean", label: "Sim / Não" },
   { value: "money", label: "Valor (R$)" },
   { value: "number", label: "Número" },
   { value: "date", label: "Data" },
 ];
 
+// Inclui 'select' (legado — não mais oferecido na criação) para rótulo correto.
 function typeLabel(t: string): string {
+  if (t === "select") return "Escolha única";
   return TYPE_OPTIONS.find((o) => o.value === t)?.label ?? t;
+}
+
+// Tipos que usam lista de opções cadastradas.
+function usaOpcoes(t: string): boolean {
+  return t === "select" || t === "multiselect";
 }
 
 function optionsToArray(options: unknown): string[] {
@@ -63,24 +71,40 @@ export function TemaFieldDefsEditor({
 
   const [label, setLabel] = useState("");
   const [type, setType] = useState<TemaFieldType>("text");
-  const [optionsText, setOptionsText] = useState("");
+  // Lista de opções (uma por linha na UI) para select/multiselect.
+  const [optionsList, setOptionsList] = useState<string[]>([]);
   const [required, setRequired] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   function resetForm() {
     setLabel("");
     setType("text");
-    setOptionsText("");
+    setOptionsList([]);
     setRequired(false);
     setEditingId(null);
   }
 
+  // Ao escolher um tipo com opções, garante ao menos uma linha em branco pra
+  // digitar; ao sair, limpa a lista.
+  function changeType(v: TemaFieldType) {
+    setType(v);
+    if (usaOpcoes(v)) setOptionsList((prev) => (prev.length ? prev : [""]));
+    else setOptionsList([]);
+  }
+
+  function setOptionAt(i: number, val: string) {
+    setOptionsList((prev) => prev.map((o, idx) => (idx === i ? val : o)));
+  }
+  function addOption() {
+    setOptionsList((prev) => [...prev, ""]);
+  }
+  function removeOption(i: number) {
+    setOptionsList((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
   function parseOptions(): string[] | null {
-    if (type !== "select") return null;
-    const arr = optionsText
-      .split(/[\n,]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    if (!usaOpcoes(type)) return null;
+    const arr = optionsList.map((s) => s.trim()).filter(Boolean);
     return arr.length > 0 ? arr : null;
   }
 
@@ -90,8 +114,8 @@ export function TemaFieldDefsEditor({
       toast.error("Informe o rótulo do campo");
       return;
     }
-    if (type === "select" && !parseOptions()) {
-      toast.error("Campo de escolha única precisa de ao menos uma opção");
+    if (usaOpcoes(type) && !parseOptions()) {
+      toast.error("Campo de múltipla escolha precisa de ao menos uma opção");
       return;
     }
     try {
@@ -122,7 +146,8 @@ export function TemaFieldDefsEditor({
     setEditingId(d.id);
     setLabel(d.label);
     setType(d.type as TemaFieldType);
-    setOptionsText(optionsToArray(d.options).join(", "));
+    const opts = optionsToArray(d.options);
+    setOptionsList(usaOpcoes(d.type) ? (opts.length ? opts : [""]) : []);
     setRequired(!!d.required);
   }
 
@@ -142,6 +167,17 @@ export function TemaFieldDefsEditor({
     }
   }
 
+  // Ocultar/mostrar (active) — não apaga; só esconde da lista/Kanban/ficha
+  // (listTemaFieldDefs filtra active=true). Reversível.
+  async function toggleAtivo(d: TemaFieldDef) {
+    try {
+      await updateDef.mutateAsync({ id: d.id, patch: { active: !d.active } });
+      toast.success(d.active ? "Filtro ocultado" : "Filtro reexibido");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao alterar visibilidade");
+    }
+  }
+
   const saving = createDef.isPending || updateDef.isPending;
 
   return (
@@ -157,20 +193,32 @@ export function TemaFieldDefsEditor({
           (defs as TemaFieldDef[]).map((d) => (
             <div
               key={d.id}
-              className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2"
+              className={`flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 ${
+                d.active ? "" : "opacity-55"
+              }`}
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
                   <span className="truncate">{d.label}</span>
                   {d.required && <span className="text-[10px] text-destructive">obrigatório</span>}
+                  {!d.active && <span className="text-[10px] text-muted-foreground">(oculto)</span>}
                 </div>
                 <div className="text-[10.5px] text-muted-foreground">
                   {d.key} · {typeLabel(d.type)}
-                  {d.type === "select" && optionsToArray(d.options).length > 0
+                  {usaOpcoes(d.type) && optionsToArray(d.options).length > 0
                     ? ` (${optionsToArray(d.options).join(", ")})`
                     : ""}
                 </div>
               </div>
+              <button
+                type="button"
+                title={d.active ? "Ocultar filtro" : "Reexibir filtro"}
+                onClick={() => toggleAtivo(d)}
+                disabled={updateDef.isPending}
+                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
+              >
+                {d.active ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
               <button
                 type="button"
                 title="Editar campo"
@@ -206,7 +254,7 @@ export function TemaFieldDefsEditor({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Tipo</Label>
-            <Select value={type} onValueChange={(v) => setType(v as TemaFieldType)}>
+            <Select value={type} onValueChange={(v) => changeType(v as TemaFieldType)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -221,14 +269,42 @@ export function TemaFieldDefsEditor({
           </div>
         </div>
 
-        {type === "select" && (
-          <div className="space-y-1">
-            <Label className="text-xs">Opções (separe por vírgula ou linha)</Label>
-            <Input
-              value={optionsText}
-              onChange={(e) => setOptionsText(e.target.value)}
-              placeholder="Ex.: Ativo, Inativo, Suspenso"
-            />
+        {usaOpcoes(type) && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Opções</Label>
+            <div className="space-y-1.5">
+              {(optionsList.length ? optionsList : [""]).map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={opt}
+                    onChange={(e) => setOptionAt(i, e.target.value)}
+                    placeholder={`Opção ${i + 1}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addOption();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    title="Remover opção"
+                    onClick={() => removeOption(i)}
+                    disabled={optionsList.length <= 1}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={addOption} className="mt-1">
+              <Plus size={13} />
+              Adicionar opção
+            </Button>
+            <p className="text-[10.5px] text-muted-foreground">
+              O usuário poderá marcar uma ou mais dessas opções.
+            </p>
           </div>
         )}
 

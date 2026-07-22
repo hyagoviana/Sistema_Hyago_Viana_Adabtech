@@ -448,6 +448,77 @@ export async function generateCaseDocumentFromTemplate(opts: {
   return { doc, editUrl: docUrl(docId) };
 }
 
+// R2-10 (2026-07-22) — "Documento de caso" gera um CASO PRÓPRIO. Cria um NOVO
+// caso clonando cliente/tema/frente do caso de origem (+ a pasta escolhida) e
+// gera o documento NELE. Reusa toda a lógica de createCase (código, etapas,
+// pastas Drive) e generateCaseDocumentFromTemplate. Retorna o id do novo caso
+// para a UI navegar e abrir o editor do Word. `docKind` é sempre 'contrato'
+// (procuração NÃO passa por aqui — continua no caso atual).
+export async function generateDocumentAsNewCase(opts: {
+  sourceCaseId: string;
+  templateId: string;
+  title?: string;
+  values: Record<string, string>;
+  casoPastaNome?: string | null;
+  casoPastaDriveId?: string | null;
+  triggeredBy?: string;
+}) {
+  const sb = getSupabaseAdmin();
+  const { data: src, error } = await sb
+    .from("system_cases")
+    .select("id, client_id, tema_id, frente_slug, case_type")
+    .eq("id", opts.sourceCaseId)
+    .is("deleted_at", null)
+    .single();
+  if (error || !src) throw new CaseDocumentServiceError("Caso de origem não encontrado", 404);
+
+  // R2-11 (req.5) — se o caso de origem AINDA NÃO tem nenhum "documento de caso"
+  // (doc_kind='contrato'), o PRIMEIRO fica NELE (procuração + caso juntos no mesmo
+  // card). Do 2º em diante, cada "documento de caso" vira um caso novo (R2-10).
+  const { count } = await sb
+    .from("system_case_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("case_id", opts.sourceCaseId)
+    .eq("doc_kind", "contrato")
+    .is("deleted_at", null);
+  if ((count ?? 0) === 0) {
+    const genHere = await generateCaseDocumentFromTemplate({
+      caseId: opts.sourceCaseId,
+      templateId: opts.templateId,
+      title: opts.title,
+      values: opts.values,
+      docKind: "contrato",
+      triggeredBy: opts.triggeredBy,
+    });
+    return { caseId: opts.sourceCaseId, ...genHere };
+  }
+
+  // Import dinâmico evita ciclo entre case-documents-service e cases-service.
+  const { createCase } = await import("./cases-service");
+  const novo = await createCase(
+    {
+      client_id: src.client_id,
+      case_type: src.case_type,
+      tema_id: src.tema_id ?? null,
+      frente_slug: src.frente_slug ?? null,
+      caso_pasta_nome: opts.casoPastaNome ?? null,
+      caso_pasta_drive_id: opts.casoPastaDriveId ?? null,
+    } as never,
+    opts.triggeredBy,
+  );
+
+  const gen = await generateCaseDocumentFromTemplate({
+    caseId: novo.id,
+    templateId: opts.templateId,
+    title: opts.title,
+    values: opts.values,
+    docKind: "contrato",
+    triggeredBy: opts.triggeredBy,
+  });
+
+  return { caseId: novo.id, ...gen };
+}
+
 // Normaliza a chave do campo p/ detectar as datas de EMISSÃO (que não devem ser
 // congeladas no caso — são sempre a data de geração). Mesma normalização do motor.
 function isEmissaoDateKey(key: string): boolean {

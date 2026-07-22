@@ -206,13 +206,13 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
           caseId={genFor.id}
           caseType={genFor.case_type}
           frenteSlug={genFor.frente_slug}
+          temaId={genFor.tema_id}
+          clientId={clientId}
           initialFolderId={genFor.casoFolderId}
           autoFill={(() => {
             let af = buildAutoFillFromClient(fullClient ?? {}, genFor);
             const municipioRow = (municipios ?? []).find(
-              (m) =>
-                m.nome.trim().toLowerCase() ===
-                (genFor.municipio ?? "").trim().toLowerCase(),
+              (m) => m.nome.trim().toLowerCase() === (genFor.municipio ?? "").trim().toLowerCase(),
             );
             af = augmentWithMunicipio(af, municipioRow);
             const perfilNum = Object.entries(af.canonical ?? {}).find(
@@ -220,9 +220,7 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
             )?.[1];
             const perfilRow = perfilNum
               ? (perfis ?? []).find(
-                  (p) =>
-                    p.nome.trim().toLowerCase() ===
-                    perfilNum.trim().toLowerCase(),
+                  (p) => p.nome.trim().toLowerCase() === perfilNum.trim().toLowerCase(),
                 )
               : undefined;
             af = augmentWithPerfil(af, perfilRow);
@@ -256,9 +254,7 @@ function TemaSection({
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-3 pb-1 border-b border-[var(--border)]">
-        <span className="text-[12px] text-muted-foreground uppercase tracking-wide">
-          {label}
-        </span>
+        <span className="text-[12px] text-muted-foreground uppercase tracking-wide">{label}</span>
         <span className="text-[11px] text-muted-foreground">({count})</span>
       </div>
       <div className="space-y-5">
@@ -300,9 +296,9 @@ function CaseCard({ c }: { c: CaseListItem }) {
       <div className="flex items-center gap-4">
         <Link to="/casos/$id" params={{ id: c.id }} className="flex-1 min-w-0 group">
           <div className="text-[15px] text-[var(--navy)] font-semibold group-hover:text-[var(--gold-700)] transition-colors">
-            {(c as { caso_pasta_nome?: string | null }).caso_pasta_nome
-              ?? CASE_TYPE_LABELS[c.case_type as CaseType]
-              ?? c.case_type}
+            {(c as { caso_pasta_nome?: string | null }).caso_pasta_nome ??
+              CASE_TYPE_LABELS[c.case_type as CaseType] ??
+              c.case_type}
           </div>
           <span className="text-[11px] text-muted-foreground tracking-wide mt-0.5">
             {c.case_code}

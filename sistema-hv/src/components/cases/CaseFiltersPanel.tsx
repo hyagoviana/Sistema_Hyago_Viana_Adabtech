@@ -1,7 +1,17 @@
-import { Filter, X } from "lucide-react";
+import { Filter, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
+import { useAuth } from "@/lib/auth";
+import { can } from "@/lib/rbac";
 import {
   MACRO_FIN_LABELS,
   MACRO_OP_LABELS,
@@ -11,6 +21,17 @@ import {
 
 // Filtros dinâmicos: { [fieldKey]: valor selecionado }
 export type CanonicalFilters = Record<string, string>;
+
+// R2-09 — sentinela para "listar só os casos com o campo EM BRANCO" (não
+// preenchido). O usuário pediu poder "puxar os em branco" na lista.
+export const CANONICAL_EMPTY = "__EMPTY__";
+
+// Converte centavos (armazenados p/ type=money) em rótulo R$ para o dropdown.
+function moneyLabel(raw: string): string {
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return raw;
+  return (n / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 export type CaseFilterValues = {
   etapaOp: string;
@@ -66,6 +87,11 @@ export function CaseFiltersPanel({
   hideFixed = [],
 }: Props) {
   const [open, setOpen] = useState(true);
+  // Editor de filtros do tema (criar/ocultar/excluir os customizados). Só admin
+  // e só quando há um tema selecionado (é onde os filtros vivem).
+  const [editOpen, setEditOpen] = useState(false);
+  const { role } = useAuth();
+  const podeGerirFiltros = can(role, "config.manage") && !!temaId;
   const { data: fieldDefs } = useTemaFieldDefs(temaId);
 
   // Opções derivadas dos dados para filtros fixos
@@ -104,20 +130,38 @@ export function CaseFiltersPanel({
     return Array.from(set).sort();
   }, [cases]);
 
-  // Opções dinâmicas do canonical_fields para cada field def (tipo select)
+  // R2-09 — Opções dinâmicas por field def, para TODOS os tipos. Cada entrada é
+  // uma lista {value,label}: o `value` casa com canonical_fields; o `label` é o
+  // que o usuário vê no dropdown. É AQUI que "as opções dos filtros aparecem":
+  //   • select  → as opções definidas no tema;
+  //   • boolean → Sim / Não;
+  //   • money   → valores observados, formatados em R$;
+  //   • demais  → valores distintos observados nos dados.
   const canonicalOptions = useMemo(() => {
-    const map: Record<string, string[]> = {};
+    const map: Record<string, { value: string; label: string }[]> = {};
     for (const def of fieldDefs ?? []) {
-      if (def.type === "select" && Array.isArray(def.options)) {
-        map[def.key] = def.options as string[];
-      } else if (def.type === "text" || def.type === "select") {
-        // Para text sem opções pré-definidas, extrair dos dados
-        const set = new Set<string>();
-        for (const c of cases) {
-          const val = (c.canonical_fields ?? {})[def.key];
-          if (typeof val === "string" && val.trim()) set.add(val.trim());
-        }
-        if (set.size > 0) map[def.key] = Array.from(set).sort();
+      if (def.type === "boolean") {
+        map[def.key] = [
+          { value: "true", label: "Sim" },
+          { value: "false", label: "Não" },
+        ];
+        continue;
+      }
+      if ((def.type === "select" || def.type === "multiselect") && Array.isArray(def.options)) {
+        map[def.key] = (def.options as string[]).map((o) => ({ value: o, label: o }));
+        continue;
+      }
+      // text / number / date / money (e select sem options) → derivar dos dados.
+      const set = new Set<string>();
+      for (const c of cases) {
+        const val = (c.canonical_fields ?? {})[def.key];
+        if (val === null || val === undefined || val === "") continue;
+        set.add(String(val).trim());
+      }
+      if (set.size > 0) {
+        map[def.key] = Array.from(set)
+          .sort()
+          .map((v) => ({ value: v, label: def.type === "money" ? moneyLabel(v) : v }));
       }
     }
     return map;
@@ -147,31 +191,62 @@ export function CaseFiltersPanel({
     onChange({ ...EMPTY_FILTERS });
   }
 
-  // Filtra field defs que fazem sentido como filtro (select e text com opções)
-  const filterableDefs = useMemo(
-    () =>
-      (fieldDefs ?? []).filter(
-        (d) => d.type === "select" || (d.type === "text" && (canonicalOptions[d.key]?.length ?? 0) > 0),
-      ),
-    [fieldDefs, canonicalOptions],
-  );
+  // R2-09 — TODOS os campos definidos no tema viram filtro (select, Sim/Não,
+  // data, número, valor, texto). Assim as opções que o admin criou aparecem.
+  const filterableDefs = useMemo(() => fieldDefs ?? [], [fieldDefs]);
 
   const hide = new Set(hideFixed);
 
   return (
     <div className="mb-4">
-      {/* Toggle */}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-[var(--navy)] transition-colors mb-2"
-      >
-        <Filter size={14} />
-        {open ? "Ocultar filtros" : "Mostrar filtros"}
-        {hasActiveFilters && (
-          <span className="ml-1 w-2 h-2 rounded-full bg-[var(--gold)] inline-block" />
+      {/* Toggle + botão de editar filtros do tema (admin) */}
+      <div className="mb-2 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-[var(--navy)] transition-colors"
+        >
+          <Filter size={14} />
+          {open ? "Ocultar filtros" : "Mostrar filtros"}
+          {hasActiveFilters && (
+            <span className="ml-1 w-2 h-2 rounded-full bg-[var(--gold)] inline-block" />
+          )}
+        </button>
+        {podeGerirFiltros && (
+          <button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            title="Criar, ocultar ou excluir filtros do tema"
+            className="flex items-center gap-1.5 text-[13px] text-[var(--gold-700)] hover:text-[var(--gold)] transition-colors"
+          >
+            <SlidersHorizontal size={14} />
+            Editar filtros
+          </button>
         )}
-      </button>
+      </div>
+
+      {/* Editor de filtros do tema — só os customizados (criar/editar/ocultar/
+          excluir). Os filtros padrão do sistema (Caso, Financeiro, Responsável,
+          Município) não são editáveis. */}
+      {podeGerirFiltros && (
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Filtros do tema</DialogTitle>
+              <DialogDescription>
+                Crie novos filtros para este tema. Os filtros padrão do sistema (Caso, Financeiro,
+                Responsável, Município) não são editáveis. Nos que você criar, dá para ocultar
+                (olho) ou excluir. Aparecem no Kanban e na Lista.
+              </DialogDescription>
+            </DialogHeader>
+            <TemaFieldDefsEditor
+              temaId={temaId as string}
+              frenteSlug={null}
+              title="Filtros personalizados"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {open && (
         <div className="card-editorial !p-4">
@@ -307,36 +382,47 @@ export function CaseFiltersPanel({
               </div>
             )}
 
-            {/* Filtros dinâmicos do tema (canonical field defs) */}
-            {filterableDefs.map((def) => (
-              <div key={def.key}>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
-                  {def.label}
-                </label>
-                {(canonicalOptions[def.key]?.length ?? 0) > 20 && def.type === "text" ? (
-                  <input
-                    type="text"
-                    value={filters.canonical[def.key] ?? ""}
-                    onChange={(e) => updateCanonical(def.key, e.target.value)}
-                    placeholder="Contém..."
-                    className={inputClass}
-                  />
-                ) : (
-                  <select
-                    value={filters.canonical[def.key] ?? ""}
-                    onChange={(e) => updateCanonical(def.key, e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">Todos</option>
-                    {(canonicalOptions[def.key] ?? []).map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            ))}
+            {/* Filtros dinâmicos do tema (canonical field defs). Dropdown com as
+                opções definidas + "(em branco)"; texto com muitos valores usa
+                busca "contém". */}
+            {filterableDefs.map((def) => {
+              const opts = canonicalOptions[def.key] ?? [];
+              const useInput = def.type === "text" && opts.length > 20;
+              return (
+                <div key={def.key}>
+                  <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
+                    {def.label}
+                  </label>
+                  {useInput ? (
+                    <input
+                      type="text"
+                      value={
+                        filters.canonical[def.key] === CANONICAL_EMPTY
+                          ? ""
+                          : (filters.canonical[def.key] ?? "")
+                      }
+                      onChange={(e) => updateCanonical(def.key, e.target.value)}
+                      placeholder="Contém..."
+                      className={inputClass}
+                    />
+                  ) : (
+                    <select
+                      value={filters.canonical[def.key] ?? ""}
+                      onChange={(e) => updateCanonical(def.key, e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">Todos</option>
+                      <option value={CANONICAL_EMPTY}>(em branco)</option>
+                      {opts.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Limpar filtros */}
@@ -358,8 +444,22 @@ export function CaseFiltersPanel({
   );
 }
 
-/** Aplica os filtros sobre uma lista de cases. Retorna o subconjunto filtrado. */
-export function applyCaseFilters<T extends CaseRow>(rows: T[], filters: CaseFilterValues): T[] {
+/**
+ * Aplica os filtros sobre uma lista de cases. Retorna o subconjunto filtrado.
+ *
+ * R2-09 — `defs` (opcional) traz o tipo de cada campo do tema para decidir o
+ * matching dos filtros canônicos: campos de DROPDOWN (select/boolean/date/
+ * number/money) casam por IGUALDADE exata (evita falso-positivo tipo "Inativo"
+ * contendo "Ativo"); campos de TEXTO casam por "contém". O valor sentinela
+ * CANONICAL_EMPTY mantém só os casos com o campo EM BRANCO. Sem `defs`
+ * (compat), mantém o comportamento antigo de "contém".
+ */
+export function applyCaseFilters<T extends CaseRow>(
+  rows: T[],
+  filters: CaseFilterValues,
+  defs?: { key: string; type: string }[],
+): T[] {
+  const typeByKey = new Map((defs ?? []).map((d) => [d.key, d.type]));
   return rows.filter((c) => {
     if (filters.etapaOp && c.macrostatus_op !== filters.etapaOp) return false;
     if (filters.etapaFin && c.macrostatus_fin !== filters.etapaFin) return false;
@@ -374,8 +474,30 @@ export function applyCaseFilters<T extends CaseRow>(rows: T[], filters: CaseFilt
     // Filtros canônicos (campos dinâmicos do tema)
     for (const [key, val] of Object.entries(filters.canonical)) {
       if (!val) continue;
-      const cVal = String((c.canonical_fields ?? {})[key] ?? "");
-      if (!cVal.toLowerCase().includes(val.toLowerCase())) return false;
+      const rawVal = (c.canonical_fields ?? {})[key];
+      // Múltipla escolha: valor é ARRAY — casa se contém a opção escolhida.
+      if (Array.isArray(rawVal)) {
+        if (val === CANONICAL_EMPTY) {
+          if (rawVal.length !== 0) return false;
+          continue;
+        }
+        const arr = rawVal.map((x) => String(x).toLowerCase());
+        if (!arr.includes(val.toLowerCase())) return false;
+        continue;
+      }
+      const cVal = rawVal === null || rawVal === undefined ? "" : String(rawVal);
+      // "(em branco)": mantém só quando o campo NÃO está preenchido.
+      if (val === CANONICAL_EMPTY) {
+        if (cVal.trim() !== "") return false;
+        continue;
+      }
+      const type = typeByKey.get(key);
+      // Texto (ou sem defs) → "contém"; demais tipos (dropdown) → igualdade.
+      if (type === undefined || type === "text") {
+        if (!cVal.toLowerCase().includes(val.toLowerCase())) return false;
+      } else if (cVal.toLowerCase() !== val.toLowerCase()) {
+        return false;
+      }
     }
     return true;
   });

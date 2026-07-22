@@ -45,6 +45,7 @@ import {
   useStages,
 } from "@/hooks/usePipeline";
 import { usePodeEditar } from "@/hooks/usePermissions";
+import { useTemaFieldDefs } from "@/hooks/useTemaFieldDefs";
 import { useTemas } from "@/hooks/useTemas";
 import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
 
@@ -247,10 +248,22 @@ function DynamicKanban({
   const { data: temas } = useTemas();
   const temaId = useMemo(() => {
     for (const t of temas ?? []) {
-      if ((t as { service_type_id?: string | null }).service_type_id === serviceType.id) return t.id;
+      if ((t as { service_type_id?: string | null }).service_type_id === serviceType.id)
+        return t.id;
     }
     return null;
   }, [temas, serviceType.id]);
+  // R2-09 — defs de filtros do tema, para o matching correto por tipo (dropdown
+  // = igualdade, texto = contém) no applyCaseFilters.
+  const { data: temaDefsData } = useTemaFieldDefs(temaId);
+  const temaFilterDefs = useMemo(
+    () =>
+      ((temaDefsData ?? []) as { key: string; type: string }[]).map((d) => ({
+        key: d.key,
+        type: d.type,
+      })),
+    [temaDefsData],
+  );
   const { data: stages, isLoading: stagesLoading } = useStages(serviceType.id, kind);
   const { data: allCases, isLoading, isError, error } = useCasesByServiceType(serviceType.id);
   const moveOp = useMoveCaseStageOp(serviceType.id);
@@ -270,13 +283,23 @@ function DynamicKanban({
   const baseCases =
     kind === "fin"
       ? (allCases ?? []).filter((c) => c.macrostatus_fin && c.macrostatus_fin !== "NAO_APLICAVEL")
-      : (allCases ?? []).filter(
-          (c) =>
-            !(c as { removido_do_operacional_at?: string | null }).removido_do_operacional_at &&
-            // Melhoria 3: casos em fase comercial (aguardando assinatura) não
-            // aparecem no Kanban operacional até serem liberados.
-            !(c as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at,
-        );
+      : (allCases ?? []).filter((c) => {
+          const cc = c as {
+            removido_do_operacional_at?: string | null;
+            lifecycle?: string | null;
+            aguardando_assinatura_at?: string | null;
+            procuracao_assinada_at?: string | null;
+          };
+          // Fora os removidos do operacional (viraram financeiro-only).
+          if (cc.removido_do_operacional_at) return false;
+          // R2-11 — leads em fase COMERCIAL (procuração pendente OU assinada, mas
+          // ainda LEAD = não promovidos ao operacional) NÃO aparecem no Kanban do
+          // tema. Entram só quando "Vincular a um tema" os promove a CLIENTE. Casos
+          // criados direto (LEAD sem procuração/aguardando) e clientes aparecem.
+          if (cc.lifecycle === "LEAD" && (cc.aguardando_assinatura_at || cc.procuracao_assinada_at))
+            return false;
+          return true;
+        });
 
   const caseFrente = (c: unknown) => (c as { frente_slug?: string | null }).frente_slug ?? null;
 
@@ -295,8 +318,11 @@ function DynamicKanban({
   const frenteFilter = panelFilters.frente;
   const applyFrente = kind === "op" && frenteFilter !== "";
   const afterPanel = applyCaseFilters(
-    baseCases as (typeof baseCases[number] & { canonical_fields?: Record<string, unknown> | null })[],
+    baseCases as ((typeof baseCases)[number] & {
+      canonical_fields?: Record<string, unknown> | null;
+    })[],
     panelFilters,
+    temaFilterDefs,
   );
   // Ajuste A4 — busca rápida por nome do cliente ou código do caso.
   const q = search.trim().toLowerCase();
@@ -490,7 +516,11 @@ function DynamicKanban({
       {/* Painel de filtros dinâmicos (fixos + campos canônicos do tema) */}
       <CaseFiltersPanel
         temaId={temaId}
-        cases={baseCases as (typeof baseCases[number] & { canonical_fields?: Record<string, unknown> | null })[]}
+        cases={
+          baseCases as ((typeof baseCases)[number] & {
+            canonical_fields?: Record<string, unknown> | null;
+          })[]
+        }
         filters={panelFilters}
         onChange={setPanelFilters}
         frenteOptions={frenteOptions.map((s) => ({ slug: s, label: s }))}

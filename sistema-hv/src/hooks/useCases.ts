@@ -198,8 +198,10 @@ export function useUpdateCaseCanonicalFields() {
   const fn = useServerFn(updateCaseCanonicalFieldsFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; patch: Record<string, string | number | boolean | null> }) =>
-      fn({ data: vars }),
+    mutationFn: (vars: {
+      id: string;
+      patch: Record<string, string | number | boolean | string[] | null>;
+    }) => fn({ data: vars }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });

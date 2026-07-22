@@ -7,19 +7,19 @@ import {
   FolderOpen,
   Layers,
   Phone,
+  SlidersHorizontal,
   Trash2,
   UserCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  ChecklistInconsistencyAlert,
-} from "@/components/cases/CaseChecklistPanel";
+import { ChecklistInconsistencyAlert } from "@/components/cases/CaseChecklistPanel";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
+import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
 import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
@@ -64,7 +64,13 @@ import {
   buildAutoFillFromClient,
 } from "@/lib/cases/document-autofill";
 import { useCaseHonorarios } from "@/hooks/useTermo";
-import { useCase, useCaseEvents, useCaseResponsaveis, useDeleteCase, usePromoverCasoManual } from "@/hooks/useCases";
+import {
+  useCase,
+  useCaseEvents,
+  useCaseResponsaveis,
+  useDeleteCase,
+  usePromoverCasoManual,
+} from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import {
   CASE_TYPE_LABELS,
@@ -136,6 +142,8 @@ function CasoDetalhe() {
   const [linkTemaOpen, setLinkTemaOpen] = useState(false);
   // ITEM 2 — popup "Enviar contrato e procuração" (mesmo do "Gerar documento").
   const [genFlowOpen, setGenFlowOpen] = useState(false);
+  // R2-09 — pop-up "Preencher filtros" do tema, avulso (além do pós-Word).
+  const [fillFiltersOpen, setFillFiltersOpen] = useState(false);
 
   // S1-03 — promover manualmente lead→cliente (independe da flag comercial).
   async function handlePromover() {
@@ -190,9 +198,10 @@ function CasoDetalhe() {
 
   const dias = daysSince(caso.status_changed_at);
   const diasFin = daysSince(caso.status_fin_changed_at);
-  const tipoLabel = (caso as { caso_pasta_nome?: string | null }).caso_pasta_nome
-    ?? CASE_TYPE_LABELS[caso.case_type as CaseType]
-    ?? caso.case_type;
+  const tipoLabel =
+    (caso as { caso_pasta_nome?: string | null }).caso_pasta_nome ??
+    CASE_TYPE_LABELS[caso.case_type as CaseType] ??
+    caso.case_type;
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
@@ -205,7 +214,14 @@ function CasoDetalhe() {
     CLIENTE: { label: "Cliente", cls: "bg-green-600 text-white" },
     PERDIDO: { label: "Perdido", cls: "bg-red-600 text-white" },
   };
-  const lcMeta = lifecycleMeta[lifecycle] ?? lifecycleMeta.LEAD;
+  // R2-11 — SELO "Cliente": procuração assinada já mostra "Cliente" mesmo o caso
+  // seguindo tecnicamente LEAD no comercial (vira CLIENTE de fato ao vincular tema).
+  const procuracaoAssinada = !!(caso as { procuracao_assinada_at?: string | null })
+    .procuracao_assinada_at;
+  const lcMeta =
+    lifecycle === "LEAD" && procuracaoAssinada
+      ? lifecycleMeta.CLIENTE
+      : (lifecycleMeta[lifecycle] ?? lifecycleMeta.LEAD);
   // `removido_do_operacional_at` entra no types.ts só após db:push + db:types (S19).
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
@@ -270,18 +286,23 @@ function CasoDetalhe() {
           >
             {lcMeta.label}
           </span>
-          {/* 2026-07-19 — promover exige poder editar o operacional (respeita override). */}
-          {podeGerirCaso && lifecycle !== "CLIENTE" && lifecycle !== "PERDIDO" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePromover}
-              disabled={promover.isPending}
-            >
-              <UserCheck size={14} className="mr-1.5" />
-              {promover.isPending ? "Promovendo…" : "Marcar como cliente"}
-            </Button>
-          )}
+          {/* 2026-07-19 — promover exige poder editar o operacional (respeita override).
+              R2-11 — some quando o selo já diz "Cliente" (procuração assinada): a
+              entrada no operacional agora é via "Vincular a um tema". */}
+          {podeGerirCaso &&
+            lifecycle !== "CLIENTE" &&
+            lifecycle !== "PERDIDO" &&
+            !procuracaoAssinada && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePromover}
+                disabled={promover.isPending}
+              >
+                <UserCheck size={14} className="mr-1.5" />
+                {promover.isPending ? "Promovendo…" : "Marcar como cliente"}
+              </Button>
+            )}
           {/* ITEM 4 (2026-07-07) — "Enviar para o financeiro" também no TOPO (abre
               o mesmo popup: duplicar p/ financeiro ou somente-financeiro). Só
               enquanto o caso ainda não está no financeiro. */}
@@ -309,6 +330,13 @@ function CasoDetalhe() {
           {podeGerirCaso && (
             <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
               <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
+            </Button>
+          )}
+          {/* R2-09 — preencher os filtros do tema a qualquer momento (além do
+              pop-up que abre depois de gerar o Word). Só quando o caso tem tema. */}
+          {podeGerirCaso && (caso as { tema_id?: string | null }).tema_id && (
+            <Button variant="outline" size="sm" onClick={() => setFillFiltersOpen(true)}>
+              <SlidersHorizontal size={14} className="mr-1.5" /> Preencher filtros
             </Button>
           )}
           {podeGerirCaso && (
@@ -436,6 +464,11 @@ function CasoDetalhe() {
         caseId={caso.id}
         caseType={caso.case_type}
         frenteSlug={caso.frente_slug}
+        temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+        clientId={caso.client_id}
+        canonicalFields={
+          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
+        }
         clientName={cliente?.full_name}
         clientCpf={cliente?.cpf_cnpj}
         municipio={caso.municipio ?? undefined}
@@ -548,7 +581,28 @@ function CasoDetalhe() {
         caseId={caso.id}
         caseType={caso.case_type}
         frenteSlug={caso.frente_slug}
+        temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+        clientId={caso.client_id}
+        canonicalFields={
+          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
+        }
         autoFill={docAutoFill}
+        casoCriaNovoCaso
+      />
+
+      {/* R2-09 — pop-up "Preencher filtros" do tema (avulso, botão do topo).
+          R2-10: cada caso é um card próprio e já estamos DENTRO do caso, então
+          NÃO há seletor de caso — preenche direto o caso atual. */}
+      <CaseFilterFillDialog
+        open={fillFiltersOpen}
+        onOpenChange={setFillFiltersOpen}
+        caseId={caso.id}
+        clientId={caso.client_id}
+        temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+        frenteSlug={caso.frente_slug}
+        initialValues={
+          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
+        }
       />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

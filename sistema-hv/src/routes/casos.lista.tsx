@@ -9,10 +9,12 @@ import {
   applyCaseFilters,
   type CaseFilterValues,
 } from "@/components/cases/CaseFiltersPanel";
+import { InlineCanonicalCell } from "@/components/cases/InlineCanonicalCell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
-import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/usePermissions";
+import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { useFrentes, useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
 import { podeVerValores } from "@/lib/rbac";
@@ -117,6 +119,28 @@ function CasosLista() {
   const { data, isLoading, isError, error } = useCasesList();
   const { data: temas } = useTemas();
   const { data: frentes } = useFrentes(temaFilter || null);
+  // R2-09 — tema EFETIVO: o escolhido no dropdown OU, quando a Lista foi aberta a
+  // partir do Kanban (search param `cat` = service_type_id), o tema dono desse
+  // service_type. Assim o botão "Editar filtros", as colunas e o matching por
+  // tipo funcionam na Lista mesmo sem escolher o tema no dropdown.
+  const effectiveTemaId = useMemo(() => {
+    if (temaFilter) return temaFilter;
+    if (cat) {
+      const t = (temas ?? []).find(
+        (x) => (x as { service_type_id?: string | null }).service_type_id === cat,
+      );
+      return t?.id ?? "";
+    }
+    return "";
+  }, [temaFilter, cat, temas]);
+  // R2-09 — filtros/campos customizados do tema efetivo (nível do tema). Viram
+  // COLUNAS editáveis inline e alimentam o matching por tipo dos filtros.
+  const { data: temaDefsData } = useTemaFieldDefs(effectiveTemaId || null);
+  const temaDefs = useMemo(() => (temaDefsData ?? []) as TemaFieldDef[], [temaDefsData]);
+  // Colunas dinâmicas só quando há um tema efetivo (defs de vários temas
+  // misturados não fariam sentido na mesma tabela).
+  const dynamicDefs = effectiveTemaId ? temaDefs : [];
+  const podeEditarOp = usePodeEditar("operacional");
 
   // R4-01 / R2-08 (AC-4) — a coluna "valor" só aparece sob gate financeiro.
   // Único booleano trocável; overrides por usuário via permissaoEfetiva. Com a
@@ -177,7 +201,11 @@ function CasosLista() {
 
   // Filtro combinado: painel de filtros dinâmicos + busca textual.
   const filtered = useMemo(() => {
-    const afterPanel = applyCaseFilters(preFiltered, panelFilters);
+    const afterPanel = applyCaseFilters(
+      preFiltered,
+      panelFilters,
+      temaDefs.map((d) => ({ key: d.key, type: d.type })),
+    );
     const q = search.trim().toLowerCase();
     if (!q) return afterPanel;
     return afterPanel.filter((c) => {
@@ -187,9 +215,7 @@ function CasosLista() {
         MACRO_FIN_LABELS[c.macrostatus_fin as MacroFin] ?? c.macrostatus_fin
       ).toLowerCase();
       const temaLabel = (c.tema_id ? (temaName.get(c.tema_id) ?? "") : "").toLowerCase();
-      const canonText = c.canonical_fields
-        ? JSON.stringify(c.canonical_fields).toLowerCase()
-        : "";
+      const canonText = c.canonical_fields ? JSON.stringify(c.canonical_fields).toLowerCase() : "";
       return (
         c.case_code.toLowerCase().includes(q) ||
         (c.client_name ?? "").toLowerCase().includes(q) ||
@@ -203,7 +229,7 @@ function CasosLista() {
         canonText.includes(q)
       );
     });
-  }, [preFiltered, panelFilters, search, temaName]);
+  }, [preFiltered, panelFilters, search, temaName, temaDefs]);
 
   // Ordenação sobre o filtrado COMPLETO (antes de paginar) — igual a busca atual.
   const sorted = useMemo(() => {
@@ -278,7 +304,7 @@ function CasosLista() {
     ...(podeVerValor ? [{ key: "valor_centavos" as SortKey, label: "Valor" }] : []),
     { key: "created_at", label: "Criado em" },
   ];
-  const colCount = columns.length;
+  const colCount = columns.length + dynamicDefs.length;
 
   return (
     <div className="page-container">
@@ -364,7 +390,7 @@ function CasosLista() {
 
       {/* Painel de filtros dinâmicos (fixos + campos do tema) */}
       <CaseFiltersPanel
-        temaId={temaFilter || null}
+        temaId={effectiveTemaId || null}
         cases={preFiltered}
         filters={panelFilters}
         onChange={(f) => {
@@ -411,6 +437,13 @@ function CasosLista() {
                     </th>
                   );
                 })}
+                {/* R2-09 — colunas dos filtros/campos do tema (editáveis inline).
+                    Não ordenáveis (valor livre). */}
+                {dynamicDefs.map((def) => (
+                  <th key={def.id} className="text-left px-4 py-3.5 whitespace-nowrap">
+                    <Eyebrow>{def.label}</Eyebrow>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -486,6 +519,22 @@ function CasosLista() {
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
                       {fmtDate(c.created_at)}
                     </td>
+                    {/* R2-09 — células editáveis dos filtros do tema. A célula
+                        não navega (stopPropagation) para permitir editar. */}
+                    {dynamicDefs.map((def) => (
+                      <td
+                        key={def.id}
+                        className="px-3 py-2 text-[12px] text-muted-foreground whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <InlineCanonicalCell
+                          caseId={c.id}
+                          def={def}
+                          value={(c.canonical_fields ?? {})[def.key]}
+                          canEdit={podeEditarOp}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 ))
               )}

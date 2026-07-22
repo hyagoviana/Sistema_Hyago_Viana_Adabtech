@@ -20,7 +20,15 @@ type FieldDefUpdate = Database["public"]["Tables"]["system_tema_field_defs"]["Up
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 
-export const TEMA_FIELD_TYPES = ["text", "select", "money", "number", "date"] as const;
+export const TEMA_FIELD_TYPES = [
+  "text",
+  "select",
+  "multiselect",
+  "money",
+  "number",
+  "date",
+  "boolean",
+] as const;
 export type TemaFieldType = (typeof TEMA_FIELD_TYPES)[number];
 
 export class TemaFieldDefServiceError extends Error {
@@ -48,10 +56,10 @@ function toKey(s: string): string {
   );
 }
 
-// Normaliza `options` (para type='select'): aceita array de strings; descarta
-// vazios; retorna null se não for select ou lista vazia.
+// Normaliza `options` (para type='select'/'multiselect'): aceita array de
+// strings; descarta vazios; retorna null se não usar opções ou lista vazia.
 function normalizeOptions(type: string, options: unknown): string[] | null {
-  if (type !== "select") return null;
+  if (type !== "select" && type !== "multiselect") return null;
   if (!Array.isArray(options)) return null;
   const clean = options
     .map((o) => (typeof o === "string" ? o.trim() : ""))

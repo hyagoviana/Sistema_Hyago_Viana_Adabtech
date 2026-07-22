@@ -1165,10 +1165,12 @@ export async function updateCaseCanonicalFields(
 
   const current = (before.canonical_fields as Record<string, unknown> | null) ?? {};
   const merged = { ...current, ...patch };
-  // Remove chaves com valor vazio/null para não poluir o JSONB.
+  // Remove chaves com valor vazio/null para não poluir o JSONB. Array vazio
+  // (multiselect sem seleção) também é tratado como vazio.
   for (const k of Object.keys(merged)) {
     const v = merged[k];
-    if (v === null || v === undefined || v === "") delete merged[k];
+    if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0))
+      delete merged[k];
   }
 
   const { data, error } = await sb
@@ -1243,7 +1245,9 @@ export async function moverCasoParaTema(
 
   const { data: caso } = await sb
     .from("system_cases")
-    .select("id, organization_id, case_type, tema_id, frente_slug, macrostatus_op, macrostatus_fin")
+    .select(
+      "id, organization_id, case_type, tema_id, frente_slug, macrostatus_op, macrostatus_fin, lifecycle, procuracao_assinada_at, aguardando_assinatura_at",
+    )
     .eq("id", caseId)
     .is("deleted_at", null)
     .single();
@@ -1322,6 +1326,22 @@ export async function moverCasoParaTema(
     macrostatus_fin: newMacroFin,
   };
 
+  // R2-11 — PROMOÇÃO AO OPERACIONAL via vínculo de tema. Quando o caso é um LEAD
+  // comercial COM procuração assinada, vincular um tema o promove a CLIENTE
+  // (operacional) SEM exigir o contrato — sai do comercial e entra no funil do
+  // tema. (Se a procuração ainda não foi assinada, só reatribui o tema; segue no
+  // comercial.) `assinatura_liberada_at` NÃO é carimbado (isso é do contrato).
+  const casoR = caso as {
+    lifecycle?: string | null;
+    procuracao_assinada_at?: string | null;
+  };
+  const promoveuAoOperacional = casoR.lifecycle === "LEAD" && !!casoR.procuracao_assinada_at;
+  if (promoveuAoOperacional) {
+    (patch as { lifecycle?: string }).lifecycle = "CLIENTE";
+    (patch as { aguardando_assinatura_at?: string | null }).aguardando_assinatura_at = null;
+    (patch as { macrostatus_comercial?: string }).macrostatus_comercial = "GANHO";
+  }
+
   const { data, error } = await sb
     .from("system_cases")
     .update(patch)
@@ -1346,11 +1366,12 @@ export async function moverCasoParaTema(
       fin_resetado: finResetado,
       from_macrostatus_op: caso.macrostatus_op,
       to_macrostatus_op: newMacroOp,
+      promovido_ao_operacional: promoveuAoOperacional,
     },
     triggered_by: triggeredBy ?? null,
   });
 
-  return { case: data, opResetado, finResetado };
+  return { case: data, opResetado, finResetado, promoveuAoOperacional };
 }
 
 // ----------------------------------------------------------------------------

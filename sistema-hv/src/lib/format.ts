@@ -62,6 +62,42 @@ export function maskBrlReais(raw: string): string {
 }
 
 /**
+ * Máscara de valor tratando a DIGITAÇÃO como CENTAVOS (preenche da direita p/ a
+ * esquerda). O usuário digita só números e o campo formata no padrão BR com 2
+ * casas — sem precisar digitar vírgula: "3444500" → "34.445,00"; "30" → "0,30";
+ * "3000" → "30,00". Casa com o armazenamento em centavos do sistema.
+ */
+export function maskCentavos(raw: string): string {
+  const digits = (raw ?? "").replace(/\D/g, "");
+  if (digits === "") return "";
+  const cents = parseInt(digits, 10);
+  if (!Number.isFinite(cents)) return "";
+  return (cents / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** Extrai o inteiro de CENTAVOS de um valor mascarado (ou "" → null). */
+export function centavosFromMask(masked: string): number | null {
+  const digits = (masked ?? "").replace(/\D/g, "");
+  if (digits === "") return null;
+  const cents = parseInt(digits, 10);
+  return Number.isFinite(cents) ? cents : null;
+}
+
+/** Formata um inteiro de CENTAVOS já armazenado como "34.445,00" (ou "" se vazio). */
+export function centavosToMask(centavos: unknown): string {
+  if (centavos === null || centavos === undefined || centavos === "") return "";
+  const n = typeof centavos === "number" ? centavos : parseInt(String(centavos), 10);
+  if (!Number.isFinite(n)) return "";
+  return (n / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
  * Normaliza um valor mascarado para SEMPRE ter 2 casas decimais (usado no onBlur).
  * Ex.: "20.000" → "20.000,00"; "200,5" → "200,50"; "" → "".
  */

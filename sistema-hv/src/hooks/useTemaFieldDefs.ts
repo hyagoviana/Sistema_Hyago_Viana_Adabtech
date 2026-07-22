@@ -9,7 +9,14 @@ import {
   updateTemaFieldDefFn,
 } from "@/rpc/tema-field-defs";
 
-export type TemaFieldType = "text" | "select" | "money" | "number" | "date";
+export type TemaFieldType =
+  | "text"
+  | "select"
+  | "multiselect"
+  | "money"
+  | "number"
+  | "date"
+  | "boolean";
 
 export type TemaFieldDef = {
   id: string;

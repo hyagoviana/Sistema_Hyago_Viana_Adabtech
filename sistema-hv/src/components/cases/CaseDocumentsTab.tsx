@@ -12,10 +12,12 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,6 +46,7 @@ import {
   useDownloadCaseDocument,
   useFinalizeCaseDocument,
   useGenerateCaseDocument,
+  useGenerateDocumentAsNewCase,
   useReopenCaseDocument,
   useSendCaseDocumentToZapsign,
   useUploadCaseDocument,
@@ -87,6 +90,9 @@ export function CaseDocumentsTab({
   caseId,
   caseType,
   frenteSlug,
+  temaId,
+  clientId,
+  canonicalFields,
   clientName,
   clientCpf,
   municipio,
@@ -96,13 +102,19 @@ export function CaseDocumentsTab({
   caseType: string;
   // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
   frenteSlug?: string | null;
+  // R2-09 — tema/cliente/canonical: pop-up de filtros pós-Word também aqui.
+  temaId?: string | null;
+  clientId?: string | null;
+  canonicalFields?: Record<string, unknown> | null;
   clientName?: string;
   clientCpf?: string;
   municipio?: string;
   autoFillExtra?: AutoFillData;
 }) {
+  const navigate = useNavigate();
   const { data: docs, isLoading } = useCaseDocuments(caseId);
   const generate = useGenerateCaseDocument(caseId);
+  const genAsNewCase = useGenerateDocumentAsNewCase();
   const finalize = useFinalizeCaseDocument(caseId);
   const reopen = useReopenCaseDocument(caseId);
   const download = useDownloadCaseDocument();
@@ -119,6 +131,23 @@ export function CaseDocumentsTab({
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
   const [sendFor, setSendFor] = useState<{ id: string; title: string } | null>(null);
+  // R2-09 — pop-up de filtros do tema, após concluir o Word (aqui também).
+  const [showFilters, setShowFilters] = useState(false);
+  // R2-10 — "Documento de caso" cria um CASO NOVO; guarda o id p/ filtros e
+  // navegação ao fechar o editor. null = mesmo caso.
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
+  const activeCaseId = createdCaseId ?? caseId;
+  // Quando o finalizar abre o pop-up de filtros, a navegação para o caso novo
+  // acontece ao FECHAR o pop-up (não no onClose do editor). Este ref evita a
+  // navegação prematura do onClose disparado por fechar o editor no finalizar.
+  const suppressCloseNavRef = useRef(false);
+
+  function irParaCasoNovo() {
+    if (!createdCaseId) return;
+    const target = createdCaseId;
+    setCreatedCaseId(null);
+    navigate({ to: "/casos/$id", params: { id: target } });
+  }
 
   return (
     <section>
@@ -436,11 +465,36 @@ export function CaseDocumentsTab({
         onOpenChange={setGenOpen}
         caseType={caseType}
         frenteSlug={frenteSlug}
-        pending={generate.isPending}
+        pending={generate.isPending || genAsNewCase.isPending}
         autoFill={{ clientName, clientCpf, municipio, ...autoFillExtra }}
-        onGenerate={async (templateId, title, values, docKind) => {
+        onGenerate={async (templateId, title, values, docKind, folderId, folderName) => {
           try {
+            // R2-10 — "Documento de caso" cria um CASO NOVO; procuração fica no atual.
+            if (docKind === "contrato") {
+              const res = await genAsNewCase.mutateAsync({
+                sourceCaseId: caseId,
+                templateId,
+                title,
+                values,
+                casoPastaNome: folderName ?? null,
+                casoPastaDriveId: folderId ?? null,
+              });
+              // R2-11 req.5 — pode ter gerado no PRÓPRIO caso (1º doc de caso) ou
+              // criado um caso NOVO. Só navega/marca se for caso diferente.
+              const isNovoCaso = res.caseId !== caseId;
+              setCreatedCaseId(isNovoCaso ? res.caseId : null);
+              setGenOpen(false);
+              toast.success(
+                isNovoCaso
+                  ? "Novo caso criado — documento gerado, abrindo editor"
+                  : "Documento gerado — abrindo editor",
+              );
+              setEditorDocId(res.doc.id);
+              setEditorUrl(editUrl(res.doc.google_doc_id!));
+              return;
+            }
             const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
+            setCreatedCaseId(null);
             setGenOpen(false);
             toast.success("Documento gerado — abrindo editor");
             setEditorDocId(res.doc.id);
@@ -456,12 +510,24 @@ export function CaseDocumentsTab({
         onClose={() => {
           setEditorUrl(null);
           setEditorDocId(null);
+          // R2-10 — navega ao caso novo ao fechar o editor, EXCETO quando o
+          // finalizar já abriu o pop-up de filtros (a navegação ocorre ao fechá-lo).
+          if (suppressCloseNavRef.current) {
+            suppressCloseNavRef.current = false;
+            return;
+          }
+          irParaCasoNovo();
         }}
         onFinalize={async () => {
           if (!editorDocId) return;
           try {
             await finalize.mutateAsync(editorDocId);
             toast.success("Documento finalizado (PDF na pasta do caso)");
+            // R2-09 — abre o pop-up de filtros do tema após concluir o Word.
+            if (temaId) {
+              suppressCloseNavRef.current = true;
+              setShowFilters(true);
+            }
             setEditorUrl(null);
             setEditorDocId(null);
           } catch (err) {
@@ -469,6 +535,22 @@ export function CaseDocumentsTab({
           }
         }}
         finalizing={finalize.isPending}
+      />
+
+      {/* R2-09/R2-10 — pop-up de FILTROS do tema, após concluir o Word (aba
+          Documentos). Se um caso NOVO foi criado (Documento de caso), o pop-up é
+          do novo caso (em branco) e ao fechar navega para ele. */}
+      <CaseFilterFillDialog
+        open={showFilters}
+        onOpenChange={(v) => {
+          setShowFilters(v);
+          if (!v) irParaCasoNovo();
+        }}
+        caseId={activeCaseId}
+        clientId={clientId}
+        temaId={temaId}
+        frenteSlug={frenteSlug}
+        initialValues={createdCaseId ? null : canonicalFields}
       />
 
       <SendZapsignDialog
@@ -543,6 +625,9 @@ function GenerateDialog({
     title: string,
     values: Record<string, string>,
     docKind: "procuracao" | "contrato",
+    // R2-10 — pasta escolhida (Documento de caso) p/ nomear o caso novo.
+    folderId?: string | null,
+    folderName?: string | null,
   ) => void;
   autoFill: AutoFillData;
 }) {
@@ -557,9 +642,14 @@ function GenerateDialog({
   // busca suas pastas de caso e de procuração vinculadas.
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  // R2-04 — pastas por frente do caso (frente + comuns). Sem frente → todas do tema.
-  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug);
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
+  // R2-09 — FRENTE removida: ignora o filtro de frente (`?? undefined` → todas as
+  // pastas do tema); senão pastas de frente legada (ex.: COVID) somem no caso sem frente.
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug ?? undefined);
+  const { data: procFolders } = useTypeFolders(
+    serviceTypeId,
+    "procuracao",
+    frenteSlug ?? undefined,
+  );
   const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
 
   // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
@@ -960,6 +1050,8 @@ function GenerateDialog({
                 selected?.name ?? "Documento",
                 values,
                 isProc ? "procuracao" : "contrato",
+                isProc ? null : folderId,
+                isProc ? null : (folderLabel ?? null),
               );
             }}
           >

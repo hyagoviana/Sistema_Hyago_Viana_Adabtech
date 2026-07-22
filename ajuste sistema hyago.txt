@@ -1,0 +1,273 @@
+Adavio Tittoni [01:50]: Tá pausada, pô, a conta. Lá, a conta do Google pausada lá. Você vai ter que logar de novo.
+
+Matheus Torquato [06:11]: Deixa eu ver qual é assim. Eu tenho aqui nos documentos aqui. Deixa eu pegar, é o contato, @iarubiana. Vai trabalhando, entrar. Qual que é aqui? Controle legal, é isso que é. Vai ficar cantando, vai ficar gravando essa porra cantando na transmissão, viado.
+
+Adavio Tittoni [16:21]: Volta lá no outro sistema, porra.
+
+Matheus Torquato [17:01]: Vai ficar aparecendo essa cantoria lá na transmissão.
+
+Adavio Tittoni [17:40]: Que isso daí é um tema, entendeu?
+
+Matheus Torquato [19:20]: Isso é um tema.
+
+Adavio Tittoni [19:40]: Isso, olha lá, total de casos. E aí esse tema é um tema que pega várias coisas, tá ligado?
+
+Matheus Torquato [21:10]: Você vê ali, ó, aqui tipos de grupo, G0, G1, tá vendo lá embaixo?
+
+Adavio Tittoni [22:40]: G8, G9 e tal.
+
+Matheus Torquato [23:00]: Beleza.
+
+Adavio Tittoni [23:01]: Então isso daí é mais ou menos o que a gente precisa replicar dentro desse caso, entendeu?
+
+Matheus Torquato [24:20]: Que no caso desse caso aí, no caso do tema, do tema, do tema, tá?
+
+Adavio Tittoni [25:30]: Isso é mais ou menos uma replicação. Sobe aí um pouquinho. Agora o seu PC tá meio lento, tá travando.
+
+Matheus Torquato [26:20]: É porque tá na TV, aí a TV ela deixa eu mudar aqui. Aí, amor, melhorou já? Melhorou. Só é porque a TV ela tem um delayzinho quando fala com o vídeo. Deixa eu trocar aqui. Pronto, bebê, tá me vendo melhor?
+
+Adavio Tittoni [28:51]: Tô vendo que tava parecendo que tava travando. Vai lá em casos. É quando a gente ficar na TV, ele, ó, aí tá vendo que aquela visualização que a gente tentou meio que construir para eles conseguirem visualizar lá na lista É isso aqui, tá vendo? Eu meio que tentei replicar isso daqui, que é o que ele tinha me dito que queria. Então tá vendo que tem ali, ó, etapa, se é fiéis ou não fiéis, qual é o status, tá vendo? Então aí ali em cima ele tem esses campos que são os filtros dele, tá vendo? Então clica lá em novo caso. Aí você cria o caso dentro desses filtros. Aí por isso que eu falei, tipo, talvez se a gente pensar em alguma coisa que deixa eles construírem os filtros, que a gente não tem como saber essa porra desses filtros. E por exemplo, aí é só uma frente, entendeu? Então tipo, eles já estão usando esse sistema aí, né? Por isso que, ó, vai lá em início. Como é que a gente vai identificar quantos temas tem se só nesse tema tem 365 casos ativos?
+
+Matheus Torquato [41:40]: Mas qual que é o documento desse caso?
+
+Adavio Tittoni [42:41]: Não, aí não vai ter o documento, viado. Não é como nós, né? Eles criaram algo para tentar só auxiliar eles nas tarefas. Os documentos estão lá nos Trello, nos negócios deles lá. Não tem documento aí, tá ligado? Aí é só um controle do caso.
+
+Matheus Torquato [45:11]: O que você tá me falando então é que eles vão criar um tema, por exemplo, um tema seria esse G0 aqui?
+
+Adavio Tittoni [46:40]: Não, não, esse aí, esse sistema é um tema.
+
+Matheus Torquato [47:40]: Ah, tá, entendeu?
+
+Adavio Tittoni [47:51]: O tema em sistema se chama aquilo ali, ó, CISGIN.
+
+Matheus Torquato [48:51]: Ah, tá, CISGIN, tá.
+
+Adavio Tittoni [49:01]: Clica lá para você ver.
+
+Matheus Torquato [49:40]: Onde?
+
+Adavio Tittoni [49:50]: Lá embaixo, tem lá no filtro, no menu, no menu lateral tem lá, assiste embaixo de Kanban. Aí esse é o tema, tá ligado? Então aí ele tem vários tipos de questões nesse tema. Por exemplo, se é fiéis, se não é fiéis. O status do caso, se contém parcela, não contém parcela. Agora aí a gente já tá separando isso dentro dos setores, né? Isso aí para ele está igual.
+
+Matheus Torquato [55:20]: A gente fez porque a gente fez assim, nosso sistema, porque o cara consegue criar o tema dele, vincular documentação que ele quiser, seja caso, seja procuração, e ele vai montar como ele quiser. A gente não precisa montar.
+
+Adavio Tittoni [57:51]: Então é isso, nós não precisamos montar o tema. Só que qual é a questão que eles ficam se batendo? Tipo, vai lá de novo em casos, tá vendo que aí em casos tem IVS máximo, IVS mínimo, classificação IVS, artigo 19 do digital, artigo 18, artigo 19-A, artigo 19-B, SINGIN, pendência, última atualização. Município com Alerta, DSEI. Então nessa frente deste, tipo assim, neste tema, dentro da parte de listas, esses seriam os filtros que eles queriam buscar do tema SIMGIM. Mas já do tema 1%, que não é esse, é isso, é outro filtro. Porque, por exemplo, lá no tema 1% não tem IVS máximo e IVS mínimo, é IJD e IJH, por exemplo, entendeu? São filtros diferentes. Aí o que que eu tô tentando pensar? Como é que a gente cria o tema e deixa eles criarem os filtros para eles conseguirem ver na lista, entendeu? Porque tipo, o que que ajuda eles é dentro dessa frente, pelo filtro artigo 19, clica lá no filtro artigo 19. Tá vendo? Tem um tipo de porcentagem do artigo 19. Então, tipo, imagina que, pô, hoje eu tenho que pegar todos os artigos 19 que sejam 20%. Aí entende que é um filtro muito— que é por isso que eles têm, tipo, essa maior dificuldade de nos passar qual é a frente. Que, tipo, a frente é artigo 19 que eles querem pesquisar, só que no artigo 19 tem 10%, 20%, 30%, 40%. Só que eles não sabem falar isso para gente.
+
+Matheus Torquato [01:16:51]: Então, o que a gente tem que fazer então? Ó, eu acho que para ficar mais tipo assim, a gente vai ter que deixar eles construírem também.
+
+Adavio Tittoni [01:18:11]: É isso, é isso que eu tô falando desde o início, entendeu? A gente tem que ter tipo o tema. Beleza, eu tenho o tema.
+
+Matheus Torquato [01:19:21]: Pode fazer o que eu pensei, ver se você acha que fica muito, muita coisa para eles fazerem, mas eu acho que seria o melhor caminho. A gente já tem hoje construído para eles colocarem um tema coloca um caso e vincula documentação, certo?
+
+Adavio Tittoni [01:21:40]: Certo. Mas não existe todos os casos.
+
+Matheus Torquato [01:22:01]: Não existe. Porque não é todos os casos. Por quê? Porque eles só passaram aqueles para gente. Colocar outros casos, eles podem colocar outros casos. Fechou? O que a gente pode fazer? Ó, a gente vai deixar para vocês construírem os filtros também que vocês querem. Por exemplo, nesse caso desse SIGIN aí, vai ter esse artigo 19, a portaria, a portaria Beleza, quais são as opções que vão ter ali dentro? A opção tal, opção tal, ou é livre para escrever o que quiser. Beleza, quando ele for construir esse filtro, automaticamente, depois que ele vai lá e preenche as variações da documentação que é do caso, abre um outro pop-up. Antes de abrir o pop-up do Word, ou pode ser depois do Word também, aonde ele tem que preencher essas informações que vão contemplar o filtro. Entendeu? Sim, entendi.
+
+Adavio Tittoni [01:32:21]: Então a gente vai fazer assim, ó, abre aquele bloquinho. Vamos lá, vou abrir aqui o sistema.
+
+Matheus Torquato [01:33:10]: Esse é o processo: eles criam um tema, criam e vinculam.
+
+Adavio Tittoni [01:33:50]: É uma coisa que eu acho que a gente tem que deixar um pouco melhor, só em relação à usabilidade. É aquela parte da criação do tema. Vamos lá, vamos pegar aqui, já que só estamos nós mesmo aqui, que eu tenho que fazer uma outra coisinha. Hoje eu reservei o meio-dia para fazer as coisas da academia. Ó, novo tema, vou botar aqui tema. Não vou botar tema, vou botar esse SimMM que eu tenho aí, sei lá. Criei, criei o tema. Beleza, ok. Então aí vincular uma pasta existente do Drive. Esse daqui são os casos. Para ele conseguir criar casos, ele tem que criar lá uma pasta modelo e subir os documentos daquele tipo de caso.
+
+Matheus Torquato [01:41:51]: Não, não necessariamente. Ele pode colocar, clica aí, criar uma nova pasta. Ele pode colocar aí, vincula uma pasta qualquer que já tenha escrito. Vincula. Ok, a gente tem uma pasta vinculada, beleza. A gente tem duas opções de documento. Depois que você vinculou uma pasta, clica aqui em criar nova pasta. Ó, clica ali de novo, criar nova pasta. Eu tenho a opção de anexar mais documentos na pasta que já está vinculada, ou eu posso criar uma pasta nova. Então eles podem, eles podem não usar as pastas que a gente criou também, se eles não quiserem. Ó, não vou usar essas pastas, beleza. A gente pega, exclui ali, vocês criam a documentação que vocês quiserem. Beleza, eles criaram a pasta, essa pasta ela duplica aí dentro, ela cria aí dentro e também fica de exemplo para outros temas. Ele vai lá, beleza, vinculou aí, salva, salva, salva.
+
+Adavio Tittoni [01:50:40]: Tirou a frente, né? Não tem mais aquela frente que tava dando aquele pau. É, agora ficou melhor porque tipo antes tinha aquela frente e aí eu não conseguia vincular a frente, né?
+
+Matheus Torquato [01:52:11]: Já tirei a frente, não existe o lance da frente. A parte, a parte da procuração seria a mesma coisa. Fecha aí. Beleza, criamos, fechou. O que a gente vai fazer agora? Entra dentro do tema aí mesmo que você criou. Aí no tema, o que a gente vai fazer? Vai ter ali uma opção de filtros. Beleza, filtros, eles vão lá, vão criar.
+
+Adavio Tittoni [01:55:41]: Então vai poder aqui adicionar filtros, adicionar o filtro que ele quisermos no sistema.
+
+Matheus Torquato [01:56:31]: Aí os filtros A gente já tem os filtros pré-montados que já vão puxar sozinho, e os filtros que eles podem adicionar. Eles vão adicionar filtros novos. Aí no filtro novo ele pode falar, ó, vai ser texto, vai ser múltipla escolha, vai ser enfiar um pinto na bunda, o que vocês quiserem. Vão lá colocar pinto na bunda, não tira da transcrição, vai que ele leva em consideração essa porra. Aí o que que eles vão fazer? Vão adicionar os filtros e vão ter as lógicas dos filtros. Quando acontecer isso, eles vão vincular o tema e o caso a um cliente. Depois de vincular o tema, no caso, um cliente, eles vão preencher as variações daquele documento. Preencheu a variação do documento, depois disso eles vão olhar o documento inteiro em um Word, editar ou não, dá um concluir. Dando um concluir, abre um pop-up aonde eles têm que preencher os filtros adicionais que tiveram ali.
+
+Adavio Tittoni [02:06:00]: Entendeu?
+
+Matheus Torquato [02:06:01]: Só que eles têm que fazer isso de uma vez só, porque se eles colocarem um pouco de filtro agora, aí depois amanhã botar mais filtro, depois colocar mais filtro, entendeu? E coisa que vai ter o filtro preenchido, tem coisa que não. Aí que tem que fazer, tem que ter uma opção em cada caso deles irem lá e preencher um filtro adicional que eles colocaram mais para frente, eventualmente não colocou na hora.
+
+Adavio Tittoni [02:09:51]: Ou senão a gente vai ter um botão É porque a gente pode criar, eles podem editar na própria lista, entendeu? É isso. Tipo assim, aqui, olha, vai poder criar os filtros. Por exemplo, criei um filtro. Imagina que eu criei um filtro agora, estado, e criei um filtro V21 aqui. Aqui embaixo, na parte da lista, a gente vai ter atualizar lista com os filtros. Aí a gente, do mesmo jeito que a gente tem um motor de documentação, A gente vai ter um motor que pega os clientes desse tema, pega os filtros e, tá ligado, mapeia. Aí tipo, ele não precisa fazer de um em um, porque em vez da gente fazer lá no documento, a gente vai fazer aqui dentro do caso, entendeu?
+
+Matheus Torquato [02:17:30]: Ele tá no tema, ele gira, ele na verdade esses filtros eles ficam para aquele conjunto de tema, não o caso, para cada conjunto de tema.
+
+Adavio Tittoni [02:19:10]: Exatamente. Aí ele raspa no cliente, entendeu? Ele vai, ele vê tipo assim, ah, qual é o tipo de contrato Qual é, não sei o quê, não sei o quê.
+
+Matheus Torquato [02:20:11]: Agora, por exemplo, é um pouco complicado porque ele pode trazer coisas erradas, que nem tipo assim, esse IVM mínimo. Se não tiver a lógica certa do que que é esse IVM mínimo, ele vai puxar errado.
+
+Adavio Tittoni [02:22:41]: Então, mas aí é por causa disso, é porque tem que ter alguma coisa, era isso que eu ia dizer, no lead que diga lá IVM mínimo, IVM máximo, tem que ter, pô, senão ele não pega filtro.
+
+Matheus Torquato [02:24:20]: É por isso que eu tô falando para a gente colocar isso lá no depois de olhar o Word pronto do documento.
+
+Adavio Tittoni [02:25:40]: Ele tá, entendi.
+
+Matheus Torquato [02:26:00]: Ó, tipo, imagina que eu venho aqui, aí vai estar os filtros lá, classificação do IVA, IVM mínimo. Ele vai lá e preenche o filtro.
+
+Adavio Tittoni [02:27:11]: Isso fica como se eu viesse aqui, ó, gerar documento, aí documento novo.
+
+Matheus Torquato [02:28:00]: Não, você foi um que não tem, eu acho.
+
+Adavio Tittoni [02:28:21]: Não foi.
+
+Matheus Torquato [02:29:10]: Então, é o que você foi em procuração, cara.
+
+Adavio Tittoni [02:29:41]: Documento do caso aqui, eu acho que talvez esse tema não esteja vinculado a nada, nem existe aquele tema, né?
+
+Matheus Torquato [02:31:50]: Aí, ó, entrei.
+
+Adavio Tittoni [02:33:00]: Documentos, documento do caso, ó, por exemplo, digamos que seja abatimento militar. Beleza, ele é requerimento 1%, aí ele preenche essas informações. Agora aqui tá ruim, mano, a gente tem que ter alguma coisa para ele copiar, tá ligado?
+
+Matheus Torquato [02:35:51]: Que senão vai ficar, ele copia, só que ele tá transparente, tá ligado? Passa o mouse em cima para você ver, ele fica meio, ele copiou, viu? Ele copiou, é, mas precisa mostrar, né? Precisa mostrar que copiou assim.
+
+Adavio Tittoni [02:38:11]: Ele tá meio preto, tá ligado? É preto e tá preto, transparente.
+
+Matheus Torquato [02:38:50]: Na verdade tá na cor bege, entendeu?
+
+Adavio Tittoni [02:40:31]: Aí beleza, pegamos aqui, geramos.
+
+Matheus Torquato [02:41:01]: Ele vai gerar, aí ele vai cair no documento para edição. Sim, aí ele vai passar da documentação normal, concluir, abre um pop-up com os filtros daquele tema que estão pré-designados, que foram adicionados a mais, sem ser os filtros que a gente já tem lógica de vínculo, entendeu?
+
+Adavio Tittoni [02:44:21]: Sim. E também aqui pode ter um selecionar os filtros deste documento, por exemplo. Aí o cara abre aqui e bota lá V1, V7, por que não?
+
+Matheus Torquato [02:46:21]: Porque o filtro é no tema, não no documento.
+
+Adavio Tittoni [02:47:01]: Então é, mas tipo assim, vincular os filtros do tema neste documento, tipo como você falou de um pop-up, só que em vez da gente deixar só aberto automaticamente, é bom deixar aqui uma edição também.
+
+Matheus Torquato [02:49:10]: Você tem que vincular os filtros, tem que ser lá em cima no cadastro do cliente, não aí no documento. Tem que ter aí, ó, vincular filtros.
+
+Adavio Tittoni [02:50:20]: Tem que estar aí também, pode ser.
+
+Matheus Torquato [02:50:31]: Eles vão confundir que o filtro é no documento. Não, o filtro é no tema. Sim, porque aí todos os casos vão estar dentro.
+
+Adavio Tittoni [02:51:40]: Só que aqui a gente tá no caso, aí a gente tem que vir na ficha do cliente.
+
+Matheus Torquato [02:52:21]: Aí, exatamente.
+
+Adavio Tittoni [02:52:31]: E aqui é antes do caso do cliente, vai ter alguma coisa assim, por exemplo.
+
+Matheus Torquato [02:53:20]: Aí é ficha do cliente, certo? Eu posso ter vários temas dentro de um cliente. Aí eu entro no tema, no caso.
+
+Adavio Tittoni [02:54:50]: Aí é porque a gente já fez isso, entendeu? O tema ele só aparece na pipeline operacional.
+
+Matheus Torquato [02:56:01]: Pela pipeline, você não entrou pelo cadastro.
+
+Adavio Tittoni [02:56:30]: Exatamente, o cadastro não mostra o tema, tá ligado?
+
+Matheus Torquato [02:57:01]: Você vincula os filtros no tema do cliente, não no caso, entendeu? Quando você entra no caso, não pode ter esse filtro, tem que estar dentro do tema, porque senão eles vão confundir. Então a gente vai ter que vincular, tipo assim, o que eu acho que a gente pode fazer é, ele vai poder digitar aí no filtro, ele pode digitar também na lista, ele pode Tem um botãozinho do lado do negócio, editar, ou se for múltipla escolha, só altera ali também na múltipla escolha.
+
+Adavio Tittoni [03:01:11]: É, então é por isso que eu acho que, por exemplo, é melhor fazer só pela lista, tá ligado?
+
+Matheus Torquato [03:02:20]: Pode ser na lista, eu acho que vai ser melhor, mas eu acho que pode ter esse botão também dos filtros, acho que não seria um problema ter.
+
+Adavio Tittoni [03:03:21]: Mas o negócio é que, por exemplo, desse jeito que a gente tá falando, tá confuso, ainda não tá claro nem para mim e nem para você, tipo assim.
+
+Matheus Torquato [03:04:51]: Pessoas, tá claro.
+
+Adavio Tittoni [03:05:01]: Mas aí vai ser no contrato, no caso não vai ser cliente, não tem o tema.
+
+Matheus Torquato [03:06:21]: Entre em cadastro, você vê cadastro, cliente caiu aqui nele.
+
+Adavio Tittoni [03:07:51]: Desce. Esse é o cliente Mateus, aqui já é o caso do cliente.
+
+Matheus Torquato [03:08:31]: Esse é o problema, aí a gente tem que ter os temas porque os clientes são vinculados.
+
+Adavio Tittoni [03:09:30]: O tema tá aqui, ó, tema teste 1.
+
+Matheus Torquato [03:09:51]: Então é isso. Você vincula um outro tema, coloca o mais novo caso aí, vê como é que ele se comporta. Aí, ó, um outro tema, coloca esse sim aí, sim, vincula. Tá vendo que ele vinculou tema?
+
+Adavio Tittoni [03:13:01]: Tem dois temas, só que o tema não é o principal, entendeu? Vai ficar aqui do ladinho. Aí é só se do lado desse tema a gente colocar Editar filtros.
+
+Matheus Torquato [03:14:40]: Não, sim, só que assim, o tema, o tema ele é o divisor de águas para entrar no caso, certo? Então aí não tenta casos do cliente, tenta temas.
+
+Adavio Tittoni [03:16:21]: Não, porque aí vai entrar no mesmo problema que a gente tava antes. Lembra que a gente tava nesse problema de ficar aparecendo tema 10 em todos os casos? Tema 10, tema 10, tema 10. Não é isso, precisa mostrar o caso e aqui tá o tema, mas o tema tá aqui.
+
+Matheus Torquato [03:18:41]: Tem que colocar então tema/caso do cliente, e ali em novo caso colocar mais novo tema/caso cliente, entendeu? Que daí você vincula o tema e o caso junto.
+
+Adavio Tittoni [03:20:31]: Sim, não, beleza, que é como tá aqui, já tá certo.
+
+Matheus Torquato [03:21:10]: Os filtros, você entra nesse abatimento não sei o quê, que daí ele vai entrar dentro do tema onde tem todos os casos dele, entendeu?
+
+Adavio Tittoni [03:22:21]: Não, mas quando entra aqui ele tá só no caso abatimento ESF, que é isso que você tá confundindo também. Lembra que ele pode ter o abatimento ESF, pode ter DGM, que é dentro do tema já.
+
+Matheus Torquato [03:24:21]: Então tá certo, só lógico que tipo aqui, ó, tá vendo esse tema teste? O novo, coloca nesse mesmo tema.
+
+Adavio Tittoni [03:25:50]: Exato, tema teste. Agora ali tá abatimento ESF, eu vou colocar um abatimento militar também. Criei. Trouxe um documento, tá certo, tá vendo?
+
+Matheus Torquato [03:28:01]: Pode cancelar, cancela, cancela isso aí.
+
+Adavio Tittoni [03:28:21]: Ele criou, entendi, 2 casos dentro de uma, de um tema.
+
+Matheus Torquato [03:29:10]: Tem que estar dentro desse tema, outros aí, e também tem que estar lá na lista. Perfeito, isso.
+
+Adavio Tittoni [03:30:20]: Só que aí o que que eu tô pensando aqui que eu acho que vai dar errado, tá ligado? Tipo, esse tema teste, certo, já é O tema teste aqui. Então se a gente editar o filtro aqui onde a gente quer editar, já na lista, já vai fazer a edição automaticamente daquela parte do cadastro do cliente.
+
+Matheus Torquato [03:35:11]: Sim, ele vai ter em dois lugares, ou ele pode estar na lista, em dois lugares.
+
+Adavio Tittoni [03:36:00]: É só que aí, tipo assim, como é que a gente vai definir que esse cliente tem aquele filtro, porque aí não vai estar vinculado ao filtro, tá vinculado ao tema. Isso a gente já fez lá na pipeline operacional, entendeu? Tipo a tabela é a mesma coisa, a gente não tá mudando nada. A gente tem que dizer que esse cliente dentro deste caso tem tal filtro, entendeu? Para poder aparecer no tema. Por isso que eu acho que é dentro do caso, porque assim, esses filtros aqui que nem tá o dele.
+
+Matheus Torquato [03:41:01]: Eu tenho, eu posso ter diversos casos, só que eu tenho todos esses filtros que contemplam diversos casos. Eu posso ter filtro que eu vou usar em um caso e filtro que eu não vou usar no outro caso.
+
+Adavio Tittoni [03:42:31]: Então aí o filtro tem que ser adicionado ao cliente.
+
+Matheus Torquato [03:43:20]: Mas esse que é o problema, porque se ele for adicionado, ele não é adicionado ao cliente, ao tema, cara. É ao tema tem que ser vinculado.
+
+Adavio Tittoni [03:44:40]: Eu acho que é o contrato, porque o filtro é vinculado ao contrato. Tipo assim, tem contrato dentro do tema teste que tem o filtro V1, mas tem contrato dentro do tema teste que tem o filtro V7. São contratos diferentes, coisas diferentes.
+
+Matheus Torquato [03:47:51]: Para ele mostra todos os filtros dependendo do contrato, entendeu?
+
+Adavio Tittoni [03:48:30]: Então isso, mas é porque mostra todos os filtros independente do contrato. Isso vai continuar mostrando, tá ligado?
+
+Matheus Torquato [03:49:41]: Sim, mas você concorda que fica complexo fazer isso? Porque assim, quando ele for preencher lá depois de gerar o documento, ele pode preencher ou não uma informação. Por exemplo, esse caso não contempla o filtro IVS mínimo. Você precisa preencher, pode ficar em branco.
+
+Adavio Tittoni [03:52:31]: Sim, sim, sim. Só que aí você tá falando como filtros pré-definidos.
+
+Matheus Torquato [03:53:40]: Não, eu tô falando que ele vai criar o filtro. A gente vai até os filtros pré-definidos que a gente já tem. Já tem alguns, né, que é o nome, é o nome do caso, é o endereço, enfim, já tem esses filtros pré-definidos, já estão no sistema. A gente tá falando de filtros que eles vão criar eles dentro do sistema. Eles criando, por exemplo, eles foram lá e adicionaram 10 filtros novos. Esses 10 filtros novos ficam para depois de dar o OK no Word da documentação, ele preencher esses 10 filtros novos.
+
+Adavio Tittoni [03:57:51]: Ah, tá, entendi. Ele marcar, né? Ó, aqui tem esse filtro, não tem esse filtro, tem esse filtro, não tem esse filtro.
+
+Matheus Torquato [03:58:40]: Não quero preencher nenhum.
+
+Adavio Tittoni [03:59:11]: Tá, beleza.
+
+Matheus Torquato [03:59:21]: Vou preencher todos. Beleza. É quando ele tá construindo o caso, ele sabe quais são os filtros que ele tem que pôr, entendeu? Ele vai lá depois gerar o Word, ele vai lá e preenche os 10 filtros que ele comprou.
+
+Adavio Tittoni [04:01:00]: Então, mas aí nesse caso o filtro é relacionado ao documento.
+
+Matheus Torquato [04:01:41]: Ao documento, exatamente. Porque você não gerou o documento, depois do documento você não tem que preencher os filtros? É isso, pô.
+
+Adavio Tittoni [04:02:50]: Tá, então aí beleza, aí tudo bem. Só que aí vai ser um documento dentro do caso, tá ligado? Só que é isso que eu tô dizendo, é dentro do caso, é dentro do caso.
+
+Matheus Torquato [04:04:11]: Só que os filtros são criados no tema.
+
+Adavio Tittoni [04:04:41]: Isso, sim, sim, tá certo. Os filtros são criados no tema, sim. Só que dentro do caso do cara, eu digo se aquele cara tem aquele filtro ou não. É isso aí, pronto, beleza. A gente chegou no mesmo, na mesma ideia.
+
+Matheus Torquato [04:07:11]: Ele preenche ou não se ele quiser, entendeu?
+
+Adavio Tittoni [04:07:40]: É isso aí, é só a forma que eu tava dizendo, tipo, de fazer de um jeito, você tá fazendo do outro jeito, mas não tem problema.
+
+Matheus Torquato [04:08:31]: A gente tem que fazer pelo tema, porque senão eles vão ter que fazer um filtro por caso.
+
+Adavio Tittoni [04:09:10]: É, não, tem que ser pelo tema.
+
+Matheus Torquato [04:09:21]: O tema geral, tipo aqui na pipeline, quando a gente entrar aqui, ó, esse, isso, tem vários filtros aqui.
+
+Adavio Tittoni [04:10:50]: Então esses vários filtros, quando ele terminar de preencher o documento do caso, ele vai lá, vai marcar se tá ativo ou não ativo, ou preencher ou não preencher, que aí quando ele entra no sim, aqui vai estar aqueles painéis. E aí ele pode, tipo assim, ele tem o direito aqui na nossa tela, de vir aqui em um desses filtros e criar um novo, entendeu? Mais um filtro, mais um filtro, mais um filtro. Aí a diferença é só que lá na documentação vai começar a aparecer mais um filtro, mais um filtro.
+
+Matheus Torquato [04:15:51]: Exatamente, ele vai atualizando. Depois da documentação vai aparecendo os outros filtros, só que ele tem que ter uma opção ali, editar filtros. Aí vai aparecendo os filtros depois de gerar documentação, e também tem que atualizar no botão lá dentro do cliente, ali no caso, um botão que a gente vai colocar, que a gente tá, é o tema, né? Aí cada tema vai ter um botãozinho ali de editar os filtros, né? Ah, vamos tirar esse botão do editar filtro no cliente, vamos deixar só dentro da lista.
+
+Adavio Tittoni [04:20:20]: Deixa só na lista, dentro do cliente ele só marca se tem ou não tem, ou, e o valor, por exemplo.
+
+Matheus Torquato [04:21:20]: Ele só marca ali, edita como ele quiser, depois que gerou o documento Automaticamente aparece esses filtros, que ele vai preencher os filtros em frente àquele documento que ele acabou de fazer. Isso, isso dentro do tema. Isso aí, essa é a lógica.
+
+Adavio Tittoni [04:24:00]: É isso aí. Aí a gente já vai ter esse padrão que eles querem, entendeu? Porque aí constrói do jeito que eles quiserem, isso dentro de qualquer tema, de qualquer filtro. Aí é com eles lá da controladoria. E aí depois a gente entra na parte da controladoria, porque ele me mandou aqui, meu filho, 700 documentos para a gente olhar. Aí, mas vamos terminar essa primeiro, essa lógica, e aí a gente faz a outra.
+
+Matheus Torquato [04:27:20]: Dá para ter, ah, é opção de data, ah, é opção de booleano, que é true ou false.
+
+Adavio Tittoni [04:28:11]: Aí ele marca no filtro, né, escolhe qual é o tipo de filtro, de texto, é opção de múltipla escolha, enfim, ele faz o que ele quiser.
+
+Matheus Torquato [04:29:30]: Data é opção de valor, número, é opção de ser em real ali, ele vai lá e coloca. E daí, tipo, quando ele quiser preencher, ele preenche, não?
+
+Adavio Tittoni [04:30:50]: Isso aí. É isso aí, a ideia é essa mesmo. Aí vai funcionar.
+
+Matheus Torquato [04:31:50]: Beleza, fechou. Aí ali na lista ele consegue entrar, por exemplo, vou precisar um caso aqui, caso FIES, ou fulano, fulano Abraão de Oliveira, tá? Abraão de Oliveira, eu preciso preencher esse filtro. Ele pode ali na lista e preencher, em vez daquele filtro lá, ou ele pode entrar dentro do caso E lá no editar filtro dentro do caso, ele pode completar um filtro que ele não tenha completado. Tipo, ó, daqui para frente ele adicionou mais um filtro que no Abraão não tinha antes. Ele vai lá no Abraão e edita, entendeu? Ele pode puxar os filtros em branco se quiser também. Tipo, ó, por exemplo, é o conjunto que ele cria um filtro aqui de ciclo. Beleza, ciclo. Quero puxar os ciclos que estão em branco para eu ver quem que não foi preenchido. Aí ele vai lá e preenche. Ou na linha, ou entra no caso e preenche, entendeu?
+
+Adavio Tittoni [04:41:11]: É isso aí, é só dando essa junção.
+
+Matheus Torquato [04:42:11]: Perfeito, então estamos conversados. Beleza, eu vou fazer então.
+
+Adavio Tittoni [04:43:40]: Fechou, qualquer coisa a gente vai se falando. Eu vou correr aqui que eu tenho essa parada da live hoje. Vai lá, bebê, tamo junto, é nós!

@@ -1,7 +1,9 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Check, ExternalLink, FileSignature, FileText, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -24,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import {
   useFinalizeCaseDocument,
   useGenerateCaseDocument,
+  useGenerateDocumentAsNewCase,
   useSendCaseDocumentToZapsign,
 } from "@/hooks/useCaseDocuments";
 import {
@@ -59,9 +62,13 @@ export function GenerateCaseDocumentFlow({
   caseId,
   caseType,
   frenteSlug,
+  temaId,
+  clientId,
+  canonicalFields,
   autoFill,
   initialMode,
   initialFolderId,
+  casoCriaNovoCaso = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -71,6 +78,14 @@ export function GenerateCaseDocumentFlow({
   caseType?: string;
   // R2-04 — frente do caso (quando houver): filtra as pastas por frente + comuns.
   frenteSlug?: string | null;
+  // R2-09 — tema do caso: usado para abrir o pop-up de FILTROS pós-Word.
+  temaId?: string | null;
+  // R2-09 — cliente do caso: habilita o seletor de caso no pop-up de filtros.
+  clientId?: string | null;
+  // R2-09 — canonical_fields BRUTO do caso (chaveado por slug do def), para
+  // pré-carregar os filtros já preenchidos no pop-up. NÃO usar autoFill.canonical
+  // aqui (aquele mapa é re-rotulado em PT e não casa com def.key).
+  canonicalFields?: Record<string, unknown> | null;
   autoFill: AutoFillData;
   // ITEM 2 — quando o chamador já sabe o modo (ex.: ficha do cliente já escolheu
   // "Documento do caso" e o caso), pula a pergunta Procuração vs Caso.
@@ -78,10 +93,20 @@ export function GenerateCaseDocumentFlow({
   // Pasta de caso pré-selecionada (drive_folder_id) — pula a etapa de seleção de
   // pasta e vai direto para a seleção de template dentro dela.
   initialFolderId?: string | null;
+  // R2-10 — quando true, gerar "Documento de caso" cria um CASO NOVO (não anexa
+  // ao caso atual). Procuração/contrato NUNCA cria caso. Ligado na ficha e na aba
+  // Documentos; DESLIGADO no "Novo caso" (o caso já foi criado ali).
+  casoCriaNovoCaso?: boolean;
 }) {
+  const navigate = useNavigate();
   const generate = useGenerateCaseDocument(caseId);
+  const genAsNewCase = useGenerateDocumentAsNewCase();
   const finalize = useFinalizeCaseDocument(caseId);
   const sendZap = useSendCaseDocumentToZapsign(caseId);
+  // R2-10 — quando um "Documento de caso" cria um caso novo, guardamos o id p/ o
+  // pop-up de filtros e a navegação ao fechar o editor. null = mesmo caso.
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
+  const activeCaseId = createdCaseId ?? caseId;
 
   const [editorUrl, setEditorUrl] = useState<string | null>(null);
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
@@ -91,12 +116,26 @@ export function GenerateCaseDocumentFlow({
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [signUrl, setSignUrl] = useState<string | null>(null);
+  // R2-09 — pop-up de FILTROS do tema, abre após concluir/finalizar o Word.
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Dispara o pop-up de filtros do tema uma vez, após finalizar o documento.
+  // Se o tema não tiver filtros customizados, o pop-up se fecha sozinho.
+  function abrirFiltrosPosWord() {
+    if (temaId) setShowFilters(true);
+  }
 
   function closeEditor() {
     setEditorUrl(null);
     setEditorDocId(null);
     setFinalized(false);
     setSignUrl(null);
+    // R2-10 — se um caso novo foi criado, navega para ele ao fechar o editor.
+    if (createdCaseId) {
+      const target = createdCaseId;
+      setCreatedCaseId(null);
+      navigate({ to: "/casos/$id", params: { id: target } });
+    }
   }
 
   async function enviarAoZapsign() {
@@ -111,6 +150,7 @@ export function GenerateCaseDocumentFlow({
       if (!finalized) {
         await finalize.mutateAsync(editorDocId);
         setFinalized(true);
+        abrirFiltrosPosWord();
       }
       const res = await sendZap.mutateAsync({
         docId: editorDocId,
@@ -144,15 +184,46 @@ export function GenerateCaseDocumentFlow({
       <PickDialog
         open={open}
         onOpenChange={onOpenChange}
-        pending={generate.isPending}
+        pending={generate.isPending || genAsNewCase.isPending}
         autoFill={autoFill}
         caseType={caseType}
         frenteSlug={frenteSlug}
         initialMode={initialMode}
         initialFolderId={initialFolderId}
-        onGenerate={async (templateId, title, values, docKind) => {
+        onGenerate={async (templateId, title, values, docKind, folderId, folderName) => {
           try {
+            // R2-10 — "Documento de caso" (contrato) com casoCriaNovoCaso: cria
+            // um CASO NOVO e gera o doc nele. Procuração NUNCA cria caso.
+            if (docKind === "contrato" && casoCriaNovoCaso) {
+              const res = await genAsNewCase.mutateAsync({
+                sourceCaseId: caseId,
+                templateId,
+                title,
+                values,
+                casoPastaNome: folderName ?? null,
+                casoPastaDriveId: folderId ?? null,
+              });
+              // R2-11 req.5 — o RPC pode ter gerado NO PRÓPRIO caso (1º doc de caso,
+              // fica junto da procuração) ou criado um caso NOVO. Só navega/marca se
+              // for um caso diferente.
+              const isNovoCaso = res.caseId !== caseId;
+              setCreatedCaseId(isNovoCaso ? res.caseId : null);
+              onOpenChange(false);
+              toast.success(
+                isNovoCaso
+                  ? "Novo caso criado — documento gerado, abrindo editor"
+                  : "Documento gerado — abrindo editor",
+              );
+              setEditorDocId(res.doc.id);
+              setEditorUrl(editUrl(res.doc.google_doc_id!));
+              setFinalized(false);
+              setSignUrl(null);
+              setSignerName(autoFill.clientName ?? "");
+              setSignerEmail(autoFill.email ?? "");
+              return;
+            }
             const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
+            setCreatedCaseId(null);
             onOpenChange(false);
             toast.success("Documento gerado — abrindo editor");
             setEditorDocId(res.doc.id);
@@ -245,6 +316,7 @@ export function GenerateCaseDocumentFlow({
                   await finalize.mutateAsync(editorDocId);
                   setFinalized(true);
                   toast.success("Documento finalizado (PDF na pasta do caso)");
+                  abrirFiltrosPosWord();
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Falha");
                 }
@@ -263,6 +335,20 @@ export function GenerateCaseDocumentFlow({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* R2-09 — pop-up de FILTROS do tema, após concluir o Word. Preenchimento
+          opcional; grava em canonical_fields. Fecha sozinho se o tema não tem
+          filtros customizados. */}
+      <CaseFilterFillDialog
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        caseId={activeCaseId}
+        clientId={clientId}
+        temaId={temaId}
+        frenteSlug={frenteSlug}
+        // Caso novo → começa em branco; mesmo caso → pré-carrega os atuais.
+        initialValues={createdCaseId ? null : canonicalFields}
+      />
     </>
   );
 }
@@ -286,6 +372,9 @@ function PickDialog({
     title: string,
     values: Record<string, string>,
     docKind: "procuracao" | "contrato",
+    // R2-10 — pasta escolhida (Documento de caso) p/ nomear o caso novo.
+    folderId?: string | null,
+    folderName?: string | null,
   ) => void;
   autoFill: AutoFillData;
   caseType?: string;
@@ -307,9 +396,15 @@ function PickDialog({
   // Resolve o tipo do caso pelo slug e busca suas pastas de caso e de procuração.
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  // R2-04 — pastas por frente do caso (frente + comuns). Sem frente → todas do tema.
-  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug);
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
+  // R2-09 — a camada FRENTE foi removida (casos nascem sem frente). Ignoramos o
+  // filtro de frente aqui (`?? undefined` → todas as pastas do tema); senão pastas
+  // marcadas com uma frente legada (ex.: COVID) somem para casos sem frente.
+  const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug ?? undefined);
+  const { data: procFolders } = useTypeFolders(
+    serviceTypeId,
+    "procuracao",
+    frenteSlug ?? undefined,
+  );
   const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
 
   // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
@@ -605,6 +700,8 @@ function PickDialog({
                 selected?.name ?? "Documento",
                 values,
                 isProc ? "procuracao" : "contrato",
+                isProc ? null : folderId,
+                isProc ? null : (folderLabel ?? null),
               );
             }}
           >

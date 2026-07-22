@@ -222,7 +222,12 @@ export const updateCaseFn = createServerFn({ method: "POST" })
 // S2-07 — campos canônicos do CASO (merge no JSONB canonical_fields).
 const canonicalFieldsSchema = z.object({
   id: z.string().uuid(),
-  patch: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  // R2-09 — `multiselect` grava um ARRAY de strings; os demais tipos gravam
+  // string/number/boolean; null remove a chave.
+  patch: z.record(
+    z.string(),
+    z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]),
+  ),
 });
 
 export const updateCaseCanonicalFieldsFn = createServerFn({ method: "POST" })

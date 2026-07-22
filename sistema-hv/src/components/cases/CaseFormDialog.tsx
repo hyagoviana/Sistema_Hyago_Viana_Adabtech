@@ -56,6 +56,8 @@ export type CreatedCaseLite = {
   id: string;
   case_type: string;
   frente_slug: string | null;
+  /** Tema do caso — usado no pop-up de filtros pós-Word (R2-09). */
+  tema_id?: string | null;
   case_code?: string;
   municipio?: string | null;
   /** Pasta de caso (drive_folder_id) escolhida na criação — pula a etapa de
@@ -109,8 +111,8 @@ export function CaseFormDialog({
 
   // Resolve o service_type interno do tema para carregar as pastas de caso.
   const selectedTema = (temas ?? []).find((t) => t.id === temaId);
-  const temaServiceTypeId = (selectedTema as { service_type_id?: string | null } | undefined)
-    ?.service_type_id ?? null;
+  const temaServiceTypeId =
+    (selectedTema as { service_type_id?: string | null } | undefined)?.service_type_id ?? null;
   const { data: casoFolders } = useTypeFolders(temaServiceTypeId, "caso");
 
   // Responsáveis selecionáveis: advogados (titular/associado) + ADMIN (ajuste A8,
@@ -186,6 +188,7 @@ export function CaseFormDialog({
         id: created.id,
         case_type: created.case_type,
         frente_slug: (created as { frente_slug?: string | null }).frente_slug ?? null,
+        tema_id: temaId || null,
         case_code: created.case_code,
         municipio: (created as { municipio?: string | null }).municipio ?? null,
         casoFolderId: casoFolderId || null,
@@ -201,8 +204,8 @@ export function CaseFormDialog({
         <DialogHeader>
           <DialogTitle>Novo caso</DialogTitle>
           <DialogDescription>
-            Escolha o tema e o caso deste cadastro. Ao criar, você escolhe o documento para gerar.
-            A situação (Comercial × Operacional) é definida pelo estado do cadastro.
+            Escolha o tema e o caso deste cadastro. Ao criar, você escolhe o documento para gerar. A
+            situação (Comercial × Operacional) é definida pelo estado do cadastro.
           </DialogDescription>
         </DialogHeader>
 
@@ -314,10 +317,7 @@ export function CaseFormDialog({
             {hasTemas && temaId && (casoFolders ?? []).length > 0 && (
               <div className="space-y-2">
                 <Label>Caso *</Label>
-                <Select
-                  value={casoFolderId}
-                  onValueChange={(v) => setCasoFolderId(v)}
-                >
+                <Select value={casoFolderId} onValueChange={(v) => setCasoFolderId(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o caso" />
                   </SelectTrigger>

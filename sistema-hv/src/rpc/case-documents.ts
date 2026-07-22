@@ -7,6 +7,7 @@ import {
   ensureCaseFolder,
   finalizeCaseDocument,
   generateCaseDocumentFromTemplate,
+  generateDocumentAsNewCase,
   getCaseDocumentDownloadUrl,
   listCaseDocuments,
   listCaseDocumentsByClient,
@@ -77,6 +78,32 @@ export const generateCaseDocumentFn = createServerFn({ method: "POST" })
         title: data.title,
         values: data.values,
         docKind: data.docKind,
+        triggeredBy: userId,
+      }),
+    ),
+  );
+
+// R2-10 — "Documento de caso" gera um CASO PRÓPRIO (novo caso + doc nele).
+const generateAsNewCaseSchema = z.object({
+  sourceCaseId: z.string().uuid(),
+  templateId: z.string().uuid(),
+  title: z.string().optional(),
+  values: z.record(z.string(), z.string()).default({}),
+  casoPastaNome: z.string().optional().nullable(),
+  casoPastaDriveId: z.string().optional().nullable(),
+});
+
+export const generateDocumentAsNewCaseFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => generateAsNewCaseSchema.parse(d))
+  .handler(async ({ data }) =>
+    handleWrite((userId) =>
+      generateDocumentAsNewCase({
+        sourceCaseId: data.sourceCaseId,
+        templateId: data.templateId,
+        title: data.title,
+        values: data.values,
+        casoPastaNome: data.casoPastaNome,
+        casoPastaDriveId: data.casoPastaDriveId,
         triggeredBy: userId,
       }),
     ),

@@ -13,11 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CanonicalMultiSelect } from "@/components/cases/CanonicalMultiSelect";
 import { useUpdateCaseCanonicalFields } from "@/hooks/useCases";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { FIES_FIELD_KEYS } from "@/lib/cases/fies-fields";
 import { VINCULO_FIELD_KEYS } from "@/lib/cases/vinculo-fields";
-import { maskBrlReais, normalizeBrl } from "@/lib/format";
+import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 // Bloco "Dados do serviço" — campos canônicos do CASO (ex.: nº FIES).
 // Distinto dos custom fields de CLIENTE. O VALOR grava sempre em
@@ -27,22 +28,6 @@ import { maskBrlReais, normalizeBrl } from "@/lib/format";
 // tema+frente (label/type/ordem/required), MAIS as chaves livres remanescentes
 // que não têm def (para não esconder/perder valores já gravados). Sem tema,
 // comportamento legado: pares chave/valor livres.
-
-function centavosToReaisMask(centavos: unknown): string {
-  if (centavos === null || centavos === undefined || centavos === "") return "";
-  const n = typeof centavos === "number" ? centavos : parseInt(String(centavos), 10);
-  if (!Number.isFinite(n)) return "";
-  return maskBrlReais((n / 100).toFixed(2).replace(".", ","));
-}
-
-function reaisMaskToCentavos(masked: string): string {
-  const cleaned = (masked ?? "").replace(/[^\d,]/g, "");
-  if (cleaned === "") return "";
-  const [intRaw, decRaw = ""] = cleaned.split(",");
-  const intNum = intRaw ? parseInt(intRaw, 10) : 0;
-  const dec = (decRaw + "00").slice(0, 2);
-  return String(intNum * 100 + parseInt(dec, 10));
-}
 
 function optionsToArray(options: unknown): string[] {
   return Array.isArray(options) ? options.filter((o): o is string => typeof o === "string") : [];
@@ -84,7 +69,7 @@ export function CaseCanonicalFields({
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
 
-  async function saveKey(key: string, value: string | number | null) {
+  async function saveKey(key: string, value: string | number | boolean | string[] | null) {
     try {
       await updateMut.mutateAsync({ id: caseId, patch: { [key]: value } });
     } catch (err) {
@@ -219,7 +204,8 @@ export function CaseCanonicalFields({
 }
 
 // Renderiza um campo DEFINIDO conforme o tipo, gravando em canonical_fields.
-function TemaFieldInput({
+// Exportado (R2-09) para reuso no pop-up de filtros pós-Word (CaseFilterFillDialog).
+export function TemaFieldInput({
   def,
   value,
   canEdit,
@@ -230,7 +216,7 @@ function TemaFieldInput({
   value: unknown;
   canEdit: boolean;
   disabled: boolean;
-  onSave: (value: string | number | null) => void;
+  onSave: (value: string | number | boolean | string[] | null) => void;
 }) {
   const strValue = value === null || value === undefined ? "" : String(value);
 
@@ -240,6 +226,47 @@ function TemaFieldInput({
       {def.required && <span className="text-destructive">*</span>}
     </Label>
   );
+
+  // R2-09 — múltipla escolha: usuário marca 1+ opções; grava array.
+  if (def.type === "multiselect") {
+    return (
+      <div className="space-y-1">
+        {labelEl}
+        <CanonicalMultiSelect
+          options={optionsToArray(def.options)}
+          value={value}
+          disabled={!canEdit || disabled}
+          onChange={(arr) => onSave(arr)}
+        />
+      </div>
+    );
+  }
+
+  // R2-09 — Sim/Não (tri-estado: Sim / Não / não definido). Grava boolean real
+  // em canonical_fields (o RPC aceita string|number|boolean|null).
+  if (def.type === "boolean") {
+    const boolStr =
+      value === true || value === "true"
+        ? "true"
+        : value === false || value === "false"
+          ? "false"
+          : "";
+    return (
+      <div className="space-y-1">
+        {labelEl}
+        <select
+          value={boolStr}
+          disabled={!canEdit || disabled}
+          onChange={(e) => onSave(e.target.value === "" ? null : e.target.value === "true")}
+          className="w-full py-2 px-3 bg-[var(--card)] border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none disabled:opacity-60"
+        >
+          <option value="">— não definido —</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
+      </div>
+    );
+  }
 
   if (def.type === "select") {
     return (
@@ -312,22 +339,18 @@ function MoneyField({
   disabled: boolean;
   onSave: (value: string | number | null) => void;
 }) {
-  const [mask, setMask] = useState(() => centavosToReaisMask(strValue));
+  // Centavos-primeiro: digita só números → formata "34.445,00". Guarda centavos.
+  const [mask, setMask] = useState(() => centavosToMask(strValue));
   return (
     <div className="space-y-1">
       {labelEl}
       <Input
         value={mask}
         disabled={!canEdit || disabled}
-        inputMode="decimal"
+        inputMode="numeric"
         placeholder="0,00"
-        onChange={(e) => setMask(maskBrlReais(e.target.value))}
-        onBlur={() => {
-          const norm = normalizeBrl(mask);
-          setMask(norm);
-          const centavos = reaisMaskToCentavos(norm);
-          onSave(centavos === "" ? null : centavos);
-        }}
+        onChange={(e) => setMask(maskCentavos(e.target.value))}
+        onBlur={() => onSave(centavosFromMask(mask))}
       />
     </div>
   );
