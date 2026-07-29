@@ -194,7 +194,16 @@ export function useDistributionConfig() {
 export function useUpdateDistributionConfig() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (config: { mode?: string; batch_hour?: number }) => {
+    mutationFn: async (config: {
+      mode?: string;
+      batch_hour?: number;
+      projuris_base_url?: string;
+      projuris_auth_type?: string;
+      projuris_username?: string | null;
+      projuris_password?: string | null;
+      projuris_token?: string | null;
+      projuris_api_key?: string | null;
+    }) => {
       const { error } = await supabase
         .from("system_distribution_config")
         .update({ ...config, updated_at: new Date().toISOString() })

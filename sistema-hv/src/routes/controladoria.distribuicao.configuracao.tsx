@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
-import { Settings, Play, FlaskConical, Clock, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Settings, Play, FlaskConical, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, Key, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useDistributionConfig, useUpdateDistributionConfig, useLastBatchLog, useAlertsSummary30d } from "@/hooks/useDistribuicao";
@@ -29,9 +30,47 @@ function ConfiguracaoPage() {
   const [executing, setExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState<Record<string, unknown> | null>(null);
 
+  // Credenciais Projuris
+  const [projurisBaseUrl, setProjurisBaseUrl] = useState("");
+  const [projurisAuthType, setProjurisAuthType] = useState<string>("bearer");
+  const [projurisUsername, setProjurisUsername] = useState("");
+  const [projurisPassword, setProjurisPassword] = useState("");
+  const [projurisToken, setProjurisToken] = useState("");
+  const [projurisApiKey, setProjurisApiKey] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
+  const [savingCredentials, setSavingCredentials] = useState(false);
+
   useEffect(() => {
-    if (config) { setMode(config.mode); setBatchHour(String(config.batch_hour)); }
+    if (config) {
+      setMode(config.mode);
+      setBatchHour(String(config.batch_hour));
+      setProjurisBaseUrl(config.projuris_base_url ?? "");
+      setProjurisAuthType(config.projuris_auth_type ?? "bearer");
+      setProjurisUsername(config.projuris_username ?? "");
+      setProjurisPassword(config.projuris_password ?? "");
+      setProjurisToken(config.projuris_token ?? "");
+      setProjurisApiKey(config.projuris_api_key ?? "");
+    }
   }, [config]);
+
+  async function saveCredentials() {
+    if (!projurisBaseUrl) { toast.error("URL base e obrigatoria"); return; }
+    setSavingCredentials(true);
+    try {
+      await updateConfig.mutateAsync({
+        projuris_base_url: projurisBaseUrl,
+        projuris_auth_type: projurisAuthType,
+        projuris_username: projurisAuthType === "basic" ? projurisUsername : null,
+        projuris_password: projurisAuthType === "basic" ? projurisPassword : null,
+        projuris_token: projurisAuthType === "bearer" ? projurisToken : null,
+        projuris_api_key: projurisAuthType === "apikey" ? projurisApiKey : null,
+      });
+      toast.success("Credenciais salvas com sucesso");
+    } catch { toast.error("Erro ao salvar credenciais"); }
+    finally { setSavingCredentials(false); }
+  }
+
+  const hasCredentials = !!config?.projuris_base_url;
 
   // Auto-save com debounce
   const debouncedSave = useCallback((field: string, value: unknown) => {
@@ -75,6 +114,119 @@ function ConfiguracaoPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Credenciais Projuris */}
+      <Card className={hasCredentials ? "border-green-200" : "border-amber-200"}>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Credenciais Projuris
+            {hasCredentials ? (
+              <Badge className="bg-green-100 text-green-700 text-xs ml-2"><CheckCircle2 className="h-3 w-3 mr-1" />Configurado</Badge>
+            ) : (
+              <Badge className="bg-amber-100 text-amber-700 text-xs ml-2"><AlertTriangle className="h-3 w-3 mr-1" />Pendente</Badge>
+            )}
+          </CardTitle>
+          <CardDescription>Conexao com a API do Projuris para sincronizar tarefas</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {configLoading ? <Skeleton className="h-[150px]" /> : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label>URL Base da API</Label>
+                  <Input
+                    placeholder="https://app.projuris.com.br/api/v1"
+                    value={projurisBaseUrl}
+                    onChange={e => setProjurisBaseUrl(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Ex: https://app.projuris.com.br/api/v1</p>
+                </div>
+                <div>
+                  <Label>Tipo de Autenticacao</Label>
+                  <Select value={projurisAuthType} onValueChange={setProjurisAuthType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bearer">Bearer Token</SelectItem>
+                      <SelectItem value="apikey">API Key</SelectItem>
+                      <SelectItem value="basic">Basic Auth (usuario/senha)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {projurisAuthType === "bearer" && (
+                <div>
+                  <Label>Token</Label>
+                  <div className="relative">
+                    <Input
+                      type={showSecret ? "text" : "password"}
+                      placeholder="Cole o token de acesso aqui"
+                      value={projurisToken}
+                      onChange={e => setProjurisToken(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground">
+                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {projurisAuthType === "apikey" && (
+                <div>
+                  <Label>API Key</Label>
+                  <div className="relative">
+                    <Input
+                      type={showSecret ? "text" : "password"}
+                      placeholder="Cole a API Key aqui"
+                      value={projurisApiKey}
+                      onChange={e => setProjurisApiKey(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground">
+                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {projurisAuthType === "basic" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Usuario</Label>
+                    <Input
+                      placeholder="usuario@projuris"
+                      value={projurisUsername}
+                      onChange={e => setProjurisUsername(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Senha</Label>
+                    <div className="relative">
+                      <Input
+                        type={showSecret ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={projurisPassword}
+                        onChange={e => setProjurisPassword(e.target.value)}
+                        className="pr-10"
+                      />
+                      <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground">
+                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={saveCredentials} disabled={savingCredentials || !projurisBaseUrl}>
+                {savingCredentials ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Key className="h-4 w-4 mr-1" />}
+                Salvar Credenciais
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Modo de Operacao */}
         <Card>
