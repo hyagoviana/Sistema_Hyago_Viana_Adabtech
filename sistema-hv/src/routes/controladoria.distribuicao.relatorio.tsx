@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/browser";
 
 export const Route = createFileRoute("/controladoria/distribuicao/relatorio")({
   component: RelatorioPage,

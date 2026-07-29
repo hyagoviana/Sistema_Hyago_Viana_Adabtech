@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/browser";
 
 export const Route = createFileRoute("/controladoria/distribuicao/simulador")({
   component: SimuladorPage,
