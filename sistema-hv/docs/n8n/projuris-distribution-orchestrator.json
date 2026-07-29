@@ -1,0 +1,149 @@
+{
+  "name": "Projuris Distribution Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "5 9 * * 1-5" }]
+        }
+      },
+      "name": "Cron 06:05 BRT (backup)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EDGE_FUNCTION_URL}}/functions/v1/projuris-sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "source", "value": "n8n" },
+            { "name": "manual", "value": "false" }
+          ]
+        },
+        "options": { "timeout": 420000 }
+      },
+      "name": "Call Edge Function",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{$json.status}}", "operation": "equals", "value2": "success" }
+          ]
+        }
+      },
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EDGE_FUNCTION_URL}}/functions/v1/projuris-sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "retry-writebacks" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      },
+      "name": "Retry Writebacks",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.SYSTEM_EMAIL}}",
+        "toEmail": "={{$env.CONTROLADOR_EMAIL}}",
+        "subject": "=Distribuicao Diaria - {{$json.distribution_date}} - {{$json.total_tasks}} tarefas",
+        "html": "=<h2>Resumo da Distribuicao</h2><ul><li><b>Data:</b> {{$json.distribution_date}}</li><li><b>Total:</b> {{$json.total_tasks}}</li><li><b>Sucesso:</b> {{$json.successful}}</li><li><b>Bloqueadas:</b> {{$json.failed}}</li><li><b>Duracao:</b> {{$json.duration_ms}}ms</li></ul><p><a href='{{$env.SISTEMA_HV_URL}}/controladoria'>Ver no Dashboard</a></p>"
+      },
+      "name": "Email Resumo",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "name": "Wait 10min",
+      "type": "n8n-nodes-base.wait",
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EDGE_FUNCTION_URL}}/functions/v1/projuris-sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "source", "value": "n8n-retry" },
+            { "name": "manual", "value": "false" }
+          ]
+        },
+        "options": { "timeout": 420000 }
+      },
+      "name": "Retry Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.SYSTEM_EMAIL}}",
+        "toEmail": "={{$env.CONTROLADOR_EMAIL}}",
+        "subject": "⚠️ FALHA Distribuicao Diaria - Acao Necessaria",
+        "html": "=<h2>Falha na Distribuicao</h2><p>O batch de distribuicao falhou apos 3 tentativas.</p><p><b>Erro:</b> {{$json.error}}</p><p>Verifique o dashboard e acione suporte tecnico se necessario.</p><p><a href='{{$env.SISTEMA_HV_URL}}/controladoria'>Ver no Dashboard</a></p>"
+      },
+      "name": "Email Falha Critica",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [1100, 400]
+    }
+  ],
+  "connections": {
+    "Cron 06:05 BRT (backup)": { "main": [[{ "node": "Call Edge Function", "type": "main", "index": 0 }]] },
+    "Call Edge Function": { "main": [[{ "node": "Check Success", "type": "main", "index": 0 }]] },
+    "Check Success": {
+      "main": [
+        [{ "node": "Retry Writebacks", "type": "main", "index": 0 }],
+        [{ "node": "Wait 10min", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Writebacks": { "main": [[{ "node": "Email Resumo", "type": "main", "index": 0 }]] },
+    "Wait 10min": { "main": [[{ "node": "Retry Batch", "type": "main", "index": 0 }]] },
+    "Retry Batch": { "main": [[{ "node": "Email Falha Critica", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "timezone": "America/Sao_Paulo",
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all"
+  }
+}
