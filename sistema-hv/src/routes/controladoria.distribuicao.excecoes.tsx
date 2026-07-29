@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { usePendingExceptions, useResolveException } from "@/hooks/useDistribuicaoDashboard";
 import { useExecutorMappings } from "@/hooks/useDistribuicao";
@@ -26,7 +26,6 @@ const ALERT_COLORS: Record<string, string> = {
 };
 
 function ExcecoesPage() {
-  const { toast } = useToast();
   const { data: exceptions, isLoading } = usePendingExceptions();
   const { data: executors } = useExecutorMappings();
   const resolve = useResolveException();
@@ -39,25 +38,25 @@ function ExcecoesPage() {
     if (!selectedExecutor || !action) return;
     try {
       await resolve.mutateAsync({ id: action.exception.id, status: "manually_assigned", manual_executor_id: selectedExecutor, override_reason: reason });
-      toast({ title: "Excecao resolvida", description: "Tarefa atribuida manualmente" });
+      toast.success("Excecao resolvida");
       setAction(null); setSelectedExecutor(""); setReason("");
-    } catch { toast({ title: "Erro", variant: "destructive" }); }
+    } catch { toast.error("Erro"); }
   }
 
   async function handleIgnore() {
-    if (!reason || !action) { toast({ title: "Justificativa obrigatoria", variant: "destructive" }); return; }
+    if (!reason || !action) { toast.error("Justificativa obrigatoria"); return; }
     try {
       await resolve.mutateAsync({ id: action.exception.id, status: "ignored", ignore_reason: reason });
-      toast({ title: "Excecao ignorada" });
+      toast.success("Excecao ignorada");
       setAction(null); setReason("");
-    } catch { toast({ title: "Erro", variant: "destructive" }); }
+    } catch { toast.error("Erro"); }
   }
 
   async function handleReprocess(exc: any) {
     try {
       await resolve.mutateAsync({ id: exc.id, status: "reprocess" });
-      toast({ title: "Marcada para reprocessamento" });
-    } catch { toast({ title: "Erro", variant: "destructive" }); }
+      toast.success("Marcada para reprocessamento");
+    } catch { toast.error("Erro"); }
   }
 
   return (

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useDistributionConfig, useUpdateDistributionConfig, useLastBatchLog, useAlertsSummary30d } from "@/hooks/useDistribuicao";
 import { supabase } from "@/lib/supabase/client";
@@ -17,7 +17,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/configuracao")
 });
 
 function ConfiguracaoPage() {
-  const { toast } = useToast();
   const { data: config, isLoading: configLoading } = useDistributionConfig();
   const { data: lastBatch, isLoading: batchLoading } = useLastBatchLog();
   const { data: alertsSummary } = useAlertsSummary30d();
@@ -36,12 +35,12 @@ function ConfiguracaoPage() {
   const debouncedSave = useCallback((field: string, value: unknown) => {
     const timer = setTimeout(() => {
       updateConfig.mutate({ [field]: value }, {
-        onSuccess: () => toast({ title: "Configuracao salva" }),
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
+        onSuccess: () => toast.success("Configuracao salva"),
+        onError: () => toast.error("Erro ao salvar"),
       });
     }, 1000);
     return () => clearTimeout(timer);
-  }, [updateConfig, toast]);
+  }, [updateConfig]);
 
   function handleModeChange(newMode: string) {
     setMode(newMode);
@@ -63,9 +62,9 @@ function ConfiguracaoPage() {
       });
       const result = await response.json();
       setExecutionResult(result);
-      toast({ title: simulate ? "Simulacao concluida" : "Batch executado", description: `${result.total_tasks ?? 0} tarefas processadas` });
+      toast.success(simulate ? "Simulacao concluida" : "Batch executado");
     } catch (error) {
-      toast({ title: "Erro na execucao", description: String(error), variant: "destructive" });
+      toast.error("Erro na execucao");
     } finally { setExecuting(false); }
   }
 

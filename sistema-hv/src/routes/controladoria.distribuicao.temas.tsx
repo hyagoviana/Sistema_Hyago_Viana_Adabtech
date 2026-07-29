@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useThemeMappings, useUpsertThemeMapping } from "@/hooks/useDistribuicao";
 
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/temas")({
 const TEMPORAL_LABELS: Record<number, string> = { 0: "Normal", 1: "Prioritario (+10%)", 2: "Urgente (+30%)" };
 
 function TemasPage() {
-  const { toast } = useToast();
   const { data: mappings, isLoading } = useThemeMappings();
   const upsert = useUpsertThemeMapping();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,16 +56,16 @@ function TemasPage() {
 
   async function handleSave() {
     const mult = parseFloat(multiplier);
-    if (!projurisCodigo || !motorId) { toast({ title: "Campos obrigatorios", variant: "destructive" }); return; }
-    if (!mult || mult <= 0) { toast({ title: "Multiplicador deve ser > 0", variant: "destructive" }); return; }
+    if (!projurisCodigo || !motorId) { toast.error("Campos obrigatorios"); return; }
+    if (!mult || mult <= 0) { toast.error("Multiplicador deve ser > 0"); return; }
     try {
       await upsert.mutateAsync({
         projuris_tema_codigo: projurisCodigo, projuris_tema_descricao: projurisDesc,
         motor_theme_id: motorId, multiplier: mult,
         temporal_level: parseInt(temporal), active,
       });
-      toast({ title: editing ? "Tema atualizado" : "Tema adicionado" }); setDialogOpen(false);
-    } catch { toast({ title: "Erro ao salvar", variant: "destructive" }); }
+      toast.success(editing ? "Tema atualizado" : "Tema adicionado"); setDialogOpen(false);
+    } catch { toast.error("Erro ao salvar"); }
   }
 
   return (

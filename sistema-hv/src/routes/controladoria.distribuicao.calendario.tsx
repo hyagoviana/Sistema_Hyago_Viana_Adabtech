@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import {
   useCalendarBlocks, useCalendarBlocksYear,
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/calendario")({
 });
 
 function CalendarioPage() {
-  const { toast } = useToast();
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [view, setView] = useState<"month" | "year">("month");
@@ -72,20 +71,20 @@ function CalendarioPage() {
     }
     try {
       await addBlock.mutateAsync(dates);
-      toast({ title: "Bloqueio adicionado", description: `${dates.length} dia(s) bloqueado(s)` });
+      toast.success("Bloqueio adicionado");
       setDialogOpen(false);
       setStartDate(""); setEndDate(""); setReason(""); setExecutorId("");
     } catch {
-      toast({ title: "Erro ao adicionar bloqueio", variant: "destructive" });
+      toast.error("Erro ao adicionar bloqueio");
     }
   }
 
   async function handleRemove(id: string) {
     try {
       await removeBlock.mutateAsync(id);
-      toast({ title: "Bloqueio removido" });
+      toast.success("Bloqueio removido");
     } catch {
-      toast({ title: "Erro ao remover", variant: "destructive" });
+      toast.error("Erro ao remover");
     }
   }
 

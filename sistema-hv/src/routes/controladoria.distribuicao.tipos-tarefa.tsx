@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useTaskTypeMappings, useUpsertTaskTypeMapping } from "@/hooks/useDistribuicao";
 
@@ -22,7 +22,6 @@ const COMPLEXITY_LABELS: Record<number, string> = { 0: "Regular", 1: "Nivel 1 (+
 const TEMPORAL_LABELS: Record<number, string> = { 0: "Normal", 1: "Prioritario (+10%)", 2: "Urgente (+30%)" };
 
 function TiposTarefaPage() {
-  const { toast } = useToast();
   const { data: mappings, isLoading } = useTaskTypeMappings();
   const upsert = useUpsertTaskTypeMapping();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,15 +55,15 @@ function TiposTarefaPage() {
   }
 
   async function handleSave() {
-    if (!projurisCodigo || !motorId) { toast({ title: "Campos obrigatorios", variant: "destructive" }); return; }
+    if (!projurisCodigo || !motorId) { toast.error("Campos obrigatorios"); return; }
     try {
       await upsert.mutateAsync({
         projuris_tipo_codigo: projurisCodigo, projuris_tipo_descricao: projurisDesc,
         motor_task_type_id: motorId, points: parseFloat(points),
         complexity_level: parseInt(complexity), temporal_level: parseInt(temporal), active,
       });
-      toast({ title: editing ? "Tipo atualizado" : "Tipo adicionado" }); setDialogOpen(false);
-    } catch { toast({ title: "Erro ao salvar", variant: "destructive" }); }
+      toast.success(editing ? "Tipo atualizado" : "Tipo adicionado"); setDialogOpen(false);
+    } catch { toast.error("Erro ao salvar"); }
   }
 
   function exportCSV() {

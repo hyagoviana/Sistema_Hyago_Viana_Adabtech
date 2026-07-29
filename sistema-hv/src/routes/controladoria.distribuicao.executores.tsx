@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useExecutorMappings, useUpsertExecutorMapping } from "@/hooks/useDistribuicao";
 
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/executores")({
 });
 
 function ExecutoresPage() {
-  const { toast } = useToast();
   const { data: executors, isLoading } = useExecutorMappings();
   const upsert = useUpsertExecutorMapping();
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
@@ -51,8 +50,8 @@ function ExecutoresPage() {
 
   async function handleSave() {
     const w = parseFloat(weight);
-    if (!w || w <= 0) { toast({ title: "Peso deve ser maior que 0", variant: "destructive" }); return; }
-    if (!projurisId) { toast({ title: "Projuris ID obrigatorio", variant: "destructive" }); return; }
+    if (!w || w <= 0) { toast.error("Peso deve ser maior que 0"); return; }
+    if (!projurisId) { toast.error("Projuris ID obrigatorio"); return; }
     try {
       await upsert.mutateAsync({
         ...(editing ? { id: (editing as any).id } : {}),
@@ -62,9 +61,9 @@ function ExecutoresPage() {
         eligible_complex: eligibleComplex,
         active,
       });
-      toast({ title: editing ? "Executor atualizado" : "Executor adicionado" });
+      toast.success(editing ? "Executor atualizado" : "Executor adicionado");
       setDialogOpen(false);
-    } catch { toast({ title: "Erro ao salvar", variant: "destructive" }); }
+    } catch { toast.error("Erro ao salvar"); }
   }
 
   return (

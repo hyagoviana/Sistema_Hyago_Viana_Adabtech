@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { supabase } from "@/lib/supabase/client";
 
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/relatorio")({
 const ORG_ID = "00000000-0000-0000-0000-000000000001";
 
 function RelatorioPage() {
-  const { toast } = useToast();
   const qc = useQueryClient();
 
   const thirtyDaysAgo = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split("T")[0]; }, []);
@@ -95,11 +94,11 @@ function RelatorioPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Motor ativado em producao!" });
+      toast.success("Motor ativado em producao!");
       qc.invalidateQueries({ queryKey: ["distribution-config"] });
       setActivateDialogOpen(false);
     },
-    onError: () => toast({ title: "Erro ao ativar", variant: "destructive" }),
+    onError: () => toast.error("Erro ao ativar"),
   });
 
   function toggleSection(key: keyof typeof sections) {

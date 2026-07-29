@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useBatchHistory } from "@/hooks/useDistribuicaoDashboard";
 import { supabase } from "@/lib/supabase/client";
@@ -16,7 +16,6 @@ export const Route = createFileRoute("/controladoria/distribuicao/historico")({
 });
 
 function HistoricoPage() {
-  const { toast } = useToast();
   const thirtyDaysAgo = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split("T")[0]; }, []);
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -52,8 +51,8 @@ function HistoricoPage() {
         method: "POST", headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ manual: true, distribution_date: batchDate }),
       });
-      toast({ title: "Re-execucao iniciada" });
-    } catch { toast({ title: "Erro", variant: "destructive" }); }
+      toast.success("Re-execucao iniciada");
+    } catch { toast.error("Erro"); }
   }
 
   function exportCSV() {
