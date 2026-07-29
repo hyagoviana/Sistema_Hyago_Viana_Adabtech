@@ -38,6 +38,7 @@ import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
 import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
 import { Route as ControladoriaIndexRouteImport } from './routes/controladoria.index'
 import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
+import { Route as ControladoriaDistribuicaoRouteImport } from './routes/controladoria.distribuicao'
 import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
 import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.prazos'
 import { Route as ControladoriaTesesRouteImport } from './routes/controladoria.teses'
@@ -244,6 +245,12 @@ const ControladoriaDecisoesRoute = ControladoriaDecisoesRouteImport.update({
   path: '/controladoria/decisoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ControladoriaDistribuicaoRoute =
+  ControladoriaDistribuicaoRouteImport.update({
+    id: '/controladoria/distribuicao',
+    path: '/controladoria/distribuicao',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ControladoriaExcecoesRoute = ControladoriaExcecoesRouteImport.update({
   id: '/controladoria/excecoes',
   path: '/controladoria/excecoes',
@@ -449,75 +456,75 @@ const CasosFinanceiroInadimplenciaRoute =
   } as any)
 const ControladoriaDistribuicaoIndexRoute =
   ControladoriaDistribuicaoIndexRouteImport.update({
-    id: '/controladoria/distribuicao/',
-    path: '/controladoria/distribuicao/',
-    getParentRoute: () => rootRouteImport,
+    id: '/',
+    path: '/',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoCalendarioRoute =
   ControladoriaDistribuicaoCalendarioRouteImport.update({
-    id: '/controladoria/distribuicao/calendario',
-    path: '/controladoria/distribuicao/calendario',
-    getParentRoute: () => rootRouteImport,
+    id: '/calendario',
+    path: '/calendario',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoConfiguracaoRoute =
   ControladoriaDistribuicaoConfiguracaoRouteImport.update({
-    id: '/controladoria/distribuicao/configuracao',
-    path: '/controladoria/distribuicao/configuracao',
-    getParentRoute: () => rootRouteImport,
+    id: '/configuracao',
+    path: '/configuracao',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoExcecoesRoute =
   ControladoriaDistribuicaoExcecoesRouteImport.update({
-    id: '/controladoria/distribuicao/excecoes',
-    path: '/controladoria/distribuicao/excecoes',
-    getParentRoute: () => rootRouteImport,
+    id: '/excecoes',
+    path: '/excecoes',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoExecutoresRoute =
   ControladoriaDistribuicaoExecutoresRouteImport.update({
-    id: '/controladoria/distribuicao/executores',
-    path: '/controladoria/distribuicao/executores',
-    getParentRoute: () => rootRouteImport,
+    id: '/executores',
+    path: '/executores',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoHistoricoRoute =
   ControladoriaDistribuicaoHistoricoRouteImport.update({
-    id: '/controladoria/distribuicao/historico',
-    path: '/controladoria/distribuicao/historico',
-    getParentRoute: () => rootRouteImport,
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoIndicadoresRoute =
   ControladoriaDistribuicaoIndicadoresRouteImport.update({
-    id: '/controladoria/distribuicao/indicadores',
-    path: '/controladoria/distribuicao/indicadores',
-    getParentRoute: () => rootRouteImport,
+    id: '/indicadores',
+    path: '/indicadores',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoListaRoute =
   ControladoriaDistribuicaoListaRouteImport.update({
-    id: '/controladoria/distribuicao/lista',
-    path: '/controladoria/distribuicao/lista',
-    getParentRoute: () => rootRouteImport,
+    id: '/lista',
+    path: '/lista',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoRelatorioRoute =
   ControladoriaDistribuicaoRelatorioRouteImport.update({
-    id: '/controladoria/distribuicao/relatorio',
-    path: '/controladoria/distribuicao/relatorio',
-    getParentRoute: () => rootRouteImport,
+    id: '/relatorio',
+    path: '/relatorio',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoSimuladorRoute =
   ControladoriaDistribuicaoSimuladorRouteImport.update({
-    id: '/controladoria/distribuicao/simulador',
-    path: '/controladoria/distribuicao/simulador',
-    getParentRoute: () => rootRouteImport,
+    id: '/simulador',
+    path: '/simulador',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoTemasRoute =
   ControladoriaDistribuicaoTemasRouteImport.update({
-    id: '/controladoria/distribuicao/temas',
-    path: '/controladoria/distribuicao/temas',
-    getParentRoute: () => rootRouteImport,
+    id: '/temas',
+    path: '/temas',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const ControladoriaDistribuicaoTiposTarefaRoute =
   ControladoriaDistribuicaoTiposTarefaRouteImport.update({
-    id: '/controladoria/distribuicao/tipos-tarefa',
-    path: '/controladoria/distribuicao/tipos-tarefa',
-    getParentRoute: () => rootRouteImport,
+    id: '/tipos-tarefa',
+    path: '/tipos-tarefa',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const PortalCasosIdRoute = PortalCasosIdRouteImport.update({
   id: '/portal/casos/$id',
@@ -591,6 +598,7 @@ export interface FileRoutesByFullPath {
   '/comercial/leads': typeof ComercialLeadsRoute
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
+  '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
   '/controladoria/teses': typeof ControladoriaTesesRoute
@@ -773,6 +781,7 @@ export interface FileRoutesById {
   '/comercial/leads': typeof ComercialLeadsRoute
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
+  '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
   '/controladoria/teses': typeof ControladoriaTesesRoute
@@ -866,6 +875,7 @@ export interface FileRouteTypes {
     | '/comercial/leads'
     | '/comercial/oportunidades'
     | '/controladoria/decisoes'
+    | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
     | '/controladoria/teses'
@@ -1047,6 +1057,7 @@ export interface FileRouteTypes {
     | '/comercial/leads'
     | '/comercial/oportunidades'
     | '/controladoria/decisoes'
+    | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
     | '/controladoria/teses'
@@ -1139,6 +1150,7 @@ export interface RootRouteChildren {
   ComercialLeadsRoute: typeof ComercialLeadsRoute
   ComercialOportunidadesRoute: typeof ComercialOportunidadesRoute
   ControladoriaDecisoesRoute: typeof ControladoriaDecisoesRoute
+  ControladoriaDistribuicaoRoute: typeof ControladoriaDistribuicaoRouteWithChildren
   ControladoriaExcecoesRoute: typeof ControladoriaExcecoesRoute
   ControladoriaPrazosRoute: typeof ControladoriaPrazosRoute
   ControladoriaTesesRoute: typeof ControladoriaTesesRoute
@@ -1179,20 +1191,8 @@ export interface RootRouteChildren {
   ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
   ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
-  ControladoriaDistribuicaoCalendarioRoute: typeof ControladoriaDistribuicaoCalendarioRoute
-  ControladoriaDistribuicaoConfiguracaoRoute: typeof ControladoriaDistribuicaoConfiguracaoRoute
-  ControladoriaDistribuicaoExcecoesRoute: typeof ControladoriaDistribuicaoExcecoesRoute
-  ControladoriaDistribuicaoExecutoresRoute: typeof ControladoriaDistribuicaoExecutoresRoute
-  ControladoriaDistribuicaoHistoricoRoute: typeof ControladoriaDistribuicaoHistoricoRoute
-  ControladoriaDistribuicaoIndicadoresRoute: typeof ControladoriaDistribuicaoIndicadoresRoute
-  ControladoriaDistribuicaoListaRoute: typeof ControladoriaDistribuicaoListaRoute
-  ControladoriaDistribuicaoRelatorioRoute: typeof ControladoriaDistribuicaoRelatorioRoute
-  ControladoriaDistribuicaoSimuladorRoute: typeof ControladoriaDistribuicaoSimuladorRoute
-  ControladoriaDistribuicaoTemasRoute: typeof ControladoriaDistribuicaoTemasRoute
-  ControladoriaDistribuicaoTiposTarefaRoute: typeof ControladoriaDistribuicaoTiposTarefaRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
-  ControladoriaDistribuicaoIndexRoute: typeof ControladoriaDistribuicaoIndexRoute
   ApiCasesIdDocumentsUploadRoute: typeof ApiCasesIdDocumentsUploadRoute
   ApiClientsIdDocumentsDocIdRoute: typeof ApiClientsIdDocumentsDocIdRouteWithChildren
   ApiServiceTypesIdTemplatesUploadRoute: typeof ApiServiceTypesIdTemplatesUploadRoute
@@ -1402,6 +1402,13 @@ declare module '@tanstack/react-router' {
       path: '/controladoria/decisoes'
       fullPath: '/controladoria/decisoes'
       preLoaderRoute: typeof ControladoriaDecisoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controladoria/distribuicao': {
+      id: '/controladoria/distribuicao'
+      path: '/controladoria/distribuicao'
+      fullPath: '/controladoria/distribuicao'
+      preLoaderRoute: typeof ControladoriaDistribuicaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/controladoria/excecoes': {
@@ -1686,87 +1693,87 @@ declare module '@tanstack/react-router' {
     }
     '/controladoria/distribuicao/': {
       id: '/controladoria/distribuicao/'
-      path: '/controladoria/distribuicao'
+      path: '/'
       fullPath: '/controladoria/distribuicao/'
       preLoaderRoute: typeof ControladoriaDistribuicaoIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/calendario': {
       id: '/controladoria/distribuicao/calendario'
-      path: '/controladoria/distribuicao/calendario'
+      path: '/calendario'
       fullPath: '/controladoria/distribuicao/calendario'
       preLoaderRoute: typeof ControladoriaDistribuicaoCalendarioRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/configuracao': {
       id: '/controladoria/distribuicao/configuracao'
-      path: '/controladoria/distribuicao/configuracao'
+      path: '/configuracao'
       fullPath: '/controladoria/distribuicao/configuracao'
       preLoaderRoute: typeof ControladoriaDistribuicaoConfiguracaoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/excecoes': {
       id: '/controladoria/distribuicao/excecoes'
-      path: '/controladoria/distribuicao/excecoes'
+      path: '/excecoes'
       fullPath: '/controladoria/distribuicao/excecoes'
       preLoaderRoute: typeof ControladoriaDistribuicaoExcecoesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/executores': {
       id: '/controladoria/distribuicao/executores'
-      path: '/controladoria/distribuicao/executores'
+      path: '/executores'
       fullPath: '/controladoria/distribuicao/executores'
       preLoaderRoute: typeof ControladoriaDistribuicaoExecutoresRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/historico': {
       id: '/controladoria/distribuicao/historico'
-      path: '/controladoria/distribuicao/historico'
+      path: '/historico'
       fullPath: '/controladoria/distribuicao/historico'
       preLoaderRoute: typeof ControladoriaDistribuicaoHistoricoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/indicadores': {
       id: '/controladoria/distribuicao/indicadores'
-      path: '/controladoria/distribuicao/indicadores'
+      path: '/indicadores'
       fullPath: '/controladoria/distribuicao/indicadores'
       preLoaderRoute: typeof ControladoriaDistribuicaoIndicadoresRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/lista': {
       id: '/controladoria/distribuicao/lista'
-      path: '/controladoria/distribuicao/lista'
+      path: '/lista'
       fullPath: '/controladoria/distribuicao/lista'
       preLoaderRoute: typeof ControladoriaDistribuicaoListaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/relatorio': {
       id: '/controladoria/distribuicao/relatorio'
-      path: '/controladoria/distribuicao/relatorio'
+      path: '/relatorio'
       fullPath: '/controladoria/distribuicao/relatorio'
       preLoaderRoute: typeof ControladoriaDistribuicaoRelatorioRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/simulador': {
       id: '/controladoria/distribuicao/simulador'
-      path: '/controladoria/distribuicao/simulador'
+      path: '/simulador'
       fullPath: '/controladoria/distribuicao/simulador'
       preLoaderRoute: typeof ControladoriaDistribuicaoSimuladorRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/temas': {
       id: '/controladoria/distribuicao/temas'
-      path: '/controladoria/distribuicao/temas'
+      path: '/temas'
       fullPath: '/controladoria/distribuicao/temas'
       preLoaderRoute: typeof ControladoriaDistribuicaoTemasRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/controladoria/distribuicao/tipos-tarefa': {
       id: '/controladoria/distribuicao/tipos-tarefa'
-      path: '/controladoria/distribuicao/tipos-tarefa'
+      path: '/tipos-tarefa'
       fullPath: '/controladoria/distribuicao/tipos-tarefa'
       preLoaderRoute: typeof ControladoriaDistribuicaoTiposTarefaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/portal/casos/$id': {
       id: '/portal/casos/$id'
@@ -1866,6 +1873,51 @@ const CasosFinanceiroRouteWithChildren = CasosFinanceiroRoute._addFileChildren(
   CasosFinanceiroRouteChildren,
 )
 
+interface ControladoriaDistribuicaoRouteChildren {
+  ControladoriaDistribuicaoCalendarioRoute: typeof ControladoriaDistribuicaoCalendarioRoute
+  ControladoriaDistribuicaoConfiguracaoRoute: typeof ControladoriaDistribuicaoConfiguracaoRoute
+  ControladoriaDistribuicaoExcecoesRoute: typeof ControladoriaDistribuicaoExcecoesRoute
+  ControladoriaDistribuicaoExecutoresRoute: typeof ControladoriaDistribuicaoExecutoresRoute
+  ControladoriaDistribuicaoHistoricoRoute: typeof ControladoriaDistribuicaoHistoricoRoute
+  ControladoriaDistribuicaoIndicadoresRoute: typeof ControladoriaDistribuicaoIndicadoresRoute
+  ControladoriaDistribuicaoListaRoute: typeof ControladoriaDistribuicaoListaRoute
+  ControladoriaDistribuicaoRelatorioRoute: typeof ControladoriaDistribuicaoRelatorioRoute
+  ControladoriaDistribuicaoSimuladorRoute: typeof ControladoriaDistribuicaoSimuladorRoute
+  ControladoriaDistribuicaoTemasRoute: typeof ControladoriaDistribuicaoTemasRoute
+  ControladoriaDistribuicaoTiposTarefaRoute: typeof ControladoriaDistribuicaoTiposTarefaRoute
+  ControladoriaDistribuicaoIndexRoute: typeof ControladoriaDistribuicaoIndexRoute
+}
+
+const ControladoriaDistribuicaoRouteChildren: ControladoriaDistribuicaoRouteChildren =
+  {
+    ControladoriaDistribuicaoCalendarioRoute:
+      ControladoriaDistribuicaoCalendarioRoute,
+    ControladoriaDistribuicaoConfiguracaoRoute:
+      ControladoriaDistribuicaoConfiguracaoRoute,
+    ControladoriaDistribuicaoExcecoesRoute:
+      ControladoriaDistribuicaoExcecoesRoute,
+    ControladoriaDistribuicaoExecutoresRoute:
+      ControladoriaDistribuicaoExecutoresRoute,
+    ControladoriaDistribuicaoHistoricoRoute:
+      ControladoriaDistribuicaoHistoricoRoute,
+    ControladoriaDistribuicaoIndicadoresRoute:
+      ControladoriaDistribuicaoIndicadoresRoute,
+    ControladoriaDistribuicaoListaRoute: ControladoriaDistribuicaoListaRoute,
+    ControladoriaDistribuicaoRelatorioRoute:
+      ControladoriaDistribuicaoRelatorioRoute,
+    ControladoriaDistribuicaoSimuladorRoute:
+      ControladoriaDistribuicaoSimuladorRoute,
+    ControladoriaDistribuicaoTemasRoute: ControladoriaDistribuicaoTemasRoute,
+    ControladoriaDistribuicaoTiposTarefaRoute:
+      ControladoriaDistribuicaoTiposTarefaRoute,
+    ControladoriaDistribuicaoIndexRoute: ControladoriaDistribuicaoIndexRoute,
+  }
+
+const ControladoriaDistribuicaoRouteWithChildren =
+  ControladoriaDistribuicaoRoute._addFileChildren(
+    ControladoriaDistribuicaoRouteChildren,
+  )
+
 interface ApiClientsIdDocumentsDocIdRouteChildren {
   ApiClientsIdDocumentsDocIdDownloadRoute: typeof ApiClientsIdDocumentsDocIdDownloadRoute
 }
@@ -1907,6 +1959,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComercialLeadsRoute: ComercialLeadsRoute,
   ComercialOportunidadesRoute: ComercialOportunidadesRoute,
   ControladoriaDecisoesRoute: ControladoriaDecisoesRoute,
+  ControladoriaDistribuicaoRoute: ControladoriaDistribuicaoRouteWithChildren,
   ControladoriaExcecoesRoute: ControladoriaExcecoesRoute,
   ControladoriaPrazosRoute: ControladoriaPrazosRoute,
   ControladoriaTesesRoute: ControladoriaTesesRoute,
@@ -1947,29 +2000,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
   ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
-  ControladoriaDistribuicaoCalendarioRoute:
-    ControladoriaDistribuicaoCalendarioRoute,
-  ControladoriaDistribuicaoConfiguracaoRoute:
-    ControladoriaDistribuicaoConfiguracaoRoute,
-  ControladoriaDistribuicaoExcecoesRoute:
-    ControladoriaDistribuicaoExcecoesRoute,
-  ControladoriaDistribuicaoExecutoresRoute:
-    ControladoriaDistribuicaoExecutoresRoute,
-  ControladoriaDistribuicaoHistoricoRoute:
-    ControladoriaDistribuicaoHistoricoRoute,
-  ControladoriaDistribuicaoIndicadoresRoute:
-    ControladoriaDistribuicaoIndicadoresRoute,
-  ControladoriaDistribuicaoListaRoute: ControladoriaDistribuicaoListaRoute,
-  ControladoriaDistribuicaoRelatorioRoute:
-    ControladoriaDistribuicaoRelatorioRoute,
-  ControladoriaDistribuicaoSimuladorRoute:
-    ControladoriaDistribuicaoSimuladorRoute,
-  ControladoriaDistribuicaoTemasRoute: ControladoriaDistribuicaoTemasRoute,
-  ControladoriaDistribuicaoTiposTarefaRoute:
-    ControladoriaDistribuicaoTiposTarefaRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
-  ControladoriaDistribuicaoIndexRoute: ControladoriaDistribuicaoIndexRoute,
   ApiCasesIdDocumentsUploadRoute: ApiCasesIdDocumentsUploadRoute,
   ApiClientsIdDocumentsDocIdRoute: ApiClientsIdDocumentsDocIdRouteWithChildren,
   ApiServiceTypesIdTemplatesUploadRoute: ApiServiceTypesIdTemplatesUploadRoute,

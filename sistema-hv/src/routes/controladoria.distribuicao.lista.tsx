@@ -47,9 +47,6 @@ function ListaDistribuicoesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Lista" }]} />
-      <PageHeader title="Lista de Distribuicoes" subtitle="Detalhamento com filtros" icon={<List className="h-6 w-6" />} />
-
       {/* Filtros */}
       <div className="flex flex-wrap items-center gap-3">
         <input type="date" value={date} onChange={e => { setDate(e.target.value); setPage(0); }} className="border rounded px-3 py-1.5 text-sm" />

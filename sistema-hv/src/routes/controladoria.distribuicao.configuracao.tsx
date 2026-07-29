@@ -75,9 +75,6 @@ function ConfiguracaoPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }, { label: "Configuracao" }]} />
-      <PageHeader title="Configuracao do Motor" subtitle="Modo de operacao, horario do batch e controles" icon={<Settings className="h-6 w-6" />} />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Modo de Operacao */}
         <Card>

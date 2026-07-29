@@ -77,9 +77,6 @@ function TiposTarefaPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }, { label: "Tipos de Tarefa" }]} />
-      <PageHeader title="Tipos de Tarefa" subtitle="Mapeamento Projuris -> Motor" icon={<ListTodo className="h-6 w-6" />} />
-
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-xs"><Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" /><Input placeholder="Filtrar..." value={filter} onChange={e => setFilter(e.target.value)} className="pl-9" /></div>
         <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>

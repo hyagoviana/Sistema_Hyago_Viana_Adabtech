@@ -65,9 +65,6 @@ function HistoricoPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Historico" }]} />
-      <PageHeader title="Historico de Batches" subtitle="Timeline de execucoes" icon={<History className="h-6 w-6" />} />
-
       {/* Filtros + KPIs */}
       <div className="flex flex-wrap items-center gap-3">
         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border rounded px-3 py-1.5 text-sm" />

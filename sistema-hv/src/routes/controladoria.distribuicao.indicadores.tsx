@@ -52,9 +52,6 @@ function IndicadoresPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Indicadores" }]} />
-      <PageHeader title="Indicadores e Metricas" subtitle="Saude do sistema de distribuicao" icon={<TrendingUp className="h-6 w-6" />} />
-
       {/* Seletor de periodo */}
       <div className="flex gap-2">
         {[7, 30, 90].map(p => (

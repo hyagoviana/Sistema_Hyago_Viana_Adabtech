@@ -47,9 +47,6 @@ function DistribuicaoPainelPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }]} />
-      <PageHeader title="Painel de Distribuicao" subtitle="Resumo do batch diario" icon={<BarChart3 className="h-6 w-6" />} />
-
       {/* Seletor de data */}
       <div className="flex items-center gap-2">
         <Button variant="outline" size="icon" onClick={() => changeDate(-1)}><ChevronLeft className="h-4 w-4" /></Button>

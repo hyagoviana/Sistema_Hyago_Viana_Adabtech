@@ -68,9 +68,6 @@ function ExecutoresPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }, { label: "Executores" }]} />
-      <PageHeader title="Executores" subtitle="Configure pesos, elegibilidade e autorizacoes" icon={<UserCheck className="h-6 w-6" />} />
-
       <div className="flex items-center gap-4">
         <Badge variant="outline">Soma de pesos (ativos): {totalWeight}</Badge>
         <div className="ml-auto">

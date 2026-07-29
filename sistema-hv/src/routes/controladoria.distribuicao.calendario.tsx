@@ -93,9 +93,6 @@ function CalendarioPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }, { label: "Calendario" }]} />
-      <PageHeader title="Calendario Operacional" subtitle="Gerencie feriados, recessos e bloqueios individuais" icon={<Calendar className="h-6 w-6" />} />
-
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); }}>←</Button>

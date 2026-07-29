@@ -100,9 +100,6 @@ function SimuladorPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Simulador" }]} />
-      <PageHeader title="Simulador — Comparacao" subtitle="Simulacao vs distribuicao real" icon={<FlaskConical className="h-6 w-6" />} />
-
       <div className="flex items-center gap-4">
         <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded px-3 py-1.5 text-sm" />
         {hasRealData && <Badge className="bg-green-100 text-green-700">Dados reais disponiveis</Badge>}

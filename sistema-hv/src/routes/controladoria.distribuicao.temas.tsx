@@ -70,9 +70,6 @@ function TemasPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao" }, { label: "Temas" }]} />
-      <PageHeader title="Temas" subtitle="Mapeamento Projuris -> Motor com multiplicadores" icon={<Tag className="h-6 w-6" />} />
-
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-xs"><Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" /><Input placeholder="Filtrar..." value={filter} onChange={e => setFilter(e.target.value)} className="pl-9" /></div>
         <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Novo Tema</Button>

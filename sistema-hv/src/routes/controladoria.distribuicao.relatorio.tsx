@@ -158,9 +158,6 @@ function RelatorioPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Relatorio" }]} />
-      <PageHeader title="Relatorio de Validacao" subtitle="Aprovacao para Go-Live do Motor" icon={<FileText className="h-6 w-6" />} />
-
       {/* Config do relatorio */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

@@ -61,9 +61,6 @@ function ExcecoesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <Breadcrumb items={[{ label: "Controladoria", href: "/controladoria" }, { label: "Distribuicao", href: "/controladoria/distribuicao" }, { label: "Excecoes" }]} />
-      <PageHeader title="Tratamento de Excecoes" subtitle="Tarefas bloqueadas que requerem acao manual" icon={<AlertTriangle className="h-6 w-6 text-amber-500" />} />
-
       {isLoading ? <Skeleton className="h-[300px]" /> : (exceptions ?? []).length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma excecao pendente</CardContent></Card>
       ) : (
