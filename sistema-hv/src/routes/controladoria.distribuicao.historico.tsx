@@ -9,7 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { useBatchHistory } from "@/hooks/useDistribuicaoDashboard";
-import { supabase } from "@/lib/supabase/browser";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+const supabase = getSupabaseBrowserClient();
 
 export const Route = createFileRoute("/controladoria/distribuicao/historico")({
   component: HistoricoPage,
