@@ -41,3 +41,6 @@ dist-ssr
 
 # Backups de cadastros (contêm CPF/dados pessoais — NUNCA versionar)
 backup-cadastros-*.json
+
+# smoke de UI (screenshots gerados)
+.smoke-ui/
