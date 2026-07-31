@@ -50,10 +50,7 @@ function DistribuicaoLayout() {
       <div className="border-b bg-background sticky top-0 z-10">
         <div className="px-6 pt-4 pb-0">
           <Breadcrumb
-            items={[
-              { label: "Controladoria", href: "/controladoria" },
-              { label: "Distribuicao" },
-            ]}
+            items={[{ label: "Controladoria", to: "/controladoria" }, { label: "Distribuicao" }]}
           />
           <PageHeader
             title="Motor de Distribuicao"

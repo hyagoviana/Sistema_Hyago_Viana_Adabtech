@@ -7,6 +7,384 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      system_distribution_simulations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          simulation_run_id: string;
+          simulated_at: string;
+          simulation_mode: string;
+          task_id: string;
+          process_id: string;
+          distribution_date: string;
+          final_points: number;
+          flow: string | null;
+          base_date: string | null;
+          applicable_limit: string | null;
+          preferred_date: string | null;
+          final_date: string | null;
+          executor_id: string | null;
+          preference_applied: boolean;
+          alerts: string[];
+          blocked: boolean;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          simulation_run_id: string;
+          simulated_at?: string;
+          simulation_mode: string;
+          task_id: string;
+          process_id: string;
+          distribution_date: string;
+          final_points?: number;
+          flow?: string | null;
+          base_date?: string | null;
+          applicable_limit?: string | null;
+          preferred_date?: string | null;
+          final_date?: string | null;
+          executor_id?: string | null;
+          preference_applied?: boolean;
+          alerts?: string[];
+          blocked?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_simulations"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_results: {
+        Row: {
+          id: string;
+          organization_id: string;
+          task_id: string;
+          process_id: string;
+          distribution_date: string;
+          final_points: number;
+          flow: string;
+          base_date: string;
+          applicable_limit: string;
+          preferred_date: string | null;
+          final_date: string;
+          executor_id: string;
+          preference_applied: boolean;
+          alerts: string[];
+          writeback_pending: boolean;
+          raw_data: Json | null;
+          created_at: string;
+          blocked: boolean;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          task_id: string;
+          process_id: string;
+          distribution_date: string;
+          final_points: number;
+          flow: string;
+          base_date: string;
+          applicable_limit: string;
+          preferred_date?: string | null;
+          final_date: string;
+          executor_id: string;
+          preference_applied?: boolean;
+          alerts?: string[];
+          writeback_pending?: boolean;
+          raw_data?: Json | null;
+          created_at?: string;
+          blocked?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_results"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_calendar: {
+        Row: {
+          id: string;
+          organization_id: string;
+          date: string;
+          block_type: string;
+          executor_id: string | null;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          date: string;
+          block_type: string;
+          executor_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_calendar"]["Insert"]>;
+        Relationships: [];
+      };
+      system_projuris_executor_mapping: {
+        Row: {
+          id: string;
+          organization_id: string;
+          projuris_responsavel_id: string;
+          executor_id: string;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+          weight: number;
+          eligible_complex: boolean;
+          authorized_task_types: string[];
+          authorized_themes: string[];
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          projuris_responsavel_id: string;
+          executor_id: string;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          weight?: number;
+          eligible_complex?: boolean;
+          authorized_task_types?: string[];
+          authorized_themes?: string[];
+        };
+        Update: Partial<Database["public"]["Tables"]["system_projuris_executor_mapping"]["Insert"]>;
+        Relationships: [];
+      };
+      system_task_type_mapping: {
+        Row: {
+          id: string;
+          organization_id: string;
+          projuris_tipo_codigo: string;
+          motor_task_type_id: string;
+          points: number;
+          complexity_level: number;
+          temporal_level: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+          projuris_tipo_descricao: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          projuris_tipo_codigo: string;
+          motor_task_type_id: string;
+          points?: number;
+          complexity_level?: number;
+          temporal_level?: number;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          projuris_tipo_descricao?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_task_type_mapping"]["Insert"]>;
+        Relationships: [];
+      };
+      system_theme_mapping: {
+        Row: {
+          id: string;
+          organization_id: string;
+          projuris_tema_codigo: string;
+          motor_theme_id: string;
+          multiplier: number;
+          temporal_level: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+          projuris_tema_descricao: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          projuris_tema_codigo: string;
+          motor_theme_id: string;
+          multiplier?: number;
+          temporal_level?: number;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          projuris_tema_descricao?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_theme_mapping"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_config: {
+        Row: {
+          id: string;
+          organization_id: string;
+          mode: string;
+          batch_hour: number;
+          updated_at: string;
+          updated_by: string | null;
+          active: boolean;
+          projuris_base_url: string | null;
+          projuris_auth_type: string | null;
+          projuris_username: string | null;
+          projuris_password: string | null;
+          projuris_token: string | null;
+          projuris_api_key: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          mode?: string;
+          batch_hour?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          active?: boolean;
+          projuris_base_url?: string | null;
+          projuris_auth_type?: string | null;
+          projuris_username?: string | null;
+          projuris_password?: string | null;
+          projuris_token?: string | null;
+          projuris_api_key?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_config"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_batch_logs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          batch_date: string;
+          started_at: string;
+          completed_at: string | null;
+          status: string;
+          total_tasks: number;
+          successful: number;
+          failed: number;
+          alerts_generated: number;
+          error_message: string | null;
+          metrics: Json | null;
+          created_at: string;
+          is_simulation: boolean;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          batch_date: string;
+          started_at?: string;
+          completed_at?: string | null;
+          status?: string;
+          total_tasks?: number;
+          successful?: number;
+          failed?: number;
+          alerts_generated?: number;
+          error_message?: string | null;
+          metrics?: Json | null;
+          created_at?: string;
+          is_simulation?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_batch_logs"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_exceptions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          distribution_result_id: string | null;
+          task_id: string;
+          alert_code: string;
+          status: string;
+          manual_executor_id: string | null;
+          override_reason: string | null;
+          ignore_reason: string | null;
+          action_by: string | null;
+          action_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          distribution_result_id?: string | null;
+          task_id: string;
+          alert_code: string;
+          status?: string;
+          manual_executor_id?: string | null;
+          override_reason?: string | null;
+          ignore_reason?: string | null;
+          action_by?: string | null;
+          action_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_exceptions"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_manual_assignments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          task_id: string;
+          distribution_date: string;
+          projuris_responsavel_id: string | null;
+          executor_id: string | null;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          task_id: string;
+          distribution_date: string;
+          projuris_responsavel_id?: string | null;
+          executor_id?: string | null;
+          source?: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_distribution_manual_assignments"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      system_distribution_queue_state: {
+        Row: {
+          id: string;
+          organization_id: string;
+          batch_date: string;
+          general_balances: Json;
+          complex_balances: Json;
+          rotating_order: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          batch_date: string;
+          general_balances?: Json;
+          complex_balances?: Json;
+          rotating_order?: string[];
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_queue_state"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_writeback_log: {
+        Row: {
+          id: string;
+          organization_id: string;
+          distribution_result_id: string;
+          task_id: string;
+          executor_id: string;
+          projuris_responsavel_id: string;
+          error: string | null;
+          attempt: number;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          distribution_result_id: string;
+          task_id: string;
+          executor_id: string;
+          projuris_responsavel_id: string;
+          error?: string | null;
+          attempt?: number;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_distribution_writeback_log"]["Insert"]
+        >;
+        Relationships: [];
+      };
       system_organizations: {
         Row: {
           id: string;
@@ -1420,6 +1798,18 @@ export type Database = {
       };
     };
     Functions: {
+      system_count_pending_exceptions: {
+        Args: { p_org_id: string };
+        Returns: number;
+      };
+      system_get_load_deviation: {
+        Args: { p_org_id: string; p_start: string; p_end: string };
+        Returns: number;
+      };
+      system_get_preference_rate: {
+        Args: { p_org_id: string; p_start: string; p_end: string };
+        Returns: number;
+      };
       system_fn_bifurcar_financeiro: {
         Args: { p_case_id: string };
         Returns: undefined;

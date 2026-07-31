@@ -56,7 +56,9 @@ export function useCalendarBlocksYear(year: number) {
 export function useAddCalendarBlock() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (blocks: Array<{ date: string; block_type: string; executor_id?: string; reason?: string }>) => {
+    mutationFn: async (
+      blocks: Array<{ date: string; block_type: string; executor_id?: string; reason?: string }>,
+    ) => {
       const rows = blocks.map((b) => ({ ...b, organization_id: ORG_ID }));
       const { error } = await supabase.from("system_distribution_calendar").insert(rows);
       if (error) throw error;
@@ -101,7 +103,9 @@ export function useUpsertExecutorMapping() {
     mutationFn: async (mapping: Record<string, unknown>) => {
       const { error } = await supabase
         .from("system_projuris_executor_mapping")
-        .upsert({ ...mapping, organization_id: ORG_ID }, { onConflict: "projuris_responsavel_id,organization_id" });
+        .upsert({ ...mapping, organization_id: ORG_ID } as never, {
+          onConflict: "projuris_responsavel_id,organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["executor-mappings"] }),
@@ -133,7 +137,9 @@ export function useUpsertTaskTypeMapping() {
     mutationFn: async (mapping: Record<string, unknown>) => {
       const { error } = await supabase
         .from("system_task_type_mapping")
-        .upsert({ ...mapping, organization_id: ORG_ID }, { onConflict: "projuris_tipo_codigo,organization_id" });
+        .upsert({ ...mapping, organization_id: ORG_ID } as never, {
+          onConflict: "projuris_tipo_codigo,organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-type-mappings"] }),
@@ -165,7 +171,9 @@ export function useUpsertThemeMapping() {
     mutationFn: async (mapping: Record<string, unknown>) => {
       const { error } = await supabase
         .from("system_theme_mapping")
-        .upsert({ ...mapping, organization_id: ORG_ID }, { onConflict: "projuris_tema_codigo,organization_id" });
+        .upsert({ ...mapping, organization_id: ORG_ID } as never, {
+          onConflict: "projuris_tema_codigo,organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["theme-mappings"] }),
