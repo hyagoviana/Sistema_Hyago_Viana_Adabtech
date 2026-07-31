@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+  <div style="background: white; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <h2 style="margin: 0 0 16px; color: #1a1a2e;">Distribuicao Diaria — {{distribution_date}}</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Total de tarefas</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">{{total_tasks}}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Distribuidas</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right; font-weight: 600; color: #16a34a;">{{successful}}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Bloqueadas</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right; font-weight: 600; color: {{failed_color}};">{{failed}}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Fluxo ABSOLUTE</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">{{flow_absolute}}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Fluxo COMPLEX</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">{{flow_complex}}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee; color: #666;">Fluxo GENERAL</td><td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">{{flow_general}}</td></tr>
+      <tr><td style="padding: 8px 0; color: #666;">Duracao</td><td style="padding: 8px 0; text-align: right;">{{duration_ms}}ms</td></tr>
+    </table>
+    {{#if alerts_count}}
+    <div style="background: #fef3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+      <strong>Alertas gerados: {{alerts_count}}</strong>
+      <p style="margin: 4px 0 0; font-size: 14px;">Verifique as excecoes no dashboard para tarefas bloqueadas.</p>
+    </div>
+    {{/if}}
+    <a href="{{dashboard_url}}/controladoria" style="display: inline-block; background: #1a1a2e; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px;">Ver no Dashboard</a>
+  </div>
+  <p style="text-align: center; color: #999; font-size: 12px; margin-top: 16px;">Sistema HV — Hyago Viana Advocacia</p>
+</body>
+</html>

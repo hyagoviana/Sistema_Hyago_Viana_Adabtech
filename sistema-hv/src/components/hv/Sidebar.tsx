@@ -22,6 +22,7 @@ import {
   UserPlus,
   Receipt,
   ShieldCheck,
+  GitBranch,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -103,6 +104,7 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Inteligência",
     items: [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
+      { to: "/controladoria/distribuicao", label: "Distribuição", icon: GitBranch },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
       { to: "/dashboards", label: "Dashboard", icon: BarChart3 },
