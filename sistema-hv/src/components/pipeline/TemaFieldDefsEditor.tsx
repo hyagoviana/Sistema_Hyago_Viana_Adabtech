@@ -74,13 +74,24 @@ export function TemaFieldDefsEditor({
   // Lista de opções (uma por linha na UI) para select/multiselect.
   const [optionsList, setOptionsList] = useState<string[]>([]);
   const [required, setRequired] = useState(false);
+  // Reunião 2026-07-29: origem do valor (#3), ocultar só na lista (#5), nº de
+  // preenchimentos do mesmo campo (#6).
+  const [scope, setScope] = useState<"caso" | "cliente">("caso");
+  const [hiddenInList, setHiddenInList] = useState(false);
+  const [maxOccurrences, setMaxOccurrences] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Múltiplas ocorrências só para campos de valor livre (texto/número/data).
+  const suportaOcorrencias = type === "text" || type === "number" || type === "date";
 
   function resetForm() {
     setLabel("");
     setType("text");
     setOptionsList([]);
     setRequired(false);
+    setScope("caso");
+    setHiddenInList(false);
+    setMaxOccurrences(1);
     setEditingId(null);
   }
 
@@ -119,10 +130,19 @@ export function TemaFieldDefsEditor({
       return;
     }
     try {
+      const occ = suportaOcorrencias ? Math.max(1, Math.min(maxOccurrences || 1, 20)) : 1;
       if (editingId) {
         await updateDef.mutateAsync({
           id: editingId,
-          patch: { label: lbl, type, options: parseOptions(), required },
+          patch: {
+            label: lbl,
+            type,
+            options: parseOptions(),
+            required,
+            scope,
+            hiddenInList,
+            maxOccurrences: occ,
+          },
         });
         toast.success("Campo atualizado");
       } else {
@@ -132,6 +152,9 @@ export function TemaFieldDefsEditor({
           type,
           options: parseOptions(),
           required,
+          scope,
+          hiddenInList,
+          maxOccurrences: occ,
           ordem: (defs ?? []).length,
         });
         toast.success("Campo criado");
@@ -149,6 +172,9 @@ export function TemaFieldDefsEditor({
     const opts = optionsToArray(d.options);
     setOptionsList(usaOpcoes(d.type) ? (opts.length ? opts : [""]) : []);
     setRequired(!!d.required);
+    setScope(d.scope === "cliente" ? "cliente" : "caso");
+    setHiddenInList(!!d.hidden_in_list);
+    setMaxOccurrences(d.max_occurrences && d.max_occurrences > 1 ? d.max_occurrences : 1);
   }
 
   async function excluir(d: TemaFieldDef) {
@@ -172,7 +198,7 @@ export function TemaFieldDefsEditor({
   async function toggleAtivo(d: TemaFieldDef) {
     try {
       await updateDef.mutateAsync({ id: d.id, patch: { active: !d.active } });
-      toast.success(d.active ? "Filtro ocultado" : "Filtro reexibido");
+      toast.success(d.active ? "Campo ocultado" : "Campo reexibido");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao alterar visibilidade");
     }
@@ -198,9 +224,20 @@ export function TemaFieldDefsEditor({
               }`}
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+                <div className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--navy)]">
                   <span className="truncate">{d.label}</span>
                   {d.required && <span className="text-[10px] text-destructive">obrigatório</span>}
+                  {d.scope === "cliente" && (
+                    <span className="text-[10px] text-[var(--gold-700)]">do cliente</span>
+                  )}
+                  {(d.max_occurrences ?? 1) > 1 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      até {d.max_occurrences}×
+                    </span>
+                  )}
+                  {d.hidden_in_list && (
+                    <span className="text-[10px] text-muted-foreground">(fora da lista)</span>
+                  )}
                   {!d.active && <span className="text-[10px] text-muted-foreground">(oculto)</span>}
                 </div>
                 <div className="text-[10.5px] text-muted-foreground">
@@ -212,7 +249,7 @@ export function TemaFieldDefsEditor({
               </div>
               <button
                 type="button"
-                title={d.active ? "Ocultar filtro" : "Reexibir filtro"}
+                title={d.active ? "Ocultar de tudo" : "Reexibir"}
                 onClick={() => toggleAtivo(d)}
                 disabled={updateDef.isPending}
                 className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
@@ -308,6 +345,47 @@ export function TemaFieldDefsEditor({
           </div>
         )}
 
+        {/* #3 — origem do valor: do CASO (por caso) ou do CLIENTE (compartilhado). */}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Onde fica o valor</Label>
+            <Select value={scope} onValueChange={(v) => setScope(v as "caso" | "cliente")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="caso">Do caso (um por caso)</SelectItem>
+                <SelectItem value="cliente">Do cliente (compartilhado entre os casos)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10.5px] text-muted-foreground">
+              {scope === "cliente"
+                ? "Ex.: “é médico?”, nacionalidade — vale para todos os casos do cliente."
+                : "Ex.: enquadramento, período — específico deste caso."}
+            </p>
+          </div>
+
+          {/* #6 — nº de preenchimentos do MESMO campo (ex.: vários períodos). */}
+          {suportaOcorrencias && (
+            <div className="space-y-1">
+              <Label className="text-xs">Nº de preenchimentos</Label>
+              <Input
+                type="number"
+                min={1}
+                max={20}
+                value={maxOccurrences}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  setMaxOccurrences(Number.isFinite(n) ? Math.max(1, Math.min(n, 20)) : 1);
+                }}
+              />
+              <p className="text-[10.5px] text-muted-foreground">
+                Mais de 1 abre várias caixinhas do mesmo campo (ex.: períodos).
+              </p>
+            </div>
+          )}
+        </div>
+
         <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
           <input
             type="checkbox"
@@ -315,6 +393,16 @@ export function TemaFieldDefsEditor({
             onChange={(e) => setRequired(e.target.checked)}
           />
           Obrigatório
+        </label>
+
+        {/* #5 — ocultar só na COLUNA da lista (continua no painel de busca/ficha). */}
+        <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+          <input
+            type="checkbox"
+            checked={hiddenInList}
+            onChange={(e) => setHiddenInList(e.target.checked)}
+          />
+          Ocultar na lista (some da coluna; continua no filtro e na ficha)
         </label>
 
         <div className="flex items-center gap-2">

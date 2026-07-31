@@ -112,6 +112,51 @@ export async function listTemaFieldDefsAdmin(
   return data ?? [];
 }
 
+// Nº de ocorrências (#6) — normaliza para inteiro em [1, 20] (limite do CHECK).
+function normalizeMaxOccurrences(v: unknown): number {
+  const n = typeof v === "number" ? Math.floor(v) : 1;
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(n, 20);
+}
+
+// Colisão de chave no BALDE do cliente (system_clients.custom_fields), para
+// campos scope='cliente'. Esse balde é COMPARTILHADO com os campos de cliente
+// (system_client_field_defs) e com scope='cliente' de OUTROS temas. Compartilhar
+// é INTENCIONAL quando é o mesmo dado da pessoa (ex.: "Nacionalidade" em dois
+// temas → mesmo valor) — por isso só é conflito quando a MESMA key pertence a um
+// campo de SIGNIFICADO diferente (rótulo normalizado distinto). Retorna o rótulo
+// conflitante ou null (sem conflito / reuso legítimo do mesmo conceito).
+async function findClientBucketKeyConflict(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  key: string,
+  label: string,
+  excludeTemaFieldId: string | null,
+): Promise<string | null> {
+  const norm = (s: string) => s.trim().toLowerCase();
+  const target = norm(label);
+
+  // (a) Campo de CLIENTE (system_client_field_defs) com a mesma key.
+  const { data: cli } = await sb
+    .from("system_client_field_defs_active")
+    .select("label")
+    .eq("organization_id", DEFAULT_ORG)
+    .eq("key", key)
+    .maybeSingle();
+  if (cli && norm(cli.label as string) !== target) return cli.label as string;
+
+  // (b) scope='cliente' de outro campo de tema com a mesma key.
+  const { data: temas } = await sb
+    .from("system_tema_field_defs_active")
+    .select("id, label")
+    .eq("scope", "cliente")
+    .eq("key", key);
+  for (const t of temas ?? []) {
+    if (excludeTemaFieldId && t.id === excludeTemaFieldId) continue;
+    if (norm(t.label as string) !== target) return t.label as string;
+  }
+  return null;
+}
+
 export async function createTemaFieldDef(input: {
   temaId: string;
   frenteSlug?: string | null;
@@ -121,12 +166,22 @@ export async function createTemaFieldDef(input: {
   options?: unknown;
   ordem?: number;
   required?: boolean;
+  scope?: string;
+  hiddenInList?: boolean;
+  maxOccurrences?: number;
 }): Promise<FieldDefRow> {
   const label = input.label.trim();
   if (!label) throw new TemaFieldDefServiceError("Rótulo do campo é obrigatório", 422);
   if (!TEMA_FIELD_TYPES.includes(input.type as TemaFieldType)) {
     throw new TemaFieldDefServiceError("Tipo de campo inválido", 422);
   }
+  const scope = input.scope === "cliente" ? "cliente" : "caso";
+  // Múltiplas ocorrências só faz sentido em campos de valor livre (texto/nº/data);
+  // select/multiselect/boolean/money são 1 (o multiselect já é lista por natureza).
+  const maxOccurrences =
+    input.type === "text" || input.type === "number" || input.type === "date"
+      ? normalizeMaxOccurrences(input.maxOccurrences)
+      : 1;
   const key = (input.key?.trim() ? toKey(input.key) : toKey(label)) || "campo";
   const frenteSlug = input.frenteSlug?.trim() ? input.frenteSlug.trim() : null;
 
@@ -154,6 +209,19 @@ export async function createTemaFieldDef(input: {
     throw new TemaFieldDefServiceError("Já existe um campo com essa chave neste tema/frente.", 409);
   }
 
+  // scope='cliente': recusa colisão com campo de SIGNIFICADO diferente no balde
+  // do cliente (evita sobrescrever silenciosamente valores de outro campo).
+  if (scope === "cliente") {
+    const conflict = await findClientBucketKeyConflict(sb, key, label, null);
+    if (conflict) {
+      throw new TemaFieldDefServiceError(
+        `A chave "${key}" já é usada pelo campo "${conflict}" nos dados do cliente. ` +
+          `Renomeie este campo (ou use exatamente o mesmo rótulo, se for o mesmo dado da pessoa).`,
+        409,
+      );
+    }
+  }
+
   const { data, error } = await sb
     .from("system_tema_field_defs")
     .insert({
@@ -166,6 +234,9 @@ export async function createTemaFieldDef(input: {
       options: normalizeOptions(input.type, input.options),
       ordem: input.ordem ?? 0,
       required: input.required ?? false,
+      scope,
+      hidden_in_list: input.hiddenInList ?? false,
+      max_occurrences: maxOccurrences,
     })
     .select()
     .single();
@@ -183,6 +254,9 @@ export async function updateTemaFieldDef(
     ordem: number;
     required: boolean;
     active: boolean;
+    scope: string;
+    hiddenInList: boolean;
+    maxOccurrences: number;
   }>,
 ): Promise<FieldDefRow> {
   const sb = getSupabaseAdmin();
@@ -210,6 +284,49 @@ export async function updateTemaFieldDef(
   if (patch.ordem !== undefined) clean.ordem = patch.ordem;
   if (patch.required !== undefined) clean.required = patch.required;
   if (patch.active !== undefined) clean.active = patch.active;
+  if (patch.scope !== undefined) clean.scope = patch.scope === "cliente" ? "cliente" : "caso";
+  if (patch.hiddenInList !== undefined) clean.hidden_in_list = patch.hiddenInList;
+  if (patch.maxOccurrences !== undefined) {
+    // Só campos de valor livre (texto/nº/data) podem ter >1; senão trava em 1.
+    const effectiveType = (patch.type ?? clean.type) as string | undefined;
+    const allowsMulti =
+      effectiveType === undefined
+        ? true
+        : effectiveType === "text" || effectiveType === "number" || effectiveType === "date";
+    clean.max_occurrences = allowsMulti ? normalizeMaxOccurrences(patch.maxOccurrences) : 1;
+  } else if (
+    patch.type !== undefined &&
+    patch.type !== "text" &&
+    patch.type !== "number" &&
+    patch.type !== "date"
+  ) {
+    // Trocou para um tipo que não suporta múltiplas ocorrências → normaliza p/ 1.
+    clean.max_occurrences = 1;
+  }
+
+  // scope='cliente': revalida colisão de chave no balde do cliente quando o campo
+  // VIRA cliente (flip) ou tem o rótulo alterado (a key não muda no update).
+  if (clean.scope === "cliente" || patch.label !== undefined) {
+    const { data: cur } = await sb
+      .from("system_tema_field_defs_active")
+      .select("key, label, scope")
+      .eq("id", id)
+      .maybeSingle();
+    if (cur) {
+      const effScope = (clean.scope ?? (cur.scope as string)) === "cliente";
+      if (effScope) {
+        const effLabel = (clean.label ?? (cur.label as string)) as string;
+        const conflict = await findClientBucketKeyConflict(sb, cur.key as string, effLabel, id);
+        if (conflict) {
+          throw new TemaFieldDefServiceError(
+            `A chave "${cur.key}" já é usada pelo campo "${conflict}" nos dados do cliente. ` +
+              `Renomeie este campo (ou use exatamente o mesmo rótulo, se for o mesmo dado da pessoa).`,
+            409,
+          );
+        }
+      }
+    }
+  }
 
   const { data, error } = await sb
     .from("system_tema_field_defs")

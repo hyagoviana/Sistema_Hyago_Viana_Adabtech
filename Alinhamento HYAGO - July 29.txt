@@ -1,0 +1,748 @@
+Alinhamento HYAGO - July 29
+VIEW RECORDING - 98 mins (No highlights): 
+
+---
+
+0:06 - Dr. Thiago Correia
+  Fala, Adavio. Fui pegar uma água aqui.
+
+0:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí, tudo bem?
+
+0:11 - Dr. Thiago Correia
+  Peguei colada aqui desde as 10 horas. Mal comi. Como é que você tá aí? Melhorou?
+
+0:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Melhorei, graças a Deus. Eu não podia tomar muito remédio, mas fiquei tomando bastante líquido e tudo mais. Aí deu uma melhorada boa.  E você, foi bem nas férias? Tudo bem?
+
+0:32 - Dr. Thiago Correia
+  Rapaz, foi. Deu pra descansar um pouco. Precisava de mais uns 10 dias aí pra repor, né? Pelo menos meu sono eu regulei, graças a Deus.  É, eu tô precisando, olha como tá meus olhos. Passei um ano desse jeito e precisando.
+
+0:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, não estou muito dentro do acordo de dormir não, mas faz parte, né? Não tem muito pra onde a gente possa correr.
+
+0:59 - Dr. Thiago Correia
+  Imagina.
+
+1:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu consegui adiantar bastante processos aqui, e aí eu queria ver com você, só que tem que fazer umas liberações aí no ProJuris, desculpa.  Eu já consegui integrar, já fiz os processos, mas ele não consegue trazer para mim os dados, porque é como se a API não tivesse liberada.
+
+1:20 - Dr. Thiago Correia
+  Eu não sei como, porque aqui não dá essa, deixa eu tentar, porque se eu for aqui criar nova chave...  É, vai quebrar essa nossa, deixa eu ver aqui.
+
+1:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, eu não posso errar mais de uma não.
+
+1:37 - Dr. Thiago Correia
+  Tem muito problema, porque vai que esse negócio de escopo a gente só clica aqui e consegue exerir.
+
+1:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É porque sem os escopos é como se a gente não conseguisse liberar, entendeu?
+
+1:50 - Dr. Thiago Correia
+  Mas tem problema, será, se a gente tirasse essa chave aqui e colocasse outra?
+
+1:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, No não, mas a gente tem que ver com eles como é que a gente consegue liberar os escopos.
+
+2:04 - Dr. Thiago Correia
+  Eu tô achando que esse escopo, em teoria, seria na hora que a gente vai criar a chave.
+
+2:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele te dá um quadradinho para você marcar umas coisas?
+
+2:13 - Dr. Thiago Correia
+  Quando eu abri aqui já tava feito, aí eu não lembro se eu fiz antigamente, se alguém fez, que foi, entendeu?  Vê se você consegue compartilhar aí comigo nesse processo. que só aparece assim, ó. Mas eu vou fazer o seguinte, para a gente não futucar agora, eu vou perguntar a eles como é que eu mudo o escopo da API.  Aí eu acho que é mais fácil. É, pergunta para eles se tem como liberar a escopo.
+
+2:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A chave e tal.
+
+2:41 - Dr. Thiago Correia
+  É.
+
+2:41 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque nem na documentação, um das organizadoras de integração API, eu não tenho onde liberar o escopo aqui, entendeu? É, aqui também não me dá essa opção, não.
+
+2:57 - Dr. Thiago Correia
+  Ou vai ser algo que é na hora de gerar a chave ou é interno dele. É. Ou é interno deles.  Eu vou mandar aqui para eles.
+
+3:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, vê se você consegue ir mandando para eles aí para a gente poder validar, porque sem um desculpa a gente não consegue testar.  Enquanto isso eu vou te mostrando o que a gente já modificou aqui para ver se está nos parâmetros que a gente precisa.  Pode ser?
+
+3:19 - Dr. Thiago Correia
+  Pronto, vamos seguir dessa forma então. Eles me respondendo aqui em psicópico qual que é o B. O pessoal também, beleza?
+
+3:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Deixa eu compartilhar aqui com você. Aqui é a documentação deles, tá? Essa SAGE, SAGE ADV aqui, caso você precise um dia.  Esse era o nome antigo deles. É, fiz todos os mapeamentos e tudo mais. Eu só preciso realmente dos escopos.  Mas aí vamos lá para o sistema aqui para você conseguir visualizar, tá? A primeira coisa que a gente fez foi o seguinte.  Dentro da... Pipeline Operacional continua do mesmo jeito, né? A gente ainda não tem as frentes dos temas ali e tudo mais, mas como é que ficou agora dentro desse processo, certo?  Quando eu entro aqui na Pipeline Operacional, por exemplo, e clico em Abrir 1% Fieis, eu tenho agora a forma de ver em lista com os filtros.  Está vendo que a gente tem um filtro aqui chamado Etapa, Caso Financeiro Responsável, Município, Teste, KKKK, Teste 1, 2, 3, Local, que aí foram as formas de teste que a gente criou, certo?  Então, eu tanto consigo visualizar eles como Kanban, quanto consigo visualizar ele em lista dentro desse processo, certo? E aí, como é que funcionam esses filtros aqui?  Como a gente conseguiu identificar que os filtros eram separados por cada frente e isso poderia mudar dentro desse processo, como você tinha me trouxe, a gente criou uma forma de edição e de vinculação de filtros.  Então, por exemplo, dentro do 1% Fieis, a gente tem esses filtros aqui, né? Que é o... Vou criar aqui um filtro chamado Regulamento, e aí o tipo de filtro que ele é, ele é um texto, ele é múltipla escolha, ele é sim ou não dentro desse processo, ele é um valor, ele é um número, ele é uma data, eu coloco como é o formato deste determinado filtro que eu quero.  Eu vou colocar como um texto aqui, certo? E eu vou colocar esse filtro como obrigatório, por exemplo. Então, eu fazendo isso, eu vou adicionar o campo, e agora eu tenho um campo aqui chamado Regulamentos, tá vendo?  Então, quando eu fecho, criou um novo campo chamado Regulamentos aqui dentro desse processo, e ele está em branco dentro disso, tá?  Por quê? Porque vamos lá, vamos entrar aqui dentro do 1% Fieis, e agora eu tenho o meu cliente, Thiago, que ele faz parte desse 1% Fieis.  Quando eu entro dentro dele, aqui em cima eu consigo preencher os filtros. Então, como eu criei filtros lá, Esse cliente vai ter os filtros separados dele, né, para esse determinado caso que eu vou fazer.  Então, eu venho aqui no filtro que eu quero adicionar, né, dentro desse processo aqui, regulamento, está vendo? Abriu aqui o filtro, então eu vou colocar aqui, regulamento, eu vou botar 1% de todos, por exemplo, eu vou concluir.  Beleza, então eu adicionei o filtro aqui, 1% de todos, e aí agora quando eu vou lá na papilar operacional do 1% FIAIS, com base nos filtros, eu consigo encontrar aqui, ó, aquele cliente que tem aquele filtro em específico que eu criei, de regulamento.  Ou você pode criar qualquer outro tipo de caso. Por a gente criou isso? Porque tem lá aquele 1%, 5%, 10%, então só na hora que está cadastrando o cliente, como a gente vai preencher esse filtro aqui, automaticamente vocês vão conseguir acompanhar lá dentro da plataforma do Pipeline Operacional.  E aí cada uma dessas aqui, por exemplo, sim, vai ter as... Edições de filtro e você vai adicionar os filtros que você quer para essa frente, para essa frente que a gente combinou, certo?  Então a gente tem também o tema, outro tipo de tema, por exemplo, que está tema teste, eu também vou editar os filtros e criar novos filtros para este determinado tema, para esta determinada frente.  Como o cliente está vinculado a essa frente aqui, quando eu vim aí preencher os filtros, ele pega, porque não tem nenhum filtro dentro desse cliente aqui, deixa eu voltar lá.  Aqui, tema teste, editar filtros, vou botar aqui, regulamentação de base, eu posso botar assim, vencimento, vou botar assim, vencimento, para a gente poder ter como uma base de filtro ali, certo?  Vou colocar como uma data, vou adicionar esse campo, bom, beleza, adicionei esse campo a essa frente, certo? Como um filtro, automaticamente ele aparece aqui como vencimento, certo?  Então se eu clicar no cliente agora, vim aí preencher filtros, vai aparecer... Qual é a data de vencimento desse cara?  É dia 1 de setembro de novembro, então vou concluir, beleza, voltei para a pipeline, tema teste, agora em vencimento eu posso escolher a data que eu quero para ser aquela determinada data de vencimento, entendeu?  Que é com base no cliente e a gente consegue ver o filtro dentro daquela ação. Então é só padronizar isso para a equipe na hora da construção, que assim, construir um cliente, a gente precisa saber que esse cliente é 20%, que tinha algumas coisas que você me disse que tinha 15%, 30%, 20%, então vai lá, cria o filtro e eles preenchem o filtro daquele cliente.  A partir daí vocês vão acompanhar todos os processos e todos os casos baseados no filtro dentro daquele determinado cliente, entendeu?  Entendi, entendi.
+
+8:50 - Dr. Thiago Correia
+  Dessa parte eu gostei da estrutura que você trouxe no sentido de poder fazer, já vincula lá, aqui também. A essa opção de variar esse campo entre datas e tudo, acho que é realmente necessário, só que eu acho que encaixaria melhor, porque aqui, pelo menos do que eu entendi, aqui a gente está criando um filtro que, na verdade, está criando um campo personalizado ali, né?
+
+9:24 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, estou te ouvindo. É mais ou menos, a gente está criando um, é como se fosse um campo personalizado, mas ele não aparece no cliente, né?  Ele fica só na área de filtros, só na área de preenchimento de filtros. Não aparece aqui dentro do cliente, entendeu?  É só uma área para filtros mesmo, filtros com base na frente. Que foi mais ou menos a ideia que a gente pegou lá do seu sim, lá.  Só que lá já tem pré-definidos filtros, né? Aqui, como a gente não pode pré-definir, eu deixei que vocês conseguirem...
+
+10:01 - Dr. Thiago Correia
+  Eu acho que isso funciona bem se a gente entender isso como campo mesmo, não como filtro. Tá, pode ser também, não tem problema.  É porque quando a gente traz aqui nesse sentido de filtro, a gente está trazendo também meio que individual por causa de cliente, mais ou menos isso, né?  Isso, é individual pelo cliente. Nesse caso desse cliente, se eu abrir outro cliente desse mesmo tema, por exemplo, do abatimento que está, esse filtro vai estar nele?
+
+10:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, não vai estar porque ele não foi preenchido para ele, entendeu? Porque esse cara não é aquela mesma data, a data desse cara é outra.  Então, eu tanto posso preencher o filtro naquele cliente, quanto eu não posso, entendeu? Depende do que vocês querem, por isso que a colocou que ele é obrigatório ou não.  Então, pode ser, por exemplo, que esse cliente não tenha uma data de vencimento, então eu não coloco para ele.  Então, lá na pipeline... Se eu vier no vencimento, ele só vai aparecer como em branco. Não tem vencimento, nesse caso, entendeu?  E os outros têm vencimento.
+
+11:10 - Dr. Thiago Correia
+  Eu acho que a gente realmente precisaria ajustar isso aí para serem campos dos casos. Dentro dessa mesma estrutura que você já trouxe, se é obrigatório, não, e tudo, mas não pensando...  É porque o filtro, na verdade, ele vai refletir o que está no campo, né?
+
+11:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso.
+
+11:33 - Dr. Thiago Correia
+  E eu acho que melhor do que a gente pensar como criação de filtros que é refletido em campo, é pensar nos campos daquele tema, vocês têm aí o que você traz como frente, né?  Pensar nos campos daquele tema, e aí aqui em filtro... É que é a coisa, então eu só vou mudar o nome.
+
+11:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vou mudar o nome de campo para filtro, porque assim... É no tema que você tem os campos... o para filtro.  daquele filosofa. microfone. simquestra, filtro.
+
+12:00 - Dr. Thiago Correia
+  O vai ficar como filtro seria aqueles campos que existem para aquele tipo de caso, a gente ter uma caixinha de sim ou não aparecer aqui como filtro.  É, então, mas é exatamente isso.
+
+12:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que a única diferença aqui é que, no caso, quem cria os campos personalizados é o tema. Sim. É isso, não é?  Exato. É a mesma coisa. A gente só trocaria o nome. Em vez de editar filtros, seria editar campos personalizados, por exemplo.
+
+12:28 - Dr. Thiago Correia
+  É, mas aí isso precisaria ser fechado, né? Por tema tem lá o que são os campos da... Mas ele é fechado por tema, já.
+
+12:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É fechado por tema.
+
+12:41 - Matheus Torquato
+  Mas quem pode criar, por exemplo? Só os administradores. Cada tema consegue ter os próprios filtros independentes, não precisa nem ser o mesmo nome nem nada.  Quando o caso é vinculado ao tema, aí dentro do caso eu vinculo o filtro, esses valores, entra no caso...  Eu vou criar um aqui para você entender. Pode entrar nesse caso o Matheus mesmo ali mesmo, que ele vai entender.  É lá em cima. tem aqui, por exemplo, nesse tema eu coloquei 20 filtros, vai aparecer os 20 filtros ali para você preencher ou não, você pode deixar em branco ou não.  Toda vez que você for criar um caso, vincular o caso, esse caso for para assinatura, vai aparecer o campo que tem os filtros vinculados àquele tema para você preencher ou não.  Então, já fica preenchido. Caso você queira alterar alguma informação desse filtro, você pode entrar no caso e alterar aí.  Mas é tudo...
+
+13:36 - Dr. Thiago Correia
+  Esses filtros aí, por exemplo, nesse caso que a gente está vendo aqui, onde é que eles aparecem aqui dentro do caso, essas informações?  Ele não aparece aí, ele só vai aparecer dentro do tema do enchimento de filtro.
+
+13:46 - Matheus Torquato
+  Ah, tá.
+
+13:47 - Dr. Thiago Correia
+  Mas ele aparece aí se você quiser.
+
+13:49 - Matheus Torquato
+  Se você for preencher, vai ter ali o que você já preencheu. Vai ter aqui o dado preenchido.
+
+13:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas você quer que a gente crie um campo aqui dentro chamado campo personalizado, é isso? É, teria...
+
+13:59 - Dr. Thiago Correia
+  Sobe, sobe aqui. Aqui, só ver aí, se eu fizer aqui na minha tela, não aparece para vocês, né, uma coisinha, como se fosse aqui onde tem...  O Notas aqui, né, seria Campos Personalizados. É, um, eu acho que acima, né, que é algo que tem as informações do caso da pessoa.
+
+14:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tipo, ou abaixo aqui do cliente, né, porque aqui a gente tem os dados do cliente, eu posso colocar aqui, Campos Personalizados deste contrato.
+
+14:23 - Dr. Thiago Correia
+  Eu não sei se seriam, são os campos personalizados, né, os obrigatórios, padrões do tema. Como que a gente chama informações do caso, tipo isso, né.  É que é onde a gente registra que se o cara que tá lá no 1% ele é DGM, senso 5, portaria.  Então tem um campo, né, que seria... A gente chamaria de...
+
+14:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, por exemplo, aqui, Vamos pegar aqui, ó, por exemplo. Pra você entender, eu entendi o que você quis dizer, tá, e aí veja se você entende o nosso lado também.  Que é a mesma coisa que você tá dizendo. Só que a gente não tem o campo fixo. Por exemplo, eu viria aqui, vamos entrar aqui no FIES 1%, certo?  Vocês têm vários, Zé. Eu vou excluir a maioria dos filtros aqui, vou fazer do início, certo? Como é que se chama essa parte se o cliente é DGM ou 1% ou sei lá, como é que é o nome disso?
+
+15:20 - Dr. Thiago Correia
+  Aí seria o campozinho que a gente daria aí de enquadramento, por exemplo. Pronto, enquadramento, enquadramento.
+
+15:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí seria múltipla escolha, certo? Aí aqui eu colocaria DGM, SFM, né? Não.
+
+15:38 - Dr. Thiago Correia
+  Pode colocar qualquer coisa.
+
+15:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, vou botar aqui, DGM, SFM e vou colocar COVID, certo? Um exemplo, por exemplo. Beleza. Criou isso daqui, eu vou adicionar esse campo.  Adicionei um campo chamado enquadramento e ele é obrigatório neste determinado cliente, certo? Então, criei esse daqui do 1%. Vamos criar outro.  O que também tem no 1%? Vamos botar aqui, eu vou botar aqui porcentagem, certo? Que a gente tem direito, por exemplo, porcentagem, então ele vai ser um valor numérico ou vai ser um número, por exemplo, vamos botar como um número, então vou adicionar esse campo.  E por último eu vou colocar nacionalidade, por exemplo, né?
+
+16:21 - Dr. Thiago Correia
+  Não, entendi, isso aí hoje da forma que vocês construíram, então já tá ali no que seria uma base de dados daqueles casos desse tema.
+
+16:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então é só mudar o nome. É só vocês trazerem isso pra um quadrinho. Isso, dentro do cliente, né? Que aí, por exemplo, quando eu clicar aqui no cliente Thiago Correia, por exemplo, se a gente vier aqui no enquadramento, não vai ter nenhum cliente ainda vinculado a esse enquadramento, que a gente não criou ainda.  Isso, aí quando eu for no Thiago, eu vou vir aqui em preencher filtros, ó, enquadramento, onde é que ele se encontra?  Ah, ele é DGM, a porcentagem dele é 5 e a nacionalidade dele é brasileira.
+
+17:00 - Dr. Thiago Correia
+  Entendi, entendi. E aí eu vou concluir.
+
+17:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que realmente não aparece aqui esses campos de uma forma tão fácil de visualização. Eles estão aqui dentro, eles continuam preenchidos, mas estão lá na parte de preencher filtros.  Então a gente vai colocar aqui como um modelo de visualização para você. Aí agora...
+
+17:19 - Matheus Torquato
+  A gente pode tirar, Adavio, essa parte de preencher ali... Vou preencher embaixo como botão.
+
+17:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Colocava a preencher embaixo e fica exposto ali. Fica mais exposto. Como se fosse ter um botãozinho assim. um campinho, né?
+
+17:32 - Dr. Thiago Correia
+  de o preencher só os filtros ou só os campos, você editar dados do caso. Aí gente pode editar tudo dessa pessoa.  Mas isso já dá, isso já dá.
+
+17:42 - Matheus Torquato
+  Entra num caso ali para ele ver, Adavio. Se for em... Quer ver só?
+
+17:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não tem a parte de... Não, é porque é no cliente. Ah, é no cliente, é. Só que aquilo ali não é caso do cliente, é um caso do certinho no cliente, igual tem certinho no cliente.  Sim. Exato, e aí aqui vai ter os campos para ele preencher de acordo com os filtros que o Thiago criou daquela determinada sessão.  Beleza. Beleza, show. Então, esse daqui a gente consegue resolver tranquilamente.
+
+18:13 - Dr. Thiago Correia
+  Para a gente já construir avançando, ali onde tem lá nos casos hoje, nas pipelines, né? Aí, quando a gente for colocar as opções de quais são os campos que vêm para filtros aqui, eu acho que se tiver como, ter como se fosse uma pré-seleção que a gente coloca se são campos do tema, que é tipo esse aqui que a gente está conversando agora, né?  Os campos dos casos desse tema, ou se são campos da pessoa, que são aqueles campos que estão lá no cliente, para a gente poder usar os campos que já estão lá.  Tá, entendi.
+
+18:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui, né? No pré-filtro, se é filtro-cliente-caso, ou filtro-cliente-cliente, porque pode ser... Por exemplo, eu quero só um cliente que é médico, por exemplo, porque pode ser médico e não médico dentro disso, e isso é habituado ao cliente e não ao contrato.
+
+19:08 - Dr. Thiago Correia
+  Isso, porque aí não precisa ter uma situação de ter que repetir isso na parte do caso, eu acho. Tá, entendi.  Não, beleza, dá para fazer assim.
+
+19:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui seria só uma coisinha da gente clicar. É mais UX assim, ajuste de tela. Não, a gente que vocês construíram aí já...  Não da operação. Mas já mata ali mais ou menos o que vocês queriam, foi o que a gente meio que pensou de acordo com aquele sim.  Eu peguei aquele sim, só que como, exatamente como a gente tinha dito, como a gente não tem o que vocês precisam, a gente criou de uma forma que vocês consigam criar e manipular, entendeu?
+
+19:43 - Dr. Thiago Correia
+  Eu acho que se a gente fizesse ali o que é o do idenização, que é o daquele lá, facilita nessa construção.
+
+19:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Entendi. E se você vê aqui em Liston, ele aparece os campos que a gente criou, tá vendo? Enquadramento, porcentagem, nacionalidade...  Então, você já consegue ver quem é o cliente e onde é que ele se encontra na lista. Lembra que você falou, eu quero o em lista e quero o normal.  Então, eu posso vir aqui e colocar só o em lista aqui e eu já consigo visualizar ele na lista.  E traz, inclusive, os casos. Porque se você for em Kanban, por exemplo, ele não traz aqui. Porque Kanban é só uma visualização de pipelines.  Agora, em lista, eu consigo obter os casos aqui já visualizando também. Não entendi.
+
+20:31 - Dr. Thiago Correia
+  Não entendi a diferença desse pra quê.
+
+20:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá. Em Kanban, certo? Por exemplo, vou clicar aqui em enquadramento e vou colocar DGM. Você consegue ver que esse cliente aqui é de DGM.  Mas eu não consigo ver a porcentagem dele. Só se eu entrar dentro dele e olhar lá naquele painel que a gente vai construir.  Certo? Quando eu estou na parte de lista, Vê. Vê. Eu consigo vir aqui no enquadramento DGM e aí eu consigo ver agora aqui na lista o enquadramento, a porcentagem, a nacionalidade, entendeu?  A visualização em lista traz mais dados, que é como é o seu lado sim, entendeu? Ele traz mais dados do que no Kanban.  São coisas diferentes dentro disso, tá? Então, conforme eu vou criando mais, porque aqui você vê que é de acordo com o filtro que eu crio.  Então, se eu for criar enquadramento, porcentagem e nacionalidade, se eu vim a editar filtros agora e colocar aqui veículo, por exemplo, e colocar como texto adicionar o campo, automaticamente aqui vai aparecer veículo.  Eu posso colocar aqui 1%, já vou ajeitar o cara aqui dentro dessa lista.
+
+21:43 - Dr. Thiago Correia
+  Dessa parte aí, não seria interessante ter a opção de editar aqui. Eu só edito lá naquele botãozinho do editar a casa do cara, para garantir que você não faz cagadas.
+
+21:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui só visualiza, mas não edita.
+
+21:57 - Dr. Thiago Correia
+  Só reflete a informação que está lá na ficha do cara. Beleza. Porque lá a pessoa tem que ir clicar em específico.  Sim, tem que ir falar, você está trocando aqui, mais ou Porque qual é o campo, as informações e tal, aí os administradores vão definir, mas o preenchimento disso no dia a dia é do pessoal.  Sim, bota para lá.
+
+22:15 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aqui vai ficar só a visualização, mas você concorda a gente ter toda a visualização em uma esteira aqui dentro da lista?  Acho que fica melhor para o usuário, né?
+
+22:23 - Dr. Thiago Correia
+  Acho que sim, assim como esteira, fica interessante. Antes, só que eu sugiro justamente isso, a gente ter como meio que mudar o que aparece aí.  Porque tem dado aí que, assim, se o cara é brasileiro, para determinado tema, pode ser que seja informação interessante quando a gente vai ver na lista.  Mas para o outro tipo de tema, não. Então, nem todos os campos aparecem.
+
+22:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, aqui em editar filtro, a gente colocaria ou ocultar o filtro, né? Dentro desse processo, aí, por exemplo, aquele foi ocultado de uma forma geral, certo?  Que aí ele pode ocultar o filtro. ou mostrar o filtro, que aí ele volta. E aí eu vou botar um ocultar na lista.  Pode ser, pode ser.
+
+23:08 - Dr. Thiago Correia
+  Porque aí a gente pode tanto deixar livre quanto ocultá-lo dentro da lista. É o mesmo tipo de personalização que a gente pode fazer no Kanban também.  Isso, exatamente.
+
+23:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Oculta, não oculta, a gente vai escondendo ali. Porque o Kanban na verdade são as etapas, né?
+
+23:22 - Dr. Thiago Correia
+  É, o Kanban é a etapa e aqui que seria os dados do lead em geral, né?
+
+23:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí a gente bota para ocultar. Aí você pode ocultar e aí aqui funciona daquele jeito. Entra aqui e já cai no caso, né?  Aí vai no caso. Aí aqui estão todos os dados sendo atualizados do caso, né? Dados sendo atualizados, tudo mais.  Toda a parte de documentação que a gente já fez já está funcionando. A integração com o Asas e a Conta Azul também já está funcionando dentro desse processo.  Eu só não consegui ver o lead lá no Asas por causa daquilo que eu te falei, que eu não consigo visualizar, né?  Mas eu sei que funciona devido à sincronização aqui. Quando ele bate a sincronização, bate lá no Asas, que a gente estava com um pouquinho com problema.  mas já foi resolvido.
+
+24:01 - Dr. Thiago Correia
+  Até pensei que agora, na hora que a gente tava falando, eu não sei se a gente já já pensou nesse sentido, mas para facilitar na parte do Kanban, talvez fizesse sentido vincular que o Kanban, no Workflow, ele só reflete o que são as etapas daquele tipo de tema.
+
+24:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É isso aí que ele vai refletir. Já tá assim, né? Já tá assim, é. Porque você pode editar a etapa, né?  Então, esse tema tem essas etapas, o outro tema tem as outras etapas. A etapa é uma coisa. Os filtros são outros, porque o filtro é vinculado ao contrato.  A etapa é vinculado à frente, que a gente tá comandando ali dentro do processo, né? Então, no caso, vai ser a etapa é 1% fiéis, aí o Kanban é 1% fiéis.  Mas dentro do 1% fiéis tem o DGM lá, que é o caso específico daquele cara. Aí já vai pra uma parte de lista barra filtros.  Sim, sim. Dentro da divisão. A gente usou bastante o seu sistema, sim, como uma base para a gente interpretar isso daqui, entendeu?  Só que de uma forma que a gente conseguisse editar, né? Porque como a gente não é 100% o que a gente sabe, então a gente bota com aberturas para isso.
+
+25:15 - Dr. Thiago Correia
+  Eu acho que com essas alterações que vai fazer a partir de hoje, depois a gente mesmo vai fotucando aí e fazendo.  Isso, e vai criando.
+
+25:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É exatamente essa intenção que a gente tentou trazer, entendeu? Para que vocês tenham liberdade e não dependam, por exemplo, eu dependo do Adavio e Matheus Programador para mudar uma etapa de um pipeline.  Não faz sentido, entendeu? A gente já deixa para que vocês consigam fazer isso também.
+
+25:36 - Dr. Thiago Correia
+  Depois desses ajustes de hoje, já vai ficar de uma maneira que eu posso, aquilo que a gente tinha conversado, de passar como que é mais ou menos a construção de todos os temas para vocês, eu já posso fazer direto aí no sistema.
+
+25:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, exatamente. Essa foi a nossa intenção, né? Para você já conseguir construir lá dentro e já ter essa experiência com o sistema de uma forma geral.  Entende? Tá.
+
+25:59 - Dr. Thiago Correia
+  Tá. É... E desse aí também, acho que depois a gente tem que ver da controladoria, né?
+
+26:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, a gente viu essa parte, que era uma parte que a gente tinha ficado com pendência, né? relação a isso, deixa passar essa tela pra cá, que a gente tinha tampado por aqui.  A que a gente tinha ficado com pendência foi isso e a parte da controladoria, porque o resto a gente já tinha feito, tinha concluído e estava certo.  Aí vamos pra parte da controladoria.
+
+26:26 - Dr. Thiago Correia
+  Só antes de ir lá, tem o... Vai ter esses ajustes aí que a gente... Sim, de mandar pra abrir o card de edição e tudo bem.  Eu acho que está quase finalizado isso aqui, mas seriam ajustes mais leves aí. E aí, tinha ficado na situação, quando você estava vendo esse aí desse sistema que eu fiz, que era a forma dessas informações depois poderem ser trazidas pra cá, né?  Da forma que fez lá... lá... É algo que realmente eu posso replicar nos outros, que depois a gente consegue trazer?  Ou como que vocês visualizam isso, ou algo mais para frente para a gente pensar? Não dá para trazer do sistema para cá, a gente consegue incorporar.  Eu não estou pensando tanto em importação manual, mas tem o jeito que eu fiz lá todo torto, é uma planilhona com não sei o que, não sei o que, né?  Como que seria o para a gente pensar? É, hoje a gente não colocou importação automática aqui, né?
+
+27:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Hoje a gente tem que construir um novo tema, cria o tema, escolhe quais são os filtros daquele tema e criou a frente.  Aí, dentro do usuário, gente vincula os filtros ao usuário, tá? Meio que um processo manual, não está construído de uma forma automática.  Com a controladoria agora, eu acho que a gente vai começar a conseguir automatizar um pouco mais esse processo, principalmente de inserção, né?  Porque hoje a gente depende de vocês irem Preencher o dado e tudo mais, não sei o quê. Com a controladoria, como eu vou puxar do ProJuris, eu já botei alguns dados do cliente, então, porcentagem, qual é a data de finalização, etc.  Isso tudo vai conseguir entrar dentro daqui do cliente automaticamente, entendeu?
+
+28:16 - Dr. Thiago Correia
+  Eu acho que para a controladoria, infelizmente, a gente não vai conseguir puxar tanta informação, porque o que vai ter no ProJuris vai ter os dados pessoais da pessoa, os dados do caso enquanto processo judicial, Porque tem muitos processos que são só administrativos, né?  Isso, tem muita coisa que é só administrativa, e as principais informações dos casos são ali nos registros administrativos, tipo aquele de indenização do mais médicos que a gente tem ali.  No processo, no sistema do ProJuris, não entra qual é o percentual discutido, não tem essa informação lá. Isso é algo que está naquela...
+
+28:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, aí vai ter que ser manual nesse processo, né? Como vocês já fazem na realidade, então a gente vai manter aqui na parte do preenchimento.  Com a utilização dos seus usuários, é que a gente vai saber se, Adavio, acho que esse pontinho aqui ficou ruim da gente fazer, vamos mudar, e a gente vai conseguir mudar ali.  Mas eu acho que o que a gente precisa é que vocês comecem a utilizar para poder ver no dia a dia ali a prática dentro disso, para ver como é que a gente consegue modificar.  Mas a forma de fazer é justamente aquela, por exemplo, quem é vai operar inicialmente? Comercial. Então, o comercial vem aqui, cadastra um novo cliente, ele vai cair como um lead, caiu como um lead, cai na pipeline comercial aqui, que não tem nenhum lead no momento, eu vou criar aqui um novo cadastro, vou criar aqui o Adavio Tittoni, o CPF, acho que eu já estou cadastrado.
+
+30:03 - Dr. Thiago Correia
+  Quando coloca ali CPF, se já for alguém que já tem um cadastro de CPF, ele não aceita, né? Ele não vai aceitar.  Eu acho que, inclusive, ele vai fazer isso agora.
+
+30:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente já testa que é tipo criar cliente. Você não vai ter preguiça. CPF já é cadastrado, é utilizado o cadastro existente.  Então, ele jogou para o meu cadastro de novo, né? Como já existe o CPF, ele só me trouxe para esse cadastro aqui dentro, tá?  Mas deixa eu pegar aqui, eu vou criar um novo. Vou criar pelo CPF também, suposto. Criou aqui, ele cai como lead, tá vendo?  Então, caiu como lead, ele tá dentro de um pipeline comercial, ele é um novo, acabamos de iniciar esse processo.  Beleza. Então, esse é o processo inicial do escritório, né? Vai cair um lead aqui, o lead inicia, então eu venho aqui dentro desse lead.  Ainda não tenho nada nesse lead. Posso tornar esse lead um cliente, se eu quiser já transformar ele automaticamente em um cliente e tirar ele de lead.  Posso editar as informações dele como um lead e posso também vincular ele a um caso. Porque ele é um lead, mas ele é um lead vinculado a um caso normalmente, dentro desse processo.  Então eu posso vir aqui em novo caso, selecionar o tema. Então qual é o tema dele? 1% Fies. Beleza.
+
+32:25 - Dr. Thiago Correia
+  Puxar os temas que existem lá no... Isso, vai puxar das pipelines operacionais.
+
+32:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então qual é o tipo de caso dele? Ele é do tema 1% Fies e o caso dele é o abatimento militar.  Beleza. Temos algum advogado vinculado? Vamos vincular aqui o advogado de Agua Viana. Aqui é um município, não é obrigatório.  Então eu posso criar e escolher os documentos para ele fazer a assinatura. E ele continua como um lead. Ele é um lead, eu só estou vinculando um caso a ele, porque ele ainda não assinou.  Então, criei ele aqui. Aí agora ele fala, ó, vamos gerar o documento do caso. Escolha um... Então, com o abatimento militar, eu tanto posso fazer a declaração militar ou o requerimento 1% militar, dentro desse determinado caso.  Então, vou fazer a declaração militar, e vai ler os campos do modelo, trouxe os dados pessoais, aí aqui tem o local de atenuações, né, alguns processos que a gente tem que colocar na mão dentro disso, por enquanto, né, dentro disso.  Então, localização, aqui, Marcelo Alagoas, aqui, eu não sei muito bem o que significa isso, IBGE, eu também não sei o que significa, período atualizado, já está em 2026, carga horário 30 horas, nome do responsável, carga responsável, vou botar secretário, né, aí, beleza, gerei a documentação, certo?  Se você for na pipeline comercial, ele continua como um lead aqui dentro, esse cara é um lead, certo? Então, como cadastro, ele é um lead e ele ainda não é um cliente, tá bom?  Eu só gerei o caso para ele, mas ele ainda não tem uma assinatura e nem nada do tipo, ele ainda não é um cliente dentro desse processo.  Então, quando eu entro nele aqui e eu vejo o caso e eu abro o caso, agora eu tenho o documento aqui.  Então, o documento eu posso editar, visualizar, abrir um docx, então eu posso vir aqui em editar, por exemplo, vai abrir aqui o nosso documento, né?  Então, câmera de tônica, asado e tudo mais. Aqui sempre tem que visualizar aqui como é que tá, para poder ficar tudo ok.  Então, visualizei, beleza, tá tudo roxo, seleciono tudo, mudo para preto, ele fica roxo porque é para poder realmente a pessoa conseguir ler ali os detalhes.  E aí eu concluo a edição e finalizo, beleza. Concluí a edição e finalizei. Aí ele já fala, preenche os filtros deste tema.  Porque lembra que eu coloquei o filtro de enquadramento como obrigatório para este tema? Então, já tenho que preencher esse filtro obrigatoriamente aqui.  Se eu não tivesse colocado obrigatório, eu não precisava preencher, mas como eu coloquei obrigatório, eu tenho que preencher. Então, eu já vou colocar esse cara como DGM, beleza.  Coloquei a Camila como DGM, ela continua sendo um lead, porque ela ainda não assinou esse processo, mas o documento está certo, eu posso enviar para o ZapSign para assinatura, por exemplo.  Então, eu vou vir lá no ofício do cliente, vou mudar só o e-mail aqui, porque está no e-mail de teste, né?  Deixa eu botar um e-mail aqui real, para a gente poder testar. Então, coloquei, salvei, beleza. Atualizou o nosso cadastro, voltei aqui para o nosso caso, está aguardando a assinatura, eu vou enviar via ZapSign.  Você quer enviar para onde? Qual é nome da pessoa? Camila, qual é o e-mail? Camila Titoni, arroba de e-mail.  Beleza, enviei, gerou, enviou para o nosso ZapSign. Agora, eu tanto consigo visualizar aqui dentro, que está aguardando a assinatura, consigo copiar o link da assinatura, caso eu queira enviar para o...  via WhatsApp ou algo do tipo aqui, certo? Consigo, dentro do nosso sistema, visualizar aqui em assinaturas que tem uma assinatura pendente aqui, tá vendo?  Eu consigo pegar do link do ZapSign ou confirmar a assinatura, caso o cara, sei lá, assine manualmente no GOV ou algo do tipo dentro desse processo, não assina o ZapSign, quanto eu também recebo lá no nosso e-mail a assinatura do ZapSign.  Olha lá, Hyago Viana, assinar documento Camila Titoni, tá? Então, recebi aqui como meu cliente, vou ver o documento, vou fazer a assinatura, vou botar o celular aqui, vou continuar, vou botar o digitar, finalizar, recebemos uma confirmação, recebeu aqui o código para assinar, abriu, continuou, assinando o documento.  Adavio Viana, gerou. Assinou o documento, quando eu volto para o sistema, já sumiu o nosso assinaturas aqui, porque ele foi assinado, do pipeline comercial, o cliente sumiu daqui, porque ele não é mais um lead, ele se tornou um cliente, ele assinou um contrato com vocês, ele entra na pipeline operacional, dentro do 1% Fieis, agora como um cliente.  Então eu abri ele aqui agora, agora aqui dentro do documento, deixa eu atualizar de novo aqui, já está como assinado, tá vendo?  Então, se eu botar aqui, baixar PDF, trouxe o PDF para a gente, naquele determinado documento, porque é o PDF normal, e aqui o documento assinado, que é o que a gente recebeu lá dos AppSign, então está todo assinado aqui, dentro dos AppSign, dentro desse processo.  Aí sim, ele se tornou um cliente para a gente agora, entendeu? Ó. Terão um cliente que já foi feito aquele processo.
+
+38:04 - Dr. Thiago Correia
+  Beleza, deixa eu te perguntar, essa integração que a gente tem aqui dos documentos, ela é vinculada lá na pasta desse cliente, então hoje ela está projetada de uma forma que só funciona quando é um caso meio que novo, né?
+
+38:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, funciona dentro de um caso normal também, porque por exemplo, vamos voltar lá, aqui eu estou na ficha do cliente, certo?  Então, essa é o cliente, se eu abrir no Drive, eu tenho o cliente Camila Tittoni e eu tenho o caso Fies, 1% da Camila Tittoni, né?  Então, dentro do caso dela, eu tenho a declaração militar e tenho o contrato assinado dessa determinada declaração militar, certo?  Beleza, então está dentro do caso 1% Fies. Quando eu entro no meu cliente aqui e eu vou no caso 1% abatimento militar, desculpa, vou no caso do abatimento militar, eu posso vir aqui e gerar um novo documento para o abatimento militar, entendeu?  Documento do caso.
+
+39:02 - Dr. Thiago Correia
+  Minha dúvida é, tipo assim, vamos colocar que agora a gente pegou, por exemplo, a indenização do Mais Médicos e botou para rodar dentro daqui, para a gente poder até ir começando a usar já prática e vendo as necessidades.  Aí tem lá 350 clientes. Eu consigo, de alguma forma, vincular a pasta do cara que já está no drive para cá, para o sistema remecer, que aquela é pasta dele, ou talvez, porque na hora que estava fazendo aí, fiquei pensando, talvez, conforme a gente vai trazendo essa informação para cá, a gente vai lá na pasta que o seu sistema cria aqui, pega o que é e joga para cá, para o sistema ter esse reconhecimento que é essa pasta desse caso, né?  Sim, pode ter, pode ter.
+
+39:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Funcionaria dessa forma, por exemplo? Funcionaria. Porque aqui é um reflexo do documento, do drive, entendeu?
+
+39:56 - Dr. Thiago Correia
+  Então, se eu pego esses documentos lá e jogo aqui... Funciona. Vai subir para cá. Possivelmente, ele gerar, porque isso é a melhor vantagem disso, ponto positivo, é que mesmo nos casos antigos, a gente pode começar a usar a geração de documentos.
+
+40:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim, já vai trazer para cá esses processos. Isso. Aí, por exemplo, quando a gente vai aqui em gerar documentos, certo?  Então, vou gerar um documento do caso, abatimento militar, e aí a gente tinha feito a declaração, agora vou fazer o requerimento 1% militar.  Então, aqui traz as informações, né? Dentro disso, vou botar aqui o NACO, aqui eu vou colocar um dado, aqui escolher em ativo e ativo, período atuado, 2026, inclui suspensão, não inclui, beleza.  Vou gerar ele aqui. Gerei o requerimento, beleza? Trouxe ele como concluído e finalizado. De novo, eu tenho que colocar o enquadramento desse determinado documento.  Então, vou botar aqui como DGM e ativei. Beleza. Então, dentro deste caso agora, que a gente tem dois casos dentro desse processo, né?  Temos os casos efetivados e temos o outro que está aguardando a assinatura ainda dentro desse processo, porque ele não foi assinado, né?  Tá aguardando a assinatura. Então, vou confirmar a assinatura. Confirmou a assinatura do abatimento militar, que é um processo, né?  Abatimento militar. Peraí que eu acho que aconteceu uma coisa aqui. O caso dentro desse processo, deixa eu ver lá na nossa pasta, abrindo o Drive, é porque ele considerou que o requerimento e o abatimento são diferentes, mas é a mesma coisa, fica dentro do mesmo processo, mas aí você vê que, por exemplo, ele vai criar uma nova pasta para um novo caso, que ele considerou como um caso novo, mas é o mesmo caso, e vai deixar a pasta do cliente só com a pasta do cliente, entendeu?  Então, a pasta do cliente, os casos separados e o que a gente vai fazer lá. Em relação aos requerimentos e documentos, eles ficam aqui dentro, deixa eu pegar lá para você entender como é que funciona, aqui dentro do jurídico, Drive,
+
+43:14 - Dr. Thiago Correia
+  Acho que é Medicina com M maiúsculo 2023. É 2023, né?
+
+43:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui antes era 2000 e não é 2023, porque foi trocada. Era 2023 e aí trocou.
+
+43:42 - Dr. Thiago Correia
+  Medicina 2023, M maiúsculo, só o M maiúsculo. Medicina 2023.
+
+43:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ah, agora foi. Aí aqui dentro, dentro da pasta tem o sistema HV, certo? Dentro do sistema HV, a gente tem os modelos.  Dentro dos modelos, a gente tem abatimento, abatimento, portaria, abatimento militar, abatimento... Isso, que é onde vocês vão jogar os documentos, entendeu?  Para poder ser modelo. E aí, cria uma pastinha dessa dentro de modelos aqui e joga os modelos que você quer lá dentro daquele tema, entendeu?
+
+44:29 - Dr. Thiago Correia
+  Entendi.
+
+44:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí ele vai ser mandado para o nosso escritório, né? Naquela parte de documentações aqui, ó. Deixa eu ver aqui.  Aqui, que é onde fica aqui na hora de gerar um documento. Gerar documento, aí aqui, documento do caso. A gente escolhe com base naquelas pastas, entendeu?  Aí, ó, abatimento, tal. Tem aqui, abatimento, SF, Censo 5. Então, são os documentos... Os documentos estão aqui em abatimento SF, Censo 5, por isso que a gente usa aquela base ali como base de documentação, de modelos de documento, mas a Patrícia, a Patrícia sabe, a gente já ensinou para ela como é que faz e ela sobe.  Tá tranquilo, tá tranquilo.
+
+45:27 - Dr. Thiago Correia
+  Aí, deixa eu ver... Não, o caminho seria a gente criar o cliente aqui, criar o caso dele aqui e depois pega a documentação de lá.
+
+45:38 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E vai subindo, isso. Exatamente. Beleza.
+
+45:41 - Matheus Torquato
+  O ideal é deixar os temas já vinculados com os casos prontos, né? Quando você for cadastrar um cliente, você já vincula o caso que já está dentro do tema ali, né?  O certo é fazer essa configuração primeiro. É, criar os temas aqui, né? É, cria o tema, coloca as documentações...
+
+46:00 - Dr. Thiago Correia
+  Depois dessas alterações de hoje, porque eu tô perguntando isso, né, porque depois dessas alterações que vinha da reunião de hoje, eu acho que na próxima, a gente já pega aí nos próximos dias e pega aquele tema que pelo menos tá mais estruturado que os outros hoje, que é a organização, e pega aquele sisteminha que eu fiz, para de usar ele, traz todos aqueles casos pra cá, e aí traz manual, tudo, né, por isso que os campinhos depois que estiverem prontos a já consegue começar a usar, e aí eu vou passar pro pessoal, quando eu for fazendo essa vinculação aqui, já colocar nas pastas certinho, pra ficar como se fosse um tempo inteiro mesmo, 350 casos rodando aqui dentro desse tema.  Sim, pra gente já ver como é funciona. Eu vou fazer isso por partes, ao invés de fazer de todos os temas, e depois, e vendo, eu vou pegar o de indenização, coloco aqui, como a gente já vai tá com os campos, as coisas prontas, traz pra cá um, começa a usar ele, vai fazendo os ajustes, depois na hora de trazer os outros, é só fazer o repeteco.  É isso.
+
+46:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí agora a gente vem aqui, ó, eu criei o O tema, né? Vinculei os casos ao tema aqui, aqui eu vinculei todos os casos, abatimento por vídeo, ao tema Frente 3, que aí a gente vai criar outros temas lá, né, dentro daqueles casos no processo.  Então, vinculou aqui, agora a gente já tem o tema Frente 3, já consigo editar os filtros, editar etapas, abrir a pasta de modelos, né, caso eu queira vincular modelos específicos para Frente 3, mas está lá naquelas pastas que eu já te mostrei, então editar as etapas, aí a gente já criou uma nova frente aqui.  Aí quando eu crio um novo cliente, eu vou vincular o cliente a essa Frente 3, para poder ele pegar dentro desse processo, né?  Por exemplo, posso vir aqui no Cliente, Cliente aqui, novo caso, qual é a Frente? Agora é o Frente 3, que eu criei agora.  Então, qual é o caso da Frente 3 que a gente vai? Ah, batimento, ESF, portaria. Beleza. Criar e escolher o documento, vai abrir para a gente criar a portaria daquele determinado caso, daquela frente, entendeu?
+
+47:57 - Dr. Thiago Correia
+  Então, essa parte já está bem ajustada, já está bem...
+
+47:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Valeu.
+
+48:02 - Dr. Thiago Correia
+  E essa questão de documento também, eu acho que a gente só vai ter o 100% pronto quando tiver realmente...  Testando, validando.
+
+48:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora a gente está numa fase que a gente precisa de utilização, porque assim, o acontece muito? Eu e o Matheus seguimos um padrão que a gente construiu, então a gente já sabe como é que a gente vai fazer do início ao fim.  A gente precisa que pessoas que não são do nosso meio, mundo assim, testem, para a gente ver, ah, isso aqui causou uma dificuldade neles, isso aqui não causou, aqui a gente pode melhorar, aqui a gente não pode melhorar, sabe?  Mas a usabilidade de pessoas que não construíram o sistema, porque elas normalmente vão quebrar, e é isso que a gente precisa, que elas quebrem...
+
+48:46 - Dr. Thiago Correia
+  Eu entendo, é porque o que eu tinha conversado com o Hyago, e que foi o que a gente fez esses últimos ajustes de focar nessas partes, é porque eu falei com ele, cara, é impossível hoje a gente simplesmente falar bem assim, ó, vamos pegar e começar a testar.  A gente já está muito atolado por conta da desorganização que o sistema vai resolver, a gente está muito atolado, e aí não seria algo que iria ajudar, ele iria atrapalhar porque era mais um lugar para preencher e olhar e fazer e tudo, desvinculado do que são todas as outras coisas que existem do passado.  Então, cria ali uma dificuldade muito grande de usar, eu falei assim, não vão testar de verdade, a gente precisa ter essa construção e sair usando, e aí o de indenização vai ser um bom case e vai validar a ideia para os outros, vai ser muito rápido, porque tudo que a gente está fazendo aqui, apesar das especificidades, eles vão aplicar para todos, este campo personalizado aqui do tema.
+
+49:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tudo vai ser igual, é o processo, até foi bom, porque assim, quando a gente fechou, eu até gostei disso, porque quando a gente tinha fechado o Conhago, ele queria que a gente só fizesse 1%, aí agora a gente acabou conseguindo criar todo o sistema de...  todos os casos em uma vez só. que ficou até melhor para a usabilidade de vocês, porque senão eu ia manter a mesma coisa, vocês iam ficar com 1% aqui e todo o resto do Trello.  Aí não ia ser interessante dentro desse processo.
+
+50:13 - Dr. Thiago Correia
+  E já para nessas alterações de hoje vim mais redonda ainda, eu fiquei pensando aqui nessa parte dos campos. Tem alguns campos que podem ter repetições, tipo no 1% que está mais visual.  Tem ali o período de atuação, tem uma informação que é meio que isso, o período de atuação. Sim, período de atuação no contrato.  Meio que tem esse dado. Tem campos que podem ter mais de um, tipo período de atuação, tem mais de um.  Meio que, por exemplo, se o cara é CPF, nome... E se ele é abatimento militar, abre um aí, só para ficar visual, porque senão nem eu consigo explicar direito.
+
+51:07 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Primeiro 1%, é na hora que a gente gera o documento.
+
+51:12 - Dr. Thiago Correia
+  Não, ele é gerar para a parte dos campos mesmo, dos campos ali. Está aqui de preencher os filtros? Isso, é o que está com o filtro hoje, né?  Imagina que aqui tem esse enquadramento, igual estava ali.
+
+51:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Lá mesmo? É, acho que onde você estava. Eu achei que era lá na construção. É que esses filtros aí é o que vai virar os campos, né?  Isso, esses filtros é que são os campos depois.
+
+51:38 - Dr. Thiago Correia
+  Isso, tem determinados campos que talvez seriam, na hora de criar o campo aí, né, como se fosse uma caixinha que permitisse criar mais um desse mesmo campo, repetir, é a mesma informação do campo, só que mais um.  Tipo, esse cara aqui, ele tem três períodos no mesmo caso. E Ele tem um período de tal data, tal data, de outra data, de outra data.  Aí eu não sei se para a coisa interna fica melhor só ter várias opções, tipo período 1, 2, 3, 4, 5, sei lá, né?  Ou se fica melhor realmente só ter uma e ter como se fosse uma caixinha para abrir essa outra possibilidade do cara que tiver isso.  Não seria múltipla escolha, eu acho.
+
+52:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, não seria múltipla escolha, porque múltipla escolha, na realidade, gente só pode escolher um dentro de vários. É, que já está pré-programado.  Eu acho que nesse caso aí o mais fácil seria ser texto com vírgulas.
+
+52:45 - Matheus Torquato
+  A múltipla escolha, você pode escolher mais de uma opção dentro de um range ou uma opção só.
+
+52:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, só que o problema da múltipla escolha é porque aí, por exemplo, se fosse múltipla escolha é fechado, aí você que tem que digitar.  E você tem que digitar, sei lá, de 2000 a 2026, digitar 2000, 2021, 2022.
+
+53:07 - Matheus Torquato
+  Mas pode ser um texto ou não?
+
+53:11 - Dr. Thiago Correia
+  Seria texto, só que a questão aqui, em determinado caso pode ter um período só, em determinado caso pode ter quatro períodos.  Aí como que encaixa isso, entendeu?
+
+53:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, eu acho que você pode usar o múltipla escolha, só que o problema é que, nesse caso do que ele tá falando, Matheus, é ruim porque o múltipla escolha, a gente que tem que criar, aí imagina que a gente tem cinco períodos, aí o período é 2022, 2024, 2015, 2018 e 2030, digamos, um exemplo aqui, certo?  São muito espaçados. Quando a gente trabalha com opção, gente teria que criar uma opção de 2000 a 2025. A gente cria o rótulo do campo, e aqui nesse tipo, a gente coloca texto, uma opção, duas, três, quatro, cinco, seis, sete, entendeu?  Que aí vai abrir uma caixinha para o cara poder preencher dentro da opção, por exemplo, período. Aí vai ter lá, texto, uma opção ou duas.  Se for duas, vai ter período, vai ter uma caixinha em cima e uma caixinha embaixo, entendeu?
+
+54:30 - Matheus Torquato
+  Ah, assim fica bom, assim fica bom.
+
+54:33 - Dr. Thiago Correia
+  Talvez não só para o campo texto, Matheus, mas ter essa opção para...
+
+54:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  vários, né? A gente coloca aqui, vai ser uma ou duas ou três opções, entendeu? Dá para a gente fazer, a gente cria isso no modal.  Só que aí aqui, por exemplo, no filtro, é que quando você for pesquisar, vai aparecer aqui, período. Não vai aparecer período 2025, 2026, vai aparecer período 2025, período...  2026, 2027, 2028, você vai enquadrar naquele caso, né?
+
+55:04 - Dr. Thiago Correia
+  É, porque se puxar um enquadramento de uma das informações do caso, quando aparecer aqui é o caso da pessoa, e todos esses períodos estão vinculados no mesmo caso, então não tem problema ele aparecer aqui, mesmo que ele só enquadrou em um, entendeu?  Isso, entendi.
+
+55:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vai aparecer só um no momento que você enquadrou, mas quando você entrar na ficha do cara aqui, vai ter lá todos dentro da ficha dele.
+
+55:28 - Dr. Thiago Correia
+  Porque se for vinculado ao mesmo caso, sim, pode ser que o mesmo cliente tenha três casos de períodos diferentes, porque um é DGM, um é Censo 5, aí são casos diferentes.  Mas dentro do mesmo caso dele, se tiver mais de um período, está enquadrado. Vai estar enquadrado dentro disso aqui.  Na verdade, porque vai ser no mesmo caso, né?
+
+55:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, tipo, no mesmo caso vai ter 2015 e 2020, mas se você pesquisar tanto 2015 quanto 2020, você cai no mesmo caso de qualquer forma, então não tem muita alteração.
+
+55:57 - Dr. Thiago Correia
+  Até para a parte dos documentos, isso é importante. Isso porque aqui a gente está trabalhando no caso mais simples, que o cara tem um período, mas imagina que esse cara que a gente acabou de gerar aqui, esse requerimento 1% militar, que tem um campo lá na declaração, que é o período dele, ele tem vários períodos.  Então o sistema já reconhece.
+
+56:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Já vai reconhecer ali. Dá para montar também. Aí a gente passa por toda essa parte aqui de documentação, que agora a gente está com poucos detalhes.  Eu estou com uma IA aqui, que é o meu fato, então eu vou conseguir puxar os dados aqui dele depois, não tem problema.  Agora, a gente vai para a parte que eu estou começando a montar da controladoria. O pessoal do Projúcio te respondeu alguma coisa aí?  Me respondeu.
+
+56:38 - Dr. Thiago Correia
+  Tem que gerar outra chave mesmo para mudar os escopos.
+
+56:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  tenta mexer aí para a gente ver, por favor.
+
+56:48 - Dr. Thiago Correia
+  Gera uma chave nova. Aí o clique em gerar chave nova, ele gera uma chave automática. Cara, eu acho que essa informação do suporte deles está errada.
+
+57:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não gera? Eu acho que vou ter que pedir para o suporte deles fazer isso lá, entendeu?
+
+57:28 - Dr. Thiago Correia
+  acho também.
+
+57:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pelo que eu tinha lido, era o suporte que liberava, não o nosso.
+
+57:37 - Dr. Thiago Correia
+  Pois é, mas quando eu entrei em contato com suporte, ele só me mandou, ele nem perguntou nada, só falou assim, vai ali na conta em tal lugar que está lá.  Mas bota aí, confirma.
+
+57:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vê ali em privacidade e segurança, também em dados básicos.
+
+58:00 - Dr. Thiago Correia
+  Quando eu volto, esse número é o mesmo que eu tinha te mandado? Deixa ver aqui, ele virou um novo aqui, só.  É, oitenta e sete, meia, nove, meia. Não, nem mudou, eu vou precisar falar com eles pra pedir pra eles mudarem isso lá e aí te passar.
+
+58:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, mas por enquanto, é porque eu não vou conseguir te mostrar dentro disso, mas eu vou te mostrar a primeira, só a tela que eu fiz, e aí depois qualquer coisa você me manda ali a confirmação, tá?  É, beleza, deixa eu ver. Aqui dentro do painel da controladoria, esse painel aqui, por enquanto, ele é só um painel interno dentro do sistema, tá?  Ele vai poder sair. O mais importante relacionado ao motor tá dentro dessa parte aqui que se chama distribuição, tá?  Então aqui dentro da distribuição a gente tem um painel, que aí o painel vai mostrar quais são as petições que a gente puxou naquele dia ou no dia anterior, tá?  Baseado na data. A gente tem a lista... ... Dentro desse processo, qual é a tarefa, qual é o processo, quem é o executor, qual é o fluxo, data final, data inicial, pontos de alerta, se ele é absoluto, complexo, general, com alertas, dentro daquele processo que a gente tinha criado, para poder gerar filtros, de acordo com o seu motor lá naquele método.  A gente tem os executores, o são os executores? São as pessoas que vão executar as tarefas, com base no peso dela e se ela está ativa ou não ativa.  Mas para isso, eu preciso do pró-júris, porque eu preciso pegar o ID do pró-júris, para que quando a gente faça a vinculação no motor, caia na pessoa certa dentro do pró-júris, entendeu?  Por que preciso do ID do pró-júris lá da pessoa, ver como vai ser criado lá. Eu estou tentando ver se eu consigo puxar todos os executores de lá, só que como eu não estou tendo acesso ao escopo, eu não estou conseguindo fazer ainda.  Mas aqui a ideia é colocar o ID do pró-júris do cara, para que ele consiga receber aquela determinada ação, certo?  E aqui a gente fala se ele é elegível na fila complexa ou não. Então, se não for, ele entra na fila comum.  Se ele for para a fila complexa, a gente ativa ele aqui como fila complexa dentro desse processo, como um executor.  Aqui a gente tem o calendário, que vai mostrar o calendário das datas e quando a gente abrir vai mostrar o que está relacionado àquela determinada data, só que a gente ainda não tem nada aqui puxado dentro das filters.  Aqui a gente tem os tipos de tarefa, que você pode criar esses novos tipos para ele ter como base.  Então, é o código do ProJuris, que vai ser baseado no código da tarefa do ProJuris, que ele vem naquela tag.  É a descrição, o motor que a gente está usando, que é o motor de testes, que vai estar lá um pouquinho para frente, que é aqueles motores que você criou para mim.  Então, seria qual é o ID do motor, para que quando cai essa tarefa eu consiga identificar qual é o motor que vai trabalhar dentro dessa tarefa naquele momento, porque tem tarefas que são complexas e tem tarefas que não são complexas.  Então, as tarefas que são complexas, elas caem num tipo de motor, que é o motor que a gente criou lá.  E A data é o ponto principal da tarefa, o período de data.
+
+1:01:12 - Dr. Thiago Correia
+  Eu tinha pensado um pouco mais simples essa parte, mas vai mostrando o resultado que talvez já está dentro.
+
+1:01:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui é a quantidade de pontos dessa determinada tarefa, porque a gente fez um cálculo baseado em pontos e datas, não foi?  Então, é a data, que é o primordial. Então, se a data está hoje, ela é primordial e ela já cai direto para uma pessoa super mega, já cai no período total.  Se ela é uma data de amanhã, ela não cai para uma pessoa específica, mas ela já cai dentro de um processo de importância, porque ele só aparece data de hoje e quando realmente é hoje, até é uma coisa que está bem grifado lá dentro daquele processo que você me mandou.  Então, eu não sei se é porque isso pode causar algum problema, mas é porque as datas... E, por exemplo, pelo que eu entendi no ProJuris, quando a data é de sete dias, ele já começa a dizer que é urgente, e aí lá no motor você colocou, não é para dizer que é urgente quando é sete dias, é para colocar com uma data de sete dias, mas ele não é critério de urgência, urgência é um dia antes ou no dia.
+
+1:02:16 - Dr. Thiago Correia
+  No ProJuris, ele não faz nenhuma classificação dessa, essas são todas as classificações internas, né?
+
+1:02:24 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É porque eu vi que tinha muito essa parte, assim, de considerar super importante e não considerar super importante.
+
+1:02:30 - Dr. Thiago Correia
+  Isso são mais dentro das regras, é porque, assim, existem as regras, como é que explica? Existem as regras processuais, que é o que é a lei de processo, sabe?  Então, se eu tenho que fazer uma tarefa de apelação, recurso de apelação, eu tenho 15 dias úteis na lei, esse é o meu prazo.  Aí, o próprio ProJuris traz esse prazo, uma sugestão de prazo. O prazo de cumprimento daquele tipo de tarefa ele traz.  É, que foi mais ou menos isso que eu tinha entendido ali. Aí, se é urgente ou não, é uma classificação nossa.
+
+1:03:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Baseado na data e no peso, não isso?
+
+1:03:19 - Dr. Thiago Correia
+  Baseado na...
+
+1:03:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque lá tinha como prioridade data, data era a maior prioridade que a gente tinha.
+
+1:03:26 - Dr. Thiago Correia
+  Sim, é porque tem classificações diferentes. Urgência, prioridade e complexidade, se eu não me engano. Sim, isso.
+
+1:03:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso.
+
+1:03:37 - Dr. Thiago Correia
+  Urgente é uma classificação mais humana mesmo. Pode ser que determinada tarefa nós sempre consideremos urgente. Tipo, a gente vai cadastrar aqui uma tarefa que é tarefa audiência aí, aí é urgente.  Todas as tarefas que forem classificadas desse tipo, sempre o sistema vai considerar como urgente. Na forma distinta. Porque sim, porque marcou que é urgente.  Ou então, essa tarefa sempre vai ser considerada como complexa. Então, o que eu tinha imaginado aqui nessa parte, por exemplo, é que quando a gente cadastra aqui os tipos de tarefas a serem distribuídas, tem as caixinhas.  Complexo, urgente, prioritário.
+
+1:04:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, que é aqui mais ou menos, só que ali no motor ele estava como um nível. É, é isso.
+
+1:04:29 - Dr. Thiago Correia
+  Eu fiz, eu deixei como, eu deixei dessa forma nível. Que é por causa dos pontos, né?
+
+1:04:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, isso.
+
+1:04:37 - Dr. Thiago Correia
+  É porque na hora que eu estava projetando, eu ia ter que criar mais uma variável, que era se ele era prioritário ou urgente.  E aí eu defini que o prioritário e urgente são só nomes visuais.
+
+1:04:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Para os níveis. Para os níveis. É, foi exatamente como eu meio que entendi, entendeu? Isso, isso é correto. Nível 2, mais de 30% é prioridade máxima.  esse percentual.
+
+1:05:00 - Dr. Thiago Correia
+  Então ele é para o peso que o sistema internamente com a contribuição dá, mas aqui apareceria para a gente como?  Apareceria aí o nomezinho, né? Prioritário ou urgente? Ok, regular, prioritário ou urgente nesse processo.
+
+1:05:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque mais de 30% é urgente, que é o nosso critério maior de avaliação, que é data e baseado na prioridade daquela determinada ação.
+
+1:05:21 - Dr. Thiago Correia
+  É, que não é o que tá isso aí, eu acho, a temporalidade. É, aqui é a temporalidade e aqui é a complexidade.  Complexidade tem isso mesmo, do nível 1 e nível 2, tem realmente isso. É se ele é uma complexidade baixa ou alta, que o nome é isso, uma complexidade baixa ou alta.  Eu só dei esse percentual diferente.
+
+1:05:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Para poder visualizar.
+
+1:05:47 - Dr. Thiago Correia
+  É número objetivo, mas...
+
+1:05:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui, eu lembro que tinha essa mesma parte de prioritário, então aqui é temporalidade.
+
+1:05:55 - Dr. Thiago Correia
+  que isso encaixe. Vamos descer nessa lição um segundo.
+
+1:05:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Obrigado. Perdão, pode ser, regular, normal, temporalidade, a vai ter prioritário ou urgente dentro desse processo. Isso aqui é para a gente criar um novo tipo de caso, um novo tipo de tarefa dentro do pró-júris, entendeu?  Na realidade, do nosso sistema que busca no pró-júris, tipo assim, qual é a base nova que eu tenho? Deixa eu botar aqui, audiência, trabalhista.  O código vai ser audiência, descrição, audiência. Isso daqui é só para a gente ter qual é o tipo de tarefa que o motor recebe, entendeu?  É que como eu não consegui puxar do pró-júris ainda, ele ainda não criou automaticamente, mas a ideia é ele criar automaticamente.
+
+1:07:00 - Dr. Thiago Correia
+  Caso surja uma nova tarefa lá dentro, a gente consegue criá-la aqui, para criar para um motor de distribuição, todas essas classificações de se é complexo, se é prioritário e tudo, é algo do motor para a distribuição, eu acho que fica mais fácil se aqui aparecer nessa lista de tarefas, todas as tarefas que estão registradas, e você só vai mudando pontos e complexidades, é isso que eu vou fazer.
+
+1:07:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, isso, porque essas informações não existem lá, né? Sim, não existe, só vai existir tipo assim, audiência, chamada de não sei o que, só vai existir o tipo do pró-júris, entendeu?  O que vai daqui para frente não tem lá no pró-júris. Sim. Só que para eu poder puxar, eu preciso da API funcionando, por isso que eu não consegui puxar.  Aí aqui também tem os temas, que ali tem um tipo de tarefa e o tema dentro desse processo. Então, qual é o tema?  Ah, o tema é trabalhista... Descrição, o motor do tema lá do Projuris, que é o tema que tem lá dentro, o multiplicador dentro disso, mesma coisa de temporalidade e se ele é ativo ou não ativo, isso é a frente do processo do tema do Projuris, porque tem a tarefa e tem o tema, do mesmo processo que a gente tem aqui.  Então a gente tem exceções, que é quando vai girar algum processo que seja duplicado, lembra que a gente falou sobre, ah, é duplicado, descarta, aí ele cai em alguns processos com exceções pendentes.  Aqui a gente tem o histórico, que é a quantidade de pessoas que foi distribuída de tarefas, quais são bloqueantes, não são bloqueantes, taxa de sucesso, e tudo isso eu vou estar integrado lá com o Projuris, né, então são os dados, como se fossem métricas dentro desse processo em relação à tarefa.  Aqui a gente tem os indicadores, que foi a questão que está lá dentro daquelas documentações, tá? Então, é a quantidade de tarefas, taxa de preferência, desvio de carga, média de produção, produção diária, letras por tipos, tudo está vinculado lá ao que a gente recebe do ProJuris e a gente trabalha dentro de uma questão de controladoria no processo de tarefas, que aí também a gente vai testar na hora que vier com aquela carga para você.  Aqui a gente tem o simulador, não tem como executar uma simulação porque a gente não tem dados reais dentro desse processo.  O é esse simulador? É uma simulação da tarefa, então é, recebi uma tarefa aqui, eu quero testar para ver se o motor está funcionando ou não está funcionando.  A gente utiliza esse simulador para esse processo. Aqui a gente tem a parte de relatórios, então a gente consegue trazer relatórios dentro desse processo e exportar ele como um modo TXT ou exportar em CSV para você conseguir ver quais são os dias, o total de tarefas que foram feitas, quais foram bloqueadas, quais não foram bloqueadas e tudo mais dentro de um processo como um relatório mesmo.  Que aí vai ser o terno daqui. Todos esses executores, o processo é a gente receber, classificar, ver se já existe com algum cliente, não existe nenhum cliente, a gente importa dentro do cliente, gera a tarefa, gerando a tarefa, a gente vai cair aqui e você vai poder aprovar para adicionar automaticamente no ProJuris na pessoa, que vai ser a controladora que vai aprovar para adicionar no ProJuris.  Aí ele já vai fazer essa integração automática de adicionar lá no ProJuris. Entendeu? Isso é a intenção? A tarefa fica vinculada ao executor lá dentro do ProJuris.  Então ele vai do início ao fim dentro desse processo. Aqui a gente tem uma configuração, que é a configuração em relação à base de dados.  Então aqui são as credenciais que a gente já configurou, só que aí provavelmente você deve ter mudado agora, vai alterar isso, mas eu já coloquei  Para que a gente consiga mudar depois, esse batch horário aqui é o horário que a gente vai ter a chamada no pró-júris, está 6 horas da manhã, que seria para a gente buscar do dia anterior, mas a tinha falado 10 horas, então eu já troquei as de 10 horas, então é o processo de 10 horas.  Modo de operação, a gente tem prioriza volume dentro do processo da quantidade, quanto é que prioriza controle dentro do processo da quantidade, então muda algumas coisas no sentido de solicitações.
+
+1:11:29 - Dr. Thiago Correia
+  O motor ali que vai alterar o motor. Isso.
+
+1:11:32 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então aqui a gente tem os últimos batchs e os alertas. Então aqui funciona o motor de distribuição. Como é que o motor de distribuição funciona?  Ele funciona via uma coisa que se chama Edge Function. O que é Edge Function? Edge Function é uma solicitação que acontece por meio do banco de dados, certo?  O banco de dados vai solicitar o na web, porque imagine que o pró-júris é um sistema na web e a gente está aqui dentro do nosso serviço.  Eu preciso ir até lá. e retornar via API. A gente funciona via Edge Function. O acontece? Edge Function tem uma limitação que a gente chama de memória.  Então, se ela bater uma limitação de memória, eu já fiz uma concordância, mas só para vocês entenderem como é que funciona o motor, que aí ele roda pelo N8N.  Conhece o N8N? Não.
+
+1:12:18 - Dr. Thiago Correia
+  O N8N é um sistema de automação de processos.
+
+1:12:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, ele serve para fazer justamente isso, conexões entre assistentes. Então, a gente já tem aqui os dados de processamento de orquestradores.  Então, eu coloquei para ser 22 horas. Então, todo dia, 22 horas, ele vai lá, chama aquela Edge Function que eu falei, certo?  Passando as informações dentro desse processo, busca essas informações e traz para nós quais são as tarefas daquele dia. Ele vai pegar 22 horas do dia.  Porque amanhã, quando o Dr. Thiago chegar, vai ter quais foram as tarefas buscadas do dia anterior. Lembra que a gente tinha combinado assim para ser do dia anterior?  Tchau. Então ele vai buscar do dia anterior, e aí quem for da controladoria, quando cair aqui, vai cair aqui no sistema, vai vir no painel, vai vir aqui, eita, as tarefas de ontem são essas, porque ontem, 10 horas da noite, rodou e puxou todas as tarefas, entendeu?
+
+1:13:15 - Dr. Thiago Correia
+  Entendi. Deixa eu ver aqui. Então ali naquela abinha, exceções, ficariam quais as dessas que estavam ali listadas no painel que foram desconsideradas?  Isso. E onde que a pessoa, onde que vai aparecer a opção, tipo assim, quando rodou no motor, ficou essas tarefas para serem distribuídas para tal pessoa?  Fica aqui em executores.
+
+1:13:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na verdade ele vai ficar na lista aqui, para você poder aprovar dentro do status, entendeu? Porque está vendo que ele tem um status aqui?  Executores é a criação. A lista vai ter a tarefa que veio, qual é o processo, para quem o motor indica, que o motor vai indicar automaticamente, né?  Qual é o fluxo, qual é a data final, a quantidade de... Os para a gente ter aquele processo, se ele é urgente ou não urgente, e o status, aí no status ela vai poder aprovar, editar ou rejeitar.
+
+1:14:09 - Dr. Thiago Correia
+  Os pontos não é só para a questão de urgência, ele é para a questão de peso ou de dificuldade.
+
+1:14:15 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, de peso da dificuldade da tarefa, na hora de ele mudar para o executor, porque não tem lá o executor que é especialista, executor que é específico daquela determinada tarefa quando ela é urgente, aí é para ele poder identificar quem é o executor com mais nos pontos.  Eu tenho aqui o motor, vou pegar ele aqui. Aqui ó. Ajusta o controlador e pega o motor. Aqui tem o  Então, dentro da fila, deixa eu pegar aqui o MD, aqui ele congela os parâmetros vigentes, que são as que são idênticos, né, aí vai congelar dentro desse processo, ele valida a entrada, calcula a pontuação final, vendo?  Aí define a data base limite, modo, média geral e calendário operacional, reordena cronologicamente as tarefas pelas datas definidas. Então, existe regra absoluta, processo, tema, tarefa, grava, responsável, data, pontos, fluxo e alerta, atualizando o saldo e agenda, que é o que a gente vai fazer lá para poder ele aprovar dentro daquele processo.  Então, não reorganiza, aplica a fila correspondente, complexa ou geral dentro desse processo, aplica preferencialmente apenas se o executor estiver entre os dois primeiros.  Como eu falei, ele tem uma regra de hierarquia por pessoa dentro daquilo.
+
+1:15:57 - Dr. Thiago Correia
+  E assim, tem um ponto. E aí Amém. Para tentar deixar para quem já trabalhou com esse processo.
+
+1:16:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exatamente, quem já é daquele determinado processo, ele consegue pegar a base. Aqui, está vendo? Princípios obrigatórios. A primeira coisa é a data, está vendo?  Data é o modo preferencial, então a data é definida antes do responsável, exceto pelo fato de regras absolutas que já identificam previamente quem deveria executar.  Como eu falei, pelo motor aqui tem regras que são de pessoas específicas, só que eu não tenho ainda essas pessoas, porque eu não tenho os IDs lá, então a gente vai ter que datar isso e data.  Esses são os dois primeiros processos que é importante dentro do motor. Depois a gente vem no processamento diário único, o lote é processado uma vez por dia, utilizando um retrato fixo dos parâmetros unidos da execução, que é aquilo que a gente falou.
+
+1:16:55 - Dr. Thiago Correia
+  As regras absolutas, por exemplo, elas são definidas por tema e... E aí vinculada a uma pessoa, não é isso?
+
+1:17:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim. Porque ela é dona daquele tema, entre aspas. Ela é da regra absoluta daquele tema. Só que para isso a gente tem que puxar lá do pró-júris para eu conseguir identificar como é que é, entendeu?  A informação não existe lá, a gente vai preencher aqui.
+
+1:17:19 - Dr. Thiago Correia
+  Lá só vai puxar qual é a pessoa que exige os temas. Qual é a pessoa que existe.
+
+1:17:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, exato. A gente vai montar aqui a estrutura, mas aí eu preciso, por exemplo, começar a montar aqui os executores.  Então eu preciso saber qual é ID do pró-júris do executor e qual é o peso que ele tem dentro disso e se ele é elegível na fila complexa ou não.  A gente pode até colocar aqui, se ele é, marcar aqui temas deste determinado executor, por exemplo, para ele colocar dentro da...  Porque como ele vai entrar na fila complexa, eu preciso dizer qual é o tema da fila complexa que ele faz parte, né?  Então eu adicionaria aqui quais são os temas, por exemplo.
+
+1:17:57 - Dr. Thiago Correia
+  É... É porque essa parte é um pouquinho complexa. Acho que faz sentido puxar esse negócio de tema para... Para a fila complexa, né?  Para a paginazinha do executor aí. Que aí mata uma outra opção que tem ali, que é outra opção, que é o tema.  Puxa onde está ali o tema aqui no seu sistema aqui?
+
+1:18:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim. Puxa os temas daqui, né? Puxa essa...
+
+1:18:29 - Dr. Thiago Correia
+  Para o executor.
+
+1:18:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí o executor é vinculado a um tema. É, não, mas aí é o pior que tem as coisas que são do tema, né?
+
+1:18:35 - Dr. Thiago Correia
+  Se aquele tema é complexo por si só...
+
+1:18:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, tem algumas complexidades, entendeu? Por isso que eu acho que quando a gente tiver o pró-júris, é que a gente vai ver como é que a gente recebe a carga, porque eu ainda não consegui ver como é que eu recebo a carga.  Recebendo a carga, aí eu vou conseguir separar temas, separar tipos de tarefa, mas assim, o motor em si, ele já está criado aqui dentro dessa complexidade.  Só que a gente precisa dos dados...
+
+1:19:00 - Dr. Thiago Correia
+  Eu só faria algumas alterações aqui, mas eu te trazer essa questão de executor, tipo tarefa, tema, isso aqui são questões de configuração do próprio sistema, então eu jogaria para dentro daquela questão ali de configuração.  Tá, entendi.
+
+1:19:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas é porque executor seria executores, seria os funcionários que recebem as tarefas.
+
+1:19:25 - Dr. Thiago Correia
+  Isso, só que assim, é que esses executores vão mudar conforme o... a realidade, né? Então precisa ser ajustável, só que na verdade isso é ajustável ali na configuração, e todo dia a pessoa vai chegar, a cada seis meses tem que mudar quem são os executores, uma regra ou outra, mas lá na configuração a pessoa chega e faz.  Mas no dia a dia ela vai chegar, olhar qual é a lista de tarefas a serem distribuídas, para quem o sistema passou o que, e falar se concorda ou não.  Sim. Entendeu? Inclusive eu acho que tinha que ter uma... A distribuição tem três momentos. A primeira que é a identificação do que vai ser distribuído, que eu acho que está aí como painel, não tem nenhuma regra, a única regra aí é o que tem repetido, ele exclui o que é repetido.
+
+1:20:24 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí ele vai cair na lista aqui, os que não são repetidos.
+
+1:20:28 - Dr. Thiago Correia
+  Isso, isso. Então, eu acho que nem precisa ser duas aí, assim, o painel e a lista. O sistema sozinho puxa e apresenta, são esses processos que têm que ser vistos.  Aí as opçõezinhas que apareceriam aqui em status, até para você já conseguir projetar dessa forma, seria distribuir tarefa, não distribuir, eu acho que no ProUris eles chamam de arquivar isso, mas aí quando você puxar lá, você vai ver como que é, é tipo assim, vi e não vou fazer nada.  Vai ser opção significa isso, vi e não vou fazer nada. Está aqui o processo, eu vi que tem uma intimação sobre isso, abri, mas essa intimação não é para a gente, é para outra parte, não tenho que fazer nada.  Então, eu acho que no ProUr se chama de arquivar, mas depende de como vai estar lá que você vai ver na API.  E a outra opção seria distribuir uma tarefa sobre isso, que aí vai aparecer...
+
+1:21:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  vincular o executor.
+
+1:21:23 - Dr. Thiago Correia
+  Ainda não, porque quem vai vincular o executor depois, quando o motor rodar, para quem vai? Qual é a data, para quem vai?
+
+1:21:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque eu pensei aqui no sentido de que ele tem duas opções, ou ele joga para a fila automaticamente pelo motor, ou ele pode vincular uma pessoa específica, porque você tinha me dito isso mais ou menos, que em alguns casos ele pode vincular uma pessoa específica, a controladoria, por exemplo.
+
+1:21:44 - Dr. Thiago Correia
+  Pode, mas deixa eu te mostrar aqui como é esse fluxo, para você entender. Eu sou a Nicole, eu sou a controller aqui, eu chego hoje, aí eu vou abrir essa opção aqui de intimações do ProUris, eu venho aqui para...  Processos, intimações, tudo que o sistema puxou, que foi intimação para a gente. E ela vai chegar aqui e vai ver assim, quais eu ainda não vi.  Aí ela vai abrir esse, aí ela vai pegar esse processo aqui que o sistema puxou, vai abrir lá o sistema, é bom te mostrar, dá um minutinho, só para você.  Ela vai abrir lá o site do tribunal, ver o que tem naquele processo que o sistema puxou a intimação, né, e vai decidir, pô, esse processo, e aí é uma decisão humana, né, isso aqui, isso aqui é humano, não tem jeito, é olhar e falar, pô, esse processo aqui eu tenho, eu vi que está de tal jeito, eu tenho que fazer não sei o quê.  Ela avaliou juridicamente e decidiu que vai ser feito um recurso nesse processo. Ela vai dar baixa nessa intimação aqui, provavelmente eu acho que é essa informação, a de arquivado, então ela já viu esse, entendeu, ela arquiva aqui, amanhã ela não vê esse de novo, essa mesma intimação.  Vai lá em cadastrar tarefa. E ela vai colocar isso vinculado a um processo, vinculado a qual é a tarefa, aí ela vai vincular aqui uma apelação, apelação, Thiago Correia, aí ela, quem vai executar?
+
+1:23:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, aí tudo isso vai selecionar lá pelo painel, só que o próprio motor já vai trazer meio que para ela pré-definido quem é a pessoa que o motor acha que é, aí ela ou vai aprovar ou vai editar a pessoa, não isso?
+
+1:23:45 - Dr. Thiago Correia
+  Isso, aí aqui essa data fatal é a data lá, que é a data processual que o próprio Ayuri sugeriu, isso aqui não foi o que eu plantei, ele mesmo sugeriu, então é a data fatal de recurso disso aqui, só que aí o motor...  O onde ele atua é, a primeira parte do motor, que é a lista, é ele substituir essa tela, que é onde tem todas as intimações.
+
+1:24:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  você busca e vai passar para as pessoas, que é isso que a gente vai fazer com o ProIuris. Todo dia, 10 horas, a gente vai bater aí e vai buscar essa lista.  Dos últimos, do dia anterior. Exato.
+
+1:24:22 - Dr. Thiago Correia
+  Todos que sejam do dia anterior. Isso. Aí, eu fiquei pensando depois, como é que a gente faz isso do dia anterior, no sentido de, e é sábado, e é domingo, sabe?  Eu acho que a primeira tela, então, seria essa lista, é meio que a pessoa seleciona de quais dias ela quer puxar, entendeu?
+
+1:24:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Entendi, mas aí a gente vai ter que fazer ao contrário. Que para a pessoa poder puxar de quais dias ela quer puxar, eu não posso fazer...  Eu vou puxar todo dia, armazenar no banco, e aí vocês escolhem lá quais são os dias que vocês querem.  Só não vou puxar dessa forma. Vocês vão selecionar isso por dentro do banco de dados de vocês, entendeu? Você não consegue saber qual foi o último dia que ele puxou?
+
+1:25:23 - Dr. Thiago Correia
+  Consegue. É, eu acho que facilita, porque, por exemplo, se na... Hoje é sábado. Porque aqui a gente tem... que ele puxou de ontem, ele pode domingo puxar o sábado.  Aqui no painel a gente tem a data, entendeu?
+
+1:25:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui, ó.
+
+1:25:39 - Dr. Thiago Correia
+  Aqui no painel a gente tem a data.
+
+1:25:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, tá vendo aqui, 29 do 7, que foi o dia que foi puxado. dia 30 do 7. Ah, eu quero puxar do dia 22.  Ah, eu quero puxar do dia 24. Me mostra o que que ele puxou. Isso, daquela data. Aí eu posso colocar, por exemplo, eu quero puxar do dia 22 ao dia 24.  Aí ele traz tudo do dia 22 ao 29, porque o nosso sistema, o motor no caso, ele vai estar puxando todo dia, só que ele puxa e armazena, puxa e armazena, puxa e armazena, puxa e armazena, aí vocês depois vão lá e olham, entendeu?
+
+1:26:17 - Dr. Thiago Correia
+  Entendi, entendi, show, então.
+
+1:26:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A questão bate numa coisa que se chama rate limit, que é tipo, a API diz assim, toda hora tu tá vindo aqui e me requisitando uma coisa que você poderia requisitar uma vez por dia, entendeu?  Entendeu? Eu vou te barrar, aí ele me barra. Tranquilo.
+
+1:26:31 - Dr. Thiago Correia
+  Então, nessa primeira tela aqui, onde mostra esse painel aqui do que puxou, eu acho que isso aqui seria, tá mais no sentido de que é o histórico de tudo.  Isso.
+
+1:26:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exato. E a lista seria as tarefas pendentes baseadas no motor, entendeu? É, é aí que eu acho que a gente precisa mudar, então.
+
+1:26:53 - Dr. Thiago Correia
+  Nessa parte aí de lista, não vai ficar ainda quem é o executor e etc. Porque nessa parte... parte de lista é onde está aqui no meu hoje, é essa tela que eu estou aqui no ProIuris, só que onde que o sistema ajuda aqui?  Essa parte lista seria a substituição disso aqui, só que sem os repetidos, seria a substituição disso aqui, só, entendeu?  Não precisa ainda ter a distribuição, por quê? Porque essa tela vai ser onde a pessoa vai vir, pegar o que que tem, abrir o processo e decidir, e aí no final, o botãozinho ali é arquivar ou distribuir tarefa, aí a pessoa vai selecionar qual é a tarefa que vai ser distribuída, ainda humanamente, vou distribuir ou não agravo.  Tá, porque primeiro ela tem que ler para conseguir distribuir. Que é onde depois talvez um olhar possa fazer, mas hoje ainda vai ser humano, né?  Então ela vai olhar o processo, ver se vai ser feito alguma coisa e o que vai ser feito. Tá.
+
+1:28:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então estou começando a entender um pouco mais, então assim, com base no tipo de tarefa, porque por exemplo, agravo, digamos que seja uma tarefa de 15 pontos e ela não é prioridade, já uma petição, por exemplo, é uma tarefa com uma prioridade maior, e aí ela entra numa outra fila do motor.  É, é sempre, sempre, o que é a pessoa que vai dizer assim, motor, escolha uma pessoa com base nesta tarefa.  Exato.
+
+1:28:32 - Dr. Thiago Correia
+  Ok, entendi. E aí quando está cadastrando a tarefa, o sistema que tem a informação do processo, não tem?
+
+1:28:38 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tem. Aqui no Criores.
+
+1:28:39 - Dr. Thiago Correia
+  Então ele sabe de qual é o tema do processo, que é outra coisa que entra nas regras de distribuição, tal tema às vezes passa tal coisa.  Se for um tema X, vai exclusivamente para uma pessoa tal. Então, essa informação está dentro das informações do processo aqui no ProIures.  Quando eu abro aqui, ó. Opa. Quando eu abro a página do processo, eu tenho as informações já registradas no Proiuris, aí eu não sei se a gente depois...  Vamos tentar puxar.
+
+1:29:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu preciso começar a puxar primeiro para eu conseguir ver, porque a minha intenção é que a gente consiga vincular tudo do Proiuris nos contratos do cliente.  Eu não tenho o caso do cliente e o caso do cliente não está no Proiuris, por exemplo, se for um caso que foi para o lado jurídico no caso.  Sempre que cair, por exemplo, caiu a petição aqui no painel, a primeira coisa que eu vou fazer é quem é o cliente que é dono desse contrato, desse processo?  Esse cliente aqui, beleza. Atualize esse cliente aqui, entendeu? Adiciona que saiu uma nova petição para ele para aparecer lá nos dados, que saiu alguma coisa.  vai ser um vínculo mesmo entre os dois sistemas, entendeu? Sim.
+
+1:29:55 - Dr. Thiago Correia
+  Aí aquela informação de coletivo ou individual, isso é uma... marcador que a gente coloca aqui. Se tem um caso complexo ou não, é um marcador que a gente coloca aqui.  O tema que a gente chama vai estar aqui nesse assunto. Tem uns campinhos que o sistema pode usar para identificar, mas, enfim, nessa primeira tela chegou, pessoa olhou e decidiu qual tarefa vai ser feita vinculada àquele processo.  Aí, nesse momento, a pessoa tem ali as informações, tipo, vamos supor que ali no tema tem o tema 1%, nos seus temas, né?  Tem o tema 1% ali no motor e que ele está marcado que aquilo é complexo. Tudo que foi envolto daquele tema é complexo.  Quando essa pessoa clicar em distribuir tarefa, o sistema já sabe que é complexo na hora de fazer a regra de distribuição, porque tudo daquele tema é complexo.  E ele tem a informação do tema pelo processo, pelo número de processo aqui do registro.
+
+1:30:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Entendi. Deu que eu pegar? Só que vai ter o...
+
+1:31:04 - Dr. Thiago Correia
+  Abre a sua tela aí, eu acho que agora é na sua. Então, aqui no painel vai cair todos daquela data.
+
+1:31:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Em lista, eu já eliminei os que são duplicados, certo? Está só aqui o que é para ser distribuído ou arquivado, por exemplo.  São casos daquele determinado processo. Então, eu, como usuário da controladoria, vou abrir esse caso, vou ler o caso, li o caso.  Beleza, vi que esse caso, por exemplo, quem vai resolver é a pessoa que é do setor, de acordo com o tema, por exemplo.  O tema, como a gente viu ali, é a ascensão, é? É, concessão. É, é, é, o que é que seria?
+
+1:32:00 - Dr. Thiago Correia
+  Tem as... As frentes, né, digamos? Como é que chama aqui os nomes aqui, as... Pipelines? Não, isso aqui que tá aqui, Tarefa, Processos...  Ah, sim, é os menus. Não, aqui, onde tá aqui, zero distribuição de contrato, tarefa. Ah, ok, ok, as colunas.
+
+1:32:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, as colunas.
+
+1:32:19 - Dr. Thiago Correia
+  As colunas aqui seria Número do Processo. Ok.
+
+1:32:24 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Seitar aqui o processo, no caso, né?
+
+1:32:26 - Dr. Thiago Correia
+  Isso, seria data final. Ok. Mata esse executor, porque não é nessa fase ainda, ela é numa fase prós.
+
+1:32:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  distribuir, o motor vai decidir pra quem vai. Fluxo também tá fora nesse processo agora inicial. Fluxo Pontos até eu acho que pode entrar, né, porque assim, com base no tema...
+
+1:32:48 - Dr. Thiago Correia
+  motor ainda vai calcular os pontos depois dessa tela, que é o quê? Aqui, aí ficaria outra coluna que é complexo, urgente...  Aí seria o cliente, prioritário, o complexo seria nível 1, 2, os parâmetros que o sistema usa, como uma caixinha mesmo, múltipla escolha, para a pessoa marcar, e a última coisinha é o botão de distribuir, distribuir, distribuir ou arquivar, por exemplo, nesse processo, né?
+
+1:33:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso.
+
+1:33:22 - Dr. Thiago Correia
+  Aí, se distribuir, ela vai decidir qual é o tipo de tarefa que vai ser passada. Aí, depois disso, tem essa terceira tela, que é o resultado do motor para aquelas tarefas que se clicou em distribuir.  Tá. Entendeu?
+
+1:33:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ficaria aqui, por exemplo, no indicadores, talvez. Eu acho que seria... Ou a gente poderia colocar motor mesmo, assim, alguma coisa do tipo assim.  Eu acho que... Distribuição de tarefas. Porque, além do momento que... Isso. Além do momento que ele distribui a tarefa, a tarefa só vai para o executor depois que ele...  A aprova ainda, não é isso? Porque o motor vai girar, ela vai analisar e vai dizer, eita, essa tarefa aqui não era do Thiago, era para o Matheus, por exemplo.  Aí ela vai lá e pode selecionar para mudar para o Matheus, por exemplo. Ou ela pode só aprovar aquilo e passar para ele automaticamente.
+
+1:34:16 - Dr. Thiago Correia
+  E é quando ele vai lá e cria no Proiuris, que aí isso vai para o histórico. Então, como que eu acho que essa...
+
+1:34:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente vai ter que ter mais uma parte aqui, que seria essa parte da distribuição, por exemplo, o nome distribuição.  Isso. Então, como é que eu acho que seriam esses menus aqui?
+
+1:34:33 - Dr. Thiago Correia
+  O painel ali está bom do jeito que está. Eu, se tivesse como a gente pegar esses exceções e unificar nesse mesmo menu, isso é só um botãozinho, mostrar repetidos, não mostrar.  Tá. Mata um menu aí, né? Aí ali onde está a lista seria tarefas para distribuir. Ok.
+
+1:34:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tarefas a distribuir, né? O terceiro menu seria...
+
+1:35:01 - Dr. Thiago Correia
+  É pendente, confirmação, tipo aquilo que rodou no sistema e precisa confirmar. Tá. Um quarto menu é o histórico. Histórico de tarefas, né?  Não preocuparia agora com indicadores, essas coisas.
+
+1:35:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente poderia matar esse tipo de tarefa entrar em configuração, sistemas, configuração, executores, configuração, simulador. Pode deixar aqui também para a gente usar como um teste, né?  Que seria a parte de É, o simulador é mais para rodar aí alguns testes. Diminuir um pouquinho aqui essa quantidade.  Ficaria então só histórico, lista, que na realidade não seria mais lista, seria tarefas a serem distribuídas, distribuição, barra aprovação.  A gente também pode botar aprovação, por exemplo, porque ele já foi para a base de aprovação, né? Agora vai ser aprovação.  Então, aprovação, painel que vai mostrar todos os que foram recebidos. Tanto no dia quanto num processo de datas, de tal data, tal data, por exemplo, para a gente ter uma base histórica aqui, e o histórico.  E aí o resto tudo entra em configuração, agora de início, né? É, eu acho que depois a gente pode botar um só, por exemplo, que seria acompanhamento, por exemplo, para poder ver como é que está sendo o acompanhamento da tarefa, se estão sendo feitas, não estão sendo feitas.  E como todo dia a gente vai puxar no ProJuris, pode ser que às vezes ele caia lá e seja relacionado àquela tarefa que já foi criada, por exemplo.
+
+1:36:33 - Dr. Thiago Correia
+  Para essa questão de simulador, é mais para validação ali durante o período de testes, né? Aí talvez fique melhor para vocês, se a gente pegar aqui e criar um caso no ProJuris, vinculando um processo aqui meu, qualquer, e aí vocês podem ficar futucando à vontade, assim, de gerar a tarefa que for.  É isso que eu preciso fazer mesmo. Depois que a gente tiver a APNI consertada aí, aí a gente vê, vinculando um processo qualquer, que é que vocês...  Pode atacar coisa aí para ver como é que funciona na parte. Tá, beleza.
+
+1:37:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É isso. Mas aí eu já consegui entender aqui, já dá para a gente começar a montar o processo. Então, eu vou aproveitar essa semana, provavelmente a gente não vai conseguir marcar com o Iago, porque tem algumas coisas para a ajeitar aqui dentro desse processo, eu preciso do ProIuris.  Se você conseguir ver com eles aí essa questão, eu acho que você vai ter que pedir para eles a autorização, tá?  vou falar que você pode ter isso aqui, pode já. Só que aí a gente... Tá bom, beleza. Beleza, a gente puxa e aí, enquanto isso, eu e o Matheus vamos progredindo aqui nessas outras partes e você me mandando o ProIuris, eu consigo começar a testar lá diretamente.  Mas eu consegui entender como é que funciona.
+
+1:37:36 - Dr. Thiago Correia
+  E aí da parte do Operacional tem mais só aquela questão ali dos campos e aí a gente começa a trazer o...
+
+1:37:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pronto. Fechado. Então, aí pegando o ProIuris, ainda essa semana a gente tenta trocar uma ideia ou na segunda-feira a gente já troca uma ideia com isso já pré-definido.
+
+1:37:53 - Dr. Thiago Correia
+  Beleza, então. Beleza, então.
+
+1:37:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só vou precisar de um tempinho para poder ajustar o ProIuris ali, aí é o tempo que eu consigo até na segunda-feira.  Tchau. Combinado, então, gente.
+
+1:38:01 - Dr. Thiago Correia
+  Valeu. Valeu, Thiago. Obrigadão, viu?
+
+1:38:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Valeu. É agora, às quatro horas. Eu não vou pro dedo dos pais, vou pra festinha. E aí, beleza? Beleza, valeu.

@@ -496,6 +496,17 @@ export function buildAutoFillFromClient(
   for (const [k, v] of Object.entries(canonRaw)) {
     if (typeof v === "string" && v) canonical[k] = v;
     else if (typeof v === "number") canonical[k] = String(v);
+    // 2026-07-29 — boolean (Sim/Não) e ARRAY (múltipla escolha / múltiplas
+    // ocorrências #6) também alimentam os placeholders do Word; antes eram
+    // silenciosamente descartados. Array vira lista "a, b, c".
+    else if (typeof v === "boolean") canonical[k] = v ? "Sim" : "Não";
+    else if (Array.isArray(v)) {
+      const joined = v
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .join(", ");
+      if (joined) canonical[k] = joined;
+    }
   }
 
   // R5-06 (A2) — expõe os campos FIES também sob RÓTULO amigável, para casar com
@@ -696,6 +707,14 @@ export function buildAutoFillFromClient(
     if (typeof v === "string" && v) canonical[k] = v;
     else if (typeof v === "number") canonical[k] = String(v);
     else if (typeof v === "boolean") canonical[k] = v ? "Sim" : "Não";
+    // Campo de tema scope='cliente' com múltipla escolha/ocorrências → array.
+    else if (Array.isArray(v)) {
+      const joined = v
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .join(", ");
+      if (joined) canonical[k] = joined;
+    }
   }
 
   return {

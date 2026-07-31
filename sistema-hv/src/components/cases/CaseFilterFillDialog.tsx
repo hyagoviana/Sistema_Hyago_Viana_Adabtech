@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useCasesList, useUpdateCaseCanonicalFields } from "@/hooks/useCases";
+import { useClient, useUpdateClientCustomFields } from "@/hooks/useClients";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 
 type SiblingCase = {
@@ -70,6 +71,15 @@ export function CaseFilterFillDialog({
   const { data: defsData, isLoading } = useTemaFieldDefs(temaId ?? null, frenteSlug ?? null);
   const defs = (defsData as TemaFieldDef[] | undefined) ?? [];
   const updateMut = useUpdateCaseCanonicalFields();
+  const updateClientMut = useUpdateClientCustomFields();
+  // #3 — custom_fields do cliente, para PRÉ-CARREGAR os campos scope='cliente'.
+  const { data: clienteData } = useClient(clientId ?? "");
+  const clientCf = useMemo(
+    () =>
+      ((clienteData as { custom_fields?: Record<string, unknown> | null } | undefined)
+        ?.custom_fields ?? {}) as Record<string, unknown>,
+    [clienteData],
+  );
 
   // Casos do mesmo cliente NESTE tema (seletor) — inclui leads/aguardando, não só
   // os assinados. Escopo por cliente (cache); o seletor só usa isto quando
@@ -102,21 +112,31 @@ export function CaseFilterFillDialog({
       selectedCaseId === caseId
         ? (initialValues ?? selectedCase?.canonical_fields ?? null)
         : (selectedCase?.canonical_fields ?? null);
-    setValues({ ...((canon as Record<string, unknown>) ?? {}) });
+    // #3 — campos scope='cliente' vêm do cliente; os do caso, do canonical. Sem
+    // colisão de chave (def única por tema), o merge preserva cada fonte.
+    setValues({ ...clientCf, ...((canon as Record<string, unknown>) ?? {}) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, selectedCaseId, selectedCase]);
+  }, [open, selectedCaseId, selectedCase, clientCf]);
 
   // Sem filtros customizados no tema → nada a preencher: fecha sozinho.
   useEffect(() => {
     if (open && !isLoading && defs.length === 0) onOpenChange(false);
   }, [open, isLoading, defs.length, onOpenChange]);
 
-  async function save(key: string, v: string | number | boolean | string[] | null) {
-    setValues((s) => ({ ...s, [key]: v }));
+  async function save(def: TemaFieldDef, v: string | number | boolean | string[] | null) {
+    setValues((s) => ({ ...s, [def.key]: v }));
     try {
-      await updateMut.mutateAsync({ id: selectedCaseId, patch: { [key]: v } });
+      if (def.scope === "cliente") {
+        if (!clientId) {
+          toast.error("Caso sem cliente vinculado — não dá para salvar campo do cliente.");
+          return;
+        }
+        await updateClientMut.mutateAsync({ id: clientId, patch: { [def.key]: v } });
+      } else {
+        await updateMut.mutateAsync({ id: selectedCaseId, patch: { [def.key]: v } });
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar filtro");
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar campo");
     }
   }
 
@@ -128,10 +148,10 @@ export function CaseFilterFillDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Preencher filtros do tema</DialogTitle>
+          <DialogTitle>Preencher campos do tema</DialogTitle>
           <DialogDescription>
-            Opcional — preencha os filtros deste caso (pode deixar em branco). Eles alimentam a
-            visualização em lista do tema.
+            Opcional — preencha os campos deste caso (pode deixar em branco). Eles alimentam a busca
+            e a visualização em lista do tema.
           </DialogDescription>
         </DialogHeader>
 
@@ -163,7 +183,7 @@ export function CaseFilterFillDialog({
 
         {isLoading ? (
           <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-            <Loader2 size={14} className="animate-spin" /> Carregando filtros…
+            <Loader2 size={14} className="animate-spin" /> Carregando campos…
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -175,8 +195,8 @@ export function CaseFilterFillDialog({
                 def={def}
                 value={values[def.key]}
                 canEdit
-                disabled={updateMut.isPending}
-                onSave={(v) => save(def.key, v)}
+                disabled={updateMut.isPending || updateClientMut.isPending}
+                onSave={(v) => save(def, v)}
               />
             ))}
           </div>

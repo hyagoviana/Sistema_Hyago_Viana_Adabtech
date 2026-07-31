@@ -48,6 +48,8 @@ async function handleAdmin<T>(fn: () => Promise<T>): Promise<T> {
 
 const fieldTypeSchema = z.enum(TEMA_FIELD_TYPES);
 const optionsSchema = z.array(z.string()).nullish();
+const scopeSchema = z.enum(["caso", "cliente"]);
+const maxOccSchema = z.number().int().min(1).max(20);
 
 // Leitura para a FICHA do caso: defs do tema (frente NULL) + da frente do caso.
 export const listTemaFieldDefsFn = createServerFn({ method: "GET" })
@@ -90,6 +92,9 @@ export const createTemaFieldDefFn = createServerFn({ method: "POST" })
         options: optionsSchema,
         ordem: z.number().optional(),
         required: z.boolean().optional(),
+        scope: scopeSchema.optional(),
+        hiddenInList: z.boolean().optional(),
+        maxOccurrences: maxOccSchema.optional(),
       })
       .parse(d),
   )
@@ -107,6 +112,9 @@ export const updateTemaFieldDefFn = createServerFn({ method: "POST" })
           ordem: z.number().optional(),
           required: z.boolean().optional(),
           active: z.boolean().optional(),
+          scope: scopeSchema.optional(),
+          hiddenInList: z.boolean().optional(),
+          maxOccurrences: maxOccSchema.optional(),
         }),
       })
       .parse(d),

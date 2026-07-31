@@ -7,9 +7,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { CanonicalMultiSelect, toStringArray } from "@/components/cases/CanonicalMultiSelect";
+import { CanonicalMultiSelect } from "@/components/cases/CanonicalMultiSelect";
 import { useUpdateCaseCanonicalFields } from "@/hooks/useCases";
 import type { TemaFieldDef } from "@/hooks/useTemaFieldDefs";
+import { formatTemaFieldValue } from "@/lib/cases/tema-field-value";
 import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 const cellSelect =
@@ -47,23 +48,10 @@ export function InlineCanonicalCell({
   const strValue = value === null || value === undefined ? "" : String(value);
 
   if (!canEdit) {
-    // Só leitura: mostra o valor formatado.
-    if (def.type === "boolean")
-      return (
-        <span>
-          {value === true || value === "true"
-            ? "Sim"
-            : value === false || value === "false"
-              ? "Não"
-              : "—"}
-        </span>
-      );
-    if (def.type === "multiselect") {
-      const arr = toStringArray(value);
-      return <span>{arr.length ? arr.join(", ") : "—"}</span>;
-    }
-    if (def.type === "money") return <span>{centavosToMask(value) || "—"}</span>;
-    return <span>{strValue || "—"}</span>;
+    // Só leitura (padrão da Lista, 2026-07-29 #4): reflete o valor da ficha; a
+    // edição é só na ficha do caso. Formatação central cobre boolean/multiselect/
+    // money/múltiplas ocorrências.
+    return <span>{formatTemaFieldValue(def, value)}</span>;
   }
 
   if (def.type === "multiselect") {

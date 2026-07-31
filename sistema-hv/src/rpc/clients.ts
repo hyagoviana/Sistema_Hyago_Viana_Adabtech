@@ -13,6 +13,7 @@ import {
   resyncClientDriveFolder,
   tornarCliente,
   updateClient,
+  updateClientCustomFields,
 } from "@/lib/clients-service";
 import { checkEmailDeliverability } from "@/lib/email-verify";
 import { AuthError, requireAnyModule, requireAuth } from "@/lib/supabase/auth-guard";
@@ -99,6 +100,21 @@ const updateInputSchema = z.object({
 export const updateClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
   .handler(async ({ data }) => handleWrite(() => updateClient(data.id, data.input)));
+
+// Campos personalizados do cliente (JSONB) — usado pelos campos de TEMA com
+// scope='cliente' (2026-07-29 #3). Merge por chave; null remove. Mesmo gate de
+// cadastro (comercial/operacional edit) do updateClient.
+const clientCustomFieldsSchema = z.object({
+  id: z.string().uuid("ID inválido"),
+  patch: z.record(
+    z.string(),
+    z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]),
+  ),
+});
+
+export const updateClientCustomFieldsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => clientCustomFieldsSchema.parse(data))
+  .handler(async ({ data }) => handleWrite(() => updateClientCustomFields(data.id, data.patch)));
 
 // HARD-DELETE — exclusão PERMANENTE do cliente e de tudo que depende dele
 // (casos + filhos, docs, notas, consentimentos). Substitui o antigo soft-delete.

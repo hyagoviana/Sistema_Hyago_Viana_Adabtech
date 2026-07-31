@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/select";
 import { CanonicalMultiSelect } from "@/components/cases/CanonicalMultiSelect";
 import { useUpdateCaseCanonicalFields } from "@/hooks/useCases";
+import { useUpdateClientCustomFields } from "@/hooks/useClients";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { FIES_FIELD_KEYS } from "@/lib/cases/fies-fields";
 import { VINCULO_FIELD_KEYS } from "@/lib/cases/vinculo-fields";
+import { isMultiOccurrence, occurrencesToSlots } from "@/lib/cases/tema-field-value";
 import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 // Bloco "Dados do serviço" — campos canônicos do CASO (ex.: nº FIES).
@@ -39,14 +41,20 @@ export function CaseCanonicalFields({
   canEdit,
   temaId,
   frenteSlug,
+  clientId,
+  clientCustomFields,
 }: {
   caseId: string;
   canonicalFields: Record<string, unknown> | null | undefined;
   canEdit: boolean;
   temaId?: string | null;
   frenteSlug?: string | null;
+  // 2026-07-29 #3 — cliente do caso + seus custom_fields, para campos scope='cliente'.
+  clientId?: string | null;
+  clientCustomFields?: Record<string, unknown> | null;
 }) {
   const updateMut = useUpdateCaseCanonicalFields();
+  const updateClientMut = useUpdateClientCustomFields();
   // R2-07 — defs do tema+frente (só quando o caso tem tema).
   const { data: defsData } = useTemaFieldDefs(temaId ?? null, frenteSlug ?? null);
   const defs = (defsData as TemaFieldDef[] | undefined) ?? [];
@@ -66,12 +74,32 @@ export function CaseCanonicalFields({
   // valores já gravados.
   const freeEntries = Object.entries(cf).filter(([k]) => !structuredKeys.has(k) && !defKeys.has(k));
 
+  const clientCf = clientCustomFields ?? {};
+
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
 
   async function saveKey(key: string, value: string | number | boolean | string[] | null) {
     try {
       await updateMut.mutateAsync({ id: caseId, patch: { [key]: value } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar");
+    }
+  }
+
+  // 2026-07-29 #3 — grava na FONTE certa: campo do caso → canonical_fields;
+  // campo do cliente → custom_fields do cliente (compartilhado entre os casos).
+  async function saveDef(def: TemaFieldDef, value: string | number | boolean | string[] | null) {
+    try {
+      if (def.scope === "cliente") {
+        if (!clientId) {
+          toast.error("Caso sem cliente vinculado — não dá para salvar campo do cliente.");
+          return;
+        }
+        await updateClientMut.mutateAsync({ id: clientId, patch: { [def.key]: value } });
+      } else {
+        await updateMut.mutateAsync({ id: caseId, patch: { [def.key]: value } });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao salvar");
     }
@@ -111,17 +139,21 @@ export function CaseCanonicalFields({
         Campos do caso (ex.: nº do contrato). Distintos dos dados do cliente. Buscáveis.
       </p>
 
-      {/* R2-07 — campos DEFINIDOS para o tema+frente. */}
+      {/* R2-07 — campos DEFINIDOS para o tema+frente. #3: valor lido da fonte
+          certa (caso × cliente). */}
       {defs.length > 0 && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {defs.map((def) => (
             <TemaFieldInput
-              key={def.id}
+              // key inclui o caso: os campos com estado local semeado no mount
+              // (MultiOccurrenceField/MoneyField) re-montam ao trocar de caso na
+              // mesma rota, evitando valor "preso" do caso anterior (QA BUG-1).
+              key={`${caseId}-${def.id}`}
               def={def}
-              value={cf[def.key]}
+              value={(def.scope === "cliente" ? clientCf : cf)[def.key]}
               canEdit={canEdit}
-              disabled={updateMut.isPending}
-              onSave={(v) => saveKey(def.key, v)}
+              disabled={updateMut.isPending || updateClientMut.isPending}
+              onSave={(v) => saveDef(def, v)}
             />
           ))}
         </div>
@@ -226,6 +258,21 @@ export function TemaFieldInput({
       {def.required && <span className="text-destructive">*</span>}
     </Label>
   );
+
+  // 2026-07-29 #6 — múltiplas ocorrências (texto/número/data): N caixinhas do
+  // mesmo campo; grava um ARRAY (ex.: vários períodos de atuação).
+  if (isMultiOccurrence(def)) {
+    return (
+      <MultiOccurrenceField
+        def={def}
+        value={value}
+        labelEl={labelEl}
+        canEdit={canEdit}
+        disabled={disabled}
+        onSave={onSave}
+      />
+    );
+  }
 
   // R2-09 — múltipla escolha: usuário marca 1+ opções; grava array.
   if (def.type === "multiselect") {
@@ -352,6 +399,55 @@ function MoneyField({
         onChange={(e) => setMask(maskCentavos(e.target.value))}
         onBlur={() => onSave(centavosFromMask(mask))}
       />
+    </div>
+  );
+}
+
+// #6 — campo com N caixinhas do mesmo tipo (texto/número/data). Estado local dos
+// slots; grava um ARRAY (descarta caixinhas vazias). Se sobrar 1 valor só, ainda
+// grava como array de 1 — o formatador de exibição normaliza.
+function MultiOccurrenceField({
+  def,
+  value,
+  labelEl,
+  canEdit,
+  disabled,
+  onSave,
+}: {
+  def: TemaFieldDef;
+  value: unknown;
+  labelEl: React.ReactNode;
+  canEdit: boolean;
+  disabled: boolean;
+  onSave: (value: string[] | null) => void;
+}) {
+  const max = def.max_occurrences ?? 1;
+  const [slots, setSlots] = useState<string[]>(() => occurrencesToSlots(value, max));
+  const inputType = def.type === "number" ? "number" : def.type === "date" ? "date" : "text";
+
+  function commit(next: string[]) {
+    const clean = next.map((s) => s.trim()).filter(Boolean);
+    onSave(clean.length ? clean : null);
+  }
+
+  return (
+    <div className="space-y-1">
+      {labelEl}
+      <div className="space-y-1.5">
+        {slots.map((slot, i) => (
+          <Input
+            key={i}
+            type={inputType}
+            value={slot}
+            disabled={!canEdit || disabled}
+            placeholder={`${def.label} ${i + 1}`}
+            onChange={(e) =>
+              setSlots((prev) => prev.map((s, idx) => (idx === i ? e.target.value : s)))
+            }
+            onBlur={() => commit(slots)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

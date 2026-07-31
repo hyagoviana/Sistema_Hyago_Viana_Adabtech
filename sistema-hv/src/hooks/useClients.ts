@@ -12,6 +12,7 @@ import {
   listClientsFn,
   resyncDriveFn,
   tornarClienteFn,
+  updateClientCustomFieldsFn,
   updateClientFn,
 } from "@/rpc/clients";
 
@@ -83,6 +84,24 @@ export function useUpdateClient() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.lists() });
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+    },
+  });
+}
+
+// Campos personalizados do cliente (JSONB) — campos de TEMA com scope='cliente'.
+// Invalida a ficha do cliente E a lista de casos (a Lista lê custom_fields do
+// cliente por linha para exibir/filtrar esses campos).
+export function useUpdateClientCustomFields() {
+  const fn = useServerFn(updateClientCustomFieldsFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      id: string;
+      patch: Record<string, string | number | boolean | string[] | null>;
+    }) => fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
     },
   });
 }

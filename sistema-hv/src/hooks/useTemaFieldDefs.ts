@@ -18,6 +18,10 @@ export type TemaFieldType =
   | "date"
   | "boolean";
 
+// Origem do VALOR do campo: 'caso' → system_cases.canonical_fields (por caso);
+// 'cliente' → system_clients.custom_fields (compartilhado entre casos do cliente).
+export type TemaFieldScope = "caso" | "cliente";
+
 export type TemaFieldDef = {
   id: string;
   tema_id: string;
@@ -29,6 +33,10 @@ export type TemaFieldDef = {
   ordem: number;
   required: boolean;
   active: boolean;
+  // Reunião 2026-07-29: origem (#3), ocultar só na lista (#5), nº de ocorrências (#6).
+  scope: TemaFieldScope;
+  hidden_in_list: boolean;
+  max_occurrences: number;
 };
 
 // FICHA do caso — defs do tema (frente NULL) + as da frente do caso, ordenadas.
@@ -83,6 +91,9 @@ export function useCreateTemaFieldDef(temaId: string) {
       options?: string[] | null;
       ordem?: number;
       required?: boolean;
+      scope?: "caso" | "cliente";
+      hiddenInList?: boolean;
+      maxOccurrences?: number;
     }) => fn({ data: { temaId, ...input } }),
     onSuccess: invalidate,
   });
@@ -101,6 +112,9 @@ export function useUpdateTemaFieldDef(temaId: string) {
         ordem?: number;
         required?: boolean;
         active?: boolean;
+        scope?: "caso" | "cliente";
+        hiddenInList?: boolean;
+        maxOccurrences?: number;
       };
     }) => fn({ data: vars }),
     onSuccess: invalidate,

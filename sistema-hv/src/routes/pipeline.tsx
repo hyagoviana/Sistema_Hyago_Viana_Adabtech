@@ -258,9 +258,10 @@ function DynamicKanban({
   const { data: temaDefsData } = useTemaFieldDefs(temaId);
   const temaFilterDefs = useMemo(
     () =>
-      ((temaDefsData ?? []) as { key: string; type: string }[]).map((d) => ({
+      ((temaDefsData ?? []) as { key: string; type: string; scope?: string }[]).map((d) => ({
         key: d.key,
         type: d.type,
+        scope: d.scope,
       })),
     [temaDefsData],
   );

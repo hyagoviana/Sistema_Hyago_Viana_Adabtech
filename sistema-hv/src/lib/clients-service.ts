@@ -160,7 +160,14 @@ export type FindOrCreateResult = {
 type ClientRow = Database["public"]["Tables"]["system_clients"]["Row"];
 
 // Campos escalares simples elegíveis a merge-em-vazio + detecção de conflito.
-const MERGEABLE_SCALAR_FIELDS = ["full_name", "email", "phone", "rg", "birth_date", "tipo"] as const;
+const MERGEABLE_SCALAR_FIELDS = [
+  "full_name",
+  "email",
+  "phone",
+  "rg",
+  "birth_date",
+  "tipo",
+] as const;
 
 async function selectActiveByCpf(cpf: string): Promise<ClientRow | null> {
   const sb = getSupabaseAdmin();
@@ -288,6 +295,57 @@ export async function updateClient(id: string, input: ClientUpdateOutput) {
     entity_type: "client",
     entity_id: data.id,
     diff: input as unknown as Json,
+  });
+
+  return data;
+}
+
+// ----------------------------------------------------------------------------
+// CAMPOS PERSONALIZADOS DO CLIENTE (JSONB) — merge no custom_fields. Usado pelos
+// campos de TEMA com scope='cliente' (reunião 2026-07-29 #3): o valor é do
+// CLIENTE, compartilhado entre TODOS os casos dele. Mesma mecânica de merge do
+// updateCaseCanonicalFields (remove chaves vazias). Reaproveita o mesmo balde
+// `custom_fields` dos campos de cliente (system_client_field_defs) — a `key` do
+// campo de tema convive com as demais chaves sem colidir.
+// ----------------------------------------------------------------------------
+export async function updateClientCustomFields(clientId: string, patch: Record<string, unknown>) {
+  const sb = getSupabaseAdmin();
+  const { data: before } = await sb
+    .from("system_clients")
+    .select("custom_fields, organization_id")
+    .eq("id", clientId)
+    .is("deleted_at", null)
+    .single();
+  if (!before) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
+
+  const current = (before.custom_fields as Record<string, unknown> | null) ?? {};
+  const merged = { ...current, ...patch };
+  for (const k of Object.keys(merged)) {
+    const v = merged[k];
+    if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0))
+      delete merged[k];
+  }
+
+  const { data, error } = await sb
+    .from("system_clients")
+    .update({ custom_fields: merged as never })
+    .eq("id", clientId)
+    .is("deleted_at", null)
+    .select("id, custom_fields")
+    .single();
+  if (error || !data)
+    throw new ClientServiceError(
+      error?.message ?? "Falha ao salvar campos do cliente",
+      "DB_ERROR",
+      500,
+    );
+
+  await sb.from("system_audit_log").insert({
+    organization_id: before.organization_id,
+    action: "client.custom_fields_updated",
+    entity_type: "client",
+    entity_id: clientId,
+    diff: patch as unknown as Json,
   });
 
   return data;

@@ -13,7 +13,8 @@ import { InlineCanonicalCell } from "@/components/cases/InlineCanonicalCell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
-import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/usePermissions";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
+import { readFieldValue } from "@/lib/cases/tema-field-value";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { useFrentes, useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
@@ -75,6 +76,9 @@ type CaseRow = {
   responsavel: string | null;
   created_at: string | null;
   canonical_fields: Record<string, unknown> | null;
+  // #3 — custom_fields do cliente (anexado por listCases via mutação, então
+  // opcional no tipo) p/ campos de tema com scope='cliente'.
+  client_custom_fields?: Record<string, unknown> | null;
 };
 
 // Colunas ordenáveis. `valor` só existe quando o gate financeiro permite.
@@ -138,9 +142,9 @@ function CasosLista() {
   const { data: temaDefsData } = useTemaFieldDefs(effectiveTemaId || null);
   const temaDefs = useMemo(() => (temaDefsData ?? []) as TemaFieldDef[], [temaDefsData]);
   // Colunas dinâmicas só quando há um tema efetivo (defs de vários temas
-  // misturados não fariam sentido na mesma tabela).
-  const dynamicDefs = effectiveTemaId ? temaDefs : [];
-  const podeEditarOp = usePodeEditar("operacional");
+  // misturados não fariam sentido na mesma tabela). #5 — campos marcados
+  // "ocultar na lista" (hidden_in_list) saem da COLUNA (seguem no filtro/ficha).
+  const dynamicDefs = effectiveTemaId ? temaDefs.filter((d) => !d.hidden_in_list) : [];
 
   // R4-01 / R2-08 (AC-4) — a coluna "valor" só aparece sob gate financeiro.
   // Único booleano trocável; overrides por usuário via permissaoEfetiva. Com a
@@ -204,7 +208,7 @@ function CasosLista() {
     const afterPanel = applyCaseFilters(
       preFiltered,
       panelFilters,
-      temaDefs.map((d) => ({ key: d.key, type: d.type })),
+      temaDefs.map((d) => ({ key: d.key, type: d.type, scope: d.scope })),
     );
     const q = search.trim().toLowerCase();
     if (!q) return afterPanel;
@@ -519,19 +523,22 @@ function CasosLista() {
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
                       {fmtDate(c.created_at)}
                     </td>
-                    {/* R2-09 — células editáveis dos filtros do tema. A célula
-                        não navega (stopPropagation) para permitir editar. */}
+                    {/* 2026-07-29 #4 — células dos campos do tema em SÓ LEITURA:
+                        refletem a ficha; a edição é só na ficha do caso. #3: o
+                        valor vem da fonte certa (caso × cliente). */}
                     {dynamicDefs.map((def) => (
                       <td
                         key={def.id}
                         className="px-3 py-2 text-[12px] text-muted-foreground whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <InlineCanonicalCell
                           caseId={c.id}
                           def={def}
-                          value={(c.canonical_fields ?? {})[def.key]}
-                          canEdit={podeEditarOp}
+                          value={readFieldValue(def, {
+                            canonical_fields: c.canonical_fields,
+                            client_custom_fields: c.client_custom_fields,
+                          })}
+                          canEdit={false}
                         />
                       </td>
                     ))}

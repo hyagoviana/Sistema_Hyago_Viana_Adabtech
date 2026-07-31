@@ -1604,6 +1604,34 @@ export async function listCases(
     }
   }
 
+  // 2026-07-29 #3 — anexa os custom_fields do CLIENTE em cada linha para a Lista/
+  // filtros exibirem os campos de tema com scope='cliente' (valor do cliente,
+  // compartilhado entre casos). Batch único por client_id. ATENÇÃO: enriquece por
+  // MUTAÇÃO (não `map(spread)`) de propósito — um novo literal de objeto criaria
+  // um tipo anônimo que estoura a inferência do createServerFn e colapsa o retorno
+  // para `{}`, quebrando TODOS os consumidores de useCasesList. Mutar preserva o
+  // tipo original; os consumidores que precisam do campo já castam a linha.
+  const clientIds = [...new Set(rows.map((r) => r.client_id).filter(Boolean))] as string[];
+  if (clientIds.length > 0) {
+    const { data: clientsCf } = await sb
+      .from("system_clients")
+      .select("id, custom_fields")
+      .in("id", clientIds);
+    const cfById = new Map(
+      (clientsCf ?? []).map((c) => [
+        c.id,
+        (c.custom_fields as Record<string, unknown> | null) ?? {},
+      ]),
+    );
+    for (const r of rows) {
+      (r as Record<string, unknown>).client_custom_fields = r.client_id
+        ? (cfById.get(r.client_id) ?? {})
+        : {};
+    }
+  } else {
+    for (const r of rows) (r as Record<string, unknown>).client_custom_fields = {};
+  }
+
   return rows;
 }
 

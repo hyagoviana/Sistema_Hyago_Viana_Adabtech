@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ChecklistInconsistencyAlert } from "@/components/cases/CaseChecklistPanel";
+import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseTimeline } from "@/components/cases/CaseTimeline";
@@ -336,7 +337,7 @@ function CasoDetalhe() {
               pop-up que abre depois de gerar o Word). Só quando o caso tem tema. */}
           {podeGerirCaso && (caso as { tema_id?: string | null }).tema_id && (
             <Button variant="outline" size="sm" onClick={() => setFillFiltersOpen(true)}>
-              <SlidersHorizontal size={14} className="mr-1.5" /> Preencher filtros
+              <SlidersHorizontal size={14} className="mr-1.5" /> Preencher campos
             </Button>
           )}
           {podeGerirCaso && (
@@ -453,6 +454,30 @@ function CasoDetalhe() {
           </div>
         </div>
       </div>
+
+      {/* 2026-07-29 #2 — bloco "Dados do serviço" (campos do tema) agora VISÍVEL
+          na ficha (antes só no pop-up "Preencher filtros"). Só quando o caso tem
+          tema. Campos scope='cliente' leem/gravam nos dados do cliente. */}
+      {(caso as { tema_id?: string | null }).tema_id && (
+        <>
+          <OrnamentalDivider />
+          <CaseCanonicalFields
+            caseId={caso.id}
+            canonicalFields={
+              (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ??
+              null
+            }
+            canEdit={podeGerirCaso}
+            temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+            frenteSlug={caso.frente_slug}
+            clientId={caso.client_id}
+            clientCustomFields={
+              (cliente as { custom_fields?: Record<string, unknown> | null } | undefined)
+                ?.custom_fields ?? null
+            }
+          />
+        </>
+      )}
 
       <OrnamentalDivider />
 

@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
+import { fieldBag } from "@/lib/cases/tema-field-value";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import {
@@ -61,6 +62,8 @@ type CaseRow = {
   frente_slug?: string | null;
   caso_pasta_nome?: string | null;
   canonical_fields?: Record<string, unknown> | null;
+  // #3 — custom_fields do cliente (anexado por listCases) p/ campos scope='cliente'.
+  client_custom_fields?: Record<string, unknown> | null;
 };
 
 type Props = {
@@ -151,12 +154,20 @@ export function CaseFiltersPanel({
         map[def.key] = (def.options as string[]).map((o) => ({ value: o, label: o }));
         continue;
       }
-      // text / number / date / money (e select sem options) → derivar dos dados.
+      // text / number / date / money (e select sem options) → derivar dos dados,
+      // lendo da fonte certa por scope (#3) e achatando múltiplas ocorrências (#6).
       const set = new Set<string>();
       for (const c of cases) {
-        const val = (c.canonical_fields ?? {})[def.key];
+        const val = fieldBag(def, c)[def.key];
         if (val === null || val === undefined || val === "") continue;
-        set.add(String(val).trim());
+        if (Array.isArray(val)) {
+          for (const item of val) {
+            const s = String(item).trim();
+            if (s) set.add(s);
+          }
+        } else {
+          set.add(String(val).trim());
+        }
       }
       if (set.size > 0) {
         map[def.key] = Array.from(set)
@@ -216,11 +227,11 @@ export function CaseFiltersPanel({
           <button
             type="button"
             onClick={() => setEditOpen(true)}
-            title="Criar, ocultar ou excluir filtros do tema"
+            title="Criar, ocultar ou excluir campos do tema"
             className="flex items-center gap-1.5 text-[13px] text-[var(--gold-700)] hover:text-[var(--gold)] transition-colors"
           >
             <SlidersHorizontal size={14} />
-            Editar filtros
+            Editar campos
           </button>
         )}
       </div>
@@ -232,17 +243,18 @@ export function CaseFiltersPanel({
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Filtros do tema</DialogTitle>
+              <DialogTitle>Campos do tema</DialogTitle>
               <DialogDescription>
-                Crie novos filtros para este tema. Os filtros padrão do sistema (Caso, Financeiro,
-                Responsável, Município) não são editáveis. Nos que você criar, dá para ocultar
-                (olho) ou excluir. Aparecem no Kanban e na Lista.
+                Crie os campos personalizados deste tema (viram colunas na Lista e filtros de
+                busca). Escolha se o valor é do caso ou do cliente, quantos preenchimentos aceita e
+                se some da coluna da Lista. Os filtros padrão (Caso, Financeiro, Responsável,
+                Município) não são editáveis.
               </DialogDescription>
             </DialogHeader>
             <TemaFieldDefsEditor
               temaId={temaId as string}
               frenteSlug={null}
-              title="Filtros personalizados"
+              title="Campos personalizados"
             />
           </DialogContent>
         </Dialog>
@@ -457,9 +469,10 @@ export function CaseFiltersPanel({
 export function applyCaseFilters<T extends CaseRow>(
   rows: T[],
   filters: CaseFilterValues,
-  defs?: { key: string; type: string }[],
+  defs?: { key: string; type: string; scope?: string | null }[],
 ): T[] {
   const typeByKey = new Map((defs ?? []).map((d) => [d.key, d.type]));
+  const scopeByKey = new Map((defs ?? []).map((d) => [d.key, d.scope ?? "caso"]));
   return rows.filter((c) => {
     if (filters.etapaOp && c.macrostatus_op !== filters.etapaOp) return false;
     if (filters.etapaFin && c.macrostatus_fin !== filters.etapaFin) return false;
@@ -474,7 +487,12 @@ export function applyCaseFilters<T extends CaseRow>(
     // Filtros canônicos (campos dinâmicos do tema)
     for (const [key, val] of Object.entries(filters.canonical)) {
       if (!val) continue;
-      const rawVal = (c.canonical_fields ?? {})[key];
+      // #3 — lê da fonte certa: campo do cliente vem de client_custom_fields.
+      const bag =
+        scopeByKey.get(key) === "cliente"
+          ? (c.client_custom_fields ?? {})
+          : (c.canonical_fields ?? {});
+      const rawVal = bag[key];
       // Múltipla escolha: valor é ARRAY — casa se contém a opção escolhida.
       if (Array.isArray(rawVal)) {
         if (val === CANONICAL_EMPTY) {

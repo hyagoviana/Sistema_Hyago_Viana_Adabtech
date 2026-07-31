@@ -625,6 +625,9 @@ export type Database = {
           ordem: number;
           required: boolean;
           active: boolean;
+          scope: string;
+          hidden_in_list: boolean;
+          max_occurrences: number;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -642,6 +645,9 @@ export type Database = {
           ordem?: number;
           required?: boolean;
           active?: boolean;
+          scope?: string;
+          hidden_in_list?: boolean;
+          max_occurrences?: number;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
