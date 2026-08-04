@@ -94,7 +94,10 @@ export const createTemaFieldDefFn = createServerFn({ method: "POST" })
         required: z.boolean().optional(),
         scope: scopeSchema.optional(),
         hiddenInList: z.boolean().optional(),
+        hiddenInFilters: z.boolean().optional(),
         maxOccurrences: maxOccSchema.optional(),
+        // A5 5c — auto-avanço: slug da etapa op destino ao marcar "Sim" (boolean).
+        moveToStageSlug: z.string().nullish(),
       })
       .parse(d),
   )
@@ -114,7 +117,10 @@ export const updateTemaFieldDefFn = createServerFn({ method: "POST" })
           active: z.boolean().optional(),
           scope: scopeSchema.optional(),
           hiddenInList: z.boolean().optional(),
+          hiddenInFilters: z.boolean().optional(),
           maxOccurrences: maxOccSchema.optional(),
+          // A5 5c — auto-avanço: slug destino (null = não move).
+          moveToStageSlug: z.string().nullish(),
         }),
       })
       .parse(d),

@@ -52,6 +52,67 @@ export type AutoFillData = {
   canonical?: Record<string, string>;
 };
 
+// AC4 (A7, 2026-08-04) — FORMATADORES DETERMINÍSTICOS por TIPO.
+// A representação no documento não depende da string que o usuário digitou: dois
+// casos com o MESMO valor numérico produzem a MESMA string. Fonte da verdade:
+//  - percentual: number simples (15 → "15%"; 12.5 → "12,5%") — vírgula decimal
+//    pt-BR, sem casas decimais desnecessárias (15.0 → "15%").
+//  - moeda: CENTAVOS inteiros (50000 → "R$ 500,00") — milhar com ponto, decimal
+//    com vírgula (pt-BR).
+//  - número: inteiro (12 → "12").
+// Aceitam também string numérica ("15", "12,5", "R$ 1.234,56") normalizando a
+// vírgula/pontuação para não formatar duas vezes.
+
+/** Converte uma entrada numérica (number ou string pt-BR/en) em number, ou null. */
+function toNumber(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  const s = v.trim();
+  if (!s) return null;
+  // Remove símbolos (R$, %, espaços) e normaliza separadores pt-BR → ponto.
+  // Estratégia: tira tudo que não é dígito, vírgula, ponto ou sinal; se houver
+  // vírgula, ela é o separador decimal (pt-BR) e os pontos são milhar.
+  const cleaned = s.replace(/[^0-9.,-]/g, "");
+  let normalized: string;
+  if (cleaned.includes(",")) {
+    normalized = cleaned.replace(/\./g, "").replace(",", ".");
+  } else {
+    normalized = cleaned;
+  }
+  const n = Number.parseFloat(normalized);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Formata um percentual de forma determinística: "15%", "12,5%" (pt-BR). */
+export function formatPercentBR(v: number | string | null | undefined): string | undefined {
+  const n = toNumber(v);
+  if (n === null) return undefined;
+  // Até 2 casas decimais, sem zeros à direita; vírgula decimal pt-BR.
+  const s = n
+    .toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+    .replace(/\s/g, "");
+  return `${s}%`;
+}
+
+/** Formata um valor monetário a partir de CENTAVOS inteiros: "R$ 500,00". */
+export function formatMoneyBR(centavos: number | string | null | undefined): string | undefined {
+  const n = toNumber(centavos);
+  if (n === null) return undefined;
+  const reais = Math.round(n) / 100;
+  const s = reais.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `R$ ${s}`;
+}
+
+/** Formata um número inteiro determinístico (ex.: nº de parcelas): "12". */
+export function formatIntBR(v: number | string | null | undefined): string | undefined {
+  const n = toNumber(v);
+  if (n === null) return undefined;
+  return String(Math.round(n));
+}
+
 // Normaliza texto p/ casar placeholder ↔ nome de campo canônico do caso: remove
 // acentos, sufixo "- obrigatório", pontuação e caixa.
 function normKey(s: string): string {
@@ -224,24 +285,38 @@ export function augmentWithHonorarios(
   if (!h) return data;
   const canonical = { ...(data.canonical ?? {}) };
   if (h.percentual_honorarios != null) {
-    const pct = `${h.percentual_honorarios}%`.replace(".", ",");
-    canonical["Percentual de Honorários"] = pct;
-    canonical["Honorários Percentual"] = pct;
-    canonical["% Honorários"] = pct;
-    // Alinhamento (owner, 2026-07-21) — modelos de procuração usam "porcentagem"
-    // / "porcentagem do êxito" para o mesmo % de honorários.
-    canonical["Porcentagem"] = pct;
-    canonical["Porcentagem do Êxito"] = pct;
+    // AC4 (A7) — formatação determinística por TIPO (percentual), não pela string.
+    const pct = formatPercentBR(h.percentual_honorarios);
+    if (pct) {
+      canonical["Percentual de Honorários"] = pct;
+      canonical["Honorários Percentual"] = pct;
+      canonical["% Honorários"] = pct;
+      canonical["Percentual"] = pct;
+      // Alinhamento (owner, 2026-07-21) — modelos de procuração usam "porcentagem"
+      // / "porcentagem do êxito" para o mesmo % de honorários. A7 (AC4) — cobre as
+      // variações de redação de "percentual/porcentagem de/do êxito".
+      canonical["Porcentagem"] = pct;
+      canonical["Porcentagem do Êxito"] = pct;
+      canonical["Porcentagem de Êxito"] = pct;
+      canonical["Percentual do Êxito"] = pct;
+      canonical["Percentual de Êxito"] = pct;
+      canonical["% Êxito"] = pct;
+      canonical["% de Êxito"] = pct;
+    }
   }
   if (h.valor_parcela_centavos != null) {
-    const v = `R$ ${(h.valor_parcela_centavos / 100).toFixed(2).replace(".", ",")}`;
-    canonical["Valor da Parcela"] = v;
-    canonical["Parcela"] = v;
+    const v = formatMoneyBR(h.valor_parcela_centavos);
+    if (v) {
+      canonical["Valor da Parcela"] = v;
+      canonical["Parcela"] = v;
+    }
   }
   if (h.desconto_avista_pct != null) {
-    const d = `${h.desconto_avista_pct}%`.replace(".", ",");
-    canonical["Desconto à Vista"] = d;
-    canonical["Desconto"] = d;
+    const d = formatPercentBR(h.desconto_avista_pct);
+    if (d) {
+      canonical["Desconto à Vista"] = d;
+      canonical["Desconto"] = d;
+    }
   }
   if (h.forma_pagamento) {
     canonical["Forma de Pagamento"] = h.forma_pagamento;
@@ -249,10 +324,12 @@ export function augmentWithHonorarios(
     canonical["Pagamento"] = h.forma_pagamento;
   }
   if (h.honorarios_total_centavos != null) {
-    const t = `R$ ${(h.honorarios_total_centavos / 100).toFixed(2).replace(".", ",")}`;
-    canonical["Total de Honorários"] = t;
-    canonical["Honorários Total"] = t;
-    canonical["Valor dos Honorários"] = t;
+    const t = formatMoneyBR(h.honorarios_total_centavos);
+    if (t) {
+      canonical["Total de Honorários"] = t;
+      canonical["Honorários Total"] = t;
+      canonical["Valor dos Honorários"] = t;
+    }
   }
   return { ...data, canonical };
 }

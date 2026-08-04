@@ -36,7 +36,13 @@ export type TemaFieldDef = {
   // Reunião 2026-07-29: origem (#3), ocultar só na lista (#5), nº de ocorrências (#6).
   scope: TemaFieldScope;
   hidden_in_list: boolean;
+  // A2 (2026-08-03): oculta a def do PAINEL DE FILTROS (lista + Kanban) sem tirar
+  // da ficha nem da coluna da lista. Independente de active/hidden_in_list.
+  hidden_in_filters: boolean;
   max_occurrences: number;
+  // A5 5c (2026-08-03): CHECKBOX de auto-avanço. Quando type='boolean' e este slug
+  // está setado, marcar "Sim" na ficha MOVE o caso para essa etapa op. NULL = não move.
+  move_to_stage_slug: string | null;
 };
 
 // FICHA do caso — defs do tema (frente NULL) + as da frente do caso, ordenadas.
@@ -93,7 +99,9 @@ export function useCreateTemaFieldDef(temaId: string) {
       required?: boolean;
       scope?: "caso" | "cliente";
       hiddenInList?: boolean;
+      hiddenInFilters?: boolean;
       maxOccurrences?: number;
+      moveToStageSlug?: string | null;
     }) => fn({ data: { temaId, ...input } }),
     onSuccess: invalidate,
   });
@@ -114,7 +122,9 @@ export function useUpdateTemaFieldDef(temaId: string) {
         active?: boolean;
         scope?: "caso" | "cliente";
         hiddenInList?: boolean;
+        hiddenInFilters?: boolean;
         maxOccurrences?: number;
+        moveToStageSlug?: string | null;
       };
     }) => fn({ data: vars }),
     onSuccess: invalidate,

@@ -19,6 +19,7 @@ import {
   listCaseResponsaveisFn,
   listComercialCasesFn,
   listComercialDocumentsFn,
+  duplicarCasoParaTemaFn,
   marcarCasoPerdidoFn,
   moveCaseStatusFinFn,
   moveCaseStatusFn,
@@ -206,6 +207,10 @@ export function useUpdateCaseCanonicalFields() {
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.cases.lists() });
       qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
+      // A5 5c — o checkbox de auto-avanço pode ter movido a etapa op: atualiza o
+      // Kanban (card pula de coluna) e o checklist da etapa (nova etapa atual).
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+      qc.invalidateQueries({ queryKey: queryKeys.checklistItems.byCase(vars.id) });
     },
   });
 }
@@ -282,6 +287,22 @@ export function useDeleteCase() {
 // caso (detalhe/listas/eventos) para refletir a nova pipeline/etapa.
 export function useMoverCasoParaTema() {
   const fn = useServerFn(moverCasoParaTemaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; temaId: string; frenteSlug?: string | null }) =>
+      fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.cases.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
+    },
+  });
+}
+
+// A4 (2026-08-03) — DUPLICAR o caso em outro tema (mantém o original). Invalida a
+// lista (nova cópia aparece) e a timeline/detalhe do original (evento cruzado).
+export function useDuplicarCasoParaTema() {
+  const fn = useServerFn(duplicarCasoParaTemaFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; temaId: string; frenteSlug?: string | null }) =>

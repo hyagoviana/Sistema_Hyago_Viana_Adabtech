@@ -6,6 +6,7 @@ import {
   FileSignature,
   FolderOpen,
   Layers,
+  ListPlus,
   Phone,
   SlidersHorizontal,
   Trash2,
@@ -14,7 +15,10 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { ChecklistInconsistencyAlert } from "@/components/cases/CaseChecklistPanel";
+import {
+  CaseChecklistPanel,
+  ChecklistInconsistencyAlert,
+} from "@/components/cases/CaseChecklistPanel";
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
@@ -26,6 +30,7 @@ import { TermoPanel } from "@/components/cases/TermoPanel";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
+import { AddCaseToBoardDialog } from "@/components/cases/AddCaseToBoardDialog";
 import { LinkCaseToTemaDialog } from "@/components/cases/LinkCaseToTemaDialog";
 import {
   AlertDialog,
@@ -141,6 +146,8 @@ function CasoDetalhe() {
   const [entrarOpen, setEntrarOpen] = useState(false);
   // R2 — popup "Vincular a um tema" (reatribui a pipeline do caso p/ o tema).
   const [linkTemaOpen, setLinkTemaOpen] = useState(false);
+  // A3 — popup "Adicionar à lista/board" (posiciona o caso num board custom do tema).
+  const [addBoardOpen, setAddBoardOpen] = useState(false);
   // ITEM 2 — popup "Enviar contrato e procuração" (mesmo do "Gerar documento").
   const [genFlowOpen, setGenFlowOpen] = useState(false);
   // R2-09 — pop-up "Preencher filtros" do tema, avulso (além do pós-Word).
@@ -328,6 +335,13 @@ function CasoDetalhe() {
               <Layers size={14} className="mr-1.5" /> Vincular a um tema
             </Button>
           )}
+          {/* A3 — adicionar o caso a outra lista/board do tema (sub-fluxos, ex.:
+              "cobrança de documento"). Espelha "Enviar para o financeiro". */}
+          {podeGerirCaso && caso.service_type_id && (
+            <Button variant="outline" size="sm" onClick={() => setAddBoardOpen(true)}>
+              <ListPlus size={14} className="mr-1.5" /> Adicionar à lista
+            </Button>
+          )}
           {podeGerirCaso && (
             <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
               <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
@@ -481,6 +495,27 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
+      {/* A5 (2026-08-03) — Checklist da etapa NA FICHA. Reabilitado no OPERACIONAL
+          (antes só aparecia no card do Kanban financeiro, via popover). Mostra os
+          critérios da(s) etapa(s) ATUAL(is) op + fin; permite marcar e (se puder
+          editar) acrescentar critérios ad-hoc deste caso. O gate de avanço é o
+          mesmo mecanismo do financeiro (roteado por kind da etapa). */}
+      <CaseChecklistPanel
+        caseId={caso.id}
+        currentStageSlugs={[caso.macrostatus_op, caso.macrostatus_fin].filter(
+          (s): s is string => !!s && s !== "NAO_APLICAVEL",
+        )}
+        canEdit={podeGerirCaso}
+      />
+
+      <OrnamentalDivider />
+
+      {/* A6 (2026-08-03) — Linha do tempo no TOPO: é onde se acompanha o andamento
+          do caso de verdade. Vem ANTES do dossiê (Prazos/Comunicações). */}
+      <CaseTimeline caseId={caso.id} />
+
+      <OrnamentalDivider />
+
       <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
 
       <OrnamentalDivider />
@@ -505,11 +540,6 @@ function CasoDetalhe() {
       {/* S4-03 — bloco de notas do caso (auth-only, soft-delete). */}
       <NotesBlock target="case" entityId={caso.id} />
 
-      <OrnamentalDivider />
-
-      {/* S4-04 — timeline read-only (eventos automáticos) + entrada manual. */}
-      <CaseTimeline caseId={caso.id} />
-
       <MoveCaseDialog
         open={moveOpen}
         onOpenChange={setMoveOpen}
@@ -525,6 +555,15 @@ function CasoDetalhe() {
         caseId={caso.id}
         caseCode={caso.case_code}
         currentFinSlug={caso.macrostatus_fin}
+        serviceTypeId={caso.service_type_id}
+      />
+
+      {/* A3 — adicionar o caso a um board/lista custom do tema. */}
+      <AddCaseToBoardDialog
+        open={addBoardOpen}
+        onOpenChange={setAddBoardOpen}
+        caseId={caso.id}
+        caseCode={caso.case_code}
         serviceTypeId={caso.service_type_id}
       />
 

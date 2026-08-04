@@ -112,6 +112,15 @@ export async function listTemaFieldDefsAdmin(
   return data ?? [];
 }
 
+// A5 5c — auto-avanço: só campos `boolean` podem ter destino de etapa. Para os
+// demais tipos a coluna fica NULL. String vazia/whitespace → NULL (não move).
+function normalizeMoveToStage(type: string, v: unknown): string | null {
+  if (type !== "boolean") return null;
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  return s ? s : null;
+}
+
 // Nº de ocorrências (#6) — normaliza para inteiro em [1, 20] (limite do CHECK).
 function normalizeMaxOccurrences(v: unknown): number {
   const n = typeof v === "number" ? Math.floor(v) : 1;
@@ -168,7 +177,9 @@ export async function createTemaFieldDef(input: {
   required?: boolean;
   scope?: string;
   hiddenInList?: boolean;
+  hiddenInFilters?: boolean;
   maxOccurrences?: number;
+  moveToStageSlug?: string | null;
 }): Promise<FieldDefRow> {
   const label = input.label.trim();
   if (!label) throw new TemaFieldDefServiceError("Rótulo do campo é obrigatório", 422);
@@ -236,7 +247,10 @@ export async function createTemaFieldDef(input: {
       required: input.required ?? false,
       scope,
       hidden_in_list: input.hiddenInList ?? false,
+      hidden_in_filters: input.hiddenInFilters ?? false,
       max_occurrences: maxOccurrences,
+      // A5 5c — auto-avanço: só campos boolean; demais tipos ficam NULL.
+      move_to_stage_slug: normalizeMoveToStage(input.type, input.moveToStageSlug),
     })
     .select()
     .single();
@@ -256,7 +270,9 @@ export async function updateTemaFieldDef(
     active: boolean;
     scope: string;
     hiddenInList: boolean;
+    hiddenInFilters: boolean;
     maxOccurrences: number;
+    moveToStageSlug: string | null;
   }>,
 ): Promise<FieldDefRow> {
   const sb = getSupabaseAdmin();
@@ -286,6 +302,7 @@ export async function updateTemaFieldDef(
   if (patch.active !== undefined) clean.active = patch.active;
   if (patch.scope !== undefined) clean.scope = patch.scope === "cliente" ? "cliente" : "caso";
   if (patch.hiddenInList !== undefined) clean.hidden_in_list = patch.hiddenInList;
+  if (patch.hiddenInFilters !== undefined) clean.hidden_in_filters = patch.hiddenInFilters;
   if (patch.maxOccurrences !== undefined) {
     // Só campos de valor livre (texto/nº/data) podem ter >1; senão trava em 1.
     const effectiveType = (patch.type ?? clean.type) as string | undefined;
@@ -302,6 +319,20 @@ export async function updateTemaFieldDef(
   ) {
     // Trocou para um tipo que não suporta múltiplas ocorrências → normaliza p/ 1.
     clean.max_occurrences = 1;
+  }
+
+  // A5 5c — auto-avanço: só campos `boolean` têm destino de etapa.
+  // Regras: se moveToStageSlug foi passado, valida contra o tipo efetivo (só
+  // boolean persiste; senão NULL). Se o TIPO mudou p/ algo != boolean sem
+  // moveToStageSlug no patch, zera o destino (não faz sentido em não-boolean).
+  const effectiveTypeForMove = (patch.type ?? clean.type) as string | undefined;
+  if (patch.moveToStageSlug !== undefined) {
+    clean.move_to_stage_slug = normalizeMoveToStage(
+      effectiveTypeForMove ?? "boolean",
+      patch.moveToStageSlug,
+    );
+  } else if (patch.type !== undefined && patch.type !== "boolean") {
+    clean.move_to_stage_slug = null;
   }
 
   // scope='cliente': revalida colisão de chave no balde do cliente quando o campo

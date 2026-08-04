@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStages } from "@/hooks/usePipeline";
 import {
   useCreateTemaFieldDef,
   useDeleteTemaFieldDef,
@@ -30,6 +31,7 @@ import {
   type TemaFieldDef,
   type TemaFieldType,
 } from "@/hooks/useTemaFieldDefs";
+import { useTemaServiceType } from "@/hooks/useTemas";
 
 const TYPE_OPTIONS: { value: TemaFieldType; label: string }[] = [
   { value: "text", label: "Texto" },
@@ -69,6 +71,10 @@ export function TemaFieldDefsEditor({
   const updateDef = useUpdateTemaFieldDef(temaId);
   const deleteDef = useDeleteTemaFieldDef(temaId);
 
+  // A5 5c — etapas OPERACIONAIS do tema (para o "mover para etapa" do checkbox).
+  const { data: temaServiceType } = useTemaServiceType(temaId);
+  const { data: opStages } = useStages(temaServiceType?.id ?? "", "op");
+
   const [label, setLabel] = useState("");
   const [type, setType] = useState<TemaFieldType>("text");
   // Lista de opções (uma por linha na UI) para select/multiselect.
@@ -78,7 +84,12 @@ export function TemaFieldDefsEditor({
   // preenchimentos do mesmo campo (#6).
   const [scope, setScope] = useState<"caso" | "cliente">("caso");
   const [hiddenInList, setHiddenInList] = useState(false);
+  // A2 (2026-08-03): ocultar do painel de filtros (lista + Kanban) — independente
+  // de "ocultar na lista"; o campo segue na ficha do caso.
+  const [hiddenInFilters, setHiddenInFilters] = useState(false);
   const [maxOccurrences, setMaxOccurrences] = useState(1);
+  // A5 5c — etapa op destino ao marcar "Sim" (só p/ boolean). "" = não move.
+  const [moveToStageSlug, setMoveToStageSlug] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Múltiplas ocorrências só para campos de valor livre (texto/número/data).
@@ -91,7 +102,9 @@ export function TemaFieldDefsEditor({
     setRequired(false);
     setScope("caso");
     setHiddenInList(false);
+    setHiddenInFilters(false);
     setMaxOccurrences(1);
+    setMoveToStageSlug("");
     setEditingId(null);
   }
 
@@ -101,6 +114,8 @@ export function TemaFieldDefsEditor({
     setType(v);
     if (usaOpcoes(v)) setOptionsList((prev) => (prev.length ? prev : [""]));
     else setOptionsList([]);
+    // A5 5c — "mover para etapa" só faz sentido em boolean; limpa ao sair dele.
+    if (v !== "boolean") setMoveToStageSlug("");
   }
 
   function setOptionAt(i: number, val: string) {
@@ -131,6 +146,8 @@ export function TemaFieldDefsEditor({
     }
     try {
       const occ = suportaOcorrencias ? Math.max(1, Math.min(maxOccurrences || 1, 20)) : 1;
+      // A5 5c — só persiste destino em campos boolean; senão null (não move).
+      const moveTo = type === "boolean" ? moveToStageSlug || null : null;
       if (editingId) {
         await updateDef.mutateAsync({
           id: editingId,
@@ -141,7 +158,9 @@ export function TemaFieldDefsEditor({
             required,
             scope,
             hiddenInList,
+            hiddenInFilters,
             maxOccurrences: occ,
+            moveToStageSlug: moveTo,
           },
         });
         toast.success("Campo atualizado");
@@ -154,7 +173,9 @@ export function TemaFieldDefsEditor({
           required,
           scope,
           hiddenInList,
+          hiddenInFilters,
           maxOccurrences: occ,
+          moveToStageSlug: moveTo,
           ordem: (defs ?? []).length,
         });
         toast.success("Campo criado");
@@ -174,7 +195,9 @@ export function TemaFieldDefsEditor({
     setRequired(!!d.required);
     setScope(d.scope === "cliente" ? "cliente" : "caso");
     setHiddenInList(!!d.hidden_in_list);
+    setHiddenInFilters(!!d.hidden_in_filters);
     setMaxOccurrences(d.max_occurrences && d.max_occurrences > 1 ? d.max_occurrences : 1);
+    setMoveToStageSlug(d.move_to_stage_slug ?? "");
   }
 
   async function excluir(d: TemaFieldDef) {
@@ -237,6 +260,14 @@ export function TemaFieldDefsEditor({
                   )}
                   {d.hidden_in_list && (
                     <span className="text-[10px] text-muted-foreground">(fora da lista)</span>
+                  )}
+                  {d.hidden_in_filters && (
+                    <span className="text-[10px] text-muted-foreground">(fora do filtro)</span>
+                  )}
+                  {d.type === "boolean" && d.move_to_stage_slug && (
+                    <span className="text-[10px] text-[var(--gold-700)]">
+                      → move p/ {d.move_to_stage_slug}
+                    </span>
                   )}
                   {!d.active && <span className="text-[10px] text-muted-foreground">(oculto)</span>}
                 </div>
@@ -386,6 +417,36 @@ export function TemaFieldDefsEditor({
           )}
         </div>
 
+        {/* A5 5c — CHECKBOX de auto-avanço: só p/ boolean. Ao marcar "Sim" na ficha,
+            o caso é movido para a etapa OP escolhida. Vazio = não move (padrão). */}
+        {type === "boolean" && (
+          <div className="space-y-1">
+            <Label className="text-xs">Ao marcar “Sim”, mover o caso para a etapa</Label>
+            <Select
+              value={moveToStageSlug || "__none__"}
+              onValueChange={(v) => setMoveToStageSlug(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Não mover (padrão)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Não mover (padrão)</SelectItem>
+                {(opStages ?? [])
+                  .filter((s) => s.slug !== "NAO_APLICAVEL")
+                  .map((s) => (
+                    <SelectItem key={s.id} value={s.slug}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10.5px] text-muted-foreground">
+              Opcional. Marcar “Sim” neste caso avança o card para a etapa escolhida (só na
+              transição para “Sim”; “Não” não move).
+            </p>
+          </div>
+        )}
+
         <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
           <input
             type="checkbox"
@@ -403,6 +464,17 @@ export function TemaFieldDefsEditor({
             onChange={(e) => setHiddenInList(e.target.checked)}
           />
           Ocultar na lista (some da coluna; continua no filtro e na ficha)
+        </label>
+
+        {/* A2 (2026-08-03) — ocultar do PAINEL DE FILTROS (lista + Kanban);
+            continua na ficha e (se não ocultado na lista) na coluna. */}
+        <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+          <input
+            type="checkbox"
+            checked={hiddenInFilters}
+            onChange={(e) => setHiddenInFilters(e.target.checked)}
+          />
+          Ocultar do filtro (some do painel de filtros; continua na ficha)
         </label>
 
         <div className="flex items-center gap-2">

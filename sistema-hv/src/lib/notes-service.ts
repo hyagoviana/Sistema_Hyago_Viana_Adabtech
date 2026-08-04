@@ -111,6 +111,23 @@ export async function createCaseNote(caseId: string, body: string, userId: strin
     .select()
     .single();
   if (error || !data) throw new NoteServiceError(error?.message ?? "Falha ao criar nota", 500);
+
+  // A6 (2026-08-03) — a linha do tempo registra TODA a movimentação do caso,
+  // inclusive a criação de nota. Best-effort: nunca derruba a criação da nota.
+  await sb
+    .from("system_case_events")
+    .insert({
+      case_id: caseId,
+      organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
+      action: "note_added",
+      diff: { note_id: data.id, note_preview: cleanBody.slice(0, 140) },
+      triggered_by: userId,
+    })
+    .then(
+      () => {},
+      () => {},
+    );
+
   return data;
 }
 

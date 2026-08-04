@@ -1005,7 +1005,9 @@ export type Database = {
           active: boolean;
           scope: string;
           hidden_in_list: boolean;
+          hidden_in_filters: boolean;
           max_occurrences: number;
+          move_to_stage_slug: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1025,7 +1027,9 @@ export type Database = {
           active?: boolean;
           scope?: string;
           hidden_in_list?: boolean;
+          hidden_in_filters?: boolean;
           max_occurrences?: number;
+          move_to_stage_slug?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1060,6 +1064,7 @@ export type Database = {
           ordem: number;
           active: boolean;
           frente_slug: string | null;
+          board_id: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -1076,11 +1081,74 @@ export type Database = {
           ordem?: number;
           active?: boolean;
           frente_slug?: string | null;
+          board_id?: string | null;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_pipeline_stages"]["Insert"]>;
+        Relationships: [];
+      };
+      system_pipeline_boards: {
+        Row: {
+          id: string;
+          organization_id: string;
+          service_type_id: string;
+          slug: string;
+          label: string;
+          ordem: number;
+          is_principal: boolean;
+          kind: string | null;
+          active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          service_type_id: string;
+          slug: string;
+          label: string;
+          ordem?: number;
+          is_principal?: boolean;
+          kind?: string | null;
+          active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_pipeline_boards"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_board_positions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          board_id: string;
+          stage_id: string | null;
+          stage_slug: string | null;
+          entered_at: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          board_id: string;
+          stage_id?: string | null;
+          stage_slug?: string | null;
+          entered_at?: string;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_board_positions"]["Insert"]>;
         Relationships: [];
       };
       system_parcelas: {
@@ -1782,6 +1850,14 @@ export type Database = {
       };
       system_pipeline_stages_active: {
         Row: Database["public"]["Tables"]["system_pipeline_stages"]["Row"];
+        Relationships: [];
+      };
+      system_pipeline_boards_active: {
+        Row: Database["public"]["Tables"]["system_pipeline_boards"]["Row"];
+        Relationships: [];
+      };
+      system_case_board_positions_active: {
+        Row: Database["public"]["Tables"]["system_case_board_positions"]["Row"];
         Relationships: [];
       };
       system_termo_snapshots_active: {

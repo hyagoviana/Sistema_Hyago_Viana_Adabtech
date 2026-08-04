@@ -1157,7 +1157,7 @@ export async function updateCaseCanonicalFields(
   const sb = getSupabaseAdmin();
   const { data: before } = await sb
     .from("system_cases")
-    .select("canonical_fields, organization_id")
+    .select("canonical_fields, organization_id, tema_id, macrostatus_op, service_type_id")
     .eq("id", caseId)
     .is("deleted_at", null)
     .single();
@@ -1191,7 +1191,94 @@ export async function updateCaseCanonicalFields(
     triggered_by: triggeredBy ?? null,
   });
 
+  // A5 5c — CHECKBOX de auto-avanço. Se alguma chave DO PATCH corresponde a uma
+  // def boolean do tema com `move_to_stage_slug` e o valor VIROU "sim"
+  // (transição não-sim → sim), move o caso para a etapa op configurada.
+  await maybeAutoAdvanceByCheckbox(caseId, before, current, patch, triggeredBy);
+
   return data;
+}
+
+// Interpreta um valor de canonical_field boolean como "sim" (true). Aceita o
+// boolean real e as strings "true"/"false" (o RPC pode gravar ambos).
+function isBoolTrue(v: unknown): boolean {
+  return v === true || v === "true";
+}
+
+// A5 5c — auto-avanço por checkbox. Guardas (Risco R2, anti-loop):
+//   (a) só chaves presentes no PATCH atual (não reavalia tudo a cada save);
+//   (b) só transição não-sim → sim (compara com o valor anterior);
+//   (c) def precisa ser type='boolean' e ter move_to_stage_slug;
+//   (d) o slug destino precisa ser uma etapa OP real do tipo do caso;
+//   (e) no-op se o caso já está na etapa destino (não move nem gera evento).
+// Falhas aqui NÃO derrubam o save dos campos (best-effort, logado).
+async function maybeAutoAdvanceByCheckbox(
+  caseId: string,
+  before: {
+    organization_id: string;
+    tema_id: string | null;
+    macrostatus_op: string | null;
+    service_type_id: string | null;
+  },
+  previousFields: Record<string, unknown>,
+  patch: Record<string, unknown>,
+  triggeredBy?: string,
+) {
+  try {
+    if (!before.tema_id || !before.service_type_id) return;
+
+    // Só chaves do patch que VIRARAM "sim" (transição não-sim → sim).
+    const turnedTrue = Object.keys(patch).filter(
+      (k) => isBoolTrue(patch[k]) && !isBoolTrue(previousFields[k]),
+    );
+    if (turnedTrue.length === 0) return;
+
+    const sb = getSupabaseAdmin();
+
+    // Defs boolean do tema (frente NULL + qualquer frente) com destino setado,
+    // cujas keys estão entre as que viraram "sim".
+    const { data: defs } = await sb
+      .from("system_tema_field_defs_active")
+      .select("key, type, move_to_stage_slug")
+      .eq("tema_id", before.tema_id)
+      .eq("type", "boolean")
+      .in("key", turnedTrue);
+
+    const targets = (defs ?? [])
+      .map((d) => (d as { move_to_stage_slug: string | null }).move_to_stage_slug)
+      .filter((s): s is string => !!s);
+    if (targets.length === 0) return;
+
+    // Move para o PRIMEIRO destino válido (etapa op real do tipo, e diferente da
+    // etapa atual). Vários checkboxes marcados de uma vez → o primeiro válido ganha.
+    for (const slug of targets) {
+      if (slug === before.macrostatus_op) continue; // anti-loop: já está lá
+      const { data: stage } = await sb
+        .from("system_pipeline_stages")
+        .select("slug")
+        .eq("service_type_id", before.service_type_id)
+        .eq("kind", "op")
+        .eq("slug", slug)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (!stage) continue; // slug não é etapa op válida deste tipo
+
+      await moveCaseStatus(caseId, slug, triggeredBy);
+      // Evento próprio p/ distinguir do avanço por checklist / arrasto manual.
+      await sb.from("system_case_events").insert({
+        case_id: caseId,
+        organization_id: before.organization_id,
+        action: "stage_moved_by_checkbox",
+        from_macrostatus_op: before.macrostatus_op,
+        to_macrostatus_op: slug,
+        diff: { from: before.macrostatus_op, to: slug, via: "checkbox" },
+        triggered_by: triggeredBy ?? null,
+      });
+      break; // um movimento por save basta
+    }
+  } catch (err) {
+    console.error("auto-avanço por checkbox:", err instanceof Error ? err.message : String(err));
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -1358,8 +1445,10 @@ export async function moverCasoParaTema(
     organization_id: caso.organization_id,
     action: "vinculado_a_tema",
     diff: {
+      modo: "mover",
       tema_id: temaId,
       frente_slug: frenteSlug ?? null,
+      from_tema_id: caso.tema_id,
       from_case_type: caso.case_type,
       to_case_type: newCaseType,
       op_resetado: opResetado,
@@ -1372,6 +1461,78 @@ export async function moverCasoParaTema(
   });
 
   return { case: data, opResetado, finResetado, promoveuAoOperacional };
+}
+
+// ----------------------------------------------------------------------------
+// A4 (2026-08-03) — DUPLICAR caso em OUTRO tema (a par de MOVER, in-place).
+// Cria uma CÓPIA no tema destino (via createCase → herda case_code, pasta no
+// Drive e evento de criação) e PRESERVA o caso original no tema de origem. A cópia
+// entra "limpa" na 1ª etapa do funil do destino (não carimba assinatura/anexos).
+// Espelha a opção "duplicar" do envio ao financeiro. Registra eventos cruzados.
+// ----------------------------------------------------------------------------
+export async function duplicateCaseToTema(
+  caseId: string,
+  temaId: string,
+  frenteSlug?: string | null,
+  triggeredBy?: string,
+) {
+  const sb = getSupabaseAdmin();
+
+  const { data: origem } = await sb
+    .from("system_cases")
+    .select(
+      "id, organization_id, client_id, case_type, tema_id, canonical_fields, municipio, responsavel, valor_centavos, lifecycle",
+    )
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!origem) throw new CaseServiceError("Caso não encontrado", 404);
+
+  // Cria a cópia no tema destino. `case_type` é sobrescrito dentro de createCase
+  // pelo slug do service_type interno do tema (quando tema_id é passado). A cópia
+  // herda o lifecycle do original (CLIENTE → nasce cliente; senão nasce lead).
+  const novo = await createCase(
+    {
+      client_id: origem.client_id,
+      case_type: origem.case_type,
+      tema_id: temaId,
+      frente_slug: frenteSlug ?? null,
+      municipio: origem.municipio ?? null,
+      responsavel: origem.responsavel ?? null,
+      valor_centavos: origem.valor_centavos ?? null,
+      iniciar_como_cliente: origem.lifecycle === "CLIENTE",
+    } as CaseCreateOutput,
+    triggeredBy,
+    { skipProcuracaoPrep: true },
+  );
+
+  // Copia os campos do caso (canonical_fields) para a cópia — valores compatíveis
+  // com as defs do tema destino aparecem na ficha; os demais ficam preservados no
+  // JSON sem quebrar o render (AC4). Nunca dropa dado na transferência.
+  const canonical = (origem.canonical_fields as Record<string, unknown> | null) ?? null;
+  if (canonical && Object.keys(canonical).length > 0) {
+    await updateCaseCanonicalFields(novo.id, canonical, triggeredBy);
+  }
+
+  // Evento no ORIGINAL (referencia a cópia) e na CÓPIA (referencia a origem).
+  await sb.from("system_case_events").insert([
+    {
+      case_id: caseId,
+      organization_id: origem.organization_id,
+      action: "duplicado_em_tema",
+      diff: { modo: "duplicar", novo_caso_id: novo.id, to_tema_id: temaId },
+      triggered_by: triggeredBy ?? null,
+    },
+    {
+      case_id: novo.id,
+      organization_id: origem.organization_id,
+      action: "duplicado_de_caso",
+      diff: { modo: "duplicar", origem_caso_id: caseId, from_tema_id: origem.tema_id },
+      triggered_by: triggeredBy ?? null,
+    },
+  ]);
+
+  return { novoCasoId: novo.id, novoCaseCode: novo.case_code };
 }
 
 // ----------------------------------------------------------------------------

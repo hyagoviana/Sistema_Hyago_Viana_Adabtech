@@ -4,7 +4,7 @@
 //   - Eventos AUTOMÁTICOS são read-only reais (sem botão de editar/apagar); o
 //     bloqueio de verdade é no servidor (cases-service.loadEditableManualEvent).
 
-import { Flag, Pencil, StickyNote, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -21,11 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCaseEvents } from "@/hooks/useCases";
-import {
-  useAddManualCaseEvent,
-  useDeleteManualCaseEvent,
-  useUpdateManualCaseEvent,
-} from "@/hooks/useTimeline";
+import { useDeleteManualCaseEvent, useUpdateManualCaseEvent } from "@/hooks/useTimeline";
 
 const MANUAL_ACTIONS = new Set(["nota_manual", "marco"]);
 
@@ -71,10 +67,24 @@ function renderEventLabel(e: CaseEvent): string {
       return "Caso excluído";
     case "stage_auto_advanced":
       return `Avanço automático por checklist: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+    case "stage_moved_by_checkbox":
+      return `Avanço por checkbox do caso: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
     case "checklist_inconsistente":
       return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "—"}" da etapa ${d?.stage_slug ?? "—"} foi desmarcado após avanço`;
     case "canonical_fields_updated":
       return "Dados do serviço atualizados";
+    case "note_added":
+      return `Nota adicionada${d?.note_preview ? `: ${d.note_preview}` : ""}`;
+    case "vinculado_a_tema":
+      return "Caso transferido para outro tema";
+    case "duplicado_em_tema":
+      return "Caso duplicado em outro tema";
+    case "duplicado_de_caso":
+      return "Caso criado por duplicação de outro caso";
+    case "andamento_importado":
+      return `Andamento (importado): ${d?.descricao ?? "—"}${
+        d?.autor_texto ? ` — ${d.autor_texto}` : ""
+      }`;
     case "task_created":
       return `Tarefa criada: ${d?.task_title ?? "—"}`;
     case "task_started":
@@ -129,32 +139,14 @@ function renderEventLabel(e: CaseEvent): string {
 
 export function CaseTimeline({ caseId }: { caseId: string }) {
   const { data: events } = useCaseEvents(caseId);
-  const add = useAddManualCaseEvent(caseId);
   const update = useUpdateManualCaseEvent(caseId);
   const remove = useDeleteManualCaseEvent(caseId);
 
-  const [action, setAction] = useState<"marco" | "nota_manual">("marco");
-  const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const list = (events ?? []) as CaseEvent[];
-
-  async function handleAdd() {
-    const body = draft.trim();
-    if (!body) {
-      toast.error("Escreva o texto do marco/nota");
-      return;
-    }
-    try {
-      await add.mutateAsync({ action, body });
-      setDraft("");
-      toast.success("Registrado na timeline");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao registrar");
-    }
-  }
 
   async function handleUpdate(eventId: string) {
     const body = editBody.trim();
@@ -188,46 +180,9 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
         Linha do tempo
       </h2>
 
-      {/* Entrada manual (auth-only) */}
-      <div className="card-editorial p-4 mb-4">
-        <div className="flex gap-2 mb-2">
-          <button
-            type="button"
-            onClick={() => setAction("marco")}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors ${
-              action === "marco"
-                ? "bg-[var(--navy)] text-white"
-                : "text-muted-foreground hover:bg-[var(--ink-50)]"
-            }`}
-          >
-            <Flag size={13} /> Marco
-          </button>
-          <button
-            type="button"
-            onClick={() => setAction("nota_manual")}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors ${
-              action === "nota_manual"
-                ? "bg-[var(--navy)] text-white"
-                : "text-muted-foreground hover:bg-[var(--ink-50)]"
-            }`}
-          >
-            <StickyNote size={13} /> Nota
-          </button>
-        </div>
-        <Textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Adicione um marco ou nota manual à timeline deste caso…"
-          rows={2}
-          className="resize-y"
-        />
-        <div className="mt-2 flex justify-end">
-          <Button size="sm" onClick={handleAdd} disabled={add.isPending || !draft.trim()}>
-            {add.isPending ? "Registrando…" : "Adicionar à timeline"}
-          </Button>
-        </div>
-      </div>
-
+      {/* A6 (2026-08-03) — a linha do tempo é AUTOMÁTICA: registra criação/edição
+          do caso, mudança de etapa, documentos, assinatura, notas, tarefas, prazos
+          e comunicações. A escrita manual foi removida (anotações vão no bloco Notas). */}
       <div className="card-editorial !p-0 overflow-hidden">
         {list.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm">

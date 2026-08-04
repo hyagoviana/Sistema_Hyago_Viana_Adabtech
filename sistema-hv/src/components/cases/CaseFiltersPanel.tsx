@@ -204,7 +204,12 @@ export function CaseFiltersPanel({
 
   // R2-09 — TODOS os campos definidos no tema viram filtro (select, Sim/Não,
   // data, número, valor, texto). Assim as opções que o admin criou aparecem.
-  const filterableDefs = useMemo(() => fieldDefs ?? [], [fieldDefs]);
+  // A2 (2026-08-03): exceto os marcados com `hidden_in_filters` — seguem na ficha
+  // e na coluna da lista, mas NÃO aparecem no painel de filtros (lista + Kanban).
+  const filterableDefs = useMemo(
+    () => (fieldDefs ?? []).filter((d) => !d.hidden_in_filters),
+    [fieldDefs],
+  );
 
   const hide = new Set(hideFixed);
 

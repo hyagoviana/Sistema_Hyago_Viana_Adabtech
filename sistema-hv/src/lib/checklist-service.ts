@@ -142,12 +142,10 @@ export async function setChecklistDefAssignees(defId: string, userIds: string[])
 
   await sb.from("system_stage_checklist_def_assignees").delete().eq("def_id", defId);
   if (unique.length) {
-    const { error } = await sb
-      .from("system_stage_checklist_def_assignees")
-      .upsert(
-        unique.map((uid) => ({ def_id: defId, user_id: uid })),
-        { onConflict: "def_id,user_id" },
-      );
+    const { error } = await sb.from("system_stage_checklist_def_assignees").upsert(
+      unique.map((uid) => ({ def_id: defId, user_id: uid })),
+      { onConflict: "def_id,user_id" },
+    );
     if (error) throw new ChecklistServiceError(error.message, 500);
   }
 
@@ -403,12 +401,10 @@ export async function setChecklistItemAssignees(itemId: string, userIds: string[
 
   await sb.from("system_case_checklist_item_assignees").delete().eq("item_id", itemId);
   if (unique.length) {
-    const { error: insErr } = await sb
-      .from("system_case_checklist_item_assignees")
-      .upsert(
-        unique.map((uid) => ({ item_id: itemId, user_id: uid })),
-        { onConflict: "item_id,user_id" },
-      );
+    const { error: insErr } = await sb.from("system_case_checklist_item_assignees").upsert(
+      unique.map((uid) => ({ item_id: itemId, user_id: uid })),
+      { onConflict: "item_id,user_id" },
+    );
     if (insErr) throw new ChecklistServiceError(insErr.message, 500);
   }
 
@@ -433,13 +429,15 @@ export async function createAdhocChecklistItem(input: {
 
   const caso = await loadCaseForAdhoc(input.caseId);
 
-  // (2026-07-09) — checklist é SÓ do financeiro. Bloqueia criar critério numa
-  // etapa que é apenas OPERACIONAL (kind 'op' e não 'fin').
+  // A5 (2026-08-03) — o checklist passa a existir também no OPERACIONAL (decisão
+  // do owner). A trava antiga que barrava ad-hoc em etapa op-only foi removida:
+  // agora só validamos que o slug é uma etapa REAL do funil do caso (op OU fin),
+  // para não criar critério ancorado numa etapa inexistente.
   if (caso.service_type_id) {
     const kinds = await stageKindsForSlug(caso.service_type_id, input.stageSlug);
-    if (kinds.has("op") && !kinds.has("fin")) {
+    if (kinds.size === 0) {
       throw new ChecklistServiceError(
-        "Checklist existe apenas nas etapas financeiras. Etapas operacionais não têm checklist.",
+        "Etapa não encontrada no funil deste caso. Não é possível criar o critério.",
         422,
       );
     }

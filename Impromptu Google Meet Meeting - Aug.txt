@@ -1,0 +1,630 @@
+Impromptu Google Meet Meeting - August 03
+VIEW RECORDING - 70 mins (No highlights): 
+
+---
+
+0:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Oi, Thiago. Boa tarde, amigo.
+
+0:05 - Dr. Thiago Correia
+  Beleza? E aí, boa tarde. Tudo bem, e você?
+
+0:08 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tudo bem? Rapaz, rapaz, só semana meio caótica aqui.
+
+0:14 - Dr. Thiago Correia
+  Deixa eu ver aqui para a gente começar. Eu acho que tinha aquelas últimas alterações ali, né?
+
+0:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, a gente tinha ficado com as alterações nas partes dos filtros e a do pró-júris.
+
+0:32 - Dr. Thiago Correia
+  Filtros... Deixa eu abrir aqui, porque aí você vai me mostrando, eu vou vendo aqui também. Tá bom. Vai ser a mexer direto no sistema também.  Do filtro... Tá, do filtro é o seguinte.
+
+0:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora, ali em editar campos, a gente tem a opção do número de preenchimentos desse determinado campo. Lembra que a gente tinha combinado sobre isso?  Aham. Então, você vai poder botar o rótulo do campo que você quer, o tipo de texto e a quantidade que ele vai poder colocar.  Lembra que a gente definiu isso? E ali é onde vai ficar esse novo valor, porque ele tanto pode ser dentro do caso, quanto ele pode ser dentro da pipeline.  Não entendi a diferença aqui.
+
+1:35 - Dr. Thiago Correia
+  Do cliente. Porque eu lembro que você me disse o seguinte, por exemplo, entra em um cliente agora.
+
+1:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Entra nesse cliente, Matheus Tor 4. Agora, ele tem aí a parte de campos dele, tá vendo? Aham.
+
+1:48 - Dr. Thiago Correia
+  Espera. Onde que tem esse aqui? Embaixo ali, Dados do caso. Aham. Tá vendo? Dados do serviço. Dados do CV, sim.
+
+2:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque o Matheus 4 não está com nenhum dado preenchido ainda dentro daqueles campos. Ou, na realidade, ali no SIM não tem nenhum campo criado, né?  Você não criou nenhum campo lá dentro. Mas, por exemplo, vai numa outra pipeline que seja... Espera aí, só um minutinho.  Vai numa pipeline que esteja com dados criados. Essa é um por cento fiéis. Pronto. Aí, dentro do um por cento fiéis, nós temos os filtros da pipeline.  Está vendo ali em cima? Você pode editar os filtros. Editar os filtros lá em cima, né? Que aí, no editar campos.  Editar campos. Isso. Aí, no editar campos, a gente tem os campos. Você pode visualizar ou não visualizar esse campo, né?  Para poder ocultar o campo nesse processo. Pode selecionar o número de preenchimento desse campo. Então, está vendo que esse teste tem três números de preenchimento?  parte. Aí abre esse cliente, abre o cliente Camila Tittoni, por exemplo. Pode ser qualquer cliente. Agora dentro do caso, a gente tem os dados do perfil do cliente.  Lembra que você pediu para ter? Eu estou vendo esse dado do perfil aqui. Olha aí, dados do serviço, enquadramento que ele se encontra, DGM, qual é a porcentagem, qual é a nacionalidade, qual é o veículo.  Aqui são os dados do caso, não do cliente.
+
+3:39 - Dr. Thiago Correia
+  Isso, é porque está dentro de um caso aí, né? Os dados do perfil do cliente, aí está me gerando dúvida.
+
+3:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, aí os dados do perfil que eu digo assim, os dados relacionados ao caso do cliente, como você tinha solicitado.  Porque aí você está dentro de um caso, você não está dentro do cliente. Você está pela pipeline.
+
+3:54 - Dr. Thiago Correia
+  Os dados do caso, os dados do caso. Isso, você está na pipeline do caso.
+
+4:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Você não está no cliente, o cliente é lá em cadastro. Sim, entendi.
+
+4:04 - Dr. Thiago Correia
+  Aí você clicou num pipeline de um caso, acessou essa pipeline desse caso e abriu o caso.
+
+4:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí dentro do caso do cliente tem os filtros que você pediu para eles aparecerem dentro do caso do cliente.  Que é esses filtros aí, que são os mesmos filtros que se encontram lá na pipeline.
+
+4:24 - Dr. Thiago Correia
+  Beleza, beleza. Vou ligar aqui a minha tela, que ela desligou aqui. Dessa parte aqui, acho que seria isso mesmo.  Aí você clica nele.
+
+4:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, por exemplo, o caso teste ali, está vendo que tem três opções lá na hora que você criou os campos?
+
+4:57 - Dr. Thiago Correia
+  Aí no caso, fica lá, três opções.
+
+5:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Do teste, entendeu? Que no caso seria como você me disse. Ah, tem casos que eu vou ter três informações neste mesmo campo.  Aí é para criar um novo campo dentro deste caso como filtro. E aí ele não vai para a Pipeline, ele fica só no caso.  Lembra que você me falou isso também?
+
+5:27 - Dr. Thiago Correia
+  É, aqui é no caso se ele aparece ou não, se ele aparece ou não como filtro aqui, né? Não, mas aí é em editar campos.
+
+5:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É que você me disse o seguinte, você me disse assim, aqui dentro da Pipeline eu vou criar filtros, mas dentro do caso pode ter um dado específico que eu quero colocar naquele caso, mas ele não precisa ficar como filtro.  Aí eu adicionei lá também. Mas aí você também coloca os filtros que você quer dentro. It's pipeline, entendeu? Mas aí é em editar campos, não dentro do contrato do cliente, do caso do cliente, no caso.  São lugares separados, mas que têm a função ali de preencher os dados, entendeu?
+
+6:15 - Dr. Thiago Correia
+  Eu entendi o que você está trazendo e está certo, na verdade, só que está certo dentro da lógica que é, e eu acho que você não entendeu bem essa parte do que é esse campo.  É porque até quando você está falando sobre campo como filtro, eu fico com dúvida se a gente conseguiu ter o direcionamento do que é esse campo.  Porque o campo não é para ser um filtro, ele é para ser um local de informação. Sim, é isso aí mesmo.
+
+6:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que isso é dentro do caso, entendeu? É porque, por exemplo, você criou um dentro do caso, aí é um local de informação.  ... ... ... ... ... O filtro é aqui dentro da pipeline operacional, entendeu? Que é lá em editar campos dos filtros.
+
+7:05 - Dr. Thiago Correia
+  Eu não vejo como pode fazer sentido eu poder criar um campo que é desvinculado do outro, entendo, da pipeline.  É porque os campos são iguais para todas as pessoas do mesmo tema. Mas é isso que acontece lá.
+
+7:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É que você me disse que tinha casos que são relacionados só ao caso. É isso que eu não entendi como é que você quer que eu crie nesse processo.  É isso.
+
+7:40 - Dr. Thiago Correia
+  É porque tudo que está aqui de informação do caso precisa. Só que nem tudo que está aqui de informação do caso vai ser um filtro.  Isso, mas já está assim. Isso. Então essa situação aqui não precisa, entendeu? Mas não vai para filtro isso.
+
+8:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, dentro do caso, não quer adicionar outras coisas. Isso não está vinculado a filtros da Pipeline. Isso é deste caso em específico.  Por exemplo, eu quero colocar uma informação neste caso, aí eu vou adicionar isso. Isso não vai para o filtro da Pipeline.
+
+8:23 - Dr. Thiago Correia
+  Se eu quiser fazer uma observação, uma informação do caso, alguma coisa, eu vou adicionar como notas, né? Isso. Também.  É porque você tinha me dito que precisava colocar dentro do caso. Não, precisa ter dentro do caso. É disso aqui.  É igual quando a gente está aqui no sistema que eu fiz de exemplo, que é para um outro tema, mas a lógica é a mesma, né?  Deixa eu abrir aqui. A gente tem aqui... Isso aqui são campos personalizados, né? Isso aqui.
+
+8:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas isso é de filtros, que aí você vai criar lá na Pipeline de filtros. É isso que eu estou dizendo, assim.  Entende que eu preciso... Eu conseguir que você entenda mais ou menos o que eu estou dizendo. Esse campo aí são campos de filtros, não é isso que você usa como para filtrar o caso?  Não, não, é exatamente isso.
+
+9:13 - Dr. Thiago Correia
+  A gente não tem que vincular campo como filtro, mesmo que não apareça lá. O campo é um local para armazenar uma informação do caso.  Tá, então não é notas. Não é notas, não é nossa.
+
+9:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora eu acho que eu consigo se fazer. Então o campo que a gente fez está certo nessa questão, que é a mesma coisa que você fez aí.  A diferença só é que os campos que aparecem também na pipeline aparecem ali para o caso do cliente. Mas os campos que você cria dentro do caso não aparecem na pipeline, entendeu?  Eles não aparecem na pipeline, só aparecem no caso, como esse daí, neste processo, entendeu? É, mas é isso, é porque...
+
+10:01 - Dr. Thiago Correia
+  Informação, quando eu digo informação, não é só informação de uma observação, é informação do próprio caso do cliente, tipo, Adavio tem um processo, deixa eu ver como é que eu consigo explicar, você tem um processo, Adavio, contra uma outra empresa que tu trabalhou como programador, e aí o seu período de trabalho naquela empresa, desse processo de trabalho que você recebeu, foi de 2022 a 2026.  Isso não é só uma informação que a gente coloca em notas, algo assim, isso é um campo de informação do seu caso.  Então, nessa parte aqui, isso aqui está certo. Então, aí seria esse campo?
+
+10:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, isso aqui está certo.
+
+10:49 - Dr. Thiago Correia
+  Aí, quando a gente coloca que esse campo aqui de informação, ele pode ou não vir como filtro para... Opa, é clicando, clicando...  Pode Opa, ou não vir Como filtro para aqui, para essa parte, também está certo. O que está errado é quando a gente coloca que existe a opção de adicionar um campo que não é de informação do caso, que não é específico daquele tema.
+
+11:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí, como é que eu vou bloquear isso? Se você pode editar isso, criar um novo esquema. Por exemplo, esse é um caso particular meu, porque o meu foi de 2022 a 2025.  Então, imagina que o cara está fazendo um outro processo, que em vez de uma data, seja um texto que eu preciso colocar nesse campo.  Se eu não deixar a pessoa preencher o campo, como é que eu vou deixar ela botar essa opção? Aí eu não entendi.
+
+11:45 - Dr. Thiago Correia
+  Ela tem que ter o... Pera, aqui quando está fazendo isso aqui, é para preencher isso aqui ou eu posso só preencher que eu preciso vir aqui?  Não, pode só preencher.
+
+11:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí é quando você está criando um novo. Que, por exemplo, não tenha na Pipeline. É desse caso específico. Então, isso aí não é para existir, não.
+
+12:08 - Dr. Thiago Correia
+  Porque quem define quais são os campos de cada tema são os administradores. Então, ele vai fazer na Pipeline, entendeu?  Ele não faz dentro do usuário. Isso, isso.
+
+12:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, esse aqui não é para existir, porque a pessoa não é para ter essa opção... Então, é para estar como estava antes.  É só a Pipeline que determina. Só que aí, antes, não mostrava aí. Aí, agora, vai mostrar aí, mas vai tirar o campo dele poder adicionar.
+
+12:31 - Dr. Thiago Correia
+  E que vai ter tipo, tipo igual está aqui, que tem sei quantos campos aqui, né? Que não estão preenchidos e tudo.  Mas aqui, na Pipeline, alguns desses campos são usados como filtro. Não todos. Não todos. E aí, a pessoa não tem como chegar aqui dentro de um caso...  Mas, por exemplo, quando você... Entendi. Entendi essa parte.
+
+12:57 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí, por exemplo, quando você cria... A sua pipeline, porque o seu é diferente do nosso. O seu é um sistema só para uma pipeline.  O nosso tem a pipeline e tem o caso do cliente. Vamos lá, entenda junto comigo para a gente conseguir pegar o processo.  Na pipeline, eu crio os campos personalizados deste determinado caso da frente, na realidade, na pipeline ali. E esses campos aparecem dentro do caso.  Neste caso aqui, você quer adicionar campos diferentes dentro desta pipeline? Ou a pipeline já vai determinar quais são os campos do caso, entendeu?  A pipeline vai determinar quais são os campos do caso.
+
+13:47 - Dr. Thiago Correia
+  Então tá certo, porque abre lá o nosso sistema.
+
+13:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vamos fazer para você entender o que é, certo? Porque eu acho que você não tá entendendo como é que funciona o sistema.  Tudo isso aqui tá certo dentro do que você tá falando. Eu só não vejo sentido da pessoa ter... O que ela quiser entendeu isso então isso aí seria retirado mas por exemplo vamos entender o caso um porcento só para a gente bater o martelo e ver se tá certo vai lá no caso um porcento pipeline abrir um por cento fiéis tá vendo que tem esses nomes aí né que são os nossos filtros não vai lá em editar campos cria um novo campo aí aqui qual portaria boa aí seleciona o tipo dele aí aí obrigatório ou não pode ser múltiplo escuro aí descemos lá aí bota adicionar campos  Boa. Aí volta. Aí tá vendo lá que apareceu agora o percentual portaria. Pronto, é isso. Nem todos os campos vão virar filtros.
+
+15:13 - Dr. Thiago Correia
+  Pronto, beleza. Tudo bem. Aí é isso que eu tô dizendo. Vamos testar pra gente testar. É, ele não tem que vir obrigatoriamente pra cá.  Aí vamos lá em editar campos.
+
+15:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí a gente pode visualizar ou não visualizar o campo. Aqui. Isso. É ocultar de tudo. Mas aí ele foi ocultado também do campo.  Do contrato.
+
+15:39 - Dr. Thiago Correia
+  Certo? Do caso. Dentro do caso.
+
+15:41 - Adavio Tittoni (adaviotittoni@gmail.com)
+  não aparece aqui. Isso. Ele está ocultado dentro do caso. Certo? Aí voltamos lá. Vamos voltar. Porque pra gente entender como é que ele vai funcionar.  Aí volta lá no editar campos. Devolve ele. E clica no editar agora. Ok. Aí no editar, a gente pode colocar ocultar na lista.  Aí salva o campo, volta no processo. Aí está aparecendo aí, mas na lista não está aparecendo. Por quê? Porque a gente tinha entendido que era só para ocultar na lista do processo, mas já vai estar aparecendo dentro do cliente agora.  Vamos lá, percentual portaria. Mas na lista não aparece, mas você também quer que não apareça no filtro, não é isso?  Isso, isso.
+
+16:35 - Dr. Thiago Correia
+  Esse aí é o ponto que eu estava te falando, que nem todo campo necessariamente é um filtro. É, a gente tinha feito isso aqui, por exemplo, está na lista, vai lá em ver lista.
+
+16:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora no ver em lista não pode mais editar, como você tenha me pedido, lembra? Para ele não conseguir editar na lista.  Não, aí na lista embaixo. Lembra que antes ele conseguia editar, aí a gente tirou. Vamos preencher os campos aqui direto, né?
+
+17:00 - Dr. Thiago Correia
+  Isso. Aí pode ir para o lado, pode ir até o final, por exemplo.
+
+17:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pode ver que aí não aparece o percentual de portaria na lista. Aqui na coluna.
+
+17:13 - Dr. Thiago Correia
+  Isso. Foi retirado o a gente colocou lá, ocultar da lista. Agora eu vou colocar ocultar do filtro. Vai ser mais uma opção, não Isso.  Exato. Não aparece aqui. Não aparece aí.
+
+17:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas quando você clicar no cliente, vai lá no cliente. Pode clicar em qualquer um aí que ele cai no cliente.  Quando clicar no cliente, aí vai aparecer o percentual portaria, mas ele só não aparece como um filtro na coluna, não isso?
+
+17:43 - Dr. Thiago Correia
+  Sim. Ele não aparece no filtro aqui. Da pipeline operacional. Isso. Ele não aparece aqui na caixa. Beleza. Beleza. Fechado.  Seja em lista, seja no Kanban, ele não aparece na... É, mas aí eu vou colocar lá na configuração.
+
+17:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vai lá em editar campos de novo. Então, em editar campos, quando você clicar em editar lá no percentual portaria, vai descendo, aí vai ter ocultar na lista, vai ter ocultar no filtro, exato, certo?
+  ACTION ITEM: Remove 'Add field' in case view; enforce pipeline-only custom fields - WATCH: https://fathom.video/calls/770992175?timestamp=1087.9999
+  ACTION ITEM: Add 'Hide from filters' option in Edit Fields (list/Kanban) - WATCH: https://fathom.video/calls/770992175?timestamp=1087.9999  Que aí ele vai criar e vai ocultar. E aí, então, eu retiro de dentro da parte do caso que o cara possa adicionar campos.  Então, os campos personalizados é você que cria de acordo com a frente e não com o caso.
+
+18:34 - Dr. Thiago Correia
+  Sim, exato. Se for algo que não é padronizado do caso... Ele vai botar nas notas. Isso, é. Se for algo que não é padronizado do tema, da frente, aí ele adiciona uma nota em algum outro nota.  Tá, beleza. Então, pronto. Aí o administrador tem que ir lá e mudar para todos os casos que tem a opção de adicionar aquilo.  Beleza, fechado.
+
+18:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Que aí ele coloca nu, no caso, dentro das notas. Isso, que vai ser igual... A gente vai definir para cada tema quais são as informações barra campos que são úteis de acordo com a necessidade.
+
+19:11 - Dr. Thiago Correia
+  Acho que disso é isso, dessa alteração, e eu queria ver para vocês se tem como, porque isso aqui, era até o que eu falei para você que estava olhando na sexta, aqui a gente tem igual o workflow do 1%, a pipeline, que tem tudo que é relacionado a tudo que a gente está construindo aqui sobre os casos daquele tema.  Agora a gente está falando que vai criar aqui o campo para essa pipeline e fica vinculado todos os casos iguais.  Tem como, dentro dessa mesma opção de pipeline aqui, que é o 1% aqui, nós temos outra visualização de pipeline relacionada aos mesmos casos?  Tipo, lista 1, lista 2, lista 3, e aí os filtros, como se eu pudesse ter outras etapas aqui dentro, só que para listas diferentes dentro dos mesmos casos, não sei se fez sentido.  Na verdade, seria como se fosse salvar filtros. Não, as próprias etapas aqui tem como mudar, porque seria como se fosse uma pipeline diferente do mesmo tema.  Eu acho que até olhando aqui no sistema, era como se esse 1% aqui fosse, igual está aqui, pipelines operacional, 1%.  E aí aqui tivesse as pipelines do 1%. Pipeline 1, 2, 3, entendeu? Entendi. Tipo, DGM, ESF, etc, etc, etc, etc, E aí, vinculada a um campo...
+
+21:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que aí o problema é o seguinte, o caso é vinculado a uma pipeline, e o caso tem os campos daquela pipeline, aí você queria que, por exemplo, quando você criasse um caso, em vez de ela ser vinculada a 1%, ela vai ser vinculada ao, por exemplo, o ESF.
+
+21:31 - Dr. Thiago Correia
+  Meio que isso, só que eu, quando eu fiquei pensando isso aí, eu acho que só, na minha cabeça, só funcionaria se aqui dentro dessa opção igual tá aqui agora que vocês fizeram, porque o que que é, cadê aqui, eu acho que não é aqui no campo não, é aqui no, onde que vai ficar, onde que eu vejo aqui dentro do caso, qual é a etapa que esse cara tá, por exemplo, a etapa é o que tá aqui, né, que é o...  Como está aqui, a Camila aqui, esse caso, ele está aqui nessa etapa novo. Onde que eu vejo dentro do caso dela que a etapa dela é essa?  Rastro operacional. Aqui, vai estar aqui. Então aqui meio que ficaria mais de uma opção, tipo, essa pessoa aqui, porque eu acho que não precisava, até para conseguir explicar melhor, eu acho que não precisava ser vários campos personalizados para cada uma dessas pipelines.  Isso aqui igual já está construído aí, de campo vinculado ao tema, que igual a 1%. Hoje a pipe lá é o tema todo, né?  Então, do jeito que está aqui vinculado ao tema, já está ok. Seria só uma situação de espelhamento do que aparece na lista.  Então, aqui eu teria a opção de adicionar esse caso na lista 1, 2 ou 3. A lista para workflow, que a mesma coisa, só muda como que é apresentado.  Então, quando eu clicasse aqui, essa aqui seria, por exemplo, meio que eu... A lista 1.
+
+23:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, exato. Eu cliquei aqui.
+
+23:11 - Dr. Thiago Correia
+  Mas aí a lista não muda os campos? Qual seria a intenção da lista?
+
+23:15 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mudar o Kanban? Mudar o Kanban.
+
+23:18 - Dr. Thiago Correia
+  Eu poderia ter etapas diferentes. Não, Kanban. Isso. Quer ver? Deixa eu criar... Mas os filtros não mudam. Os filtros, acredito que não precisem...  Os filtros são vinculados no campo, né? É, então. Os filtros são vinculados ao caso.
+
+23:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Por isso que ia mudar um pouco a lógica, entendeu? Porque aí, em cada etapa, você ia ter que criar filtros diferentes.  Aí não ia ter uma frente de caso, entendeu? Ele ia ter vários. Aí é melhor você pegar e construir uma outra pipeline, por exemplo.
+
+23:51 - Dr. Thiago Correia
+  É, não, não. acho que faz sentido manter os mesmos filtros, porque a gente nem mexe nessa outra coisa aí que daria muita bagunça.  Eu acho que... Filtros mantém os mesmos, não teria problema, porque seria só uma situação para a gente ter etapas diferentes.  Quer ver? É tipo, deixa eu criar uma aqui, só para vocês visualizarem qual seria a utilidade, né? Vamos supor que esse em andamento aqui seria um, não consigo mudar, Ah, já mudou.  Beleza. Então, seria um aguardando documento, esse caso aqui. Só que aí eu posso ter a situação de ter uma pessoa que eu estou aguardando documento que eu cobrei uma vez, duas vezes, três vezes, quatro vezes, e aí esse mesmo caso, então, por isso que não seria criar um caso diferente, porque na lista 1, que é a lista principal, o caso da Camila aqui, ela está aguardando documento.  Na etapa principal é essa. Só que ela tem uma subetapa de cobranças desse documento. teria aqui rastro, igual está aqui já, aí na lista 1, lista principal, ela estaria aqui nesse lugar.  Só teria uma outra informação aqui, é na lista 2, de cobrança de documentos, qual é a etapa que ela está.  Tá, mas então quando ela é criada, ela é criada nas quatro listas? Na principal, sempre na primeira, que é a do tema, que é a que define tudo, né, que é o andamento principal, fluxo principal.  Tá, e aí como é que, estou pensando aqui, para eu já conseguir mapear. Eu acho que seria só espelhar o mesmo caso, não criar outro caso, não sei o que.  mas aí, onde é que eu adicionaria isso?
+
+25:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí dentro do rastro operacional, adicionar a base 2? Dentro do caso, eu faria isso? Eu acho que aqui dentro do caso, ficaria um, alguma forma de eu poder...
+
+25:46 - Dr. Thiago Correia
+  Adicionar a lista 2. Igual vocês já fizeram aqui, enviar financeiro. Sim, seria enviar para a lista 2. É, seria tipo assim, adicionar etapa, tipo isso, adicionar etapa, e aí eu posso adicionar ela em outra lista.
+  ACTION ITEM: Implement multi-Kanban views per theme; add 'Add stage' (mirror) - WATCH: https://fathom.video/calls/770992175?timestamp=1553.9999  O mesmo caso... Tá bom, a gente faz. Você acha que é algo que... Acho que dá para fazer. Vou dar uma olhada, mas acho que dá para fazer essa parte.  Se fosse os filtros, aí seria ruim.
+
+26:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas como é só o mesmo caso, só para ele ter uma pipeline de Kanban diferente, aí é tranquilo. Só se você achar que não mexe em alguma outra coisa que vai dar outro problema, entendeu?
+
+26:31 - Dr. Thiago Correia
+  Entendi. Se você quiser outros campos, aí você cria uma nova pipeline.
+
+26:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, acho que os campos dá para manter igual, porque lá em...
+
+26:41 - Dr. Thiago Correia
+  Considerando as informações que vão estar no campo, lá na lista de cobrança de documentos, essas coisas, o caso vai ser o mesmo.  Quem é? O município, não sei o quê, o empadramento, se é senso, portaria, DGM, isso tudo vai ser o mesmo, não muda.  As informações do caso são as mesmas, isso que eu quero dizer. Então, eu acho que seria só um exercício de espelhamento, tudo manteria igual.  Eu acho que a única alteração que teria, além da situação que a gente está comentando, de poder dizer para onde isso aqui vai, seria nessa lógica aqui da pipeline.  Quando tu clica, você tem um pré-menu antes de cair. Sim, igual o pipeline do Kanban você quer visualizar. Isso, isso, isso.  Que é mais ou menos a lógica que tem aqui, dessa parte aqui. Aqui eu tenho, aqui é um Kanban dos casos, e aqui é outro Kanban dos casos, está como lista e tal, mas é outro Kanban, é outro Kanban, na verdade.  É o que vocês fizeram aqui no Kanban virar lista, né? Sim. Aqui eu tenho essas duas situações que eu estou falando, que é o lista, que vocês já fizeram aqui, visualizar como lista ou não.  Então, aqui é Kanban, aqui é lista, só que as colunas que aparecem aqui, as etapas, as etapas que aparecem aqui...  Aqui diferentes, são as mesmas etapas daqui, aqui eu tenho essas etapas e aqui eu tenho essas etapas da parcela.  Outros filtros, né?
+
+28:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, assim, os filtros eu acho que a gente nem precisa se preocupar de mexer com os filtros.
+
+28:14 - Dr. Thiago Correia
+  Aqui é porque, na verdade, se você transformar isso aqui em um Kanban, essa página aqui é um Kanban, as etapas são diferentes.  Entendi. Que uma é essa etapa aqui. Mas é isso, ele tem etapas diferentes. Aqui eu tenho as etapas da parcela e as etapas da solicitação inicial.  Mas eu acho que seria isso, por não complicar demais e falar demais. Só fazer um Kanban diferente e aí já tá certo.
+
+28:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente só vai tirar ali dos casos para a pessoa poder adicionar um novo campo, porque ela só vai poder adicionar um campo.  Aí dentro do filtro da frente, dentro do processo, e aí a gente espera o pró-júris e faz essa determinada conexão.  Até tinha ali, eu tinha até falado para o Iagos, quando vocês quiserem, se vocês conseguirem exportar os casos que vocês queiram que a gente importe aí dentro, vocês avisem que a gente importa.
+
+29:21 - Dr. Thiago Correia
+  Isso, e se eu queria ver isso com você também, é porque a gente comentou isso lá na primeira vez que a falou sobre esse tema específico.  Aqui eu tentei, ele é até mais lento aqui, esse que eu fiz para o pessoal usando por conta da necessidade, ele é até mais lento porque eu quis manter essa base de dados dele dentro do XMED, para não mexer com base externa que depois pudesse dar trabalho para a gente importar.  Lógico que o que está lá no Trello e tal, sei o que, isso é impossível, acredito, da gente importar, mas desses...  Se a gente conseguir exportar do Trello, a gente importa. Eu acho muito difícil, porque é muita informação e é bagunçado, eu acho que impossível, mas esse daqui, eu acredito que pelo menos do que está aqui nesse sistema, a gente conseguiria importar, porque, por exemplo, aqui a gente tem nesse caso, algumas informações já específicas, que dentro da construção que a gente está fazendo aqui, a gente já está projetando de uma forma parecida.  Então, eu tenho aqui o comentário do dia que isso aqui aconteceu.
+
+30:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Que fica ali, por exemplo, na nossa linha do tempo, que aparece lá. Exato. Aqui é o andamento do caso, é a nossa linha do tempo lá.
+
+30:43 - Dr. Thiago Correia
+  Então, observação e comentário, isso aqui é a anotação que já existe nos temas de vocês. E isso aqui foi feito de uma forma que essa informação aqui, ela está naquela planilha lá que você tem acesso.  Sim, do XML. Eu não sei como é que ela está salva lá, mas...
+
+31:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tudo que está aqui está lá. Aqui é só o visual, o X que vocês chamam.
+
+31:09 - Dr. Thiago Correia
+  Aqui é o front-end. Aqui é só o front-end do que está lá naquela planilha. Então, isso aqui está armazenado lá de alguma forma.  Mas a gente pega aquilo lá e importa aí dentro.
+
+31:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só precisa o mapeado, por exemplo, quais são os campos, os filtros, isso a gente precisa mapear, porque aí não está lá na tabela, vai estar aí no front-end.  O que que é, por exemplo, essa informação aqui significa no campo personalizado nosso aqui?
+
+31:38 - Dr. Thiago Correia
+  Seria isso? Não, na verdade não é isso, por exemplo. Volta lá. Vai lá em cima e...
+
+31:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Você está dando um caso, né? Vai lá na lista. Por exemplo, esse nome aí, mais médicos ativos, fiéis, DSE, município, cidade, pendência...  Os filtros, os campos de filtros, né? Talvez eu precise que você me mande, tipo assim, Adavio, esses são os filtros do SIM, esses são os filtros do 1%, esses são os filtros que a gente já cria tudo, entendeu?  É, aqui no caso, esses filtros aqui são, que são esses campos aqui, ó.
+
+32:19 - Dr. Thiago Correia
+  Que é a mesma coisa do nosso, que é aqueles campos personalizados lá. Isso aqui eu fiz no sentido de que dentro da pipeline aqui, que se a gente tá falando lista 1, lista 2, teria como ter filtros diferentes, mas eu acho que a gente não precisa fazer a mesma coisa no nosso aí, por conta da complexidade que isso vai gerar, né?  Mas essas informações que você tá citando lá, são os campos, são os campos aqui, tá? São esses campos. Que vai ser, é, vai ser os mesmos campos dos filtros que a gente tem lá, né?  Isso, vai ser tudo isso aqui. Só que aí, quais desses vão pra filtros? Aí a gente... Sim, aí você vai marcar lá.
+
+33:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vocês vão marcando dentro da pipeline, entendeu? Qual vai para filtro, qual aparece na lista, qual não aparece na lista, tudo bem editável.
+
+33:09 - Dr. Thiago Correia
+  Vou fazer o seguinte, até para a gente ter um plano mais efetivo, eu vou pegar aqui o do Idenização, a pipeline que seria do Idenização, e vou montar todos os campos de acordo com essas informações que a gente tem aqui.  Então, assim, qual o campo que fica ali no sistema de vocês, né? Então, tem coisa aqui que eu não vou colocar mais lá, sabe, que na hora que eu estava fazendo ficou, e aí dá muito trabalho desfazer, arrumar, dá muito trabalho.  Aí, o edital, a gente vai manter essa informação no sistema lá, com um campo. Então, eu vou deixar pronto e trazer para você, Adavio, esse campo aqui é o campo aqui tal no sistema de vocês.  Isso, bom.
+
+33:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas assim, se você quiser me enviar só os campos, eu já crio todos também, não tem problema, não. Eu vou fazer porque eu já projeto ele de uma forma que fica pronto.
+
+34:03 - Dr. Thiago Correia
+  Tá bom. O trabalho seu vai ser pegar essa base de dados e trazer aqui para dentro. É, mas aí a gente importa, a gente consegue importar.  O trabalho seu vai ser maior de trazer isso aqui para dentro. Aí o que vai ficar é essa parte das etapas que gente precisa fazer antes de poder importar.  Sim, sim.
+
+34:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Deixar pré-montado, né?
+
+34:32 - Dr. Thiago Correia
+  Isso, essa parte da etapa precisa fazer antes de importar os dados em si, porque quando a gente for fazer aqui vai ter isso, né?  De que aqui tem uma etapa e aqui tem outro tipo de etapa. Então, a gente precisa consolidar no seu sistema que é a operação antes de importar os dados.  Esse botão aqui é o quê? Vincular a um tema? É quando você quer vincular o caso a um tema.
+
+35:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O cliente é um tema também.
+
+35:01 - Dr. Thiago Correia
+  Mas a gente pode retirar esse botão. Pode clicar ele aí. Ele já tem que ser criado. Já está vinculado ao tema.  Ah, mas aqui no caso eu posso pegar, tipo assim, o cara quer de 1% e transferir ele para a indenização mais médicos, é isso?  Isso. Ele vai duplicar nesse outro tema daí, né?
+
+35:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, ele vai duplicar nos dois temas.
+
+35:19 - Matheus Torquato
+  Os dois temas, vai estar nos dois.
+
+35:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Como se fosse o mover para o financeiro, só que aí ele move para um outro tema. Entendi. Eu acho que isso aqui é interessante.
+
+35:29 - Dr. Thiago Correia
+  sai retirado. É interessante ter, mas no sentido...
+
+35:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  para mover para a Kamban, não para outro tema, né? Que é o que a gente vai fazer lá de mudar para a Kamban, né?
+
+35:40 - Dr. Thiago Correia
+  Não, aqui eu acho interessante ter isso aqui, porque, sei lá, eu estou classificando o caso do cara num tema errado.
+  ACTION ITEM: Implement Move to Theme (transfer, not duplicate); add confirmation - WATCH: https://fathom.video/calls/770992175?timestamp=2142.9999  E aí para não precisar criar outro caso no tema certo, eu poder jogar para o tema certo. Hum, entendi.  Só que aí não seria uma cópia, seria uma transferência mesmo.
+
+35:57 - Adavio Tittoni (adaviotittoni@gmail.com)
+  transferência. E aí pode avisar, né? Então... E Você está sendo transferido, está transferindo de um lugar para o outro.
+
+36:03 - Matheus Torquato
+  Você aceita fazer isso, aí ele vai lá e aceita aquele processo.
+
+36:06 - Dr. Thiago Correia
+  É, é igual estar aqui, é esse aqui mesmo. Só no sentido de não fazer uma cópia. Tá bom. O terceiro, sim, acho que seria isso aqui dessa parte.  O das informações vai ajudar muito. Aí tem umas questões, assim, sobre o visual que está aqui, que eu tentei fazer de um jeito que fica meio que desenhado para o povo não errar, sabe?  Mas acredito que não tenha como a gente ficar puxando, assim. Só tem umas questõezinhas aqui, tipo assim, eu deixei um botãozinho, registrar a comunicação feita, que é uma etapa.
+
+36:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente não consegue algo assim para lá, né? Não, só se a botar nos filtros como colocar como uma marcação, checkbox.  É, tipo...
+
+37:00 - Dr. Thiago Correia
+  Ah, lá nos filtros. Eu vou aqui, vou aqui. Editar campos.
+
+37:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, não tem o tipo ali? Em vez do tipo CT, a gente pode colocar botão, checkbox. Checkbox é tipo marcar um ok, né?  Ali embaixo. Ah, tá.
+
+37:15 - Dr. Thiago Correia
+  Entendi. Entendi. Beleza. Esse aqui eu fiz de um jeito que quando a pessoa clica aqui, vem um andamento, né?  Que seria ali a nossa linha do tempo, né? Tipo, aqui vem uma informação assim. Etapa tal enviada. Comunicação feita, tipo isso.  Não, pode fazer com checkbox. Na verdade, né? Quando a gente move uma etapa... Isso.
+
+37:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Já aparece e fica marcado lá que você moveu a etapa na linha do tempo.
+
+37:47 - Dr. Thiago Correia
+  É, então já vai aparecer, já tá igual. Já tá aqui. É, porque aí você pode botar como na etapa, né?  E a gente consegue, tipo assim, cliquei aqui que tá a comunicação feita. Vamos... Ou que eu peguei esse campo aqui e transformei ele em OK, que está a comunicação feita.  Eu consigo, de alguma forma, colocar que quando a comunicação está feita, esse caso vai para a próxima etapa do...  Pode avançar a etapa.
+
+38:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Você entendeu? Tipo assim, aguardando documento.
+
+38:21 - Dr. Thiago Correia
+  Aí eu tenho aqui um negocinho que é documentação OK. Aí eu marquei. Aí ele pega e move o caso já para a próxima etapa, que é fazer a solicitação administrativa.  Pode, você pode...
+
+38:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  estou pensando aqui. Lá em editar campos, a gente pode colocar o checkbox e pode colocar mover para a etapa.  Aí quando o cara jogar ele lá, ele move para a etapa. Porque vai ser um... Porque isso aqui é uma parte do caso, certo?
+
+38:53 - Dr. Thiago Correia
+  Não é uma etapa no campan. Então, por exemplo, você pode colocar aí... Buta... Buta...
+
+39:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Adavio X, certo? Aí você bota no texto, é onde você está mesmo. No tipo de texto você muda para checkbox, que é dar um ok ou não, ou sim ou não, está sim ou não, está vendo ali?  Aí você vai marcar mover para a etapa, aí você bota sim, e aí escolhe qual é a etapa que vai mover, entendeu?  Porque aí quando o cara clicar, porque isso aí vai estar lá no editar campos, aí quando ele clicar no botão, ele move ele para a etapa no campano.
+
+39:27 - Dr. Thiago Correia
+  Mas aí teria que ser uma resposta específica, porque se ele clicar não, por exemplo, ele não pode ser movido.
+
+39:32 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas não vai ser movido, porque não está marcado o checkbox, entendeu? Porque na realidade o padrão é não. Só muda quando ele manda sim, entendeu?  Entendi.
+
+39:42 - Dr. Thiago Correia
+  É que a gente tira do sim ou não e bota checkbox, que é aquela caixinha branca, entendeu?
+
+39:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Que aí quando você clica fica um ok. Ou pode ser um botão também, não tem problema.
+
+39:52 - Dr. Thiago Correia
+  É, botão eu acho difícil, porque vai ser específico para cada tema, né? É, eu acho melhor o checkbox, entendeu?  Que é a caixinha branquinha e o marca... o meu como... Não foi para um só, a gente tem mais essa...  Aí vai ficar a caixinha, entendeu? Porque a caixinha, o cara marca o play, e aí você pode botar, que move para uma etapa diferente.  Entendi, entendi. Coloca sim ou não. Eu acho que mantém o que você já tem aqui de sim ou não, Adavio, mas deixar uma opção nova, mas ter algo meio que parcial, sabe?  Tem como? Como assim? Tipo, é porque eu estou imaginando para esse tema, mas eu estou imaginando para muitos temas.  Tem várias situações que a gente tem, partes do que precisa. É porque na advocação é inferno, cara. Você pede para a pessoa que precisa de 10 coisas, aí o cara vai e te manda 5, e aí ele demora outros dois meses para te mandar 5.  E você precisa saber quem mandou 5 e quem mandou nada, porque isso pode mudar alguma coisa, sabe? Sim. E fala, pô, eu preciso de 10 documentos.
+
+41:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele te manda dois, aí dois ele vai te mandar dois meses, aí outro ele te manda semana que vem.
+
+41:07 - Dr. Thiago Correia
+  Então você pode botar checklist. Seria um checklist de sim. Múltiplo escolha, só que vários checkboxes.
+
+41:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas o checklist já tem dentro do caso, dentro do tema.
+  ACTION ITEM: Implement case-level checklists; add checkbox field w/ auto-advance - WATCH: https://fathom.video/calls/770992175?timestamp=2480.9999
+
+41:23 - Matheus Torquato
+  Mas não é um checklist, é múltiplo escolha, né?
+
+41:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, tem, ver?
+
+41:27 - Matheus Torquato
+  Entra dentro de um caso aí. Ah não, mas é só para o financeiro, lembra? É, é só para o financeiro.  A gente pode fazer do mesmo esquema, só que para o caso. É. Como é que está aqui? Se ele está aqui?  É aí embaixo. O pipeline financeiro. O pipeline financeiro. Na verdade, eu tinha esquecido disso. Tem, aí se você entrar, se você consegue criar um checklist para esse caso só.  Para esse caso em específico. Então daí, ele só passa de funil quando o checklist for completo, né? Estiver ali com, ou você arrastar manualmente.
+
+41:59 - Dr. Thiago Correia
+  Onde é que eu... É...
+
+42:00 - Matheus Torquato
+  mais para baixo, é mais para baixo, abaixo um pouquinho, sobe, eu acho que é porque não tem nenhum aí, não está aparecendo, não foi engraçado nenhum, não, estava bem ali para cima mesmo, é, ali em cima, é na hora do checklist do, quer ver, entra na pipeline financeira, favor, é, que tem que editar lá dentro, aí coloca ali, editar etapas, editar etapas, você clicar em qualquer etapa aí, clica naquela primeira ali, que tem uma setinha, é, na setinha do lado, a setinha do lado, isso, você consegue criar um checklist aí, então, e colocar se ele é obrigatório ou não, e tudo mais, aí você pode ir adicionando, isso fica para todos os casos, mas se você quiser criar um para um caso específico, você consegue entrar na pipeline lá e criar um checklist para ele, é a mesma coisa, ele aparece aqui, isso, aparece aí o checklist, seria muito interessante ter isso aqui,
+
+43:00 - Dr. Thiago Correia
+  Tá, a gente coloca.
+
+43:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente até tinha colocado e a gente tirou. Eu acho interessante.
+
+43:05 - Dr. Thiago Correia
+  Tudo isso que a gente está conversando sobre esse tipo de observação aqui, eu acho que serve para todos. Então, é igual isso aqui.  Esse caso aqui, quando ele está no financeiro, ele continua sendo um caso do 1%, por exemplo. Então, aqueles campos personalizados que ficam lá no 1% também podem aparecer aqui, entendeu?  É porque ele vai para o financeiro, só que ele continua sendo um caso do 1% do tema. Sim. Então, aqui o ruim é que tem outras coisas a mais.  Mas é bom.
+
+43:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tem outras coisas a mais aqui, né? É, por causa do financeiro, entendeu?
+
+43:49 - Dr. Thiago Correia
+  Que é para esconder, né? Aí é outro tipo de lugar.
+
+44:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí falta a gente ajeita essa parte aí e fazemos o... Esperamos o pessoal mandar o... Deixa eu só abrir esse outro aqui do financeiro também pra...
+
+44:12 - Dr. Thiago Correia
+  Vou só fechar minha janela aqui, gente, tá chovendo pra não dar a minha sala ali. Só o que tem diferente aqui na Pipeline do Centro do Financeiro.  Ah, tem muita coisa, né? Tem outros campos que são específicos do financeiro, do financeiro... O que a gente estava conversando sobre os campos, Matheus, que, Adavio, é que ficava dessa forma aqui, né?
+
+45:35 - Matheus Torquato
+  Isso. Como está no financeiro, né?
+
+45:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exatamente, entendeu? Que é o campo específico desse caso. É, não, mas é isso mesmo, tudo que for campo vai ser geral para...
+
+45:46 - Dr. Thiago Correia
+  Obrigado para todos. Isso. Porque aqui... for é nota. É, o que vai ter aqui no financeiro, por exemplo, que é diferente, que não teria aqui, é qual é o percentual de honorários da pessoa.  E aí, aqui vai estar... Vai estar... É, vai ser algo específico financeiro. Talvez isso fizesse sentido, sim, ter como, ter como interessante.  Porque a única coisa que eu tô vendo diferente entre o caso que tá aqui no financeiro e que tá aqui no pipeline operacional, por exemplo, são essas informações aqui.  É isso mesmo? Acho que é, né? Isso aqui é tudo que tá lá. Isso, é os outros campos que são criados aí dentro, entendeu?
+
+46:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que eles são criados dentro do caso, né? É por isso que não pode ter como algo pra criar, porque, tipo assim, vai validar erro, sabe?
+
+46:44 - Dr. Thiago Correia
+  A pessoa chega aqui, aí ela vai digitar uma coisa diferente. Sim, aí é melhor ser notas, né? É, a gente tá lá vendo, por exemplo, a porcentagem do êxito, o percentual do honorários na parte do sistema de...  Então, que cria o documento, tem lá a variável para puxar essa informação, aí a pessoa chega aqui e adiciona sem acento, aí o sistema de vocês já não puxa.  Sim.
+
+47:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, a gente tira e coloca...
+
+47:19 - Dr. Thiago Correia
+  Ele copia para o financeiro ou ele cria um novo? Como assim? Quando vem, por exemplo, quando eu clico aqui em enviar para o financeiro, ele...  Tanto pode criar um novo quanto copia, tem que clicar ali em enviar para o financeiro, clique lá.
+
+47:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É que aí já está no financeiro, né? ele escolhe duplicar ou enviar para o financeiro, entendeu? Entendi.
+
+47:55 - Dr. Thiago Correia
+  Nossa, dentro... Vou jogar aqui a ideia, mas dentro do que a gente... Estava falando aqui de poder estar em etapas diferentes, até no sentido de que a gente aqui está fazendo duas situações para isso, seria só uma etapa assim, a etapa do financeiro, entendeu?  Porque aqui ele vai estar em duas campanhas diferentes, no campanhas do operacional e no campanhas do financeiro. Mas a intenção não é mostrar o financeiro para todos, né?
+
+48:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Por isso que o financeiro tem um lugar para o financeiro, entendeu? Porque quando o cliente está com a etapa financeira, o caso está no financeiro, ele aparece no caso.  Por exemplo, esse caso não está no financeiro, certo? Mas o outro caso está no financeiro, vai lá no outro caso.  O caso do...
+
+48:47 - Dr. Thiago Correia
+  Esse é o Thiago, certo?
+
+48:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Está no financeiro. Pode voltar lá para o Thiago, para você ver. Ele está dentro de Covid, abatimento 5. Vai lá na Pipeline Operacional.  Aí é em 1% fiéis, mas aí olha lá o Thiago, clica lá nele, já tá aí, tá vendo? Já aparece qual racho financeiro que ele se encontra, olha lá, ele tá elaborando nos financeiros, entendeu?
+
+49:14 - Dr. Thiago Correia
+  Ah, tá, então sempre... Porque aquele caso não tá vinculado ao financeiro.
+
+49:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sempre que tiver alguma informação no financeiro...
+
+49:22 - Dr. Thiago Correia
+  Vai aparecer aí dentro do caso. E esse outro caso que nunca foi pra lá, tá aqui dessa forma. Tá parado, entendeu?  Entendi, entendi. Então, isso aqui seria mais ou menos também do que a gente tava conversando, de teriam outro lugarzinho aqui que eu vejo outras etapas.  É, então, que seria racho operacional, etapa 2, etapa 3, etapa 4, né?
+
+49:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim.
+
+49:46 - Dr. Thiago Correia
+  E como são checklists que não devem ser tão grandes, eu acho que dá pra colocar, sem abrir um quadro novo aqui e tal.  Não, bota um em cima do outro, é só pra ver em qual momento... assim, até se for algo que...  Pensando já, né? Ter aquela barrinha aqui, né? Se eventualmente for algo que fica muito grande, tem a barrinha aqui.  A pessoa vai poder descer aqui. Sei lá, imagina assim. Não consigo visualizar nenhum caso que isso aconteceria, mas vai aqui, né?  Fica tão grande aqui o checklist daquela etapa, que a próxima etapa não aparece tudo. E a gente consegue. Dá para a fazer isso.  Aqui seria no mesmo sentido, né? Porque às vezes aqui vai ter muita parcela. É, ele vai ficar descendo, rolando.
+
+50:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Como se fosse um container, né?
+
+50:37 - Dr. Thiago Correia
+  Tá. Então agora é essa edição ali.
+
+50:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na realidade dos campos é só retirar, já está certo, né?
+
+50:46 - Matheus Torquato
+  Só vai botar a parte do filtro. Se vai para o filtro, não vai para o filtro.
+
+50:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Criar novas partes de Kanban dentro da pipeline. Eu vou projetar aqui os campos do Temulac.
+
+51:00 - Dr. Thiago Correia
+  que a gente vai importar primeiro e aguardar o pró-júris para eu conseguir integrar ali eu só tô eu acho que quem fez essa questão aqui do duplicar ou não foi Iago né foi ele mesmo eu acho que eu lembro quando ele falou isso se você puder anotar para eu não esquecer na próxima reunião que tiver com ele confirmar se isso aqui ficaria dessa forma mesmo que eu tô pensando que vai gerar problema para caso vai sair da da pipeline que tava para ir para lá e depois não devolve tá a gente pode repassar de novo porque ele já tinha visto e ele que tinha solicitado que fosse desta forma eu acho que é importante poder ter não poder sair de onde deveria tá porque depois perde as pessoas erram entendi mas só mais uma coisa já pensando na importação aí o o drive quando a gente tá aqui abre abrindo drive as passas as coisas tá abrindo então  Não tá vinculado ao nosso workspace ainda, né? Acho que tá, tá vinculado nesse jurídico aí.
+
+52:09 - Matheus Torquato
+  Vai no meu drive ali, ali do lado do meu drive, não é sistema da WTEC não. Não, é sistema HV é nome.  É, esse mesmo, esse aí. É, esse aí. Criou um novo drive compartilhado aqui no caso.
+
+52:32 - Dr. Thiago Correia
+  Isso, isso, pra ficar dividido, sim.
+
+52:36 - Matheus Torquato
+  Mas todo mundo do meio da empresa de vocês tem acesso a esse drive também. É, eles têm acesso aqui, né?  Não, é o de baixo, né? Esse e o de baixo, tem acesso aos dois, né? É que a gente separou porque lá tinha muitos dados.
+
+52:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso.
+
+52:57 - Matheus Torquato
+  Aí você não quer fazer as coisas, né?
+
+53:00 - Dr. Thiago Correia
+  E podia misturar, então a gente acabou fazendo essa divisão para ficar melhor. Beleza, porque, por exemplo, quando a gente for importou o indenização para cá, até para a pasta do Drive, vincular bonitinho e tal, a minha intenção é pegar, botar um estagiário aqui para chegar e ficar assim, ah, o caso de indenização da Camila está rodando aquele agora no sistema.  Vai chegar aqui, pegar no nosso Drive aqui a pasta da Camila, ver qual é a pasta do Drive que foi criado para ela e jogar aqui os documentos antigos.  Hum, entendi. Pode dar problema ou não? Não, não vai acontecer nada.
+
+53:38 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só provavelmente vai aparecer os documentos aí, entendeu? Talvez não para edição, se for PDF, né? Mas vai aparecer os documentos aí na pasta dela.  Aqui, Sazen?
+
+53:49 - Dr. Thiago Correia
+  É, mais embaixo, mais embaixo. É ali. É, mas não tem problema, porque... Aí, em documentos. É, porque até para a gente poder descobrir também como é que o sistema vai se comportar, porque...  É. Aqui a gente está pensando dessa forma. Eu acho que isso aqui, esse campo aqui de puxar os documentos aqui, todos que estão na pasta, eu acho que vai dar problema.  Não, mas não é todos, é de acordo com o caso.
+
+54:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ó, abre lá o drive. É, mas assim, é que é muito documento, cara.
+
+54:15 - Dr. Thiago Correia
+  É muito documento. Se você pegar qualquer processo, tipo, vou abrir qualquer um. Então, assim, um só processo do caso da pessoa já vem aqui 20.
+  ACTION ITEM: Move Timeline above Communications/Deadlines; remove 'Write on timeline' - WATCH: https://fathom.video/calls/770992175?timestamp=3272.9999  Sim. Aí tem um caso só, você vai abrir, tem 100 documentos na pasta, isso aqui vai estar aquela lista enorme, assim, sabe?  É, entendi. Eu acho até que essa linha do tempo, vamos mudar ela já para cima. Eu acho que a linha do tempo, a linha do tempo tem que estar aqui, antes de comunicação e depois...  Dois prazos, que vai ser na linha do tempo que a gente acompanha de verdade o andamento do caso da pessoa.  Isso aqui, ó. Tá.
+
+55:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí esse Notas sai, né? Porque ele vai ficar dentro da linha do tempo. Ou, na realidade, deixo notas e tiro essa parte de escrever na linha do tempo, né?  Eu acho que vocês já fizeram, só esqueceram de remover aqui, ó.
+
+55:23 - Dr. Thiago Correia
+  É, esquecemos de remover essa parte mesmo. Vou fazer e ajustar. Só alterar aqui. E aí, quando o pró-júris liberar, você me manda pra gente conseguir terminar?  Eu cobrei eles hoje. Eu cobrei eles hoje. consegui o suporte deles tudo aqui hoje. Que eu olhei lá no sistema deles.  tava lá com baixa prioridade. Aí eu, moço, eu tô com seis programador aqui mexendo no negócio aqui. Tudo parado, esperando isso aí.  Não tô fazendo nada. Pelo amor de Deus. Eles me doidaram lá. Deixa eu ver que eles me respondem logo.  Mas eu acho que dessa parte seria só isso. Isso, e aí joga dura aí, Adavio, nessa questão das etapas, e já vê o que precisa ser feito para a parte de importação, porque a gente tem uma expectativa alta de poder botar esse tema aqui para lá, sabe?
+  ACTION ITEM: Draft Excel import template w/ mappings; share w/ Thiago - WATCH: https://fathom.video/calls/770992175?timestamp=3366.9999  Tá.
+
+56:15 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí... É, aí na importação eu vou importar de acordo com como que está as etapas e os casos, mas eu vou elaborar, vou fazer um modelo de Excel, e aí a gente elabora e coloca junto.
+
+56:28 - Dr. Thiago Correia
+  Beleza, porque isso é muito importante. Se você conseguir já olhar aquele Excel que tem essas informações... E já subir de lá, né?  É, assim, você já conseguir fazer isso sem a gente precisar digitar manualmente, sabe? Tá bom. Só se tiver... Por exemplo, eu acho que naquele Excel nós não temos a informação sobre o CPF do cliente.  Aí, aqui no sistema, o CPF é obrigatório, não tem como subir para importar sem o CPF. Então, isso aí a gente vai ter que pegar...  É, mas aí qualquer coisa no dia a gente coloca como nulo ali e tenta subir, mas... Eu acho que não tem como, porque criação de cliente precisa do CPF, mas a gente vê, a gente já deixa isso pronto para assim, liberou aqui, já projetei aqui como é que vai ficar nos campos, já puxa para cá, acho que os comentários são bem importantes para a gente, dos checklists, igual tem aqui, essa parte aqui, checklist desse documento, isso aqui vai ser um checklist dentro de uma etapa, que vocês já vão fazer agora para ficar no operacional também, né?  Uhum. Então, é tranquilo. Vai dar para fazer, eu vou fazer aquele checklist e vou fazer o checkbox, vou fazer os dois.  Isso, aí dessa parte das listas que a gente estava falando aqui, seria ali a lista principal do tema, que é obrigatório, todo caso tem que estar numa lista, né?  Então, é lista, obrigatória, e aí essas outras listas, se a gente puder editar o nome? Pode. Pode. Para o tema do 1%, a outra lista vai ser renovação, para o tema do indemnização vai ser solicitação no SIGIN, e aí a gente vai fazendo no dia a dia, da questão dos checklists, beleza, fechou, pronto, então seria só a jogadura aí nessa parte aí, para essa importação, porque a gente precisaria reunir com o Iago, quarta ou quinta-feira, acho que dá para deixar para quinta, para a gente ter mais um tempinho, e aí já mostra esse do indemnização meio que pronto já para a gente poder rolar.
+
+58:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá bom, então a gente tenta fazer até quarta, e aí na quinta-feira a gente tenta implementar eu e você e mostra para ele.
+  ACTION ITEM: Define and send Mais Médicos fields/filters to Adavio; then Adavio creates fields - WATCH: https://fathom.video/calls/770992175?timestamp=3524.9999  Beleza. Ou na quarta a gente tenta implementar, vou tentar ver se eu consigo amanhã dar uma focada nisso. Se aí a gente conseguir, aí na quarta a gente já implementa.  Dos campos aqui, amanhã eu já vou parar e fazer os campos.
+
+59:00 - Dr. Thiago Correia
+  do tema e tal, só vai ficar pendente essa outra parte do que precisa do checklist e tal, não o que, e aí seria o tempo que você já vê também como faz para importação.  Se tudo está concluído, na quarta-feira a gente consegue rodar a importação para cá, e aí rodando para cá eu vejo, só depois que você conclui isso aí para a gente poder fazer a importação, é não, você vai ter que me avisar, né, para eu poder vir terminar.  Sim. Que aí quando for fazer isso eu vou passar para o pessoal parar de mexer no sistema para não ter nenhuma informação, né, diferente.  Tá, beleza.
+
+59:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então eu faço isso e até na quarta a gente troca uma ideia.
+
+59:43 - Dr. Thiago Correia
+  Tá certo então, Adavio. Pode ser? Tá ok.
+
+59:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente termina de fazer, hoje até quarta-feira no máximo de manhã ali, e na quarta-feira à tarde a gente tenta já fazer essa importação.  É para ver se vai funcionar tudo certinho.
+
+59:56 - Dr. Thiago Correia
+  É, eu acho que nem precisa fazer uma reunião. Tchau. Até para não consumir mais o tempo de vocês, mais do que necessário, mas não precisa, eu acho, nem marcar uma reunião.  Você falando, Thiago, está tudo pronto aqui, o que precisa de vocês são isso ou aquilo, aí eu já... Já consegue importar, né?  E só se eventualmente tiver alguma coisa que vocês queiram entender melhor, em reunião, alguma coisa, ou um ponto que eu olhei e falei, não vai funcionar por conta disso ou daquilo, mas a gente consegue conversar, eu acho que não precisa de uma reunião para não te ocupar também.  Tá bom, fechado. Mas aí eu te aviso direitinho. Eu vou tentar já subir e deixar previamente pronto, que aí eu pego uma base do que a gente já tem.
+  ACTION ITEM: Review Conta Azul integration; confirm recording flow - WATCH: https://fathom.video/calls/770992175?timestamp=3636.9999  Esse de utilização aí, o Iago está em cima aqui, querendo que a gente entregue logo. Tá bom, combinado. Beleza, então, Adavio, valeu.  Valeu, Thiago, tamo junto.
+
+1:00:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu vou pegar aqui a transcrição e aí eu já resolvo, tá bom?
+
+1:00:47 - Dr. Thiago Correia
+  Então, até a quarta-feira também, até a próxima reunião, eu vou olhar a questão do Conta Azul, como que a gente registra o Conta Azul e tudo, para ver se a gente consegue dar andamento.
+  ACTION ITEM: Review Asas integration; confirm client visibility - WATCH: https://fathom.video/calls/770992175?timestamp=3649.9999  Depois dá uma olhadinha lá no Asas também, se está tudo certo, que a gente nunca conseguiu visualizar, né?
+
+1:01:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu sei que está integrado, mas eu não consegui ver lá o cliente, onde é que ele caiu e tudo mais, porque eu não tenho acesso à conta, né?  Aí depois você dá uma olhadinha para ver se está tudo ok.
+
+1:01:14 - Dr. Thiago Correia
+  Tá, mas a gente nem está usando ainda, até concluir a parte do financeiro todo, a gente não está usando de registrar aqui e para lá.  Então, não se tem algum já que a gente ficou assim.
+
+1:01:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas depois eu vou rodar os testes, sim.
+
+1:01:27 - Dr. Thiago Correia
+  E do ProUris, tem essa parte aí da API e tudo, né? Mas a API é essa entrada de informações.  Se você conseguir até a quinta, deixar já o que é o motor de distribuição pronto. É, o motor está pronto.
+
+1:01:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O negócio é que eu não consigo trazer a informação para montar ele, entendeu?
+
+1:01:50 - Dr. Thiago Correia
+  Tem a questão da gente poder pegar essas informações de outra forma para você poder rodar teste. Quando eu fiz mesmo aquela construção lá que eu te entreguei das...  Eu peguei as informações do ProUris, baixei o relatório de intimações e essas coisas, e botei para ficar rodando o teste.
+  ACTION ITEM: Send ProJuris intimações report + 4–5 executor names to Adavio; then Adavio builds distribution motor - WATCH: https://fathom.video/calls/770992175?timestamp=3735.9999  Se você puder me passar isso aí, eu tento já vincular lá no sistema. Que aí você cria ali quatro, cinco pessoas para a distribuição, que são...  Sim, um desmocado, né? É, só para ver como é que fica a regra. E eu vou te baixar e te mandar o relatório de intimações.  Que é o que vai vir de Que é o que vai vir de entrada. É, isso que eu preciso, porque eu não tenho esse dado, entendeu?
+
+1:02:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu não tenho nenhum insumo, eu não sei nem como é que entra. Mas aí se você baixar para mim, tá ótimo, já me ajuda.
+
+1:02:41 - Dr. Thiago Correia
+  Beleza. da controladoria também, aí é mais uma pergunta. Eu sei que o da controladoria a gente tem a situação do...  De que ele vai puxar e colocar na agenda do ProUris. Eu não sei se já faz sentido, até para fins de...  nós Naihi. A gente já pensar em ter uma agenda nossa interna ao invés de ter o ProUPS, porque hoje a gente tem aqui, né?  Eu posso até te passar minha senha para você poder ficar mexendo aqui, mas hoje o ProUPS tem agenda calendário, isso que eu quero dizer, né?  Tem agenda calendário, as pessoas entram aqui, a minha vazia é porque eu estou aqui, né? Tem hora e meia que estou aqui, mas assim, o pessoal está aqui cheio das tarefas que eles têm que fazer, então a gente está fazendo lá de uma forma que ele vai puxar as informações daqui distribuir e depois ele devolve para cá a tarefa.  Eu não sei se faz sentido e talvez fique mais fácil nós termos essa própria agenda dentro do nosso sistema.  O problema é o registro, porque assim, a API tem hit limit, que é o ponto de registro.
+
+1:03:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, pode ser que, aí depende do ProJuris, porque imagine que tudo que eu fizer lá dentro... Eu vou ter que mandar para cá.  Tudo que eu fizer lá dentro, eu vou ter que mandar para cá. Aí, isso vai fazer com que tenha muitas ações.  Adicionei um documento, mudei um texto, e aí isso pode dar ruim aqui. Não vai ficar chegando os dados aqui, entendeu?  Que é o seu ponto principal. Eu posso até botar lá no calendário como lembrete, mas a pessoa tem que entrar no ProJuris para poder editar, entendeu?  Ou colocar ações. A sugestão seria justamente essa.
+
+1:04:26 - Dr. Thiago Correia
+  É porque hoje a gente está construído dessa forma, né? Que vai pegar aquela agenda. Então, chegou no final da distribuição, ele decidiu que essa contra-razão de apelação desse processo e tal vai vir aqui para a minha agenda.  Aí, a API vai pegar lá... Vai mandar para cá. E mandar para cá essa tarefa criada, né? Isso. E se faz sentido e se facilitaria, porque a gente ter aqui já a nossa, não vindo daqui, mas ter aqui a própria agenda.  Em vez do motor, quando a gente for distribuir, gerar uma tarefa aqui, ele gerar já dentro... É, mas eu acho que é bom gerar nos dois lados, entendeu?
+
+1:05:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque, por exemplo, a pessoa vai ter que movimentar no pró-júris, né? Não, não precisa, não.
+
+1:05:09 - Dr. Thiago Correia
+  Não? Assim, o que fica que a tarefa que tá aqui precisa ser movimentada, no sentido de que hoje é registrado aqui, então você vai dar concluída aqui.  Se eu tiver o registro agora aqui, eu não preciso mais concluir lá. Dá pra fazer, se não consigo fazer, até quinta.  Mas dá pra gente fazer. É, não. Já pensando assim, né?
+
+1:05:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aí... Porque já foi isso que eu fiz, né?
+
+1:05:33 - Dr. Thiago Correia
+  Que tá ali em tarefas. Quando você entra num...
+
+1:05:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exato, exato. Seria isso, seria isso. Ficaria aqui as tarefas que a pessoa tem, entendeu?
+
+1:05:40 - Dr. Thiago Correia
+  Isso, mas já tem aí. No sistema já tá incluso, entendeu? É só botar ele pra gerar uma tarefa aí dentro.  E tem como ter tipo um calendáriozinho assim? Porque todos os sistemas de justiça que a gente... O advogado tá acostumado com isso aqui.  Todos os sistemas de justiça que a gente usa, já usamos várias empresas, todas elas têm... Você acha que facilita isso ou que traz dificuldades?  Não, facilita.
+
+1:06:08 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É só na hora do motor ele também criar aí dentro.
+
+1:06:11 - Dr. Thiago Correia
+  Só que aí, para isso, eu preciso ter os usuários, quem são as pessoas, já pronto no sistema para poder criar o motor de tarefa.  É, porque se isso aqui estiver funcionando dessa forma, é muito tranquilo, porque eu vou pegar para os meninos e falar assim, em vez de vocês chegarem todo dia e abrirem o ProIuris para ver sua agenda, você vai chegar e vai abrir aqui.  A gente vai criar os usuários e você vai chegar e vai abrir aqui. É, dá para fazer.
+
+1:06:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só precisa dos usuários. Com os usuários eu consigo montar. Assim, no sentido da distribuição, entendeu?
+
+1:06:40 - Dr. Thiago Correia
+  Porque hoje, dentro do sistema lá, já tem os usuários do ProIuris, né? Os usuários é tranquilo, a gente passa para fazer aqui, ela cria todos eles.  É, pronto. Isso aí já facilitaria para a gente criar.
+
+1:06:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu não consigo criar até quinto, porque aí já vai ser uma mexida muito grande no motor. Se você conseguir me enviar primeiro essa base...  O ProJuris para eu já começar a montar, se der eu monto até quinta, se não eu explico e a gente monta depois não tem problema, gente pode montar entendeu, é só o tempo, talvez demore um pouquinho.
+
+1:07:09 - Dr. Thiago Correia
+  Essa semana o seria mais importante seria mesmo a gente ter a parte do Mais Médicos e ter a parte de o motor funcionando.  Isso, enviando para o ProJuris ou não nesse momento, tipo tarefa não muda muito né, é só a gente já montar e já dizer ó, a vai colocar aqui como tarefa e tudo mais dentro desse processo.  Até porque aí pode ter um período de teste, de o motor estar gerando as tarefas e colocando lá, já dá para pensar nesse caminho aí, Adap.  Se, por acaso, a API não sai rápido. A gente tendo aqui o motor funcionando, o motor funcionando, mesmo que seja com entrada manual dos relatórios de intimações, e ele chegando no final, funcionando, falando, olha, essa tarefa é para tal pessoa,  O trabalho do pessoal criar manual, que já existe hoje, de toda forma, né, a tarefa aqui no Proiores, não é problema, porque aí teríamos um prazo de validação também dessa distribuição que o motor está fazendo, uma validação, né, de pessoal estar mais ativo.  Mas, lógico, se já estiver pronto para jogar para lá, beleza, mas se o Proiores eventualmente me entregar para a gente a API corrigida, dá para já pensar nesse meio do caminho aí, né, de, elas jogam todo dia, vai pegar o mesmo arquivo que eu vou te mandar agora, de intimação do Proiores, joga no sistema, ele distribui, elas geram a tarefa.  O que dependeria da API não vem porque não está pronta, né, algo nesse sentido. Como intermediário, sabe? Sim, dá para fazer.  Beleza, então, eu ia até passar para o pessoal as alterações do Proiores essa semana, mas, como talvez a gente depois já possa incorporar a agenda deles para cá, porque o que eu imaginei para isso aqui que poderia ajudar é que...  E coisas hoje no sistema, até no motor de distribuição, que ele vai considerar, por exemplo, como que está a agenda do pessoal naquele dia, não é?  Sim. Então ele tem que ter essa informação de como é que está a agenda naquele dia. Ao invés dele ter que buscar isso lá no ProJuris...  ProJuris, ele vai olhar dentro do sistema mesmo, né? Exato, exato. Ele já olha dentro do próprio sistema como é que estão as tarefas.  Então você falar, ó, aqui para funcionar bem tem que ser dessa forma, é um caminho viável, porque no futuro é isso que vai acontecer, eles não vão mais mexer no ProJuris, né?  O ProJuris vai ser só um lugar que capta as informações. um lugar que capta. E armazena para eles direto, né?  Isso, isso, isso. Exato. Mas beleza, só já trazendo as ideias aí para a gente ver, mas eu vou puxar esse relatório de intimações da semana passada inteira e te passa para você poder fazer validação aí nesse sistema.
+
+1:09:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pronto, que aí eu já consigo rodar aqui e testar. Além do relatório que seria as intimações, você precisa...
+
+1:09:56 - Dr. Thiago Correia
+  Eu vou te passar só quatro nomes assim, sênior, júnior, não sei o quê. Só para você poder rodar ali, como se fossem os executores.  Tá bom.
+
+1:10:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Combinado. Aí eu tento e a gente já faz o teste na quarta-feira.
+
+1:10:09 - Dr. Thiago Correia
+  Beleza, então. Tá ok. Fechou? A gente ficou conversando. Obrigado. Tá bom, então. Obrigado a você, viu? Boa tarde. Boa tarde.  Tchau, tchau.

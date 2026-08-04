@@ -1,9 +1,8 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Eyebrow } from "@/components/hv/primitives";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -76,9 +75,6 @@ export function CaseCanonicalFields({
 
   const clientCf = clientCustomFields ?? {};
 
-  const [newKey, setNewKey] = useState("");
-  const [newValue, setNewValue] = useState("");
-
   async function saveKey(key: string, value: string | number | boolean | string[] | null) {
     try {
       await updateMut.mutateAsync({ id: caseId, patch: { [key]: value } });
@@ -102,23 +98,6 @@ export function CaseCanonicalFields({
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao salvar");
-    }
-  }
-
-  async function addField() {
-    const key = newKey.trim();
-    const value = newValue.trim();
-    if (!key) {
-      toast.error("Informe o nome do campo");
-      return;
-    }
-    try {
-      await updateMut.mutateAsync({ id: caseId, patch: { [key]: value || null } });
-      setNewKey("");
-      setNewValue("");
-      toast.success("Campo salvo");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar campo");
     }
   }
 
@@ -200,37 +179,6 @@ export function CaseCanonicalFields({
           </>
         ) : null}
       </div>
-
-      {canEdit && (
-        <div className="mt-4 flex items-end gap-2 border-t pt-3">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Nome do campo</label>
-            <Input
-              value={newKey}
-              onChange={(e) => setNewKey(e.target.value)}
-              placeholder="Ex.: nº FIES"
-              className="max-w-[180px]"
-            />
-          </div>
-          <div className="space-y-1 flex-1">
-            <label className="text-xs font-medium">Valor</label>
-            <Input
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              placeholder="Ex.: 123456789"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addField();
-                }
-              }}
-            />
-          </div>
-          <Button type="button" onClick={addField} disabled={updateMut.isPending}>
-            <Plus size={14} className="mr-1" /> Adicionar
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

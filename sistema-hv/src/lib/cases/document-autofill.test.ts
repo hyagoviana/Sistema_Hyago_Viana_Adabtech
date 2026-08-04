@@ -12,6 +12,9 @@
 import {
   augmentWithHonorarios,
   buildAutoFillValues,
+  formatIntBR,
+  formatMoneyBR,
+  formatPercentBR,
   resolveAutoValue,
   type AutoFillData,
   type TemplateField,
@@ -159,6 +162,74 @@ console.log("document-autofill (R5-08):");
   assert(
     '"porcentagem do êxito" resolve o % de honorários',
     resolveAutoValue(field("porcentagem do êxito - obrigatório"), data) === "20%",
+  );
+}
+
+// --- 7. AC4 (A7) — FORMATADORES determinísticos por TIPO -------------------
+{
+  // Percentual pt-BR: inteiro sem casas, fração com vírgula decimal.
+  assert("formatPercentBR(15) → '15%'", formatPercentBR(15) === "15%");
+  assert("formatPercentBR(12.5) → '12,5%'", formatPercentBR(12.5) === "12,5%");
+  assert("formatPercentBR(15.0) → '15%' (sem zeros à direita)", formatPercentBR(15.0) === "15%");
+  assert("formatPercentBR(20) → '20%'", formatPercentBR(20) === "20%");
+  // Não formata duas vezes: string pt-BR já digitada volta idêntica.
+  assert("formatPercentBR('12,5') → '12,5%'", formatPercentBR("12,5") === "12,5%");
+  assert("formatPercentBR('15%') → '15%'", formatPercentBR("15%") === "15%");
+  assert("formatPercentBR(null) → undefined", formatPercentBR(null) === undefined);
+  assert("formatPercentBR('') → undefined", formatPercentBR("") === undefined);
+
+  // Moeda a partir de CENTAVOS inteiros.
+  assert("formatMoneyBR(50000) → 'R$ 500,00'", formatMoneyBR(50000) === "R$ 500,00");
+  assert("formatMoneyBR(123456) → 'R$ 1.234,56'", formatMoneyBR(123456) === "R$ 1.234,56");
+  assert("formatMoneyBR(0) → 'R$ 0,00'", formatMoneyBR(0) === "R$ 0,00");
+  assert("formatMoneyBR(99) → 'R$ 0,99'", formatMoneyBR(99) === "R$ 0,99");
+  assert("formatMoneyBR(null) → undefined", formatMoneyBR(null) === undefined);
+
+  // Número inteiro (ex.: nº de parcelas).
+  assert("formatIntBR(12) → '12'", formatIntBR(12) === "12");
+  assert("formatIntBR('12') → '12'", formatIntBR("12") === "12");
+  assert("formatIntBR(12.7) → '13' (arredonda)", formatIntBR(12.7) === "13");
+  assert("formatIntBR(null) → undefined", formatIntBR(null) === undefined);
+}
+
+// --- 8. AC4 (A7) — determinismo: mesmo valor → mesma string ----------------
+{
+  // Dois casos com os MESMOS valores numéricos geram a MESMA string, seja o
+  // percentual armazenado como number ou string pt-BR.
+  let a: AutoFillData = { clientName: "Caso A" };
+  a = augmentWithHonorarios(a, {
+    percentual_honorarios: 15,
+    valor_parcela_centavos: 50000,
+    honorarios_total_centavos: 600000,
+    desconto_avista_pct: null,
+    forma_pagamento: null,
+  });
+  let b: AutoFillData = { clientName: "Caso B" };
+  b = augmentWithHonorarios(b, {
+    percentual_honorarios: 15,
+    valor_parcela_centavos: 50000,
+    honorarios_total_centavos: 600000,
+    desconto_avista_pct: null,
+    forma_pagamento: null,
+  });
+  const pctA = resolveAutoValue(field("percentual de honorários"), a);
+  const pctB = resolveAutoValue(field("percentual de honorários"), b);
+  assert("percentual determinístico → '15%'", pctA === "15%");
+  assert("mesmo valor → mesma string (percentual)", pctA === pctB);
+
+  const valA = resolveAutoValue(field("valor da parcela"), a);
+  assert("valor da parcela → 'R$ 500,00'", valA === "R$ 500,00");
+  const totA = resolveAutoValue(field("total de honorários"), a);
+  assert("total de honorários → 'R$ 6.000,00'", totA === "R$ 6.000,00");
+
+  // Novos aliases de % êxito (A7 AC4).
+  assert(
+    '"percentual do êxito" resolve o % de honorários',
+    resolveAutoValue(field("percentual do êxito"), a) === "15%",
+  );
+  assert(
+    '"% de êxito" resolve o % de honorários',
+    resolveAutoValue(field("% de êxito"), a) === "15%",
   );
 }
 

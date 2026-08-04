@@ -162,8 +162,10 @@ function CasosLista() {
   }, [temas]);
 
   const temaSelecionado = temaFilter ? (temaName.get(temaFilter) ?? null) : null;
-  // Rótulo do contexto de origem (categoria do Kanban ou tema) para título/botão.
-  const contextoLabel = catName ?? temaSelecionado ?? null;
+  // Rótulo do contexto para título/botão. Se o usuário escolheu um TEMA no
+  // dropdown, o título segue o tema (não o `cat` de origem) — senão o título diria
+  // "1% fies" mostrando casos de outro tema.
+  const contextoLabel = temaSelecionado ?? catName ?? null;
   // Coerência (QA 2026-07-20): título/botão-voltar seguem o filtro EFETIVO de tema
   // (temaFilter), não mais o search param bruto — evita título e dropdown discordarem.
   const temContexto = !!cat || !!temaFilter;
@@ -194,11 +196,15 @@ function CasosLista() {
     return slugs.map((s) => ({ slug: s, label: s }));
   }, [frentes, rows, cat]);
 
-  // Pré-filtro: cat (categoria do Kanban) e tema (dropdown).
+  // Pré-filtro: cat (categoria do Kanban de origem) e tema (dropdown).
   const preFiltered = useMemo(() => {
     return rows.filter((c) => {
+      // Se o usuário escolheu um TEMA no dropdown, o tema MANDA e ignora o `cat`
+      // (service_type de origem, quando a Lista veio de um Kanban). Sem isso,
+      // trocar o tema intersectava com o service_type antigo → 0 casos para
+      // qualquer tema diferente do de origem. Vale p/ todos os temas.
+      if (temaFilter) return c.tema_id === temaFilter;
       if (cat && c.service_type_id !== cat) return false;
-      if (temaFilter && c.tema_id !== temaFilter) return false;
       return true;
     });
   }, [rows, cat, temaFilter]);

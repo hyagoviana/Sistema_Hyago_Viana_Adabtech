@@ -455,6 +455,19 @@ function PickDialog({
     setValues(pre);
   }, [fieldsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A7 AC5(a) — placeholders ÓRFÃOS: variáveis do modelo que NÃO casam com nenhum
+  // campo/autofill (resolveAutoValue devolve undefined). Sinaliza de forma NÃO
+  // bloqueante ("sem campo correspondente — preencha manualmente"); não altera o
+  // fluxo de geração. Um placeholder que resolve por autofill NÃO é órfão.
+  const orphanKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of fields) {
+      if (f.source === "blank") continue;
+      if (resolveAutoValue(f, autoFill) == null) set.add(f.key);
+    }
+    return set;
+  }, [fieldsKey, autoFill]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (mode === null) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -657,6 +670,8 @@ function PickDialog({
             const isDoc = isCpfCnpjField(f.key, f.label);
             const hasValue = !!String(values[f.key] ?? "").trim();
             const autoFilled = hasValue && f.source === "auto";
+            // A7 AC5(a) — órfão: variável sem campo/autofill correspondente.
+            const isOrphan = orphanKeys.has(f.key);
             return (
               <div key={f.key}>
                 <Label className="flex items-center gap-1.5">
@@ -676,6 +691,11 @@ function PickDialog({
                   }
                   placeholder={isDoc ? "000.000.000-00" : f.key}
                 />
+                {isOrphan && (
+                  <p className="mt-1 text-[11px] text-amber-600">
+                    sem campo correspondente — preencha manualmente
+                  </p>
+                )}
               </div>
             );
           })}

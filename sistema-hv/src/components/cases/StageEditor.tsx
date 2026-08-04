@@ -80,9 +80,11 @@ export function StageEditor({
   // permitimos renomear/reordenar. (O backend também bloqueia — defesa em profundidade.)
   const isGlobalFunnel = serviceTypeId === GLOBAL_FUNNEL_SERVICE_TYPE_ID;
 
-  // (2026-07-09) — checklist de critérios existe SÓ no pipeline FINANCEIRO. No
-  // operacional/comercial não instanciamos, exibimos nem editamos checklist.
-  const showChecklist = kind === "fin";
+  // A5 (2026-08-03) — decisão do owner: o checklist do funil (defs por etapa que
+  // valem p/ TODOS os casos) passa a existir no OPERACIONAL com o MESMO mecanismo
+  // do financeiro. Antes era `kind === "fin"` (só o financeiro exibia/editava).
+  // Comercial segue sem checklist (é a esteira de leads, não de execução).
+  const showChecklist = kind === "fin" || kind === "op";
 
   async function addStage() {
     const label = newLabel.trim();

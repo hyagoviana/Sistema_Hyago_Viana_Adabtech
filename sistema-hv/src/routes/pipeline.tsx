@@ -44,6 +44,8 @@ import {
   useMoveCaseStageOp,
   useStages,
 } from "@/hooks/usePipeline";
+import { useBoards, useBoardStages, useCasesByBoard, useMoveCaseInBoard } from "@/hooks/useBoards";
+import { BoardsManagerDialog } from "@/components/pipeline/BoardsManagerDialog";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemaFieldDefs } from "@/hooks/useTemaFieldDefs";
 import { useTemas } from "@/hooks/useTemas";
@@ -57,6 +59,8 @@ const searchSchema = z.object({
   catName: z.string().optional().catch(undefined),
   // R2-08 — frente ativa (semeada ao voltar da Lista via toggle "Kanban").
   frente: z.string().optional().catch(undefined),
+  // A3 — board/lista selecionado (undefined = board principal / operacional).
+  board: z.string().uuid().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/pipeline")({
@@ -78,7 +82,7 @@ function roleColor(role: string): string {
 }
 
 function PipelinePage() {
-  const { cat, catName, frente } = Route.useSearch();
+  const { cat, catName, frente, board } = Route.useSearch();
   const navigate = useNavigate();
 
   const onPick = (t: { id: string; name: string }) =>
@@ -90,6 +94,7 @@ function PipelinePage() {
       <DynamicKanban
         serviceType={{ id: cat, name: catName ?? "—" }}
         initialFrente={frente ?? ""}
+        boardId={board ?? null}
         onBack={onBack}
       />
     );
@@ -219,16 +224,71 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
   );
 }
 
+// A3 — wrapper: resolve o board selecionado (search param) e delega ao Kanban
+// PRINCIPAL (operacional) ou ao Kanban de um board CUSTOM. As sub-telas mantêm
+// cada uma seus próprios hooks (rules-of-hooks OK — nenhum hook antes deste ponto).
 function DynamicKanban({
   serviceType,
   initialFrente = "",
+  boardId = null,
   onBack,
 }: {
   serviceType: { id: string; name: string };
   initialFrente?: string;
+  boardId?: string | null;
   onBack: () => void;
 }) {
   const navigate = useNavigate();
+  const { data: boards } = useBoards(serviceType.id);
+  const activeBoard = boardId ? ((boards ?? []).find((b) => b.id === boardId) ?? null) : null;
+  const selectBoard = (id: string | null) =>
+    navigate({
+      to: "/pipeline",
+      search: {
+        cat: serviceType.id,
+        catName: serviceType.name,
+        ...(id ? { board: id } : {}),
+      },
+    });
+
+  if (activeBoard && !activeBoard.is_principal) {
+    return (
+      <CustomBoardKanban
+        serviceType={serviceType}
+        board={activeBoard}
+        boards={boards ?? []}
+        onSelectBoard={selectBoard}
+        onBack={onBack}
+      />
+    );
+  }
+  return (
+    <PrincipalKanban
+      serviceType={serviceType}
+      initialFrente={initialFrente}
+      boards={boards ?? []}
+      onSelectBoard={selectBoard}
+      onBack={onBack}
+    />
+  );
+}
+
+function PrincipalKanban({
+  serviceType,
+  initialFrente = "",
+  boards,
+  onSelectBoard,
+  onBack,
+}: {
+  serviceType: { id: string; name: string };
+  initialFrente?: string;
+  boards: BoardRow[];
+  onSelectBoard: (id: string | null) => void;
+  onBack: () => void;
+}) {
+  const navigate = useNavigate();
+  const principalBoard = boards.find((b) => b.is_principal) ?? null;
+  const [boardsManagerOpen, setBoardsManagerOpen] = useState(false);
   // A5 — `kind` fica fixo em "op" (o toggle foi removido); mantido como união de
   // tipos para preservar o narrowing das checagens `kind === "fin"` existentes.
   const [kind] = useState<"op" | "fin">("op");
@@ -272,6 +332,8 @@ function DynamicKanban({
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const podeEditar = usePodeEditar("operacional");
+  // A3 — gate RBAC do board Financeiro no seletor (entrada especial oculta sem módulo).
+  const podeFinanceiro = can(role, "financeiro.manage");
   const [editorOpen, setEditorOpen] = useState(false);
   // Ponto 6 — vincular/trocar a pasta de modelos deste tipo (caso).
   const setFolder = useSetTypeTemplatesFolder();
@@ -412,6 +474,17 @@ function DynamicKanban({
                 className="w-56 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
               />
             </div>
+            {/* A3 — seletor de board/lista do tema (principal + custom). O
+                financeiro é uma entrada gateada por RBAC. */}
+            <BoardSelector
+              boards={boards}
+              activeBoardId={null}
+              onSelect={onSelectBoard}
+              onManage={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
+              onFinanceiro={
+                podeFinanceiro ? () => navigate({ to: "/casos/financeiro" }) : undefined
+              }
+            />
             {/* R2-08 — alterna Kanban→Lista no contexto da categoria, levando a
                 frente ativa (a Lista filtra pelo MESMO service_type_id do board). */}
             <Btn
@@ -462,6 +535,19 @@ function DynamicKanban({
         onOpenChange={setEditorOpen}
         canEdit={canEditStages}
       />
+
+      {/* A3 — gestão de listas/boards do tema (criar/renomear/reordenar/excluir +
+          etapas de cada lista custom). Admin-only. O board principal (espelho do
+          operacional) não é editável aqui — suas etapas vivem em "Editar etapas". */}
+      {canEditStages && (
+        <BoardsManagerDialog
+          serviceTypeId={serviceType.id}
+          serviceTypeName={serviceType.name}
+          principalBoardId={principalBoard?.id ?? null}
+          open={boardsManagerOpen}
+          onOpenChange={setBoardsManagerOpen}
+        />
+      )}
 
       {/* Ponto 6 — vincular/trocar a pasta de modelos (procuração/caso) deste tipo */}
       <Dialog open={folderOpen} onOpenChange={setFolderOpen}>
@@ -550,6 +636,224 @@ function DynamicKanban({
           getId={(c) => c.id}
           getColumn={(c) => (kind === "op" ? c.macrostatus_op : c.macrostatus_fin)}
           renderCard={(c) => <CaseCardReal caso={c} kind={kind} />}
+          onMove={podeEditar ? handleMove : undefined}
+        />
+      )}
+    </div>
+  );
+}
+
+// A3 — tipo mínimo de um board (linha de system_pipeline_boards_active).
+type BoardRow = {
+  id: string;
+  label: string;
+  is_principal: boolean;
+  ordem: number;
+};
+
+// A3 — seletor de board/lista (segmented). Principal + boards custom + engrenagem
+// (gestão, admin) + entrada Financeiro gateada por RBAC.
+function BoardSelector({
+  boards,
+  activeBoardId,
+  onSelect,
+  onManage,
+  onFinanceiro,
+}: {
+  boards: BoardRow[];
+  activeBoardId: string | null;
+  onSelect: (id: string | null) => void;
+  onManage?: () => void;
+  onFinanceiro?: () => void;
+}) {
+  const principal = boards.find((b) => b.is_principal) ?? null;
+  const custom = boards.filter((b) => !b.is_principal);
+  // Sem boards custom e sem gestão/financeiro não há o que escolher — some.
+  if (custom.length === 0 && !onManage && !onFinanceiro) return null;
+
+  const pill = (active: boolean) =>
+    `px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+      active
+        ? "bg-[var(--navy)] text-white"
+        : "bg-[var(--card)] text-[var(--navy)] border border-[rgba(120,96,30,0.12)] hover:border-[var(--gold)]"
+    }`;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        className={pill(activeBoardId === null)}
+        onClick={() => onSelect(null)}
+        title="Board principal (operacional)"
+      >
+        {principal?.label ?? "Principal"}
+      </button>
+      {custom.map((b) => (
+        <button
+          key={b.id}
+          type="button"
+          className={pill(activeBoardId === b.id)}
+          onClick={() => onSelect(b.id)}
+        >
+          {b.label}
+        </button>
+      ))}
+      {onFinanceiro && (
+        <button
+          type="button"
+          className={pill(false)}
+          onClick={onFinanceiro}
+          title="Board financeiro (reservado)"
+        >
+          Financeiro
+        </button>
+      )}
+      {onManage && (
+        <button
+          type="button"
+          className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-colors"
+          onClick={onManage}
+          title="Gerenciar listas do tema"
+        >
+          <Settings2 size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// A3 — Kanban de um board CUSTOM. Etapas próprias (system_pipeline_stages.board_id)
+// + posições próprias (system_case_board_positions). Campos/filtros continuam do
+// TEMA (mesmos do principal), então NÃO reintroduzimos um painel de filtros próprio
+// (regra dura: filtros não mudam por board). Busca rápida por cliente/código.
+function CustomBoardKanban({
+  serviceType,
+  board,
+  boards,
+  onSelectBoard,
+  onBack,
+}: {
+  serviceType: { id: string; name: string };
+  board: BoardRow;
+  boards: BoardRow[];
+  onSelectBoard: (id: string | null) => void;
+  onBack: () => void;
+}) {
+  const { role } = useAuth();
+  const canEditStages = can(role, "config.manage");
+  const podeFinanceiro = can(role, "financeiro.manage");
+  const podeEditar = usePodeEditar("operacional");
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [boardsManagerOpen, setBoardsManagerOpen] = useState(false);
+
+  const { data: stages, isLoading: stagesLoading } = useBoardStages(board.id);
+  const { data: cases, isLoading } = useCasesByBoard(board.id);
+  const move = useMoveCaseInBoard(board.id);
+  const principalBoard = boards.find((b) => b.is_principal) ?? null;
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? (cases ?? []).filter((c) => {
+        const nome = (c as { client_name?: string | null }).client_name ?? "";
+        const code = (c as { case_code?: string | null }).case_code ?? "";
+        return nome.toLowerCase().includes(q) || code.toLowerCase().includes(q);
+      })
+    : (cases ?? []);
+
+  const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
+    id: s.slug,
+    label: s.label,
+    toneColor: roleColor(s.stage_role),
+  }));
+
+  function handleMove(id: string, toSlug: string) {
+    const stage = (stages ?? []).find((s) => s.slug === toSlug);
+    if (!stage) return;
+    move.mutate(
+      { caseId: id, stageId: stage.id, toSlug },
+      {
+        onSuccess: () => toast.success(`Movido pra ${stage.label}`),
+        onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao mover"),
+      },
+    );
+  }
+
+  const total = filtered.length;
+
+  return (
+    <div className="px-5 lg:px-7 pt-7 pb-10">
+      <Breadcrumb
+        items={[
+          { label: "Operação", to: "/hoje" },
+          { label: "Pipeline Operacional" },
+          { label: serviceType.name },
+          { label: board.label },
+        ]}
+      />
+      <PageHeader
+        eyebrow={`Lista · ${serviceType.name}`}
+        title={board.label}
+        subtitle={
+          isLoading || stagesLoading
+            ? "Carregando…"
+            : `${total} caso${total === 1 ? "" : "s"} em ${columns.length} etapas.`
+        }
+        aside={
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search
+                size={13}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gold)]"
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar cliente, código…"
+                className="w-52 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
+              />
+            </div>
+            <BoardSelector
+              boards={boards}
+              activeBoardId={board.id}
+              onSelect={onSelectBoard}
+              onManage={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
+              onFinanceiro={
+                podeFinanceiro ? () => navigate({ to: "/casos/financeiro" }) : undefined
+              }
+            />
+            <Btn variant="ghost" onClick={onBack}>
+              <ArrowLeft size={14} />
+              Trocar tipo
+            </Btn>
+          </div>
+        }
+      />
+
+      {canEditStages && (
+        <BoardsManagerDialog
+          serviceTypeId={serviceType.id}
+          serviceTypeName={serviceType.name}
+          principalBoardId={principalBoard?.id ?? null}
+          open={boardsManagerOpen}
+          onOpenChange={setBoardsManagerOpen}
+        />
+      )}
+
+      {!stagesLoading && columns.length === 0 ? (
+        <Alert>
+          <AlertDescription className="flex items-center gap-2">
+            <Layers size={15} /> Esta lista ainda não tem etapas. Adicione em "Gerenciar listas".
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <KanbanBoard
+          columns={columns}
+          items={filtered}
+          isLoading={isLoading || stagesLoading}
+          getId={(c) => c.id}
+          getColumn={(c) => (c as { board_stage_slug?: string | null }).board_stage_slug ?? ""}
+          renderCard={(c) => <CaseCardReal caso={c} kind="op" />}
           onMove={podeEditar ? handleMove : undefined}
         />
       )}

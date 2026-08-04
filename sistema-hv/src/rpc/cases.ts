@@ -17,6 +17,7 @@ import {
   liberarCasoComercial,
   listCaseEvents,
   listCases,
+  duplicateCaseToTema,
   listComercialCases,
   listComercialDocuments,
   marcarCasoPerdido,
@@ -270,6 +271,16 @@ export const moverCasoParaTemaFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handleManage((userId) =>
       moverCasoParaTema(data.id, data.temaId, data.frenteSlug ?? null, userId),
+    ),
+  );
+
+// A4 (2026-08-03) — DUPLICAR o caso em outro tema (mantém o original). Mesmo gate
+// (casos.manage) e schema do mover.
+export const duplicarCasoParaTemaFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => moverParaTemaSchema.parse(data))
+  .handler(async ({ data }) =>
+    handleManage((userId) =>
+      duplicateCaseToTema(data.id, data.temaId, data.frenteSlug ?? null, userId),
     ),
   );
 
