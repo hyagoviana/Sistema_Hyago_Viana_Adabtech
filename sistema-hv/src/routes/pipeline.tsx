@@ -654,8 +654,10 @@ function BoardSelector({
 
 // A3 — Kanban de um board CUSTOM. Etapas próprias (system_pipeline_stages.board_id)
 // + posições próprias (system_case_board_positions). Campos/filtros continuam do
-// TEMA (mesmos do principal), então NÃO reintroduzimos um painel de filtros próprio
-// (regra dura: filtros não mudam por board). Busca rápida por cliente/código.
+// TEMA (mesmos do principal): AJUSTE #2 (item 3) — renderizamos o MESMO
+// CaseFiltersPanel do principal (defs do tema) e o botão "Editar campos" edita os
+// defs do TEMA. NÃO há storage de filtro por board (a fonte é system_tema_field_defs
+// por tema, compartilhada). Busca rápida por cliente/código também.
 function CustomBoardKanban({
   serviceType,
   board,
@@ -676,20 +678,55 @@ function CustomBoardKanban({
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [boardsManagerOpen, setBoardsManagerOpen] = useState(false);
+  // AJUSTE #2 (item 3) — mesmo painel de filtros do principal (defs do TEMA).
+  const [panelFilters, setPanelFilters] = useState<CaseFilterValues>({
+    etapaOp: "",
+    etapaFin: "",
+    responsavel: "",
+    municipio: "",
+    frente: "",
+    caso: "",
+    canonical: {},
+  });
 
   const { data: stages, isLoading: stagesLoading } = useBoardStages(board.id);
   const { data: cases, isLoading } = useCasesByBoard(board.id);
   const move = useMoveCaseInBoard(board.id);
   const principalBoard = boards.find((b) => b.is_principal) ?? null;
 
+  // Resolve o tema_id do service_type (lookup reverso) — os filtros são do TEMA.
+  const { data: temas } = useTemas();
+  const temaId = useMemo(() => {
+    for (const t of temas ?? []) {
+      if ((t as { service_type_id?: string | null }).service_type_id === serviceType.id)
+        return t.id;
+    }
+    return null;
+  }, [temas, serviceType.id]);
+  const { data: temaDefsData } = useTemaFieldDefs(temaId);
+  const temaFilterDefs = useMemo(
+    () =>
+      ((temaDefsData ?? []) as { key: string; type: string; scope?: string }[]).map((d) => ({
+        key: d.key,
+        type: d.type,
+        scope: d.scope,
+      })),
+    [temaDefsData],
+  );
+
+  const boardCases = (cases ?? []) as (NonNullable<typeof cases>[number] & {
+    canonical_fields?: Record<string, unknown> | null;
+  })[];
+  // Aplica os filtros do TEMA (mesma função do principal), depois a busca rápida.
+  const afterPanel = applyCaseFilters(boardCases, panelFilters, temaFilterDefs);
   const q = search.trim().toLowerCase();
   const filtered = q
-    ? (cases ?? []).filter((c) => {
+    ? afterPanel.filter((c) => {
         const nome = (c as { client_name?: string | null }).client_name ?? "";
         const code = (c as { case_code?: string | null }).case_code ?? "";
         return nome.toLowerCase().includes(q) || code.toLowerCase().includes(q);
       })
-    : (cases ?? []);
+    : afterPanel;
 
   const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
     id: s.slug,
@@ -769,6 +806,17 @@ function CustomBoardKanban({
           onOpenChange={setBoardsManagerOpen}
         />
       )}
+
+      {/* AJUSTE #2 (item 3) — MESMO painel de filtros do TEMA (defs compartilhados).
+          "Editar campos" (dentro do painel) edita os defs do tema, refletindo em
+          todos os kanbans. Sem storage de filtro por board. */}
+      <CaseFiltersPanel
+        temaId={temaId}
+        cases={boardCases}
+        filters={panelFilters}
+        onChange={setPanelFilters}
+        hideFixed={["etapaOp", "etapaFin", "frente"]}
+      />
 
       {!stagesLoading && columns.length === 0 ? (
         <Alert>

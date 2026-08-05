@@ -293,6 +293,61 @@ export async function createBoardStage(input: {
   return data;
 }
 
+// Renomeia/reordena uma etapa de board custom. NÃO altera slug (o slug é a
+// identidade da coluna nas posições dos casos). Guarda: a etapa DEVE pertencer a
+// um board custom (board_id não-nulo) — jamais toca etapas op/fin legadas.
+export async function updateBoardStage(
+  id: string,
+  patch: Partial<{ label: string; ordem: number; stage_role: string }>,
+) {
+  const sb = getSupabaseAdmin();
+  const { data: stage } = await sb
+    .from("system_pipeline_stages")
+    .select("id, board_id")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (!stage?.board_id) {
+    throw new BoardServiceError(
+      "Etapa inválida para board (use o editor de etapas do operacional).",
+      409,
+    );
+  }
+  const clean: { label?: string; ordem?: number; stage_role?: string } = {};
+  if (patch.label !== undefined) {
+    const l = patch.label.trim();
+    if (!l) throw new BoardServiceError("Nome da etapa obrigatório", 422);
+    clean.label = l;
+  }
+  if (patch.ordem !== undefined) clean.ordem = patch.ordem;
+  if (patch.stage_role !== undefined) clean.stage_role = patch.stage_role;
+
+  const { data, error } = await sb
+    .from("system_pipeline_stages")
+    .update(clean)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error || !data)
+    throw new BoardServiceError(error?.message ?? "Falha ao atualizar etapa", 500);
+  return data;
+}
+
+// Reordena as etapas de um board custom (grava `ordem` = índice). Não valida
+// board_id item-a-item (o array vem do editor já escopado ao board).
+export async function reorderBoardStages(ids: string[]) {
+  const sb = getSupabaseAdmin();
+  for (let i = 0; i < ids.length; i++) {
+    const { error } = await sb
+      .from("system_pipeline_stages")
+      .update({ ordem: i })
+      .eq("id", ids[i])
+      .not("board_id", "is", null);
+    if (error) throw new BoardServiceError(error.message, 500);
+  }
+  return { ok: true as const };
+}
+
 // Soft-delete de uma etapa de board custom. Guarda: nenhum caso posicionado nela.
 export async function softDeleteBoardStage(id: string) {
   const sb = getSupabaseAdmin();
@@ -402,6 +457,94 @@ export async function addCaseToBoard(caseId: string, boardId: string, triggeredB
     );
 
   return { ok: true as const, noop: false, id: data.id };
+}
+
+// AJUSTE #2 (item 5) — lista os boards CUSTOM em que o caso já está posicionado
+// (via system_case_board_positions). O board PRINCIPAL não entra: ele espelha
+// TODO caso (posição virtual), então "o caso já está no principal" é implícito.
+// Usado pelo diálogo Mover/Duplicar para excluir do seletor os boards de destino
+// onde o caso já se encontra.
+export async function listCaseBoards(caseId: string): Promise<string[]> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_board_positions_active")
+    .select("board_id")
+    .eq("case_id", caseId);
+  if (error) throw new BoardServiceError(error.message, 500);
+  return (data ?? []).map((p) => p.board_id as string);
+}
+
+// AJUSTE #2 (item 5) — remove o caso de um board CUSTOM (soft-delete da posição).
+// Idempotente (não posicionado → no-op). Nunca aplica ao principal (não há
+// posição física dele). Evento de timeline 'board_removed'.
+export async function removeCaseFromBoard(caseId: string, boardId: string, triggeredBy?: string) {
+  const sb = getSupabaseAdmin();
+  const { data: board } = await sb
+    .from("system_pipeline_boards")
+    .select("id, label, is_principal")
+    .eq("id", boardId)
+    .is("deleted_at", null)
+    .single();
+  if (!board) throw new BoardServiceError("Board não encontrado", 404);
+  if (board.is_principal) {
+    throw new BoardServiceError("O caso não pode sair do board principal.", 409);
+  }
+
+  const { data: pos } = await sb
+    .from("system_case_board_positions")
+    .select("id, organization_id")
+    .eq("case_id", caseId)
+    .eq("board_id", boardId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!pos) return { ok: true as const, noop: true };
+
+  const { error } = await sb
+    .from("system_case_board_positions")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", pos.id);
+  if (error) throw new BoardServiceError(error.message, 500);
+
+  await sb
+    .from("system_case_events")
+    .insert({
+      case_id: caseId,
+      organization_id: pos.organization_id,
+      action: "board_removed",
+      diff: { board_id: boardId, board_label: board.label },
+      triggered_by: triggeredBy ?? null,
+    })
+    .then(
+      () => {},
+      () => {},
+    );
+
+  return { ok: true as const, noop: false };
+}
+
+// AJUSTE #2 (item 5) — MOVER o caso entre kanbans: adiciona no board DESTINO e, se
+// a origem for um board custom, remove o caso da origem. Se `fromBoardId` for
+// null/undefined (origem = principal, que não tem posição física), é só um add
+// (o caso segue no principal por design). NÃO altera tema_id/service_type_id.
+export async function moveCaseBetweenBoards(
+  caseId: string,
+  toBoardId: string,
+  fromBoardId: string | null | undefined,
+  triggeredBy?: string,
+) {
+  const added = await addCaseToBoard(caseId, toBoardId, triggeredBy);
+  if (fromBoardId && fromBoardId !== toBoardId) {
+    // Só remove de origem custom (o principal nunca é removível).
+    const { data: fromBoard } = await getSupabaseAdmin()
+      .from("system_pipeline_boards")
+      .select("is_principal")
+      .eq("id", fromBoardId)
+      .maybeSingle();
+    if (fromBoard && !fromBoard.is_principal) {
+      await removeCaseFromBoard(caseId, fromBoardId, triggeredBy);
+    }
+  }
+  return added;
 }
 
 // Move o caso entre etapas DENTRO de um board custom (upsert da posição). A etapa

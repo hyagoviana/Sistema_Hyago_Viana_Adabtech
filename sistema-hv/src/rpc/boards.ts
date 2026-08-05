@@ -11,13 +11,18 @@ import {
   createBoard,
   createBoardStage,
   listBoards,
+  listCaseBoards,
   listCasesByBoard,
   listStagesByBoard,
+  moveCaseBetweenBoards,
   moveCaseInBoard,
+  removeCaseFromBoard,
+  reorderBoardStages,
   reorderBoards,
   softDeleteBoard,
   softDeleteBoardStage,
   updateBoard,
+  updateBoardStage,
 } from "@/lib/board-service";
 import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
@@ -106,6 +111,25 @@ export const createBoardStageFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => handleSistema(() => createBoardStage(data)));
 
+export const updateBoardStageFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        patch: z.object({
+          label: z.string().min(1).optional(),
+          ordem: z.number().optional(),
+          stage_role: z.enum(["normal", "won", "lost", "closed"]).optional(),
+        }),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => handleSistema(() => updateBoardStage(data.id, data.patch)));
+
+export const reorderBoardStagesFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()) }).parse(d))
+  .handler(async ({ data }) => handleSistema(() => reorderBoardStages(data.ids)));
+
 export const deleteBoardStageFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handleSistema(() => softDeleteBoardStage(data.id)));
@@ -121,6 +145,38 @@ export const addCaseToBoardFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handleOp((userId) => addCaseToBoard(data.caseId, data.boardId, userId)),
+  );
+
+// AJUSTE #2 (item 5) — boards em que o caso já está (custom); alimenta o seletor
+// de destino do Mover/Duplicar (exclui os que já contêm o caso).
+export const listCaseBoardsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listCaseBoards(data.caseId)));
+
+// AJUSTE #2 (item 5) — remove o caso de um board custom.
+export const removeCaseFromBoardFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), boardId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handleOp((userId) => removeCaseFromBoard(data.caseId, data.boardId, userId)),
+  );
+
+// AJUSTE #2 (item 5) — MOVER entre kanbans (add no destino + sai da origem custom).
+export const moveCaseBetweenBoardsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        toBoardId: z.string().uuid(),
+        fromBoardId: z.string().uuid().nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handleOp((userId) =>
+      moveCaseBetweenBoards(data.caseId, data.toBoardId, data.fromBoardId ?? null, userId),
+    ),
   );
 
 export const moveCaseInBoardFn = createServerFn({ method: "POST" })

@@ -9,10 +9,15 @@ import {
   deleteBoardStageFn,
   listBoardsFn,
   listBoardStagesFn,
+  listCaseBoardsFn,
   listCasesByBoardFn,
+  moveCaseBetweenBoardsFn,
   moveCaseInBoardFn,
+  removeCaseFromBoardFn,
+  reorderBoardStagesFn,
   reorderBoardsFn,
   updateBoardFn,
+  updateBoardStageFn,
 } from "@/rpc/boards";
 
 // A3 — hooks dos boards (múltiplos Kanbans por tema). Campos/filtros continuam
@@ -93,12 +98,44 @@ export function useCreateBoardStage(boardId: string | null) {
   });
 }
 
+export function useUpdateBoardStage(boardId: string | null) {
+  const fn = useServerFn(updateBoardStageFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      id: string;
+      patch: { label?: string; ordem?: number; stage_role?: string };
+    }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["board-stages", boardId] }),
+  });
+}
+
+export function useReorderBoardStages(boardId: string | null) {
+  const fn = useServerFn(reorderBoardStagesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => fn({ data: { ids } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["board-stages", boardId] }),
+  });
+}
+
 export function useDeleteBoardStage(boardId: string | null) {
   const fn = useServerFn(deleteBoardStageFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board-stages", boardId] }),
+  });
+}
+
+// AJUSTE #2 (item 5) — boards custom em que o caso já está (p/ excluir do destino).
+export function useCaseBoards(caseId: string | null) {
+  const fn = useServerFn(listCaseBoardsFn);
+  return useQuery({
+    queryKey: ["case-boards", caseId],
+    queryFn: () => fn({ data: { caseId: caseId! } }),
+    enabled: !!caseId,
+    staleTime: 60 * 1000,
   });
 }
 
@@ -120,6 +157,39 @@ export function useAddCaseToBoard() {
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ["cases-by-board", vars.boardId] });
       qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["case-events"] });
+    },
+  });
+}
+
+// AJUSTE #2 (item 5) — MOVER o caso entre kanbans (add no destino + sai da origem
+// custom). Invalida os dois boards + eventos do caso.
+export function useMoveCaseBetweenBoards() {
+  const fn = useServerFn(moveCaseBetweenBoardsFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string; toBoardId: string; fromBoardId?: string | null }) =>
+      fn({ data: vars }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ["cases-by-board", vars.toBoardId] });
+      if (vars.fromBoardId)
+        qc.invalidateQueries({ queryKey: ["cases-by-board", vars.fromBoardId] });
+      qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["case-events"] });
+    },
+  });
+}
+
+// AJUSTE #2 (item 5) — remove o caso de um board custom.
+export function useRemoveCaseFromBoard() {
+  const fn = useServerFn(removeCaseFromBoardFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string; boardId: string }) => fn({ data: vars }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ["cases-by-board", vars.boardId] });
+      qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
   });

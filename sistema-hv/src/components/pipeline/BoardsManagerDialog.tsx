@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,21 @@ import {
   useDeleteBoard,
   useDeleteBoardStage,
   useUpdateBoard,
+  useUpdateBoardStage,
 } from "@/hooks/useBoards";
 
-// A3 — gestão das LISTAS/BOARDS de um tema (admin). Criar/renomear/excluir boards
-// custom + etapas de cada board. O board PRINCIPAL (espelho do operacional) não é
-// editável aqui (suas etapas vivem em "Editar etapas"). Campos/filtros são do TEMA
-// e NÃO são configuráveis por board (regra dura da reunião).
+// A3 / AJUSTE #2 (item 1) — gestão das LISTAS/KANBANS de um tema (admin).
+//
+// CORREÇÃO DO BUG PRINCIPAL: "Criar novo kanban" cria um BOARD NOVO
+// (system_pipeline_boards, is_principal=false) e o usuário define as ETAPAS DESSE
+// board (system_pipeline_stages com board_id = o novo board) — etapas PRÓPRIAS,
+// independentes do kanban-mãe (principal). Este diálogo JAMAIS edita as etapas do
+// board principal: as etapas do principal são as do operacional e vivem em
+// "Editar etapas". O backend (createBoardStage) também bloqueia editar etapas do
+// principal (defesa em profundidade).
+//
+// Campos/filtros são do TEMA (mesmos em TODOS os kanbans) — este diálogo NÃO
+// define campo/filtro por board (regra dura da reunião).
 type Props = {
   serviceTypeId: string;
   serviceTypeName: string;
@@ -52,19 +61,25 @@ export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOp
   const deleteBoard = useDeleteBoard(serviceTypeId);
 
   const [newBoard, setNewBoard] = useState("");
+  // Kanban expandido (mostra o editor de etapas DAQUELE board). Ao criar um novo
+  // kanban, expandimos automaticamente para o usuário já escrever suas etapas.
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  const principal = (boards ?? []).find((b) => b.is_principal) ?? null;
   const custom = (boards ?? []).filter((b) => !b.is_principal);
 
   async function handleCreateBoard() {
     const label = newBoard.trim();
     if (!label) return;
     try {
-      await createBoard.mutateAsync({ service_type_id: serviceTypeId, label });
+      // (a) Cria o BOARD NOVO (is_principal=false) — NÃO uma etapa no principal.
+      const created = await createBoard.mutateAsync({ service_type_id: serviceTypeId, label });
       setNewBoard("");
-      toast.success(`Lista "${label}" criada`);
+      // (b) Abre o editor de ETAPAS PRÓPRIAS do board recém-criado.
+      setExpanded((created as { id: string }).id);
+      toast.success(`Kanban "${label}" criado — agora defina as etapas dele abaixo`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao criar lista");
+      toast.error(err instanceof Error ? err.message : "Falha ao criar kanban");
     }
   }
 
@@ -72,27 +87,56 @@ export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Listas do tema — {serviceTypeName}</DialogTitle>
+          <DialogTitle>Kanbans do tema — {serviceTypeName}</DialogTitle>
           <DialogDescription>
-            Crie sub-fluxos (listas/boards) do mesmo caso, cada um com suas etapas. Os campos e
-            filtros são os mesmos do tema em todas as listas.
+            Cada kanban é um sub-fluxo do mesmo caso, com <strong>etapas próprias</strong>. Os
+            campos e filtros são os mesmos do tema em todos os kanbans (compartilhados).
           </DialogDescription>
         </DialogHeader>
+
+        {/* Novo kanban — no TOPO para deixar claro que é a ação principal. Ao criar,
+            o kanban abre já expandido para o usuário escrever as etapas dele. */}
+        <div className="rounded-md border border-[var(--gold)]/40 bg-[var(--gold)]/5 p-3 space-y-2">
+          <div className="text-[13px] font-medium text-[var(--navy)]">Criar novo kanban</div>
+          <div className="flex items-center gap-2">
+            <Input
+              value={newBoard}
+              onChange={(e) => setNewBoard(e.target.value)}
+              placeholder="Nome do novo kanban (ex.: Cobrança de documento)"
+              onKeyDown={(e) => e.key === "Enter" && handleCreateBoard()}
+            />
+            <Button
+              onClick={handleCreateBoard}
+              disabled={!newBoard.trim() || createBoard.isPending}
+            >
+              {createBoard.isPending ? (
+                <Loader2 size={14} className="mr-1 animate-spin" />
+              ) : (
+                <Plus size={14} className="mr-1" />
+              )}
+              Criar
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Cria um kanban com etapas próprias (não altera o kanban principal). Depois de criar,
+            escreva as etapas dele.
+          </p>
+        </div>
 
         {/* Board principal (informativo, não editável aqui) */}
         <div className="rounded-md border border-[var(--border)] p-3 bg-[var(--muted)]/40">
           <div className="text-[13px] font-medium text-[var(--navy)]">
-            {(boards ?? []).find((b) => b.is_principal)?.label ?? "Principal"}{" "}
+            {principal?.label ?? "Principal"}{" "}
             <span className="text-[11px] text-muted-foreground font-normal">
               · principal (etapas no "Editar etapas")
             </span>
           </div>
         </div>
 
-        {/* Listas custom */}
+        {/* Kanbans custom — cada um com suas etapas próprias */}
         <div className="space-y-2">
           {custom.length === 0 ? (
-            <p className="text-[12px] text-muted-foreground">Nenhuma lista extra ainda.</p>
+            <p className="text-[12px] text-muted-foreground">Nenhum kanban extra ainda.</p>
           ) : (
             custom.map((b) => (
               <BoardRow
@@ -110,7 +154,8 @@ export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOp
                 onDelete={async () => {
                   try {
                     await deleteBoard.mutateAsync(b.id);
-                    toast.success("Lista excluída");
+                    if (expanded === b.id) setExpanded(null);
+                    toast.success("Kanban excluído");
                   } catch (err) {
                     toast.error(err instanceof Error ? err.message : "Falha ao excluir");
                   }
@@ -118,19 +163,6 @@ export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOp
               />
             ))
           )}
-        </div>
-
-        {/* Nova lista */}
-        <div className="flex items-center gap-2 pt-2 border-t border-[var(--border)]">
-          <Input
-            value={newBoard}
-            onChange={(e) => setNewBoard(e.target.value)}
-            placeholder="Nome da nova lista (ex.: Cobrança de documento)"
-            onKeyDown={(e) => e.key === "Enter" && handleCreateBoard()}
-          />
-          <Button onClick={handleCreateBoard} disabled={!newBoard.trim() || createBoard.isPending}>
-            <Plus size={14} className="mr-1" /> Criar
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -151,8 +183,10 @@ function BoardRow({
   onDelete: () => void;
 }) {
   const [label, setLabel] = useState(board.label);
+  // Só carrega as etapas DESTE board (escopo por board_id) quando expandido.
   const { data: stages } = useBoardStages(expanded ? board.id : null);
   const createStage = useCreateBoardStage(board.id);
+  const updateStage = useUpdateBoardStage(board.id);
   const deleteStage = useDeleteBoardStage(board.id);
   const [newStage, setNewStage] = useState("");
 
@@ -160,6 +194,7 @@ function BoardRow({
     const l = newStage.trim();
     if (!l) return;
     try {
+      // Etapa PRÓPRIA do board (board_id = board.id). Nunca toca o principal.
       await createStage.mutateAsync({
         board_id: board.id,
         slug: slugify(l),
@@ -187,7 +222,7 @@ function BoardRow({
         <button
           type="button"
           onClick={onDelete}
-          title="Excluir lista"
+          title="Excluir kanban"
           className="p-1.5 rounded-md text-destructive hover:bg-[var(--muted)] transition-colors"
         >
           <Trash2 size={14} />
@@ -196,16 +231,25 @@ function BoardRow({
 
       {expanded && (
         <div className="px-3 pb-3 space-y-1.5">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Etapas</div>
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Etapas deste kanban
+          </div>
           {(stages ?? []).length === 0 ? (
             <p className="text-[12px] text-muted-foreground">Nenhuma etapa. Adicione abaixo.</p>
           ) : (
             (stages ?? []).map((s) => (
               <div
                 key={s.id}
-                className="flex items-center justify-between gap-2 text-[13px] py-1 px-2 rounded bg-[var(--muted)]/40"
+                className="flex items-center gap-2 text-[13px] py-1 px-2 rounded bg-[var(--muted)]/40"
               >
-                <span>{s.label}</span>
+                <Input
+                  defaultValue={s.label}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && v !== s.label) updateStage.mutate({ id: s.id, patch: { label: v } });
+                  }}
+                  className="h-7 text-[13px] flex-1 border-transparent bg-transparent focus:border-[var(--gold)]"
+                />
                 <button
                   type="button"
                   onClick={() => deleteStage.mutate(s.id)}

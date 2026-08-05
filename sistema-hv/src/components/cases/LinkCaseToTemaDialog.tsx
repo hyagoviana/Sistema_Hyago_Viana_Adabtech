@@ -38,7 +38,12 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useDuplicarCasoParaTema, useMoverCasoParaTema } from "@/hooks/useCases";
-import { useAddCaseToBoard, useBoards } from "@/hooks/useBoards";
+import {
+  useAddCaseToBoard,
+  useBoards,
+  useCaseBoards,
+  useMoveCaseBetweenBoards,
+} from "@/hooks/useBoards";
 import { useTemas } from "@/hooks/useTemas";
 
 type Tema = { id: string; name: string };
@@ -64,9 +69,11 @@ export function LinkCaseToTemaDialog({
 }) {
   const { data: temas, isLoading: temasLoading } = useTemas();
   const { data: boards } = useBoards(serviceTypeId ?? "");
+  // AJUSTE #2 (item 5) — boards CUSTOM em que o caso já está (p/ excluir do destino).
+  const { data: caseBoardIds } = useCaseBoards(caseId);
   const [alvo, setAlvo] = useState<Alvo>("tema");
   const [temaId, setTemaId] = useState<string>("");
-  // KANBAN — board de destino (só custom; o principal já contém todo caso).
+  // KANBAN — board de destino (todos do tema EXCETO os que já contêm o caso).
   const [boardId, setBoardId] = useState<string>("");
   // A4 (2026-08-03) — igual ao envio ao financeiro: o usuário escolhe DUPLICAR
   // (fica nos dois) ou MOVER/transferir (sai da origem, entra no destino).
@@ -74,7 +81,9 @@ export function LinkCaseToTemaDialog({
   const mover = useMoverCasoParaTema();
   const duplicar = useDuplicarCasoParaTema();
   const addToBoard = useAddCaseToBoard();
-  const pending = mover.isPending || duplicar.isPending || addToBoard.isPending;
+  const moveBetweenBoards = useMoveCaseBetweenBoards();
+  const pending =
+    mover.isPending || duplicar.isPending || addToBoard.isPending || moveBetweenBoards.isPending;
 
   // Ao reabrir, reseta para o estado inicial (alvo tema, sem destino, modo mover).
   useEffect(() => {
@@ -91,9 +100,15 @@ export function LinkCaseToTemaDialog({
   const origemNome = currentTemaId ? nomeTema(currentTemaId) : null;
   const destinoNome = temaId ? nomeTema(temaId) : null;
 
-  // Só kanbans CUSTOM são alvo (o principal contém todo caso automaticamente).
-  const customBoards = (boards ?? []).filter((b) => !b.is_principal);
-  const boardDestinoNome = customBoards.find((b) => b.id === boardId)?.label ?? "—";
+  // AJUSTE #2 (item 5) — DESTINO = TODOS os kanbans do tema (principal + custom)
+  // EXCETO os que já contêm o caso. O principal SEMPRE contém o caso (posição
+  // virtual), então normalmente fica de fora. Custom já ocupados também saem.
+  const jaContem = new Set([
+    ...(boards ?? []).filter((b) => b.is_principal).map((b) => b.id),
+    ...(caseBoardIds ?? []),
+  ]);
+  const targetBoards = (boards ?? []).filter((b) => !jaContem.has(b.id));
+  const boardDestinoNome = (boards ?? []).find((b) => b.id === boardId)?.label ?? "—";
 
   async function confirmar() {
     if (alvo === "tema") {
@@ -123,17 +138,28 @@ export function LinkCaseToTemaDialog({
       return;
     }
 
-    // Alvo KANBAN — posiciona o caso no board custom do tema atual (não troca de
-    // tema). O caso permanece no board principal por design; "mover" e "duplicar"
-    // apenas o inserem no board de destino.
+    // Alvo KANBAN — posiciona o caso num kanban do tema atual (NÃO troca de tema).
+    //   • DUPLICAR → adiciona ao destino, mantendo onde já estava.
+    //   • MOVER    → adiciona ao destino e SAI dos demais boards custom em que
+    //                estava (o principal é intocável — o caso sempre segue nele).
     if (!boardId) return;
     try {
-      await addToBoard.mutateAsync({ caseId, boardId });
-      toast.success(
-        modo === "duplicar"
-          ? `Caso adicionado ao kanban "${boardDestinoNome}" (permanece no principal)`
-          : `Caso movido para o kanban "${boardDestinoNome}" (segue no mesmo tema)`,
-      );
+      if (modo === "duplicar") {
+        await addToBoard.mutateAsync({ caseId, boardId });
+        toast.success(`Caso duplicado no kanban "${boardDestinoNome}" (mantém onde estava)`);
+      } else {
+        // Origem custom (se houver): removemos dos boards custom onde o caso está,
+        // deixando-o só no destino (+ principal). Passamos a 1ª origem custom ao
+        // backend (move-between); se houver mais de uma, saem via removeCaseFromBoard
+        // implícito por reprocessar — aqui simplificamos ao caso comum (1 origem).
+        const origemCustom = (caseBoardIds ?? []).filter((id) => id !== boardId);
+        await moveBetweenBoards.mutateAsync({
+          caseId,
+          toBoardId: boardId,
+          fromBoardId: origemCustom[0] ?? null,
+        });
+        toast.success(`Caso movido para o kanban "${boardDestinoNome}" (segue no mesmo tema)`);
+      }
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao vincular ao kanban");
@@ -205,10 +231,10 @@ export function LinkCaseToTemaDialog({
           ) : (
             <div>
               <Label>Kanban de destino</Label>
-              {customBoards.length === 0 ? (
+              {targetBoards.length === 0 ? (
                 <p className="text-[12px] text-muted-foreground pt-1">
-                  Este tema ainda não tem outros kanbans. Crie um em "Criar novo kanban" na barra do
-                  tema (Pipeline).
+                  Não há outro kanban de destino: o caso já está em todos os kanbans deste tema.
+                  Crie um novo em "Criar novo kanban" na barra do tema (Pipeline).
                 </p>
               ) : (
                 <Select value={boardId} onValueChange={setBoardId}>
@@ -216,9 +242,10 @@ export function LinkCaseToTemaDialog({
                     <SelectValue placeholder="Selecione o kanban" />
                   </SelectTrigger>
                   <SelectContent>
-                    {customBoards.map((b) => (
+                    {targetBoards.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.label}
+                        {b.is_principal ? " (principal)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
