@@ -2,6 +2,10 @@
   "regions": ["gru1"],
   "crons": [
     {
+      "path": "/api/cron/distribuicao",
+      "schedule": "0 11 * * *"
+    },
+    {
       "path": "/api/cron/sync-contaazul",
       "schedule": "30 11 * * *"
     },
