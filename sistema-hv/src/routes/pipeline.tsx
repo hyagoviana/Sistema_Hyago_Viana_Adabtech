@@ -458,8 +458,10 @@ function PrincipalKanban({
                 className="w-56 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
               />
             </div>
-            {/* A3 — seletor de board/lista do tema (principal + custom). O
-                financeiro é uma entrada gateada por RBAC. */}
+            {/* A3 — seletor de board/lista do tema (principal + custom). No
+                PrincipalKanban o board ativo é sempre o principal (activeBoardId
+                = null destaca o pill "Principal"). O financeiro é uma entrada
+                gateada por RBAC. */}
             <BoardSelector
               boards={boards}
               activeBoardId={null}

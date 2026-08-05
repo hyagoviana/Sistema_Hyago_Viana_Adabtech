@@ -42,6 +42,15 @@ function slugify(label: string): string {
   );
 }
 
+// Token curto aleatório para desambiguar slugs INTERNOS. O owner quer LABELS
+// duplicados livremente (quantos "teste" quiser) e recriar-após-excluir sem
+// colisão. Como a UNIQUE de stages é (service_type_id, kind, slug) — CHEIA
+// (ignora deleted_at) — o slug NUNCA pode repetir. Solução: slug interno =
+// slugify(label) + token único (o LABEL exibido continua o que o usuário digitou).
+function uniqueToken(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
 // AJUSTE #2 — garante que o tema (service_type) tenha o board PRINCIPAL. A
 // migration semeou 1 principal por service_type existente; para temas CRIADOS
 // DEPOIS (createTema) garantimos aqui, on-demand, na 1ª leitura dos boards. O
@@ -253,14 +262,25 @@ export async function listStagesByBoard(boardId: string) {
 // Cria uma etapa de um board CUSTOM. Carrega o service_type_id do board para
 // preencher a FK (a UNIQUE de stages é (service_type_id, kind, slug) — usamos
 // kind='op' para as etapas de board custom, num namespace de slug próprio).
+//
+// PROBLEMA #4 (owner enfático): "posso gerar quantos duplicados eu quiser com o
+// mesmo nome". A UNIQUE de stages é CHEIA (ignora deleted_at) → o slug NÃO pode
+// repetir NEM entre ativos NEM contra soft-deletados. Por isso IGNORAMOS o slug
+// que a UI mandar e SEMPRE geramos um slug INTERNO ÚNICO (slugify(label)+token).
+// O LABEL exibido continua o que o usuário digitou → labels repetem à vontade e
+// recriar-após-excluir nunca colide. A coluna dos casos é `stage_slug` (interno),
+// então cada etapa carrega sua identidade própria de forma estável.
 export async function createBoardStage(input: {
   board_id: string;
-  slug: string;
+  slug?: string;
   label: string;
   stage_role?: string;
   ordem?: number;
 }) {
   const sb = getSupabaseAdmin();
+  const label = input.label.trim();
+  if (!label) throw new BoardServiceError("Nome da etapa obrigatório", 422);
+
   const { data: board } = await sb
     .from("system_pipeline_boards")
     .select("service_type_id, is_principal")
@@ -275,6 +295,11 @@ export async function createBoardStage(input: {
     );
   }
 
+  // Slug interno SEMPRE único (independe do que a UI mandou) — libera labels
+  // duplicados e recriar-após-excluir sem esbarrar na UNIQUE cheia.
+  const baseSlug = slugify(input.slug || label).slice(0, 40);
+  const slug = `${baseSlug}_${uniqueToken()}`.slice(0, 64);
+
   const { data, error } = await sb
     .from("system_pipeline_stages")
     .insert({
@@ -282,8 +307,8 @@ export async function createBoardStage(input: {
       service_type_id: board.service_type_id,
       board_id: input.board_id,
       kind: "op",
-      slug: input.slug,
-      label: input.label,
+      slug,
+      label,
       stage_role: input.stage_role ?? "normal",
       ordem: input.ordem ?? 0,
     })

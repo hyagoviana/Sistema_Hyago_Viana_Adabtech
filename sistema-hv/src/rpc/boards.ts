@@ -102,7 +102,9 @@ export const createBoardStageFn = createServerFn({ method: "POST" })
     z
       .object({
         board_id: z.string().uuid(),
-        slug: z.string().min(1),
+        // slug é opcional: o serviço SEMPRE gera um slug interno único a partir do
+        // label (libera labels duplicados e recriar-após-excluir).
+        slug: z.string().optional(),
         label: z.string().min(1),
         stage_role: z.enum(["normal", "won", "lost", "closed"]).optional(),
         ordem: z.number().optional(),

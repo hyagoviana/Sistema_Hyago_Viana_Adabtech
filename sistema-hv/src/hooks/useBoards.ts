@@ -29,7 +29,10 @@ export function useBoards(serviceTypeId: string) {
     queryKey: ["pipeline-boards", serviceTypeId],
     queryFn: () => fn({ data: { serviceTypeId } }),
     enabled: !!serviceTypeId,
-    staleTime: 5 * 60 * 1000,
+    // Problema #1/#2 — a barra de boards precisa refletir criações/exclusões na
+    // hora. staleTime curto (10s) + invalidação nos mutations garante que o board
+    // recém-criado apareça no seletor sem refresh manual.
+    staleTime: 10 * 1000,
   });
 }
 
@@ -89,12 +92,18 @@ export function useCreateBoardStage(boardId: string | null) {
   return useMutation({
     mutationFn: (input: {
       board_id: string;
-      slug: string;
+      slug?: string;
       label: string;
       stage_role?: string;
       ordem?: number;
     }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["board-stages", boardId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-stages", boardId] });
+      // Problema #1/#2 — o board novo/etapas afetam a barra de boards e as colunas
+      // do kanban custom; invalida a lista de boards do tema também (barata) para
+      // manter o seletor coerente após editar etapas.
+      qc.invalidateQueries({ queryKey: ["pipeline-boards"] });
+    },
   });
 }
 

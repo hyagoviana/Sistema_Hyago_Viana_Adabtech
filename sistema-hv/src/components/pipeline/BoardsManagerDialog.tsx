@@ -42,18 +42,6 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-function slugify(label: string): string {
-  return (
-    label
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "")
-      .slice(0, 40) || `etapa_${Date.now().toString(36)}`
-  );
-}
-
 export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOpenChange }: Props) {
   const { data: boards } = useBoards(serviceTypeId);
   const createBoard = useCreateBoard(serviceTypeId);
@@ -195,9 +183,10 @@ function BoardRow({
     if (!l) return;
     try {
       // Etapa PRÓPRIA do board (board_id = board.id). Nunca toca o principal.
+      // NÃO enviamos slug: o serviço gera um slug INTERNO ÚNICO a partir do label
+      // (owner quer poder repetir nomes de etapa livremente e recriar após excluir).
       await createStage.mutateAsync({
         board_id: board.id,
-        slug: slugify(l),
         label: l,
         ordem: (stages ?? []).length,
       });
