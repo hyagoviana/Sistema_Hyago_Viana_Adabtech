@@ -232,6 +232,11 @@ export async function listStages(serviceTypeId: string, kind: StageKind) {
     .select("*")
     .eq("service_type_id", serviceTypeId)
     .eq("kind", kind)
+    // Fix A3/#2 — o kanban PRINCIPAL (e o "Editar etapas") só enxerga as etapas
+    // DELE (board_id IS NULL). Etapas de kanbans CUSTOM têm board_id setado e são
+    // buscadas à parte (listBoardStages); sem este filtro elas vazavam para as
+    // colunas do principal.
+    .is("board_id", null)
     .order("ordem", { ascending: true });
   if (error) throw new PipelineServiceError(error.message, 500);
   return data ?? [];
