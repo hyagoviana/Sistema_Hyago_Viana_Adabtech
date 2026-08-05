@@ -8,8 +8,11 @@ import { z } from "zod";
 
 import {
   addCaseToBoard,
+  caseHasExclusivePosition,
+  caseIdsByBoard,
   createBoard,
   createBoardStage,
+  exclusiveCaseIds,
   listBoards,
   listCaseBoards,
   listCasesByBoard,
@@ -19,6 +22,7 @@ import {
   removeCaseFromBoard,
   reorderBoardStages,
   reorderBoards,
+  returnCaseToPrincipal,
   softDeleteBoard,
   softDeleteBoardStage,
   updateBoard,
@@ -141,12 +145,36 @@ export const listCasesByBoardFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ boardId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle((userId) => listCasesByBoard(data.boardId, userId)));
 
+// TAREFA B — só os IDs dos casos num board custom (p/ filtrar a Lista client-side).
+export const caseIdsByBoardFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ boardId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => caseIdsByBoard(data.boardId)));
+
+// TAREFA B — IDs dos casos movidos exclusivamente p/ custom (p/ o filtro do
+// PRINCIPAL na Lista: mostra os que NÃO estão exclusivos em custom).
+export const exclusiveCaseIdsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({}).parse(d ?? {}))
+  .handler(async () => handle(() => exclusiveCaseIds()));
+
 export const addCaseToBoardFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ caseId: z.string().uuid(), boardId: z.string().uuid() }).parse(d),
+    z
+      .object({
+        caseId: z.string().uuid(),
+        boardId: z.string().uuid(),
+        exclusive: z.boolean().optional(),
+        stageId: z.string().uuid().nullable().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) =>
-    handleOp((userId) => addCaseToBoard(data.caseId, data.boardId, userId)),
+    handleOp((userId) =>
+      addCaseToBoard(data.caseId, data.boardId, {
+        exclusive: data.exclusive,
+        stageId: data.stageId ?? null,
+        triggeredBy: userId,
+      }),
+    ),
   );
 
 // AJUSTE #2 (item 5) — boards em que o caso já está (custom); alimenta o seletor
@@ -154,6 +182,16 @@ export const addCaseToBoardFn = createServerFn({ method: "POST" })
 export const listCaseBoardsFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => listCaseBoards(data.caseId)));
+
+// A4 — o caso está movido exclusivamente para fora do principal?
+export const caseHasExclusivePositionFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => caseHasExclusivePosition(data.caseId)));
+
+// A4 — "voltar ao principal": remove todas as posições custom do caso.
+export const returnCaseToPrincipalFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handleOp((userId) => returnCaseToPrincipal(data.caseId, userId)));
 
 // AJUSTE #2 (item 5) — remove o caso de um board custom.
 export const removeCaseFromBoardFn = createServerFn({ method: "POST" })
@@ -164,20 +202,29 @@ export const removeCaseFromBoardFn = createServerFn({ method: "POST" })
     handleOp((userId) => removeCaseFromBoard(data.caseId, data.boardId, userId)),
   );
 
-// AJUSTE #2 (item 5) — MOVER entre kanbans (add no destino + sai da origem custom).
+// AJUSTE #2 (item 5) + A4 — MOVER/DUPLICAR entre kanbans.
+//   • toBoard principal → volta ao principal (limpa posições custom).
+//   • toBoard custom + exclusive=true → move exclusivo (sai do principal/outros).
+//   • toBoard custom + exclusive=false → duplica (aditivo).
+//   • stageId → etapa escolhida no board de destino (item 3).
 export const moveCaseBetweenBoardsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
         toBoardId: z.string().uuid(),
-        fromBoardId: z.string().uuid().nullable().optional(),
+        exclusive: z.boolean().optional(),
+        stageId: z.string().uuid().nullable().optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }) =>
     handleOp((userId) =>
-      moveCaseBetweenBoards(data.caseId, data.toBoardId, data.fromBoardId ?? null, userId),
+      moveCaseBetweenBoards(data.caseId, data.toBoardId, {
+        exclusive: data.exclusive,
+        stageId: data.stageId ?? null,
+        triggeredBy: userId,
+      }),
     ),
   );
 

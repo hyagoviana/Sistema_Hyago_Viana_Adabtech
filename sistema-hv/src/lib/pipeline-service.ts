@@ -425,7 +425,27 @@ export async function listCasesByServiceType(serviceTypeId: string, viewerUserId
   if (visible !== null) q = q.in("id", visible);
   const { data, error } = await q;
   if (error) throw new PipelineServiceError(error.message, 500);
-  return data ?? [];
+  const rows = data ?? [];
+  if (rows.length === 0) return rows;
+
+  // A4 (2026-08-03) — o PrincipalKanban (Mais Médicos) NÃO mostra casos que foram
+  // MOVIDOS EXCLUSIVAMENTE para um board custom (system_case_board_positions com
+  // exclusive=true, ativas). "Duplicados" (exclusive=false) e casos sem posição
+  // (os 381 importados) seguem aparecendo. Filtro via NOT EXISTS aplicado só aqui,
+  // sem tocar macrostatus_op / a view / o trigger. Regressão zero.
+  const { data: excl } = await sb
+    .from("system_case_board_positions_active")
+    .select("case_id")
+    .eq("exclusive", true)
+    .in(
+      "case_id",
+      rows.map((c) => c.id),
+    );
+  if (excl && excl.length > 0) {
+    const moved = new Set(excl.map((p) => p.case_id as string));
+    return rows.filter((c) => !moved.has(c.id));
+  }
+  return rows;
 }
 
 // R5-04 (B5) — Resolve o service_type_id de um caso ATIVO, replicando a lógica do

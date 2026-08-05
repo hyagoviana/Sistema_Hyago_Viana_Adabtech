@@ -1132,6 +1132,7 @@ export type Database = {
           stage_id: string | null;
           stage_slug: string | null;
           entered_at: string;
+          exclusive: boolean;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -1144,6 +1145,7 @@ export type Database = {
           stage_id?: string | null;
           stage_slug?: string | null;
           entered_at?: string;
+          exclusive?: boolean;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;

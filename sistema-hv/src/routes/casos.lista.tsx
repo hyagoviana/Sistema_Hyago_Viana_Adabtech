@@ -13,6 +13,7 @@ import { InlineCanonicalCell } from "@/components/cases/InlineCanonicalCell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
+import { useBoards, useCaseIdsByBoard, useExclusiveCaseIds } from "@/hooks/useBoards";
 import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { readFieldValue } from "@/lib/cases/tema-field-value";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
@@ -37,6 +38,9 @@ const searchSchema = z.object({
   catName: z.string().optional().catch(undefined),
   tema: z.string().uuid().optional().catch(undefined),
   frente: z.string().optional().catch(undefined),
+  // TAREFA B (2026-08-04) — kanban escolhido (board.id). Ausente = "Todos os
+  // kanbans" (default: junta todos). Semeado ao vir do Kanban custom via "Ver em lista".
+  board: z.string().uuid().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/casos/lista")({
@@ -98,13 +102,16 @@ type SortKey =
 type SortDir = "asc" | "desc";
 
 function CasosLista() {
-  const { cat, catName, tema, frente } = Route.useSearch();
+  const { cat, catName, tema, frente, board } = Route.useSearch();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   // Tema selecionado (seed do search param ou dropdown).
   const [temaFilter, setTemaFilter] = useState<string>(tema ?? "");
+  // TAREFA B — kanban escolhido (board.id). "" = "Todos os kanbans" (default:
+  // junta todos os kanbans do tema, sem excluir os movidos p/ custom).
+  const [boardFilter, setBoardFilter] = useState<string>(board ?? "");
   // Painel de filtros dinâmicos (fixos + canonical do tema).
   const [panelFilters, setPanelFilters] = useState<CaseFilterValues>({
     etapaOp: "",
@@ -137,6 +144,31 @@ function CasosLista() {
     }
     return "";
   }, [temaFilter, cat, temas]);
+  // TAREFA B — service_type_id do tema efetivo (os boards são por service_type).
+  const effectiveServiceTypeId = useMemo(() => {
+    if (!effectiveTemaId) return "";
+    const t = (temas ?? []).find((x) => x.id === effectiveTemaId);
+    return (t as { service_type_id?: string | null } | undefined)?.service_type_id ?? "";
+  }, [effectiveTemaId, temas]);
+  // TAREFA B — kanbans do tema (principal + custom). Só habilita o seletor quando
+  // há um tema efetivo. Enquanto não houver tema, "Escolher kanban" fica oculto.
+  const { data: boards } = useBoards(effectiveServiceTypeId);
+  const boardList = (boards ?? []) as {
+    id: string;
+    label: string;
+    is_principal: boolean;
+    ordem: number;
+  }[];
+  const selectedBoard = boardFilter ? boardList.find((b) => b.id === boardFilter) : undefined;
+  const filterByPrincipal = !!selectedBoard?.is_principal;
+  const filterByCustomBoardId =
+    selectedBoard && !selectedBoard.is_principal ? selectedBoard.id : null;
+  // Conjuntos de ids p/ o filtro por kanban:
+  //   • principal → exclui os casos MOVIDOS exclusivamente p/ custom.
+  //   • custom    → mantém só os casos posicionados naquele board.
+  const { data: customBoardCaseIds } = useCaseIdsByBoard(filterByCustomBoardId);
+  const { data: exclusiveIds } = useExclusiveCaseIds(filterByPrincipal);
+
   // R2-09 — filtros/campos customizados do tema efetivo (nível do tema). Viram
   // COLUNAS editáveis inline e alimentam o matching por tipo dos filtros.
   const { data: temaDefsData } = useTemaFieldDefs(effectiveTemaId || null);
@@ -196,18 +228,36 @@ function CasosLista() {
     return slugs.map((s) => ({ slug: s, label: s }));
   }, [frentes, rows, cat]);
 
-  // Pré-filtro: cat (categoria do Kanban de origem) e tema (dropdown).
+  // Pré-filtro: cat (categoria do Kanban de origem), tema (dropdown) e kanban
+  // (TAREFA B). Conjuntos de ids p/ o filtro por kanban (memoizados).
+  const customIdSet = useMemo(
+    () => (filterByCustomBoardId ? new Set(customBoardCaseIds ?? []) : null),
+    [filterByCustomBoardId, customBoardCaseIds],
+  );
+  const exclusiveIdSet = useMemo(
+    () => (filterByPrincipal ? new Set(exclusiveIds ?? []) : null),
+    [filterByPrincipal, exclusiveIds],
+  );
   const preFiltered = useMemo(() => {
     return rows.filter((c) => {
       // Se o usuário escolheu um TEMA no dropdown, o tema MANDA e ignora o `cat`
       // (service_type de origem, quando a Lista veio de um Kanban). Sem isso,
       // trocar o tema intersectava com o service_type antigo → 0 casos para
       // qualquer tema diferente do de origem. Vale p/ todos os temas.
-      if (temaFilter) return c.tema_id === temaFilter;
-      if (cat && c.service_type_id !== cat) return false;
+      if (temaFilter) {
+        if (c.tema_id !== temaFilter) return false;
+      } else if (cat && c.service_type_id !== cat) {
+        return false;
+      }
+      // TAREFA B — filtro por kanban específico (só quando um kanban foi escolhido):
+      //   • custom    → mantém só os casos posicionados naquele board.
+      //   • principal → exclui os casos movidos exclusivamente p/ custom.
+      // Default ("Todos os kanbans") não filtra nada aqui (vê tudo do tema).
+      if (customIdSet) return customIdSet.has(c.id);
+      if (exclusiveIdSet) return !exclusiveIdSet.has(c.id);
       return true;
     });
-  }, [rows, cat, temaFilter]);
+  }, [rows, cat, temaFilter, customIdSet, exclusiveIdSet]);
 
   // Filtro combinado: painel de filtros dinâmicos + busca textual.
   const filtered = useMemo(() => {
@@ -384,6 +434,13 @@ function CasosLista() {
             onChange={(e) => {
               setTemaFilter(e.target.value);
               setPanelFilters((f) => ({ ...f, frente: "" }));
+              // TAREFA B — trocar de tema reseta o kanban p/ "Todos os kanbans".
+              setBoardFilter("");
+              navigate({
+                to: "/casos/lista",
+                search: (prev) => ({ ...prev, board: undefined }),
+                replace: true,
+              });
               setPage(0);
             }}
             className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
@@ -392,6 +449,33 @@ function CasosLista() {
             {(temas ?? []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
+              </option>
+            ))}
+          </select>
+        )}
+        {/* TAREFA B — "Escolher kanban": só quando há um tema efetivo. Default =
+            "Todos os kanbans" (junta todos, inclusive os movidos p/ custom).
+            Filtrar por um kanban específico reduz a lista àquele kanban. */}
+        {effectiveTemaId && boardList.length > 0 && (
+          <select
+            value={boardFilter}
+            onChange={(e) => {
+              const v = e.target.value;
+              setBoardFilter(v);
+              navigate({
+                to: "/casos/lista",
+                search: (prev) => ({ ...prev, board: v || undefined }),
+                replace: true,
+              });
+              setPage(0);
+            }}
+            className="py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+            title="Escolher kanban"
+          >
+            <option value="">Todos os kanbans</option>
+            {boardList.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.is_principal ? `${b.label} (principal)` : b.label}
               </option>
             ))}
           </select>

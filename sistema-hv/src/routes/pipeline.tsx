@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import {
   ArrowLeft,
+  Check,
+  ChevronDown,
   FolderKanban,
   Layers,
   List,
@@ -11,7 +13,7 @@ import {
   Settings2,
   Tag,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/auth";
@@ -35,6 +37,14 @@ import {
 } from "@/hooks/usePipeline";
 import { useBoards, useBoardStages, useCasesByBoard, useMoveCaseInBoard } from "@/hooks/useBoards";
 import { BoardsManagerDialog } from "@/components/pipeline/BoardsManagerDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemaFieldDefs } from "@/hooks/useTemaFieldDefs";
 import { useTemas } from "@/hooks/useTemas";
@@ -228,8 +238,18 @@ function DynamicKanban({
 }) {
   const navigate = useNavigate();
   const { data: boards } = useBoards(serviceType.id);
-  const activeBoard = boardId ? ((boards ?? []).find((b) => b.id === boardId) ?? null) : null;
-  const selectBoard = (id: string | null) =>
+  // Fix — a troca de kanban usa ESTADO LOCAL: clicar num pill reflete NA HORA, sem
+  // depender da reatividade do search-param da URL (que estava não trocando a
+  // visão). A URL é mantida em sincronia só para deep-link / voltar do navegador.
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(boardId ?? null);
+  useEffect(() => {
+    setSelectedBoardId(boardId ?? null);
+  }, [boardId]);
+  const activeBoard = selectedBoardId
+    ? ((boards ?? []).find((b) => b.id === selectedBoardId) ?? null)
+    : null;
+  const selectBoard = (id: string | null) => {
+    setSelectedBoardId(id);
     navigate({
       to: "/pipeline",
       search: {
@@ -238,6 +258,7 @@ function DynamicKanban({
         ...(id ? { board: id } : {}),
       },
     });
+  };
 
   if (activeBoard && !activeBoard.is_principal) {
     return (
@@ -320,8 +341,6 @@ function PrincipalKanban({
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
   const podeEditar = usePodeEditar("operacional");
-  // A3 — gate RBAC do board Financeiro no seletor (entrada especial oculta sem módulo).
-  const podeFinanceiro = can(role, "financeiro.manage");
   const [editorOpen, setEditorOpen] = useState(false);
 
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
@@ -444,69 +463,29 @@ function PrincipalKanban({
             : `${total} caso${total === 1 ? "" : "s"} em ${columns.length} etapas.`
         }
         aside={
-          <div className="flex items-center gap-2">
-            {/* Busca rápida por cliente/código no Kanban. */}
-            <div className="relative">
-              <Search
-                size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gold)]"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar cliente, código, município…"
-                className="w-56 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
-              />
-            </div>
-            {/* A3 — seletor de board/lista do tema (principal + custom). No
-                PrincipalKanban o board ativo é sempre o principal (activeBoardId
-                = null destaca o pill "Principal"). O financeiro é uma entrada
-                gateada por RBAC. */}
-            <BoardSelector
-              boards={boards}
-              activeBoardId={null}
-              onSelect={onSelectBoard}
-              onManage={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
-              onFinanceiro={
-                podeFinanceiro ? () => navigate({ to: "/casos/financeiro" }) : undefined
-              }
-            />
-            {/* R2-08 — alterna Kanban→Lista no contexto da categoria, levando a
-                frente ativa (a Lista filtra pelo MESMO service_type_id do board). */}
-            <Btn
-              variant="ghost"
-              onClick={() =>
-                navigate({
-                  to: "/casos/lista",
-                  search: {
-                    cat: serviceType.id,
-                    catName: serviceType.name,
-                    ...(frenteFilter ? { frente: frenteFilter } : {}),
-                  },
-                })
-              }
-            >
-              <List size={14} />
-              Ver em lista
-            </Btn>
-            <Btn variant="ghost" onClick={() => setEditorOpen(true)}>
-              <Settings2 size={14} />
-              Editar etapas
-            </Btn>
-            {/* AJUSTE #2 — "Criar novo kanban": abre o gestor de listas/boards do
-                tema (criar/renomear/reordenar + etapas de cada board). Fica ao
-                lado de "Editar etapas". */}
-            {canEditStages && (
-              <Btn variant="ghost" onClick={() => setBoardsManagerOpen(true)}>
-                <Plus size={14} />
-                Criar novo kanban
-              </Btn>
-            )}
-            <Btn variant="ghost" onClick={onBack}>
-              <ArrowLeft size={14} />
-              Trocar tipo
-            </Btn>
-          </div>
+          // Item 1 + 2 — toolbar compartilhada. No principal, "Editar etapas" abre
+          // o StageEditor do operacional (etapas do principal). O dropdown
+          // "Escolher kanban" lista principal + custom (sem Financeiro).
+          <KanbanToolbar
+            boards={boards}
+            activeBoardId={null}
+            onSelectBoard={onSelectBoard}
+            search={search}
+            onSearch={setSearch}
+            onVerLista={() =>
+              navigate({
+                to: "/casos/lista",
+                search: {
+                  cat: serviceType.id,
+                  catName: serviceType.name,
+                  ...(frenteFilter ? { frente: frenteFilter } : {}),
+                },
+              })
+            }
+            onEditarEtapas={() => setEditorOpen(true)}
+            onCriarKanban={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
+            onTrocarTipo={onBack}
+          />
         }
       />
 
@@ -583,73 +562,122 @@ type BoardRow = {
   ordem: number;
 };
 
-// A3 — seletor de board/lista (segmented). Principal + boards custom + engrenagem
-// (gestão, admin) + entrada Financeiro gateada por RBAC.
-function BoardSelector({
+// Item 1 (2026-08-03) — "Escolher kanban": UM dropdown que lista TODOS os kanbans
+// do tema (principal + custom) e troca a visão ao selecionar. NÃO inclui o
+// Financeiro (o financeiro não faz parte dessa escolha). O botão mostra o kanban
+// ativo. `activeBoardId=null` = kanban principal.
+function KanbanDropdown({
   boards,
   activeBoardId,
   onSelect,
-  onManage,
-  onFinanceiro,
 }: {
   boards: BoardRow[];
   activeBoardId: string | null;
   onSelect: (id: string | null) => void;
-  onManage?: () => void;
-  onFinanceiro?: () => void;
 }) {
   const principal = boards.find((b) => b.is_principal) ?? null;
   const custom = boards.filter((b) => !b.is_principal);
-  // Sem boards custom e sem gestão/financeiro não há o que escolher — some.
-  if (custom.length === 0 && !onManage && !onFinanceiro) return null;
+  const activeLabel =
+    activeBoardId === null
+      ? (principal?.label ?? "Principal")
+      : (boards.find((b) => b.id === activeBoardId)?.label ?? "—");
 
-  const pill = (active: boolean) =>
-    `px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
-      active
-        ? "bg-[var(--navy)] text-white"
-        : "bg-[var(--card)] text-[var(--navy)] border border-[rgba(120,96,30,0.12)] hover:border-[var(--gold)]"
-    }`;
+  const item = (id: string | null, label: string) => {
+    const active = activeBoardId === id;
+    return (
+      <DropdownMenuItem key={id ?? "__principal"} onClick={() => onSelect(id)} className="gap-2">
+        <Check size={13} className={active ? "opacity-100 text-[var(--gold)]" : "opacity-0"} />
+        <span className={active ? "font-medium text-[var(--navy)]" : ""}>{label}</span>
+      </DropdownMenuItem>
+    );
+  };
 
   return (
-    <div className="flex items-center gap-1.5">
-      <button
-        type="button"
-        className={pill(activeBoardId === null)}
-        onClick={() => onSelect(null)}
-        title="Board principal (operacional)"
-      >
-        {principal?.label ?? "Principal"}
-      </button>
-      {custom.map((b) => (
-        <button
-          key={b.id}
-          type="button"
-          className={pill(activeBoardId === b.id)}
-          onClick={() => onSelect(b.id)}
-        >
-          {b.label}
-        </button>
-      ))}
-      {onFinanceiro && (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={pill(false)}
-          onClick={onFinanceiro}
-          title="Board financeiro (reservado)"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium bg-[var(--card)] text-[var(--navy)] border border-[rgba(120,96,30,0.12)] hover:border-[var(--gold)] transition-colors"
+          title="Escolher kanban"
         >
-          Financeiro
+          <FolderKanban size={13} className="text-[var(--gold)]" />
+          <span className="max-w-[160px] truncate">{activeLabel}</span>
+          <ChevronDown size={13} className="text-muted-foreground" />
         </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[220px]">
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          Escolher kanban
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {item(null, principal?.label ?? "Principal")}
+        {custom.map((b) => item(b.id, b.label))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// Item 2 (2026-08-03) — toolbar COMPARTILHADA do kanban (principal e custom têm
+// PARIDADE): busca, dropdown "Escolher kanban", "Ver em lista", "Editar etapas",
+// "Criar novo kanban" e "Trocar tipo". Extraída num único componente para garantir
+// paridade e não duplicar lógica. Os handlers de cada botão vêm do chamador (no
+// custom, "Editar etapas" edita as etapas DAQUELE board).
+function KanbanToolbar({
+  boards,
+  activeBoardId,
+  onSelectBoard,
+  search,
+  onSearch,
+  searchPlaceholder = "Buscar cliente, código, município…",
+  onVerLista,
+  onEditarEtapas,
+  onCriarKanban,
+  onTrocarTipo,
+}: {
+  boards: BoardRow[];
+  activeBoardId: string | null;
+  onSelectBoard: (id: string | null) => void;
+  search: string;
+  onSearch: (v: string) => void;
+  searchPlaceholder?: string;
+  onVerLista: () => void;
+  onEditarEtapas: () => void;
+  onCriarKanban?: () => void;
+  onTrocarTipo: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative">
+        <Search
+          size={13}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gold)]"
+        />
+        <input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder={searchPlaceholder}
+          className="w-56 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
+        />
+      </div>
+      <KanbanDropdown boards={boards} activeBoardId={activeBoardId} onSelect={onSelectBoard} />
+      <Btn variant="ghost" onClick={onVerLista}>
+        <List size={14} />
+        Ver em lista
+      </Btn>
+      <Btn variant="ghost" onClick={onEditarEtapas}>
+        <Settings2 size={14} />
+        Editar etapas
+      </Btn>
+      {onCriarKanban && (
+        <Btn variant="ghost" onClick={onCriarKanban}>
+          <Plus size={14} />
+          Criar novo kanban
+        </Btn>
       )}
-      {onManage && (
-        <button
-          type="button"
-          className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-colors"
-          onClick={onManage}
-          title="Gerenciar listas do tema"
-        >
-          <Settings2 size={14} />
-        </button>
-      )}
+      <Btn variant="ghost" onClick={onTrocarTipo}>
+        <ArrowLeft size={14} />
+        Trocar tipo
+      </Btn>
     </div>
   );
 }
@@ -675,11 +703,15 @@ function CustomBoardKanban({
 }) {
   const { role } = useAuth();
   const canEditStages = can(role, "config.manage");
-  const podeFinanceiro = can(role, "financeiro.manage");
   const podeEditar = usePodeEditar("operacional");
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [boardsManagerOpen, setBoardsManagerOpen] = useState(false);
+  // TAREFA A (2026-08-04) — "Editar etapas" no kanban CUSTOM abre o MESMO
+  // StageEditor do principal, porém escopado a ESTE board (boardId={board.id}):
+  // reordenar/renomear/papel/excluir + "Nova etapa" + a setinha do checklist por
+  // etapa. "Criar novo kanban" segue abrindo o BoardsManagerDialog.
+  const [stageEditorOpen, setStageEditorOpen] = useState(false);
   // AJUSTE #2 (item 3) — mesmo painel de filtros do principal (defs do TEMA).
   const [panelFilters, setPanelFilters] = useState<CaseFilterValues>({
     etapaOp: "",
@@ -769,34 +801,42 @@ function CustomBoardKanban({
             : `${total} caso${total === 1 ? "" : "s"} em ${columns.length} etapas.`
         }
         aside={
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search
-                size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gold)]"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar cliente, código…"
-                className="w-52 pl-8 pr-3 py-1.5 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[12px] focus:border-[var(--gold)] outline-none"
-              />
-            </div>
-            <BoardSelector
-              boards={boards}
-              activeBoardId={board.id}
-              onSelect={onSelectBoard}
-              onManage={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
-              onFinanceiro={
-                podeFinanceiro ? () => navigate({ to: "/casos/financeiro" }) : undefined
-              }
-            />
-            <Btn variant="ghost" onClick={onBack}>
-              <ArrowLeft size={14} />
-              Trocar tipo
-            </Btn>
-          </div>
+          // Item 2 — PARIDADE com o principal: mesma toolbar. TAREFA A — "Editar
+          // etapas" abre o MESMO StageEditor do principal, escopado a ESTE board
+          // (etapas deste kanban custom + checklist por etapa). "Criar novo kanban"
+          // abre o BoardsManagerDialog. "Ver em lista" leva à Lista do tema;
+          // "Trocar tipo" volta à seleção.
+          <KanbanToolbar
+            boards={boards}
+            activeBoardId={board.id}
+            onSelectBoard={onSelectBoard}
+            search={search}
+            onSearch={setSearch}
+            searchPlaceholder="Buscar cliente, código…"
+            onVerLista={() =>
+              navigate({
+                to: "/casos/lista",
+                search: { cat: serviceType.id, catName: serviceType.name, board: board.id },
+              })
+            }
+            onEditarEtapas={() => setStageEditorOpen(true)}
+            onCriarKanban={canEditStages ? () => setBoardsManagerOpen(true) : undefined}
+            onTrocarTipo={onBack}
+          />
         }
+      />
+
+      {/* TAREFA A — MESMO editor do principal, porém escopado a ESTE board
+          (boardId={board.id}). Lê/edita as etapas do board via board-service e
+          expõe o checklist por etapa (chaveado por service_type_id + stage_slug). */}
+      <StageEditor
+        serviceTypeId={serviceType.id}
+        serviceTypeName={board.label}
+        kind="op"
+        boardId={board.id}
+        open={stageEditorOpen}
+        onOpenChange={setStageEditorOpen}
+        canEdit={canEditStages}
       />
 
       {canEditStages && (

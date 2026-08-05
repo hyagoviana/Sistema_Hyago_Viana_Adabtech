@@ -416,10 +416,47 @@ async function firstStageOfBoard(sb: ReturnType<typeof getSupabaseAdmin>, boardI
   return data ?? null;
 }
 
-// Adiciona um caso a um board CUSTOM na 1ª etapa. Idempotente (já posicionado →
-// no-op). Registra evento na timeline (system_case_events, action 'board_added').
-export async function addCaseToBoard(caseId: string, boardId: string, triggeredBy?: string) {
+// Resolve a etapa-ALVO de um board custom: se `stageId` foi informado, valida que
+// pertence ao board; senão usa a 1ª etapa (ordem 0). Retorna null se o board não
+// tem etapa nenhuma (o caller decide se isso é erro).
+async function resolveTargetStage(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  boardId: string,
+  stageId?: string | null,
+): Promise<{ id: string; slug: string } | null> {
+  if (stageId) {
+    const { data: st } = await sb
+      .from("system_pipeline_stages")
+      .select("id, slug, board_id")
+      .eq("id", stageId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (!st || st.board_id !== boardId) {
+      throw new BoardServiceError("Etapa inválida para este board.", 422);
+    }
+    return { id: st.id, slug: st.slug };
+  }
+  const first = await firstStageOfBoard(sb, boardId);
+  return first ? { id: first.id, slug: first.slug } : null;
+}
+
+// Adiciona um caso a um board CUSTOM na etapa escolhida (ou na 1ª, se omitida).
+// Idempotente por (case, board): se já posicionado, apenas realinha `exclusive`
+// e a etapa (quando `stageId` foi passado). Registra evento na timeline.
+//
+// A4 (2026-08-03) — `exclusive`:
+//   • DUPLICAR  → exclusive=false (mantém o caso no principal e nos demais boards).
+//   • MOVER     → exclusive=true  (o caso SAI do principal e dos OUTROS boards
+//                 custom: sumimos as demais posições — o caso passa a existir SÓ
+//                 neste board). O PrincipalKanban filtra por NOT EXISTS(exclusive).
+export async function addCaseToBoard(
+  caseId: string,
+  boardId: string,
+  opts?: { exclusive?: boolean; stageId?: string | null; triggeredBy?: string },
+) {
   const sb = getSupabaseAdmin();
+  const exclusive = opts?.exclusive ?? false;
+  const triggeredBy = opts?.triggeredBy;
 
   const { data: caso } = await sb
     .from("system_cases")
@@ -440,7 +477,27 @@ export async function addCaseToBoard(caseId: string, boardId: string, triggeredB
     throw new BoardServiceError("Todo caso já está no board principal.", 409);
   }
 
-  // Idempotente: já posicionado neste board → no-op.
+  const target = await resolveTargetStage(sb, boardId, opts?.stageId);
+  // MOVER (exclusive) exige uma etapa de destino — o board precisa ter ao menos 1.
+  if (exclusive && !target) {
+    throw new BoardServiceError(
+      "Crie uma etapa no kanban escolhido antes de mover/duplicar o caso.",
+      422,
+    );
+  }
+
+  // Se MOVER exclusivo: remove as posições em OUTROS boards custom (o caso passa
+  // a existir só neste board). Faz ANTES do upsert deste board.
+  if (exclusive) {
+    await sb
+      .from("system_case_board_positions")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("case_id", caseId)
+      .is("deleted_at", null)
+      .neq("board_id", boardId);
+  }
+
+  // Idempotente: já posicionado neste board → realinha exclusive + etapa (se dada).
   const { data: existing } = await sb
     .from("system_case_board_positions")
     .select("id")
@@ -448,32 +505,51 @@ export async function addCaseToBoard(caseId: string, boardId: string, triggeredB
     .eq("board_id", boardId)
     .is("deleted_at", null)
     .maybeSingle();
-  if (existing) return { ok: true as const, noop: true, id: existing.id };
+  if (existing) {
+    const patch: {
+      exclusive: boolean;
+      stage_id?: string;
+      stage_slug?: string;
+      entered_at?: string;
+    } = { exclusive };
+    if (target) {
+      patch.stage_id = target.id;
+      patch.stage_slug = target.slug;
+      patch.entered_at = new Date().toISOString();
+    }
+    await sb.from("system_case_board_positions").update(patch).eq("id", existing.id);
+    return { ok: true as const, noop: true, id: existing.id };
+  }
 
-  const first = await firstStageOfBoard(sb, boardId);
   const { data, error } = await sb
     .from("system_case_board_positions")
     .insert({
       organization_id: caso.organization_id,
       case_id: caseId,
       board_id: boardId,
-      stage_id: first?.id ?? null,
-      stage_slug: first?.slug ?? null,
+      stage_id: target?.id ?? null,
+      stage_slug: target?.slug ?? null,
       entered_at: new Date().toISOString(),
+      exclusive,
     })
     .select()
     .single();
   if (error || !data)
     throw new BoardServiceError(error?.message ?? "Falha ao adicionar ao board", 500);
 
-  // Timeline (A6) — evento board_added.
+  // Timeline (A6) — evento board_added (mover exclusivo x duplicar aditivo).
   await sb
     .from("system_case_events")
     .insert({
       case_id: caseId,
       organization_id: caso.organization_id,
-      action: "board_added",
-      diff: { board_id: boardId, board_label: board.label, stage_slug: first?.slug ?? null },
+      action: exclusive ? "board_moved_exclusive" : "board_added",
+      diff: {
+        board_id: boardId,
+        board_label: board.label,
+        stage_slug: target?.slug ?? null,
+        exclusive,
+      },
       triggered_by: triggeredBy ?? null,
     })
     .then(
@@ -497,6 +573,21 @@ export async function listCaseBoards(caseId: string): Promise<string[]> {
     .eq("case_id", caseId);
   if (error) throw new BoardServiceError(error.message, 500);
   return (data ?? []).map((p) => p.board_id as string);
+}
+
+// A4 — indica se o caso tem ALGUMA posição custom exclusiva ativa (foi MOVIDO
+// para fora do principal). Usado pelo diálogo para saber se "voltar ao principal"
+// tem efeito real.
+export async function caseHasExclusivePosition(caseId: string): Promise<boolean> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_case_board_positions_active")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("exclusive", true)
+    .limit(1)
+    .maybeSingle();
+  return !!data;
 }
 
 // AJUSTE #2 (item 5) — remove o caso de um board CUSTOM (soft-delete da posição).
@@ -547,29 +638,88 @@ export async function removeCaseFromBoard(caseId: string, boardId: string, trigg
   return { ok: true as const, noop: false };
 }
 
-// AJUSTE #2 (item 5) — MOVER o caso entre kanbans: adiciona no board DESTINO e, se
-// a origem for um board custom, remove o caso da origem. Se `fromBoardId` for
-// null/undefined (origem = principal, que não tem posição física), é só um add
-// (o caso segue no principal por design). NÃO altera tema_id/service_type_id.
+// A4 (2026-08-03) — "voltar ao principal" (Mais Médicos): remove TODAS as posições
+// custom do caso (soft-delete), fazendo-o reaparecer no PrincipalKanban (que
+// filtra por NOT EXISTS de posição exclusiva). Idempotente (sem posições → no-op).
+// Evento de timeline 'board_returned_to_principal'.
+export async function returnCaseToPrincipal(caseId: string, triggeredBy?: string) {
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .single();
+  if (!caso) throw new BoardServiceError("Caso não encontrado", 404);
+
+  const { data: positions } = await sb
+    .from("system_case_board_positions")
+    .select("id")
+    .eq("case_id", caseId)
+    .is("deleted_at", null);
+  if (!positions || positions.length === 0) {
+    return { ok: true as const, noop: true, removed: 0 };
+  }
+
+  await sb
+    .from("system_case_board_positions")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("case_id", caseId)
+    .is("deleted_at", null);
+
+  await sb
+    .from("system_case_events")
+    .insert({
+      case_id: caseId,
+      organization_id: caso.organization_id,
+      action: "board_returned_to_principal",
+      diff: { removed_positions: positions.length },
+      triggered_by: triggeredBy ?? null,
+    })
+    .then(
+      () => {},
+      () => {},
+    );
+
+  return { ok: true as const, noop: false, removed: positions.length };
+}
+
+// AJUSTE #2 (item 5) + A4 — MOVER/DUPLICAR o caso entre kanbans.
+//   • toBoard = PRINCIPAL  → "voltar ao principal": remove todas as posições
+//     custom (returnCaseToPrincipal). MOVER e DUPLICAR caem no mesmo efeito (o
+//     caso volta ao fluxo principal; duplicar-no-principal não faz sentido).
+//   • toBoard = CUSTOM, exclusive=true (MOVER) → o caso vai SÓ para o destino na
+//     etapa escolhida; sai do principal e dos demais boards custom.
+//   • toBoard = CUSTOM, exclusive=false (DUPLICAR) → adiciona no destino sem mexer
+//     nas outras posições (segue no principal e onde já estava).
+// NÃO altera tema_id/service_type_id.
 export async function moveCaseBetweenBoards(
   caseId: string,
   toBoardId: string,
-  fromBoardId: string | null | undefined,
-  triggeredBy?: string,
+  opts?: { exclusive?: boolean; stageId?: string | null; triggeredBy?: string },
 ) {
-  const added = await addCaseToBoard(caseId, toBoardId, triggeredBy);
-  if (fromBoardId && fromBoardId !== toBoardId) {
-    // Só remove de origem custom (o principal nunca é removível).
-    const { data: fromBoard } = await getSupabaseAdmin()
-      .from("system_pipeline_boards")
-      .select("is_principal")
-      .eq("id", fromBoardId)
-      .maybeSingle();
-    if (fromBoard && !fromBoard.is_principal) {
-      await removeCaseFromBoard(caseId, fromBoardId, triggeredBy);
-    }
+  const sb = getSupabaseAdmin();
+  const { data: toBoard } = await sb
+    .from("system_pipeline_boards")
+    .select("id, is_principal")
+    .eq("id", toBoardId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!toBoard) throw new BoardServiceError("Board de destino não encontrado", 404);
+
+  // Destino = principal → voltar ao principal (limpa posições custom).
+  if (toBoard.is_principal) {
+    return returnCaseToPrincipal(caseId, opts?.triggeredBy);
   }
-  return added;
+
+  // Destino custom → addCaseToBoard cuida do exclusive (mover) x aditivo (duplicar):
+  // no exclusive ele já remove as posições dos outros boards custom.
+  return addCaseToBoard(caseId, toBoardId, {
+    exclusive: opts?.exclusive ?? false,
+    stageId: opts?.stageId ?? null,
+    triggeredBy: opts?.triggeredBy,
+  });
 }
 
 // Move o caso entre etapas DENTRO de um board custom (upsert da posição). A etapa
@@ -635,6 +785,35 @@ export async function moveCaseInBoard(
     );
 
   return { ok: true as const, noop: false, id: data.id, stage_slug: stage.slug };
+}
+
+// TAREFA B (2026-08-04) — só os IDS dos casos com posição ATIVA num board custom.
+// Leve (não faz join nem carrega os casos): usado pela LISTA para filtrar
+// client-side quando o usuário escolhe um kanban específico. NÃO aplica RBAC aqui
+// (a Lista já filtra por visibilidade via useCasesList — a interseção resolve).
+export async function caseIdsByBoard(boardId: string): Promise<string[]> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_board_positions_active")
+    .select("case_id")
+    .eq("board_id", boardId);
+  if (error) throw new BoardServiceError(error.message, 500);
+  return (data ?? []).map((p) => p.case_id as string);
+}
+
+// TAREFA B — IDs dos casos que foram MOVIDOS exclusivamente para algum board custom
+// (posição exclusive=true ativa). A Lista usa isto para o filtro do kanban
+// PRINCIPAL: o principal mostra os casos do tema que NÃO estão exclusivos em custom
+// (mesma regra do PrincipalKanban). Sem filtro por service_type na tabela de
+// posições, retornamos TODOS os exclusivos — a Lista já restringe por tema_id.
+export async function exclusiveCaseIds(): Promise<string[]> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_case_board_positions_active")
+    .select("case_id")
+    .eq("exclusive", true);
+  if (error) throw new BoardServiceError(error.message, 500);
+  return (data ?? []).map((p) => p.case_id as string);
 }
 
 // Lista os casos posicionados num board CUSTOM (join posições × casos ativos),

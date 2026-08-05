@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,9 +40,18 @@ type Props = {
   principalBoardId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Item 2 — quando aberto a partir do "Editar etapas" de um kanban CUSTOM, abre
+  // já expandido nas etapas daquele board (edita só as etapas dele).
+  focusBoardId?: string | null;
 };
 
-export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOpenChange }: Props) {
+export function BoardsManagerDialog({
+  serviceTypeId,
+  serviceTypeName,
+  open,
+  onOpenChange,
+  focusBoardId,
+}: Props) {
   const { data: boards } = useBoards(serviceTypeId);
   const createBoard = useCreateBoard(serviceTypeId);
   const updateBoard = useUpdateBoard(serviceTypeId);
@@ -52,6 +61,12 @@ export function BoardsManagerDialog({ serviceTypeId, serviceTypeName, open, onOp
   // Kanban expandido (mostra o editor de etapas DAQUELE board). Ao criar um novo
   // kanban, expandimos automaticamente para o usuário já escrever suas etapas.
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Item 2 — ao abrir com foco num board (via "Editar etapas" do kanban custom),
+  // expande esse board para editar as etapas dele diretamente.
+  useEffect(() => {
+    if (open && focusBoardId) setExpanded(focusBoardId);
+  }, [open, focusBoardId]);
 
   const principal = (boards ?? []).find((b) => b.is_principal) ?? null;
   const custom = (boards ?? []).filter((b) => !b.is_principal);

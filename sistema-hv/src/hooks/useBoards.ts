@@ -3,10 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   addCaseToBoardFn,
+  caseHasExclusivePositionFn,
+  caseIdsByBoardFn,
   createBoardFn,
   createBoardStageFn,
   deleteBoardFn,
   deleteBoardStageFn,
+  exclusiveCaseIdsFn,
   listBoardsFn,
   listBoardStagesFn,
   listCaseBoardsFn,
@@ -16,6 +19,7 @@ import {
   removeCaseFromBoardFn,
   reorderBoardStagesFn,
   reorderBoardsFn,
+  returnCaseToPrincipalFn,
   updateBoardFn,
   updateBoardStageFn,
 } from "@/rpc/boards";
@@ -148,6 +152,30 @@ export function useCaseBoards(caseId: string | null) {
   });
 }
 
+// TAREFA B (2026-08-04) — só os IDs dos casos num board custom (p/ filtrar a Lista
+// client-side ao escolher um kanban específico). Leve (não carrega os casos).
+export function useCaseIdsByBoard(boardId: string | null) {
+  const fn = useServerFn(caseIdsByBoardFn);
+  return useQuery({
+    queryKey: ["case-ids-by-board", boardId],
+    queryFn: () => fn({ data: { boardId: boardId! } }),
+    enabled: !!boardId,
+    staleTime: 60 * 1000,
+  });
+}
+
+// TAREFA B — IDs dos casos movidos exclusivamente p/ custom (p/ o filtro do
+// PRINCIPAL na Lista). `enabled` controla a busca (só quando útil).
+export function useExclusiveCaseIds(enabled = true) {
+  const fn = useServerFn(exclusiveCaseIdsFn);
+  return useQuery({
+    queryKey: ["exclusive-case-ids"],
+    queryFn: () => fn({ data: {} }),
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useCasesByBoard(boardId: string | null) {
   const fn = useServerFn(listCasesByBoardFn);
   return useQuery({
@@ -162,31 +190,76 @@ export function useAddCaseToBoard() {
   const fn = useServerFn(addCaseToBoardFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { caseId: string; boardId: string }) => fn({ data: vars }),
+    mutationFn: (vars: {
+      caseId: string;
+      boardId: string;
+      exclusive?: boolean;
+      stageId?: string | null;
+    }) => fn({ data: vars }),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ["cases-by-board", vars.boardId] });
+      // A4 — mover exclusivo tira o caso do principal → invalida também o kanban
+      // principal (cases-by-service) e os demais boards custom do caso.
+      qc.invalidateQueries({ queryKey: ["cases-by-board"] });
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+      qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
   });
 }
 
-// AJUSTE #2 (item 5) — MOVER o caso entre kanbans (add no destino + sai da origem
-// custom). Invalida os dois boards + eventos do caso.
+// AJUSTE #2 (item 5) + A4 — MOVER/DUPLICAR o caso entre kanbans. Mover exclusivo
+// tira o caso do principal e dos demais boards; duplicar é aditivo; destino
+// principal = voltar ao principal. Invalida boards + principal + eventos.
 export function useMoveCaseBetweenBoards() {
   const fn = useServerFn(moveCaseBetweenBoardsFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { caseId: string; toBoardId: string; fromBoardId?: string | null }) =>
-      fn({ data: vars }),
+    mutationFn: (vars: {
+      caseId: string;
+      toBoardId: string;
+      exclusive?: boolean;
+      stageId?: string | null;
+    }) => fn({ data: vars }),
     onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: ["cases-by-board", vars.toBoardId] });
-      if (vars.fromBoardId)
-        qc.invalidateQueries({ queryKey: ["cases-by-board", vars.fromBoardId] });
+      qc.invalidateQueries({ queryKey: ["cases-by-board"] });
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
       qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
+  });
+}
+
+// A4 — "voltar ao principal": remove todas as posições custom. Reaparece no
+// PrincipalKanban e some dos custom.
+export function useReturnCaseToPrincipal() {
+  const fn = useServerFn(returnCaseToPrincipalFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { caseId: string }) => fn({ data: vars }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ["cases-by-board"] });
+      qc.invalidateQueries({ queryKey: ["cases-by-service"] });
+      qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case"] });
+      qc.invalidateQueries({ queryKey: ["case-events"] });
+    },
+  });
+}
+
+// A4 — o caso está movido exclusivamente para fora do principal?
+export function useCaseHasExclusivePosition(caseId: string | null) {
+  const fn = useServerFn(caseHasExclusivePositionFn);
+  return useQuery({
+    queryKey: ["case-exclusive", caseId],
+    queryFn: () => fn({ data: { caseId: caseId! } }),
+    enabled: !!caseId,
+    staleTime: 30 * 1000,
   });
 }
 

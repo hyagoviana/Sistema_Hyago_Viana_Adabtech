@@ -79,6 +79,16 @@ function renderEventLabel(e: CaseEvent): string {
       return "Caso transferido para outro tema";
     case "duplicado_em_tema":
       return "Caso duplicado em outro tema";
+    case "board_added":
+      return `Adicionado ao kanban${d?.board_label ? `: ${d.board_label}` : ""} (duplicado)`;
+    case "board_moved_exclusive":
+      return `Movido para o kanban${d?.board_label ? `: ${d.board_label}` : ""} (saiu do principal)`;
+    case "board_removed":
+      return `Removido do kanban${d?.board_label ? `: ${d.board_label}` : ""}`;
+    case "board_returned_to_principal":
+      return "Voltou ao kanban principal";
+    case "board_stage_changed":
+      return `Mudou de etapa no kanban: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
     case "duplicado_de_caso":
       return "Caso criado por duplicação de outro caso";
     case "andamento_importado":

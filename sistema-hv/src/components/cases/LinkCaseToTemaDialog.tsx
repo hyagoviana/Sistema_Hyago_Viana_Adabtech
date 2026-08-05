@@ -41,6 +41,7 @@ import { useDuplicarCasoParaTema, useMoverCasoParaTema } from "@/hooks/useCases"
 import {
   useAddCaseToBoard,
   useBoards,
+  useBoardStages,
   useCaseBoards,
   useMoveCaseBetweenBoards,
 } from "@/hooks/useBoards";
@@ -73,8 +74,10 @@ export function LinkCaseToTemaDialog({
   const { data: caseBoardIds } = useCaseBoards(caseId);
   const [alvo, setAlvo] = useState<Alvo>("tema");
   const [temaId, setTemaId] = useState<string>("");
-  // KANBAN — board de destino (todos do tema EXCETO os que já contêm o caso).
+  // KANBAN — board de destino (todos do tema: principal + custom).
   const [boardId, setBoardId] = useState<string>("");
+  // Item 3 — etapa/funil escolhida do kanban de destino (só p/ board custom).
+  const [stageId, setStageId] = useState<string>("");
   // A4 (2026-08-03) — igual ao envio ao financeiro: o usuário escolhe DUPLICAR
   // (fica nos dois) ou MOVER/transferir (sai da origem, entra no destino).
   const [modo, setModo] = useState<Modo>("mover");
@@ -91,24 +94,40 @@ export function LinkCaseToTemaDialog({
       setAlvo("tema");
       setTemaId("");
       setBoardId("");
+      setStageId("");
       setModo("mover");
     }
   }, [open]);
+
+  // Ao trocar o kanban de destino, zera a etapa (as etapas são por board).
+  useEffect(() => {
+    setStageId("");
+  }, [boardId]);
 
   const temaList = (temas as Tema[] | undefined) ?? [];
   const nomeTema = (id?: string | null) => temaList.find((t) => t.id === id)?.name ?? "—";
   const origemNome = currentTemaId ? nomeTema(currentTemaId) : null;
   const destinoNome = temaId ? nomeTema(temaId) : null;
 
-  // AJUSTE #2 (item 5) — DESTINO = TODOS os kanbans do tema (principal + custom)
-  // EXCETO os que já contêm o caso. O principal SEMPRE contém o caso (posição
-  // virtual), então normalmente fica de fora. Custom já ocupados também saem.
-  const jaContem = new Set([
-    ...(boards ?? []).filter((b) => b.is_principal).map((b) => b.id),
-    ...(caseBoardIds ?? []),
-  ]);
-  const targetBoards = (boards ?? []).filter((b) => !jaContem.has(b.id));
-  const boardDestinoNome = (boards ?? []).find((b) => b.id === boardId)?.label ?? "—";
+  // AJUSTE #2 (item 5) + A4 — DESTINO = TODOS os kanbans do tema (principal + custom).
+  // O caso está no principal quando NÃO foi movido exclusivamente; e nos custom
+  // onde foi adicionado. O PRINCIPAL NÃO bloqueia "voltar" (item 4): selecioná-lo é
+  // exatamente o "voltar ao principal". "já está nesse kanban" só vale para um
+  // board CUSTOM em que o caso já está (posição ativa).
+  const targetBoards = boards ?? [];
+  const boardsById = new Map((boards ?? []).map((b) => [b.id, b]));
+  const destBoard = boardId ? boardsById.get(boardId) : null;
+  const destIsPrincipal = !!destBoard?.is_principal;
+  const boardJaContem = !!boardId && !destIsPrincipal && (caseBoardIds ?? []).includes(boardId);
+  const boardDestinoNome = destBoard?.label ?? "—";
+
+  // Item 3 — etapas do kanban de destino (só custom têm etapas próprias; o
+  // principal espelha o operacional e não usa positions).
+  const { data: destStages, isLoading: destStagesLoading } = useBoardStages(
+    destBoard && !destIsPrincipal ? boardId : null,
+  );
+  const destSemEtapas =
+    !!destBoard && !destIsPrincipal && !destStagesLoading && (destStages ?? []).length === 0;
 
   async function confirmar() {
     if (alvo === "tema") {
@@ -139,26 +158,40 @@ export function LinkCaseToTemaDialog({
     }
 
     // Alvo KANBAN — posiciona o caso num kanban do tema atual (NÃO troca de tema).
-    //   • DUPLICAR → adiciona ao destino, mantendo onde já estava.
-    //   • MOVER    → adiciona ao destino e SAI dos demais boards custom em que
-    //                estava (o principal é intocável — o caso sempre segue nele).
+    //   • Destino = PRINCIPAL → "voltar ao principal": remove posições custom.
+    //   • Destino custom + MOVER  → move exclusivo (sai do principal e dos outros).
+    //   • Destino custom + DUPLICAR → aditivo (fica no principal e no destino).
     if (!boardId) return;
+
+    // Voltar ao principal (mover para o board principal). Duplicar-no-principal
+    // não faz sentido → tratamos qualquer modo como "voltar".
+    if (destIsPrincipal) {
+      try {
+        await moveBetweenBoards.mutateAsync({ caseId, toBoardId: boardId });
+        toast.success(`Caso devolvido ao kanban principal "${boardDestinoNome}"`);
+        onOpenChange(false);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Falha ao voltar ao principal");
+      }
+      return;
+    }
+
+    // Destino custom: trava se já contém (mesmo board) ou se não tem etapa.
+    if (boardJaContem || destSemEtapas || !stageId) return;
     try {
       if (modo === "duplicar") {
-        await addToBoard.mutateAsync({ caseId, boardId });
-        toast.success(`Caso duplicado no kanban "${boardDestinoNome}" (mantém onde estava)`);
+        await addToBoard.mutateAsync({ caseId, boardId, exclusive: false, stageId });
+        toast.success(`Caso duplicado no kanban "${boardDestinoNome}" (mantém no principal)`);
       } else {
-        // Origem custom (se houver): removemos dos boards custom onde o caso está,
-        // deixando-o só no destino (+ principal). Passamos a 1ª origem custom ao
-        // backend (move-between); se houver mais de uma, saem via removeCaseFromBoard
-        // implícito por reprocessar — aqui simplificamos ao caso comum (1 origem).
-        const origemCustom = (caseBoardIds ?? []).filter((id) => id !== boardId);
+        // MOVER exclusivo: sai do principal e dos demais boards custom; entra só
+        // no destino, na etapa escolhida.
         await moveBetweenBoards.mutateAsync({
           caseId,
           toBoardId: boardId,
-          fromBoardId: origemCustom[0] ?? null,
+          exclusive: true,
+          stageId,
         });
-        toast.success(`Caso movido para o kanban "${boardDestinoNome}" (segue no mesmo tema)`);
+        toast.success(`Caso movido para o kanban "${boardDestinoNome}" (saiu do principal)`);
       }
       onOpenChange(false);
     } catch (err) {
@@ -166,7 +199,14 @@ export function LinkCaseToTemaDialog({
     }
   }
 
-  const confirmDisabled = pending || (alvo === "tema" ? !temaId : !boardId);
+  const confirmDisabled =
+    pending ||
+    (alvo === "tema"
+      ? !temaId
+      : !boardId ||
+        boardJaContem ||
+        // custom sem etapa escolhida, ou o kanban não tem etapas: trava (item 3).
+        (!destIsPrincipal && (destSemEtapas || !stageId)));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -229,66 +269,108 @@ export function LinkCaseToTemaDialog({
               </Select>
             </div>
           ) : (
-            <div>
-              <Label>Kanban de destino</Label>
-              {targetBoards.length === 0 ? (
-                <p className="text-[12px] text-muted-foreground pt-1">
-                  Não há outro kanban de destino: o caso já está em todos os kanbans deste tema.
-                  Crie um novo em "Criar novo kanban" na barra do tema (Pipeline).
-                </p>
-              ) : (
-                <Select value={boardId} onValueChange={setBoardId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o kanban" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {targetBoards.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.label}
-                        {b.is_principal ? " (principal)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <div>
+                <Label>Kanban de destino</Label>
+                {targetBoards.length === 0 ? (
+                  <p className="text-[12px] text-muted-foreground pt-1">
+                    Nenhum kanban disponível neste tema.
+                  </p>
+                ) : (
+                  <Select value={boardId} onValueChange={setBoardId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o kanban" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetBoards.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.label}
+                          {b.is_principal ? " (principal — voltar)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Item 3 — etapa/funil do kanban de destino (só para board CUSTOM). */}
+              {destBoard && !destIsPrincipal && (
+                <div>
+                  <Label>Etapa (funil) de destino</Label>
+                  {destStagesLoading ? (
+                    <p className="text-[12px] text-muted-foreground pt-1">Carregando etapas…</p>
+                  ) : destSemEtapas ? (
+                    <Alert className="mt-1">
+                      <AlertDescription className="text-[12px]">
+                        Crie uma etapa no kanban escolhido antes de mover/duplicar o caso.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Select value={stageId} onValueChange={setStageId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a etapa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(destStages ?? []).map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {boardJaContem && (
+                <Alert>
+                  <AlertDescription className="text-[12px]">
+                    Esse caso já está nesse kanban.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
           )}
 
-          {/* Escolha do modo — espelha o popup do financeiro (duplicar × mover). */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setModo("mover")}
-              className={`rounded-md border px-3 py-2 text-left text-[12px] transition-colors ${
-                modo === "mover"
-                  ? "border-[var(--navy)] bg-[var(--navy)] text-white"
-                  : "border-[var(--border)] hover:bg-[var(--ink-50)]"
-              }`}
-            >
-              <div className="font-semibold">Mover / Transferir</div>
-              <div className="opacity-80">
-                {alvo === "tema"
-                  ? "Sai do tema atual e entra no destino."
-                  : "Posiciona o caso no kanban de destino."}
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setModo("duplicar")}
-              className={`rounded-md border px-3 py-2 text-left text-[12px] transition-colors ${
-                modo === "duplicar"
-                  ? "border-[var(--navy)] bg-[var(--navy)] text-white"
-                  : "border-[var(--border)] hover:bg-[var(--ink-50)]"
-              }`}
-            >
-              <div className="font-semibold">Duplicar</div>
-              <div className="opacity-80">
-                {alvo === "tema"
-                  ? "Cria uma cópia no destino; mantém o original."
-                  : "Mantém o caso no kanban principal também."}
-              </div>
-            </button>
-          </div>
+          {/* Escolha do modo — espelha o popup do financeiro (duplicar × mover).
+              Para o alvo KANBAN quando o destino é o PRINCIPAL (voltar), o modo é
+              irrelevante (é só "voltar") → escondemos os botões. */}
+          {!(alvo === "kanban" && destIsPrincipal) && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setModo("mover")}
+                className={`rounded-md border px-3 py-2 text-left text-[12px] transition-colors ${
+                  modo === "mover"
+                    ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                    : "border-[var(--border)] hover:bg-[var(--ink-50)]"
+                }`}
+              >
+                <div className="font-semibold">Mover / Transferir</div>
+                <div className="opacity-80">
+                  {alvo === "tema"
+                    ? "Sai do tema atual e entra no destino."
+                    : "Sai do principal e vai SÓ para o kanban de destino."}
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setModo("duplicar")}
+                className={`rounded-md border px-3 py-2 text-left text-[12px] transition-colors ${
+                  modo === "duplicar"
+                    ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                    : "border-[var(--border)] hover:bg-[var(--ink-50)]"
+                }`}
+              >
+                <div className="font-semibold">Duplicar</div>
+                <div className="opacity-80">
+                  {alvo === "tema"
+                    ? "Cria uma cópia no destino; mantém o original."
+                    : "Mantém o caso no principal e no kanban de destino."}
+                </div>
+              </button>
+            </div>
+          )}
 
           {/* Confirmação explícita com os nomes do destino. */}
           {alvo === "tema" && temaId && (
@@ -323,12 +405,26 @@ export function LinkCaseToTemaDialog({
             </Alert>
           )}
 
-          {alvo === "kanban" && boardId && (
+          {alvo === "kanban" && boardId && !boardJaContem && (
             <Alert>
               <AlertDescription className="text-[12px]">
-                O caso será posicionado no kanban <strong>{boardDestinoNome}</strong> deste mesmo
-                tema. Ele <strong>continua vinculado ao tema</strong> — muda apenas de kanban, sem
-                sair do principal.
+                {destIsPrincipal ? (
+                  <>
+                    O caso <strong>volta ao kanban principal</strong> ({boardDestinoNome}) e sai de
+                    todos os kanbans extras. Ele continua vinculado ao mesmo tema.
+                  </>
+                ) : modo === "duplicar" ? (
+                  <>
+                    O caso é <strong>duplicado</strong> no kanban{" "}
+                    <strong>{boardDestinoNome}</strong> — continua também no kanban principal.
+                  </>
+                ) : (
+                  <>
+                    O caso é <strong>movido</strong> para o kanban{" "}
+                    <strong>{boardDestinoNome}</strong>: <strong>sai do principal</strong> e dos
+                    demais kanbans, ficando só neste. Use "voltar ao principal" para reverter.
+                  </>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -349,9 +445,11 @@ export function LinkCaseToTemaDialog({
                 ? modo === "duplicar"
                   ? "Duplicar no tema"
                   : "Mover para o tema"
-                : modo === "duplicar"
-                  ? "Duplicar no kanban"
-                  : "Mover para o kanban"}
+                : destIsPrincipal
+                  ? "Voltar ao principal"
+                  : modo === "duplicar"
+                    ? "Duplicar no kanban"
+                    : "Mover para o kanban"}
           </Button>
         </DialogFooter>
       </DialogContent>
