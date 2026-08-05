@@ -113,7 +113,7 @@ export function CaseCanonicalFields({
 
   return (
     <div className="card-hero p-7">
-      <Eyebrow>Dados do serviço</Eyebrow>
+      <Eyebrow>Dados do caso</Eyebrow>
       <p className="text-[12px] text-muted-foreground mt-1">
         Campos do caso (ex.: nº do contrato). Distintos dos dados do cliente. Buscáveis.
       </p>

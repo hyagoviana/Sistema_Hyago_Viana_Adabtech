@@ -42,9 +42,60 @@ function slugify(label: string): string {
   );
 }
 
+// AJUSTE #2 — garante que o tema (service_type) tenha o board PRINCIPAL. A
+// migration semeou 1 principal por service_type existente; para temas CRIADOS
+// DEPOIS (createTema) garantimos aqui, on-demand, na 1ª leitura dos boards. O
+// principal é o espelho virtual do operacional (não cria etapas). Idempotente:
+// o índice único parcial uq_system_pipeline_boards_principal impede duplicar; em
+// caso de corrida ignoramos o erro e relemos. Ignora o funil sentinela global.
+const GLOBAL_FUNNEL_SERVICE_TYPE_ID = "00000000-0000-0000-0000-0000000000f0";
+
+async function ensurePrincipalBoard(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  serviceTypeId: string,
+): Promise<void> {
+  if (serviceTypeId === GLOBAL_FUNNEL_SERVICE_TYPE_ID) return;
+
+  const { data: existing } = await sb
+    .from("system_pipeline_boards")
+    .select("id")
+    .eq("service_type_id", serviceTypeId)
+    .eq("is_principal", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (existing) return;
+
+  const { data: st } = await sb
+    .from("system_service_types")
+    .select("id, name, organization_id")
+    .eq("id", serviceTypeId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!st) return; // service_type inexistente/excluído — nada a semear.
+
+  await sb
+    .from("system_pipeline_boards")
+    .insert({
+      organization_id: st.organization_id ?? DEFAULT_ORG,
+      service_type_id: serviceTypeId,
+      slug: "principal",
+      label: st.name ?? "Principal",
+      ordem: 0,
+      is_principal: true,
+    })
+    // Corrida (outro request semeou primeiro): o índice único parcial rejeita;
+    // ignoramos e seguimos — a releitura em listBoards já traz o principal.
+    .then(
+      () => {},
+      () => {},
+    );
+}
+
 // --------------------------------------------------------------------- Boards
 export async function listBoards(serviceTypeId: string) {
   const sb = getSupabaseAdmin();
+  // Garante o board principal para temas criados após a migration de seed.
+  await ensurePrincipalBoard(sb, serviceTypeId);
   const { data, error } = await sb
     .from("system_pipeline_boards_active")
     .select("*")

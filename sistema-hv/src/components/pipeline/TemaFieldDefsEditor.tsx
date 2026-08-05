@@ -229,6 +229,193 @@ export function TemaFieldDefsEditor({
 
   const saving = createDef.isPending || updateDef.isPending;
 
+  // Form de criar/editar def. Renderizado em DOIS lugares mutuamente exclusivos:
+  // (a) INLINE logo abaixo do campo em edição (editingId === d.id) e
+  // (b) no FIM da lista quando editingId === null (modo "adicionar novo campo").
+  const formNode = (
+    <div className="mt-3 space-y-2 border-t pt-3">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Rótulo do campo</Label>
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Ex.: Nº do processo"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Tipo</Label>
+          <Select value={type} onValueChange={(v) => changeType(v as TemaFieldType)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TYPE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {usaOpcoes(type) && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Opções</Label>
+          <div className="space-y-1.5">
+            {(optionsList.length ? optionsList : [""]).map((opt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={opt}
+                  onChange={(e) => setOptionAt(i, e.target.value)}
+                  placeholder={`Opção ${i + 1}`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addOption();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  title="Remover opção"
+                  onClick={() => removeOption(i)}
+                  disabled={optionsList.length <= 1}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <Button type="button" variant="ghost" size="sm" onClick={addOption} className="mt-1">
+            <Plus size={13} />
+            Adicionar opção
+          </Button>
+          <p className="text-[10.5px] text-muted-foreground">
+            O usuário poderá marcar uma ou mais dessas opções.
+          </p>
+        </div>
+      )}
+
+      {/* #3 — origem do valor: do CASO (por caso) ou do CLIENTE (compartilhado). */}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Onde fica o valor</Label>
+          <Select value={scope} onValueChange={(v) => setScope(v as "caso" | "cliente")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="caso">Do caso (um por caso)</SelectItem>
+              <SelectItem value="cliente">Do cliente (compartilhado entre os casos)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10.5px] text-muted-foreground">
+            {scope === "cliente"
+              ? "Ex.: “é médico?”, nacionalidade — vale para todos os casos do cliente."
+              : "Ex.: enquadramento, período — específico deste caso."}
+          </p>
+        </div>
+
+        {/* #6 — nº de preenchimentos do MESMO campo (ex.: vários períodos). */}
+        {suportaOcorrencias && (
+          <div className="space-y-1">
+            <Label className="text-xs">Nº de preenchimentos</Label>
+            <Input
+              type="number"
+              min={1}
+              max={20}
+              value={maxOccurrences}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                setMaxOccurrences(Number.isFinite(n) ? Math.max(1, Math.min(n, 20)) : 1);
+              }}
+            />
+            <p className="text-[10.5px] text-muted-foreground">
+              Mais de 1 abre várias caixinhas do mesmo campo (ex.: períodos).
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* A5 5c — CHECKBOX de auto-avanço: só p/ boolean. Ao marcar "Sim" na ficha,
+          o caso é movido para a etapa OP escolhida. Vazio = não move (padrão). */}
+      {type === "boolean" && (
+        <div className="space-y-1">
+          <Label className="text-xs">Ao marcar “Sim”, mover o caso para a etapa</Label>
+          <Select
+            value={moveToStageSlug || "__none__"}
+            onValueChange={(v) => setMoveToStageSlug(v === "__none__" ? "" : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Não mover (padrão)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não mover (padrão)</SelectItem>
+              {(opStages ?? [])
+                .filter((s) => s.slug !== "NAO_APLICAVEL")
+                .map((s) => (
+                  <SelectItem key={s.id} value={s.slug}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10.5px] text-muted-foreground">
+            Opcional. Marcar “Sim” neste caso avança o card para a etapa escolhida (só na transição
+            para “Sim”; “Não” não move).
+          </p>
+        </div>
+      )}
+
+      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+        <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} />
+        Obrigatório
+      </label>
+
+      {/* #5 — ocultar só na COLUNA da lista (continua no painel de busca/ficha). */}
+      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+        <input
+          type="checkbox"
+          checked={hiddenInList}
+          onChange={(e) => setHiddenInList(e.target.checked)}
+        />
+        Ocultar na lista (some da coluna; continua no filtro e na ficha)
+      </label>
+
+      {/* A2 (2026-08-03) — ocultar do PAINEL DE FILTROS (lista + Kanban);
+          continua na ficha e (se não ocultado na lista) na coluna. */}
+      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
+        <input
+          type="checkbox"
+          checked={hiddenInFilters}
+          onChange={(e) => setHiddenInFilters(e.target.checked)}
+        />
+        Ocultar do filtro (some do painel de filtros; continua na ficha)
+      </label>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={salvar} disabled={saving || !label.trim()}>
+          <Plus size={14} />
+          {editingId
+            ? saving
+              ? "Salvando…"
+              : "Salvar campo"
+            : saving
+              ? "Criando…"
+              : "Adicionar campo"}
+        </Button>
+        {editingId && (
+          <Button variant="ghost" size="sm" onClick={resetForm}>
+            Cancelar
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="rounded-lg border border-[var(--border)] p-3">
       <div className="mb-2 text-[13px] font-semibold text-[var(--navy)]">{title}</div>
@@ -240,261 +427,85 @@ export function TemaFieldDefsEditor({
           <div className="text-muted-foreground text-[13px]">Nenhum campo definido ainda.</div>
         ) : (
           (defs as TemaFieldDef[]).map((d) => (
-            <div
-              key={d.id}
-              className={`flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 ${
-                d.active ? "" : "opacity-55"
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--navy)]">
-                  <span className="truncate">{d.label}</span>
-                  {d.required && <span className="text-[10px] text-destructive">obrigatório</span>}
-                  {d.scope === "cliente" && (
-                    <span className="text-[10px] text-[var(--gold-700)]">do cliente</span>
-                  )}
-                  {(d.max_occurrences ?? 1) > 1 && (
-                    <span className="text-[10px] text-muted-foreground">
-                      até {d.max_occurrences}×
-                    </span>
-                  )}
-                  {d.hidden_in_list && (
-                    <span className="text-[10px] text-muted-foreground">(fora da lista)</span>
-                  )}
-                  {d.hidden_in_filters && (
-                    <span className="text-[10px] text-muted-foreground">(fora do filtro)</span>
-                  )}
-                  {d.type === "boolean" && d.move_to_stage_slug && (
-                    <span className="text-[10px] text-[var(--gold-700)]">
-                      → move p/ {d.move_to_stage_slug}
-                    </span>
-                  )}
-                  {!d.active && <span className="text-[10px] text-muted-foreground">(oculto)</span>}
+            <div key={d.id}>
+              <div
+                className={`flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 ${
+                  d.active ? "" : "opacity-55"
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--navy)]">
+                    <span className="truncate">{d.label}</span>
+                    {d.required && (
+                      <span className="text-[10px] text-destructive">obrigatório</span>
+                    )}
+                    {d.scope === "cliente" && (
+                      <span className="text-[10px] text-[var(--gold-700)]">do cliente</span>
+                    )}
+                    {(d.max_occurrences ?? 1) > 1 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        até {d.max_occurrences}×
+                      </span>
+                    )}
+                    {d.hidden_in_list && (
+                      <span className="text-[10px] text-muted-foreground">(fora da lista)</span>
+                    )}
+                    {d.hidden_in_filters && (
+                      <span className="text-[10px] text-muted-foreground">(fora do filtro)</span>
+                    )}
+                    {d.type === "boolean" && d.move_to_stage_slug && (
+                      <span className="text-[10px] text-[var(--gold-700)]">
+                        → move p/ {d.move_to_stage_slug}
+                      </span>
+                    )}
+                    {!d.active && (
+                      <span className="text-[10px] text-muted-foreground">(oculto)</span>
+                    )}
+                  </div>
+                  <div className="text-[10.5px] text-muted-foreground">
+                    {d.key} · {typeLabel(d.type)}
+                    {usaOpcoes(d.type) && optionsToArray(d.options).length > 0
+                      ? ` (${optionsToArray(d.options).join(", ")})`
+                      : ""}
+                  </div>
                 </div>
-                <div className="text-[10.5px] text-muted-foreground">
-                  {d.key} · {typeLabel(d.type)}
-                  {usaOpcoes(d.type) && optionsToArray(d.options).length > 0
-                    ? ` (${optionsToArray(d.options).join(", ")})`
-                    : ""}
-                </div>
+                <button
+                  type="button"
+                  title={d.active ? "Ocultar de tudo" : "Reexibir"}
+                  onClick={() => toggleAtivo(d)}
+                  disabled={updateDef.isPending}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
+                >
+                  {d.active ? <Eye size={13} /> : <EyeOff size={13} />}
+                </button>
+                <button
+                  type="button"
+                  title="Editar campo"
+                  onClick={() => startEdit(d)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
+                >
+                  <Pencil size={13} />
+                </button>
+                <button
+                  type="button"
+                  title="Excluir campo"
+                  onClick={() => excluir(d)}
+                  disabled={deleteDef.isPending}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive"
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
-              <button
-                type="button"
-                title={d.active ? "Ocultar de tudo" : "Reexibir"}
-                onClick={() => toggleAtivo(d)}
-                disabled={updateDef.isPending}
-                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
-              >
-                {d.active ? <Eye size={13} /> : <EyeOff size={13} />}
-              </button>
-              <button
-                type="button"
-                title="Editar campo"
-                onClick={() => startEdit(d)}
-                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-[var(--navy)]"
-              >
-                <Pencil size={13} />
-              </button>
-              <button
-                type="button"
-                title="Excluir campo"
-                onClick={() => excluir(d)}
-                disabled={deleteDef.isPending}
-                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive"
-              >
-                <Trash2 size={13} />
-              </button>
+              {/* AJUSTE #1 — form de edição INLINE logo abaixo do campo clicado. */}
+              {editingId === d.id && formNode}
             </div>
           ))
         )}
       </div>
 
-      {/* Form criar/editar def */}
-      <div className="mt-3 space-y-2 border-t pt-3">
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Rótulo do campo</Label>
-            <Input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Ex.: Nº do processo"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Tipo</Label>
-            <Select value={type} onValueChange={(v) => changeType(v as TemaFieldType)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TYPE_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {usaOpcoes(type) && (
-          <div className="space-y-1.5">
-            <Label className="text-xs">Opções</Label>
-            <div className="space-y-1.5">
-              {(optionsList.length ? optionsList : [""]).map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={opt}
-                    onChange={(e) => setOptionAt(i, e.target.value)}
-                    placeholder={`Opção ${i + 1}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addOption();
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    title="Remover opção"
-                    onClick={() => removeOption(i)}
-                    disabled={optionsList.length <= 1}
-                    className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Button type="button" variant="ghost" size="sm" onClick={addOption} className="mt-1">
-              <Plus size={13} />
-              Adicionar opção
-            </Button>
-            <p className="text-[10.5px] text-muted-foreground">
-              O usuário poderá marcar uma ou mais dessas opções.
-            </p>
-          </div>
-        )}
-
-        {/* #3 — origem do valor: do CASO (por caso) ou do CLIENTE (compartilhado). */}
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Onde fica o valor</Label>
-            <Select value={scope} onValueChange={(v) => setScope(v as "caso" | "cliente")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="caso">Do caso (um por caso)</SelectItem>
-                <SelectItem value="cliente">Do cliente (compartilhado entre os casos)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-[10.5px] text-muted-foreground">
-              {scope === "cliente"
-                ? "Ex.: “é médico?”, nacionalidade — vale para todos os casos do cliente."
-                : "Ex.: enquadramento, período — específico deste caso."}
-            </p>
-          </div>
-
-          {/* #6 — nº de preenchimentos do MESMO campo (ex.: vários períodos). */}
-          {suportaOcorrencias && (
-            <div className="space-y-1">
-              <Label className="text-xs">Nº de preenchimentos</Label>
-              <Input
-                type="number"
-                min={1}
-                max={20}
-                value={maxOccurrences}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value, 10);
-                  setMaxOccurrences(Number.isFinite(n) ? Math.max(1, Math.min(n, 20)) : 1);
-                }}
-              />
-              <p className="text-[10.5px] text-muted-foreground">
-                Mais de 1 abre várias caixinhas do mesmo campo (ex.: períodos).
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* A5 5c — CHECKBOX de auto-avanço: só p/ boolean. Ao marcar "Sim" na ficha,
-            o caso é movido para a etapa OP escolhida. Vazio = não move (padrão). */}
-        {type === "boolean" && (
-          <div className="space-y-1">
-            <Label className="text-xs">Ao marcar “Sim”, mover o caso para a etapa</Label>
-            <Select
-              value={moveToStageSlug || "__none__"}
-              onValueChange={(v) => setMoveToStageSlug(v === "__none__" ? "" : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Não mover (padrão)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Não mover (padrão)</SelectItem>
-                {(opStages ?? [])
-                  .filter((s) => s.slug !== "NAO_APLICAVEL")
-                  .map((s) => (
-                    <SelectItem key={s.id} value={s.slug}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[10.5px] text-muted-foreground">
-              Opcional. Marcar “Sim” neste caso avança o card para a etapa escolhida (só na
-              transição para “Sim”; “Não” não move).
-            </p>
-          </div>
-        )}
-
-        <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-          <input
-            type="checkbox"
-            checked={required}
-            onChange={(e) => setRequired(e.target.checked)}
-          />
-          Obrigatório
-        </label>
-
-        {/* #5 — ocultar só na COLUNA da lista (continua no painel de busca/ficha). */}
-        <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-          <input
-            type="checkbox"
-            checked={hiddenInList}
-            onChange={(e) => setHiddenInList(e.target.checked)}
-          />
-          Ocultar na lista (some da coluna; continua no filtro e na ficha)
-        </label>
-
-        {/* A2 (2026-08-03) — ocultar do PAINEL DE FILTROS (lista + Kanban);
-            continua na ficha e (se não ocultado na lista) na coluna. */}
-        <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-          <input
-            type="checkbox"
-            checked={hiddenInFilters}
-            onChange={(e) => setHiddenInFilters(e.target.checked)}
-          />
-          Ocultar do filtro (some do painel de filtros; continua na ficha)
-        </label>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={salvar} disabled={saving || !label.trim()}>
-            <Plus size={14} />
-            {editingId
-              ? saving
-                ? "Salvando…"
-                : "Salvar campo"
-              : saving
-                ? "Criando…"
-                : "Adicionar campo"}
-          </Button>
-          {editingId && (
-            <Button variant="ghost" size="sm" onClick={resetForm}>
-              Cancelar
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* AJUSTE #1 — form de ADICIONAR novo campo fica no FIM (só quando não há
+          nenhum campo em edição; ao editar, o form aparece inline acima). */}
+      {editingId === null && formNode}
     </div>
   );
 }

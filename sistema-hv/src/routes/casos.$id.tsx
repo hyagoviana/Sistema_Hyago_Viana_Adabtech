@@ -332,7 +332,7 @@ function CasoDetalhe() {
               pode gerir caso (casos.manage). */}
           {podeGerirCaso && (
             <Button variant="outline" size="sm" onClick={() => setLinkTemaOpen(true)}>
-              <Layers size={14} className="mr-1.5" /> Vincular a um tema
+              <Layers size={14} className="mr-1.5" /> Vincular ao tema ou kanban
             </Button>
           )}
           {/* A3 — adicionar o caso a outra lista/board do tema (sub-fluxos, ex.:
@@ -516,6 +516,11 @@ function CasoDetalhe() {
 
       <OrnamentalDivider />
 
+      {/* Notas ACIMA de Tarefas (dossiê), por pedido do owner 2026-08-04. */}
+      <NotesBlock target="case" entityId={caso.id} />
+
+      <OrnamentalDivider />
+
       <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
 
       <OrnamentalDivider />
@@ -534,11 +539,6 @@ function CasoDetalhe() {
         municipio={caso.municipio ?? undefined}
         autoFillExtra={docAutoFill}
       />
-
-      <OrnamentalDivider />
-
-      {/* S4-03 — bloco de notas do caso (auth-only, soft-delete). */}
-      <NotesBlock target="case" entityId={caso.id} />
 
       <MoveCaseDialog
         open={moveOpen}
@@ -567,13 +567,15 @@ function CasoDetalhe() {
         serviceTypeId={caso.service_type_id}
       />
 
-      {/* R2 — vincular o caso a um TEMA (reatribui case_type/pipeline + tema/frente). */}
+      {/* R2 / AJUSTE #2 — vincular o caso a um TEMA (reatribui pipeline) OU a um
+          KANBAN (board) dentro do tema atual (sem trocar de tema). */}
       <LinkCaseToTemaDialog
         open={linkTemaOpen}
         onOpenChange={setLinkTemaOpen}
         caseId={caso.id}
         caseCode={caso.case_code}
         currentTemaId={(caso as { tema_id?: string | null }).tema_id ?? null}
+        serviceTypeId={caso.service_type_id}
       />
 
       <Dialog open={entrarOpen} onOpenChange={setEntrarOpen}>

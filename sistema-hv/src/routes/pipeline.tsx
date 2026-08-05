@@ -27,17 +27,6 @@ import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   useCasesByServiceType,
   useMoveCaseStageFin,
@@ -49,7 +38,6 @@ import { BoardsManagerDialog } from "@/components/pipeline/BoardsManagerDialog";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemaFieldDefs } from "@/hooks/useTemaFieldDefs";
 import { useTemas } from "@/hooks/useTemas";
-import { useSetTypeTemplatesFolder } from "@/hooks/useDocumentTemplates";
 
 // (item 2, 2026-07-09) — a categoria selecionada vive na URL (search param `cat`).
 // Assim, clicar em "Pipeline Operacional" no menu (Link sem search) VOLTA ao
@@ -335,10 +323,6 @@ function PrincipalKanban({
   // A3 — gate RBAC do board Financeiro no seletor (entrada especial oculta sem módulo).
   const podeFinanceiro = can(role, "financeiro.manage");
   const [editorOpen, setEditorOpen] = useState(false);
-  // Ponto 6 — vincular/trocar a pasta de modelos deste tipo (caso).
-  const setFolder = useSetTypeTemplatesFolder();
-  const [folderOpen, setFolderOpen] = useState(false);
-  const [folderInput, setFolderInput] = useState("");
 
   // Financeiro mostra só casos bifurcados (com etapa financeira ativa).
   // Operacional esconde os casos "somente financeiro" (S19 / ADR-016) — filtro SÓ aqui,
@@ -507,16 +491,13 @@ function PrincipalKanban({
               <Settings2 size={14} />
               Editar etapas
             </Btn>
+            {/* AJUSTE #2 — "Criar novo kanban": abre o gestor de listas/boards do
+                tema (criar/renomear/reordenar + etapas de cada board). Fica ao
+                lado de "Editar etapas". */}
             {canEditStages && (
-              <Btn
-                variant="ghost"
-                onClick={() => {
-                  setFolderInput("");
-                  setFolderOpen(true);
-                }}
-              >
-                <FolderKanban size={14} />
-                Pasta de modelos
+              <Btn variant="ghost" onClick={() => setBoardsManagerOpen(true)}>
+                <Plus size={14} />
+                Criar novo kanban
               </Btn>
             )}
             <Btn variant="ghost" onClick={onBack}>
@@ -548,57 +529,6 @@ function PrincipalKanban({
           onOpenChange={setBoardsManagerOpen}
         />
       )}
-
-      {/* Ponto 6 — vincular/trocar a pasta de modelos (procuração/caso) deste tipo */}
-      <Dialog open={folderOpen} onOpenChange={setFolderOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pasta de modelos — {serviceType.name}</DialogTitle>
-            <DialogDescription>
-              Cole o link (ou o ID) da pasta do Google Drive com os modelos deste caso. Ao salvar,
-              os modelos dessa pasta são sincronizados e passam a aparecer ao gerar o documento
-              deste tipo.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Link ou ID da pasta do Drive</Label>
-            <Input
-              value={folderInput}
-              onChange={(e) => setFolderInput(e.target.value)}
-              placeholder="https://drive.google.com/drive/folders/..."
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setFolderOpen(false)}
-              disabled={setFolder.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              disabled={!folderInput.trim() || setFolder.isPending}
-              onClick={async () => {
-                try {
-                  const res = await setFolder.mutateAsync({
-                    serviceTypeId: serviceType.id,
-                    folder: folderInput.trim(),
-                  });
-                  toast.success(
-                    `Pasta vinculada — ${res.created} novos, ${res.updated} atualizados, ${res.skipped} já existiam` +
-                      (res.errors.length ? ` | ${res.errors.length} erros` : ""),
-                  );
-                  setFolderOpen(false);
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Falha ao vincular a pasta");
-                }
-              }}
-            >
-              {setFolder.isPending ? "Sincronizando…" : "Salvar e sincronizar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Painel de filtros dinâmicos (fixos + campos canônicos do tema) */}
       <CaseFiltersPanel
