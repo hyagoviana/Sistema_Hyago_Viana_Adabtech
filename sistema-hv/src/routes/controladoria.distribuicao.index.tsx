@@ -1,21 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   BarChart3,
   PieChart,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
-import { useDistributionResults, useBatchLog } from "@/hooks/useDistribuicaoDashboard";
+import {
+  useDistributionResults,
+  useBatchLog,
+  useSincronizarDistribuicao,
+} from "@/hooks/useDistribuicaoDashboard";
+import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/controladoria/distribuicao/")({
   component: DistribuicaoPainelPage,
@@ -25,6 +29,28 @@ function DistribuicaoPainelPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const { data: resultsData, isLoading: resultsLoading } = useDistributionResults(date);
   const { data: batchLog, isLoading: batchLoading } = useBatchLog(date);
+
+  // Sincronizacao sob demanda — mesmo gate da rota (controladoria/edit).
+  const podeSincronizar = usePodeEditar("controladoria");
+  const sync = useSincronizarDistribuicao();
+
+  function handleSync() {
+    sync.mutate(
+      { distributionDate: date, windowDays: 3 },
+      {
+        onSuccess: (r) => {
+          toast.success(
+            `Sincronizado: ${r.distributed} distribuidas` +
+              (r.blocked ? `, ${r.blocked} bloqueadas` : "") +
+              ` (de ${r.totalTasks} tarefas)`,
+          );
+        },
+        onError: (e) => {
+          toast.error(e instanceof Error ? e.message : "Falha ao sincronizar distribuicao.");
+        },
+      },
+    );
+  }
 
   const results = resultsData?.data ?? [];
   const flowCounts = useMemo(() => {
@@ -90,6 +116,12 @@ function DistribuicaoPainelPage() {
           <span className="text-xs text-muted-foreground">
             Concluido: {new Date(batchLog.completed_at).toLocaleTimeString("pt-BR")}
           </span>
+        )}
+        {podeSincronizar && (
+          <Button className="ml-auto" onClick={handleSync} disabled={sync.isPending}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${sync.isPending ? "animate-spin" : ""}`} />
+            {sync.isPending ? "Sincronizando…" : "Sincronizar"}
+          </Button>
         )}
       </div>
 

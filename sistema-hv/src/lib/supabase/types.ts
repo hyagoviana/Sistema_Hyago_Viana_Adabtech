@@ -160,6 +160,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           projuris_tipo_descricao: string | null;
+          exclusive_executor_id: string | null;
         };
         Insert: {
           id?: string;
@@ -173,6 +174,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           projuris_tipo_descricao?: string | null;
+          exclusive_executor_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_task_type_mapping"]["Insert"]>;
         Relationships: [];
@@ -189,6 +191,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           projuris_tema_descricao: string | null;
+          exclusive_executor_id: string | null;
         };
         Insert: {
           id?: string;
@@ -201,6 +204,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           projuris_tema_descricao?: string | null;
+          exclusive_executor_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_theme_mapping"]["Insert"]>;
         Relationships: [];

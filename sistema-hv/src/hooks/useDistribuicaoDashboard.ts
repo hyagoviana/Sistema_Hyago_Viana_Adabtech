@@ -4,11 +4,30 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { sincronizarDistribuicaoFn } from "@/rpc/distribuicao";
 
 const supabase = getSupabaseBrowserClient();
 
 const ORG_ID = "00000000-0000-0000-0000-000000000001";
+
+// ---------------------------------------------------------------------------
+// Sincronizacao SOB DEMANDA (botao "Sincronizar") — roda o motor no servidor
+// (le ProJuris + grava system_distribution_results/batch_logs) e invalida as
+// queries do painel do dia. ZERO writeback ao ProJuris.
+// ---------------------------------------------------------------------------
+export function useSincronizarDistribuicao() {
+  const fn = useServerFn(sincronizarDistribuicaoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { distributionDate?: string; windowDays?: number }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["distribution-results"] });
+      qc.invalidateQueries({ queryKey: ["batch-log"] });
+    },
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Distribuicoes do dia (5.1 + 5.2)
