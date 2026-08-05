@@ -254,6 +254,272 @@ Doc REST minerada (`SajAdv Rest Api.html` + `application.wadl` + Central de Ajud
 
 ---
 
+## Conexão REAL com usuário de serviço (2026-08-05, @data-engineer)
+
+Rodada de teste da conexão real agora que o Thiago mandou um usuário/senha ProJuris.
+Credenciais no `.env.local`: `PROJURIS_USERNAME=thiagocorreia@hyagovianaadvocacia.com.br`,
+`PROJURIS_PASSWORD=***`, `PROJURIS_DOMINIO=hyagovianaadvocacia`,
+`PROJURIS_PROCESSO_TESTE=0733583-07.2026.8.07.0016`. **Só leitura nesta rodada.**
+
+### Resultado da autenticação: 🔴 AUTH ainda = 401 (todas as variantes)
+
+O client ganhou `buildUsernameVariants()` + `authenticateTryingVariants()` (tenta em
+ordem, para na 1ª 200). O smoke rodou as **5 variantes** de `username`:
+
+| # | username tentado | HTTP |
+|---|---|---|
+| 1 | `thiagocorreia@hyagovianaadvocacia.com.br` (e-mail cru) | **401** |
+| 2 | `thiagocorreia$$hyagovianaadvocacia` (formato oficial da doc) | **401** |
+| 3 | `thiagocorreia@hyagovianaadvocacia` (local@dominio, sem TLD) | **401** |
+| 4 | `thiagocorreia@hyagovianaadvocacia.com.br$$hyagovianaadvocacia` | **401** |
+| 5 | `hyagovianaadvocacia\thiagocorreia` (realm-style) | **401** |
+
+Todas: **HTTP 401, body VAZIO, sem `content-type`, sem `www-authenticate`.**
+
+### Diagnóstico (probes adicionais no gateway)
+
+A rejeição **NÃO vem do Keycloak** (invalid_grant), e sim da **camada do API gateway
+(`apigw`)** — o gateway rejeita ANTES de repassar ao Keycloak. Evidências:
+
+- `POST /auth/token` **sem body** → **400** (endpoint existe, faz parse do corpo).
+- `POST /auth/token` só com `grant_type=password` → **401 body vazio**.
+- `POST /auth/token` com creds completas (qualquer variante / Basic-header / `scope=openid`) → **401 body vazio**.
+- `grant_type=client_credentials` (só client_id+secret) → **401 body vazio**.
+- `GET /adv-service/usuario` **sem token** → **401 mas com JSON** `{"error":"unauthorized","error_description":"Full authentication is required..."}` — ou seja, o serviço REST responde formatado; **só o `/auth/token` devolve 401 cru**.
+
+**Leitura:** o 401 cru e sem headers no `/auth/token`, invariável ao conteúdo das
+credenciais, é típico de **gateway barrando a requisição** — o app OAuth `client_id=87696`
+provavelmente **não está habilitado/autorizado no gateway `apigw`**, OU falta uma
+credencial de gateway (subscription/api-key) além do par client_id+client_secret do
+Keycloak. Se fosse só senha/username errado, o Keycloak devolveria `400/401` **com JSON**
+`{"error":"invalid_grant"}` (como o `/adv-service` faz). A doc REST (`SajAdv Rest Api.html`
+= WADL/XSD) **não documenta** header de subscription do gateway; isso vive na Central de
+Ajuda/Confluence e/ou depende de ativação do lado da Softplan.
+
+### O que pedir ao Thiago / Softplan (novo BLOQUEIO)
+
+1. **Confirmar que o app `api_cliente_codigo=87696` está ATIVO/habilitado no gateway
+   `apigw.projurisadv.com.br`** (não só criado no Keycloak). O 401 cru sugere app não
+   provisionado no gateway.
+2. **Confirmar o `client_secret`** do 87696 (se rotacionou, o `.env.local` está velho).
+3. **Confirmar o formato EXATO do `username`** para o realm deles (a doc diz
+   `USUARIO$$DOMINIO`; testamos as 5 variantes prováveis, todas 401 — mas como o gateway
+   barra antes, não dá pra distinguir "username errado" de "app não habilitado" enquanto o
+   401 vier cru).
+4. **Confirmar se há um passo/credencial de gateway** (subscription key / header extra)
+   além do grant password do Keycloak.
+
+Enquanto o `/auth/token` devolver **401 com body vazio**, o problema é de
+**provisionamento/credencial de gateway**, não de username/senha — nenhuma variante de
+username resolve isso do nosso lado.
+
+### De-para (reconciliação) — pendente da auth
+
+Como a auth não passou, **não foi possível listar assuntos/tipos/usuários reais do
+ProJuris**, logo o de-para nome→código real **continua em aberto** (mesma situação de
+2026-08-04). O smoke JÁ está pronto para, assim que a auth passar, emitir os dois
+relatórios: assuntos ProJuris × `system_theme_mapping` (26 temas) e tipos de tarefa
+ProJuris × `system_task_type_mapping` (44 tipos), casando por NOME normalizado e imprimindo
+`código real | nome` + `casaram/total`. **Nada gravado no banco.** (Nesta rodada o smoke
+nem chegou a abrir o pg, pois abortou no 401 da auth.)
+
+### Endpoint de INTIMAÇÕES (entrada do motor) — MAPEADO na doc
+
+Recurso **Intimação** no `SajAdv Rest Api.html` (linhas ~937-984). Entrada do motor:
+
+- **Listagem/consulta (LEITURA):** `POST /adv-service/intimacao/consulta` — é uma
+  *consulta* (leitura), aceita filtros no corpo; variantes v2:
+  `POST /adv-service/v2/intimacao/consulta-pendente`, `/v2/intimacao/consulta-keyset`,
+  `/v2/intimacao/consulta-codigos` (paginação keyset). **É POST, mas de CONSULTA — leitura,
+  permitido** (não faz este subagente, porque a rodada é só-GET e a auth não passou).
+- **Contadores/health (GET, leitura pura):** `GET /adv-service/intimacao/contar-pendentes`,
+  `GET /adv-service/intimacao/total-intimacoes`, `GET /adv-service/intimacao/health-check`.
+- **Detalhe:** `GET /adv-service/intimacao/{codigo-intimacao}` ·
+  `GET /adv-service/intimacao/{codigo-intimacao}/resumo`.
+- **Indicadores:** `GET /adv-service/v2/indicador/intimacoes/data-base/{data-base}/visao-escritorio/{visao-escritorio}`.
+- **Andamentos (correlato):** `POST /adv-service/v2/processo-andamento/consulta` (consulta = leitura).
+
+> Endpoints que GRAVAM (NÃO usar nesta fase, D1 = ProJuris é fonte): `/v2/intimacao/cadastro`,
+> `/v2/intimacao/arquivar`, `/v2/intimacao/novas-tarefas-em-lote`, `/intimacao/{cod}/vincular/processo/{cod}`,
+> `/v2/intimacao/remover*`. Só reportados.
+
+O smoke já tenta os 3 GETs de contador/health após a auth (quando ela passar) para provar
+leitura do domínio de intimações antes de montar a consulta com filtros.
+
+### O que falta para rodar o dry-run da distribuição
+
+1. **🔴 Destravar a AUTH** (provisionar/confirmar app 87696 no gateway + secret + formato de
+   username) — sem isso, nada da API entra. **Único bloqueio duro.**
+2. **De-para real** (assuntos→código, tipos→código, executores→`projuris_responsavel_id`) —
+   sai automático do smoke assim que a auth passar; depois o owner revisa e um seed grava
+   `projuris_tema_codigo`/`projuris_tipo_codigo` reais (hoje = NOME placeholder).
+3. **Semear pontuação** (44 tipos + 27 assuntos da planilha) + **exceções** (responsável
+   exclusivo) + **executores** — T1/T2 da story (script idempotente + rollback).
+4. **Consulta de intimações com filtros** (data-base = dia) via `POST /intimacao/consulta` —
+   montar o corpo do filtro (leitura) e normalizar {tipo, assunto, marcadores, prazo previsto,
+   prazo fatal} → `raw_data`.
+5. **Rodar o simulador** (`system_distribution_simulations`) com o lote importado → dry-run
+   mostra distribuição projetada SEM efetivar.
+
+### Artefatos tocados nesta rodada (código, não commitado)
+
+- `sistema-hv/src/lib/projuris/client.ts` — +`buildUsernameVariants()` (5 variantes em ordem)
+  e +`authenticateTryingVariants(onAttempt)` (para na 1ª 200; senão lança o último
+  `ProjurisAuthError` com status/body cru). `authenticate()` original preservado.
+- `sistema-hv/scripts/projuris-smoke.ts` — auth por variantes (loga cada tentativa+HTTP);
+  +leitura de **tipos de tarefa** (`GET /tipo?chave-tipo=tarefa-tipo`) e **intimações**
+  (contadores GET); amostra ampliada p/ **15**; reconciliação DUPLA (assuntos + tipos de
+  tarefa) via helper `reconcile()`; `openPg()` aceita `DATABASE_URL`/`SUPABASE_DB_URL` além
+  de `SUPABASE_PROJECT_REF`+`SUPABASE_DB_PASSWORD`.
+- `npx eslint` verde nos 2 arquivos; `npx tsc --noEmit` só com o erro pré-existente de
+  `src/lib/contaazul/service.ts` (fora do escopo). **Não commitado.**
+
+---
+
+## AUTH DESTRAVADA + leitura real (2026-08-05, @data-engineer)
+
+**🟢 A CONEXÃO FUNCIONA.** O bloqueio do gateway era o `client_id`: ele é a **string
+completa** `api_cliente_codigo_87696` (não o número `87696`). Com isso no
+`.env.local` (`PROJURIS_API_CLIENTE_CODIGO=api_cliente_codigo_87696`), o
+`POST /auth/token` (grant password, username = **e-mail cru**
+`thiagocorreia@hyagovianaadvocacia.com.br`, variante #1) retorna **200** —
+`token_type: Bearer`, `expires_in: 28800` (8h). As demais variantes de username
+continuam 401; a vencedora é o e-mail cru.
+
+### (1) Tipos de tarefa — 52 desempacotados + de-para com `system_task_type_mapping`
+
+`GET /tipo?chave-tipo=tarefa-tipo` tem envelope aninhado
+`{ consultaTipoRetorno: [ { chaveTipo, quantidadeRegistros: 52, simpleDto: [ { chave, valor } ] } ] }`.
+`chave` = código do tipo, `valor` = nome. Os **52 tipos** (código | nome):
+
+```
+4191945 Administrativo            6476507 Agendamento de despacho     3843102 Agravo de Instrumento
+3843103 Agravo Interno            6476503 Análise de caso             6450638 Análise Processual
+3843106 Apelação                  6476505 Atendimento                 6476501 Audiência
+6483954 Balcão/Digilência         3843104 Contestação                 6450640 Contrarrazões de Apelação
+6450639 Contrarrazões de Embargos 3843107 Contrarrazões de recurso    6476442 Contrarrazões de recurso inominado
+3923169 Cumprimento de Sentença   6056891 Cumprimento provisório de sentença   3923168 DC
+6476499 Defesa Administrativa     3925771 Despacho                    6483955 Diligência/Balcão
+3843090 Diligências/Balcão        6476497 Embargos à Execução         3843111 Embargos de Declaração
+3843115 Emenda à Inicial          6476498 Execução Extrajudicial      6476509 Gerar Custas
+3843083 Inicial                   4239949 Lembrete                    6476510 Lembrete
+6577646 Manifestação (10 dias)    3843118 Manifestação (15 dias)      6577642 Manifestação (5 dias)
+4353972 Memoriais                 4249139 Parecer                     4259855 Pesquisa
+6476506 Petição de Juntada        6476440 Petição Intercorrente       3843093 Protocolo
+4327344 Protocolo Inicial         6476441 Protocolo Intercorrente     6450641 Recurso Administrativo
+3843108 Recurso Especial          3843109 Recurso Extraordinário      3843087 Recurso Inominado
+3843110 Recurso Ordinário         6535001 Rejuizamento                3843117 Réplica à Contestação
+3843089 Reunião                   6476508 Solicitação administrativa  6050441 Sustentação Oral
+3985878 Tutela Antecipada
+```
+
+**De-para (casamento por NOME normalizado — ignora acento/caixa): 39/44 casaram.**
+Os 44 do `system_task_type_mapping` cujo `projuris_tipo_codigo` (hoje NOME placeholder)
+casou → código ProJuris real (amostra dos matches, todos gravados NADA — só relatório):
+`Despacho→3925771`, `Apelação→3843106`, `Protocolo→3843093`, `Sustentação Oral→6050441`,
+`Audiência/AUDIENCIA→6476501` (2 linhas SHV mapeiam p/ o mesmo código), `Tutela antecipada→3985878`, etc.
+
+**5 do SHV NÃO casaram** (near-miss de nomenclatura — resolver manualmente):
+- `Fallback` → sentinela interna do SHV, **sem** equivalente ProJuris (esperado).
+- `Diligências / Balcão` → 3 candidatos ProJuris: `6483955 Diligência/Balcão`, `3843090 Diligências/Balcão`, `6483954 Balcão/Digilência`.
+- `Emenda` → `3843115 Emenda à Inicial`.
+- `Manifestação` → 3 variantes por prazo: `6577646 (10 dias)`, `3843118 (15 dias)`, `6577642 (5 dias)`.
+- `Réplica` → `3843117 Réplica à Contestação`.
+
+**Tipos ProJuris SEM pontuação no SHV (14):** Balcão/Digilência, Diligência/Balcão,
+Diligências/Balcão, Emenda à Inicial, Lembrete (x2), Manifestação (10/15/5 dias),
+Petição Intercorrente, Recurso Extraordinário, Recurso Ordinário, Rejuizamento,
+Réplica à Contestação. (owner decide se pontua ou ignora)
+
+### (2) Colaboradores — 15 com CÓDIGO (`chave`), candidatos a EXECUTORES
+
+`GET /usuario` → `{ simpleDto: [ { chave: <código>, valor: <nome> } ] }`. O código do
+executor (candidato a `projuris_responsavel_id`) vem em **`chave`** (o smoke antigo
+procurava `codigoUsuario`/`id`, por isso mostrava `[?]`). E-mail NÃO vem nesta rota.
+Os **15** (código | nome):
+
+```
+195775 Amanda Campos          131021 Ana Patricia Cruz     128861 Controladoria
+130405 HYAGO ALVES VIANA      131873 joão braga gois        207254 KEILANE ALVES
+203286 leslie Souza           131018 Maxwel Bruno Santos    131484 Pablo silva
+194419 Pedro Holanda          194420 Sarah Helena           131016 suporte HV
+204546 THAISE                 128858 THIAGO CORREIA SILVA   131022 Wdyson Neres Moreira da Costa
+```
+
+Executores citados na planilha de exceções: **THIAGO CORREIA SILVA = 128858**,
+**THAISE = 204546** (Patrícia da exceção TEMFC NÃO aparece na lista — checar com o owner
+se é a "Ana Patricia Cruz = 131021" ou um usuário ausente). **NADA gravado** em
+`system_projuris_executor_mapping` — mapeamento executor↔`system_users.id` depende do owner.
+
+### (3) Intimações — consulta REAL (leitura) + shape da entrada do motor
+
+`POST /adv-service/intimacao/consulta` (é CONSULTA = leitura). **Corpo (filtro)** =
+`IntimacaoConsultaFiltroWs`: campos úteis `tipoDataFiltroIntimacao`
+(`DATA_DA_DISPONIBILIZACAO`|`DATA_DO_JORNAL`), `dataPeriodoInicial`/`dataPeriodoFinal`
+(`YYYY-MM-DD`), `tipoSituacao` (`PENDENTE`|`PROCESSADA`|`ARQUIVADA`|`ATIVA`),
+`codigosUsuariosResponsaveis[]` (long), `tipoFiltroEspeciais`
+(`PROCESSO_CADASTRADO`|`PROCESSO_NAO_CADASTRADO`|`SOMENTE_PENDENTES`),
+`filtroGeral` (string), `dadosOrigemFiltro` (bool — traz responsável/foto). Corpo VAZIO
+→ **503** ("Consulta excedeu o tempo limite; refine os filtros") — período é obrigatório
+na prática.
+
+**Resposta** = `{ totalRegistros, intimacaoConsultaWs: [ IntimacaoConsultaWs ] }`. Filtro
+de teste (últimos 7 dias, DISPONIBILIZAÇÃO) → **totalRegistros=548**, 200 itens/página.
+Campos por intimação (`IntimacaoConsultaWs`): `codigoIntimacao`, `numeroProcesso`,
+`codigoProcesso`, `tipoIntimacao` (`DIARIO`|`ELETRONICA`), `tipoSituacao`, `orgao`,
+`estado`/`cidade` (vieram null), `nomeCliente[]`, `nomeResponsavel` +
+`usuariosResponsaveis[{codigoUsuario}]`, `dataDisponibilizacao`/`dataJornal`
+(**epoch ms**), `texto` (HTML com `<destaque>`), `tarefasSugeridas[]`, `termoExcecao`,
+`duplicada`, `descartada`, `flAtivo`. Amostra das 5 primeiras (todas responsável
+HYAGO ALVES VIANA = 130405; processos 6390225-54.2025.4.06.3800, 6010842-03..., etc.).
+
+**Paginação keyset** (recomendada p/ o batch): `POST /v2/intimacao/consulta-keyset` →
+`{ totalRegistros, proximoCursor, intimacaoConsultaWs[] }`; passar `proximoCursor` na
+próxima chamada. `POST /v2/intimacao/consulta-pendente` usa filtro `{ visaoEscritorio }`
+e devolve `intimacaoConsultaPendenteWs[]` (retornou 0 pendentes agora).
+
+**⚠ GAP DE MODELO p/ o motor:** a intimação bruta traz PROCESSO + RESPONSÁVEL(cod) +
+datas + texto + situação, mas **NÃO traz `assunto/tema`, `tipo-de-tarefa`, nem `prazo`
+(previsto/fatal)**. Consequências:
+- `prazoPrevisto`/`prazoFatal` (int, dias) vivem na **TAREFA** — em `tarefasSugeridas`
+  (schema `intimacaoSugestaoType`) ou na tarefa gerada da intimação (`acaoEmLoteNovasTarefas`);
+  nas amostras `tarefasSugeridas` veio vazio (intimações já ARQUIVADAS/sem sugestão).
+- `assunto/tema` (que dirige o `multiplier`) vem do **PROCESSO** vinculado (`codigoProcesso`),
+  não da intimação — precisa de um 2º GET (processo/assunto do processo) para casar o tema.
+- `tipo de tarefa` (que dirige `points`) idem: vem da tarefa, não da intimação crua.
+
+Ou seja, **a "entrada do motor" não é a intimação sozinha** — é intimação + tarefa
+(prazo/tipo) + processo (assunto/tema). Definir no T3/T4 se o motor pontua a partir da
+**tarefa sugerida** ou se materializa a tarefa e pontua depois. (O de-para de ASSUNTO
+com o SHV segue pendente do Thiago — `GET /processo/assunto` só devolve os 17 assuntos
+CNJ de topo, não os temas SHV como `INDENIZAÇÃO PMMB`; 0/26 casaram, esperado.)
+
+### O que falta para o dry-run da distribuição
+
+1. ~~🔴 Destravar a AUTH~~ **RESOLVIDO** (client_id = `api_cliente_codigo_87696`).
+2. **De-para de tipos: aplicar os 39 matches + resolver os 5 near-miss manualmente**
+   (owner escolhe qual variante ProJuris p/ Diligências/Emenda/Manifestação/Réplica);
+   depois um seed grava `projuris_tipo_codigo` REAL (hoje NOME placeholder). Os 15
+   executores (código) prontos p/ mapear.
+3. **De-para de ASSUNTO/tema → aguarda Thiago** (temas SHV não estão em `/processo/assunto`;
+   provavelmente vêm de MARCADOR ou campo do processo — confirmar fonte).
+4. **Semear pontuação** (44 tipos + 27 assuntos da planilha) + exceções + executores (T1/T2).
+5. **Normalizador de entrada:** juntar intimação (`consulta-keyset`) + tarefa (prazo/tipo)
+   + processo (assunto) → `raw_data`; depois pontuar → simular (dry-run).
+
+### Artefatos tocados (2026-08-05, NÃO commitado)
+
+- `sistema-hv/src/lib/projuris/client.ts` — +`projurisPostConsulta(path, body, query?)`
+  (POST de CONSULTA = leitura; usado p/ `intimacao/consulta`; 401→retry Bearer; NÃO usar
+  p/ endpoints de escrita).
+- `sistema-hv/scripts/projuris-smoke.ts` — +`unwrapTipoSimpleDto()` (desempacota
+  `consultaTipoRetorno[0].simpleDto`, 52 tipos); usuários agora leem `chave` (código);
+  seção de intimações faz a CONSULTA real (7 dias, amostra 5, campos do motor);
+  `reconcile()` agora também lista os NÃO-casados dos 2 lados (SHV-sem-match e
+  ProJuris-sem-pontuação). `eslint` verde; `tsc` só o erro pré-existente do contaazul.
+
+---
+
 ## Perguntas em aberto (bloqueiam design)
 
 **Do Thiago (2026-08-04) — precisam de decisão do owner antes de finalizar o design:**
@@ -327,5 +593,8 @@ Doc REST minerada (`SajAdv Rest Api.html` + `application.wadl` + Central de Ajud
 
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
+| 2026-08-05 | v0.5 | **De-para de TIPOS aplicado (config, prod, idempotente) + normalizador de entrada + smoke de tema real.** **(1) CÓDIGOS DE TIPO APLICADOS:** novo `scripts/reconcile-projuris-tipos.ts` (idempotente; casa por NOME normalizado, chaveia por `motor_task_type_id` estável; `--dry` p/ relatório). Rodado em PROD → **38/44 linhas** de `system_task_type_mapping` agora com `projuris_tipo_codigo` NUMÉRICO real + `projuris_tipo_descricao` = nome ProJuris. Re-rodar não duplica (verificado 2×). **6 ficam placeholder:** 5 near-miss aguardando owner (Fallback-sentinela, Diligências/Balcão, Emenda, Manifestação, Réplica) + **1 COLISÃO nova**: `AUDIENCIA` e `audiencia_trabalhista` casam AMBAS no código `6476501`, e o UNIQUE `(projuris_tipo_codigo, organization_id)` só deixa UMA levar o código — a 1ª (`AUDIENCIA`, motor `AUDIENCIA`) ficou placeholder e `audiencia_trabalhista` levou 6476501; owner decide fundir/remover a linha extra. **(2) ENDPOINTS de tarefa/processo DESCOBERTOS empiricamente (probe só-leitura):** tarefa do processo = **`GET /processo/{codigoProcesso}/tarefa/consulta-multi-modulo`** → `{totalRegistros, tarefaConsultaWs[]}` (traz `codigoTarefaTipo`+`nomeTarefaTipo`, `dataConclusaoPrevista`=prazo previsto, `dataLimite`=prazo fatal, `marcadores`, `usuarioResponsaveis`, `situacao`); processo = **`GET /processo/{codigoProcesso}`** (traz `assunto`, `assuntoCnj`, `marcadorWs[]`, **`campoDinamicoDadoWs[]`** = campos personalizados). (o filtro por `codigosProcessos` no `/v2/tarefa/consulta-keyset` é IGNORADO — devolve todas as 41k tarefas; usar o multi-modulo.) **(3) NORMALIZADOR** `src/lib/projuris/normalizer.ts` (server-only): `normalizeIntimacao()` + `normalizeIntimacoes(pj, di, df, {limit})` (concorrência 4, amostra) juntam intimação + tarefa (tipo/prazos) + processo (tema-candidatos) num registro `{codigoIntimacao, numeroProcesso, codigoProcesso, tipo_tarefa_codigo/nome, tema_candidatos:{assunto, assuntoCnj, marcadores[], camposPersonalizados[]}, tema_resolvido, prazo_previsto/fatal (dias, derivados vs disponibilização) + *_data (epoch), responsavel_cod/nome, data_disponibilizacao, alerts[]}`; `resolveTema()` CONFIGURÁVEL com TODO. **(4) 🔑 ACHADO DE TEMA:** o smoke `scripts/projuris-normalize-smoke.ts` (7 dias, amostra 10) mostrou que **o TEMA SHV está no campo `assunto` do PROCESSO** — valores reais `1% ESF`, `1% COVID`, `CÍVEIS`, `CONCESSÃO` que CASAM com os placeholders de `system_theme_mapping` (`/processo/assunto` só dava os 17 CNJ de topo). Existe TAMBÉM um campo personalizado dedicado **"TEMA" (código 10021, TEXTO_CURTO)** porém VAZIO nos processos vistos — provável destino oficial ainda não preenchido. `resolveTema()` prefere o campo 10021 quando populado e cai p/ `assunto`. **Falta p/ dry-run:** Thiago confirmar a fonte canônica do tema (assunto vs campo 10021) → seed de `system_theme_mapping` com `projuris_tema_codigo` real; owner resolver os 5 near-miss + a colisão AUDIENCIA; semear pontuação/exceções/executores; então pontuar→simular. SÓ LEITURA no ProJuris; única escrita = os 38 códigos (config). `eslint` verde; `tsc` só o erro pré-existente do contaazul. Não commitado. | @data-engineer |
+| 2026-08-05 | v0.4 | **🟢 AUTH DESTRAVADA — leitura real do ProJuris.** Causa do 401 do gateway: `client_id` é a STRING completa `api_cliente_codigo_87696` (não o número `87696`); com isso `/auth/token` (grant password, username=e-mail cru) retorna 200 (Bearer, 8h). **(1) Tipos de tarefa:** desempacotado o envelope `consultaTipoRetorno[0].simpleDto` → **52 tipos** (código `chave` \| nome `valor`) listados; **de-para com `system_task_type_mapping`: 39/44 casaram** por nome; 5 near-miss do SHV (Diligências/Balcão, Emenda, Manifestação, Réplica + Fallback-sentinela) com candidatos ProJuris apontados; 14 tipos ProJuris sem pontuação SHV listados. **(2) Colaboradores:** conserta extração (código vem em `chave`, não `codigoUsuario`) → **15 usuários com código** (THIAGO=128858, THAISE=204546; Patrícia ausente/ambígua). Nada gravado em `system_projuris_executor_mapping`. **(3) Intimações:** `POST /intimacao/consulta` (leitura) com filtro `{tipoDataFiltroIntimacao, dataPeriodoInicial/Final, dadosOrigemFiltro}` → `{totalRegistros, intimacaoConsultaWs[]}`; teste 7 dias = **548 registros**, amostra de 5 impressa; keyset em `/v2/intimacao/consulta-keyset` (proximoCursor). **Shape real mapeado** (IntimacaoConsultaFiltroWs / IntimacaoConsultaWs do XSD). **GAP:** intimação crua traz processo+responsável+datas+texto, mas NÃO traz assunto/tema, tipo-de-tarefa nem prazo — prazo/tipo vêm da TAREFA (tarefasSugeridas→prazoPrevisto/prazoFatal), assunto/tema do PROCESSO (codigoProcesso). Código: `client.ts` +`projurisPostConsulta` (POST-consulta=leitura); smoke +unwrap dos tipos, +código de usuários, +consulta real de intimações, +reconciliação bidirecional. `eslint` verde; `tsc` só erro pré-existente do contaazul. Não commitado. | @data-engineer |
+| 2026-08-05 | v0.3 | **Teste da conexão REAL com o usuário de serviço do Thiago.** Client ganhou `buildUsernameVariants()` (5 variantes) + `authenticateTryingVariants()`. Smoke rodou as 5 variantes de username (e-mail cru, `local$$dominio`, `local@dominio`, `email$$dominio`, `dominio\local`): **TODAS 401 com body vazio + sem headers**. Probes de diagnóstico: `/auth/token` sem body → 400 (existe); só `grant_type` → 401 cru; `client_credentials` → 401 cru; `/adv-service/usuario` sem token → 401 **com JSON** (`unauthorized`). **Diagnóstico: rejeição na camada do GATEWAY (apigw), não no Keycloak** — 401 cru invariável ao conteúdo = app `client_id=87696` provavelmente não habilitado/provisionado no gateway (ou falta credencial/subscription de gateway). **NOVO BLOQUEIO p/ Thiago/Softplan:** confirmar app 87696 ATIVO no gateway + secret + formato do username. De-para real ainda pendente (auth não passou). **Endpoint de intimações MAPEADO:** listagem = `POST /adv-service/intimacao/consulta` (consulta=leitura) + v2 `consulta-pendente`/`consulta-keyset`; contadores GET `intimacao/contar-pendentes`/`total-intimacoes`/`health-check`; detalhe `intimacao/{cod}`; indicador `v2/indicador/intimacoes/data-base/{data-base}/...`. Smoke estendido (tipos de tarefa + intimações + reconciliação dupla + amostra 15). `eslint` verde; `tsc` só o erro pré-existente do contaazul. Não commitado. | @data-engineer |
 | 2026-08-04 | v0.2 | **1ª fatia da integração ProJuris (leitura).** Minerada a doc REST (`SajAdv Rest Api.html` + `application.wadl` + Central de Ajuda). URL base descoberta: auth `https://apigw.projurisadv.com.br/auth/token` (OAuth2/Keycloak, `grant_type=password`, x-www-form-urlencoded, `client_id`=api_cliente_codigo 87696 + `client_secret` + `username`=USUARIO$$DOMINIO + `password`; resposta `access_token`/`Bearer`, 8h, 480 req/min); serviços `https://api.projurisadv.com.br/adv-service/`; token no header `Authorization`. Corrigido: `/permissao/token` NÃO é o login. Entregues `src/lib/projuris/client.ts` (server-only, `projurisGet` só leitura) + `scripts/projuris-smoke.ts` (auth + `/usuario` + `/processo/assunto` + reconciliação com `system_theme_mapping`, só leitura). Smoke: **AUTH 401** (gateway OK, faltam `username`+`password` do usuário ProJuris — só temos client_id+secret → novo BLOQUEIO). Reconciliação (lado SHV): 26 temas / 44 tipos, `projuris_tema_codigo` hoje é NOME placeholder; de-para fecha quando a auth passar. Decisões do owner: **D1** ProJuris=fonte (SHV espelha, só leitura nesta fatia); **D2** sim haverá automação (fase posterior); códigos/executores via API; entrada = relatório diário de intimações. `tsc`/`eslint` verdes nos arquivos novos (só o erro pré-existente em `contaazul/service.ts`). | @data-engineer |
 | 2026-08-04 | v0.1 | Draft inicial da story A9 (motor de distribuição ProJuris). Infra JÁ existe (migrations `20260728*`/`20260729*` + rotas `controladoria.distribuicao.*` + `useDistribuicao`). Escopo: semear pontuação (44 tipos / 27 assuntos) + exceções da planilha do Thiago; cadastrar executores; gravar credenciais na config do banco; cliente ProJuris (auth+import+rate-limit+write-back); fio fim-a-fim pontuar→exceções→distribuir→agendar; dry-run. 13 ACs. BLOQUEIOS: base_url/auth_type, códigos ProJuris de tipo/tema, 4-5 executores, relatório de intimações de teste, respostas D1/D2/D3. | @sm |

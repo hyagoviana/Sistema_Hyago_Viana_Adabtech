@@ -93,6 +93,111 @@ export class ProjurisClient {
     return d ? `${u}$$${d}` : u;
   }
 
+  /**
+   * Gera, em ORDEM de tentativa, as variantes de `username` do grant password.
+   * A doc do ADV indica `USUARIO$$DOMINIO_ESCRITORIO`; como o Thiago mandou um
+   * e-mail (thiagocorreia@hyagovianaadvocacia.com.br) + domínio separado, tentamos:
+   *   (a) e-mail cru
+   *   (b) LOCALPART$$DOMINIO         (formato oficial da doc: usuario$$dominio)
+   *   (c) LOCALPART@DOMINIO          (e-mail sem TLD)
+   *   (d) EMAIL$$DOMINIO             (e-mail completo + $$ + domínio)
+   *   (e) DOMINIO\\LOCALPART         (fallback estilo realm)
+   * Deduplicado, preservando a ordem.
+   */
+  buildUsernameVariants(): string[] {
+    const u = (this.creds.username || "").trim();
+    const d = (this.creds.dominio || "").trim();
+    if (!u) return [];
+    if (u.includes("$$")) return [u]; // já explícito — respeita
+    const local = u.includes("@") ? u.slice(0, u.indexOf("@")) : u;
+    const variants: string[] = [];
+    variants.push(u); // (a) e-mail cru
+    if (d) {
+      variants.push(`${local}$$${d}`); // (b) formato oficial da doc
+      variants.push(`${local}@${d}`); // (c) local@dominio (sem TLD)
+      variants.push(`${u}$$${d}`); // (d) e-mail completo + $$ + dominio
+      variants.push(`${d}\\${local}`); // (e) realm-style
+    }
+    // dedup preservando ordem
+    return [...new Set(variants)];
+  }
+
+  /**
+   * Tenta autenticar percorrendo `buildUsernameVariants()` em ordem; PARA na 1ª
+   * que retornar 200 com access_token. Retorna { token, username } da vencedora.
+   * Se TODAS falharem, lança o último ProjurisAuthError (com status/body cru).
+   * `onAttempt` permite logar cada tentativa sem expor segredos.
+   */
+  async authenticateTryingVariants(
+    onAttempt?: (username: string, status: number, ok: boolean) => void,
+  ): Promise<{ token: ProjurisTokenResponse; username: string }> {
+    if (!this.creds.clientId || !this.creds.clientSecret) {
+      throw new ProjurisAuthError(
+        "PROJURIS_API_CLIENTE_CODIGO / PROJURIS_CLIENT_SECRET ausentes.",
+        0,
+        "",
+      );
+    }
+    const variants = this.buildUsernameVariants();
+    if (variants.length === 0) {
+      throw new ProjurisAuthError("Sem username para tentar (PROJURIS_USERNAME vazio).", 0, "");
+    }
+    let lastErr: ProjurisAuthError | null = null;
+    for (const username of variants) {
+      const body = new URLSearchParams({
+        grant_type: "password",
+        client_id: this.creds.clientId,
+        client_secret: this.creds.clientSecret,
+        username,
+        password: this.creds.password ?? "",
+      });
+      let res: Response;
+      let text: string;
+      try {
+        res = await fetch(this.authUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+          },
+          body,
+        });
+        text = await res.text();
+      } catch (err) {
+        onAttempt?.(username, 0, false);
+        lastErr = new ProjurisAuthError(
+          `Erro de rede autenticando: ${err instanceof Error ? err.message : String(err)}`,
+          0,
+          "",
+        );
+        continue;
+      }
+      onAttempt?.(username, res.status, res.ok);
+      if (res.ok) {
+        let json: ProjurisTokenResponse;
+        try {
+          json = JSON.parse(text) as ProjurisTokenResponse;
+        } catch {
+          lastErr = new ProjurisAuthError("Resposta 200 não-JSON.", res.status, text.slice(0, 800));
+          continue;
+        }
+        if (json.access_token) {
+          this.token = json.access_token;
+          this.tokenExpiresAt = Date.now() + Math.max(0, json.expires_in - 60) * 1000;
+          return { token: json, username };
+        }
+        lastErr = new ProjurisAuthError("200 sem access_token.", res.status, text.slice(0, 800));
+        continue;
+      }
+      lastErr = new ProjurisAuthError(
+        `Falha na autenticação ProJuris (HTTP ${res.status}).`,
+        res.status,
+        text.slice(0, 800),
+      );
+    }
+    throw lastErr ?? new ProjurisAuthError("Todas as variantes falharam.", 0, "");
+  }
+
   /** Autentica (grant_type=password) e cacheia o token. */
   async authenticate(): Promise<ProjurisTokenResponse> {
     if (!this.creds.clientId || !this.creds.clientSecret) {
@@ -182,6 +287,52 @@ export class ProjurisClient {
     const text = await res.text();
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} em GET ${path}: ${text.slice(0, 400)}`);
+    }
+    return (text ? JSON.parse(text) : undefined) as T;
+  }
+
+  /**
+   * POST de CONSULTA (LEITURA) numa rota relativa a /adv-service. Envia um corpo
+   * JSON de filtro e retorna o resultado. Usado para endpoints de consulta que a
+   * API modela como POST (ex.: `/intimacao/consulta`), que são LEITURA — NÃO
+   * gravam/movem/criam nada. NÃO usar para endpoints de escrita (cadastro,
+   * arquivar, novas-tarefas-em-lote, remover, vincular).
+   */
+  async projurisPostConsulta<T = unknown>(
+    path: string,
+    body: unknown,
+    query?: Record<string, string | number | undefined>,
+  ): Promise<T> {
+    const token = await this.ensureToken();
+    const qs = query
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(query)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)]),
+        ).toString()
+      : "";
+    const url = `${this.baseUrl}/${path.replace(/^\/+/, "")}${qs}`;
+
+    const doFetch = (authValue: string) =>
+      fetch(url, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: authValue,
+        },
+        body: JSON.stringify(body ?? {}),
+      });
+
+    let res = await doFetch(this.useBearerPrefix ? `Bearer ${token}` : token);
+    if (res.status === 401 && !this.useBearerPrefix) {
+      this.useBearerPrefix = true;
+      res = await doFetch(`Bearer ${token}`);
+    }
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} em POST ${path}: ${text.slice(0, 400)}`);
     }
     return (text ? JSON.parse(text) : undefined) as T;
   }

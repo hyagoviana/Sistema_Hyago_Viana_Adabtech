@@ -46,11 +46,16 @@ function getAdapter(): ProjurisAdapter {
   if (adapterType === 'rest') {
     return new ProjurisRestAdapter({
       PROJURIS_BASE_URL: Deno.env.get('PROJURIS_BASE_URL') ?? '',
-      PROJURIS_AUTH_TYPE: Deno.env.get('PROJURIS_AUTH_TYPE') ?? 'basic',
+      PROJURIS_AUTH_TYPE: Deno.env.get('PROJURIS_AUTH_TYPE') ?? 'oauth2_password',
       PROJURIS_USERNAME: Deno.env.get('PROJURIS_USERNAME') ?? '',
       PROJURIS_PASSWORD: Deno.env.get('PROJURIS_PASSWORD') ?? '',
       PROJURIS_TOKEN: Deno.env.get('PROJURIS_TOKEN') ?? '',
       PROJURIS_API_KEY: Deno.env.get('PROJURIS_API_KEY') ?? '',
+      // OAuth2 password grant (auth REAL do ProJuris ADV — Keycloak)
+      PROJURIS_AUTH_URL: Deno.env.get('PROJURIS_AUTH_URL') ?? '',
+      PROJURIS_CLIENT_ID: Deno.env.get('PROJURIS_CLIENT_ID') ?? Deno.env.get('PROJURIS_API_CLIENTE_CODIGO') ?? '',
+      PROJURIS_CLIENT_SECRET: Deno.env.get('PROJURIS_CLIENT_SECRET') ?? '',
+      PROJURIS_DOMINIO: Deno.env.get('PROJURIS_DOMINIO') ?? '',
     });
   }
   return new MockProjurisAdapter();
