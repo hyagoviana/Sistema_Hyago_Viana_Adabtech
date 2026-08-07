@@ -128,7 +128,7 @@ export function CaseFilterFillDialog({
     try {
       if (def.scope === "cliente") {
         if (!clientId) {
-          toast.error("Caso sem cliente vinculado — não dá para salvar campo do cliente.");
+          toast.error("Caso sem cliente vinculado · não dá para salvar campo do cliente.");
           return;
         }
         await updateClientMut.mutateAsync({ id: clientId, patch: { [def.key]: v } });
@@ -150,7 +150,7 @@ export function CaseFilterFillDialog({
         <DialogHeader>
           <DialogTitle>Preencher campos do tema</DialogTitle>
           <DialogDescription>
-            Opcional — preencha os campos deste caso (pode deixar em branco). Eles alimentam a busca
+            Opcional · preencha os campos deste caso (pode deixar em branco). Eles alimentam a busca
             e a visualização em lista do tema.
           </DialogDescription>
         </DialogHeader>
@@ -168,7 +168,7 @@ export function CaseFilterFillDialog({
                 return (
                   <option key={c.id} value={c.id}>
                     {(c.case_code ?? c.id) +
-                      (c.caso_pasta_nome ? ` — ${c.caso_pasta_nome}` : "") +
+                      (c.caso_pasta_nome ? ` · ${c.caso_pasta_nome}` : "") +
                       (lc ? ` (${lc})` : "")}
                   </option>
                 );

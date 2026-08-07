@@ -308,7 +308,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     });
 
   if (executors.length === 0) {
-    throw new AuthError("Nenhum executor mapeado/ativo — impossivel distribuir.", 422);
+    throw new AuthError("Nenhum executor mapeado/ativo · impossivel distribuir.", 422);
   }
 
   // Calendario: seg-sex operacional + bloqueios (geral desliga o dia; individual

@@ -182,7 +182,7 @@ export function CaseFormDialog({
         iniciar_como_cliente: comoCliente,
         procuracao_template_id: undefined,
       });
-      toast.success(`Caso ${created.case_code} criado — agora escolha os documentos`);
+      toast.success(`Caso ${created.case_code} criado · agora escolha os documentos`);
       onOpenChange(false);
       onCreated?.({
         id: created.id,
@@ -377,7 +377,7 @@ export function CaseFormDialog({
                   const selected = (field.value ?? []) as string[];
                   const labelFor = (id: string) => {
                     const a = advogados.find((x) => x.id === id);
-                    return a?.full_name || a?.email || "—";
+                    return a?.full_name || a?.email || "·";
                   };
                   const toggle = (id: string) => {
                     if (iAmAdvogado) return; // advogado fica travado em si mesmo

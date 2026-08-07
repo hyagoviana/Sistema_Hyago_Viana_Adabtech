@@ -41,7 +41,7 @@ function ComercialIndex() {
   // saíram da fonte — a coluna terminal mostra só instantâneo recém-movido).
   const byStage = new Map<string, number>();
   for (const l of list) {
-    const slug = (l as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "—";
+    const slug = (l as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "·";
     byStage.set(slug, (byStage.get(slug) ?? 0) + 1);
   }
   const stageEntries = [

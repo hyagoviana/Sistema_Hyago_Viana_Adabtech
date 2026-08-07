@@ -76,8 +76,8 @@ export function ClientCardMenu({ clientId, clientName, onEdit }: Props) {
             <AlertDialogTitle>Excluir {clientName} permanentemente?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação é <strong>PERMANENTE e não pode ser desfeita</strong>. O cliente e{" "}
-              <strong>tudo que depende dele</strong> — casos, documentos, parcelas, notas e
-              consentimentos — serão apagados do banco. A pasta no Google Drive não é apagada.
+              <strong>tudo que depende dele</strong> · casos, documentos, parcelas, notas e
+              consentimentos · serão apagados do banco. A pasta no Google Drive não é apagada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

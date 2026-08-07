@@ -226,7 +226,7 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
   const remove = async (id: string, label: string) => {
     if (
       !confirm(
-        `EXCLUIR o campo "${label}"?\n\nIsto apaga as informações desse campo de TODOS os clientes — não tem como desfazer.\n\nSe a intenção é só tirar do formulário sem perder dados, use "Ocultar".`,
+        `EXCLUIR o campo "${label}"?\n\nIsto apaga as informações desse campo de TODOS os clientes · não tem como desfazer.\n\nSe a intenção é só tirar do formulário sem perder dados, use "Ocultar".`,
       )
     ) {
       return;
@@ -456,7 +456,7 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
                 <span className="text-sm font-medium">Aparece nos casos</span>
                 <span className="block text-[11px] text-muted-foreground">
                   Além do cadastro do cliente, mostra este campo (mesmo valor da pessoa) nas
-                  pipelines dos temas escolhidos — e reflete em todos eles.
+                  pipelines dos temas escolhidos · e reflete em todos eles.
                 </span>
               </div>
               <Switch

@@ -120,7 +120,7 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
     if (hit && !ambiguousNames.has(key)) {
       if (usedCodes.has(hit.codigo)) {
         collisions.push(
-          `${motor} (nome logico="${name}") → codigo ${hit.codigo} JA usado por outra linha SHV (UNIQUE) — nao aplicado`,
+          `${motor} (nome logico="${name}") → codigo ${hit.codigo} JA usado por outra linha SHV (UNIQUE) · nao aplicado`,
         );
         continue;
       }

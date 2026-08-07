@@ -377,7 +377,7 @@ export async function createTemaFieldDef(input: {
   if (existing) {
     throw new TemaFieldDefServiceError(
       "Já existe um campo com essa chave neste tema/frente. " +
-        "A unicidade é por tema/frente — a mesma chave pode ser usada em outros temas.",
+        "A unicidade é por tema/frente · a mesma chave pode ser usada em outros temas.",
       409,
     );
   }

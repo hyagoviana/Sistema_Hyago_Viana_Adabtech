@@ -374,7 +374,7 @@ export async function softDeleteStage(id: string) {
     count = c ?? 0;
   }
   if (count > 0) {
-    throw new PipelineServiceError("Há casos nesta etapa — remaneje antes de excluir", 409);
+    throw new PipelineServiceError("Há casos nesta etapa · remaneje antes de excluir", 409);
   }
 
   // S2-02 (R-ARCH-7) — bloqueia também se houver checklist items ancorados por
@@ -383,7 +383,7 @@ export async function softDeleteStage(id: string) {
     const itemCount = await countChecklistItemsForStage(stage.service_type_id, stage.slug);
     if (itemCount > 0) {
       throw new PipelineServiceError(
-        "Há itens de checklist de casos nesta etapa — remaneje antes de excluir",
+        "Há itens de checklist de casos nesta etapa · remaneje antes de excluir",
         409,
       );
     }
@@ -479,7 +479,7 @@ async function loadActiveCaseWithServiceType(
   }
   if (!serviceTypeId) {
     throw new PipelineServiceError(
-      "Caso sem tipo de serviço resolvido — defina a categoria antes de mover a etapa.",
+      "Caso sem tipo de serviço resolvido · defina a categoria antes de mover a etapa.",
       422,
     );
   }
@@ -661,7 +661,7 @@ export async function listComercialBoard(viewerUserId?: string): Promise<Comerci
       .map((cli) => ({
         id: cli.id,
         client_id: cli.id,
-        case_code: "—",
+        case_code: "·",
         case_type: "",
         macrostatus_comercial:
           (cli as { macrostatus_comercial?: string | null }).macrostatus_comercial ?? "NOVO",

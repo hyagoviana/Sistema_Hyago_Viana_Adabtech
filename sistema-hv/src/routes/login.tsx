@@ -83,7 +83,7 @@ function LoginPage() {
             className="mt-6 text-sm tracking-[0.18em] uppercase"
             style={{ color: "rgba(201,166,52,0.85)" }}
           >
-            — Hyago Viana · OAB/AL
+            Hyago Viana · OAB/AL
           </footer>
         </blockquote>
 

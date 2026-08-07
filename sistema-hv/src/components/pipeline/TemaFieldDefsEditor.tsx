@@ -322,7 +322,7 @@ export function TemaFieldDefsEditor({
   async function excluir(d: TemaFieldDef) {
     if (
       !window.confirm(
-        `Excluir o campo "${d.label}"?\n\nOs valores já preenchidos nos casos NÃO são apagados — continuam visíveis na ficha como campo livre.`,
+        `Excluir o campo "${d.label}"?\n\nOs valores já preenchidos nos casos NÃO são apagados · continuam visíveis na ficha como campo livre.`,
       )
     )
       return;
@@ -457,8 +457,8 @@ export function TemaFieldDefsEditor({
           </Select>
           <p className="text-[10.5px] text-muted-foreground">
             {scope === "cliente"
-              ? "Ex.: “é médico?”, nacionalidade — vale para todos os casos do cliente."
-              : "Ex.: enquadramento, período — específico deste caso."}
+              ? "Ex.: “é médico?”, nacionalidade · vale para todos os casos do cliente."
+              : "Ex.: enquadramento, período · específico deste caso."}
           </p>
         </div>
 

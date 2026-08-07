@@ -82,7 +82,7 @@ export function InlineCanonicalCell({
         }}
         className={cellSelect}
       >
-        <option value="">—</option>
+        <option value="">·</option>
         <option value="true">Sim</option>
         <option value="false">Não</option>
       </select>
@@ -100,7 +100,7 @@ export function InlineCanonicalCell({
         }}
         className={cellSelect}
       >
-        <option value="">—</option>
+        <option value="">·</option>
         {optionsToArray(def.options).map((opt) => (
           <option key={opt} value={opt}>
             {opt}

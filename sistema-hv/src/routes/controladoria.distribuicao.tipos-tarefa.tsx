@@ -129,7 +129,7 @@ function TiposTarefaPage() {
       const pend = r.nearMiss.length + r.collisions.length;
       toast.success(
         `Sincronizado: ${r.matched.length} casados (${r.numericos}/${r.shvLinhas} com codigo real)` +
-          (pend ? ` — ${pend} para revisar manualmente` : ""),
+          (pend ? ` · ${pend} para revisar manualmente` : ""),
       );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao sincronizar tipos");
@@ -224,10 +224,10 @@ function TiposTarefaPage() {
                       </Badge>
                     </td>
                     <td className="py-2 text-center text-muted-foreground">
-                      {m.prazo_previsto_dias ?? "—"}
+                      {m.prazo_previsto_dias ?? "·"}
                     </td>
                     <td className="py-2 text-center text-muted-foreground">
-                      {m.prazo_fatal_dias ?? "—"}
+                      {m.prazo_fatal_dias ?? "·"}
                     </td>
                     <td className="py-2 text-center">
                       {m.active ? (
@@ -335,7 +335,7 @@ function TiposTarefaPage() {
                   step="1"
                   value={prazoPrevisto}
                   onChange={(e) => setPrazoPrevisto(e.target.value)}
-                  placeholder="—"
+                  placeholder="·"
                 />
               </div>
               <div>
@@ -346,7 +346,7 @@ function TiposTarefaPage() {
                   step="1"
                   value={prazoFatal}
                   onChange={(e) => setPrazoFatal(e.target.value)}
-                  placeholder="—"
+                  placeholder="·"
                 />
               </div>
             </div>

@@ -309,7 +309,7 @@ function SendFlowDialog({
       });
       toast.success(
         `${isContrato ? "Contrato e procuração" : "Procuração"} enviado ao ZapSign${
-          (res as { signUrl?: string })?.signUrl ? " — link gerado" : ""
+          (res as { signUrl?: string })?.signUrl ? " · link gerado" : ""
         }`,
       );
       onClose();

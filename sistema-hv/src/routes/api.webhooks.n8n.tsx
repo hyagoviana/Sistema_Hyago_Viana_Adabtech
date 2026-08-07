@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/webhooks/n8n")({
         const intakeEnabled = process.env.N8N_INTAKE_ENABLED === "true";
         if (!intakeEnabled) {
           return Response.json(
-            { error: "Onboarding automático (n8n) desativado — cadastro é manual." },
+            { error: "Onboarding automático (n8n) desativado · cadastro é manual." },
             { status: 403 },
           );
         }

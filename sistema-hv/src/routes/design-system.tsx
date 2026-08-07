@@ -32,7 +32,7 @@ function DesignSystem() {
       <PageHeader
         eyebrow="QA visual · catálogo"
         title="Design System"
-        subtitle="Componentes signature do sistema Hyago Viana — para validação rápida de consistência."
+        subtitle="Componentes signature do sistema Hyago Viana · para validação rápida de consistência."
       />
 
       <Section title="Tipografia">
@@ -51,7 +51,7 @@ function DesignSystem() {
           </div>
           <div>
             <blockquote className="editorial-quote">
-              A justiça que tarda chega tarde, mas chega — desde que alguém esteja disposto a esperá-la com método.
+              A justiça que tarda chega tarde, mas chega · desde que alguém esteja disposto a esperá-la com método.
             </blockquote>
           </div>
         </Card>
@@ -131,7 +131,7 @@ function DesignSystem() {
 
       <OrnamentalDivider symbol="✦ ✦ ✦" />
 
-      <p className="text-center text-muted-foreground font-display">— fim do catálogo —</p>
+      <p className="text-center text-muted-foreground font-display">fim do catálogo</p>
     </div>
   );
 }

@@ -57,7 +57,7 @@ export function AddCaseToBoardDialog({
     const board = eligible.find((b) => b.id === targetId);
     try {
       await add.mutateAsync({ caseId, boardId: targetId });
-      toast.success(`${caseCode} — adicionado à lista "${board?.label ?? "?"}"`);
+      toast.success(`${caseCode} · adicionado à lista "${board?.label ?? "?"}"`);
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao adicionar");

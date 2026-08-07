@@ -80,7 +80,7 @@ export function BoardsManagerDialog({
       setNewBoard("");
       // (b) Abre o editor de ETAPAS PRÓPRIAS do board recém-criado.
       setExpanded((created as { id: string }).id);
-      toast.success(`Kanban "${label}" criado — agora defina as etapas dele abaixo`);
+      toast.success(`Kanban "${label}" criado · agora defina as etapas dele abaixo`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao criar kanban");
     }
@@ -90,7 +90,7 @@ export function BoardsManagerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Kanbans do tema — {serviceTypeName}</DialogTitle>
+          <DialogTitle>Kanbans do tema · {serviceTypeName}</DialogTitle>
           <DialogDescription>
             Cada kanban é um sub-fluxo do mesmo caso, com <strong>etapas próprias</strong>. Os
             campos e filtros são os mesmos do tema em todos os kanbans (compartilhados).

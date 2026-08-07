@@ -50,15 +50,15 @@ function renderEventLabel(e: CaseEvent): string {
     case "created":
       return "Caso criado";
     case "created_comercial":
-      return "Caso criado (comercial — aguardando assinatura da procuração)";
+      return "Caso criado (comercial · aguardando assinatura da procuração)";
     case "status_changed":
-      return `Status mudou: ${e.from_macrostatus_op ?? "—"} → ${e.to_macrostatus_op ?? "—"}`;
+      return `Status mudou: ${e.from_macrostatus_op ?? "·"} → ${e.to_macrostatus_op ?? "·"}`;
     case "fin_status_changed":
-      return `Status financeiro mudou: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Status financeiro mudou: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "fin_stage_auto_advanced":
-      return `Avanço automático (financeiro) por checklist: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Avanço automático (financeiro) por checklist: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "fin_enviado_conferencia":
-      return `Enviado para conferência (financeiro): ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Enviado para conferência (financeiro): ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "fin_conferencia_aprovada":
       return "Conferência financeira aprovada (segunda pessoa)";
     case "updated":
@@ -66,11 +66,11 @@ function renderEventLabel(e: CaseEvent): string {
     case "soft_deleted":
       return "Caso excluído";
     case "stage_auto_advanced":
-      return `Avanço automático por checklist: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Avanço automático por checklist: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "stage_moved_by_checkbox":
-      return `Avanço por checkbox do caso: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Avanço por checkbox do caso: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "checklist_inconsistente":
-      return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "—"}" da etapa ${d?.stage_slug ?? "—"} foi desmarcado após avanço`;
+      return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "·"}" da etapa ${d?.stage_slug ?? "·"} foi desmarcado após avanço`;
     case "canonical_fields_updated":
       return "Dados do serviço atualizados";
     case "note_added":
@@ -88,55 +88,55 @@ function renderEventLabel(e: CaseEvent): string {
     case "board_returned_to_principal":
       return "Voltou ao kanban principal";
     case "board_stage_changed":
-      return `Mudou de etapa no kanban: ${d?.from ?? "—"} → ${d?.to ?? "—"}`;
+      return `Mudou de etapa no kanban: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
     case "duplicado_de_caso":
       return "Caso criado por duplicação de outro caso";
     case "andamento_importado":
-      return `Andamento (importado): ${d?.descricao ?? "—"}${
-        d?.autor_texto ? ` — ${d.autor_texto}` : ""
+      return `Andamento (importado): ${d?.descricao ?? "·"}${
+        d?.autor_texto ? ` · ${d.autor_texto}` : ""
       }`;
     case "task_created":
-      return `Tarefa criada: ${d?.task_title ?? "—"}`;
+      return `Tarefa criada: ${d?.task_title ?? "·"}`;
     case "task_started":
-      return `Tarefa iniciada: ${d?.task_title ?? "—"}`;
+      return `Tarefa iniciada: ${d?.task_title ?? "·"}`;
     case "task_completed":
-      return `Tarefa concluída: ${d?.task_title ?? "—"}`;
+      return `Tarefa concluída: ${d?.task_title ?? "·"}`;
     case "task_status_changed":
-      return `Tarefa "${d?.task_title ?? "—"}" → ${d?.status ?? "—"}`;
+      return `Tarefa "${d?.task_title ?? "·"}" → ${d?.status ?? "·"}`;
     case "task_deleted":
-      return `Tarefa excluída: ${d?.task_title ?? "—"}`;
+      return `Tarefa excluída: ${d?.task_title ?? "·"}`;
     case "doc_generated":
-      return `Documento gerado: ${d?.doc_title ?? "—"}`;
+      return `Documento gerado: ${d?.doc_title ?? "·"}`;
     case "doc_finalized":
-      return `Documento finalizado: ${d?.doc_title ?? "—"}`;
+      return `Documento finalizado: ${d?.doc_title ?? "·"}`;
     case "doc_reopened":
-      return `Documento reaberto: ${d?.doc_title ?? "—"}`;
+      return `Documento reaberto: ${d?.doc_title ?? "·"}`;
     case "doc_sent_zapsign":
-      return `Documento enviado para assinatura: ${d?.doc_title ?? "—"}`;
+      return `Documento enviado para assinatura: ${d?.doc_title ?? "·"}`;
     case "doc_deleted":
-      return `Documento excluído: ${d?.doc_title ?? "—"}`;
+      return `Documento excluído: ${d?.doc_title ?? "·"}`;
     case "procuracao_preparada":
       return "Procuração preparada";
     case "liberado_comercial":
       return d?.via === "manual"
         ? "Promovido para cliente (manual)"
-        : `Procuração assinada — caso liberado para operação${d?.via ? ` (${d.via})` : ""}`;
+        : `Procuração assinada · caso liberado para operação${d?.via ? ` (${d.via})` : ""}`;
     case "perdido":
-      return `Caso marcado como perdido${d?.motivo ? ` — ${d.motivo}` : ""}`;
+      return `Caso marcado como perdido${d?.motivo ? ` · ${d.motivo}` : ""}`;
     case "deadline_created":
-      return `Prazo criado: ${d?.deadline_title ?? "—"} (${d?.fatal_date ?? "—"})`;
+      return `Prazo criado: ${d?.deadline_title ?? "·"} (${d?.fatal_date ?? "·"})`;
     case "deadline_completed":
-      return `Prazo cumprido: ${d?.deadline_title ?? "—"}`;
+      return `Prazo cumprido: ${d?.deadline_title ?? "·"}`;
     case "deadline_missed":
-      return `Prazo perdido: ${d?.deadline_title ?? "—"}`;
+      return `Prazo perdido: ${d?.deadline_title ?? "·"}`;
     case "deadline_status_changed":
-      return `Prazo "${d?.deadline_title ?? "—"}" → ${d?.status ?? "—"}`;
+      return `Prazo "${d?.deadline_title ?? "·"}" → ${d?.status ?? "·"}`;
     case "deadline_deleted":
-      return `Prazo excluído: ${d?.deadline_title ?? "—"}`;
+      return `Prazo excluído: ${d?.deadline_title ?? "·"}`;
     case "communication_logged":
-      return `Comunicação registrada (${d?.channel ?? "—"}): ${d?.summary ?? "—"}`;
+      return `Comunicação registrada (${d?.channel ?? "·"}): ${d?.summary ?? "·"}`;
     case "communication_deleted":
-      return `Comunicação excluída: ${d?.summary ?? "—"}`;
+      return `Comunicação excluída: ${d?.summary ?? "·"}`;
     // Manuais (S4-04)
     case "marco":
       return d?.body ?? "Marco";

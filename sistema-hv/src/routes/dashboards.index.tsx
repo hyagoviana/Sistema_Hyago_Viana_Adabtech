@@ -7,7 +7,7 @@ export const Route = createFileRoute("/dashboards/")({
 });
 
 const dashes = [
-  { to: "/dashboards/admin", label: "Admin Consolidado", icon: Crown, desc: "Visão executiva 360º — receita, op, fin, comercial." },
+  { to: "/dashboards/admin", label: "Admin Consolidado", icon: Crown, desc: "Visão executiva 360º · receita, op, fin, comercial." },
   { to: "/dashboards/operacional", label: "Operacional", icon: Briefcase, desc: "Tempos médios, gargalos, fluxo de casos." },
   { to: "/dashboards/financeiro", label: "Financeiro", icon: DollarSign, desc: "Recebimentos, inadimplência, projeções." },
   { to: "/dashboards/comercial", label: "Comercial", icon: TrendingUp, desc: "Funil, conversão, LTV, CAC." },

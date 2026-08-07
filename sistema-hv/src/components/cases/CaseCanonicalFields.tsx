@@ -102,7 +102,7 @@ export function CaseCanonicalFields({
     try {
       if (def.scope === "cliente") {
         if (!clientId) {
-          toast.error("Caso sem cliente vinculado — não dá para salvar campo do cliente.");
+          toast.error("Caso sem cliente vinculado · não dá para salvar campo do cliente.");
           return;
         }
         await updateClientMut.mutateAsync({ id: clientId, patch: { [def.key]: value } });
@@ -191,7 +191,7 @@ export function CaseCanonicalFields({
                       className="flex-1"
                     />
                   ) : (
-                    <span className="flex-1">{String(value ?? "—")}</span>
+                    <span className="flex-1">{String(value ?? "·")}</span>
                   )}
                   {canEdit && (
                     <button
@@ -241,7 +241,7 @@ export function TemaFieldInput({
       {def.required && <span className="text-destructive">*</span>}
       {parentHint && (
         <span className="ml-1 text-[10.5px] font-normal text-muted-foreground">
-          — preencha <em>{parentHint}</em> primeiro
+          · preencha <em>{parentHint}</em> primeiro
         </span>
       )}
     </Label>
@@ -295,7 +295,7 @@ export function TemaFieldInput({
           onChange={(e) => onSave(e.target.value === "" ? null : e.target.value === "true")}
           className="w-full py-2 px-3 bg-[var(--card)] border border-[var(--border)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none disabled:opacity-60"
         >
-          <option value="">— não definido —</option>
+          <option value="">não definido</option>
           <option value="true">Sim</option>
           <option value="false">Não</option>
         </select>

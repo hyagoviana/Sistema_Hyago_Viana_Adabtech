@@ -413,7 +413,7 @@ export async function normalizeIntimacao(
   let tarefasCount = 0;
 
   if (codigoProcesso === null) {
-    alerts.push("intimacao sem codigoProcesso — sem tema/tipo/prazo");
+    alerts.push("intimacao sem codigoProcesso · sem tema/tipo/prazo");
   } else {
     // (a) PROCESSO → tema candidatos
     try {
@@ -444,7 +444,7 @@ export async function normalizeIntimacao(
         prazo_previsto_data = asNum(t.dataConclusaoPrevista);
         prazo_fatal_data = asNum(t.dataLimite);
       } else {
-        alerts.push(`processo ${codigoProcesso} sem tarefa associada — sem tipo/prazo`);
+        alerts.push(`processo ${codigoProcesso} sem tarefa associada · sem tipo/prazo`);
       }
     } catch (err) {
       alerts.push(

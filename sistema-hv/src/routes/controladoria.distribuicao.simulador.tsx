@@ -158,7 +158,7 @@ function SimuladorPage() {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold">
-                  {concordance !== null ? `${concordance}%` : "—"}
+                  {concordance !== null ? `${concordance}%` : "·"}
                 </div>
                 <div className="text-xs text-muted-foreground">Concordancia</div>
                 {concordance !== null && (
@@ -175,7 +175,7 @@ function SimuladorPage() {
                 <div className="text-2xl font-bold">
                   {(simResults ?? [])
                     .find((s) => s.simulation_run_id)
-                    ?.simulation_run_id?.slice(0, 8) ?? "—"}
+                    ?.simulation_run_id?.slice(0, 8) ?? "·"}
                 </div>
                 <div className="text-xs text-muted-foreground">Run ID</div>
               </CardContent>
@@ -208,10 +208,10 @@ function SimuladorPage() {
                       >
                         <td className="py-2 font-mono text-xs">{c.task_id}</td>
                         <td className="py-2 text-center text-xs">
-                          {c.sim_executor?.slice(0, 8) ?? "—"}
+                          {c.sim_executor?.slice(0, 8) ?? "·"}
                         </td>
                         <td className="py-2 text-center text-xs">
-                          {c.real_executor ? String(c.real_executor).slice(0, 8) : "—"}
+                          {c.real_executor ? String(c.real_executor).slice(0, 8) : "·"}
                         </td>
                         <td className="py-2 text-center">
                           {c.match === true ? (
@@ -219,7 +219,7 @@ function SimuladorPage() {
                           ) : c.match === false ? (
                             <XCircle className="h-4 w-4 text-red-500 inline" />
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground">·</span>
                           )}
                         </td>
                         <td className="py-2 text-right">{c.sim_points?.toFixed(2)}</td>

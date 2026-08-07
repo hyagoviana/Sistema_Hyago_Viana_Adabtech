@@ -56,7 +56,7 @@ function CasosFinanceiro() {
   // Deep-link legado por tipo — abre a esteira daquele tipo. Sem `type`, cai no
   // funil único (default).
   if (type) {
-    return <FinanceiroKanban serviceType={{ id: type, name: typeName ?? "—" }} onBack={goBack} />;
+    return <FinanceiroKanban serviceType={{ id: type, name: typeName ?? "·" }} onBack={goBack} />;
   }
   return <FinanceiroKanbanTodos />;
 }

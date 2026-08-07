@@ -671,7 +671,7 @@ export async function cancelContaAzulCharge(parcelaId: string): Promise<{ ok: bo
 
   if (!parcela) throw new ContaAzulServiceError("Parcela não encontrada.", 404);
   if (parcela.provider !== "conta_azul") throw new ContaAzulServiceError("Parcela não é do Conta Azul.", 400);
-  if (!parcela.provider_ext_id) throw new ContaAzulServiceError("Parcela sem ID do Conta Azul — sync primeiro.", 400);
+  if (!parcela.provider_ext_id) throw new ContaAzulServiceError("Parcela sem ID do Conta Azul · sync primeiro.", 400);
 
   try {
     await deleteCobranca(parcela.provider_ext_id);

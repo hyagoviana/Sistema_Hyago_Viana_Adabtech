@@ -44,7 +44,7 @@ function RelatorioFinanceiro() {
       onSuccess: (r) => {
         const asaasOk = r.asaas && "atualizadas" in r.asaas ? r.asaas.atualizadas : 0;
         const caOk = r.contaAzul && "atualizadas" in r.contaAzul ? r.contaAzul.atualizadas : 0;
-        toast.success(`Sync concluído — Asaas: ${asaasOk} atualizada(s), Conta Azul: ${caOk} atualizada(s)`);
+        toast.success(`Sync concluído · Asaas: ${asaasOk} atualizada(s), Conta Azul: ${caOk} atualizada(s)`);
       },
       onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao sincronizar"),
     });
@@ -57,7 +57,7 @@ function RelatorioFinanceiro() {
         <PageHeader
           eyebrow="Operação"
           title="Relatório Financeiro"
-          subtitle="Valores pagos e pendentes por caso — consolidando Asaas, Conta Azul e cobranças manuais."
+          subtitle="Valores pagos e pendentes por caso · consolidando Asaas, Conta Azul e cobranças manuais."
         />
         <Button
           variant="outline"
@@ -162,7 +162,7 @@ function RelatorioFinanceiro() {
                     <td className="px-3 py-2.5 text-muted-foreground">
                       {c.providers.length
                         ? c.providers.map((p) => PROVIDER_LABEL[p] ?? p).join(", ")
-                        : "—"}
+                        : "·"}
                     </td>
                     <td className="px-3 py-2.5 text-right text-[var(--success)]">
                       {fmtBRL(c.pago_centavos)}

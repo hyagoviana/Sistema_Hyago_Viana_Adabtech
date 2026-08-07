@@ -191,7 +191,7 @@ function CobrancasPage() {
                     {provMeta.label}
                   </Badge>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground w-20 text-center">—</span>
+                  <span className="text-[10px] text-muted-foreground w-20 text-center">·</span>
                 )}
               </div>
             );

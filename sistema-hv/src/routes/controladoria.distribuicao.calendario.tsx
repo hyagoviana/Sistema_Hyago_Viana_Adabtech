@@ -329,8 +329,8 @@ function CalendarioPage() {
                         {b.block_type === "general" ? "Geral" : "Individual"}
                       </span>
                     </td>
-                    <td className="py-2">{b.executor_id ?? "—"}</td>
-                    <td className="py-2">{b.reason ?? "—"}</td>
+                    <td className="py-2">{b.executor_id ?? "·"}</td>
+                    <td className="py-2">{b.reason ?? "·"}</td>
                     <td className="py-2 text-center">
                       <Button variant="ghost" size="icon" onClick={() => handleRemove(b.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />

@@ -281,7 +281,7 @@ function ElaborarTermo() {
                   placeholder="0,00"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Informado manualmente — usado no documento (soma no honorário total do
+                  Informado manualmente · usado no documento (soma no honorário total do
                   complementar; não altera o cálculo do abatimento).
                 </p>
                 {/* S7-02 — referência do último termo (apenas dica; não preenche). */}
@@ -289,7 +289,7 @@ function ElaborarTermo() {
                   <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 text-[11px] text-muted-foreground">
                     <div className="font-medium text-[var(--navy)]">
                       Referência do último termo (v{ultimoTermo.version ?? "?"} ·{" "}
-                      {ultimoTermo.tipo_termo ?? "—"})
+                      {ultimoTermo.tipo_termo ?? "·"})
                     </div>
                     <div>Honorários: {brl(ultimoTermo.valor_total_centavos)}</div>
                     <div>À vista: {brl(ultimoTermo.valor_avista_centavos)}</div>
@@ -370,7 +370,7 @@ function ElaborarTermo() {
             {tipo === "PARCIAL" ? (
               <>
                 <div>
-                  <Label>Saldo atual (R$) — opcional</Label>
+                  <Label>Saldo atual (R$) · opcional</Label>
                   <Input
                     value={saldoAtual}
                     onChange={(e) => setSaldoAtual(e.target.value)}
@@ -378,7 +378,7 @@ function ElaborarTermo() {
                   />
                 </div>
                 <div>
-                  <Label>% abatimento — opcional</Label>
+                  <Label>% abatimento · opcional</Label>
                   <Input
                     value={percAbatimento}
                     onChange={(e) => setPercAbatimento(e.target.value)}
@@ -389,7 +389,7 @@ function ElaborarTermo() {
             ) : (
               <>
                 <div>
-                  <Label>Saldo originário (R$) — opcional</Label>
+                  <Label>Saldo originário (R$) · opcional</Label>
                   <Input
                     value={saldoOriginario}
                     onChange={(e) => setSaldoOriginario(e.target.value)}
@@ -397,7 +397,7 @@ function ElaborarTermo() {
                   />
                 </div>
                 <div>
-                  <Label>Saldo à época do abatimento (R$) — opcional</Label>
+                  <Label>Saldo à época do abatimento (R$) · opcional</Label>
                   <Input
                     value={saldoEpoca}
                     onChange={(e) => setSaldoEpoca(e.target.value)}
@@ -408,7 +408,7 @@ function ElaborarTermo() {
             )}
             <p className="sm:col-span-2 text-[11px] text-muted-foreground">
               Campos usados só no documento (não alteram o cálculo). Deixe em branco se não se
-              aplicarem — saem vazios no termo.
+              aplicarem · saem vazios no termo.
             </p>
           </div>
         </div>

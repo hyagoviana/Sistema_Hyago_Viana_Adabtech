@@ -63,7 +63,7 @@ export function TemasManagerDialog({
     if (!name) return;
     try {
       const created = (await createTema.mutateAsync({ name })) as Tema;
-      toast.success("Tema criado — agora vincule os casos e procurações");
+      toast.success("Tema criado · agora vincule os casos e procurações");
       setNewName("");
       if (created?.id) {
         setSelected(created);
@@ -179,7 +179,7 @@ export function TemasManagerDialog({
             <DialogTitle>Editar tema</DialogTitle>
             <DialogDescription>
               Renomeie o tema e vincule os casos e procurações (das pastas "modelos" e "procuração")
-              — ou crie novos e anexe o documento.
+              · ou crie novos e anexe o documento.
             </DialogDescription>
           </DialogHeader>
 

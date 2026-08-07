@@ -135,7 +135,7 @@ export function ChecklistItemsRows({
             <span
               className={`flex-1 min-w-0 ${it.done ? "line-through text-muted-foreground" : ""}`}
             >
-              {it.def?.label ?? it.def?.key ?? "—"}
+              {it.def?.label ?? it.def?.key ?? "·"}
             </span>
             {it.def?.required && (
               <Badge className="bg-[var(--navy)] text-white shrink-0">Obrigatório</Badge>

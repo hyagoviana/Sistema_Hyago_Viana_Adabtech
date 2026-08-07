@@ -118,7 +118,7 @@ function brl(c: number | null | undefined) {
 }
 
 function maskPhone(phone: string | null): string {
-  if (!phone) return "—";
+  if (!phone) return "·";
   const d = phone.replace(/\D/g, "");
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
@@ -264,8 +264,8 @@ function CasoDetalhe() {
           <Eyebrow>Caso · {caso.case_code}</Eyebrow>
           <h1 className="font-display text-[40px] font-bold text-[var(--navy)] leading-tight mt-2 flex items-center gap-2 flex-wrap">
             <span>
-              {cliente?.full_name ?? "—"}{" "}
-              <span className="text-[var(--gold-700)]">— {tipoLabel}</span>
+              {cliente?.full_name ?? "·"}{" "}
+              <span className="text-[var(--gold-700)]">· {tipoLabel}</span>
             </span>
             {/* J2 — editar o nome do caso (caso_pasta_nome). */}
             {podeGerirCaso && (
@@ -368,7 +368,7 @@ function CasoDetalhe() {
           <div>
             <Eyebrow>Pasta no Drive</Eyebrow>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Arquivos do cliente ficam aqui — você pode subir/baixar pelo Drive direto.
+              Arquivos do cliente ficam aqui · você pode subir/baixar pelo Drive direto.
             </p>
           </div>
           <a
@@ -532,15 +532,15 @@ function CasoDetalhe() {
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px]">
                 <span className="text-[var(--navy)]">
                   <span className="text-muted-foreground">Tribunal/órgão: </span>
-                  {judProcesso?.tribunal || judProcesso?.orgao || "—"}
+                  {judProcesso?.tribunal || judProcesso?.orgao || "·"}
                 </span>
                 <span className="text-[var(--navy)]">
                   <span className="text-muted-foreground">Nº processo: </span>
-                  {judicial.numeroProcesso ?? "—"}
+                  {judicial.numeroProcesso ?? "·"}
                 </span>
                 <span className="text-[var(--navy)]">
                   <span className="text-muted-foreground">Etapa: </span>
-                  {judProcesso?.fase ?? "—"}
+                  {judProcesso?.fase ?? "·"}
                 </span>
               </div>
             ) : (

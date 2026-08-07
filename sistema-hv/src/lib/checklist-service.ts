@@ -340,7 +340,7 @@ export async function listCaseChecklistItems(caseId: string) {
         is_adhoc: true as const,
         def: {
           key: `adhoc:${r.id}`,
-          label: r.label ?? "—",
+          label: r.label ?? "·",
           ordem: r.ordem ?? 0,
           required: r.required ?? false,
           expected_doc_pattern: null,

@@ -66,7 +66,7 @@ export async function uploadClientDocument(opts: {
   }
   if (!client.drive_folder_id) {
     throw new DocumentServiceError(
-      "Cliente sem pasta no Drive — use 'Tentar de novo' na ficha pra criar antes de subir documentos",
+      "Cliente sem pasta no Drive · use 'Tentar de novo' na ficha pra criar antes de subir documentos",
       409,
     );
   }

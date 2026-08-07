@@ -64,7 +64,7 @@ export function CaseNameEditDialog({ open, onOpenChange, caseId, currentName }: 
           <Label htmlFor="case-name">Nome do caso</Label>
           <Input
             id="case-name"
-            placeholder="Ex.: Mais Médicos — Município X"
+            placeholder="Ex.: Mais Médicos · Município X"
             autoFocus
             maxLength={200}
             value={value}

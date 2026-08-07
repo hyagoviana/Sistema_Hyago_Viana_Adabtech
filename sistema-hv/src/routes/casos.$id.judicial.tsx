@@ -43,7 +43,7 @@ type JudTask = {
 };
 
 function fmtDate(d: string | null): string {
-  if (!d) return "—";
+  if (!d) return "·";
   return new Date(d + "T00:00:00").toLocaleDateString("pt-BR");
 }
 
@@ -142,10 +142,10 @@ function CasoJudicial() {
           <div className="card-hero p-6 mb-6">
             <Eyebrow>Resumo do processo</Eyebrow>
             <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[13px]">
-              <Field label="Tribunal/órgão" value={processo?.tribunal || processo?.orgao || "—"} />
-              <Field label="Nº do processo" value={judicial.numeroProcesso ?? "—"} />
-              <Field label="Etapa/fase" value={processo?.fase ?? "—"} />
-              <Field label="Assunto" value={processo?.assunto ?? "—"} />
+              <Field label="Tribunal/órgão" value={processo?.tribunal || processo?.orgao || "·"} />
+              <Field label="Nº do processo" value={judicial.numeroProcesso ?? "·"} />
+              <Field label="Etapa/fase" value={processo?.fase ?? "·"} />
+              <Field label="Assunto" value={processo?.assunto ?? "·"} />
             </div>
           </div>
 

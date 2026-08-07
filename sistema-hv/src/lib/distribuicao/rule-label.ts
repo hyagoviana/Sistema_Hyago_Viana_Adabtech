@@ -42,7 +42,7 @@ export function deriveRuleLabel(input: {
   if (input.blocked) {
     return {
       short: "Bloqueada",
-      detail: "Tarefa bloqueada pelo motor — nao entra na distribuicao (ver alertas).",
+      detail: "Tarefa bloqueada pelo motor · nao entra na distribuicao (ver alertas).",
     };
   }
 
@@ -52,13 +52,13 @@ export function deriveRuleLabel(input: {
       return {
         short: "Exceção (executor exclusivo)",
         detail:
-          "Fluxo ABSOLUTE: executor dirigido do processo, tema exclusivo ou tipo-tarefa exclusivo — vai direto ao responsavel, ignorando fila/carga." +
+          "Fluxo ABSOLUTE: executor dirigido do processo, tema exclusivo ou tipo-tarefa exclusivo · vai direto ao responsavel, ignorando fila/carga." +
           (sub ? ` (${sub})` : ""),
       };
     }
     case "COMPLEX":
       return {
-        short: pref ? "Complexo — rodízio (preferência)" : "Complexo — rodízio",
+        short: pref ? "Complexo · rodízio (preferência)" : "Complexo · rodízio",
         detail:
           "Fluxo COMPLEX: rodizio entre executores elegiveis a complexidade." +
           (pref ? " Data preferencial/excecao honrada." : ""),
@@ -72,8 +72,8 @@ export function deriveRuleLabel(input: {
       };
     default:
       return {
-        short: input.flow || "—",
-        detail: "Regra nao reconhecida — consulte os alertas crus.",
+        short: input.flow || "·",
+        detail: "Regra nao reconhecida · consulte os alertas crus.",
       };
   }
 }

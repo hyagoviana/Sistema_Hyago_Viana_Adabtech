@@ -254,8 +254,8 @@ function ConfiguracaoPage() {
                       type={showSecret ? "text" : "password"}
                       placeholder={
                         creds?.has_token
-                          ? "•••• definido — digite para substituir"
-                          : "não definido — cole o token de acesso"
+                          ? "•••• definido · digite para substituir"
+                          : "não definido · cole o token de acesso"
                       }
                       value={projurisToken}
                       onChange={(e) => setProjurisToken(e.target.value)}
@@ -283,8 +283,8 @@ function ConfiguracaoPage() {
                       type={showSecret ? "text" : "password"}
                       placeholder={
                         creds?.has_api_key
-                          ? "•••• definido — digite para substituir"
-                          : "não definido — cole a API Key"
+                          ? "•••• definido · digite para substituir"
+                          : "não definido · cole a API Key"
                       }
                       value={projurisApiKey}
                       onChange={(e) => setProjurisApiKey(e.target.value)}
@@ -321,7 +321,7 @@ function ConfiguracaoPage() {
                         type={showSecret ? "text" : "password"}
                         placeholder={
                           creds?.has_password
-                            ? "•••• definido — digite para substituir"
+                            ? "•••• definido · digite para substituir"
                             : "não definido"
                         }
                         value={projurisPassword}

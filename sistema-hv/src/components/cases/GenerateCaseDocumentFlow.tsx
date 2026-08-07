@@ -164,7 +164,7 @@ export function GenerateCaseDocumentFlow({
         ],
       });
       setSignUrl(res.signUrl ?? null);
-      toast.success("Enviado ao ZapSign — e-mail de assinatura disparado");
+      toast.success("Enviado ao ZapSign · e-mail de assinatura disparado");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao enviar ao ZapSign");
     }
@@ -211,8 +211,8 @@ export function GenerateCaseDocumentFlow({
               onOpenChange(false);
               toast.success(
                 isNovoCaso
-                  ? "Novo caso criado — documento gerado, abrindo editor"
-                  : "Documento gerado — abrindo editor",
+                  ? "Novo caso criado · documento gerado, abrindo editor"
+                  : "Documento gerado · abrindo editor",
               );
               setEditorDocId(res.doc.id);
               setEditorUrl(editUrl(res.doc.google_doc_id!));
@@ -225,7 +225,7 @@ export function GenerateCaseDocumentFlow({
             const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
             setCreatedCaseId(null);
             onOpenChange(false);
-            toast.success("Documento gerado — abrindo editor");
+            toast.success("Documento gerado · abrindo editor");
             setEditorDocId(res.doc.id);
             setEditorUrl(editUrl(res.doc.google_doc_id!));
             // Pré-preenche o signatário com os dados do cliente do caso.
@@ -457,7 +457,7 @@ function PickDialog({
 
   // A7 AC5(a) — placeholders ÓRFÃOS: variáveis do modelo que NÃO casam com nenhum
   // campo/autofill (resolveAutoValue devolve undefined). Sinaliza de forma NÃO
-  // bloqueante ("sem campo correspondente — preencha manualmente"); não altera o
+  // bloqueante ("sem campo correspondente · preencha manualmente"); não altera o
   // fluxo de geração. Um placeholder que resolve por autofill NÃO é órfão.
   const orphanKeys = useMemo(() => {
     const set = new Set<string>();
@@ -519,7 +519,7 @@ function PickDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
+            <DialogTitle>Documento de caso · escolha a pasta</DialogTitle>
             <DialogDescription>
               Só as pastas desta categoria aparecem. Os documentos da pasta escolhida ficam
               disponíveis para gerar.
@@ -591,7 +591,7 @@ function PickDialog({
           </button>
           <div>
             <Label>
-              {isProc ? "Modelo de procuração" : `Documento — ${folderLabel ?? "pasta"}`}
+              {isProc ? "Modelo de procuração" : `Documento · ${folderLabel ?? "pasta"}`}
             </Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
@@ -693,7 +693,7 @@ function PickDialog({
                 />
                 {isOrphan && (
                   <p className="mt-1 text-[11px] text-amber-600">
-                    sem campo correspondente — preencha manualmente
+                    sem campo correspondente · preencha manualmente
                   </p>
                 )}
               </div>

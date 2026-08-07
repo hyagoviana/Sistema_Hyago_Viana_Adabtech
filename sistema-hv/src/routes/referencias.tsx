@@ -79,7 +79,7 @@ function MunicipiosSection() {
         )}
       </div>
       <p className="text-[12px] text-muted-foreground mb-3">
-        Preencha 1x por cidade — população, densidade, salário médio, percentual, IBGE e secretário
+        Preencha 1x por cidade · população, densidade, salário médio, percentual, IBGE e secretário
         são puxados no documento (e continuam editáveis na geração).
       </p>
 
@@ -117,7 +117,7 @@ function MunicipiosSection() {
               <div>
                 <span className="font-medium text-[var(--navy)]">{m.nome}</span>
                 <span className="text-muted-foreground ml-2">
-                  IBGE {m.ibge ?? "—"} · pop. {m.populacao ?? "—"} · sec. {m.secretario_nome ?? "—"}
+                  IBGE {m.ibge ?? "·"} · pop. {m.populacao ?? "·"} · sec. {m.secretario_nome ?? "·"}
                 </span>
               </div>
               <div className="flex gap-1">
@@ -224,7 +224,7 @@ function PerfisSection() {
             <li key={p.id} className="flex items-start justify-between py-2 text-[13px] gap-3">
               <div className="min-w-0">
                 <span className="font-medium text-[var(--navy)]">{p.nome}</span>
-                <p className="text-muted-foreground line-clamp-2">{p.texto ?? "—"}</p>
+                <p className="text-muted-foreground line-clamp-2">{p.texto ?? "·"}</p>
               </div>
               <div className="flex gap-1 shrink-0">
                 <Button

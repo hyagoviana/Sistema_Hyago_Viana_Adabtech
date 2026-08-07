@@ -255,9 +255,9 @@ export async function getRelatorioFinanceiroPorCaso(): Promise<RelatorioCasoFina
       return {
         ...rest,
         providers: [...providersSet],
-        case_code: caso?.case_code ?? "—",
+        case_code: caso?.case_code ?? "·",
         client_id: caso?.client_id ?? "",
-        client_name: clientMap.get(caso?.client_id ?? "") ?? "—",
+        client_name: clientMap.get(caso?.client_id ?? "") ?? "·",
         case_type: caso?.case_type ?? "",
       };
     })

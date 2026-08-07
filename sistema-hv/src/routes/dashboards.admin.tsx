@@ -99,7 +99,7 @@ function AdminDash() {
       <PageHeader
         eyebrow="Visão executiva"
         title="Dashboard Admin"
-        subtitle="Visão consolidada 360º — casos, clientes, financeiro e operacional."
+        subtitle="Visão consolidada 360º · casos, clientes, financeiro e operacional."
       />
 
       {isError && (
@@ -161,7 +161,7 @@ function AdminDash() {
               <Alert className="border-[var(--danger,#dc2626)] bg-red-50 dark:bg-red-950/20 cursor-pointer hover:bg-red-100 transition-colors">
                 <AlertTriangle className="h-4 w-4 text-[var(--danger,#dc2626)]" />
                 <AlertDescription className="text-[var(--danger,#dc2626)] font-medium">
-                  {data?.casos_inadimplentes} caso(s) marcado(s) como inadimplente — clique para ver
+                  {data?.casos_inadimplentes} caso(s) marcado(s) como inadimplente · clique para ver
                   no pipeline financeiro
                 </AlertDescription>
               </Alert>

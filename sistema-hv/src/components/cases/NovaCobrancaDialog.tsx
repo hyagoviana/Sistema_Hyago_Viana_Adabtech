@@ -111,7 +111,7 @@ export function NovaCobrancaDialog({
         },
         {
           onSuccess: (r) => {
-            toast.success(`${r.parcelaIds.length} parcela(s) gerada(s) — Conta Azul`);
+            toast.success(`${r.parcelaIds.length} parcela(s) gerada(s) · Conta Azul`);
             onOpenChange(false);
           },
           onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
@@ -136,7 +136,7 @@ export function NovaCobrancaDialog({
         },
         {
           onSuccess: (r) => {
-            toast.success(`${r.parcelaIds.length} parcela(s) gerada(s) — Asaas`);
+            toast.success(`${r.parcelaIds.length} parcela(s) gerada(s) · Asaas`);
             onOpenChange(false);
           },
           onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
@@ -257,7 +257,7 @@ export function NovaCobrancaDialog({
                 <span>
                   {vencimento
                     ? new Date(vencimento + "T00:00:00").toLocaleDateString("pt-BR")
-                    : "—"}
+                    : "·"}
                 </span>
               </div>
               <div className="flex justify-between">

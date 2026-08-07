@@ -48,7 +48,7 @@ const PRIO_LABEL: Record<string, string> = {
 const PRIO_ORDER: Record<string, number> = { URGENTE: 0, ALTA: 1, MEDIA: 2, BAIXA: 3 };
 
 function fmtBRL(centavos: number | null): string {
-  if (centavos === null || centavos === undefined) return "—";
+  if (centavos === null || centavos === undefined) return "·";
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
@@ -397,7 +397,7 @@ function CasosTab({
                           )}
                         </span>
                       ) : (
-                        <span className="text-[12px] text-[var(--ink-300)]">—</span>
+                        <span className="text-[12px] text-[var(--ink-300)]">·</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -414,7 +414,7 @@ function CasosTab({
                           )}
                         </span>
                       ) : (
-                        <span className="text-[12px] text-[var(--ink-300)]">—</span>
+                        <span className="text-[12px] text-[var(--ink-300)]">·</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -430,7 +430,7 @@ function CasosTab({
                       ) : c.diasParado > 0 ? (
                         <span className="text-[12px] text-[var(--ink-400)]">{c.diasParado}d</span>
                       ) : (
-                        <span className="text-[12px] text-[var(--ink-300)]">—</span>
+                        <span className="text-[12px] text-[var(--ink-300)]">·</span>
                       )}
                     </td>
                     <td className="px-4 py-3 font-mono text-[12px] text-[var(--navy)]">

@@ -53,7 +53,7 @@ export function useDocumentTitle(title: string, withSuffix = true) {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const previous = document.title;
-    const next = withSuffix && title ? `${title} — ${APP_TITLE_SUFFIX}` : title || APP_TITLE_SUFFIX;
+    const next = withSuffix && title ? `${title} · ${APP_TITLE_SUFFIX}` : title || APP_TITLE_SUFFIX;
     document.title = next;
     return () => {
       document.title = previous;

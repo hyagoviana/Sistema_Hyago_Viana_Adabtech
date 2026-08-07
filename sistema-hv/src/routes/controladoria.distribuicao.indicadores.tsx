@@ -63,7 +63,7 @@ function IndicadoresPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            {m90Loading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{m90?.toFixed(2) ?? "—"}</div>}
+            {m90Loading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{m90?.toFixed(2) ?? "·"}</div>}
             <div className="text-xs text-muted-foreground">M90 (media producao)</div>
             <div className="text-xs text-muted-foreground mt-1">Referencia capacidade diaria</div>
           </CardContent>
@@ -73,7 +73,7 @@ function IndicadoresPage() {
           <CardContent className="pt-4">
             {devLoading ? <Skeleton className="h-8 w-20" /> : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">{loadDev?.toFixed(1) ?? "—"}%</span>
+                <span className="text-2xl font-bold">{loadDev?.toFixed(1) ?? "·"}%</span>
                 <Badge className={`text-xs ${(loadDev ?? 0) < 15 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{(loadDev ?? 0) < 15 ? "Meta" : "Acima"}</Badge>
               </div>
             )}
@@ -86,7 +86,7 @@ function IndicadoresPage() {
           <CardContent className="pt-4">
             {prefLoading ? <Skeleton className="h-8 w-20" /> : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">{prefRate?.toFixed(1) ?? "—"}%</span>
+                <span className="text-2xl font-bold">{prefRate?.toFixed(1) ?? "·"}%</span>
                 <Badge className={`text-xs ${(prefRate ?? 0) >= 80 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{(prefRate ?? 0) >= 80 ? "Meta" : "Abaixo"}</Badge>
               </div>
             )}

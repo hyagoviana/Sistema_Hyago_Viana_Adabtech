@@ -28,7 +28,7 @@ export function StubPage({
             {[1, 2, 3].map((i) => (
               <Card key={i}>
                 <Eyebrow>Bloco {i}</Eyebrow>
-                <div className="kpi-number text-[28px] mt-3">—</div>
+                <div className="kpi-number text-[28px] mt-3">·</div>
                 <div className="text-[12.5px] text-muted-foreground mt-2">Conteúdo desta seção em breve.</div>
               </Card>
             ))}

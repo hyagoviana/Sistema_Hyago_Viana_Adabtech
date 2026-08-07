@@ -161,7 +161,7 @@ function DistribuicaoPainelPage() {
                   {(() => {
                     const d = (batchLog?.metrics as { duration_ms?: number } | null | undefined)
                       ?.duration_ms;
-                    return d ? `${Math.round(d / 1000)}s` : "—";
+                    return d ? `${Math.round(d / 1000)}s` : "·";
                   })()}
                 </div>
                 <div className="text-sm text-muted-foreground">Duracao</div>

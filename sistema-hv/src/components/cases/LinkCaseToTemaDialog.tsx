@@ -105,7 +105,7 @@ export function LinkCaseToTemaDialog({
   }, [boardId]);
 
   const temaList = (temas as Tema[] | undefined) ?? [];
-  const nomeTema = (id?: string | null) => temaList.find((t) => t.id === id)?.name ?? "—";
+  const nomeTema = (id?: string | null) => temaList.find((t) => t.id === id)?.name ?? "·";
   const origemNome = currentTemaId ? nomeTema(currentTemaId) : null;
   const destinoNome = temaId ? nomeTema(temaId) : null;
 
@@ -119,7 +119,7 @@ export function LinkCaseToTemaDialog({
   const destBoard = boardId ? boardsById.get(boardId) : null;
   const destIsPrincipal = !!destBoard?.is_principal;
   const boardJaContem = !!boardId && !destIsPrincipal && (caseBoardIds ?? []).includes(boardId);
-  const boardDestinoNome = destBoard?.label ?? "—";
+  const boardDestinoNome = destBoard?.label ?? "·";
 
   // Item 3 — etapas do kanban de destino (só custom têm etapas próprias; o
   // principal espelha o operacional e não usa positions).
@@ -135,12 +135,12 @@ export function LinkCaseToTemaDialog({
       try {
         if (modo === "duplicar") {
           await duplicar.mutateAsync({ id: caseId, temaId, frenteSlug: null });
-          toast.success(`Caso duplicado no tema "${destinoNome}" — o original foi preservado`);
+          toast.success(`Caso duplicado no tema "${destinoNome}" · o original foi preservado`);
         } else {
           const res = await mover.mutateAsync({ id: caseId, temaId, frenteSlug: null });
           toast.success(
             res?.opResetado
-              ? `Caso transferido para "${destinoNome}" — a etapa foi reiniciada para a 1ª da pipeline`
+              ? `Caso transferido para "${destinoNome}" · a etapa foi reiniciada para a 1ª da pipeline`
               : `Caso transferido para "${destinoNome}"`,
           );
         }
@@ -285,7 +285,7 @@ export function LinkCaseToTemaDialog({
                       {targetBoards.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.label}
-                          {b.is_principal ? " (principal — voltar)" : ""}
+                          {b.is_principal ? " (principal · voltar)" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -416,7 +416,7 @@ export function LinkCaseToTemaDialog({
                 ) : modo === "duplicar" ? (
                   <>
                     O caso é <strong>duplicado</strong> no kanban{" "}
-                    <strong>{boardDestinoNome}</strong> — continua também no kanban principal.
+                    <strong>{boardDestinoNome}</strong> · continua também no kanban principal.
                   </>
                 ) : (
                   <>

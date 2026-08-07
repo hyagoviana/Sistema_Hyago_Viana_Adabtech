@@ -119,7 +119,7 @@ function RelatorioPage() {
   function generatePDFText() {
     // Gera texto formatado para copiar/imprimir (PDF via browser print)
     const content = [
-      `RELATORIO DE VALIDACAO — MOTOR DE DISTRIBUICAO v1.0`,
+      `RELATORIO DE VALIDACAO · MOTOR DE DISTRIBUICAO v1.0`,
       `Hyago Viana Advocacia`,
       `Periodo: ${startDate} a ${endDate}`,
       `Gerado em: ${new Date().toLocaleString("pt-BR")}`,

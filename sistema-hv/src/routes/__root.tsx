@@ -87,14 +87,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM.",
       },
       { name: "author", content: "Hyago Viana Advocacia" },
-      { property: "og:title", content: "Hyago Viana Advocacia — Sistema de Gestão Jurídica" },
+      { property: "og:title", content: "Hyago Viana Advocacia · Sistema de Gestão Jurídica" },
       {
         property: "og:description",
         content:
           "Plataforma premium de gestão jurídica para FIES, Mais Médicos, Residência e CFM/CRM.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "Hyago Viana Advocacia — Sistema de Gestão Jurídica" },
+      { name: "twitter:title", content: "Hyago Viana Advocacia · Sistema de Gestão Jurídica" },
       {
         name: "twitter:description",
         content:

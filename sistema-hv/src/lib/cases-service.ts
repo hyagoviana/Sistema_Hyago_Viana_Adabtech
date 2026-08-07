@@ -864,7 +864,7 @@ export async function listComercialDocuments(): Promise<ComercialDocument[]> {
     return {
       id: d.id,
       case_id: d.case_id,
-      case_code: caso?.case_code ?? "—",
+      case_code: caso?.case_code ?? "·",
       case_type: caso?.case_type ?? null,
       client_id: caso?.client_id ?? null,
       client_name: cli?.full_name ?? "Cliente",
@@ -1682,7 +1682,7 @@ export async function aprovarConferenciaFin(caseId: string, triggeredBy?: string
   }
   if (pendente.enviado_por && pendente.enviado_por === triggeredBy) {
     throw new CaseServiceError(
-      "A aprovação exige uma segunda pessoa — quem enviou para conferência não pode aprovar.",
+      "A aprovação exige uma segunda pessoa · quem enviou para conferência não pode aprovar.",
       409,
     );
   }

@@ -164,7 +164,7 @@ export function ClientFinanceiroSection({ clientId }: { clientId: string }) {
                       {provMeta.label}
                     </Badge>
                   ) : (
-                    <span className="text-[10px] text-muted-foreground w-20 text-center">—</span>
+                    <span className="text-[10px] text-muted-foreground w-20 text-center">·</span>
                   )}
                 </div>
               );
@@ -272,7 +272,7 @@ function NovaCobrancaClienteDialog({
                     {casos.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.case_code || c.id.slice(0, 8)}
-                        {" — "}
+                        {" · "}
                         {CASE_TYPE_LABELS[c.case_type as CaseType] ?? c.case_type}
                       </SelectItem>
                     ))}

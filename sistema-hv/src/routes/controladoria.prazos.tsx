@@ -15,7 +15,7 @@ function daysUntil(iso: string): number {
 }
 
 function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "·";
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -290,7 +290,7 @@ function PrazoRow({
           <span className="text-[var(--danger)] text-[12px]">Sem responsável</span>
         )}
       </td>
-      <td className="px-4 py-3 text-[12px] text-muted-foreground">{d.tipo ?? "—"}</td>
+      <td className="px-4 py-3 text-[12px] text-muted-foreground">{d.tipo ?? "·"}</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <button

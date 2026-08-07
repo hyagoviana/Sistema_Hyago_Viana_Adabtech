@@ -214,7 +214,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                               toast.success(
                                 res?.auto
                                   ? "Conferido e auto-aprovado"
-                                  : "Conferido — aguarda aprovação jurídica",
+                                  : "Conferido · aguarda aprovação jurídica",
                               ),
                             onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
                           },
@@ -262,7 +262,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                       onClick={() =>
                         aceitar.mutate(t.id, {
                           onSuccess: (r) =>
-                            toast.success(`Aceito — ${r?.parcelas ?? 0} parcela(s) gerada(s)`),
+                            toast.success(`Aceito · ${r?.parcelas ?? 0} parcela(s) gerada(s)`),
                           onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
                         })
                       }
@@ -329,7 +329,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                         delAdmin.mutate(t.id, {
                           onSuccess: (r) =>
                             toast.success(
-                              `Termo excluído — ${r?.parcelasRemovidas ?? 0} parcela(s) removida(s)`,
+                              `Termo excluído · ${r?.parcelasRemovidas ?? 0} parcela(s) removida(s)`,
                             ),
                           onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
                         });
@@ -362,7 +362,7 @@ export function TermoPanel({ caseId }: { caseId: string }) {
                     onSuccess: (r) =>
                       toast.success(
                         r?.ok
-                          ? `Conta Azul sincronizado — ${r.atualizadas} parcela(s) baixada(s)`
+                          ? `Conta Azul sincronizado · ${r.atualizadas} parcela(s) baixada(s)`
                           : (r?.nota ?? "Sync concluído"),
                       ),
                     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha no sync"),
@@ -737,7 +737,7 @@ function ElaborarDialog({
                         setDocUrl(res.editUrl);
                         setUltimoDocUrl(res.editUrl);
                         setSigGerada(sig);
-                        toast.success("Documento gerado — abrindo para revisão");
+                        toast.success("Documento gerado · abrindo para revisão");
                       } else {
                         toast.error("Documento não retornou link editável");
                       }
@@ -763,7 +763,7 @@ function ElaborarDialog({
   // "Salvar termo": o snapshot RASCUNHO já foi criado em "Calcular e revisar" e as
   // edições do Word já persistem no Google Docs. Aqui só confirmamos e fechamos.
   function doSalvarTermo() {
-    toast.success("Termo salvo (rascunho) — aguardando aprovação");
+    toast.success("Termo salvo (rascunho) · aguardando aprovação");
     onOpenChange(false);
   }
 
@@ -942,13 +942,13 @@ function ElaborarDialog({
         onOpenChange={(v) => {
           if (!v) {
             setDocUrl(null);
-            toast.success("Documento salvo — clique em Salvar termo para concluir.");
+            toast.success("Documento salvo · clique em Salvar termo para concluir.");
           }
         }}
       >
         <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader>
-            <DialogTitle>Termo de acerto — revisão</DialogTitle>
+            <DialogTitle>Termo de acerto · revisão</DialogTitle>
             <DialogDescription>
               O termo com as duas formas de pagamento (à vista e parcelado) em formato Word (Google
               Docs). Edite o que precisar antes de aprovar/imprimir.
@@ -1035,7 +1035,7 @@ function CobrancaAsaasDialog({
       },
       {
         onSuccess: () => {
-          toast.success("Cobrança criada no Conta Azul — o cliente recebe por e-mail");
+          toast.success("Cobrança criada no Conta Azul · o cliente recebe por e-mail");
           onOpenChange(false);
         },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança"),
@@ -1049,7 +1049,7 @@ function CobrancaAsaasDialog({
         <DialogHeader>
           <DialogTitle>
             Gerar cobrança
-            {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
+            {parcela ? ` · parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
           </DialogTitle>
           <DialogDescription>
             A cobrança é criada no Conta Azul e o cliente recebe por e-mail, com link de pagamento.
@@ -1066,7 +1066,7 @@ function CobrancaAsaasDialog({
               <span className="font-medium">
                 {parcela
                   ? new Date(parcela.vencimento + "T00:00:00").toLocaleDateString("pt-BR")
-                  : "—"}
+                  : "·"}
               </span>
             </div>
           </div>
@@ -1231,7 +1231,7 @@ function BaixaParcelaDialog({
         <DialogHeader>
           <DialogTitle>
             Registrar pagamento
-            {parcela ? ` — parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
+            {parcela ? ` · parcela ${String(parcela.numero).padStart(2, "0")}` : ""}
           </DialogTitle>
           <DialogDescription>
             Baixa manual da parcela (substitui a cobrança automática até a integração via n8n).

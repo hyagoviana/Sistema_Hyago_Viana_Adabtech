@@ -125,7 +125,7 @@ export const PROGRAMAS_GOVERNAMENTAIS = [
 export const PROGRAMA_LABELS: Record<(typeof PROGRAMAS_GOVERNAMENTAIS)[number], string> = {
   FIES: "FIES",
   MAIS_MEDICOS: "Programa Mais Médicos",
-  MEDICOS_BRASIL_FORMACAO: "Médicos pelo Brasil — Formação",
+  MEDICOS_BRASIL_FORMACAO: "Médicos pelo Brasil · Formação",
   RESIDENCIA_MEDICA: "Residência Médica",
 };
 

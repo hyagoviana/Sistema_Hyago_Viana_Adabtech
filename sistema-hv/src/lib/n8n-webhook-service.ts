@@ -421,7 +421,7 @@ export async function processN8nWebhook(payload: N8nIncomingPayload): Promise<N8
           const parentId = caso.drive_folder_id;
           if (!parentId) {
             throw new N8nWebhookError(
-              "Caso sem pasta no Drive — não foi possível armazenar o PDF assinado",
+              "Caso sem pasta no Drive · não foi possível armazenar o PDF assinado",
               424,
             );
           }

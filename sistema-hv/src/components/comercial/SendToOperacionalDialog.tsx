@@ -60,7 +60,7 @@ export function SendToOperacionalDialog({
         <DialogHeader>
           <DialogTitle>Enviar para operacional</DialogTitle>
           <DialogDescription>
-            {clientName ? `${clientName} — ` : ""}escolha qual caso entra na pipeline operacional. O
+            {clientName ? `${clientName} · ` : ""}escolha qual caso entra na pipeline operacional. O
             caso sai do funil comercial (aguardando assinatura).
           </DialogDescription>
         </DialogHeader>

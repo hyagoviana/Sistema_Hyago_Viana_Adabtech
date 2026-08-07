@@ -78,7 +78,7 @@ const MACRO_OP_LABELS: Record<string, string> = {
 };
 
 const MACRO_FIN_LABELS: Record<string, string> = {
-  NAO_APLICAVEL: "—",
+  NAO_APLICAVEL: "·",
   ELABORANDO: "Elaborando",
   APROVACAO: "Aprovação",
   AGUARDANDO_ATIVACAO: "Aguardando ativação",
@@ -163,7 +163,7 @@ export async function getDashboardAdmin(): Promise<DashboardAdmin> {
     case_type: c.case_type,
     macrostatus_op: c.macrostatus_op,
     macrostatus_fin: c.macrostatus_fin,
-    client_name: clientMap.get(c.client_id) ?? "—",
+    client_name: clientMap.get(c.client_id) ?? "·",
     created_at: c.created_at,
   }));
 

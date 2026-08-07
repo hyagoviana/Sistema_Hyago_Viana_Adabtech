@@ -58,7 +58,7 @@ async function assertExecutorEligible(
     .maybeSingle();
   if (error) throw new AuthError(`Falha ao validar executor: ${error.message}`, 500);
   if (!mapping) {
-    throw new AuthError("Executor destino nao mapeado/ativo — troca nao permitida.", 422);
+    throw new AuthError("Executor destino nao mapeado/ativo · troca nao permitida.", 422);
   }
   // Sem sujar o dado: se o mapping tem listas de autorizacao vazias, tratamos
   // como "autorizado a tudo" (mesma semantica do engine/transformer, que usa

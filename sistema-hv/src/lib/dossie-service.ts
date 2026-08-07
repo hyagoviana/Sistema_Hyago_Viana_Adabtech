@@ -320,8 +320,8 @@ export async function listAllTasks() {
   const map = await caseLookup(sb);
   return (data ?? []).map((t) => ({
     ...t,
-    case_code: map.get(t.case_id)?.case_code ?? "—",
-    client_name: map.get(t.case_id)?.client_name ?? "—",
+    case_code: map.get(t.case_id)?.case_code ?? "·",
+    client_name: map.get(t.case_id)?.client_name ?? "·",
   }));
 }
 
@@ -424,8 +424,8 @@ export async function listWorkItems(
       id: t.id,
       type: "tarefa",
       case_id: t.case_id,
-      case_code: map.get(t.case_id)?.case_code ?? "—",
-      client_name: map.get(t.case_id)?.client_name ?? "—",
+      case_code: map.get(t.case_id)?.case_code ?? "·",
+      client_name: map.get(t.case_id)?.client_name ?? "·",
       title: t.title,
       status: t.status,
       priority: t.priority,
@@ -448,8 +448,8 @@ export async function listWorkItems(
       id: row.id,
       type: "checklist",
       case_id: row.case_id,
-      case_code: map.get(row.case_id)?.case_code ?? "—",
-      client_name: map.get(row.case_id)?.client_name ?? "—",
+      case_code: map.get(row.case_id)?.case_code ?? "·",
+      client_name: map.get(row.case_id)?.client_name ?? "·",
       title: row.def?.label ?? row.label ?? "Item de checklist",
       status: "PENDENTE",
       priority: null,
@@ -485,7 +485,7 @@ export async function listAllDeadlines() {
   const map = await caseLookup(sb);
   return (data ?? []).map((d) => ({
     ...d,
-    case_code: map.get(d.case_id)?.case_code ?? "—",
-    client_name: map.get(d.case_id)?.client_name ?? "—",
+    case_code: map.get(d.case_id)?.case_code ?? "·",
+    client_name: map.get(d.case_id)?.client_name ?? "·",
   }));
 }

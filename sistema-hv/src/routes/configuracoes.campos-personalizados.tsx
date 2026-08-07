@@ -49,7 +49,7 @@ function CamposPersonalizados() {
       <PageHeader
         eyebrow="Sistema"
         title="Campos personalizados"
-        subtitle="Crie e organize os campos de cada pipeline (tema) e do cadastro do cliente. O campo continua abaixo da sua pipeline — aqui você só edita tudo em um lugar."
+        subtitle="Crie e organize os campos de cada pipeline (tema) e do cadastro do cliente. O campo continua abaixo da sua pipeline · aqui você só edita tudo em um lugar."
       />
 
       {loading ? null : !podeGerir ? (

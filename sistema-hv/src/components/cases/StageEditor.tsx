@@ -184,10 +184,10 @@ export function StageEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Etapas — {serviceTypeName}</DialogTitle>
+          <DialogTitle>Etapas · {serviceTypeName}</DialogTitle>
           <DialogDescription>
             {isGlobalFunnel
-              ? "Renomeie e reordene as etapas. Este é o funil ÚNICO (compartilhado por todos os tipos), então criar/excluir etapas está desativado — evita colunas órfãs."
+              ? "Renomeie e reordene as etapas. Este é o funil ÚNICO (compartilhado por todos os tipos), então criar/excluir etapas está desativado · evita colunas órfãs."
               : "Crie, renomeie, reordene ou remova as etapas."}{" "}
             “Ganho” marca a etapa que dispara o financeiro.
           </DialogDescription>

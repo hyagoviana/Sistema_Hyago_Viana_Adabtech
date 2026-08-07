@@ -35,7 +35,7 @@ const ACCEPT = Array.from(ALLOWED_MIMES).join(",");
 const MAX_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
 
 function formatBytes(n: number | null): string {
-  if (!n) return "—";
+  if (!n) return "·";
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -61,7 +61,7 @@ export function ClientDocumentsSection({ clientId, clientHasDriveFolder }: Props
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     if (!clientHasDriveFolder) {
-      toast.error("Cliente sem pasta no Drive — sincronize a pasta antes de subir documentos.");
+      toast.error("Cliente sem pasta no Drive · sincronize a pasta antes de subir documentos.");
       return;
     }
     for (const file of Array.from(files)) {
@@ -135,7 +135,7 @@ export function ClientDocumentsSection({ clientId, clientHasDriveFolder }: Props
         {!clientHasDriveFolder && (
           <Alert variant="destructive" className="mt-2">
             <AlertDescription>
-              Esse cliente ainda não tem pasta no Drive — use o botão "Tentar de novo" acima pra
+              Esse cliente ainda não tem pasta no Drive · use o botão "Tentar de novo" acima pra
               criar antes de subir arquivos.
             </AlertDescription>
           </Alert>

@@ -69,23 +69,23 @@ function multiselectToArray(value: unknown): string[] {
 
 // Rótulo legível de um valor para EXIBIÇÃO (Lista/filtros/read-only).
 export function formatTemaFieldValue(def: FieldLike, value: unknown): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "·";
   if (isMultiOccurrence(def)) {
     const arr = Array.isArray(value) ? value : [value];
     const clean = arr.map((v) => String(v).trim()).filter(Boolean);
-    return clean.length ? clean.join(", ") : "—";
+    return clean.length ? clean.join(", ") : "·";
   }
   if (def.type === "boolean") {
     return value === true || value === "true"
       ? "Sim"
       : value === false || value === "false"
         ? "Não"
-        : "—";
+        : "·";
   }
   if (def.type === "multiselect") {
     const arr = multiselectToArray(value);
-    return arr.length ? arr.join(", ") : "—";
+    return arr.length ? arr.join(", ") : "·";
   }
-  if (def.type === "money") return centavosToMask(value) || "—";
+  if (def.type === "money") return centavosToMask(value) || "·";
   return String(value);
 }

@@ -16,7 +16,7 @@ function daysSince(iso: string): number {
 }
 
 function fmtBRL(centavos: number | null): string {
-  if (!centavos) return "—";
+  if (!centavos) return "·";
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
@@ -128,7 +128,7 @@ function Inadimplencia() {
                       {fmtBRL(c.valor_centavos)}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[300px] truncate">
-                      {c.proximo_passo ?? "—"}
+                      {c.proximo_passo ?? "·"}
                     </td>
                   </tr>
                 ))

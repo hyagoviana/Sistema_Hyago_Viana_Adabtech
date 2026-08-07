@@ -83,7 +83,7 @@ export function CaseConferenciaFinPanel({
           <div className="flex items-center gap-2 mb-1">
             <Badge className="bg-amber-100 text-amber-800">Pendente de aprovação</Badge>
             <span className="text-muted-foreground">
-              {pendente.from ?? "—"} → {pendente.to ?? "—"}
+              {pendente.from ?? "·"} → {pendente.to ?? "·"}
             </span>
           </div>
           <p className="text-[12px] text-muted-foreground">
@@ -94,7 +94,7 @@ export function CaseConferenciaFinPanel({
             <Button
               size="sm"
               disabled={aprovar.isPending || souOEnviador}
-              title={souOEnviador ? "Você enviou — outra pessoa deve aprovar" : undefined}
+              title={souOEnviador ? "Você enviou · outra pessoa deve aprovar" : undefined}
               onClick={handleAprovar}
             >
               <CheckCircle2 size={13} className="mr-1" />

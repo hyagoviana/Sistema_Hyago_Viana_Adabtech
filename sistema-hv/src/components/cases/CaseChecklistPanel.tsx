@@ -319,7 +319,7 @@ export function ChecklistInconsistencyAlert({
         <p className="text-[13px] font-semibold text-[var(--danger)]">Checklist inconsistente</p>
         <p className="text-[12px] text-muted-foreground mt-0.5">
           Um item obrigatório de uma etapa já ultrapassada foi desmarcado. O caso NÃO regride
-          sozinho — reveja o item ou mova o caso manualmente.
+          sozinho · reveja o item ou mova o caso manualmente.
         </p>
       </div>
     </div>

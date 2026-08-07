@@ -217,7 +217,7 @@ function UfSelect({
         <SelectValue placeholder="UF" />
       </SelectTrigger>
       <SelectContent className="max-h-[300px]">
-        {includeEmpty && <SelectItem value="__none__">—</SelectItem>}
+        {includeEmpty && <SelectItem value="__none__">·</SelectItem>}
         {ESTADOS_BR.map((e) => (
           <SelectItem key={e.sigla} value={e.sigla}>
             {e.sigla} · {e.nome}
@@ -341,7 +341,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
       // editáveis e o save conclui normalmente.
       const detalhe = err instanceof CepError ? ` (${err.message})` : "";
       toast.warning(
-        `Não foi possível buscar o endereço pelo CEP — preencha manualmente${detalhe}.`,
+        `Não foi possível buscar o endereço pelo CEP · preencha manualmente${detalhe}.`,
       );
     } finally {
       setCepLoading(false);
@@ -373,10 +373,10 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         const res = await createMutation.mutateAsync(data);
         const created = res.client;
         if (!res.created) {
-          toast.info("CPF já cadastrado — reutilizando o cadastro existente.");
+          toast.info("CPF já cadastrado · reutilizando o cadastro existente.");
         } else if (created.drive_sync_failed) {
           toast.warning(
-            "Cliente criado, mas a pasta no Drive falhou — tente sincronizar na ficha.",
+            "Cliente criado, mas a pasta no Drive falhou · tente sincronizar na ficha.",
           );
         } else {
           toast.success("Cliente criado com pasta no Drive");
@@ -415,7 +415,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
           <DialogDescription>
             {mode === "edit"
               ? "Nome, CPF/CNPJ e RG não podem ser alterados. Os demais campos são editáveis."
-              : "Cadastro do cliente — uma pasta no Google Drive é criada automaticamente."}
+              : "Cadastro do cliente · uma pasta no Google Drive é criada automaticamente."}
           </DialogDescription>
         </DialogHeader>
 
@@ -747,7 +747,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="—" />
+                        <SelectValue placeholder="·" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -822,11 +822,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="—" />
+                            <SelectValue placeholder="·" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-[300px]">
-                          <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value="__none__">·</SelectItem>
                           {ESPECIALIDADES.map((e) => (
                             <SelectItem key={e} value={e}>
                               {e}
@@ -911,11 +911,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="—" />
+                            <SelectValue placeholder="·" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value="__none__">·</SelectItem>
                           <SelectItem value="Sim">Sim</SelectItem>
                           <SelectItem value="Não">Não</SelectItem>
                         </SelectContent>
@@ -973,7 +973,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   name="professional_data.residencia_hospital"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Residência — hospital</FormLabel>
+                      <FormLabel>Residência · hospital</FormLabel>
                       <FormControl>
                         <Input
                           list="hospitais-residencia"
@@ -992,7 +992,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   name="professional_data.residencia_especialidade"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Residência — especialidade</FormLabel>
+                      <FormLabel>Residência · especialidade</FormLabel>
                       <Select
                         disabled={semResidencia}
                         onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
@@ -1000,11 +1000,11 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="—" />
+                            <SelectValue placeholder="·" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-[300px]">
-                          <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value="__none__">·</SelectItem>
                           <SelectItem value={RESIDENCIA_NAO_POSSUI}>Não possui</SelectItem>
                           {ESPECIALIDADES.map((e) => (
                             <SelectItem key={e} value={e}>
@@ -1025,7 +1025,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   name="professional_data.residencia_inicio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Residência — início</FormLabel>
+                      <FormLabel>Residência · início</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
@@ -1043,7 +1043,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   name="professional_data.residencia_termino"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Residência — término</FormLabel>
+                      <FormLabel>Residência · término</FormLabel>
                       <FormControl>
                         <Input
                           type="date"

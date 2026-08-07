@@ -87,7 +87,7 @@ function LeadsPage() {
 
   const stageLabel = (slug: string | null): string => {
     const s = (stages ?? []).find((st) => st.slug === slug);
-    return s ? displayStageLabel(s) : "—";
+    return s ? displayStageLabel(s) : "·";
   };
 
   function handleMove(id: string, toSlug: string) {

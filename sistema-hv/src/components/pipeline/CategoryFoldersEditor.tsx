@@ -244,7 +244,7 @@ export function CategoryFoldersEditor({ serviceTypeId }: { serviceTypeId: string
         serviceTypeId={serviceTypeId}
         kind="procuracao"
         title="Procurações"
-        description="Documentos de assinatura (procuração/contrato → ZapSign) — pasta Procurações."
+        description="Documentos de assinatura (procuração/contrato → ZapSign) · pasta Procurações."
       />
     </div>
   );

@@ -41,7 +41,7 @@ function HistoricoPage() {
   const statusColors: Record<string, string> = { completed: "bg-green-100 text-green-700", failed: "bg-red-100 text-red-700", running: "bg-blue-100 text-blue-700" };
 
   function formatDuration(batch: any) {
-    if (!batch.started_at || !batch.completed_at) return "—";
+    if (!batch.started_at || !batch.completed_at) return "·";
     const ms = new Date(batch.completed_at).getTime() - new Date(batch.started_at).getTime();
     return ms > 60000 ? `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s` : `${Math.round(ms / 1000)}s`;
   }
@@ -87,7 +87,7 @@ function HistoricoPage() {
             <tbody>{batches.map((b: any) => (
               <tr key={b.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => setSelected(b)}>
                 <td className="py-2 font-medium">{b.batch_date}</td>
-                <td className="py-2 text-xs text-muted-foreground">{b.started_at ? new Date(b.started_at).toLocaleTimeString("pt-BR") : "—"}</td>
+                <td className="py-2 text-xs text-muted-foreground">{b.started_at ? new Date(b.started_at).toLocaleTimeString("pt-BR") : "·"}</td>
                 <td className="py-2">{formatDuration(b)}</td>
                 <td className="py-2 text-center"><Badge className={`text-xs ${statusColors[b.status] ?? ""}`}>{b.status}</Badge></td>
                 <td className="py-2 text-right">{b.total_tasks}</td>

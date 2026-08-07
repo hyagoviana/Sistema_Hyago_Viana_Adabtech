@@ -96,7 +96,7 @@ function PipelinePage() {
     return (
       <KanbanPickerPage
         serviceTypeId={cat}
-        name={catName ?? "—"}
+        name={catName ?? "·"}
         temaId={temaId ?? null}
         onBack={onBack}
         onPick={(boardId) =>
@@ -116,7 +116,7 @@ function PipelinePage() {
   if (cat) {
     return (
       <DynamicKanban
-        serviceType={{ id: cat, name: catName ?? "—" }}
+        serviceType={{ id: cat, name: catName ?? "·" }}
         initialFrente={frente ?? ""}
         boardId={board ?? null}
         onBack={onBack}
@@ -257,7 +257,7 @@ function ServiceTypeSelection() {
 
       <p className="text-[11.5px] text-muted-foreground mt-6 max-w-2xl">
         Só os temas aparecem aqui. Casos de tipos antigos, ainda não vinculados a um tema, continuam
-        acessíveis pela Lista de casos — vincule-os a um tema pela ficha do caso.
+        acessíveis pela Lista de casos · vincule-os a um tema pela ficha do caso.
       </p>
     </div>
   );
@@ -621,7 +621,7 @@ function KanbanDropdown({
   const activeLabel =
     activeBoardId === null
       ? (principal?.label ?? "Principal")
-      : (boards.find((b) => b.id === activeBoardId)?.label ?? "—");
+      : (boards.find((b) => b.id === activeBoardId)?.label ?? "·");
 
   const item = (id: string | null, label: string) => {
     const active = activeBoardId === id;

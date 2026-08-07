@@ -61,14 +61,14 @@ export const Route = createFileRoute("/casos/lista")({
 const PAGE_SIZE = 50;
 
 function fmtBRL(centavos: number | null): string {
-  if (centavos === null || centavos === undefined) return "—";
+  if (centavos === null || centavos === undefined) return "·";
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "·";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "·";
   return d.toLocaleDateString("pt-BR");
 }
 
@@ -431,7 +431,7 @@ function CasosLista() {
       case "tema":
         return (
           <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-            {c.tema_id ? (temaName.get(c.tema_id) ?? "—") : "—"}
+            {c.tema_id ? (temaName.get(c.tema_id) ?? "·") : "·"}
           </td>
         );
       case "case_type":
@@ -443,7 +443,7 @@ function CasosLista() {
       case "frente_slug":
         return (
           <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-            {c.frente_slug ?? "—"}
+            {c.frente_slug ?? "·"}
           </td>
         );
       case "macrostatus_op":
@@ -461,13 +461,13 @@ function CasosLista() {
       case "responsavel":
         return (
           <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-            {c.responsavel ?? "—"}
+            {c.responsavel ?? "·"}
           </td>
         );
       case "municipio":
         return (
           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-            {c.municipio ?? "—"}
+            {c.municipio ?? "·"}
           </td>
         );
       case "valor_centavos":
@@ -496,7 +496,7 @@ function CasosLista() {
       />
       <PageHeader
         eyebrow="Operação"
-        title={contextoLabel ? `Lista — ${contextoLabel}` : "Lista de casos"}
+        title={contextoLabel ? `Lista · ${contextoLabel}` : "Lista de casos"}
         subtitle={isLoading ? "Carregando…" : `${total} caso${total === 1 ? "" : "s"} no total.`}
         aside={
           <div className="flex items-center gap-2">

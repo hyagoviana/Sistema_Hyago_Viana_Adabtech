@@ -356,7 +356,7 @@ function ProcuracaoReviewStep({
         honorarios,
       });
       const doc = res.doc as { id: string; google_doc_id: string | null };
-      toast.success(`Caso ${res.case.case_code} criado no Comercial — valide a procuração.`);
+      toast.success(`Caso ${res.case.case_code} criado no Comercial · valide a procuração.`);
       onGenerated({
         docId: doc.id,
         googleDocId: doc.google_doc_id ?? "",
@@ -373,7 +373,7 @@ function ProcuracaoReviewStep({
       <DialogHeader>
         <DialogTitle>Preencher procuração</DialogTitle>
         <DialogDescription>
-          {templateName} — confira os campos preenchidos com os dados do cliente. Edite o que
+          {templateName} · confira os campos preenchidos com os dados do cliente. Edite o que
           precisar; os vazios você completa à mão. Ao confirmar, o cliente entra no Comercial e o
           documento abre em formato Word para você validar/editar antes de enviar ao ZapSign.
         </DialogDescription>
@@ -472,7 +472,7 @@ function ProcuracaoEditorStep({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Procuração {editor.caseCode} — validar</DialogTitle>
+        <DialogTitle>Procuração {editor.caseCode} · validar</DialogTitle>
         <DialogDescription>
           Confira e edite o documento em formato Word (Google Docs). Ao concluir, ele é finalizado
           (PDF na pasta do caso) e fica pronto para enviar ao ZapSign na ficha do caso.
@@ -516,7 +516,7 @@ function ProcuracaoEditorStep({
           onClick={async () => {
             try {
               await finalize.mutateAsync(editor.docId);
-              toast.success("Procuração finalizada — pronta para enviar ao ZapSign na ficha do caso");
+              toast.success("Procuração finalizada · pronta para enviar ao ZapSign na ficha do caso");
               onClose();
             } catch (err) {
               toast.error(err instanceof Error ? err.message : "Falha ao finalizar");

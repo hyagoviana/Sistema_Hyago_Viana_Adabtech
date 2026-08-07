@@ -177,7 +177,7 @@ function StageList({
       {canEdit && (
         <div className="flex items-end gap-2 rounded-lg border border-dashed p-3">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Nova etapa — rótulo</label>
+            <label className="text-xs font-medium">Nova etapa · rótulo</label>
             <Input
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
@@ -222,13 +222,13 @@ function FunilEditor() {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Ajuste as etapas de cada tipo (rótulo, papel) e os itens de checklist de cada etapa. O
-          slug de uma etapa em uso não muda — para uma etapa diferente, crie uma nova.
+          slug de uma etapa em uso não muda · para uma etapa diferente, crie uma nova.
         </p>
       </header>
 
       {!canEdit && (
         <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Você está em modo leitura — apenas administradores editam o funil.
+          Você está em modo leitura · apenas administradores editam o funil.
         </p>
       )}
 

@@ -79,7 +79,7 @@ export const MACRO_FIN = [
 export type MacroFin = (typeof MACRO_FIN)[number];
 
 export const MACRO_FIN_LABELS: Record<MacroFin, string> = {
-  NAO_APLICAVEL: "—",
+  NAO_APLICAVEL: "·",
   ELABORANDO: "Elaborando",
   APROVACAO: "Aprovação",
   AGUARDANDO_ATIVACAO: "Aguardando ativação",

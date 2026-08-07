@@ -64,7 +64,7 @@ export function MoveCaseFinDialog({
     const targetStage = eligible.find((s) => s.id === targetId);
     try {
       await move.mutateAsync({ caseId, stageId: targetId, toSlug: targetStage?.slug });
-      toast.success(`${caseCode} — financeiro movido pra ${targetStage?.label ?? "?"}`);
+      toast.success(`${caseCode} · financeiro movido pra ${targetStage?.label ?? "?"}`);
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao mover");

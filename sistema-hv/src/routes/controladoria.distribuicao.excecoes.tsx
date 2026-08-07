@@ -76,10 +76,10 @@ function ExcecoesPage() {
               return (
                 <tr key={exc.id} className="border-b hover:bg-accent/50">
                   <td className="py-2 font-mono text-xs">{exc.task_id}</td>
-                  <td className="py-2 text-xs">{result?.process_id ?? "—"}</td>
+                  <td className="py-2 text-xs">{result?.process_id ?? "·"}</td>
                   <td className="py-2 text-center"><Badge className={`text-xs ${ALERT_COLORS[exc.alert_code] ?? "bg-gray-100"}`}>{exc.alert_code}</Badge></td>
-                  <td className="py-2">{fatalDate ?? "—"}</td>
-                  <td className="py-2 text-center">{daysLeft !== null ? <span className={daysLeft <= 2 ? "text-destructive font-bold" : ""}>{daysLeft}d</span> : "—"}</td>
+                  <td className="py-2">{fatalDate ?? "·"}</td>
+                  <td className="py-2 text-center">{daysLeft !== null ? <span className={daysLeft <= 2 ? "text-destructive font-bold" : ""}>{daysLeft}d</span> : "·"}</td>
                   <td className="py-2 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Button variant="outline" size="sm" onClick={() => { setAction({ type: "assign", exception: exc }); setSelectedExecutor(""); setReason(""); }}><UserPlus className="h-3 w-3 mr-1" />Atribuir</Button>

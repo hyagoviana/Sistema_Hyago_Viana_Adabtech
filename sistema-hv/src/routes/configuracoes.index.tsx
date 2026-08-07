@@ -15,7 +15,7 @@ export const Route = createFileRoute("/configuracoes/")({
 
 function Configuracoes() {
   const { session, profile, role } = useAuth();
-  const email = session?.user?.email ?? "—";
+  const email = session?.user?.email ?? "·";
   const isAdmin = role === "admin";
   // I1/B3 — atalho de "Campos personalizados" só para quem pode editar o módulo
   // sistema (mesma régua do servidor requireModule('sistema','edit')).
@@ -100,7 +100,7 @@ function Configuracoes() {
               Usuários e permissões
             </div>
             <div className="text-[12px] text-muted-foreground">
-              Convites, papéis e acesso — agora em uma aba própria.
+              Convites, papéis e acesso · agora em uma aba própria.
             </div>
           </div>
           <span className="text-[var(--gold-700)] text-sm">Abrir →</span>

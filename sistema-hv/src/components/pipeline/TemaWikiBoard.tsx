@@ -327,7 +327,7 @@ function WikiBlockCard({
           </div>
           {items.length === 0 ? (
             <div className="text-[12px] text-muted-foreground">
-              {canManage ? "Vazio — clique no lápis para adicionar caixinhas." : "Sem itens."}
+              {canManage ? "Vazio · clique no lápis para adicionar caixinhas." : "Sem itens."}
             </div>
           ) : (
             <ul className="space-y-1.5">

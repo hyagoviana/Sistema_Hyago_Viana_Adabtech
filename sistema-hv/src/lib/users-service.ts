@@ -391,8 +391,8 @@ export async function getUserReport(userId: string): Promise<UserReport> {
   const nameOf = (caseId: string) => {
     const c = caseMap.get(caseId);
     return {
-      case_code: c?.case_code ?? "—",
-      client_name: clientMap.get(c?.client_id ?? "") ?? "—",
+      case_code: c?.case_code ?? "·",
+      client_name: clientMap.get(c?.client_id ?? "") ?? "·",
     };
   };
 
@@ -422,7 +422,7 @@ export async function getUserReport(userId: string): Promise<UserReport> {
     id: it.id,
     case_id: it.case_id,
     ...nameOf(it.case_id),
-    label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "—",
+    label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "·",
     stage_slug: it.stage_slug,
     done: it.done,
   }));
@@ -553,8 +553,8 @@ export async function getUserWorkload(userId: string): Promise<UserWorkload> {
     ? await sb.from("system_clients").select("id, full_name").in("id", clientIds)
     : { data: [] as { id: string; full_name: string }[] };
   const clientMap = new Map((cli ?? []).map((c) => [c.id, c.full_name]));
-  const codeOf = (cid: string) => caseMap.get(cid)?.case_code ?? "—";
-  const clientOf = (cid: string) => clientMap.get(caseMap.get(cid)?.client_id ?? "") ?? "—";
+  const codeOf = (cid: string) => caseMap.get(cid)?.case_code ?? "·";
+  const clientOf = (cid: string) => clientMap.get(caseMap.get(cid)?.client_id ?? "") ?? "·";
 
   return {
     user,
@@ -582,7 +582,7 @@ export async function getUserWorkload(userId: string): Promise<UserWorkload> {
       id: it.id,
       case_id: it.case_id,
       case_code: codeOf(it.case_id),
-      label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "—",
+      label: (it as { def?: { label?: string } | null }).def?.label ?? it.label ?? "·",
     })),
   };
 }

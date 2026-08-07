@@ -138,7 +138,7 @@ function TarefasPage() {
               itemsOrdenados.map((it, i) => {
                 const isTask = it.type === "tarefa";
                 const trailing = isTask
-                  ? (PRIO_LABEL[it.priority ?? "MEDIA"] ?? it.priority ?? "—")
+                  ? (PRIO_LABEL[it.priority ?? "MEDIA"] ?? it.priority ?? "·")
                   : "Checklist";
                 const trailingColor = isTask
                   ? (PRIO_TONE[it.priority ?? "MEDIA"] ?? "var(--ink-500)")

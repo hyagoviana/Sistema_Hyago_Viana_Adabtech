@@ -34,7 +34,7 @@ function pickCity(address: Client["address"]): string | null {
 }
 
 function maskPhone(phone: string | null): string {
-  if (!phone) return "—";
+  if (!phone) return "·";
   const d = phone.replace(/\D/g, "");
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
@@ -410,7 +410,7 @@ export function ClientRoster({
                     </span>
                   </div>
                   <div className="text-[11.5px] text-muted-foreground mt-1.5">
-                    {pickCity(c.address) ?? "—"}
+                    {pickCity(c.address) ?? "·"}
                     {usingLifecycle &&
                       typeof (c as { dias_parado?: number }).dias_parado === "number" && (
                         <>

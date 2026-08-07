@@ -53,7 +53,7 @@ function maskCpfCnpj(d: string): string {
 }
 
 function maskPhone(phone: string | null): string {
-  if (!phone) return "—";
+  if (!phone) return "·";
   const d = phone.replace(/\D/g, "");
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
@@ -277,7 +277,7 @@ function ClienteDetalhe() {
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">E-mail</dt>
-              <dd className="text-[var(--navy)] font-medium">{cliente.email ?? "—"}</dd>
+              <dd className="text-[var(--navy)] font-medium">{cliente.email ?? "·"}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Telefone</dt>
@@ -297,7 +297,7 @@ function ClienteDetalhe() {
           {cliente.drive_folder_url ? (
             <div className="mt-3">
               <p className="text-xs text-muted-foreground mb-3">
-                Arquivos do cliente ficam aqui — você pode subir/baixar pelo Drive direto.
+                Arquivos do cliente ficam aqui · você pode subir/baixar pelo Drive direto.
               </p>
               <Button asChild variant="outline" size="sm">
                 <a href={cliente.drive_folder_url} target="_blank" rel="noopener noreferrer">
@@ -373,8 +373,8 @@ function ClienteDetalhe() {
             <AlertDialogTitle>Excluir {cliente.full_name} permanentemente?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação é <strong>PERMANENTE e não pode ser desfeita</strong>. O cliente e{" "}
-              <strong>tudo que depende dele</strong> — casos, documentos, parcelas, notas e
-              consentimentos — serão apagados do banco. A pasta no Google Drive não é apagada.
+              <strong>tudo que depende dele</strong> · casos, documentos, parcelas, notas e
+              consentimentos · serão apagados do banco. A pasta no Google Drive não é apagada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -115,7 +115,7 @@ function ExecutoresPage() {
               <tbody>
                 {((executors ?? []) as ExecutorRow[]).map((e) => (
                   <tr key={e.id} className="border-b hover:bg-accent/50">
-                    <td className="py-2 font-medium">{e.system_users?.full_name ?? "—"}</td>
+                    <td className="py-2 font-medium">{e.system_users?.full_name ?? "·"}</td>
                     <td className="py-2 text-muted-foreground">{e.projuris_responsavel_id}</td>
                     <td className="py-2 text-right">{e.weight ?? 1}</td>
                     <td className="py-2 text-center">

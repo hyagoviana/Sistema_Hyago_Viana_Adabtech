@@ -62,7 +62,7 @@ export function GerarDocumentoTermoButton({
           const url = r.editUrl ?? null;
           setEditUrl(url);
           if (url) setOpen(true);
-          toast.success("Documento do termo gerado — abrindo para revisão");
+          toast.success("Documento do termo gerado · abrindo para revisão");
         },
         onError: (e) =>
           toast.error(e instanceof Error ? e.message : "Falha ao gerar documento do termo"),
@@ -90,7 +90,7 @@ export function GerarDocumentoTermoButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader>
-            <DialogTitle>Termo de acerto — revisão</DialogTitle>
+            <DialogTitle>Termo de acerto · revisão</DialogTitle>
             <DialogDescription>
               O termo com as duas formas de pagamento (à vista e parcelado) abaixo, em formato Word
               (Google Docs). Edite o que precisar antes de aprovar/imprimir.

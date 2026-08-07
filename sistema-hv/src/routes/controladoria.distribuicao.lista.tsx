@@ -207,10 +207,10 @@ function ListaDistribuicoesPage() {
   }, [taskTypes]);
 
   function resolveExecutor(r: ResultRow): string {
-    if (!r?.executor_id) return "—";
+    if (!r?.executor_id) return "·";
     return (
       executorNameById.get(r.executor_id) ??
-      `(cód. ${String(r.executor_id).slice(0, 8)} — não sincronizado)`
+      `(cód. ${String(r.executor_id).slice(0, 8)} · não sincronizado)`
     );
   }
 
@@ -219,14 +219,14 @@ function ListaDistribuicoesPage() {
     if (rd.tipo_nome) return rd.tipo_nome;
     if (rd.tipo_codigo) {
       const desc = tipoDescByCode.get(String(rd.tipo_codigo));
-      return desc ?? `(cód. ${rd.tipo_codigo} — não sincronizado)`;
+      return desc ?? `(cód. ${rd.tipo_codigo} · não sincronizado)`;
     }
-    return "—";
+    return "·";
   }
 
   function resolveProcesso(r: ResultRow): string {
     const rd = (r?.raw_data ?? {}) as NonNullable<ResultRaw>;
-    return rd.numero_processo || r?.process_id || "—";
+    return rd.numero_processo || r?.process_id || "·";
   }
 
   function toggleFlow(f: string) {
@@ -476,7 +476,7 @@ function ListaDistribuicoesPage() {
                               {r.alerts?.length}
                             </Badge>
                           ) : (
-                            "—"
+                            "·"
                           )}
                         </td>
                         <td className="py-2 text-center">
@@ -485,7 +485,7 @@ function ListaDistribuicoesPage() {
                         {podeEditar && (
                           <td className="py-2">
                             {r.blocked ? (
-                              <span className="text-xs text-muted-foreground">—</span>
+                              <span className="text-xs text-muted-foreground">·</span>
                             ) : (
                               <div className="flex items-center justify-center gap-1">
                                 <Button
@@ -606,7 +606,7 @@ function ListaDistribuicoesPage() {
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Data Preferencial:</span>{" "}
-                  {selected.preferred_date ?? "—"}
+                  {selected.preferred_date ?? "·"}
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Data Final:</span>{" "}
@@ -756,7 +756,7 @@ function ListaDistribuicoesPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" /> Write-back ao ProJuris — {date}
+                <Upload className="h-5 w-5" /> Write-back ao ProJuris · {date}
               </DialogTitle>
               <DialogDescription>
                 Grava no ProJuris a atribuição das tarefas <strong>aprovadas</strong>. Só tarefas
@@ -811,7 +811,7 @@ function ListaDistribuicoesPage() {
                 {!writebackPreview.confirmed && (
                   <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
                     <p className="font-medium flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" /> Pré-visualização (dry-run) — nada foi
+                      <AlertTriangle className="h-3 w-3" /> Pré-visualização (dry-run) · nada foi
                       gravado no ProJuris.
                     </p>
                     <p className="mt-1">

@@ -31,7 +31,7 @@ export function StatusBar() {
       <span className="text-[var(--ink-300)]">·</span>
       <span>Hyago Viana Advocacia</span>
       <span className="text-[var(--ink-300)]">·</span>
-      <span className="truncate max-w-[220px]">Sessão: {email || "—"}</span>
+      <span className="truncate max-w-[220px]">Sessão: {email || "·"}</span>
       <span className="text-[var(--ink-300)]">·</span>
       <span className="tabular" suppressHydrationWarning>
         {time || "--:--:--"}

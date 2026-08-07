@@ -168,7 +168,7 @@ export function DeleteUserDialog({
           </DialogTitle>
           <DialogDescription>
             Reatribua cada trabalho vinculado a este colaborador. Ao confirmar, ele é removido do
-            sistema e perde o acesso à plataforma — esta ação é permanente.
+            sistema e perde o acesso à plataforma · esta ação é permanente.
           </DialogDescription>
         </DialogHeader>
 

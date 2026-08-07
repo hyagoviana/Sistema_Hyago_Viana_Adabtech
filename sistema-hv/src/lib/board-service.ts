@@ -291,7 +291,7 @@ export async function createBoardStage(input: {
   if (!board) throw new BoardServiceError("Board não encontrado", 404);
   if (board.is_principal) {
     throw new BoardServiceError(
-      "As etapas do board principal são as do operacional — edite-as em 'Editar etapas'.",
+      "As etapas do board principal são as do operacional · edite-as em 'Editar etapas'.",
       409,
     );
   }
@@ -394,7 +394,7 @@ export async function softDeleteBoardStage(id: string) {
     .eq("stage_id", id)
     .is("deleted_at", null);
   if ((count ?? 0) > 0) {
-    throw new BoardServiceError("Há casos nesta etapa — remaneje antes de excluir.", 409);
+    throw new BoardServiceError("Há casos nesta etapa · remaneje antes de excluir.", 409);
   }
   const { error } = await sb
     .from("system_pipeline_stages")
@@ -617,7 +617,7 @@ export async function listCaseOperationalTrail(
     board_label: principal?.label ?? "Principal",
     is_principal: true,
     stage_slug: macroOp,
-    stage_label: macroOp ? (MACRO_OP_LABELS[macroOp as MacroOp] ?? macroOp) : "—",
+    stage_label: macroOp ? (MACRO_OP_LABELS[macroOp as MacroOp] ?? macroOp) : "·",
     entered_at: caso.status_changed_at ?? null,
   });
 
@@ -657,7 +657,7 @@ export async function listCaseOperationalTrail(
         board_label: board.label as string,
         is_principal: false,
         stage_slug: slug,
-        stage_label: slug ? (stageLabel.get(`${p.board_id}::${slug}`) ?? "—") : "—",
+        stage_label: slug ? (stageLabel.get(`${p.board_id}::${slug}`) ?? "·") : "·",
         entered_at: (p.entered_at as string | null) ?? null,
         ordem: (board.ordem as number) ?? 0,
       });
@@ -848,7 +848,7 @@ export async function moveCaseInBoard(
     .is("deleted_at", null)
     .maybeSingle();
   if (!pos) {
-    throw new BoardServiceError("Caso não está neste board — adicione-o primeiro.", 404);
+    throw new BoardServiceError("Caso não está neste board · adicione-o primeiro.", 404);
   }
 
   const from = pos.stage_slug ?? null;

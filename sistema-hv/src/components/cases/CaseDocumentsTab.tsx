@@ -486,8 +486,8 @@ export function CaseDocumentsTab({
               setGenOpen(false);
               toast.success(
                 isNovoCaso
-                  ? "Novo caso criado — documento gerado, abrindo editor"
-                  : "Documento gerado — abrindo editor",
+                  ? "Novo caso criado · documento gerado, abrindo editor"
+                  : "Documento gerado · abrindo editor",
               );
               setEditorDocId(res.doc.id);
               setEditorUrl(editUrl(res.doc.google_doc_id!));
@@ -496,7 +496,7 @@ export function CaseDocumentsTab({
             const res = await generate.mutateAsync({ caseId, templateId, title, values, docKind });
             setCreatedCaseId(null);
             setGenOpen(false);
-            toast.success("Documento gerado — abrindo editor");
+            toast.success("Documento gerado · abrindo editor");
             setEditorDocId(res.doc.id);
             setEditorUrl(editUrl(res.doc.google_doc_id!));
           } catch (err) {
@@ -564,7 +564,7 @@ export function CaseDocumentsTab({
           try {
             const res = await sendZap.mutateAsync({ docId: sendFor.id, signers: [signer] });
             setSendFor(null);
-            toast.success(`Enviado ao ZapSign${res.signUrl ? " — link gerado" : ""}`);
+            toast.success(`Enviado ao ZapSign${res.signUrl ? " · link gerado" : ""}`);
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Falha ao enviar");
           }
@@ -805,7 +805,7 @@ function GenerateDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Documento de caso — escolha a pasta</DialogTitle>
+            <DialogTitle>Documento de caso · escolha a pasta</DialogTitle>
             <DialogDescription>
               Só as pastas desta categoria aparecem. Os documentos da pasta escolhida ficam
               disponíveis para gerar.
@@ -834,7 +834,7 @@ function GenerateDialog({
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-3">
               <p className="text-sm text-amber-800">
                 Esta categoria ainda não tem nenhuma pasta de documentos de caso. Quer incluir uma
-                agora? Dê um nome à pasta e anexe um documento Word — ou saia se clicou aqui sem
+                agora? Dê um nome à pasta e anexe um documento Word · ou saia se clicou aqui sem
                 querer.
               </p>
               <div>
@@ -908,7 +908,7 @@ function GenerateDialog({
           </button>
           <div>
             <Label>
-              {isProc ? "Modelo de procuração" : `Documento — ${folderLabel ?? "pasta"}`}
+              {isProc ? "Modelo de procuração" : `Documento · ${folderLabel ?? "pasta"}`}
             </Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">
@@ -986,7 +986,7 @@ function GenerateDialog({
 
           {!loadingFields && templateId && fields.length === 0 && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Nenhum campo encontrado neste modelo. O documento sera gerado sem substituicoes —
+              Nenhum campo encontrado neste modelo. O documento sera gerado sem substituicoes ·
               preencha manualmente na edicao.
             </div>
           )}
