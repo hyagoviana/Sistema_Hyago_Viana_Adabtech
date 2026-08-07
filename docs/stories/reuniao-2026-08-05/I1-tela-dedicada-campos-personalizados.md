@@ -102,3 +102,4 @@ Isto é **reorganização de navegação/visualização**: a tela **consome os e
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-05 | v0.1 | Draft inicial | @sm (Bob) |
+| 2026-08-07 | v0.3 | Ajuste de acesso (owner via Orion). Removido o item "Campos personalizados" da SIDEBAR (aba dedicada) + seu gate. O acesso agora é por um BOTÃO "Campos personalizados" no header do Pipeline Operacional, logo DEPOIS de "+ Novo tema" (gate admin `config.manage`), que navega para a mesma página `/configuracoes/campos-personalizados`. A rota/página permanece; só mudou o ponto de entrada. Arquivos: `pipeline.tsx` (botão), `Sidebar.tsx` (removido item + gate + imports órfãos `SlidersHorizontal`/`permissaoEfetiva`). typecheck limpo, eslint 0. | @dev |

@@ -160,6 +160,15 @@ function ServiceTypeSelection() {
                 Novo tema
               </Btn>
             )}
+            {canManage && (
+              <Btn
+                variant="ghost"
+                onClick={() => navigate({ to: "/configuracoes/campos-personalizados" })}
+              >
+                <Settings2 size={14} />
+                Campos personalizados
+              </Btn>
+            )}
             <Btn variant="ghost" onClick={() => navigate({ to: "/casos/lista", search: {} })}>
               <List size={14} />
               Ver todos em lista

@@ -33,7 +33,7 @@ import { signOut, useAuth } from "@/lib/auth";
 import { useCasesList, useComercialCases } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
 import { useExceptions } from "@/hooks/useExceptions";
-import { canSeeRouteEfetiva, permissaoEfetiva, ROLE_LABELS } from "@/lib/rbac";
+import { canSeeRouteEfetiva, ROLE_LABELS } from "@/lib/rbac";
 import { useMyModulePerms } from "@/hooks/usePermissions";
 
 // Monograma H·V oficial (SVG) — copiado da referência de design v3 (hvmark).
@@ -122,11 +122,6 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Sistema",
     items: [
       { to: "/referencias", label: "Referências", icon: Library },
-      {
-        to: "/configuracoes/campos-personalizados",
-        label: "Campos personalizados",
-        icon: SlidersHorizontal,
-      },
       { to: "/permissoes", label: "Permissões", icon: ShieldCheck },
       { to: "/configuracoes", label: "Configurações", icon: Settings },
     ],
@@ -245,11 +240,7 @@ export function Sidebar() {
               // papel base. "Não ver" numa aba some do menu.
               canSeeRouteEfetiva(role, perms ?? {}, it.to) &&
               // Permissões é exclusivo do admin (mesmo papéis "all" não veem).
-              (it.to !== "/permissoes" || role === "admin") &&
-              // I1/B3 — "Campos personalizados" exige poder EDITAR o módulo sistema
-              // (mesma régua do servidor requireModule('sistema','edit')), não só ver.
-              (it.to !== "/configuracoes/campos-personalizados" ||
-                permissaoEfetiva(role, perms ?? {}, "sistema", "edit")),
+              (it.to !== "/permissoes" || role === "admin"),
           ),
         }))
         .filter((g) => g.items.length > 0)
