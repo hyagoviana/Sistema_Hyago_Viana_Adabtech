@@ -23,12 +23,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   useClientFieldDefs,
+  useClientFieldTemaLinks,
   useCreateClientFieldDef,
   useDeleteClientFieldDef,
   useReorderClientFieldDefs,
   useSetClientFieldActive,
+  useSetClientFieldTemaLinks,
   useUpdateClientFieldDef,
 } from "@/hooks/useClientFields";
+import { useTemas } from "@/hooks/useTemas";
 import {
   FIELD_TYPE_LABELS,
   FIELD_TYPES,
@@ -45,6 +48,8 @@ type Draft = {
   label: string;
   field_type: FieldType;
   required: boolean;
+  // B1 — o campo aparece nos casos (espelhado nos temas vinculados)?
+  appears_in_cases: boolean;
   help_text: string;
   options: string[];
 };
@@ -53,6 +58,7 @@ const EMPTY_DRAFT: Draft = {
   label: "",
   field_type: "text",
   required: false,
+  appears_in_cases: false,
   help_text: "",
   options: [],
 };
@@ -80,16 +86,28 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
   const deleteMut = useDeleteClientFieldDef();
   const reorderMut = useReorderClientFieldDefs();
   const activeMut = useSetClientFieldActive();
+  const setLinksMut = useSetClientFieldTemaLinks();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [optionInput, setOptionInput] = useState("");
+
+  // B1 — temas onde o campo (em edição) aparece. Multisseleção; persiste ao clicar.
+  const { data: temas } = useTemas();
+  const { data: linkedTemaIds } = useClientFieldTemaLinks(editingId);
+  const [selectedTemaIds, setSelectedTemaIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Sincroniza o estado local com os vínculos carregados do campo em edição.
+    setSelectedTemaIds(linkedTemaIds ?? []);
+  }, [linkedTemaIds]);
 
   useEffect(() => {
     if (!open) {
       setEditingId(null);
       setDraft(EMPTY_DRAFT);
       setOptionInput("");
+      setSelectedTemaIds([]);
     }
   }, [open]);
 
@@ -98,7 +116,8 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
     updateMut.isPending ||
     deleteMut.isPending ||
     reorderMut.isPending ||
-    activeMut.isPending;
+    activeMut.isPending ||
+    setLinksMut.isPending;
   const needsOptions = FIELD_TYPES_WITH_OPTIONS.includes(draft.field_type);
 
   const startEdit = (id: string) => {
@@ -109,6 +128,7 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
       label: d.label,
       field_type: d.field_type as FieldType,
       required: d.required,
+      appears_in_cases: d.appears_in_cases ?? false,
       help_text: d.help_text ?? "",
       options: Array.isArray(d.options)
         ? (d.options.filter((o) => typeof o === "string") as string[])
@@ -151,19 +171,46 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
         label: draft.label.trim(),
         field_type: draft.field_type,
         required: draft.required,
+        appears_in_cases: draft.appears_in_cases,
         help_text: draft.help_text.trim() || null,
         options: needsOptions ? draft.options : null,
       };
       if (editingId) {
         await updateMut.mutateAsync({ id: editingId, input: payload });
+        // B1 — se o campo NÃO aparece nos casos, garante zero vínculos.
+        if (!draft.appears_in_cases && (linkedTemaIds ?? []).length > 0) {
+          await setLinksMut.mutateAsync({ clientFieldDefId: editingId, temaIds: [] });
+        }
         toast.success("Campo atualizado");
+        resetDraft();
       } else {
-        await createMut.mutateAsync(payload);
+        const created = await createMut.mutateAsync(payload);
         toast.success("Campo criado");
+        // B1 — se marcou "aparece nos casos", entra em edição para escolher os temas.
+        if (draft.appears_in_cases && created?.id) {
+          startEdit(created.id);
+        } else {
+          resetDraft();
+        }
       }
-      resetDraft();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar campo");
+    }
+  };
+
+  // B1 — persiste a multisseleção de temas (reconcilia defs-espelho no backend).
+  const toggleTema = async (temaId: string) => {
+    if (!editingId) return;
+    const next = selectedTemaIds.includes(temaId)
+      ? selectedTemaIds.filter((t) => t !== temaId)
+      : [...selectedTemaIds, temaId];
+    setSelectedTemaIds(next);
+    try {
+      await setLinksMut.mutateAsync({ clientFieldDefId: editingId, temaIds: next });
+    } catch (err) {
+      // Reverte o estado local se o backend recusar (ex.: colisão de chave).
+      setSelectedTemaIds(selectedTemaIds);
+      toast.error(err instanceof Error ? err.message : "Erro ao vincular tema");
     }
   };
 
@@ -400,6 +447,60 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
               checked={draft.required}
               onCheckedChange={(c) => setDraft((d) => ({ ...d, required: c }))}
             />
+          </div>
+
+          {/* B1 — aparece nos casos + seletor de temas */}
+          <div className="rounded-md border p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium">Aparece nos casos</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Além do cadastro do cliente, mostra este campo (mesmo valor da pessoa) nas
+                  pipelines dos temas escolhidos — e reflete em todos eles.
+                </span>
+              </div>
+              <Switch
+                checked={draft.appears_in_cases}
+                onCheckedChange={(c) => setDraft((d) => ({ ...d, appears_in_cases: c }))}
+              />
+            </div>
+
+            {draft.appears_in_cases &&
+              (editingId ? (
+                <div className="space-y-1.5 border-t pt-3">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Temas onde aparece
+                  </label>
+                  {(temas ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum tema cadastrado.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {(temas ?? []).map((t) => {
+                        const on = selectedTemaIds.includes(t.id);
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            disabled={busy}
+                            onClick={() => toggleTema(t.id)}
+                            className={`rounded-full border px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
+                              on
+                                ? "border-transparent bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/70"
+                            }`}
+                          >
+                            {t.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground border-t pt-3">
+                  Salve o campo para escolher em quais temas ele aparece.
+                </p>
+              ))}
           </div>
 
           <div className="flex gap-2">

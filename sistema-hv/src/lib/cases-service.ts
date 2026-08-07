@@ -1921,3 +1921,62 @@ export async function deleteManualCaseEvent(eventId: string, userId: string) {
   if (error) throw new CaseServiceError(error.message, 500);
   return { ok: true as const, id: eventId };
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// G4 — SIGILO do caso: liga/desliga a flag `sigiloso` e sincroniza a lista de
+// usuários autorizados (system_case_sigilo_users). Chamado pelo RPC gate-ado
+// (admin/gestor do caso). Reconcilia a N:N: insere os que faltam, remove os que
+// saíram. Idempotente.
+export async function setCaseSigilo(
+  caseId: string,
+  sigiloso: boolean,
+  userIds: string[],
+  actorUserId: string,
+) {
+  if (!actorUserId) throw new CaseServiceError("Ação exige usuário autenticado", 401);
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, organization_id")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!caso) throw new CaseServiceError("Caso não encontrado", 404);
+  const orgId = caso.organization_id ?? DEFAULT_ORG_ID;
+
+  const { error: upErr } = await sb.from("system_cases").update({ sigiloso }).eq("id", caseId);
+  if (upErr) throw new CaseServiceError(upErr.message, 500);
+
+  // Reconcilia autorizados (dedup). Quando desliga o sigilo, mantemos a lista
+  // (reversível): religar o sigilo preserva quem já estava autorizado.
+  const wanted = [...new Set(userIds.filter((u) => !!u))];
+  const { data: current } = await sb
+    .from("system_case_sigilo_users")
+    .select("user_id")
+    .eq("case_id", caseId);
+  const currentSet = new Set((current ?? []).map((r) => r.user_id));
+  const toAdd = wanted.filter((u) => !currentSet.has(u));
+  const toRemove = [...currentSet].filter((u) => !wanted.includes(u));
+
+  if (toAdd.length > 0) {
+    const rows = toAdd.map((user_id) => ({
+      organization_id: orgId,
+      case_id: caseId,
+      user_id,
+      created_by: actorUserId,
+    }));
+    const { error } = await sb.from("system_case_sigilo_users").insert(rows);
+    if (error) throw new CaseServiceError(error.message, 500);
+  }
+  if (toRemove.length > 0) {
+    const { error } = await sb
+      .from("system_case_sigilo_users")
+      .delete()
+      .eq("case_id", caseId)
+      .in("user_id", toRemove);
+    if (error) throw new CaseServiceError(error.message, 500);
+  }
+
+  return { ok: true as const, sigiloso, autorizados: wanted };
+}

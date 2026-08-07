@@ -40,9 +40,15 @@ export type TemaFieldDef = {
   // da ficha nem da coluna da lista. Independente de active/hidden_in_list.
   hidden_in_filters: boolean;
   max_occurrences: number;
+  // A5 (2026-08-05): nº de LINHAS mostradas de largada no campo multi-linha (<= teto).
+  // O usuário adiciona mais com o botão "+" até `max_occurrences`.
+  initial_occurrences: number;
   // A5 5c (2026-08-03): CHECKBOX de auto-avanço. Quando type='boolean' e este slug
   // está setado, marcar "Sim" na ficha MOVE o caso para essa etapa op. NULL = não move.
   move_to_stage_slug: string | null;
+  // A4 (2026-08-05): campo PAI de quem este depende (mesmo tema/frente). NULL = sem
+  // dependência. Na ficha, o filho só edita quando o valor do pai está preenchido.
+  parent_field_def_id: string | null;
 };
 
 // FICHA do caso — defs do tema (frente NULL) + as da frente do caso, ordenadas.
@@ -101,7 +107,13 @@ export function useCreateTemaFieldDef(temaId: string) {
       hiddenInList?: boolean;
       hiddenInFilters?: boolean;
       maxOccurrences?: number;
+      // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
+      initialOccurrences?: number;
       moveToStageSlug?: string | null;
+      // A4 (2026-08-05) — campo pai (dependência); null = sem dependência.
+      parentFieldDefId?: string | null;
+      // A7 (2026-08-05) — libera a checagem do balde compartilhado do cliente.
+      allowSharedClientKey?: boolean;
     }) => fn({ data: { temaId, ...input } }),
     onSuccess: invalidate,
   });
@@ -124,7 +136,13 @@ export function useUpdateTemaFieldDef(temaId: string) {
         hiddenInList?: boolean;
         hiddenInFilters?: boolean;
         maxOccurrences?: number;
+        // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
+        initialOccurrences?: number;
         moveToStageSlug?: string | null;
+        // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).
+        parentFieldDefId?: string | null;
+        // A7 (2026-08-05) — libera a checagem do balde compartilhado do cliente.
+        allowSharedClientKey?: boolean;
       };
     }) => fn({ data: vars }),
     onSuccess: invalidate,

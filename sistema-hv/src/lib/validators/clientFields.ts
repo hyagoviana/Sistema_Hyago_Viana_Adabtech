@@ -37,6 +37,8 @@ export const fieldDefCreateSchema = z
     field_type: z.enum(FIELD_TYPES),
     options: z.array(z.string().trim().min(1).max(120)).max(100).optional().nullable(),
     required: z.boolean().optional().default(false),
+    // B1 (2026-08-05) — o campo "aparece nos casos" (espelhado nos temas vinculados).
+    appears_in_cases: z.boolean().optional().default(false),
     help_text: z
       .string()
       .trim()
@@ -64,6 +66,7 @@ export const fieldDefUpdateSchema = z.object({
   field_type: z.enum(FIELD_TYPES).optional(),
   options: z.array(z.string().trim().min(1).max(120)).max(100).optional().nullable(),
   required: z.boolean().optional(),
+  appears_in_cases: z.boolean().optional(),
   help_text: z
     .string()
     .trim()
@@ -74,6 +77,14 @@ export const fieldDefUpdateSchema = z.object({
   ordem: z.number().int().min(0).optional(),
   active: z.boolean().optional(),
 });
+
+// B1 (2026-08-05) — vínculo campo-do-cliente → tema(s). A UI manda o conjunto
+// DESEJADO de temas; o service faz o diff (cria/oculta defs-espelho).
+export const setClientFieldTemaLinksSchema = z.object({
+  clientFieldDefId: z.string().uuid("ID de campo inválido"),
+  temaIds: z.array(z.string().uuid()).max(200),
+});
+export type SetClientFieldTemaLinksInput = z.infer<typeof setClientFieldTemaLinksSchema>;
 
 export type FieldDefCreateInput = z.input<typeof fieldDefCreateSchema>;
 export type FieldDefCreateOutput = z.output<typeof fieldDefCreateSchema>;

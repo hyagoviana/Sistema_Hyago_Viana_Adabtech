@@ -95,6 +95,36 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_distribution_results"]["Insert"]>;
         Relationships: [];
       };
+      system_distribution_approvals: {
+        Row: {
+          id: string;
+          organization_id: string;
+          distribution_result_id: string;
+          status: "pending" | "approved" | "rejected";
+          decided_by: string | null;
+          decided_at: string | null;
+          reason: string | null;
+          original_executor_id: string | null;
+          override_executor_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          distribution_result_id: string;
+          status?: "pending" | "approved" | "rejected";
+          decided_by?: string | null;
+          decided_at?: string | null;
+          reason?: string | null;
+          original_executor_id?: string | null;
+          override_executor_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_approvals"]["Insert"]>;
+        Relationships: [];
+      };
       system_distribution_calendar: {
         Row: {
           id: string;
@@ -161,6 +191,8 @@ export type Database = {
           updated_at: string;
           projuris_tipo_descricao: string | null;
           exclusive_executor_id: string | null;
+          prazo_previsto_dias: number | null;
+          prazo_fatal_dias: number | null;
         };
         Insert: {
           id?: string;
@@ -175,6 +207,8 @@ export type Database = {
           updated_at?: string;
           projuris_tipo_descricao?: string | null;
           exclusive_executor_id?: string | null;
+          prazo_previsto_dias?: number | null;
+          prazo_fatal_dias?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_task_type_mapping"]["Insert"]>;
         Relationships: [];
@@ -476,6 +510,8 @@ export type Database = {
           help_text: string | null;
           ordem: number;
           active: boolean;
+          // B1 (2026-08-05) — o campo do cliente "aparece nos casos" (espelhado).
+          appears_in_cases: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -492,6 +528,7 @@ export type Database = {
           help_text?: string | null;
           ordem?: number;
           active?: boolean;
+          appears_in_cases?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -503,6 +540,46 @@ export type Database = {
             foreignKeyName: "system_client_field_defs_organization_id_fkey";
             columns: ["organization_id"];
             referencedRelation: "system_organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // B1 (2026-08-05) — vínculo N:N campo-do-cliente → tema. Ao vincular, o
+      // backend reconcilia uma def-espelho (system_tema_field_defs scope='cliente')
+      // no tema; ao desvincular (soft), oculta a espelho. Fonte única = cliente.
+      system_client_field_tema_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_field_def_id: string;
+          tema_id: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_field_def_id: string;
+          tema_id: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_client_field_tema_links"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "system_client_field_tema_links_client_field_def_id_fkey";
+            columns: ["client_field_def_id"];
+            referencedRelation: "system_client_field_defs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "system_client_field_tema_links_tema_id_fkey";
+            columns: ["tema_id"];
+            referencedRelation: "system_temas";
             referencedColumns: ["id"];
           },
         ];
@@ -1011,7 +1088,9 @@ export type Database = {
           hidden_in_list: boolean;
           hidden_in_filters: boolean;
           max_occurrences: number;
+          initial_occurrences: number;
           move_to_stage_slug: string | null;
+          parent_field_def_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1033,7 +1112,9 @@ export type Database = {
           hidden_in_list?: boolean;
           hidden_in_filters?: boolean;
           max_occurrences?: number;
+          initial_occurrences?: number;
           move_to_stage_slug?: string | null;
+          parent_field_def_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1155,6 +1236,34 @@ export type Database = {
           deleted_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_case_board_positions"]["Insert"]>;
+        Relationships: [];
+      };
+      system_tema_wiki_blocks: {
+        Row: {
+          id: string;
+          organization_id: string;
+          tema_id: string;
+          titulo: string;
+          itens: Json;
+          ordem: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          tema_id: string;
+          titulo: string;
+          itens?: Json;
+          ordem?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_tema_wiki_blocks"]["Insert"]>;
         Relationships: [];
       };
       system_parcelas: {
@@ -1306,6 +1415,9 @@ export type Database = {
           frente_slug: string | null;
           caso_pasta_nome: string | null;
           caso_pasta_drive_id: string | null;
+          projuris_codigo_processo: number | null;
+          projuris_numero_processo: string | null;
+          sigiloso: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1351,6 +1463,9 @@ export type Database = {
           frente_slug?: string | null;
           caso_pasta_nome?: string | null;
           caso_pasta_drive_id?: string | null;
+          projuris_codigo_processo?: number | null;
+          projuris_numero_processo?: string | null;
+          sigiloso?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1433,6 +1548,7 @@ export type Database = {
           organization_id: string;
           case_id: string;
           body: string;
+          scope: string;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1444,6 +1560,7 @@ export type Database = {
           organization_id: string;
           case_id: string;
           body: string;
+          scope?: string;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1460,6 +1577,100 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      system_case_judicial_processos: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          projuris_codigo_processo: number | null;
+          numero_processo: string | null;
+          tribunal: string | null;
+          orgao: string | null;
+          fase: string | null;
+          assunto: string | null;
+          raw: Json | null;
+          synced_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          projuris_codigo_processo?: number | null;
+          numero_processo?: string | null;
+          tribunal?: string | null;
+          orgao?: string | null;
+          fase?: string | null;
+          assunto?: string | null;
+          raw?: Json | null;
+          synced_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_judicial_processos"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_judicial_tasks: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          projuris_codigo_tarefa: string;
+          tipo_codigo: string | null;
+          tipo_nome: string | null;
+          responsavel_projuris_cod: string | null;
+          responsavel_nome: string | null;
+          situacao: string | null;
+          concluida: boolean;
+          prazo_previsto: string | null;
+          prazo_fatal: string | null;
+          raw: Json | null;
+          synced_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          projuris_codigo_tarefa: string;
+          tipo_codigo?: string | null;
+          tipo_nome?: string | null;
+          responsavel_projuris_cod?: string | null;
+          responsavel_nome?: string | null;
+          situacao?: string | null;
+          concluida?: boolean;
+          prazo_previsto?: string | null;
+          prazo_fatal?: string | null;
+          raw?: Json | null;
+          synced_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_judicial_tasks"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_sigilo_users: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          user_id: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          user_id: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_sigilo_users"]["Insert"]>;
+        Relationships: [];
       };
       system_client_notes: {
         Row: {
@@ -1783,6 +1994,10 @@ export type Database = {
         Row: Database["public"]["Tables"]["system_client_field_defs"]["Row"];
         Relationships: [];
       };
+      system_client_field_tema_links_active: {
+        Row: Database["public"]["Tables"]["system_client_field_tema_links"]["Row"];
+        Relationships: [];
+      };
       system_stage_checklist_defs_active: {
         Row: Database["public"]["Tables"]["system_stage_checklist_defs"]["Row"];
         Relationships: [];
@@ -1864,6 +2079,10 @@ export type Database = {
       };
       system_case_board_positions_active: {
         Row: Database["public"]["Tables"]["system_case_board_positions"]["Row"];
+        Relationships: [];
+      };
+      system_tema_wiki_blocks_active: {
+        Row: Database["public"]["Tables"]["system_tema_wiki_blocks"]["Row"];
         Relationships: [];
       };
       system_termo_snapshots_active: {

@@ -13,6 +13,7 @@ import {
   resyncClientDriveFolder,
   tornarCliente,
   updateClient,
+  updateClientCpf,
   updateClientCustomFields,
 } from "@/lib/clients-service";
 import { checkEmailDeliverability } from "@/lib/email-verify";
@@ -100,6 +101,18 @@ const updateInputSchema = z.object({
 export const updateClientFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateInputSchema.parse(data))
   .handler(async ({ data }) => handleWrite(() => updateClient(data.id, data.input)));
+
+// J2 — PREENCHER CPF/CNPJ (troca o marcador CL-XXXX por CPF real). Valida no
+// serviço (reusa isValidCpf/isValidCnpj), limpa cpf_pendente e trata o UNIQUE
+// parcial. Mesmo gate de cadastro (comercial/operacional edit) do updateClient.
+const fillCpfSchema = z.object({
+  id: z.string().uuid("ID inválido"),
+  cpf_cnpj: z.string().trim().min(1, "Informe o CPF/CNPJ"),
+});
+
+export const updateClientCpfFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => fillCpfSchema.parse(data))
+  .handler(async ({ data }) => handleWrite(() => updateClientCpf(data.id, data.cpf_cnpj)));
 
 // Campos personalizados do cliente (JSONB) — usado pelos campos de TEMA com
 // scope='cliente' (2026-07-29 #3). Merge por chave; null remove. Mesmo gate de

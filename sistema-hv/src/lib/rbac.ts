@@ -397,6 +397,8 @@ export const ROUTE_MODULE: Partial<Record<string, Module>> = {
   "/referencias": "sistema",
   "/permissoes": "sistema",
   "/configuracoes": "sistema",
+  // I1 (2026-08-05) — tela dedicada de campos personalizados (config do sistema).
+  "/configuracoes/campos-personalizados": "sistema",
 };
 
 /**

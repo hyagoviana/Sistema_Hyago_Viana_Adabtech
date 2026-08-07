@@ -336,7 +336,70 @@ export class ProjurisClient {
     }
     return (text ? JSON.parse(text) : undefined) as T;
   }
+
+  // ===========================================================================
+  // ⚠️  ESCRITA NO PROJURIS (write-back) — Story H3.
+  // ===========================================================================
+  // Este é o ÚNICO método de ESCRITA do client. Está ISOLADO de propósito: a
+  // regra do motor (sync-core) é ZERO writeback; só a rotina de writeback (H3),
+  // atrás do portão de aprovação (H2) e de um flag de confirmação humana
+  // explícito, pode chamá-lo. NÃO usar em fluxo de sincronização/leitura.
+  //
+  // Endpoints reais (minerados na A9, já usados pela Edge Function
+  // supabase/functions/projuris-sync/adapters/projuris-rest-adapter.ts):
+  //   PUT /v2/tarefa/adicionar-responsavel-em-lote   (add — tarefa sem resp.)
+  //   PUT /v2/tarefa/substituir-responsavel-em-lote  (replace — troca resp.)
+  //
+  // Idempotência/retomada e o dry-run ficam a cargo do chamador (writeback.ts);
+  // aqui só existe o transporte HTTP PUT autenticado.
+
+  /**
+   * PUT de ESCRITA numa rota relativa a /adv-service. GRAVA no ProJuris.
+   * SÓ deve ser chamado pela rotina de writeback (H3), nunca pelo sync.
+   */
+  async projurisPut<T = unknown>(path: string, body: unknown): Promise<T> {
+    const token = await this.ensureToken();
+    const url = `${this.baseUrl}/${path.replace(/^\/+/, "")}`;
+
+    const doFetch = (authValue: string) =>
+      fetch(url, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: authValue,
+        },
+        body: JSON.stringify(body ?? {}),
+      });
+
+    let res = await doFetch(this.useBearerPrefix ? `Bearer ${token}` : token);
+    if (res.status === 401 && !this.useBearerPrefix) {
+      this.useBearerPrefix = true;
+      res = await doFetch(`Bearer ${token}`);
+    }
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} em PUT ${path}: ${text.slice(0, 400)}`);
+    }
+    return (text ? JSON.parse(text) : undefined) as T;
+  }
 }
+
+/** Item de write-back (atribuição de responsável a uma tarefa). */
+export interface ProjurisWriteBackItem {
+  /** codigoTarefa no ProJuris. */
+  codigoTarefa: string;
+  /** codigoResponsavel destino (mapeado do executor do motor). */
+  codigoResponsavel: string;
+  /** Responsável anterior — presente => usa o endpoint de SUBSTITUIR. */
+  codigoResponsavelAnterior?: string;
+}
+
+/** Rotas de ESCRITA (write-back de responsável) — Story H3. */
+export const PROJURIS_WRITEBACK_ROUTES = {
+  addResponsible: "v2/tarefa/adicionar-responsavel-em-lote",
+  replaceResponsible: "v2/tarefa/substituir-responsavel-em-lote",
+} as const;
 
 /** Fábrica de conveniência a partir do ambiente. */
 export function createProjurisClientFromEnv(): ProjurisClient {

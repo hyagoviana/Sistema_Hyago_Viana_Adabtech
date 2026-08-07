@@ -10,6 +10,7 @@ import {
   inviteUserFn,
   setUserRoleFn,
   setUserStatusFn,
+  setUserDistributionFn,
   removeUserFn,
   updateUserProfileFn,
 } from "@/rpc/users";
@@ -80,6 +81,26 @@ export function useUpdateUserProfile() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["system-users"] });
       qc.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+}
+
+// Configura a distribuição (ProJuris) de um usuário: ID ProJuris, participa,
+// peso e elegibilidade a tarefas complexas (H5). Admin-only no servidor.
+export function useSetUserDistribution() {
+  const fn = useServerFn(setUserDistributionFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      id: string;
+      projuris_responsavel_id?: string | null;
+      participa?: boolean;
+      weight?: number | null;
+      eligible_complex?: boolean | null;
+    }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["system-users"] });
+      qc.invalidateQueries({ queryKey: ["executor-mappings"] });
     },
   });
 }

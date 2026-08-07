@@ -14,8 +14,10 @@ import { z } from "zod";
 
 import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
 import { runSync, ymd, type SyncSummary } from "@/lib/distribuicao/sync-core";
+import { syncTaskTypesCore, type SyncTaskTypesResult } from "@/lib/distribuicao/sync-task-types";
 
 export type { SyncSummary } from "@/lib/distribuicao/sync-core";
+export type { SyncTaskTypesResult } from "@/lib/distribuicao/sync-task-types";
 
 export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -45,3 +47,21 @@ export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
       throw err instanceof Error ? new Error(err.message) : new Error(String(err));
     }
   });
+
+// H6: Sincronizar TIPOS de tarefa do ProJuris (de-para por nome, so leitura no
+// ProJuris; escrita apenas dos codigos/descricoes no nosso banco). Idempotente.
+export const sincronizarTiposTarefaFn = createServerFn({ method: "POST" }).handler(
+  async (): Promise<SyncTaskTypesResult> => {
+    try {
+      await requireModule("controladoria", "edit");
+      return await syncTaskTypesCore();
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err instanceof Error ? new Error(err.message) : new Error(String(err));
+    }
+  },
+);

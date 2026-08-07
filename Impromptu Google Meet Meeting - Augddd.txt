@@ -1,0 +1,450 @@
+Impromptu Google Meet Meeting - August 05
+VIEW RECORDING - 58 mins (No highlights): 
+
+---
+
+0:00 - Dr. Thiago Correia
+  Um campo, né, aqui é um campo, né, igual a gente tá lá no nosso, qual é o edital, o ciclo, e qual é o município desse edital, o período desse município, aqui, qual é o período e qual é o vínculo.  Então isso aqui são dois campos que estão vinculados, aí eles aparecem juntos, mas na verdade são dois campos diferentes, né, é porque quando fica assim com uma linha só, eu posso escrever aqui essas duas informações, edital, tal, ciclo, tal.  Mas não são necessariamente a mesma informação, né, então eu tô pensando nisso ali para o Mais Médicos, mas essa alteração seria algo que serve para todos os temas.  Então aqui a gente construiu uma situação aqui nessa, isso aqui, que foi quando a gente pensou. dois campos. Isso, tipo, eu tenho um município que eu posso ter duas, dois períodos de atuação diferentes dentro desse mesmo município, então tá aqui.  Mas ao mesmo tempo eu posso ter uma situação que não encaixa aqui, que é esse... O tem um período em um município e outro período em outro município, então seria município tal, aí esse campo, por exemplo, eu faria município e aí eu crio um campo que é vinculado, que é período, aí o segundo campo é sempre vinculado no primeiro, né, assim, ele é menor na questão da hierarquia que você falou, né, ente desse aqui.
+  ACTION ITEM: Implement dependent fields (Município→Período) in Pipeline Operacional; enforce parent-first + max 3 levels - WATCH: https://fathom.video/calls/774444082?timestamp=70.9999
+
+1:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, acho que a gente pode fazer assim, ó, pra não atrapalhar o nosso processo, vai lá na Pipeline Operacional, acho que fica mais usual e mais respeitoso na hierarquia.  Quando você for em editar campos, você vai criar um novo campo e aí você vai colocar dependente, aí você marca uma caixinha e faz um novo campo dependente, que aí eu consigo colocar um é dependente do outro, entendeu?  Grupo pai e grupo filho. Aqui, quando eu for criar, tem um botão dependente no caso.
+
+1:56 - Dr. Thiago Correia
+  Isso. Aí você cria município... e período. Qual é o outro campo que ele é filho? exato. Que aí fica o pai e o filho.
+
+2:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aí se não, eu tô fazendo dois pais e querendo vincular os dois pais. Aí ele não entra dentro da hierarquia, entendeu?  Aí eu faria um pai e adicionaria um filho. Ia parecer normal pra vocês aqui, mas dentro da hierarquia eu ia saber que um anda com o outro, entendeu?
+
+2:25 - Dr. Thiago Correia
+  Ah, beleza. Acho que assim funciona bem. E pra esse aqui que a gente fez, foi uma alteração que a gente não tinha visto, mas foi da última reunião, esse aqui seria visualmente mais bonito se a gente tivesse...  Aqui foi quando criou, a gente selecionou que são três linhas, né? opções, isso. Isso. Só que pode ser que um deles fique em branco.  E eu testei, vi que até que o sistema ele faz esse reconhecimento, se for em branco, ele não perde, né?
+  ACTION ITEM: Add + button to multi-line fields; cap at 10 lines - WATCH: https://fathom.video/calls/774444082?timestamp=170.9999  Mas como existe a possibilidade desse campo ser uma situação de que... Nem todos vão ser preenchidos. Se a gente tivesse, ao invés de criei três, aqui aparece três, eu tivesse a opção do maisinho, sabe?  Só que limitado no número de linhas que a gente marcou lá na meta. Então, pô, eu marquei que para esse campo podem ter três linhas.  Uma pessoa pode adicionar dois mais. Tá, entendi. Pode ficar uma coisa que foge, né? Porque... Se você botar, tipo, aí fica dez espaços em branco ocupando um espaço vazio.  E lá, lá no principal, que aqui é o menor, né? Lá no principal, que é onde tem isso, tá, que é três.  Então, lá seria quantas podem ter, mas aqui teria o maisinho. Tá, entendi. Aí, até penso que possa ter uma situação de vocês, para fins de...  Thiago, mas pode ser que vocês coloquem sem linha, vai virar um negócio meio doido aqui. Pode ter uma limitação mesmo.  Eu acho que se for acima de cinco linhas, já tem algum tipo de problema. Então, pode ter uma limitação desse campo aí ser cinco ou dez, no máximo.  Não, não, assim, se for sim, para nós em si, não vai atrapalhar nada.
+
+4:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O que vai atrapalhar é para vocês visualmente, vai ficar 100 linhas uma abaixo da outra. Se você falar assim, não, Adavio, eu quero 100.  Já deixa essa opção aí, que esse campo que pode...
+
+4:12 - Dr. Thiago Correia
+  até 10. E nessa situação do campo filho, se puder vincular a meu máximo, esse é pai desse, que é pai desse, no máximo três.  Tá, de dependência, né? Isso, isso. Porque se eu crio um que é dependente do outro, aí pode... Então...
+
+4:32 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, aí assim, a única coisa que a gente tem que ver é que, por exemplo... Três no máximo do meu.  Quando eu tenho um grupo pai e um grupo filho, eu só posso preencher o filho se o pai tiver preenchido, ou não.
+  ACTION ITEM: Implement drag-and-drop reorder for list/menu items - WATCH: https://fathom.video/calls/774444082?timestamp=289.9999
+
+4:48 - Dr. Thiago Correia
+  Sim, exato. Tá, beleza. Isso, isso. Só pra eu...
+
+4:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aí eu boto uma regra, né? E aí tem essa limitação de que só pode ter três, porque senão...
+
+4:58 - Dr. Thiago Correia
+  Três filhos, tá. Dois filhos no caso, um pai e dois filhos e redução de bem é tem uma situação de que a gente tem como alterar a ordem isso aqui porque não tá podendo fazer de cima abaixo baixa assim cima abaixo cima abaixo não consigo umas setinhas umas setinhas ou arrastar e subir também dá legal pode ser de um por um como a gente vai mudar o menu eu acho que vocês já fizeram isso em etapas já etapas sim é nessa setinha aí de baixo e cima de onde vai para onde vai como a gente vai mudar o menu no outro menu a gente consegue deixar mais visual esse processo talvez arrastando como se fosse um kanban sabe você sobe para cima sobe para baixo vai mexendo a bolinha ali que ali na setinha querendo ou não você só vai de um em um né  Com a bolinha, você consegue sobrepor outro. É, se você achar que não complica demais... Não, não, não. Beleza. E eu pensei nessa questão do financeiro, e aí a gente já entra no ProUse também, mas no financeiro eu pensei nesse sentido.  Aqui, quando tem isso aqui de rastro financeiro, a gente está refletindo a mesma informação de que está lá. Então, igual a gente estava comentando ali, de que quando o cara estiver em mais de uma etapa, de mais de um Kanban, vai ficar aqui só essa informação de onde é que ele está.  Eu acho que isso aqui de rastro financeiro seria só mais uma informação aqui dentro, sabe? E aí, o que ficaria aqui seria, isso de forma geral, tá?  Não o financeiro em si, mas de forma geral. Ficaria aqui só uma informação de que se esse cara, ele está...  Ah. Em atraso, como se o sistema pegasse tudo isso aqui, está aqui, ele tem R$2,00 estão pendentes, ele pegaria essa informação que está pendente e só colocaria assim, pendente, R$2,00, pago, que ele também vai fazer essa identificação, não vai?  Vai. Pago, R$4,00, só isso. Mas isso dentro do financeiro? Dentro desse, porque lógico, aqui ele vai ficar, o rastro...  Da onde ele está, no cambando. Exato, então seria só... Mais um lá embaixo escrito, tipo assim... Eu acho que não precisa dessa forma aqui, porque o que acontece aqui é interessante, só que da forma que a está pensando aqui, daqui a pouco esse cara aqui tem 30 parcelas, e a gente não vai substituir isso aqui de uma forma que...  Porque o Conta Azul, por exemplo, deixe de existir o ERP, né? Não, é, não vai, não vai. Então, a gente tem mais detalhamento lá, aqui seria mais no sentido de ver, poxa, o cara tá devendo, quanto que ele tá devendo, e aí isso aqui que tá com o financeiro, aqui tá um espelhamento integral, né, dessa, do caso ali, eu acho que isso aqui teria que ser um submenu, onde a gente fala realmente do financeiro, porque o que é que precisava ser financeiro, quando a gente fala aqui de pipeline financeiro?  Aqui são só etapas, tarefas, mas dá pra tratar como etapas, até pra não complicar demais, mas assim, são etapas, só que a única informação que precisa realmente do financeiro é tudo que já existe em caso, já tá aqui, né, já vem de lá, tá aqui, e a situação de que isso aqui tá como...  Eu tenho aqui o menu financeiro do caso, que quando eu clico, ele me abre esse detalhamento que vocês já fizeram aqui, como uma página própria, dentro do caso, essa subpágina, esse submenu, em que eu tenho realmente as coisas do financeiro, que é isso aqui que vocês já fizeram, tenho lá a opção de eu poder gerar os...  Novas faturas. Isso, de poder gerar nova fatura, de poder gerar não sei o que e tal. É que sairia do caso.
+  ACTION ITEM: Implement Financeiro submenu: summary, Conta Azul/Asaas, comments, access; remove rastro financeiro - WATCH: https://fathom.video/calls/774444082?timestamp=578.9999  Isso, eu sairia do caso. E aí eu não preciso transportar tudo que está do caso para esse submenu lá, porque isso aqui está dentro, é só eu voltar uma página aqui.  Sim, sim, tá, entendi. Volta uma página para o caso. No caso, na realidade, é só tirar o raço financeiro do comum e criar uma área só para ele.
+
+9:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí aqui ficaria o quê?
+
+9:57 - Dr. Thiago Correia
+  Ficaria uma situação de informação de financeiro.
+
+10:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  So we're just about Fathom, Adavio Tittoni, Dr. adaviotittoni, Dr.
+
+10:19 - Dr. Thiago Correia
+  Thiago Correia, and adaviotittoni. Quanto que ele tem a pagar e quanto que ele está pendente em atraso. Quanto que ele está para pagar para frente.  Só essa informação, em atraso, vencido e pendente, que é a pagar. Esse outro detalhamento de cada parcela, de não sei o que, tudo que foi pago, está dentro do menu do financeiro puxado lá do Conta Azul.  É isso, só quem tem acesso ao financeiro que visualiza. Isso, que visualiza.
+
+10:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí, essa sincronização, por exemplo, que nós fazemos hoje com a Conta Azul e a ASAS, que é para poder...  Criar o cliente lá dentro, fica no rastro financeiro também, dentro da parte financeira.
+
+11:04 - Dr. Thiago Correia
+  Fica dentro da parte financeira, tudo lá. Mas na linha do tempo, sai coisas do financeiro ou não?
+
+11:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque hoje sai.
+
+11:19 - Dr. Thiago Correia
+  Aqui, você está dizendo? É. Eu acho que não, porque nesse submenu só teria o que é do financeiro. Tudo que a gente fizesse nesse submenu é próprio.  A única coisa que precisava nesse submenu, além das informações detalhadas do financeiro e de informações sobre gerar, gerar faturas, etapas próprias, opções próprias dessa situação, seria um campo de comentários que eu poderia fazer, que o pessoal poderia fazer.  E aí não tem por que ser dentro do próprio caso em si, porque se a pessoa quiser entender as informações e comentários do caso, ela abre aqui no caso.  O que vai estar lá no financeiro são coisas próprias do financeiro. As pessoas que estão aqui, inclusive, não vão ver, porque isso geraria uma situação de, se o caso está aqui no financeiro, como é refletido e tudo igual, como um caso só, se o cara escrever que é algo do financeiro, a pessoa que está lá no operacional, que não tem acesso ao financeiro, em teoria, haveria.  Sim.
+
+12:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, no caso, o financeiro é um módulo à parte, dentro do caso.
+
+12:21 - Dr. Thiago Correia
+  É um módulo, dentro do caso, né, que são coisas próprias do financeiro, ali, tudo. Aí... Tá bom.
+
+12:30 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Dá pra gente... E o que teria aqui para as pessoas seria só essa informação, ó.
+
+12:34 - Dr. Thiago Correia
+  Tá... Tá devendo, não tá devendo. É, seria tipo assim, atualizações, né? É, dá até pra ter isso aqui, assim, de rastro financeiro.  Rastro financeiro, no caso. Mostrando a etapa, essa informação aqui, ó, sim. Essa informação está aqui, Rastro financeiro. Qual é a etapa?  Isso aqui pode. Mas isso aqui, pra baixo, em teoria, se a pessoa não tiver acesso, nem aparece. Sim. É, acho que é isso.  Porque, assim, praticamente ele já não aparece, entendeu?
+
+12:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que, por exemplo... Porque... O aparece para quem é funcionário, esse rastro financeiro só aparece para você, administrador, mas ele não está num bloco separado, ele está num bloco unificado, você quer que separe esse bloco.
+
+13:10 - Dr. Thiago Correia
+  É, porque esse rastro financeiro vinha para cá, porque quando a gente trata de rastro operacional, eu acredito que seria, dá para deixar como rastro, dá para saber, está lá no tal sistema, não o que, não tem problema não, porque dentro dessa parte aqui do financeiro, não, isso aqui seria isso aí mesmo, eu acho inclusive que a conciliação vai ficar mais fácil, e tal, estou tentando fechar lá como é que eu faço no Conta Azul, mas vai ficar mais fácil para não ficar com dois sistemas ao mesmo tempo igual está aqui.  Dentro disso, eu já tinha pensado em outra situação que é para o Proiuris. E do Proiuris, eu vou ver quais são as suas dúvidas, mas eu imagine, eu fiquei mexendo, sabe, é incrível, como se eu mexesse dois meses atrás, antes da gente começar isso aqui, pelo próprio conhecimento que eu tinha que a vai fazendo, eu vou aprendendo, eu olhava...  Eu tinha feito de forma... Pô, que negócio ruim, não tem nada que eu preciso, aí hoje entendendo um pouquinho mais, eu falo assim, nossa, isso aqui se eu fizer assim e usar ali, dá para fazer desse jeito, eu acho que o Conta Azul, por exemplo, tem boas coisas lá, que se a gente for pegar tudo que tem de bom no Conta Azul para trazer para cá, é um trabalho enorme, não tem o a gente tirar de lá, então o que vai ter aqui nesse menu financeiro que eu estou citando, parte das coisas vai ser só a informação que está lá, que ele já calcula os juros, o atraso da pessoa, tudo isso, ele já calcula lá, a gente não precisa, que o nosso sistema faça isso, então deixa lá, a só puxa, do, do, do, da controladoria, a gente só vai trazer e enviar, trazer e enviar, trazer e enviar, é, porque aí fica mais fácil do que a gente ter no nosso sistema tudo, mas eu vou fechar lá como é que funcionaria lá e depois a gente faz uma para ver do Conta Azul, do, do, do Proiuris, da controladoria, processo, eu acredito que seria uma informe, um submenu, Obrigado.  de judicial, aqui dentro do caso, em que a gente só espelharia o que está no ProIuris.
+
+15:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí tem o motor de distribuição, né? No caso, você fala dentro do caso, quando a gente for...
+
+15:16 - Dr. Thiago Correia
+  O que for entrando do caso também ia sendo adicionado dentro do caso.
+
+15:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas tudo bem, essa parte ainda não está implementada, que a gente ainda não fez. Beleza, o que a gente conseguiu fazer?  Conseguimos fazer a integração do ProIuris.
+
+15:29 - Dr. Thiago Correia
+  Só que estou com algumas dúvidas em relação a que eu não sei muito bem como ele manipula.
+
+15:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, vai ali em distribuição, por favor.
+
+15:39 - Dr. Thiago Correia
+  Ele é distribuição. Beleza. Então, aí em distribuição, a gente já começou a pegar os dados vindo de lá, certo?
+
+15:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ainda não está daquele jeito que a gente tinha conversado. Por quê? Porque eu nunca tinha conseguido puxar a informação, né?  Eu consegui puxar a informação hoje de tarde. Que aí eu vou mudar aquela parte que a gente falou, a lista vai vir...  Quais são, para poder aprovar, para poder mandar e tudo mais, certo? Mas a gente já conseguiu puxar. Então, quando a gente puxa, ele está trazendo ali o estilo que é para o motor, porque lá no motor tem motor geral, complexo ou absoluto, no tipo de fluxo, que é como ele traz em relação a isso.  Então, aí ele trouxe a tarefa, trouxe o processo, que a gente conseguiu puxar agora tarde só esse negócio, por isso que ainda não está 100% ajustado.  Mas aqui na lista, a gente trouxe a tarefa, o processo e o executor, que aí em executores, clica em executores, que ainda não está trazendo o nome, mas está em executores, entendeu?
+
+16:50 - Dr. Thiago Correia
+  É porque eu estou modificando. Ela é em executores.
+
+16:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, em executores, a gente tem o ID do executor e quem é a pessoa. E o peso que ele tem dentro disso, se ele vai para complexa ou não complexa, quais as ações que ele toma dentro disso, só que o que acontece, quando eu rodei, acredito eu que o motor distribuiu, por isso que eu quero ver lá no ProJuris com você, porque ali em histórico, vai lá em histórico, ele distribuiu algumas coisas, então eu quero dar uma olhada como é que ele fez, já que eu tenho uma tarefa ali, para a gente conseguir visualizar.
+
+17:36 - Dr. Thiago Correia
+  Vamos ver então como é que a gente escolpa esse negócio aqui, no caso você acha que ele gerou tarefas de verdade aqui?
+
+17:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, eu acho que sim, então eu preciso dar uma olhadinha lá, lá na lista, a gente tem aí o processo, o executor e a tarefa, tá vendo?  Eu vou mudar isso para Londres. vi dessa forma não, pode ser coisa de API, mas eu nunca vi. É tudo coisa de API, é porque na API não existe nome, né?  Só existe número. Como é que eu identifico qual que é essa tarefa que foi esse número?
+
+18:08 - Dr. Thiago Correia
+  Então, aí a gente vai olhar pelo nome da tarefa, ó, volta lá.
+
+18:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É pra você ver que a vida do programador não é muito simples.
+
+18:14 - Dr. Thiago Correia
+  Em tipo de tarefas, a gente tem a numeração da tarefa e tem qual é a tarefa, tá vendo? Apareceu.  Ah, porque ali é a tarefa. Ali, a tarefa é aquela. Aí, lá a gente tem o tipo de tarefa na lista.
+
+18:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E o processo é aquele lá. Então, a gente tem o processo.
+
+18:38 - Dr. Thiago Correia
+  Da tarefa. Pode clicar nela.
+
+18:44 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não puxou, não.
+
+18:45 - Dr. Thiago Correia
+  É, a tarefa é a tarefa específica que foi criada. Vai pelo processo, pelo número do processo.
+
+18:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A pessoa que ele encaminhou... Mas aqui ele veio pra qual executor, a gente sabe?
+
+18:56 - Dr. Thiago Correia
+  DDD.
+
+18:57 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vamos descendo um pouquinho pra gente ver. Se a souber para qual executor foi, eu consigo achar na agenda, entendeu?  DDD 294BB, é porque a gente acabou de conseguir fazer isso, a gente conseguiu fazer agora tarde.
+
+19:11 - Dr. Thiago Correia
+  2294BB, isso aqui, né? Isso, esse é o executor.
+
+19:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí lá nos executores a gente consegue encontrar quem é ele. Ixi.
+
+19:20 - Dr. Thiago Correia
+  Ele não trouxe quem é a pessoa. É porque esse número aqui é outro, não bate também com os números.  É 294, então vamos ver ali na lista. É por isso que eu quero identificar, entendeu?
+
+19:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  que que aconteceu. Vamos pegar pelo processo, pega esse processo 25, 60, 70, vamos tentar olhar lá pelo número do processo, a gente vê se a gente encontra alguma manipulação diferente.  O que a gente conseguiu assim?
+
+19:46 - Dr. Thiago Correia
+  Cara, porque esse número aqui não é número do sistema, eu acho. É, eu acho que ele não vai existir aqui também.  É porque parece que ele deu os números aleatórios. Então pode ser que
+
+20:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele disse que gerou alguma coisa, sabe?
+
+20:04 - Dr. Thiago Correia
+  É, disse que gerou e talvez ele não tenha gerado.
+
+20:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora, por exemplo, os executores estão corretos, não está? Aqui, código ProUris.
+
+20:11 - Dr. Thiago Correia
+  Aí são os códigos das tarefas. Aqui já está na própria tarefa. Porque o que eu fiz?
+
+20:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu pedi para ele ir lá no ProUris e baixar todo mundo, baixar todos os executores, todos os indicadores. Eu acho que ele rodou como simulador, pô.
+
+20:33 - Dr. Thiago Correia
+  Pode ter sido, então. Rodou como simulação, pelo que está apresentando, eu acho.
+
+20:39 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vamos ver. Vai ali em relatórios. Volta um pouquinho. Simulador. Clica no simulador para a gente ver alguma coisa. Já que está aqui o simulador.
+
+20:56 - Dr. Thiago Correia
+  Ah.
+
+21:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Comparação por tarefa. Ali são os motores e a parte real dentro desse processo. Carga do motor e a parte real, são os indicadores.  Vai ali nos indicadores, é porque tem o momento que mostra onde a pessoa foi passada. Só que como eu não tenho acesso, aí é isso que eu estou visualizando para ver se eu consigo encontrar.  É porque no Projuris você vai encontrar de um jeito que não é a numeração. Vai ali em executores, aí a gente consegue ver aqui, carga por executor, tá vendo?  Então esse executor, D741, a gente vai descobrir quem é ele com base nos executores. Clica ali nas executores. E aí está no tipo de tarefa?  Não vai não, é outro número também. Deixa eu pegar aqui, deixa fazer aqui para eu conseguir encontrar. Executores.
+
+22:20 - Dr. Thiago Correia
+  Eu acho que ele tinha me dado outro número. Se tem um número aqui, talvez ajude. Eu acho que ele só rodou uma simulação.
+
+22:38 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas é porque ele puxou as informações de hoje. Olha, porque ele está me falando aqui que gerou uma para mim, né?
+
+22:45 - Dr. Thiago Correia
+  Não, aí é o seu peso, que aí é a parte do executor em si.
+
+22:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aqui ó, executor. Aqui ó, cheio. É porque está pelo banco de dados. Essa numeração que você está vendo é a numeração do banco de dados.
+
+23:04 - Dr. Thiago Correia
+  Deixa eu ver aqui.
+
+23:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu vou clicar aqui no executor e eu vou encontrar aqui no banco. Espera aí.
+
+23:13 - Dr. Thiago Correia
+  Bom, minha agenda é mais tranquila, mas eu estou rodando aqui para gerar nada para mim não, porque eu tenho compreensão de dados.
+
+23:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vou fazer uma conexão com o Git, que aí eu vou puxar aqui. Vou puxar aqui do controle. Aqui, Distribuição, calendar, pedidos, leads, clientes, active...  Batlogs, que foi puxado, distribuição, resultados, task ID, peraí, vou pegar aqui os executores, é que ele tá puxando o executor com base no banco de dados, na mineração do banco, aí eu consigo visualizar aqui.  Se tu conseguir algum dado, pelo menos de quem foi ou para qual dia foi, eu consigo ver se a gente identifica aqui, mas eu acho que não gerou não.  Os executores, pelo número do ID que ele tá pegando, qual é aquele ID? DDD294BB, sabe que a gente viu primeiro lá?
+
+25:01 - Dr. Thiago Correia
+  Foi na tarefa, na lista. DDD-294, não é isso? DDD-294BB. É Thaís. Tá, então vamos lá na agenda do Thaís lá.  Você consegue identificar pelo banco de dados qual é o tipo de tarefa? Qual é a tarefa que foi atribuída?
+
+25:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  DDD-29, base dia 7, ela é absoluto. O ponto final foi 2040, ela distribuiu nesse dia. O processo ID é 2586-0795.
+
+25:50 - Dr. Thiago Correia
+  Ele gerou no dia 8 do 7, foi isso? Não, 5 do 8, não é?
+
+25:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Hoje. Pra que data que ele gerou a tarefa?
+
+26:00 - Dr. Thiago Correia
+  Data base 7 do 8. Essa data base é a data de previsão, né? Seria 7 do 8. Na agenda dela, dia 7 do 8, só tem aqui uma tarefa, que é essa aqui da...  Qual é o ID da tarefa? Consegue ver? Aqui eu não mostro esse negócio do ID, não. Ele tem um identificador diferente dentro do sistema.  040041478. A task ID aqui que cai pra mim é 55129271. É, mas esse número aqui, ele tem o quê?  Tem 8 dígitos? Esse do sistema aqui vai ter 4, 7, são 8 mesmo aqui no nosso? Parefa... 1, 2, 3, 4, 5, 6, 7, 8.  É, 8. É, os do ProIuris, eles têm 6 dígitos só. Numéricos, né? Tem essa tagzinha aqui que tem todos lá.
+
+26:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele aplicou o limite, dia 5. A data base é 7 do 8, o final da data é 7 do 8, o executor é a Thaís, não tem nenhum alerta.
+
+27:10 - Dr. Thiago Correia
+  A data base dele vai corresponder à data de previsão, se eu não me engano, a data base e data de conclusão prevista.  É, essa daí mesmo.
+
+27:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que aí a data base, ele trouxe dia 7 do 8, vem no dia 7 do 8. É que só tem esse aqui, ela só tem uma tarefa do 7 do 8, e é uma tarefa que ela criou manualmente.  E hoje no dia 5 ela fez todos também, não foi?
+
+27:44 - Dr. Thiago Correia
+  Aí é dia 29, acho que é no de baixo. Mas só para me entender, eu acho que isso aqui não bateria, Adavio, porque em teoria o sistema  Antes de gerar, ele tem que ir para uma tela de confirmação em que a gente diz qual a tarefa que vai ser gerada.  Exatamente, porque eu só estava querendo ver como é que tinha batido aí, entendeu?
+
+28:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É porque eu não consigo ver como é que está batendo lá. Por isso que eu ia te pedir, tipo assim, como eu tenho acesso ali, que você me passou, se eu posso pelo menos olhar um caso ali para eu ver como é que está caindo lá, porque eu preciso identificar como é que cai e como é que retorna, entendeu?  Pela sua conta eu posso olhar isso? Pelaquele caso que você me deu?
+
+28:34 - Dr. Thiago Correia
+  Pode acessar o que vocês quiserem aí.
+
+28:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aquele caso que você me passou, você pode me mostrar como é que ele funciona? O caso...
+
+28:42 - Dr. Thiago Correia
+  Todos os dados que eu te passei de tudo quanto é sistema aí, pode acessar, fica à vontade aí, mexe aí, jogador aí.  O caso que eu gerei lá para a gente... Não, esse não. Pelo menos você me mandou uma numeração bem grande aqui, 07-33-583-07.  E Esse número é o número do processo judicial. Ele vai cair aqui em processo judicial. Então, você vai aqui em processos, digitou, achou qual é o processo judicial ali que a gente está falando, aquele número que eu te mandei é o número do processo judicial em si.  Dentro do Proiuris, esses processos, eles estão aqui sobre essa nomenclatura que o Proiuris chama de, esse identificador aqui, é o do próprio sistema, né?  É esse aqui, esse é o identificador que o Proiuris fala, esse processo é aquele número ali que eu te mandei.
+
+29:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É isso aqui.
+
+29:54 - Dr. Thiago Correia
+  O número do processo também é pesquisável, né? Também, também, também.
+
+29:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas eu acho que...
+
+30:00 - Dr. Thiago Correia
+  Para fins do que está fazendo aí, o ideal seria trabalhar com esse identificador aqui, porque esse mesmo número pode ser, sei lá, veio um outro grau de justiça, o sistema falou que é alguma outra coisa, eu acho que o ideal seria trabalhar com esse identificador, porque na minha cabeça isso aqui é o que o ProUris usa para saber que esse é esse e esse aqui, tudo isso aqui é baseado nisso aqui.  E onde é que fica a parte de tarefa? Tarefa, eu posso adicionar por dentro do processo, eu posso adicionar aqui em atividades, mas aqui dentro do processo, deixa eu adicionar também tarefas, aqui dentro do processo tem um campo também de tarefas, aqui, eu posso adicionar tarefas aqui.  Tá bom. Aí... E onde é aquele campo que você visualiza as tarefas, aquele calendário?
+
+30:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, aqui.
+
+30:59 - Dr. Thiago Correia
+  É. É. na página principal.
+
+31:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque como eu só consegui puxar hoje, vou entrar, vou puxar esses dados e ajustar esses dados, aí amanhã eu mostro ao Thiago que a gente já está conseguindo integrar e o que a gente está conseguindo puxar, só que até amanhã com certeza eu vou conseguir fazer o motor 100%, por conta do que eu só consegui puxar os dados do ProJuris agora.  Aí se você quiser ver de outras pessoas, você vai ter que vir aqui em escritório. Mas a princípio agora de início não, eu vou puxar primeiro o pessoal para ficar testando o seu ali, agora de início, quando rodar bem aí eu jogo para as outras pessoas, porque primeiro eu vou fazer aquela parte de puxar, validar, é porque como ele traz só número, eu preciso trazer o número, buscar o nome e vincular o nome, entendeu?  Ou o nome ou o processo.
+
+31:56 - Dr. Thiago Correia
+  Toda tarefa vai ter esse identificador aqui, que é o identificador do sistema. identificador. do Stephano. É esse aqui. Acho que essa seria a melhor forma de buscar qual é a tarefa que a gente tá falando, né?  Isso.
+
+32:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O que mais?
+
+32:10 - Dr. Thiago Correia
+  Você também consegue ver tarefas aqui, mas acho que dentro do próprio negócio do processo, quer ver aquela página do processo que a gente tava falando?  Opa, página desse processo aqui, Jesus. Acho que você botou... Ah, tá. É porque ele vai cair na página da justiça.  Quando eu vou aqui dentro da página do processo... Aqui não abriu. Por que, Jesus? Aqui. Quando eu... Puta que pariu, velho.  Quanta coisa pra abrir. É botão, sabe? Botão pra caralho. Tudo isso pra cair aqui. Dentro da página do processo, eu vejo todas as tarefas aqui também, né?  Nesses menuzinhos que estão vinculados a ele. Dentro dessa página aqui, você gera. Pode adicionar pra quem quiser e tudo.  É... Mais ou menos por aí, aqui onde ele vai puxar o tipo. Essas configurações de tipo e essas coisas, você vai ver aqui, o palastro gerais.  Que é o tipo de tarefa, né? Isso. Aí aqui vai ter todas as categorias, tudo que o sistema usa de categoria vai estar aqui dentro.  Quando eu falei lá, por exemplo, do menuzinho de campo, é tipo isso aqui.
+
+33:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na verdade, vai ter tipo um lugar de configuração de campos ali.
+
+33:29 - Dr. Thiago Correia
+  Aí quando eu clico lá dentro daquele campo que eu estou falando, aí eu vou ter várias opções dele.
+
+33:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso aqui, lógico, dentro do que é o nosso, ele também. Aí o que eu tinha pensado do nosso mesmo sistema aqui?
+
+33:44 - Dr. Thiago Correia
+  A gente ter um, dentro do caso aqui, por quê? Eu fiquei pensando nisso, em que sentido? Para a gente gerar aqui o motor, e aí talvez isso seja uma limitação da gente trazer para amanhã, ou algo assim, inclusive, não ficou marcado.  So we were just talking Fathom, Adavio Tittoni, Dr. about Fathom, Adavio Tittoni, Dr. Thiago Correia and we talking about Adavio Tittoni, just talking about Fathom, Adavio Tittoni, Dr.  Correia, about Fathom. So were talking about questions, more of the presentation, at least in the operation, that we've been to a lot.  When I'm going to show him, it's also what I thought, that we'll be able to him in a way more usual.  I'm going to with him about the beginning of the week, so when he's sitting, he's going to sit and say, Thank you much.  Isso, e o pessoal começa a usar também, né, que eu acho que a intenção dele é isso, né, o pessoal começa a usar mais.  Posso começar com ele já pra gente deixar pra segunda-feira, por exemplo. Pode ser.
+
+35:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, que talvez eu acho que seja bom pra nós aqui, se der pra você, claro, na sexta-feira, a gente fazer mais um pente finozinho ali.
+
+35:18 - Dr. Thiago Correia
+  Dá, assim, tô só mexendo no sistema, bicho, eu nem advogado sou mais. Daqui a pouco vai tomar o nosso lugar, cara, de desenvolvedor aí.  Não, esse negócio do Conta Azul, bicho, eu tô lá pesquisando, igual um maluco lá, como é que eu corrijo lá as coisas, e aí pensando em outros B.O.  aqui que eu tenho que resolver também.
+
+35:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, mas é bom, a mentalidade de desenvolvedor vai ser bom pro caso.
+
+35:41 - Dr. Thiago Correia
+  Planilha passando raiva, sabe, você começa a mexer nas coisas, fala, não, deixa eu fazer isso aqui e já voltar ali.  Mas, bora lá. Isso aqui, a gente tava onde? Tava aqui dentro do motor. É, dentro do motor. Pra gente ver essa questão do motor, tem que ter um campo, por exemplo, um local...  de informações, em que a gente consegue identificar se o caso é complexo, qual é o tema do caso, aquelas variáveis que tem que entrar, né?
+
+36:07 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim, essa daqui, porque tá em inglês aqui, mas é absoluto, complexo e general, é o tipo de caso.
+
+36:14 - Dr. Thiago Correia
+  Essa é uma variável que entra, né? Se aquele caso... Não, aqui não é nem o... Aí é da lista, a lista, né?  É a lista de distribuição, se é a lista complexa, se é a lista geral ou se é a lista do É, disso aqui eu queria comentar pra você, que eu acho que isso aqui tem que ser uma coisa só, mas antes da gente chegar nisso, tem as variáveis que entram, que são o quê?  Qual é o tipo de tarefa? Certo. Qual é o... Tipo de caso? É, o tipo de caso, qual é o tipo de tarefa, de qual tema ela é, de qual, se isso é complexo ou que há complexidade nível 1.  Ou é geral, né? É, geral.
+
+37:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O zero, Se é prioridade zero, um ou dois, que é urgência, zero, um ou dois, que é, na verdade, normal, prioritário e urgente, isso.
+
+37:19 - Dr. Thiago Correia
+  Que é justamente essa parte aqui dos pontos aqui, tá vendo?
+
+37:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Que é a carga por executor.
+
+37:23 - Dr. Thiago Correia
+  E o, isso, aí ele vai, depois de se identificar a data, fazer, quais são as datas, né, de se a data é para 15 dias, para 30 dias, para 10 dias, ele tem essas variáveis que são vinculadas à tarefa e agenda e tem essas que são vinculadas ao processo.  Quando a gente fala nessas entradas que são ao processo e às tarefas, no ProIuris hoje, nós não temos todas essas informações.  que eu te mandei aquela que tinha lá, que informação existe atualmente. Então, eu visualizo que tanta gente pode construir já o motor pensando.  Dele puxar tudo isso aqui do Proiuris, se o campo estiver ok, como a gente já pode pensar de uma forma que nós vamos pegar os casos judiciais que estão aqui, que vai ser os que vão chegar à intimação, e já ter esses casos no submenuzinho aqui, que espere essas informações do Proiuris.  Mas não melhor dentro do caso? Dentro do caso, né? É, porque assim, não dá para pegar e deixar tudo que for judicial dentro dessa situação, porque aqui é o caso, o caso vai ter as coisas administrativas e as coisas judiciais, todos os campos, tudo isso que a gente está construindo até agora, ele serve para tudo, para todos os temas, todas as etapas, de todas as situações, mas esse mesmo caso que está aqui, que é DGM, ele tem as etapas administrativas, que são o workflow que está aqui.  Operacional, esse rastro. Pode ter o rastro processual, judicial, por exemplo, judicial? Pode, a gente vai criar um cambã a mais e definir esse rastro aqui, eliminado, indeferida, sentenciado, recurso, a gente pode definir e já está construído dessa forma também, né, mas teve intimação de não sei o que, isso não é algo do caso, porque quando a gente, sem entender, quando a gente abre aqui esse processo, quando a gente abre aqui, quando você abre o processo, o judicial no Proígures aqui, ele vai te mostrar muita informação, porque tem um monte de asneira na justiça, a outra parte apresentou um documento que era de um processo...  É uma movimentação nova no processo. Então ele vai ter isso aqui, que são os andamentos... Puta que pariu, abriu a lista de atividade.  Qual é aquela página do processo que a gente abriu? Acho que é aí.
+
+40:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Clicou aí para poder visualizar ele. Visão completa do processo.
+
+40:22 - Dr. Thiago Correia
+  Até perto da estrutura que a gente faz. Sistema, casos, processo, que aqui seria... Tá aqui. Tudo quanto é tarefa, só que foi criada do judicial.  Aqui ele mostra as últimas, mas tem várias outras. Tudo que é andamento. Aqui ele puxou os últimos andamentos, mas isso tudo aqui é andamento.  Só desse... Tá baixado, né? Provavelmente. Não tá mostrando mais o que tá baixado, mas... Esse aqui tá marcado ali só para os filtros específicos, né?  É, mas assim... Está aqui, só as últimas movimentações, tem várias, isso aqui é tudo baboseiro, não significa nada isso aqui, as movimentações não significam nada, as atividades só daquele processo, então se dentro dessa tela aqui de casa o nosso, a gente puxar tudo isso para cá, vai virar uma zona, então eu acho que...
+
+41:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu até vou botar aí, cara, para que quando ele bata num limite, ele fique só rolando, para não ficar aquele negócio gigantesco, como é aí, está vendo que ali é um modal com uma rolagem?
+
+41:36 - Dr. Thiago Correia
+  Não, fica bom dessa forma, para evitar algo assim, eu acho que seria, igual a gente estava tratando o financeiro só como um submenu aqui, Seria um submenu mesmo, assim...
+  ACTION ITEM: Implement Judicial submenu: ProJuris mirror, rastro, tribunal/processo, sigiloso; add sigiloso field - WATCH: https://fathom.video/calls/774444082?timestamp=2502.9999  Para júris. Isso, que a gente clica e abre aqui... Ou, no caso, judicial, né, porque aqui está tudo dentro...  É o judicial daquele caso, vinculado àquele caso, então a gente clica aqui e abre uma tela que só espelha informações que já existem no Proiuris, que já existam aqui, então ele vai aqui puxar, a gente tem aqui nesse processo campo personalizado tal, vamos supor, a gente tem aqui nesse processo, no nosso sistema, tá, deixar aqui primeiro, no nosso sistema, imagina que isso aqui não tá na página do caso, tá dentro do menu judicial que tá nesse caso, fica aqui um rastrozinho judicial, um botão, né?
+
+42:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  vai ser um novo, que aí vai cair numa pipeline que seria da controladoria, por exemplo, que o cara administrativo não tem acesso.  Não, pra ter, dá pra ter, não tem problema não, tá? Dá pra ter, que aí...
+
+43:00 - Dr. Thiago Correia
+  Quando a gente cai aqui nesse submenu, nesse menu que é igual vai ter o do financeiro, mas dá para fazer do jeito que você falou, de não ter acesso a acessar esse menu, né, que seria o menu judicial que é vinculado à controladoria, mas seria vinculado, dá para ser, mas de forma geral eu acredito que todos vão ter, mas pode ter que ter algum processo sigiloso, a gente coloca algum tipo de limitação assim, mas aí caiu aqui, caiu aqui, né.  Dá até para fazer isso, Matheus, já pode construir dessa forma. Para a questão aqui desse menu judicial que a gente está falando, todos têm visualização de forma geral, só não vai ter quando tiver a opção sigiloso marcado, e aí esse processo sigiloso, ele só tem tido clicar quem tem autorização, aí a gente, dentro desse judicial, opção de visualização só existe para quem tem essa, os usuários que estão indicados.  Então aí, no caso, vai ser no contrato, certo? Então, vamos Então, Vamos Vamos Obrigado.
+
+44:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  No caso, quer dizer, quando eu criar o caso ali, por exemplo, em editar caso, aí eu vou dizer caso sigiloso, não sigiloso.  Sim.
+
+44:10 - Dr. Thiago Correia
+  É que não existe isso hoje, né? Aí eu vou implementar. É, aí só aparece para determinada pessoa. Tá bom, só para quem tem aquela determinada administrativa.  Os usuários que a gente marcou, nem precisa ser no campo do usuário, aqui vinculado ao registro desse processo. Tá.  Acredito que isso. Aí a gente caiu aqui, tem aqui, vai ter, pô, do financeiro. Beleza. Vai para o menu financeiro.  Quando eu clico aqui em menu judicial, cliquei em menu judicial, e aí ele pode ser da mesma forma que do financeiro.  Eu sei que existe lá, porque vai ter um rastro que mostra quanto o cara está devendo, de que que é e tal, não sei o quê.  Também vai ter a informaçãozinha, o quadrinho aqui do judicial, em que mostra, por exemplo, qual é o tribunal e qual é o número do processo.  isso. É número do processo e a etapa do judicial.
+
+45:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O judicial, no caso, também terá um Kanban, você acha, ou não há necessidade? Acho que não precisa de Kanban.
+
+45:14 - Dr. Thiago Correia
+  Se for alguma situação que a gente precisa, eu imagino que lá no Kanban do tema, a gente abre um Kanban novo, por isso que o sistema está ficando bem legal, avançou muito desse título, a gente cria um Kanban novo dentro do caso, dentro do Kanban, e coloca lá o fio.  Judicial, por exemplo. Judicial, sim ou não. Então, já morreu, foi o Kanban.
+
+45:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, acho que dessa forma funciona bem.
+
+45:39 - Dr. Thiago Correia
+  E aí, quando eu clico, abri lá o menu que é do judicial. Só do judicial.
+
+45:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí vai ter lá todas as tarefas que foram daquele caso, para quem foi enviado as tarefas, onde é que se encontra, se terminou ou não terminou a tarefa.  Isso aí vai ser o espelhamento do projúris.
+
+45:55 - Dr. Thiago Correia
+  Tudo isso puxando do projúris. O que fica do nosso? É até uma dúvida minha. Igual hoje nós temos informações, se esse caso fosse complexo, estava nas informações do caso que estava aqui em marcadores, aqui em marcadores, marcador individual.  Se fosse processo coletivo, seria coletivo, que uma variável que o motor usa. Se fosse complexo, estaria aqui o marcador complexo.  Certo. Para fins do nosso sistema de API de puxar essas informações. Faz diferença se esse registro é em marcador ou se eu crio um campo personalizado onde isso é preenchido?  Não, eu só preciso saber se vai ser em marcador ou se vai ser em um campo personalizado.
+
+46:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque eu vou dizer para ele, busca, encontra o campo. e ver o que está preenchido, entendeu? Aí trabalha dentro desse processo.  Não faz diferença para mim de onde está vindo. O que faz diferença é, na verdade, assim, não faz diferença em qual campo ele vem.  O que faz diferença é aonde eu encontro ele, entendeu?
+
+47:17 - Dr. Thiago Correia
+  O que eu tinha imaginado de que pode ter alguma diferença de dificultar, porque a gente tem que tentar conceitar, no sentido de que aqui eu vou ter individual e coletivo, né?  Se eu tiver como campo, eu posso adicionar como opção e é mais fechado para o sistema achar mais fácil, né?  Entendi.
+
+47:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, mas eu acho que não muda muito não, porque quando eu pego a informação, normalmente ele pega a informação da página inteira.  O que muda mais é para vocês no sentido de inserção, mas para mim não tem muita diferença, não. Porque quando a gente pega, a pega uma coisa que se chama payload, né?  Aí eu pego tudo que vem da página. Ah, tá. Aí você puxa tudo que existe. Aí tem tipo assim, marcador, dois pontos, aí abre...  Um JSON, né, que a gente chama, que são vários itens dentro do marcador, aí se tiver mais de um, ele pega mais de um item, não problema.  Entendi, entendi, entendi.
+
+48:08 - Dr. Thiago Correia
+  Então, gente aqui, é, porque aí ficaria aqui uma página em que, ao invés de ser o marcador escondido, que hoje aqui, por exemplo, isso aqui não aparece, porque o sistema aqui deles é fechado, né?  Para eles, essa não uma informação importante, para a gente é. Então, no nosso sistema, teria um campozinho que está lá, complexo, porque já está preenchido ali, só refletiria, só refletiria.
+
+48:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, o que eu vou precisar fazer agora, né, é, eu vou pegar hoje e amanhã ali, vou estudar e tentar manipular, aí na sexta-feira a gente tenta fazer o Macau, eu e você, para a gente ver se está na ideia, e aí a gente mostra para o Iago, que aí a gente já tenta implementar tudo de uma vez só.
+  ACTION ITEM: Compile and send to Adavio list of fields for elaborando, rastros, Judicial - WATCH: https://fathom.video/calls/774444082?timestamp=2929.9999  Vou focar bastante no ProJuris e volto o Matheus para ir terminando esses outros, essas partes mais de UX.
+
+49:00 - Dr. Thiago Correia
+  Eu vou montar uma lista sobre quais campos apareceriam no elaborando, nos rastros, nessa página judicial aqui, até para que a gente vai chegar e falar, esse campo não precisa, então eu vou pensar quais campos vêm para cá, baseado no que também a gente tem de informação aqui, acho ajuda.  Enquanto isso, vou fazendo o motor, vou trazendo o motor. Eu espero você chegar à página e aí eu vou montando.  Só para a ir trabalhando em duas mãos. Eu pensei nisso aqui porque, ao invés, e aí é o que eu acho que poderia ajudar, ao invés do motor de distribuição, quando for baixar essas movimentações para fazer essa identificação, tem que pegar tudo isso que está no Proiuris, Achar onde é que está aquela variável que ele precisa...  isso... .. E ... só vai ter que puxar as atualizações. Na verdade, acho que ele nem vai puxar a variável de fora.  Por quê? O processo que isso é vinculado vai estar ali no caso judicial, dentro do nosso próprio sistema, qual é o processo.  Se esse processo é complexo, urgente, individual, coletivo, tudo isso vai estar dentro do nosso sistema para encontrar essa informação.  Ele não vai precisar buscar tanta coisa fora, eu tinha imaginado nesse sentido. E até já para a gente ajustar, eu acho que isso aqui igual a gente está fazendo aqui, tipo de tarefa.  Aqui puxou tudo que tem lá do ProIures. Eu acho que a gente pode pensar nesse tipo de tarefa, nesse tema aqui, que é onde a gente coloca quem é o responsável.  Obrigatório, esse tipo de coisa da tarefa, como um menu de configuração de opções do sistema, também geral aqui. E o motor não precisa, a cada vez que for rodar, a gente ter toda essa seleção aqui de informações.  Isso aqui está ali configurado. A configuração. Isso.
+
+51:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  No caso aí, ficou mostrando, jogar isso lá na configuração e só mostrar o que é realmente necessário para a controladoria, porque ela não vai ficar fazendo essa configuração sempre.
+
+51:36 - Dr. Thiago Correia
+  Isso, porque aqui hoje, como é que funciona? Na minha cabeça, tem a variável lá no motor que para calcular para qual data vai, ele vai puxar qual é a data base, a data que eu estou gerando isso, né, ele vai calcular qual é a data prevista, a data que essa tarefa estaria na agenda da pessoa, depois que ele calcula, o dia que ele coloca de verdade na agenda da pessoa.  Esse dia aqui é a data prevista. E ele tem a data máxima, a data fatal dessa tarefa. Isso vem dessas informações aqui, que estão aqui, que é tipo de tarefa.  Ele vem disso aqui, deixa eu puxar um excelente judicial, ele vai puxar isso aqui, prazo previsto e prazo fatal.  Hoje da forma que está construída, quando o nosso motor vai rodar, ele não tem essa informação interna, então ele vai ter que todas as vezes, quando ele baixar essa informação que você falou do Proiuris, achar isso lá no tipo de tarefa.  Então acho que a gente só teria aqui um tipo de tarefa, um tipo de tarefa, um menu de tarefa, em que essas mesmas opções que existem aqui dentro do Proiuris, refletem no novo sistema.
+
+52:57 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E nem precisa ser tudo, só algumas dessas...
+
+53:00 - Dr. Thiago Correia
+  Então, isso aqui seria importante, isso aqui seria importante, porque é importante para a gente e para o sistema também.  Agora, aqui dentro, nós teríamos a opção de adicionar mais opções, que seriam aquela, pô, essa tarefa, se for de tal tema, é exclusivo do Adavio.  Essa tarefa, se for de qualquer tema, é exclusivo do Thiago. Esse tema, não importa qual tarefa, é do Adavio.  Esse aqui, aí a gente teria esse menu, onde a gente configura, não tipos de tarefas só para motor de distribuição, mas tipos de tarefa.  Refletindo alguns campos que vêm daqui, sim, para facilitar, mas o que Acho que a gente vai ter que pegar o ID de lá para poder vincular no ProJuris, mas eu vou pensar em como é que eu manipulo isso.
+
+53:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É que se você criar um tipo de tarefa no nosso sistema e não criar no ProJuris, eu não consigo vincular o ID de uma na outra, entendeu?  É, criaria lá também, eu acho.
+
+54:00 - Dr. Thiago Correia
+  Acho que assim, quando a gente criar aqui, criou lá.
+
+54:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, então, aí é isso que eu vou ver se tem porta de entrada para eu fazer isso, entendeu? Ou se vai ter que criar lá e depois criar aqui, a gente vai ter que visualizar.
+
+54:09 - Dr. Thiago Correia
+  E aí tem que vir aqui e terminar as configurações que não são do sistema deles, são só do sistema.  Não, é nosso, que é pontos, a complexidade, né, tudo mais dentro desse processo. Exato. Dá para eu ir ajustando.
+  ACTION ITEM: Implement Distribution: map IDs→names; add approve/reject/edit; show rule; start w/ Thiago; roll out - WATCH: https://fathom.video/calls/774444082?timestamp=3262.9999  Aí, de forma geral, motor de distribuição seria só isso, que é aqui. É a lista?
+
+54:32 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso.
+
+54:33 - Dr. Thiago Correia
+  Aí, essa lista, é... Vai ter que deixar aquele de aprovar e não aprovar.
+
+54:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É que eu não tinha conseguido puxar ainda a informação. É, aí seria, seria...
+
+54:43 - Dr. Thiago Correia
+  Eu fiquei, tipo, se vou... É, mas agora já está a API pronta, né? Porque eu fiquei de passar aquela planilha, eu baixei a planilha, mas aí já tinha gerada a API, eu nem te mandei.  Eu tenho aquela lista de atividade gerada lá, se precisar para teste. Mas, enfim, seria... Aqui é a lista antes de distribuir.  Então, quando está aqui Absolut, Complex ou General, eu não acho que são situações diferentes. Isso aqui vai ser a regra que o motor vai considerar, mas...  Não são filtragens. É dentro dele, entre o autorizei gerar uma tal tarefa para tal processo, ele vai rodar o motor, identificar se tem uma regra específica, se é a regra geral, que tem isso interno.  Aí ele vai identificar para quando isso vai ser colocado e para quem vai ser colocado. Aí, isso tudo dentro dele ainda.  A minha próxima tela é só, coloquei essas tarefas para as pessoas. Sim. Ele pode me indicar qual foi a regra utilizada para fim de conferência, mas tudo isso dentro dele.  Então, essa lista aqui, na verdade, está mais como se fosse a lista de entrega final, e ela é a última etapa.  Isso, ela é a última etapa, exato. É por causa que eu não tinha conseguido ainda preparar.
+
+55:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Que essa daí é aquela que vai aprovar, não aprovar, ele vai indicar quem é a pessoa, mas eu vou aprovar, não aprovar, ou...  ou editar a pessoa que está recebendo aquela determinada tarefa.
+  ACTION ITEM: Add ProJuris ID to Users/Permissions; add distribution participation flag - WATCH: https://fathom.video/calls/774444082?timestamp=3365.9999
+
+56:03 - Dr. Thiago Correia
+  Aí aqui nessa parte, Adavio... Deixa eu ir no banheiro, só um minutinho que eu estou... Tá bom, vai lá.  Na verdade, assim, eu tenho outra reunião... Tá. Só para... Um minutinho só, perdão. Nessa parte de executor, eu imagino que também como a gente está tratando de menu de configuração de tema, de tarefa e seria um menu de configuração de usuários, que são as pessoas internas.  Esse daí já tem, só que ele fica ali em permissões.
+
+56:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pronto. Aí dentro desse menu de usuários, eu teria...
+
+56:36 - Dr. Thiago Correia
+  Colocar o ID do ProJuris. Isso. E eu teria essa opção de regras aqui, vinculada a esse usuário lá. Eu poderia indicar, né?  Participa da distribuição, elegir... E qual é o ID dele e do ProJuris, que a gente vai precisar... Isso.
+
+56:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí o sistema vai puxar de lá, nesse sentido. Aí fica tudo meio que assim. Isso tudo depois vai servir para outras coisas que a vai fazer na frente.
+
+56:57 - Dr. Thiago Correia
+  Mas, para isso aqui, já ajuda a gente a focar. Obrigado.
+
+57:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Fechado, eu vou pegar tudo isso, vou fazer agora durante esses dias e na sexta-feira eu já marco com você, provavelmente amanhã eu vou falar alguma coisa com você do ProJuris ali para a gente ajustar, mas aí a gente vai ajustando e eu já te mando direitinho.
+
+57:15 - Dr. Thiago Correia
+  Beleza, então Adavio, fechou, vai lá no banheiro, vou até outro minuto. Beleza, também vou aqui, vou rápido.
+
+57:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí você me avisa do...

@@ -20,6 +20,7 @@
 import { AuthError } from "@/lib/supabase/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { ProjurisClient } from "@/lib/projuris/client";
+import { buildThemeMap, type ThemeMapRow, normalizeTemaKey } from "@/lib/projuris/normalizer";
 import { distributeBatch } from "@/lib/distribuicao/engine/motor";
 import { buildBatchInput } from "@/lib/distribuicao/engine/transformer";
 import type {
@@ -87,24 +88,61 @@ export interface SyncSummary {
 // ---------------------------------------------------------------------------
 // Nucleo (server-only): roda o motor e grava resultados. NAO exporta segredos.
 // ---------------------------------------------------------------------------
-export async function runSync(distributionDate: string, windowDays: number): Promise<SyncSummary> {
-  const supabase = getSupabaseAdmin();
+// Client ProJuris a partir da config do BANCO (H11) — reusado por runSync e
+// pela sincronizacao de tipos (H6). Precedencia banco → env POR CAMPO; a config
+// e a fonte da verdade, o env e fallback. NUNCA loga a config crua nem segredos.
+//
+// Mapa credencial↔coluna (auth_type='oauth2_password'):
+//   baseUrl      ← projuris_base_url   || PROJURIS_BASE_URL
+//   username     ← projuris_username   || PROJURIS_USERNAME
+//   password     ← projuris_password   || PROJURIS_PASSWORD
+//   clientId     ← PROJURIS_API_CLIENTE_CODIGO   (env — segredo de app, A9)
+//   clientSecret ← PROJURIS_CLIENT_SECRET        (env — segredo de app, A9)
+//   authUrl      ← PROJURIS_AUTH_URL             (env; default apigw)
+//   dominio      ← PROJURIS_DOMINIO              (env)
+// As colunas projuris_token/projuris_api_key existem p/ outros auth_types
+// (bearer/apikey) mas não são exercidas no fluxo oauth2_password de hoje.
+export async function buildProjurisClientFromConfig(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+): Promise<ProjurisClient> {
+  const { data: cfg } = await supabase
+    .from("system_distribution_config")
+    .select(
+      "projuris_base_url, projuris_auth_type, projuris_username, projuris_password, projuris_token, projuris_api_key",
+    )
+    .eq("organization_id", ORG_ID)
+    .maybeSingle();
 
-  // ---- Credenciais ProJuris (client_id = api_cliente_codigo COMPLETO) ----
+  // Helper: banco (se não-vazio) → env (se não-vazio) → undefined.
+  const pick = (dbVal: unknown, envVal: string | undefined): string | undefined => {
+    const db = typeof dbVal === "string" ? dbVal.trim() : "";
+    if (db) return db;
+    const env = (envVal ?? "").trim();
+    return env || undefined;
+  };
+
+  // client_id/secret ficam no env por decisão A9 (segredo de app).
   const clientId = process.env.PROJURIS_API_CLIENTE_CODIGO ?? "";
   const clientSecret = process.env.PROJURIS_CLIENT_SECRET ?? "";
   if (!clientId || !clientSecret) {
     throw new AuthError("PROJURIS_API_CLIENTE_CODIGO / PROJURIS_CLIENT_SECRET ausentes.", 500);
   }
-  const client = new ProjurisClient({
+
+  return new ProjurisClient({
     clientId,
     clientSecret,
-    username: process.env.PROJURIS_USERNAME || undefined,
+    username: pick(cfg?.projuris_username, process.env.PROJURIS_USERNAME),
     dominio: process.env.PROJURIS_DOMINIO || undefined,
-    password: process.env.PROJURIS_PASSWORD || undefined,
+    password: pick(cfg?.projuris_password, process.env.PROJURIS_PASSWORD),
     authUrl: process.env.PROJURIS_AUTH_URL || undefined,
-    baseUrl: process.env.PROJURIS_BASE_URL || undefined,
+    baseUrl: pick(cfg?.projuris_base_url, process.env.PROJURIS_BASE_URL),
   });
+}
+
+export async function runSync(distributionDate: string, windowDays: number): Promise<SyncSummary> {
+  const supabase = getSupabaseAdmin();
+
+  const client = await buildProjurisClientFromConfig(supabase);
 
   // ---- 1) Auth OAuth2 (grant password; tenta variantes de username) ----
   await client.authenticateTryingVariants();
@@ -127,11 +165,21 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     ),
   ];
 
+  // H1: de-para de PROCESSO — guarda o numeroProcesso (CNJ humano) por
+  // codigoProcesso (chave interna) para exibir NOME na lista, sem novo GET.
+  const numeroProcessoByCode = new Map<string, string>();
+  for (const x of intimacoes) {
+    const cod = typeof x.codigoProcesso === "number" ? String(x.codigoProcesso) : null;
+    const num = typeof x.numeroProcesso === "string" ? x.numeroProcesso : null;
+    if (cod && num && !numeroProcessoByCode.has(cod)) numeroProcessoByCode.set(cod, num);
+  }
+
   // ---- 3) Por processo: assunto (tema) + tarefas abertas (multi-modulo) ----
   const rawTasks: Array<{
     task_id: string;
     process_id: string;
     tipo_codigo: string;
+    tipo_nome: string | null; // H1: nome ProJuris do tipo (nomeTarefaTipo), p/ exibição
     prazo_fatal: string | null;
     prazo_interno: string | null;
   }> = [];
@@ -162,6 +210,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
           task_id: String(t.codigoTarefa ?? `${pid}-${tipoCodigo}`),
           process_id: pid,
           tipo_codigo: tipoCodigo,
+          tipo_nome: typeof t.nomeTarefaTipo === "string" ? t.nomeTarefaTipo : null,
           prazo_fatal: msToIso(t.dataLimite),
           prazo_interno: msToIso(t.dataConclusaoPrevista ?? t.dataLimite),
         });
@@ -176,7 +225,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     supabase
       .from("system_task_type_mapping")
       .select(
-        "projuris_tipo_codigo, motor_task_type_id, points, complexity_level, temporal_level, exclusive_executor_id",
+        "projuris_tipo_codigo, motor_task_type_id, points, complexity_level, temporal_level, exclusive_executor_id, prazo_previsto_dias, prazo_fatal_dias",
       )
       .eq("organization_id", ORG_ID)
       .eq("active", true),
@@ -208,6 +257,9 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     complexity_level: number;
     temporal_level: number;
     exclusive_executor_id: string | null;
+    // H6: defaults internos de prazo (fallback quando a tarefa ProJuris nao traz).
+    prazo_previsto_dias: number | null;
+    prazo_fatal_dias: number | null;
   };
   const ttMap = new Map<string, TaskTypeRow>();
   for (const r of (ttRes.data ?? []) as TaskTypeRow[]) ttMap.set(r.projuris_tipo_codigo, r);
@@ -219,8 +271,11 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     temporal_level: number;
     exclusive_executor_id: string | null;
   };
-  const thMap = new Map<string, ThemeRow>();
-  for (const r of (thRes.data ?? []) as ThemeRow[]) thMap.set(r.projuris_tema_codigo, r);
+  // H4: de-para de TEMA por NOME NORMALIZADO (acento/caixa/espaco). Antes o
+  // casamento era exato contra o assunto cru (thMap.get(assunto)), o que
+  // derrubava qualquer variacao de grafia. resolveTemaId() casa o assunto/
+  // marcador/campo contra este mapa normalizado.
+  const thMap: Map<string, ThemeMapRow> = buildThemeMap((thRes.data ?? []) as ThemeRow[]);
 
   type ExecRow = {
     executor_id: string;
@@ -292,6 +347,15 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   }
 
   // ---- 5) Transformar em Task[]/Process[] ----
+  // H4: alertas gerados FORA do engine (na fase de montagem), acumulados aqui
+  // para entrar no resumo/batch_log em vez de sumir com `continue` silencioso.
+  const preBatchAlerts: Record<string, number> = {};
+  const bump = (code: string) => {
+    preBatchAlerts[code] = (preBatchAlerts[code] ?? 0) + 1;
+  };
+  // Diagnostico (AC-6): por processo, o assunto cru e o tema resolvido/motivo.
+  const temaDiag = new Map<string, { assunto: string; resolvido: string | null }>();
+
   const tasks: Task[] = [];
   const processMap = new Map<string, Process>();
   let order = 0;
@@ -299,8 +363,20 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     const tt = ttMap.get(rt.tipo_codigo);
     if (!tt) continue; // tipo nao mapeado
     const assunto = processAssunto.get(rt.process_id) ?? "";
-    const th = thMap.get(assunto);
-    if (!th) continue; // tema nao mapeado
+    // H4: casamento por NOME NORMALIZADO (acento/caixa/espaco) contra o de-para,
+    // no lugar do get exato do assunto cru. O assunto do PROCESSO e a fonte
+    // canonica confirmada no achado A9 (populada hoje).
+    const th = thMap.get(normalizeTemaKey(assunto));
+    if (!temaDiag.has(rt.process_id)) {
+      temaDiag.set(rt.process_id, { assunto, resolvido: th ? th.motor_theme_id : null });
+    }
+    if (!th) {
+      // H4: tema nao mapeado -> ALERTA (nao descarte silencioso). A intimacao
+      // NAO entra na distribuicao (sem tema nao ha multiplier), mas e
+      // CONTABILIZADA no resumo/batch_log para o owner auditar a cobertura.
+      bump("ALT-TEMA-001");
+      continue;
+    }
 
     if (!processMap.has(rt.process_id)) {
       processMap.set(rt.process_id, {
@@ -327,8 +403,22 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       theme_temporal_level: th.temporal_level as 0 | 1 | 2,
       theme_exclusive_executor_id: th.exclusive_executor_id ?? null,
       task_type_exclusive_executor_id: tt.exclusive_executor_id ?? null,
-      fatal_date: rt.prazo_fatal ?? "9999-12-31",
-      internal_limit_date: rt.prazo_interno ?? rt.prazo_fatal ?? "9999-12-31",
+      // H6: prazo = REAL da tarefa (ProJuris) > default interno do tipo
+      // (base+N dias sobre a data de distribuicao) > sentinela. A data real
+      // continua autoritativa (sem regressao); o default so entra quando a
+      // tarefa nao trouxe o prazo.
+      fatal_date:
+        rt.prazo_fatal ??
+        (tt.prazo_fatal_dias != null ? addDaysIso(distributionDate, tt.prazo_fatal_dias) : null) ??
+        "9999-12-31",
+      internal_limit_date:
+        rt.prazo_interno ??
+        rt.prazo_fatal ??
+        (tt.prazo_previsto_dias != null
+          ? addDaysIso(distributionDate, tt.prazo_previsto_dias)
+          : null) ??
+        (tt.prazo_fatal_dias != null ? addDaysIso(distributionDate, tt.prazo_fatal_dias) : null) ??
+        "9999-12-31",
       input_order: ++order,
     });
   }
@@ -375,29 +465,48 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     );
   }
 
+  // H1: de-para de TIPO por task_id (código + nome ProJuris da tarefa escolhida).
+  const tipoByTaskId = new Map<string, { codigo: string; nome: string | null }>();
+  for (const rt of rawTasks) {
+    if (!tipoByTaskId.has(rt.task_id)) {
+      tipoByTaskId.set(rt.task_id, { codigo: rt.tipo_codigo, nome: rt.tipo_nome });
+    }
+  }
+
   // So as DISTRIBUIDAS (nao-bloqueadas) vao pra results — executor_id e NOT NULL
   // e FK -> system_users; bloqueadas nao tem executor. As bloqueadas ficam
   // refletidas no batch_log (failed) e nos alertas.
+  //
+  // H1: gravamos os dados de EXIBIÇÃO no raw_data (JSONB) NO INSERT (a tabela é
+  // append-only via trigger — não dá p/ preencher por UPDATE depois). A lista lê
+  // numeroProcesso/tipo daqui sem novo GET no ProJuris.
   const rows = output.task_results
     .filter((r) => !r.blocked && r.executor_id)
-    .map((r) => ({
-      organization_id: ORG_ID,
-      task_id: r.task_id,
-      process_id: r.process_id,
-      distribution_date: r.distribution_date,
-      final_points: r.final_points,
-      flow: r.flow,
-      base_date: r.base_date,
-      applicable_limit: r.applicable_limit,
-      preferred_date: r.preferred_date,
-      final_date: r.final_date,
-      executor_id: r.executor_id,
-      preference_applied: r.preference_applied,
-      alerts: r.alerts,
-      writeback_pending: true, // calculado; SEM escrita no ProJuris ainda
-      blocked: false,
-      raw_data: null,
-    }));
+    .map((r) => {
+      const tipo = tipoByTaskId.get(r.task_id);
+      return {
+        organization_id: ORG_ID,
+        task_id: r.task_id,
+        process_id: r.process_id,
+        distribution_date: r.distribution_date,
+        final_points: r.final_points,
+        flow: r.flow,
+        base_date: r.base_date,
+        applicable_limit: r.applicable_limit,
+        preferred_date: r.preferred_date,
+        final_date: r.final_date,
+        executor_id: r.executor_id,
+        preference_applied: r.preference_applied,
+        alerts: r.alerts,
+        writeback_pending: true, // calculado; SEM escrita no ProJuris ainda
+        blocked: false,
+        raw_data: {
+          numero_processo: numeroProcessoByCode.get(r.process_id) ?? null,
+          tipo_codigo: tipo?.codigo ?? null,
+          tipo_nome: tipo?.nome ?? null,
+        },
+      };
+    });
 
   for (let i = 0; i < rows.length; i += 100) {
     const chunk = rows.slice(i, i + 100);
@@ -407,7 +516,12 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
 
   // batch_log (is_simulation=true — sob demanda, sem writeback). Insere direto
   // como 'completed' (a coluna is_simulation marca a origem manual).
-  const alertsGenerated = Object.values(output.alerts_summary).reduce((s, n) => s + n, 0);
+  // H4: alertas do engine + alertas pre-batch (ex.: ALT-TEMA-001) num unico mapa.
+  const mergedAlertsSummary: Record<string, number> = { ...output.alerts_summary };
+  for (const [code, count] of Object.entries(preBatchAlerts)) {
+    mergedAlertsSummary[code] = (mergedAlertsSummary[code] ?? 0) + count;
+  }
+  const alertsGenerated = Object.values(mergedAlertsSummary).reduce((s, n) => s + n, 0);
   const { error: logErr } = await supabase.from("system_distribution_batch_logs").insert({
     organization_id: ORG_ID,
     batch_date: distributionDate,
@@ -424,6 +538,13 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       intimacoes: intimacoes.length,
       processos: chosen.length,
       tarefas_mapeadas: tasks.length,
+      // H4: quantos processos ficaram sem tema mapeado (auditoria de cobertura).
+      temas_nao_mapeados: preBatchAlerts["ALT-TEMA-001"] ?? 0,
+      // H4 (AC-6): amostra de diagnostico do de-para de tema (assunto cru ->
+      // motor_theme_id resolvido ou null) — cap 50 p/ nao inflar o metrics.
+      tema_diag: [...temaDiag.entries()]
+        .slice(0, 50)
+        .map(([process_id, d]) => ({ process_id, assunto: d.assunto, resolvido: d.resolvido })),
       source: "on_demand_sync",
     },
     is_simulation: true,
@@ -448,7 +569,9 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     }))
     .sort((a, b) => b.points - a.points);
 
-  const alerts = Object.entries(output.alerts_summary)
+  // H4: resumo inclui os alertas pre-batch (ALT-TEMA-001) — antes o tema nao
+  // mapeado sumia sem rastro; agora aparece contabilizado no resumo do front.
+  const alerts = Object.entries(mergedAlertsSummary)
     .map(([code, count]) => ({ code, count }))
     .sort((a, b) => b.count - a.count);
 

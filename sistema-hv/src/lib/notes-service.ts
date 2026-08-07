@@ -24,6 +24,9 @@ export type Note = {
   id: string;
   organization_id: string;
   body: string;
+  // F1 — balde da nota do CASO: 'geral' (ficha comum) | 'financeiro' (submenu).
+  // Notas de CLIENTE não têm scope (sempre indefinido).
+  scope?: string;
   created_by: string | null;
   created_by_name?: string | null;
   created_at: string;
@@ -33,6 +36,10 @@ export type Note = {
   case_id?: string;
   client_id?: string;
 };
+
+// F1 — escopos válidos das notas do CASO. 'geral' = bloco de Notas da ficha
+// comum; 'financeiro' = comentários dentro do submenu financeiro (gate próprio).
+export type CaseNoteScope = "geral" | "financeiro";
 
 function requireUser(userId: string) {
   if (!userId) throw new NoteServiceError("Ação exige usuário autenticado", 401);
@@ -62,12 +69,16 @@ async function attachAuthorNames(rows: Note[]): Promise<Note[]> {
 // ----------------------------------------------------------------------------
 // LISTAGEM (via view _active — só não-excluídos), mais recentes primeiro.
 // ----------------------------------------------------------------------------
-export async function listCaseNotes(caseId: string): Promise<Note[]> {
+export async function listCaseNotes(
+  caseId: string,
+  scope: CaseNoteScope = "geral",
+): Promise<Note[]> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_case_notes_active")
     .select("*")
     .eq("case_id", caseId)
+    .eq("scope", scope)
     .order("created_at", { ascending: false });
   if (error) throw new NoteServiceError(error.message, 500);
   return attachAuthorNames((data ?? []) as Note[]);
@@ -87,7 +98,12 @@ export async function listClientNotes(clientId: string): Promise<Note[]> {
 // ----------------------------------------------------------------------------
 // CRIAÇÃO — grava created_by (ator não-null) + organization_id da entidade.
 // ----------------------------------------------------------------------------
-export async function createCaseNote(caseId: string, body: string, userId: string) {
+export async function createCaseNote(
+  caseId: string,
+  body: string,
+  userId: string,
+  scope: CaseNoteScope = "geral",
+) {
   requireUser(userId);
   const cleanBody = requireBody(body);
   const sb = getSupabaseAdmin();
@@ -106,6 +122,7 @@ export async function createCaseNote(caseId: string, body: string, userId: strin
       organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
       case_id: caseId,
       body: cleanBody,
+      scope,
       created_by: userId,
     })
     .select()
@@ -114,19 +131,23 @@ export async function createCaseNote(caseId: string, body: string, userId: strin
 
   // A6 (2026-08-03) — a linha do tempo registra TODA a movimentação do caso,
   // inclusive a criação de nota. Best-effort: nunca derruba a criação da nota.
-  await sb
-    .from("system_case_events")
-    .insert({
-      case_id: caseId,
-      organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
-      action: "note_added",
-      diff: { note_id: data.id, note_preview: cleanBody.slice(0, 140) },
-      triggered_by: userId,
-    })
-    .then(
-      () => {},
-      () => {},
-    );
+  // F1 — comentários do FINANCEIRO NÃO geram evento na timeline: eles são
+  // exclusivos do submenu financeiro e não devem vazar para a ficha comum.
+  if (scope !== "financeiro") {
+    await sb
+      .from("system_case_events")
+      .insert({
+        case_id: caseId,
+        organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
+        action: "note_added",
+        diff: { note_id: data.id, note_preview: cleanBody.slice(0, 140) },
+        triggered_by: userId,
+      })
+      .then(
+        () => {},
+        () => {},
+      );
+  }
 
   return data;
 }

@@ -1,5 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp, LayoutGrid, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Columns3,
+  LayoutGrid,
+  Search,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 
@@ -11,6 +19,8 @@ import {
 } from "@/components/cases/CaseFiltersPanel";
 import { InlineCanonicalCell } from "@/components/cases/InlineCanonicalCell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useBoards, useCaseIdsByBoard, useExclusiveCaseIds } from "@/hooks/useBoards";
@@ -126,6 +136,11 @@ function CasosLista() {
   // devolve por created_at desc).
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  // E1 (2026-08-05) — menu "Colunas": colunas fixas ocultadas manualmente pelo
+  // usuário (por SortKey). Independente do auto-ocultar da coluna Tema. O usuário
+  // também pode recolher o painel de filtros por aqui (menos ruído na Lista).
+  const [hiddenCols, setHiddenCols] = useState<Set<SortKey>>(() => new Set());
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   const { data, isLoading, isError, error } = useCasesList();
   const { data: temas } = useTemas();
@@ -350,12 +365,19 @@ function CasosLista() {
     setPage(0);
   }
 
+  // E1/E2 (2026-08-05) — quando a Lista está restrita a UM único tema
+  // (effectiveTemaId), a coluna "Tema" é redundante com "Tipo de Caso" (repete o
+  // mesmo rótulo em toda linha). Auto-oculta nesse caso; em "Todos os temas" ela
+  // volta. O usuário ainda pode ocultar/mostrar colunas fixas pelo menu "Colunas".
+  const temaColRedundant = !!effectiveTemaId;
+
   // Cabeçalhos densos (Excel). `valor` só entra sob gate financeiro (AC-4).
-  const columns: { key: SortKey; label: string }[] = [
+  // Ordem E2: Tema ANTES de Tipo de Caso (mais legível na visão "Todos os temas").
+  const allColumns: { key: SortKey; label: string }[] = [
     { key: "case_code", label: "Código" },
     { key: "client_name", label: "Cliente" },
-    { key: "case_type", label: "Tipo de Caso" },
     { key: "tema", label: "Tema" },
+    { key: "case_type", label: "Tipo de Caso" },
     { key: "frente_slug", label: "Frente" },
     { key: "macrostatus_op", label: "Operacional" },
     { key: "macrostatus_fin", label: "Financeiro" },
@@ -364,7 +386,104 @@ function CasosLista() {
     ...(podeVerValor ? [{ key: "valor_centavos" as SortKey, label: "Valor" }] : []),
     { key: "created_at", label: "Criado em" },
   ];
+  // E1 — colunas EFETIVAS: tira a Tema redundante e as ocultadas no menu.
+  const isColHidden = (key: SortKey) => (key === "tema" && temaColRedundant) || hiddenCols.has(key);
+  const columns = allColumns.filter((col) => !isColHidden(col.key));
   const colCount = columns.length + dynamicDefs.length;
+
+  // E1 — colunas que o usuário PODE ligar/desligar no menu (todas menos a Tema
+  // quando ela já é auto-ocultada por redundância, para não dar a impressão de
+  // que dá pra trazê-la de volta enquanto está num único tema).
+  const toggleableColumns = allColumns.filter((col) => !(col.key === "tema" && temaColRedundant));
+
+  // E1 — renderiza a célula do corpo de uma coluna fixa. Fica como closure (usa
+  // resolveTipo/temaName/fmt*) para que o corpo itere por `columns` respeitando a
+  // ordem (Tema→Tipo) e a visibilidade sem duplicar a árvore de <td>.
+  function CaseCell({ col, row: c }: { col: SortKey; row: CaseRow }) {
+    switch (col) {
+      case "case_code":
+        return (
+          <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground whitespace-nowrap">
+            <Link
+              to="/casos/$id"
+              params={{ id: c.id }}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-[var(--gold-700)]"
+            >
+              {c.case_code}
+            </Link>
+          </td>
+        );
+      case "client_name":
+        return (
+          <td className="px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-[var(--navy)] shrink-0"
+                style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}
+              >
+                {c.client_name[0]?.toUpperCase() ?? "?"}
+              </div>
+              <span className="text-[var(--navy)] font-medium">{c.client_name}</span>
+            </div>
+          </td>
+        );
+      case "tema":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {c.tema_id ? (temaName.get(c.tema_id) ?? "—") : "—"}
+          </td>
+        );
+      case "case_type":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {resolveTipo(c)}
+          </td>
+        );
+      case "frente_slug":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {c.frente_slug ?? "—"}
+          </td>
+        );
+      case "macrostatus_op":
+        return (
+          <td className="px-4 py-3 text-[12px] whitespace-nowrap">
+            {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
+          </td>
+        );
+      case "macrostatus_fin":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {MACRO_FIN_LABELS[c.macrostatus_fin as MacroFin] ?? c.macrostatus_fin}
+          </td>
+        );
+      case "responsavel":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {c.responsavel ?? "—"}
+          </td>
+        );
+      case "municipio":
+        return (
+          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+            {c.municipio ?? "—"}
+          </td>
+        );
+      case "valor_centavos":
+        return (
+          <td className="px-4 py-3 font-mono text-[var(--navy)] whitespace-nowrap">
+            {fmtBRL(c.valor_centavos)}
+          </td>
+        );
+      case "created_at":
+        return (
+          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+            {fmtDate(c.created_at)}
+          </td>
+        );
+    }
+  }
 
   return (
     <div className="page-container">
@@ -480,19 +599,74 @@ function CasosLista() {
             ))}
           </select>
         )}
+
+        {/* E1 (2026-08-05) — menu "Colunas": ocultar/mostrar colunas fixas e
+            recolher o painel de filtros. Reusa Popover + Checkbox (padrão do
+            filtro multi-valor). As colunas dinâmicas do tema seguem sendo
+            geridas em "Editar campos" (hidden_in_list). */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              title="Ocultar colunas e filtros"
+              className="flex items-center gap-1.5 py-2.5 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] text-muted-foreground hover:text-[var(--navy)] hover:border-[var(--gold)] transition-colors outline-none"
+            >
+              <Columns3 size={14} />
+              Colunas
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-64 p-2">
+            <div className="px-1 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Colunas visíveis
+            </div>
+            <div className="max-h-64 space-y-0.5 overflow-auto">
+              {toggleableColumns.map((col) => (
+                <label
+                  key={col.key}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-[var(--muted)]"
+                >
+                  <Checkbox
+                    checked={!hiddenCols.has(col.key)}
+                    onCheckedChange={(checked) => {
+                      setHiddenCols((prev) => {
+                        const next = new Set(prev);
+                        if (checked === true) next.delete(col.key);
+                        else next.add(col.key);
+                        return next;
+                      });
+                    }}
+                  />
+                  <span>{col.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-1.5 border-t border-[rgba(120,96,30,0.1)] pt-1.5">
+              <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-[var(--muted)]">
+                <Checkbox
+                  checked={filtersVisible}
+                  onCheckedChange={(checked) => setFiltersVisible(checked === true)}
+                />
+                <span>Mostrar filtros</span>
+              </label>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Painel de filtros dinâmicos (fixos + campos do tema) */}
-      <CaseFiltersPanel
-        temaId={effectiveTemaId || null}
-        cases={preFiltered}
-        filters={panelFilters}
-        onChange={(f) => {
-          setPanelFilters(f);
-          setPage(0);
-        }}
-        frenteOptions={frenteOptions}
-      />
+      {/* Painel de filtros dinâmicos (fixos + campos do tema). E1 — pode ser
+          recolhido pelo menu "Colunas" (filtersVisible). */}
+      {filtersVisible && (
+        <CaseFiltersPanel
+          temaId={effectiveTemaId || null}
+          cases={preFiltered}
+          filters={panelFilters}
+          onChange={(f) => {
+            setPanelFilters(f);
+            setPage(0);
+          }}
+          frenteOptions={frenteOptions}
+        />
+      )}
 
       {isError && (
         <Alert variant="destructive" className="mb-4">
@@ -563,56 +737,12 @@ function CasosLista() {
                     onClick={() => navigate({ to: "/casos/$id", params: { id: c.id } })}
                     className="border-b border-[rgba(152,120,20,0.08)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer"
                   >
-                    <td className="px-4 py-3 font-mono text-[12px] text-muted-foreground whitespace-nowrap">
-                      <Link
-                        to="/casos/$id"
-                        params={{ id: c.id }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hover:text-[var(--gold-700)]"
-                      >
-                        {c.case_code}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-[var(--navy)] shrink-0"
-                          style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}
-                        >
-                          {c.client_name[0]?.toUpperCase() ?? "?"}
-                        </div>
-                        <span className="text-[var(--navy)] font-medium">{c.client_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {resolveTipo(c)}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {c.tema_id ? (temaName.get(c.tema_id) ?? "—") : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {c.frente_slug ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] whitespace-nowrap">
-                      {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {MACRO_FIN_LABELS[c.macrostatus_fin as MacroFin] ?? c.macrostatus_fin}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {c.responsavel ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {c.municipio ?? "—"}
-                    </td>
-                    {podeVerValor && (
-                      <td className="px-4 py-3 font-mono text-[var(--navy)] whitespace-nowrap">
-                        {fmtBRL(c.valor_centavos)}
-                      </td>
-                    )}
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {fmtDate(c.created_at)}
-                    </td>
+                    {/* E1 (2026-08-05) — células seguem a ORDEM e a VISIBILIDADE de
+                        `columns` (Tema antes de Tipo; auto-oculta Tema num único
+                        tema; menu "Colunas" liga/desliga fixas). */}
+                    {columns.map((col) => (
+                      <CaseCell key={col.key} col={col.key} row={c} />
+                    ))}
                     {/* 2026-07-29 #4 — células dos campos do tema em SÓ LEITURA:
                         refletem a ficha; a edição é só na ficha do caso. #3: o
                         valor vem da fonte certa (caso × cliente). */}

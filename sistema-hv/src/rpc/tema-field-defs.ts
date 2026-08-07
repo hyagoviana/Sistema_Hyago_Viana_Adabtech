@@ -10,12 +10,14 @@ import {
   TEMA_FIELD_TYPES,
   updateTemaFieldDef,
 } from "@/lib/tema-field-defs-service";
-import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
 // R2-07 — DEFS de campo personalizado por TEMA/FRENTE.
-// Leitura (não sensível): requireAuth. Escrita (defs): gate ADMIN server-side —
-// config.manage é admin-only no rbac, então exigimos o papel `admin`, mesmo
-// padrão de rpc/temas.ts.
+// Leitura (não sensível): requireAuth. Escrita (defs): gate por MÓDULO server-side
+// (B3 / I3, reunião 2026-08-05) — `requireModule('sistema','edit')`. `sistema:edit`
+// (config.manage) hoje é do admin, então é EQUIVALENTE ao antigo `requireRole
+// (["admin"])`, mas passa a honrar overrides por usuário (system_user_module_perms):
+// um colaborador pode receber `sistema:edit` sem virar admin.
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
     await requireAuth();
@@ -33,7 +35,7 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
 
 async function handleAdmin<T>(fn: () => Promise<T>): Promise<T> {
   try {
-    await requireRole(["admin"]);
+    await requireModule("sistema", "edit");
     return await fn();
   } catch (err: unknown) {
     if (err instanceof AuthError) {
@@ -96,8 +98,14 @@ export const createTemaFieldDefFn = createServerFn({ method: "POST" })
         hiddenInList: z.boolean().optional(),
         hiddenInFilters: z.boolean().optional(),
         maxOccurrences: maxOccSchema.optional(),
+        // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
+        initialOccurrences: maxOccSchema.optional(),
         // A5 5c — auto-avanço: slug da etapa op destino ao marcar "Sim" (boolean).
         moveToStageSlug: z.string().nullish(),
+        // A4 (2026-08-05) — campo pai (dependência); null/omisso = sem dependência.
+        parentFieldDefId: z.string().uuid().nullish(),
+        // A7 (2026-08-05) — libera a checagem do balde compartilhado do cliente.
+        allowSharedClientKey: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -119,8 +127,14 @@ export const updateTemaFieldDefFn = createServerFn({ method: "POST" })
           hiddenInList: z.boolean().optional(),
           hiddenInFilters: z.boolean().optional(),
           maxOccurrences: maxOccSchema.optional(),
+          // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
+          initialOccurrences: maxOccSchema.optional(),
           // A5 5c — auto-avanço: slug destino (null = não move).
           moveToStageSlug: z.string().nullish(),
+          // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).
+          parentFieldDefId: z.string().uuid().nullish(),
+          // A7 (2026-08-05) — libera a checagem do balde compartilhado do cliente.
+          allowSharedClientKey: z.boolean().optional(),
         }),
       })
       .parse(d),

@@ -201,6 +201,137 @@ export function resolveTema(cand: TemaCandidatos): string | null {
 }
 
 // ----------------------------------------------------------------------------
+// TEMA — resolução para motor_theme_id via de-para normalizado (H4)
+// ----------------------------------------------------------------------------
+
+/**
+ * Normaliza uma string de tema para casamento tolerante: remove acentos,
+ * caixa e espaços extras (ex.: "INDENIZAÇÃO PMMB" === "indenizacao  pmmb").
+ * Espelha `normalizeName` de scripts/reconcile-projuris-tipos.ts para manter
+ * o mesmo critério de de-para em toda a base.
+ */
+export function normalizeTemaKey(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toUpperCase().replace(/\s+/g, " ");
+}
+
+/** Linha do de-para de TEMA (subset de system_theme_mapping usado pelo motor). */
+export interface ThemeMapRow {
+  motor_theme_id: string;
+  multiplier: number;
+  temporal_level: number;
+  exclusive_executor_id: string | null;
+}
+
+/** Resultado da resolução do TEMA → motor. */
+export interface ResolvedTema {
+  /** Linha do de-para casada. */
+  theme: ThemeMapRow;
+  /** String de tema que casou (candidato vencedor, valor cru). */
+  tema_resolvido: string;
+  /** De qual balde saiu o casamento (diagnóstico). */
+  source: "campo_10021" | "campo_nome" | "assunto" | "marcador";
+}
+
+/**
+ * Fonte configurável do tema. A ordem default segue o achado A9 (2026-08-05):
+ * campo "TEMA" (10021) quando preenchido → `assunto` do processo → marcador.
+ * Quando o Thiago confirmar a fonte canônica, basta reordenar esta constante
+ * (ex.: fixar `assunto` primeiro), sem tocar na lógica de casamento.
+ */
+export type TemaSource = "campo_10021" | "campo_nome" | "assunto" | "marcador";
+export const TEMA_SOURCE_ORDER_DEFAULT: readonly TemaSource[] = [
+  "campo_10021",
+  "campo_nome",
+  "assunto",
+  "marcador",
+] as const;
+
+/** Coleta os valores-candidato de um balde (podem ser vários no caso de marcador). */
+function candidatosDoBalde(cand: TemaCandidatos, source: TemaSource): string[] {
+  switch (source) {
+    case "campo_10021": {
+      const c = cand.camposPersonalizados.find(
+        (x) => x.codigoCampoDinamico === PROJURIS_CAMPO_TEMA_CODIGO,
+      );
+      if (c && (typeof c.valor === "string" || typeof c.valor === "number")) {
+        const v = String(c.valor).trim();
+        return v ? [v] : [];
+      }
+      return [];
+    }
+    case "campo_nome": {
+      const c = cand.camposPersonalizados.find(
+        (x) =>
+          /tema|assunto|frente/i.test(x.nome ?? "") &&
+          (typeof x.valor === "string" || typeof x.valor === "number") &&
+          String(x.valor).trim(),
+      );
+      return c ? [String(c.valor).trim()] : [];
+    }
+    case "assunto":
+      return cand.assunto ? [cand.assunto] : [];
+    case "marcador":
+      return cand.marcadores.filter((m) => m && m.trim());
+  }
+}
+
+/**
+ * Resolve o TEMA SHV (`motor_theme_id` + multiplier/temporal/exclusive) a partir
+ * dos candidatos do processo (assunto / campo 10021 / marcador), casando por
+ * NOME normalizado (acento/caixa/espaço) contra o de-para de `system_theme_mapping`.
+ *
+ * Retorna `null` quando NENHUM candidato casa — o chamador (sync-core) trata o
+ * fallback com alerta (`ALT-TEMA-001`), sem descartar silenciosamente.
+ *
+ * @param themeMap de-para NOME-normalizado → linha do motor (construído pelo
+ *   chamador a partir de system_theme_mapping via `buildThemeMap`).
+ * @param order ordem de fontes (default = achado A9). Configurável para virar
+ *   p/ o campo dedicado sem retrabalho.
+ */
+export function resolveTemaId(
+  cand: TemaCandidatos,
+  themeMap: Map<string, ThemeMapRow>,
+  order: readonly TemaSource[] = TEMA_SOURCE_ORDER_DEFAULT,
+): ResolvedTema | null {
+  for (const source of order) {
+    for (const valor of candidatosDoBalde(cand, source)) {
+      const th = themeMap.get(normalizeTemaKey(valor));
+      if (th) return { theme: th, tema_resolvido: valor, source };
+    }
+  }
+  return null;
+}
+
+/**
+ * Constrói o mapa NOME-normalizado → linha do motor a partir das linhas cruas de
+ * `system_theme_mapping` (chave = `projuris_tema_codigo`, hoje NOME placeholder).
+ * Em colisão de chave normalizada, a 1ª linha vence (determinístico por ordem de
+ * entrada) — o owner audita via diagnóstico se necessário.
+ */
+export function buildThemeMap(
+  rows: Array<{
+    projuris_tema_codigo: string;
+    motor_theme_id: string;
+    multiplier: number;
+    temporal_level: number;
+    exclusive_executor_id: string | null;
+  }>,
+): Map<string, ThemeMapRow> {
+  const m = new Map<string, ThemeMapRow>();
+  for (const r of rows) {
+    const key = normalizeTemaKey(r.projuris_tema_codigo ?? "");
+    if (!key || m.has(key)) continue;
+    m.set(key, {
+      motor_theme_id: r.motor_theme_id,
+      multiplier: r.multiplier,
+      temporal_level: r.temporal_level,
+      exclusive_executor_id: r.exclusive_executor_id,
+    });
+  }
+  return m;
+}
+
+// ----------------------------------------------------------------------------
 // Buscas (LEITURA) no ProJuris
 // ----------------------------------------------------------------------------
 

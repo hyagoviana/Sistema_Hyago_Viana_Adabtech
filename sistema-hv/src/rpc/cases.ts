@@ -26,6 +26,7 @@ import {
   moverCasoParaTema,
   previewProcuracao,
   promoverCasoManual,
+  setCaseSigilo,
   softDeleteCase,
   updateCase,
   updateCaseCanonicalFields,
@@ -343,4 +344,17 @@ export const marcarCasoPerdidoFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => marcarPerdidoSchema.parse(data))
   .handler(async ({ data }) =>
     handleBiz((userId) => marcarCasoPerdido(data.id, data.motivo, userId)),
+  );
+
+// G4 — marcar/desmarcar SIGILO do caso + autorizados. Gate: gestor do caso
+// (operacional:edit) OU admin. Só quem pode gerir o caso muda o sigilo.
+const setSigiloSchema = z.object({
+  caseId: z.string().uuid(),
+  sigiloso: z.boolean(),
+  userIds: z.array(z.string().uuid()).default([]),
+});
+export const setCaseSigiloFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => setSigiloSchema.parse(data))
+  .handler(async ({ data }) =>
+    handleManage((userId) => setCaseSigilo(data.caseId, data.sigiloso, data.userIds, userId)),
   );

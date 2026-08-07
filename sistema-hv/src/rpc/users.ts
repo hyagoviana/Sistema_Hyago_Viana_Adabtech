@@ -11,6 +11,7 @@ import {
   getUserRole,
   setUserRole,
   setUserStatus,
+  setUserDistribution,
   removeUser,
   getUserWorkload,
   reassignAndDeleteUser,
@@ -165,6 +166,33 @@ export const setUserRoleFn = createServerFn({ method: "POST" })
 export const setUserStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
   .handler(async ({ data }) => handle(() => setUserStatus(data.id, data.status)));
+
+// Configura a distribuição (ProJuris) de um usuário (H5). Gate admin — mesmo
+// padrão de setUserRoleFn/reassignAndDeleteUserFn.
+export const setUserDistributionFn = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: {
+      id: string;
+      projuris_responsavel_id?: string | null;
+      participa?: boolean;
+      weight?: number | null;
+      eligible_complex?: boolean | null;
+    }) => d,
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      if ((await getUserRole(me.id)) !== "admin") {
+        throw new UsersServiceError("Apenas o administrador pode configurar a distribuição.", 403);
+      }
+      return setUserDistribution(data.id, {
+        projuris_responsavel_id: data.projuris_responsavel_id,
+        participa: data.participa,
+        weight: data.weight,
+        eligible_complex: data.eligible_complex,
+      });
+    }),
+  );
 
 export const removeUserFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)

@@ -31,6 +31,7 @@ import { Route as PainelIndexRouteImport } from './routes/painel.index'
 import { Route as MarketingIndexRouteImport } from './routes/marketing.index'
 import { Route as DashboardsIndexRouteImport } from './routes/dashboards.index'
 import { Route as ControladoriaIndexRouteImport } from './routes/controladoria.index'
+import { Route as ConfiguracoesIndexRouteImport } from './routes/configuracoes.index'
 import { Route as ComercialIndexRouteImport } from './routes/comercial.index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as CasosIndexRouteImport } from './routes/casos.index'
@@ -60,6 +61,7 @@ import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.
 import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
 import { Route as ControladoriaDistribuicaoRouteImport } from './routes/controladoria.distribuicao'
 import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
+import { Route as ConfiguracoesCamposPersonalizadosRouteImport } from './routes/configuracoes.campos-personalizados'
 import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
 import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
 import { Route as ComercialFunilRouteImport } from './routes/comercial.funil'
@@ -71,6 +73,7 @@ import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
 import { Route as CasosIdRouteImport } from './routes/casos.$id'
 import { Route as ControladoriaDistribuicaoIndexRouteImport } from './routes/controladoria.distribuicao.index'
 import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.financeiro.index'
+import { Route as CasosIdIndexRouteImport } from './routes/casos.$id.index'
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
 import { Route as ControladoriaDistribuicaoTiposTarefaRouteImport } from './routes/controladoria.distribuicao.tipos-tarefa'
@@ -87,6 +90,8 @@ import { Route as ControladoriaDistribuicaoCalendarioRouteImport } from './route
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
+import { Route as CasosIdJudicialRouteImport } from './routes/casos.$id.judicial'
+import { Route as CasosIdFinanceiroRouteImport } from './routes/casos.$id.financeiro'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
@@ -210,6 +215,11 @@ const ControladoriaIndexRoute = ControladoriaIndexRouteImport.update({
   id: '/controladoria/',
   path: '/controladoria/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesIndexRoute = ConfiguracoesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConfiguracoesRoute,
 } as any)
 const ComercialIndexRoute = ComercialIndexRouteImport.update({
   id: '/comercial/',
@@ -358,6 +368,12 @@ const ControladoriaDecisoesRoute = ControladoriaDecisoesRouteImport.update({
   path: '/controladoria/decisoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiguracoesCamposPersonalizadosRoute =
+  ConfiguracoesCamposPersonalizadosRouteImport.update({
+    id: '/campos-personalizados',
+    path: '/campos-personalizados',
+    getParentRoute: () => ConfiguracoesRoute,
+  } as any)
 const ComercialOportunidadesRoute = ComercialOportunidadesRouteImport.update({
   id: '/comercial/oportunidades',
   path: '/comercial/oportunidades',
@@ -413,6 +429,11 @@ const CasosFinanceiroIndexRoute = CasosFinanceiroIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CasosFinanceiroRoute,
+} as any)
+const CasosIdIndexRoute = CasosIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CasosIdRoute,
 } as any)
 const WhatsappConversasIdRoute = WhatsappConversasIdRouteImport.update({
   id: '/whatsapp/conversas/$id',
@@ -507,6 +528,16 @@ const CasosIdTermoRoute = CasosIdTermoRouteImport.update({
   path: '/termo',
   getParentRoute: () => CasosIdRoute,
 } as any)
+const CasosIdJudicialRoute = CasosIdJudicialRouteImport.update({
+  id: '/judicial',
+  path: '/judicial',
+  getParentRoute: () => CasosIdRoute,
+} as any)
+const CasosIdFinanceiroRoute = CasosIdFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => CasosIdRoute,
+} as any)
 const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
   id: '/api/webhooks/zapsign',
   path: '/api/webhooks/zapsign',
@@ -580,7 +611,7 @@ const ApiClientsIdDocumentsDocIdDownloadRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/configuracoes': typeof ConfiguracoesRoute
+  '/configuracoes': typeof ConfiguracoesRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
@@ -603,6 +634,7 @@ export interface FileRoutesByFullPath {
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
+  '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
@@ -632,6 +664,7 @@ export interface FileRoutesByFullPath {
   '/casos/': typeof CasosIndexRoute
   '/clientes/': typeof ClientesIndexRoute
   '/comercial/': typeof ComercialIndexRoute
+  '/configuracoes/': typeof ConfiguracoesIndexRoute
   '/controladoria/': typeof ControladoriaIndexRoute
   '/dashboards/': typeof DashboardsIndexRoute
   '/marketing/': typeof MarketingIndexRoute
@@ -646,6 +679,8 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
+  '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -662,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/$id/': typeof CasosIdIndexRoute
   '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/controladoria/distribuicao/': typeof ControladoriaDistribuicaoIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
@@ -673,7 +709,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/configuracoes': typeof ConfiguracoesRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
@@ -687,7 +722,6 @@ export interface FileRoutesByTo {
   '/referencias': typeof ReferenciasRoute
   '/relatorio-financeiro': typeof RelatorioFinanceiroRoute
   '/tarefas': typeof TarefasRoute
-  '/casos/$id': typeof CasosIdRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/comercial/assinaturas': typeof ComercialAssinaturasRoute
@@ -695,6 +729,7 @@ export interface FileRoutesByTo {
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
+  '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
@@ -723,6 +758,7 @@ export interface FileRoutesByTo {
   '/casos': typeof CasosIndexRoute
   '/clientes': typeof ClientesIndexRoute
   '/comercial': typeof ComercialIndexRoute
+  '/configuracoes': typeof ConfiguracoesIndexRoute
   '/controladoria': typeof ControladoriaIndexRoute
   '/dashboards': typeof DashboardsIndexRoute
   '/marketing': typeof MarketingIndexRoute
@@ -737,6 +773,8 @@ export interface FileRoutesByTo {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
+  '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -753,6 +791,7 @@ export interface FileRoutesByTo {
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/$id': typeof CasosIdIndexRoute
   '/casos/financeiro': typeof CasosFinanceiroIndexRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
@@ -765,7 +804,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/configuracoes': typeof ConfiguracoesRoute
+  '/configuracoes': typeof ConfiguracoesRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
@@ -788,6 +827,7 @@ export interface FileRoutesById {
   '/comercial/funil': typeof ComercialFunilRoute
   '/comercial/leads': typeof ComercialLeadsRoute
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
+  '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
@@ -817,6 +857,7 @@ export interface FileRoutesById {
   '/casos/': typeof CasosIndexRoute
   '/clientes/': typeof ClientesIndexRoute
   '/comercial/': typeof ComercialIndexRoute
+  '/configuracoes/': typeof ConfiguracoesIndexRoute
   '/controladoria/': typeof ControladoriaIndexRoute
   '/dashboards/': typeof DashboardsIndexRoute
   '/marketing/': typeof MarketingIndexRoute
@@ -831,6 +872,8 @@ export interface FileRoutesById {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
+  '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
@@ -847,6 +890,7 @@ export interface FileRoutesById {
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
+  '/casos/$id/': typeof CasosIdIndexRoute
   '/casos/financeiro/': typeof CasosFinanceiroIndexRoute
   '/controladoria/distribuicao/': typeof ControladoriaDistribuicaoIndexRoute
   '/casos/$id/termo/elaborar': typeof CasosIdTermoElaborarRoute
@@ -883,6 +927,7 @@ export interface FileRouteTypes {
     | '/comercial/funil'
     | '/comercial/leads'
     | '/comercial/oportunidades'
+    | '/configuracoes/campos-personalizados'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
@@ -912,6 +957,7 @@ export interface FileRouteTypes {
     | '/casos/'
     | '/clientes/'
     | '/comercial/'
+    | '/configuracoes/'
     | '/controladoria/'
     | '/dashboards/'
     | '/marketing/'
@@ -926,6 +972,8 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/financeiro'
+    | '/casos/$id/judicial'
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
@@ -942,6 +990,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/tipos-tarefa'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/$id/'
     | '/casos/financeiro/'
     | '/controladoria/distribuicao/'
     | '/casos/$id/termo/elaborar'
@@ -953,7 +1002,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/configuracoes'
     | '/definir-senha'
     | '/design-system'
     | '/entrar'
@@ -967,7 +1015,6 @@ export interface FileRouteTypes {
     | '/referencias'
     | '/relatorio-financeiro'
     | '/tarefas'
-    | '/casos/$id'
     | '/casos/lista'
     | '/clientes/$id'
     | '/comercial/assinaturas'
@@ -975,6 +1022,7 @@ export interface FileRouteTypes {
     | '/comercial/funil'
     | '/comercial/leads'
     | '/comercial/oportunidades'
+    | '/configuracoes/campos-personalizados'
     | '/controladoria/decisoes'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
@@ -1003,6 +1051,7 @@ export interface FileRouteTypes {
     | '/casos'
     | '/clientes'
     | '/comercial'
+    | '/configuracoes'
     | '/controladoria'
     | '/dashboards'
     | '/marketing'
@@ -1017,6 +1066,8 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/financeiro'
+    | '/casos/$id/judicial'
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
@@ -1033,6 +1084,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/tipos-tarefa'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/$id'
     | '/casos/financeiro'
     | '/controladoria/distribuicao'
     | '/casos/$id/termo/elaborar'
@@ -1067,6 +1119,7 @@ export interface FileRouteTypes {
     | '/comercial/funil'
     | '/comercial/leads'
     | '/comercial/oportunidades'
+    | '/configuracoes/campos-personalizados'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
@@ -1096,6 +1149,7 @@ export interface FileRouteTypes {
     | '/casos/'
     | '/clientes/'
     | '/comercial/'
+    | '/configuracoes/'
     | '/controladoria/'
     | '/dashboards/'
     | '/marketing/'
@@ -1110,6 +1164,8 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/financeiro'
+    | '/casos/$id/judicial'
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
@@ -1126,6 +1182,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/tipos-tarefa'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
+    | '/casos/$id/'
     | '/casos/financeiro/'
     | '/controladoria/distribuicao/'
     | '/casos/$id/termo/elaborar'
@@ -1138,7 +1195,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRouteWithChildren
   DefinirSenhaRoute: typeof DefinirSenhaRoute
   DesignSystemRoute: typeof DesignSystemRoute
   EntrarRoute: typeof EntrarRoute
@@ -1368,6 +1425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes/': {
+      id: '/configuracoes/'
+      path: '/'
+      fullPath: '/configuracoes/'
+      preLoaderRoute: typeof ConfiguracoesIndexRouteImport
+      parentRoute: typeof ConfiguracoesRoute
+    }
     '/comercial/': {
       id: '/comercial/'
       path: '/comercial'
@@ -1571,6 +1635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaDecisoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes/campos-personalizados': {
+      id: '/configuracoes/campos-personalizados'
+      path: '/campos-personalizados'
+      fullPath: '/configuracoes/campos-personalizados'
+      preLoaderRoute: typeof ConfiguracoesCamposPersonalizadosRouteImport
+      parentRoute: typeof ConfiguracoesRoute
+    }
     '/comercial/oportunidades': {
       id: '/comercial/oportunidades'
       path: '/comercial/oportunidades'
@@ -1647,6 +1718,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/casos/financeiro/'
       preLoaderRoute: typeof CasosFinanceiroIndexRouteImport
       parentRoute: typeof CasosFinanceiroRoute
+    }
+    '/casos/$id/': {
+      id: '/casos/$id/'
+      path: '/'
+      fullPath: '/casos/$id/'
+      preLoaderRoute: typeof CasosIdIndexRouteImport
+      parentRoute: typeof CasosIdRoute
     }
     '/whatsapp/conversas/$id': {
       id: '/whatsapp/conversas/$id'
@@ -1760,6 +1838,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdTermoRouteImport
       parentRoute: typeof CasosIdRoute
     }
+    '/casos/$id/judicial': {
+      id: '/casos/$id/judicial'
+      path: '/judicial'
+      fullPath: '/casos/$id/judicial'
+      preLoaderRoute: typeof CasosIdJudicialRouteImport
+      parentRoute: typeof CasosIdRoute
+    }
+    '/casos/$id/financeiro': {
+      id: '/casos/$id/financeiro'
+      path: '/financeiro'
+      fullPath: '/casos/$id/financeiro'
+      preLoaderRoute: typeof CasosIdFinanceiroRouteImport
+      parentRoute: typeof CasosIdRoute
+    }
     '/api/webhooks/zapsign': {
       id: '/api/webhooks/zapsign'
       path: '/api/webhooks/zapsign'
@@ -1854,6 +1946,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ConfiguracoesRouteChildren {
+  ConfiguracoesCamposPersonalizadosRoute: typeof ConfiguracoesCamposPersonalizadosRoute
+  ConfiguracoesIndexRoute: typeof ConfiguracoesIndexRoute
+}
+
+const ConfiguracoesRouteChildren: ConfiguracoesRouteChildren = {
+  ConfiguracoesCamposPersonalizadosRoute:
+    ConfiguracoesCamposPersonalizadosRoute,
+  ConfiguracoesIndexRoute: ConfiguracoesIndexRoute,
+}
+
+const ConfiguracoesRouteWithChildren = ConfiguracoesRoute._addFileChildren(
+  ConfiguracoesRouteChildren,
+)
+
 interface CasosIdTermoRouteChildren {
   CasosIdTermoElaborarRoute: typeof CasosIdTermoElaborarRoute
 }
@@ -1867,11 +1974,17 @@ const CasosIdTermoRouteWithChildren = CasosIdTermoRoute._addFileChildren(
 )
 
 interface CasosIdRouteChildren {
+  CasosIdFinanceiroRoute: typeof CasosIdFinanceiroRoute
+  CasosIdJudicialRoute: typeof CasosIdJudicialRoute
   CasosIdTermoRoute: typeof CasosIdTermoRouteWithChildren
+  CasosIdIndexRoute: typeof CasosIdIndexRoute
 }
 
 const CasosIdRouteChildren: CasosIdRouteChildren = {
+  CasosIdFinanceiroRoute: CasosIdFinanceiroRoute,
+  CasosIdJudicialRoute: CasosIdJudicialRoute,
   CasosIdTermoRoute: CasosIdTermoRouteWithChildren,
+  CasosIdIndexRoute: CasosIdIndexRoute,
 }
 
 const CasosIdRouteWithChildren =
@@ -1955,7 +2068,7 @@ const ApiClientsIdDocumentsDocIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ConfiguracoesRoute: ConfiguracoesRoute,
+  ConfiguracoesRoute: ConfiguracoesRouteWithChildren,
   DefinirSenhaRoute: DefinirSenhaRoute,
   DesignSystemRoute: DesignSystemRoute,
   EntrarRoute: EntrarRoute,

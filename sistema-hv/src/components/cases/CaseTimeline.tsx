@@ -156,7 +156,12 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
   const [editBody, setEditBody] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const list = (events ?? []) as CaseEvent[];
+  // F1 (AC-5) — a ficha comum NÃO mistura eventos financeiros: filtra na CAMADA
+  // DE APRESENTAÇÃO toda `action` que começa com `fin_` (fin_status_changed,
+  // fin_stage_auto_advanced, fin_enviado_conferencia, fin_conferencia_aprovada e
+  // variações futuras). Os eventos continuam gravados no banco; só não são
+  // MOSTRADOS aqui (aparecem no submenu financeiro, para quem tem acesso).
+  const list = ((events ?? []) as CaseEvent[]).filter((e) => !e.action.startsWith("fin_"));
 
   async function handleUpdate(eventId: string) {
     const body = editBody.trim();

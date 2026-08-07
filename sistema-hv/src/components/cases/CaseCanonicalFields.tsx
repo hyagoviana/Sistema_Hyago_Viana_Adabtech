@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +18,11 @@ import { useUpdateClientCustomFields } from "@/hooks/useClients";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { FIES_FIELD_KEYS } from "@/lib/cases/fies-fields";
 import { VINCULO_FIELD_KEYS } from "@/lib/cases/vinculo-fields";
-import { isMultiOccurrence, occurrencesToSlots } from "@/lib/cases/tema-field-value";
+import {
+  isMultiOccurrence,
+  occurrencesToSlots,
+  readFieldValue,
+} from "@/lib/cases/tema-field-value";
 import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 // Bloco "Dados do serviço" — campos canônicos do CASO (ex.: nº FIES).
@@ -32,6 +36,15 @@ import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 function optionsToArray(options: unknown): string[] {
   return Array.isArray(options) ? options.filter((o): o is string => typeof o === "string") : [];
+}
+
+// A4 — "valor preenchido?" para decidir se o campo FILHO libera. Vazio = null,
+// undefined, "" ou array sem itens não-vazios (multi-ocorrência/multiselect).
+function isValueFilled(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.some((v) => v !== null && v !== undefined && v !== "");
+  return true; // number/boolean já preenchidos (inclui false e 0)
 }
 
 export function CaseCanonicalFields({
@@ -122,19 +135,37 @@ export function CaseCanonicalFields({
           certa (caso × cliente). */}
       {defs.length > 0 && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {defs.map((def) => (
-            <TemaFieldInput
-              // key inclui o caso: os campos com estado local semeado no mount
-              // (MultiOccurrenceField/MoneyField) re-montam ao trocar de caso na
-              // mesma rota, evitando valor "preso" do caso anterior (QA BUG-1).
-              key={`${caseId}-${def.id}`}
-              def={def}
-              value={(def.scope === "cliente" ? clientCf : cf)[def.key]}
-              canEdit={canEdit}
-              disabled={updateMut.isPending || updateClientMut.isPending}
-              onSave={(v) => saveDef(def, v)}
-            />
-          ))}
+          {defs.map((def) => {
+            // A4 — campo dependente: só edita quando o PAI está preenchido. Resolve
+            // o pai na lista de defs; se o pai não existe mais (soft-delete/ausente),
+            // trata como SEM dependência (filho livre). Lê o valor do pai da fonte
+            // certa por scope do PAI (permite pai=cliente e filho=caso).
+            const parent = def.parent_field_def_id
+              ? defs.find((p) => p.id === def.parent_field_def_id)
+              : undefined;
+            const parentValue = parent
+              ? readFieldValue(parent, {
+                  canonical_fields: cf,
+                  client_custom_fields: clientCf,
+                })
+              : undefined;
+            const parentFilled = parent ? isValueFilled(parentValue) : true;
+            const parentBlocked = !!parent && !parentFilled;
+            return (
+              <TemaFieldInput
+                // key inclui o caso: os campos com estado local semeado no mount
+                // (MultiOccurrenceField/MoneyField) re-montam ao trocar de caso na
+                // mesma rota, evitando valor "preso" do caso anterior (QA BUG-1).
+                key={`${caseId}-${def.id}`}
+                def={def}
+                value={(def.scope === "cliente" ? clientCf : cf)[def.key]}
+                canEdit={canEdit && !parentBlocked}
+                disabled={updateMut.isPending || updateClientMut.isPending}
+                onSave={(v) => saveDef(def, v)}
+                parentHint={parentBlocked ? (parent?.label ?? null) : null}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -191,12 +222,16 @@ export function TemaFieldInput({
   canEdit,
   disabled,
   onSave,
+  // A4 — quando setado, o campo PAI (com este rótulo) ainda está vazio: o filho
+  // fica desabilitado (canEdit já vem false) e mostramos a dica p/ preencher o pai.
+  parentHint,
 }: {
   def: TemaFieldDef;
   value: unknown;
   canEdit: boolean;
   disabled: boolean;
   onSave: (value: string | number | boolean | string[] | null) => void;
+  parentHint?: string | null;
 }) {
   const strValue = value === null || value === undefined ? "" : String(value);
 
@@ -204,6 +239,11 @@ export function TemaFieldInput({
     <Label className="flex items-center gap-1">
       {def.label}
       {def.required && <span className="text-destructive">*</span>}
+      {parentHint && (
+        <span className="ml-1 text-[10.5px] font-normal text-muted-foreground">
+          — preencha <em>{parentHint}</em> primeiro
+        </span>
+      )}
     </Label>
   );
 
@@ -351,9 +391,12 @@ function MoneyField({
   );
 }
 
-// #6 — campo com N caixinhas do mesmo tipo (texto/número/data). Estado local dos
-// slots; grava um ARRAY (descarta caixinhas vazias). Se sobrar 1 valor só, ainda
-// grava como array de 1 — o formatador de exibição normaliza.
+// #6 / A5 — campo multi-linha do mesmo tipo (texto/número/data). Começa com N
+// linhas (initial_occurrences) — ou mais, se já houver valores gravados — e o
+// usuário ADICIONA ocorrências com o botão "+" até o TETO (max_occurrences).
+// Estado local dos slots; grava um ARRAY (descarta caixinhas vazias). Linha em
+// branco é ignorada ao salvar. Se sobrar 1 valor só, grava como array de 1 — o
+// formatador de exibição normaliza.
 function MultiOccurrenceField({
   def,
   value,
@@ -369,8 +412,16 @@ function MultiOccurrenceField({
   disabled: boolean;
   onSave: (value: string[] | null) => void;
 }) {
-  const max = def.max_occurrences ?? 1;
-  const [slots, setSlots] = useState<string[]>(() => occurrencesToSlots(value, max));
+  // Teto (max_occurrences) e nº inicial de linhas (initial_occurrences), ambos
+  // clampados 1..20 (limite dos CHECKs do banco). O initial nunca ultrapassa o teto.
+  const max = Math.max(1, Math.min(def.max_occurrences ?? 1, 20));
+  const initial = Math.max(1, Math.min(def.initial_occurrences ?? 1, max));
+  // A5: semeia com o initial (não com o teto). occurrencesToSlots preenche as
+  // linhas iniciais e, se houver MAIS valores gravados que o initial, expande até
+  // caber todos (mas nunca acima do teto) — AC4 (valores existentes preservados).
+  const existing = Array.isArray(value) ? value.filter((v) => v != null && v !== "").length : 0;
+  const seed = Math.min(Math.max(initial, existing), max);
+  const [slots, setSlots] = useState<string[]>(() => occurrencesToSlots(value, seed));
   const inputType = def.type === "number" ? "number" : def.type === "date" ? "date" : "text";
 
   function commit(next: string[]) {
@@ -378,24 +429,69 @@ function MultiOccurrenceField({
     onSave(clean.length ? clean : null);
   }
 
+  // Adiciona uma linha vazia se ainda cabe (< teto). Não grava (linha vazia é
+  // ignorada no commit); só amplia a UI para o usuário digitar mais uma ocorrência.
+  function addRow() {
+    setSlots((prev) => (prev.length >= max ? prev : [...prev, ""]));
+  }
+
+  // Remove a linha `i` e re-commita (some do array gravado).
+  function removeRow(i: number) {
+    setSlots((prev) => {
+      const next = prev.filter((_, idx) => idx !== i);
+      const safe = next.length ? next : [""];
+      commit(safe);
+      return safe;
+    });
+  }
+
+  const canAdd = canEdit && !disabled && slots.length < max;
+
   return (
     <div className="space-y-1">
       {labelEl}
       <div className="space-y-1.5">
         {slots.map((slot, i) => (
-          <Input
-            key={i}
-            type={inputType}
-            value={slot}
-            disabled={!canEdit || disabled}
-            placeholder={`${def.label} ${i + 1}`}
-            onChange={(e) =>
-              setSlots((prev) => prev.map((s, idx) => (idx === i ? e.target.value : s)))
-            }
-            onBlur={() => commit(slots)}
-          />
+          <div key={i} className="flex items-center gap-1.5">
+            <Input
+              type={inputType}
+              value={slot}
+              disabled={!canEdit || disabled}
+              placeholder={`${def.label} ${i + 1}`}
+              onChange={(e) =>
+                setSlots((prev) => prev.map((s, idx) => (idx === i ? e.target.value : s)))
+              }
+              onBlur={() => commit(slots)}
+              className="flex-1"
+            />
+            {/* Remover linha — só quando há mais de uma caixinha (mantém ao menos 1). */}
+            {canEdit && slots.length > 1 && (
+              <button
+                type="button"
+                title="Remover linha"
+                onClick={() => removeRow(i)}
+                disabled={disabled}
+                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         ))}
       </div>
+      {/* Botão "+" — adiciona uma ocorrência até o teto; desabilita no teto. */}
+      {canEdit && (
+        <button
+          type="button"
+          onClick={addRow}
+          disabled={!canAdd}
+          className="mt-1 inline-flex items-center gap-1 text-[12px] text-[var(--gold-700)] hover:underline disabled:opacity-40 disabled:no-underline"
+          title={slots.length >= max ? `Máximo de ${max} linhas` : "Adicionar ocorrência"}
+        >
+          <Plus size={13} />
+          Adicionar
+        </button>
+      )}
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
   moverCasoParaTemaFn,
   previewProcuracaoFn,
   promoverCasoManualFn,
+  setCaseSigiloFn,
   softDeleteCaseFn,
   updateCaseCanonicalFieldsFn,
   updateCaseFn,
@@ -425,6 +426,21 @@ export function useMarcarCasoPerdido() {
       qc.invalidateQueries({ queryKey: queryKeys.cases.all });
       qc.invalidateQueries({ queryKey: queryKeys.cases.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.cases.events(vars.id) });
+    },
+  });
+}
+
+// G4 — liga/desliga o sigilo do caso + autorizados. Invalida o status de sigilo
+// (usePodeVerJudicial reage) e o detalhe do caso.
+export function useSetCaseSigilo(caseId: string) {
+  const fn = useServerFn(setCaseSigiloFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { sigiloso: boolean; userIds: string[] }) =>
+      fn({ data: { caseId, sigiloso: vars.sigiloso, userIds: vars.userIds } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-sigilo", caseId] });
+      qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) });
     },
   });
 }

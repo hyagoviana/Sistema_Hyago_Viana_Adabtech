@@ -1,7 +1,8 @@
-import { Filter, SlidersHorizontal, X } from "lucide-react";
+import { ChevronsUpDown, Filter, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,10 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTemaFieldDefs, type TemaFieldDef } from "@/hooks/useTemaFieldDefs";
 import { fieldBag } from "@/lib/cases/tema-field-value";
-import { useAuth } from "@/lib/auth";
-import { can } from "@/lib/rbac";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import {
   MACRO_FIN_LABELS,
   MACRO_OP_LABELS,
@@ -20,12 +21,29 @@ import {
   type MacroOp,
 } from "@/lib/cases/constants";
 
-// Filtros dinâmicos: { [fieldKey]: valor selecionado }
-export type CanonicalFilters = Record<string, string>;
+// A2 (2026-08-05) — Filtros dinâmicos: cada campo aceita VALOR ÚNICO ou LISTA de
+// valores. String (retrocompat: filtro de valor único ou input "contém"); array
+// (multi-valor de seleção: "muito baixo" + "baixo" juntos → união/OR interno).
+export type CanonicalFilters = Record<string, string | string[]>;
 
 // R2-09 — sentinela para "listar só os casos com o campo EM BRANCO" (não
 // preenchido). O usuário pediu poder "puxar os em branco" na lista.
 export const CANONICAL_EMPTY = "__EMPTY__";
+
+// A3 (2026-08-05) — teto de opções renderizadas num controle de seleção. Acima
+// disso o controle degrada para input "Contém…" (busca textual), evitando um
+// dropdown gigante (ex.: 5.000 municípios) que travaria a UI. Protege qualquer
+// campo de alta cardinalidade, não só município.
+export const FILTER_OPTIONS_CAP = 200;
+
+// A2 (2026-08-05) — normaliza o valor de um filtro canônico para um conjunto de
+// selecionados. string → [string]; undefined/"" → []; array → cópia sem vazios.
+// Usado tanto na UI (multi-checkbox) quanto no matching (applyCaseFilters).
+export function toSelectedSet(v: string | string[] | undefined): string[] {
+  if (Array.isArray(v)) return v.filter((s) => s !== "" && s != null);
+  if (typeof v === "string" && v !== "") return [v];
+  return [];
+}
 
 // Converte centavos (armazenados p/ type=money) em rótulo R$ para o dropdown.
 function moneyLabel(raw: string): string {
@@ -93,8 +111,9 @@ export function CaseFiltersPanel({
   // Editor de filtros do tema (criar/ocultar/excluir os customizados). Só admin
   // e só quando há um tema selecionado (é onde os filtros vivem).
   const [editOpen, setEditOpen] = useState(false);
-  const { role } = useAuth();
-  const podeGerirFiltros = can(role, "config.manage") && !!temaId;
+  // B3 (2026-08-05) — gate por MÓDULO (mesma régua do servidor
+  // `requireModule('sistema','edit')`): honra overrides por usuário, não só admin.
+  const podeGerirFiltros = usePodeEditar("sistema") && !!temaId;
   const { data: fieldDefs } = useTemaFieldDefs(temaId);
 
   // Opções derivadas dos dados para filtros fixos
@@ -185,7 +204,7 @@ export function CaseFiltersPanel({
     filters.municipio ||
     filters.frente ||
     filters.caso ||
-    Object.values(filters.canonical).some((v) => !!v);
+    Object.values(filters.canonical).some((v) => (Array.isArray(v) ? v.length > 0 : !!v));
 
   function updateFixed<K extends keyof Omit<CaseFilterValues, "canonical">>(
     key: K,
@@ -194,8 +213,16 @@ export function CaseFiltersPanel({
     onChange({ ...filters, [key]: val });
   }
 
-  function updateCanonical(key: string, val: string) {
-    onChange({ ...filters, canonical: { ...filters.canonical, [key]: val } });
+  // A2 — grava valor único (input "contém") OU lista (multi-checkbox). Lista
+  // vazia é removida da key p/ manter `canonical` enxuto (default = todos).
+  function updateCanonical(key: string, val: string | string[]) {
+    const next = { ...filters.canonical };
+    if (Array.isArray(val) && val.length === 0) {
+      delete next[key];
+    } else {
+      next[key] = val;
+    }
+    onChange({ ...filters, canonical: next });
   }
 
   function clearAll() {
@@ -399,12 +426,18 @@ export function CaseFiltersPanel({
               </div>
             )}
 
-            {/* Filtros dinâmicos do tema (canonical field defs). Dropdown com as
-                opções definidas + "(em branco)"; texto com muitos valores usa
-                busca "contém". */}
+            {/* Filtros dinâmicos do tema (canonical field defs). A2: campos de
+                seleção viram multi-checkbox (marca 1+ valores, união/OR). A3:
+                acima do teto de opções (ou texto com muitos valores) degrada
+                para busca "contém" (input de valor único). */}
             {filterableDefs.map((def) => {
               const opts = canonicalOptions[def.key] ?? [];
-              const useInput = def.type === "text" && opts.length > 20;
+              // A3 — texto com muitas opções OU qualquer tipo acima do teto vira
+              // input "Contém…" (evita dropdown gigante de alta cardinalidade).
+              const useInput =
+                (def.type === "text" && opts.length > 20) || opts.length > FILTER_OPTIONS_CAP;
+              const raw = filters.canonical[def.key];
+              const inputVal = typeof raw === "string" && raw !== CANONICAL_EMPTY ? raw : "";
               return (
                 <div key={def.key}>
                   <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
@@ -413,29 +446,17 @@ export function CaseFiltersPanel({
                   {useInput ? (
                     <input
                       type="text"
-                      value={
-                        filters.canonical[def.key] === CANONICAL_EMPTY
-                          ? ""
-                          : (filters.canonical[def.key] ?? "")
-                      }
+                      value={inputVal}
                       onChange={(e) => updateCanonical(def.key, e.target.value)}
                       placeholder="Contém..."
                       className={inputClass}
                     />
                   ) : (
-                    <select
-                      value={filters.canonical[def.key] ?? ""}
-                      onChange={(e) => updateCanonical(def.key, e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">Todos</option>
-                      <option value={CANONICAL_EMPTY}>(em branco)</option>
-                      {opts.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                    <CanonicalFilterMultiSelect
+                      options={opts}
+                      value={toSelectedSet(raw)}
+                      onChange={(next) => updateCanonical(def.key, next)}
+                    />
                   )}
                 </div>
               );
@@ -458,6 +479,92 @@ export function CaseFiltersPanel({
         </div>
       )}
     </div>
+  );
+}
+
+// A2 (2026-08-05) — Multi-checkbox de VALOR para um filtro canônico de seleção.
+// Marca 1+ valores (união/OR interno). Inclui a pseudo-opção "(em branco)" =
+// CANONICAL_EMPTY, mutuamente exclusiva com valores reais (não existe "vazio E
+// igual a X"): marcar "(em branco)" limpa os reais e vice-versa. Rótulo do
+// gatilho: "Todos" (nenhum) / "1 selecionado" / "N selecionados". Reusa o padrão
+// visual de CanonicalMultiSelect (Popover + Checkbox), mas com {value,label}.
+function CanonicalFilterMultiSelect({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const selected = value;
+  const emptySelected = selected.includes(CANONICAL_EMPTY);
+  const label =
+    selected.length === 0
+      ? "Todos"
+      : selected.length === 1
+        ? emptySelected
+          ? "(em branco)"
+          : "1 selecionado"
+        : `${selected.length} selecionados`;
+
+  function toggle(val: string, checked: boolean) {
+    if (val === CANONICAL_EMPTY) {
+      // "(em branco)" é exclusivo: marcá-la limpa os valores reais.
+      onChange(checked ? [CANONICAL_EMPTY] : []);
+      return;
+    }
+    if (checked) {
+      // marcar um valor real limpa "(em branco)".
+      onChange([...selected.filter((s) => s !== CANONICAL_EMPTY), val]);
+    } else {
+      onChange(selected.filter((s) => s !== val));
+    }
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className="flex w-full items-center justify-between gap-2 py-2 px-3 bg-[var(--card)] border border-[rgba(120,96,30,0.12)] rounded-md text-[13px] focus:border-[var(--gold)] outline-none"
+        >
+          <span className="truncate text-left">{label}</span>
+          <ChevronsUpDown size={13} className="shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-2" onClick={(e) => e.stopPropagation()}>
+        <div className="max-h-56 space-y-0.5 overflow-auto">
+          <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-[var(--muted)]">
+            <Checkbox
+              checked={emptySelected}
+              onCheckedChange={(c) => toggle(CANONICAL_EMPTY, c === true)}
+            />
+            <span className="text-muted-foreground">(em branco)</span>
+          </label>
+          {options.length === 0 ? (
+            <div className="px-1 text-xs text-muted-foreground">Sem opções.</div>
+          ) : (
+            options.map((opt) => {
+              const checked = selected.includes(opt.value);
+              return (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-[var(--muted)]"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(c) => toggle(opt.value, c === true)}
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              );
+            })
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -489,38 +596,44 @@ export function applyCaseFilters<T extends CaseRow>(
     }
     if (filters.frente && (c.frente_slug ?? "") !== filters.frente) return false;
     if (filters.caso && (c.caso_pasta_nome ?? "") !== filters.caso) return false;
-    // Filtros canônicos (campos dinâmicos do tema)
+    // Filtros canônicos (campos dinâmicos do tema).
+    // A2 (2026-08-05): o valor do filtro é um CONJUNTO de selecionados (OR interno
+    // entre os valores do MESMO campo); campos diferentes seguem combinando por
+    // AND (o `for` já é AND — todo campo precisa passar).
     for (const [key, val] of Object.entries(filters.canonical)) {
-      if (!val) continue;
+      const selected = toSelectedSet(val);
+      if (selected.length === 0) continue;
+      const wantsEmpty = selected.includes(CANONICAL_EMPTY);
+      // Valores reais (sem o sentinela) em lower-case p/ comparação.
+      const realSel = selected.filter((s) => s !== CANONICAL_EMPTY);
+      const realLower = realSel.map((s) => s.toLowerCase());
       // #3 — lê da fonte certa: campo do cliente vem de client_custom_fields.
       const bag =
         scopeByKey.get(key) === "cliente"
           ? (c.client_custom_fields ?? {})
           : (c.canonical_fields ?? {});
       const rawVal = bag[key];
-      // Múltipla escolha: valor é ARRAY — casa se contém a opção escolhida.
+      // Múltipla escolha do CASO: valor é ARRAY — casa se INTERSETA o conjunto
+      // selecionado; "(em branco)" casa quando o array está vazio.
       if (Array.isArray(rawVal)) {
-        if (val === CANONICAL_EMPTY) {
-          if (rawVal.length !== 0) return false;
-          continue;
-        }
+        const empty = rawVal.length === 0;
+        if (wantsEmpty && empty) continue;
         const arr = rawVal.map((x) => String(x).toLowerCase());
-        if (!arr.includes(val.toLowerCase())) return false;
-        continue;
-      }
-      const cVal = rawVal === null || rawVal === undefined ? "" : String(rawVal);
-      // "(em branco)": mantém só quando o campo NÃO está preenchido.
-      if (val === CANONICAL_EMPTY) {
-        if (cVal.trim() !== "") return false;
-        continue;
-      }
-      const type = typeByKey.get(key);
-      // Texto (ou sem defs) → "contém"; demais tipos (dropdown) → igualdade.
-      if (type === undefined || type === "text") {
-        if (!cVal.toLowerCase().includes(val.toLowerCase())) return false;
-      } else if (cVal.toLowerCase() !== val.toLowerCase()) {
+        if (realLower.some((s) => arr.includes(s))) continue;
         return false;
       }
+      const cVal = rawVal === null || rawVal === undefined ? "" : String(rawVal);
+      const isEmpty = cVal.trim() === "";
+      // "(em branco)" (OR): mantém se o campo está vazio.
+      if (wantsEmpty && isEmpty) continue;
+      const cLower = cVal.toLowerCase();
+      const type = typeByKey.get(key);
+      // Texto (ou sem defs) → "contém algum" termo; demais (dropdown) → valor ∈ S.
+      const hit =
+        type === undefined || type === "text"
+          ? realLower.some((s) => cLower.includes(s))
+          : realLower.includes(cLower);
+      if (!hit) return false;
     }
     return true;
   });

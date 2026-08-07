@@ -35,14 +35,171 @@ const now = () => new Date().toISOString();
 // ----------------------------------------------------------------------------
 // Usuários
 // ----------------------------------------------------------------------------
-export async function listUsers() {
+export type UserWithDistribution = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+  // Distribuição (ProJuris) — join em system_projuris_executor_mapping (H5).
+  projuris_responsavel_id: string | null;
+  participa_distribuicao: boolean;
+  weight: number | null;
+  eligible_complex: boolean | null;
+};
+
+export async function listUsers(): Promise<UserWithDistribution[]> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_users_active")
     .select("id, email, full_name, phone, role, status, created_at")
     .order("created_at", { ascending: true });
   check(error);
-  return data ?? [];
+  const users = (data ?? []) as Array<{
+    id: string;
+    email: string;
+    full_name: string | null;
+    phone: string | null;
+    role: string;
+    status: string;
+    created_at: string;
+  }>;
+
+  // Join com o mapping de executores (H5) — 1 lookup por lista, mapeado por
+  // executor_id (= system_users.id). Não chama o ProJuris.
+  const { data: mappings } = await sb
+    .from("system_projuris_executor_mapping")
+    .select("executor_id, projuris_responsavel_id, active, weight, eligible_complex")
+    .eq("organization_id", DEFAULT_ORG_ID);
+  const byExecutor = new Map(
+    (mappings ?? []).map((m) => [
+      (m as { executor_id: string }).executor_id,
+      m as {
+        projuris_responsavel_id: string;
+        active: boolean;
+        weight: number;
+        eligible_complex: boolean;
+      },
+    ]),
+  );
+
+  return users.map((u) => {
+    const m = byExecutor.get(u.id);
+    return {
+      ...u,
+      projuris_responsavel_id: m?.projuris_responsavel_id ?? null,
+      participa_distribuicao: m?.active ?? false,
+      weight: m?.weight ?? null,
+      eligible_complex: m?.eligible_complex ?? null,
+    };
+  });
+}
+
+/**
+ * Configura a distribuição (ProJuris) de um usuário (H5). Faz upsert em
+ * system_projuris_executor_mapping usando o usuário REAL (executor_id =
+ * system_users.id) como fonte da verdade.
+ *
+ * D-merge (Opção A): um código ProJuris tem no máximo 1 executor (UNIQUE
+ * projuris_responsavel_id, organization_id). Se o código já pertence a OUTRO
+ * executor (ex.: o usuário sintético do seed 20260805000001), re-aponta o
+ * executor_id para o usuário real — sem criar mapping órfão nem violar o UNIQUE.
+ * O usuário sintético anterior fica sem mapping (deixa de distribuir).
+ */
+export async function setUserDistribution(
+  userId: string,
+  input: {
+    projuris_responsavel_id?: string | null;
+    participa?: boolean;
+    weight?: number | null;
+    eligible_complex?: boolean | null;
+  },
+) {
+  const sb = getSupabaseAdmin();
+
+  const codigo = (input.projuris_responsavel_id ?? "").trim();
+  const participa = !!input.participa;
+  const weight = input.weight != null && input.weight > 0 ? input.weight : 1.0;
+  const eligibleComplex = input.eligible_complex ?? true;
+
+  // Mapping ATUAL deste usuário (por executor_id), se houver.
+  const { data: existingByUser } = await sb
+    .from("system_projuris_executor_mapping")
+    .select("id, projuris_responsavel_id")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .eq("executor_id", userId)
+    .maybeSingle();
+
+  // Sem código ProJuris: só faz sentido DESLIGAR/ajustar um mapping existente.
+  // (a UI orienta a não "participar" sem código.)
+  if (!codigo) {
+    if (existingByUser) {
+      const { error } = await sb
+        .from("system_projuris_executor_mapping")
+        .update({ active: false, weight, eligible_complex: eligibleComplex } as never)
+        .eq("id", (existingByUser as { id: string }).id);
+      check(error);
+    }
+    if (participa) {
+      throw new UsersServiceError(
+        "Informe o ID ProJuris antes de marcar o usuário como participante da distribuição.",
+        400,
+      );
+    }
+    return { ok: true as const, executor_id: userId, projuris_responsavel_id: null };
+  }
+
+  // Mapping que já usa ESTE código (pode ser de outro executor — ex.: sintético).
+  const { data: existingByCode } = await sb
+    .from("system_projuris_executor_mapping")
+    .select("id, executor_id")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .eq("projuris_responsavel_id", codigo)
+    .maybeSingle();
+
+  const fields = {
+    projuris_responsavel_id: codigo,
+    executor_id: userId,
+    active: participa,
+    weight,
+    eligible_complex: eligibleComplex,
+  };
+
+  if (existingByCode) {
+    const codeRow = existingByCode as { id: string; executor_id: string };
+    // Se o código pertencia a outro executor, re-aponta para o usuário real
+    // (D-merge). Também remove o mapping ANTIGO deste usuário (se apontava p/
+    // outro código) para não deixá-lo com 2 mappings.
+    if (existingByUser && (existingByUser as { id: string }).id !== codeRow.id) {
+      const { error: delErr } = await sb
+        .from("system_projuris_executor_mapping")
+        .delete()
+        .eq("id", (existingByUser as { id: string }).id);
+      check(delErr);
+    }
+    const { error } = await sb
+      .from("system_projuris_executor_mapping")
+      .update(fields as never)
+      .eq("id", codeRow.id);
+    check(error);
+  } else if (existingByUser) {
+    // Usuário já tinha mapping (com OUTRO código) → troca o código no registro.
+    const { error } = await sb
+      .from("system_projuris_executor_mapping")
+      .update(fields as never)
+      .eq("id", (existingByUser as { id: string }).id);
+    check(error);
+  } else {
+    // Novo mapping.
+    const { error } = await sb
+      .from("system_projuris_executor_mapping")
+      .insert({ organization_id: DEFAULT_ORG_ID, ...fields } as never);
+    check(error);
+  }
+
+  return { ok: true as const, executor_id: userId, projuris_responsavel_id: codigo };
 }
 
 /**
@@ -443,11 +600,7 @@ export type ReassignMapping = {
  * escolhidos e então EXCLUI o usuário DE VEZ (perfil + conta Auth → perde acesso).
  * Só deve ser chamado pelo admin (gate no RPC). Não permite excluir a si mesmo.
  */
-export async function reassignAndDeleteUser(
-  userId: string,
-  map: ReassignMapping,
-  actorId: string,
-) {
+export async function reassignAndDeleteUser(userId: string, map: ReassignMapping, actorId: string) {
   const sb = getSupabaseAdmin();
   if (userId === actorId) {
     throw new UsersServiceError("Você não pode excluir a si mesmo.", 400);

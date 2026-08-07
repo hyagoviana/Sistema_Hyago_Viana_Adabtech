@@ -22,7 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUsers, useSetUserRole, useSetUserStatus, useUpdateUserProfile } from "@/hooks/useUsers";
+import { Switch } from "@/components/ui/switch";
+import {
+  useUsers,
+  useSetUserRole,
+  useSetUserStatus,
+  useUpdateUserProfile,
+  useSetUserDistribution,
+} from "@/hooks/useUsers";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
 
 import { DeleteUserDialog } from "./DeleteUserDialog";
@@ -46,6 +53,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const setRole = useSetUserRole();
   const setStatus = useSetUserStatus();
   const updateProfile = useUpdateUserProfile();
+  const setDistribution = useSetUserDistribution();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
@@ -57,10 +65,21 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     role: string;
     originalRole: string;
     isSelf: boolean;
+    // Distribuição (ProJuris) — H5.
+    projurisId: string;
+    participa: boolean;
+    eligibleComplex: boolean;
+    weight: string;
   } | null>(null);
 
   async function salvarPerfil() {
     if (!editing) return;
+    // Orienta o admin: "participa" sem ID ProJuris não faz sentido (o motor
+    // casa a tarefa pelo código). Bloqueia no cliente antes do save.
+    if (editing.participa && !editing.projurisId.trim()) {
+      toast.error("Informe o ID ProJuris antes de marcar como participante da distribuição.");
+      return;
+    }
     try {
       await updateProfile.mutateAsync({
         id: editing.id,
@@ -75,6 +94,15 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       ) {
         await setRole.mutateAsync({ id: editing.id, role: editing.role });
       }
+      // Distribuição (ProJuris) — H5. Grava o mapping por executor_id.
+      const w = parseFloat(editing.weight);
+      await setDistribution.mutateAsync({
+        id: editing.id,
+        projuris_responsavel_id: editing.projurisId.trim() || null,
+        participa: editing.participa,
+        weight: Number.isFinite(w) && w > 0 ? w : 1.0,
+        eligible_complex: editing.eligibleComplex,
+      });
       toast.success("Dados do usuário atualizados.");
       setEditing(null);
     } catch (err) {
@@ -172,6 +200,22 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   </div>
                 </button>
 
+                {/* Distribuição (ProJuris) — H5: mostra rapidamente quem é
+                    executor e o código ProJuris. */}
+                {u.participa_distribuicao ? (
+                  <span
+                    className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0"
+                    style={{
+                      color: "var(--gold-700)",
+                      background: "rgba(212,168,50,0.08)",
+                      border: "1px solid var(--border)",
+                    }}
+                    title="Participa da distribuição (motor ProJuris)"
+                  >
+                    Distribuição {u.projuris_responsavel_id ? `· ${u.projuris_responsavel_id}` : ""}
+                  </span>
+                ) : null}
+
                 <span
                   className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0"
                   style={{
@@ -212,6 +256,10 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                       role: u.role,
                       originalRole: u.role,
                       isSelf,
+                      projurisId: u.projuris_responsavel_id ?? "",
+                      participa: u.participa_distribuicao ?? false,
+                      eligibleComplex: u.eligible_complex ?? true,
+                      weight: String(u.weight ?? 1),
                     })
                   }
                   title="Editar dados e cargo"
@@ -310,6 +358,55 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 )}
               </div>
 
+              {/* Distribuição (ProJuris) — H5. Fonte da verdade do executor do
+                  motor: ID ProJuris + participa + peso + elegível-complexo.
+                  Grava em system_projuris_executor_mapping por executor_id. */}
+              <div className="border-t border-[var(--border)] pt-3 space-y-3">
+                <p className="text-[12px] font-semibold text-[var(--navy)]">
+                  Distribuição (ProJuris)
+                </p>
+                <div>
+                  <Label>ID ProJuris (executor)</Label>
+                  <Input
+                    value={editing.projurisId}
+                    onChange={(e) => setEditing({ ...editing, projurisId: e.target.value })}
+                    placeholder="ex.: 128858"
+                    inputMode="numeric"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Código do usuário no ProJuris. Vazio = sem código (não distribui).
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="mb-0">Participa da distribuição</Label>
+                  <Switch
+                    checked={editing.participa}
+                    onCheckedChange={(v) => setEditing({ ...editing, participa: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="mb-0">Elegível a tarefas complexas</Label>
+                  <Switch
+                    checked={editing.eligibleComplex}
+                    onCheckedChange={(v) => setEditing({ ...editing, eligibleComplex: v })}
+                  />
+                </div>
+                <div>
+                  <Label>Peso na fila</Label>
+                  <Input
+                    type="number"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    value={editing.weight}
+                    onChange={(e) => setEditing({ ...editing, weight: e.target.value })}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Um usuário suspenso não distribui, mesmo com a flag ligada.
+                </p>
+              </div>
+
               {/* Permissões por aba do usuário (R3, 2026-07-19) — carrega/salva com
                   botão próprio, desacoplado do "Salvar" de perfil/cargo acima. Não
                   exibido para admin nem para você mesmo: um override só rebaixaria
@@ -329,8 +426,13 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
             <Button variant="outline" onClick={() => setEditing(null)}>
               Cancelar
             </Button>
-            <Button onClick={salvarPerfil} disabled={updateProfile.isPending || setRole.isPending}>
-              {updateProfile.isPending || setRole.isPending ? "Salvando…" : "Salvar"}
+            <Button
+              onClick={salvarPerfil}
+              disabled={updateProfile.isPending || setRole.isPending || setDistribution.isPending}
+            >
+              {updateProfile.isPending || setRole.isPending || setDistribution.isPending
+                ? "Salvando…"
+                : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>

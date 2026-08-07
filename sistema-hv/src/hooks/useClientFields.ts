@@ -7,8 +7,10 @@ import {
   createClientFieldDefFn,
   deleteClientFieldDefFn,
   listClientFieldDefsFn,
+  listClientFieldTemaLinksFn,
   reorderClientFieldDefsFn,
   setClientFieldActiveFn,
+  setClientFieldTemaLinksFn,
   updateClientFieldDefFn,
 } from "@/rpc/clientFields";
 
@@ -66,5 +68,35 @@ export function useSetClientFieldActive() {
   return useMutation({
     mutationFn: (vars: { id: string; active: boolean }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientFieldDefs.all }),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// B1 (2026-08-05) — vínculo campo-do-cliente → tema(s).
+// ----------------------------------------------------------------------------
+export function useClientFieldTemaLinks(clientFieldDefId: string | null | undefined) {
+  const fn = useServerFn(listClientFieldTemaLinksFn);
+  return useQuery({
+    queryKey: ["client-field-tema-links", clientFieldDefId],
+    queryFn: () => fn({ data: { clientFieldDefId: clientFieldDefId as string } }),
+    enabled: !!clientFieldDefId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useSetClientFieldTemaLinks() {
+  const fn = useServerFn(setClientFieldTemaLinksFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { clientFieldDefId: string; temaIds: string[] }) => fn({ data: vars }),
+    // Invalida o campo do cliente, o vínculo e as defs de tema (para os painéis de
+    // filtro/coluna refletirem a def-espelho na hora).
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.clientFieldDefs.all });
+      qc.invalidateQueries({ queryKey: ["client-field-tema-links", vars.clientFieldDefId] });
+      qc.invalidateQueries({ queryKey: ["temas"] });
+      qc.invalidateQueries({ queryKey: ["tema-field-defs"] });
+      qc.invalidateQueries({ queryKey: ["tema-field-defs-admin"] });
+    },
   });
 }

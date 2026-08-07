@@ -7,7 +7,13 @@ import { checkEmailDeliverability } from "./email-verify";
 import { createFolder, deleteFile, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import type { Database, Json } from "./supabase/types";
-import type { ClientCreateOutput, ClientUpdateOutput } from "./validators/client";
+import {
+  isValidCnpj,
+  isValidCpf,
+  sanitizeCpfCnpj,
+  type ClientCreateOutput,
+  type ClientUpdateOutput,
+} from "./validators/client";
 
 type ClientInsert = Database["public"]["Tables"]["system_clients"]["Insert"];
 type ClientUpdate = Database["public"]["Tables"]["system_clients"]["Update"];
@@ -295,6 +301,78 @@ export async function updateClient(id: string, input: ClientUpdateOutput) {
     entity_type: "client",
     entity_id: data.id,
     diff: input as unknown as Json,
+  });
+
+  return data;
+}
+
+// ----------------------------------------------------------------------------
+// J2 — PREENCHER CPF/CNPJ (ficha do cliente). Troca o marcador CL-XXXX (batch
+// Mais Médicos, A8) por um CPF/CNPJ REAL. Valida, grava o valor canônico (só
+// dígitos), limpa `custom_fields.cpf_pendente` e ajusta `person_type`. Trata o
+// UNIQUE PARCIAL (organization_id, cpf_cnpj) WHERE deleted_at IS NULL com
+// mensagem amigável (nunca 500 cru).
+//
+// Diferente do updateClient (form geral, onde o CPF fica bloqueado em edição):
+// aqui o CPF é o alvo. A validação de CPF/CNPJ é REUSADA de validators/client.
+// ----------------------------------------------------------------------------
+export async function updateClientCpf(id: string, rawCpf: string) {
+  const sb = getSupabaseAdmin();
+
+  // Valida + canoniza (só dígitos). Rejeita o marcador CL-XXXX e valores inválidos.
+  const clean = sanitizeCpfCnpj(rawCpf ?? "");
+  const isValid =
+    (clean.length === 11 && isValidCpf(clean)) || (clean.length === 14 && isValidCnpj(clean));
+  if (!isValid) {
+    throw new ClientServiceError("CPF ou CNPJ inválido", "DB_ERROR", 422);
+  }
+  const person_type = clean.length === 14 ? "PJ" : "PF";
+
+  // Lê o cliente para preservar/limpar o custom_fields (remove o flag cpf_pendente).
+  const { data: before, error: findErr } = await sb
+    .from("system_clients")
+    .select("id, organization_id, custom_fields")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (findErr) throw new ClientServiceError(findErr.message, "DB_ERROR", 500);
+  if (!before) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
+
+  const current = (before.custom_fields as Record<string, unknown> | null) ?? {};
+  const nextCustom = { ...current };
+  delete nextCustom.cpf_pendente;
+
+  const { data, error } = await sb
+    .from("system_clients")
+    .update({
+      cpf_cnpj: clean,
+      person_type,
+      custom_fields: nextCustom as never,
+    } as ClientUpdate)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select()
+    .single();
+
+  if (error) {
+    // UNIQUE parcial (organization_id, cpf_cnpj) WHERE deleted_at IS NULL — o CPF
+    // real já pertence a outro cliente ATIVO da org. Mensagem clara, sem 500.
+    if (error.code === "23505") {
+      throw new ClientServiceError("CPF já cadastrado para outro cliente", "DUPLICATE_CPF", 409);
+    }
+    if (error.code === "PGRST116") {
+      throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
+    }
+    throw new ClientServiceError(error.message, "DB_ERROR", 500);
+  }
+  if (!data) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
+
+  await sb.from("system_audit_log").insert({
+    organization_id: data.organization_id,
+    action: "client.fill_cpf",
+    entity_type: "client",
+    entity_id: data.id,
+    diff: { cpf_cnpj: clean, cpf_pendente_removed: "cpf_pendente" in current } as unknown as Json,
   });
 
   return data;

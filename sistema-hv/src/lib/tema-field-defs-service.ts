@@ -128,6 +128,15 @@ function normalizeMaxOccurrences(v: unknown): number {
   return Math.min(n, 20);
 }
 
+// A5 (2026-08-05) — nº de LINHAS INICIAIS mostradas de largada. Normaliza para
+// inteiro em [1, 20] e clampa em <= teto (max_occurrences) — o CHECK do banco
+// (initial_occurrences <= max_occurrences) rejeitaria um initial acima do teto.
+function normalizeInitialOccurrences(v: unknown, max: number): number {
+  const n = typeof v === "number" ? Math.floor(v) : 1;
+  const base = !Number.isFinite(n) || n < 1 ? 1 : Math.min(n, 20);
+  return Math.min(base, max);
+}
+
 // Colisão de chave no BALDE do cliente (system_clients.custom_fields), para
 // campos scope='cliente'. Esse balde é COMPARTILHADO com os campos de cliente
 // (system_client_field_defs) e com scope='cliente' de OUTROS temas. Compartilhar
@@ -166,6 +175,131 @@ async function findClientBucketKeyConflict(
   return null;
 }
 
+// A4 (2026-08-05) — máximos da hierarquia de campos dependentes (pai→filho).
+const MAX_DEPTH = 3; // raiz(1) → filho(2) → neto(3). 4º nível recusado.
+const MAX_CHILDREN = 3; // até 3 filhos por pai; o 4º é recusado.
+
+// Só o que a validação de hierarquia precisa de cada def (defs ativas do
+// tema/frente). Espelha as colunas relevantes da view _active.
+type ParentGraphRow = {
+  id: string;
+  frente_slug: string | null;
+  parent_field_def_id: string | null;
+};
+
+// A4 — valida a ligação pai→filho ANTES de gravar. Regras (todas 422):
+//  (a) o pai existe, está ativo e pertence ao MESMO tema E mesma frente/painel;
+//  (b) não é auto-referência (pai = o próprio campo);
+//  (c) não cria CICLO (o pai não pode ser descendente do próprio campo);
+//  (d) profundidade final ≤ MAX_DEPTH (contando os descendentes do filho);
+//  (e) o pai não pode já ter MAX_CHILDREN filhos ativos.
+// `selfId` é null no create (campo ainda não existe). Carrega as defs ativas do
+// tema (todas as frentes) e filtra pela cadeia — barato (poucas defs por tema).
+async function validateParent(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  args: { temaId: string; frenteSlug: string | null; selfId: string | null; parentId: string },
+): Promise<void> {
+  const { temaId, frenteSlug, selfId, parentId } = args;
+
+  if (selfId && parentId === selfId) {
+    throw new TemaFieldDefServiceError("Um campo não pode depender de si mesmo.", 422);
+  }
+
+  const { data, error } = await sb
+    .from("system_tema_field_defs_active")
+    .select("id, frente_slug, parent_field_def_id")
+    .eq("tema_id", temaId);
+  if (error) throw new TemaFieldDefServiceError(error.message, 500);
+  const rows = (data ?? []) as ParentGraphRow[];
+  const byId = new Map(rows.map((r) => [r.id, r]));
+
+  const parent = byId.get(parentId);
+  if (!parent) {
+    throw new TemaFieldDefServiceError(
+      "Campo pai não encontrado neste tema (ou foi excluído).",
+      422,
+    );
+  }
+  // (a) mesma frente/painel — normaliza NULL/"" para comparar painel padrão × frente.
+  const norm = (s: string | null) => s ?? "";
+  if (norm(parent.frente_slug) !== norm(frenteSlug)) {
+    throw new TemaFieldDefServiceError(
+      "O campo pai precisa estar no mesmo painel/frente que o campo dependente.",
+      422,
+    );
+  }
+
+  // (c) sem ciclo: subindo a cadeia de pais a partir do pai escolhido, não posso
+  // reencontrar o próprio campo. Também detecta ciclos pré-existentes (guarda).
+  const ancestors: string[] = [];
+  let cursor: string | null = parentId;
+  const seen = new Set<string>();
+  while (cursor) {
+    if (selfId && cursor === selfId) {
+      throw new TemaFieldDefServiceError(
+        "Dependência inválida: criaria um ciclo (o pai já depende deste campo).",
+        422,
+      );
+    }
+    if (seen.has(cursor)) break; // ciclo pré-existente — para de subir.
+    seen.add(cursor);
+    ancestors.push(cursor);
+    const node: ParentGraphRow | undefined = byId.get(cursor);
+    cursor = node?.parent_field_def_id ?? null;
+  }
+
+  // (d) profundidade. Nível do pai = nº de ancestrais dele + 1 (ele próprio).
+  // O filho fica um nível abaixo. Somado à sub-árvore que já pende do filho
+  // (quando editando um campo que já tem netos), não pode passar de MAX_DEPTH.
+  const parentDepth = ancestors.length; // inclui o próprio pai
+  const childDepth = parentDepth + 1;
+  if (childDepth > MAX_DEPTH) {
+    throw new TemaFieldDefServiceError(
+      `Limite de ${MAX_DEPTH} níveis de dependência. Este campo pai já está no nível máximo.`,
+      422,
+    );
+  }
+  // Altura da sub-árvore pendurada no próprio campo (só no update): se o campo já
+  // tem filhos/netos, mover ele para baixo de `parent` empurraria os descendentes.
+  if (selfId) {
+    const childrenOf = new Map<string, string[]>();
+    for (const r of rows) {
+      if (r.parent_field_def_id) {
+        const arr = childrenOf.get(r.parent_field_def_id) ?? [];
+        arr.push(r.id);
+        childrenOf.set(r.parent_field_def_id, arr);
+      }
+    }
+    const heightBelow = (id: string, guard: Set<string>): number => {
+      if (guard.has(id)) return 0;
+      guard.add(id);
+      const kids = childrenOf.get(id) ?? [];
+      let h = 0;
+      for (const k of kids) h = Math.max(h, 1 + heightBelow(k, guard));
+      return h;
+    };
+    const subtreeHeight = heightBelow(selfId, new Set<string>());
+    if (childDepth + subtreeHeight > MAX_DEPTH) {
+      throw new TemaFieldDefServiceError(
+        `Limite de ${MAX_DEPTH} níveis de dependência: este campo já tem descendentes que ultrapassariam o limite sob esse pai.`,
+        422,
+      );
+    }
+  }
+
+  // (e) até MAX_CHILDREN filhos ativos por pai (não conta o próprio campo, que
+  // pode já ser filho desse pai num update — reatribuir não incrementa).
+  const currentChildren = rows.filter(
+    (r) => r.parent_field_def_id === parentId && r.id !== selfId,
+  ).length;
+  if (currentChildren >= MAX_CHILDREN) {
+    throw new TemaFieldDefServiceError(
+      `O campo pai já tem ${MAX_CHILDREN} campos dependentes (máximo).`,
+      422,
+    );
+  }
+}
+
 export async function createTemaFieldDef(input: {
   temaId: string;
   frenteSlug?: string | null;
@@ -179,7 +313,22 @@ export async function createTemaFieldDef(input: {
   hiddenInList?: boolean;
   hiddenInFilters?: boolean;
   maxOccurrences?: number;
+  // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto). Só p/ text/number/date.
+  initialOccurrences?: number;
   moveToStageSlug?: string | null;
+  // A4 (2026-08-05) — campo PAI de quem este depende (mesmo tema/frente). null =
+  // sem dependência. Validado (existência/mesma frente/ciclo/profundidade/filhos).
+  parentFieldDefId?: string | null;
+  // A7 (2026-08-05) — override do bloqueio do balde COMPARTILHADO do cliente.
+  // Só afeta scope='cliente': quando true, o admin assume conscientemente que é o
+  // MESMO dado da pessoa e libera reusar a mesma key mesmo com rótulo diferente.
+  // Não afeta a unicidade POR TEMA (índice/pré-check) nem scope='caso'.
+  allowSharedClientKey?: boolean;
+  // B1 (2026-08-05) — usa a `key` fornecida VERBATIM (sem re-slugar via toKey).
+  // Necessário para a def-ESPELHO de campo do cliente: ela precisa casar EXATAMENTE
+  // a key do system_client_field_defs (que preserva underscores) — do contrário o
+  // balde compartilhado do cliente não é o mesmo e o dado não reflete.
+  rawKey?: boolean;
 }): Promise<FieldDefRow> {
   const label = input.label.trim();
   if (!label) throw new TemaFieldDefServiceError("Rótulo do campo é obrigatório", 422);
@@ -189,11 +338,20 @@ export async function createTemaFieldDef(input: {
   const scope = input.scope === "cliente" ? "cliente" : "caso";
   // Múltiplas ocorrências só faz sentido em campos de valor livre (texto/nº/data);
   // select/multiselect/boolean/money são 1 (o multiselect já é lista por natureza).
-  const maxOccurrences =
-    input.type === "text" || input.type === "number" || input.type === "date"
-      ? normalizeMaxOccurrences(input.maxOccurrences)
-      : 1;
-  const key = (input.key?.trim() ? toKey(input.key) : toKey(label)) || "campo";
+  const supportsMulti = input.type === "text" || input.type === "number" || input.type === "date";
+  const maxOccurrences = supportsMulti ? normalizeMaxOccurrences(input.maxOccurrences) : 1;
+  // A5 — linhas iniciais só p/ campos de valor livre; sempre <= teto.
+  const initialOccurrences = supportsMulti
+    ? normalizeInitialOccurrences(input.initialOccurrences, maxOccurrences)
+    : 1;
+  // B1 — `rawKey` usa a key fornecida sem re-slugar (casamento exato com o campo
+  // do cliente). Caso contrário, deriva a key via toKey (comportamento padrão).
+  const key =
+    (input.rawKey && input.key?.trim()
+      ? input.key.trim()
+      : input.key?.trim()
+        ? toKey(input.key)
+        : toKey(label)) || "campo";
   const frenteSlug = input.frenteSlug?.trim() ? input.frenteSlug.trim() : null;
 
   const sb = getSupabaseAdmin();
@@ -217,20 +375,38 @@ export async function createTemaFieldDef(input: {
     frenteSlug ? dup.eq("frente_slug", frenteSlug) : dup.is("frente_slug", null)
   ).maybeSingle();
   if (existing) {
-    throw new TemaFieldDefServiceError("Já existe um campo com essa chave neste tema/frente.", 409);
+    throw new TemaFieldDefServiceError(
+      "Já existe um campo com essa chave neste tema/frente. " +
+        "A unicidade é por tema/frente — a mesma chave pode ser usada em outros temas.",
+      409,
+    );
   }
 
   // scope='cliente': recusa colisão com campo de SIGNIFICADO diferente no balde
-  // do cliente (evita sobrescrever silenciosamente valores de outro campo).
-  if (scope === "cliente") {
+  // COMPARTILHADO do cliente (evita sobrescrever silenciosamente valores de outro
+  // campo). NÃO roda para scope='caso' (esse é único só por tema/frente) e é
+  // ignorado quando o admin marca o override `allowSharedClientKey`.
+  if (scope === "cliente" && !input.allowSharedClientKey) {
     const conflict = await findClientBucketKeyConflict(sb, key, label, null);
     if (conflict) {
       throw new TemaFieldDefServiceError(
-        `A chave "${key}" já é usada pelo campo "${conflict}" nos dados do cliente. ` +
-          `Renomeie este campo (ou use exatamente o mesmo rótulo, se for o mesmo dado da pessoa).`,
+        `A chave "${key}" já é usada pelo campo "${conflict}" nos dados COMPARTILHADOS do cliente ` +
+          `(vale para todos os casos/temas do cliente). Renomeie este campo, use exatamente o mesmo ` +
+          `rótulo se for o mesmo dado da pessoa, ou marque "liberar chave compartilhada" para usar mesmo assim.`,
         409,
       );
     }
+  }
+
+  // A4 — dependência pai→filho (opcional). Valida hierarquia (422) antes de gravar.
+  const parentFieldDefId = input.parentFieldDefId ?? null;
+  if (parentFieldDefId) {
+    await validateParent(sb, {
+      temaId: input.temaId,
+      frenteSlug,
+      selfId: null,
+      parentId: parentFieldDefId,
+    });
   }
 
   const { data, error } = await sb
@@ -249,8 +425,12 @@ export async function createTemaFieldDef(input: {
       hidden_in_list: input.hiddenInList ?? false,
       hidden_in_filters: input.hiddenInFilters ?? false,
       max_occurrences: maxOccurrences,
+      // A5 — nº de linhas mostradas de largada (<= teto).
+      initial_occurrences: initialOccurrences,
       // A5 5c — auto-avanço: só campos boolean; demais tipos ficam NULL.
       move_to_stage_slug: normalizeMoveToStage(input.type, input.moveToStageSlug),
+      // A4 — campo pai (dependência); null = sem dependência.
+      parent_field_def_id: parentFieldDefId,
     })
     .select()
     .single();
@@ -272,7 +452,14 @@ export async function updateTemaFieldDef(
     hiddenInList: boolean;
     hiddenInFilters: boolean;
     maxOccurrences: number;
+    // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
+    initialOccurrences: number;
     moveToStageSlug: string | null;
+    // A4 (2026-08-05) — reatribui/remove a dependência pai. null = remove.
+    parentFieldDefId: string | null;
+    // A7 (2026-08-05) — mesmo override do create: libera a checagem do balde
+    // COMPARTILHADO do cliente. Não persiste no banco; só controla a validação.
+    allowSharedClientKey: boolean;
   }>,
 ): Promise<FieldDefRow> {
   const sb = getSupabaseAdmin();
@@ -321,6 +508,33 @@ export async function updateTemaFieldDef(
     clean.max_occurrences = 1;
   }
 
+  // A5 (2026-08-05) — linhas iniciais. Precisa respeitar o CHECK do banco
+  // (initial_occurrences <= max_occurrences). Se `initialOccurrences` foi passado
+  // OU se o teto foi rebaixado (novo max menor que o initial já gravado), reclampa.
+  const needsInitialResolve =
+    patch.initialOccurrences !== undefined || clean.max_occurrences !== undefined;
+  if (needsInitialResolve) {
+    // Teto efetivo: o novo max (se mudou) ou o atual no banco.
+    let effMax = clean.max_occurrences;
+    let curInitial: number | undefined;
+    if (effMax === undefined || patch.initialOccurrences === undefined) {
+      const { data: cur } = await sb
+        .from("system_tema_field_defs_active")
+        .select("max_occurrences, initial_occurrences")
+        .eq("id", id)
+        .maybeSingle();
+      if (effMax === undefined) effMax = (cur?.max_occurrences as number | undefined) ?? 1;
+      curInitial = (cur?.initial_occurrences as number | undefined) ?? 1;
+    }
+    const max = effMax ?? 1;
+    if (patch.initialOccurrences !== undefined) {
+      clean.initial_occurrences = normalizeInitialOccurrences(patch.initialOccurrences, max);
+    } else if (curInitial !== undefined && curInitial > max) {
+      // Teto rebaixado abaixo do initial atual → clampa p/ não violar o CHECK.
+      clean.initial_occurrences = max;
+    }
+  }
+
   // A5 5c — auto-avanço: só campos `boolean` têm destino de etapa.
   // Regras: se moveToStageSlug foi passado, valida contra o tipo efetivo (só
   // boolean persiste; senão NULL). Se o TIPO mudou p/ algo != boolean sem
@@ -335,9 +549,10 @@ export async function updateTemaFieldDef(
     clean.move_to_stage_slug = null;
   }
 
-  // scope='cliente': revalida colisão de chave no balde do cliente quando o campo
-  // VIRA cliente (flip) ou tem o rótulo alterado (a key não muda no update).
-  if (clean.scope === "cliente" || patch.label !== undefined) {
+  // scope='cliente': revalida colisão de chave no balde COMPARTILHADO do cliente
+  // quando o campo VIRA cliente (flip) ou tem o rótulo alterado (a key não muda no
+  // update). Ignorado quando o admin marca o override `allowSharedClientKey`.
+  if ((clean.scope === "cliente" || patch.label !== undefined) && !patch.allowSharedClientKey) {
     const { data: cur } = await sb
       .from("system_tema_field_defs_active")
       .select("key, label, scope")
@@ -350,12 +565,36 @@ export async function updateTemaFieldDef(
         const conflict = await findClientBucketKeyConflict(sb, cur.key as string, effLabel, id);
         if (conflict) {
           throw new TemaFieldDefServiceError(
-            `A chave "${cur.key}" já é usada pelo campo "${conflict}" nos dados do cliente. ` +
-              `Renomeie este campo (ou use exatamente o mesmo rótulo, se for o mesmo dado da pessoa).`,
+            `A chave "${cur.key}" já é usada pelo campo "${conflict}" nos dados COMPARTILHADOS do cliente ` +
+              `(vale para todos os casos/temas do cliente). Renomeie este campo, use exatamente o mesmo ` +
+              `rótulo se for o mesmo dado da pessoa, ou marque "liberar chave compartilhada" para usar mesmo assim.`,
             409,
           );
         }
       }
+    }
+  }
+
+  // A4 — dependência pai→filho. Só toca a coluna quando `parentFieldDefId` vem no
+  // patch. null = remove a dependência (sem validar); id = valida hierarquia (422)
+  // no MESMO tema/frente do campo em edição, contando a sub-árvore dele.
+  if (patch.parentFieldDefId !== undefined) {
+    if (patch.parentFieldDefId === null) {
+      clean.parent_field_def_id = null;
+    } else {
+      const { data: cur } = await sb
+        .from("system_tema_field_defs_active")
+        .select("tema_id, frente_slug")
+        .eq("id", id)
+        .maybeSingle();
+      if (!cur) throw new TemaFieldDefServiceError("Campo não encontrado.", 404);
+      await validateParent(sb, {
+        temaId: cur.tema_id as string,
+        frenteSlug: (cur.frente_slug as string | null) ?? null,
+        selfId: id,
+        parentId: patch.parentFieldDefId,
+      });
+      clean.parent_field_def_id = patch.parentFieldDefId;
     }
   }
 

@@ -88,6 +88,15 @@ export const ALERT_CATALOG: Record<
     blocking: false,
     message: "Write-back de responsavel no Projuris falhou (retry pendente)",
   },
+  // H4: tema da intimacao nao casou com nenhuma linha de system_theme_mapping.
+  // Nao-blocking: a intimacao NAO some do resumo (antes caia em `continue`
+  // silencioso no sync-core); e contabilizada para o owner auditar a cobertura
+  // do de-para e resolver os near-miss de tema.
+  "ALT-TEMA-001": {
+    severity: "warning",
+    blocking: false,
+    message: "Tema da intimacao nao mapeado em system_theme_mapping (fallback)",
+  },
 };
 
 // ---------------------------------------------------------------------------

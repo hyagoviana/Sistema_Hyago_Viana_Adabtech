@@ -4,11 +4,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { queryKeys } from "@/lib/queryKeys";
 import {
   createCaseNoteFn,
+  createCaseFinNoteFn,
   createClientNoteFn,
   listCaseNotesFn,
+  listCaseFinNotesFn,
   listClientNotesFn,
   softDeleteNoteFn,
+  softDeleteCaseFinNoteFn,
   updateNoteFn,
+  updateCaseFinNoteFn,
 } from "@/rpc/notes";
 
 export type NoteTarget = "case" | "client";
@@ -31,6 +35,44 @@ export function useClientNotes(clientId: string) {
     queryKey: queryKeys.notes.byClient(clientId),
     queryFn: () => fn({ data: { clientId } }),
     enabled: !!clientId,
+  });
+}
+
+// F1 — comentários do FINANCEIRO (scope='financeiro'). Gate por `financeiro`.
+export function useCaseFinNotes(caseId: string, enabled = true) {
+  const fn = useServerFn(listCaseFinNotesFn);
+  return useQuery({
+    queryKey: queryKeys.notes.byCaseFin(caseId),
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId && enabled,
+  });
+}
+
+export function useCreateCaseFinNote(caseId: string) {
+  const fn = useServerFn(createCaseFinNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => fn({ data: { caseId, body } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseFin(caseId) }),
+  });
+}
+
+export function useUpdateCaseFinNote(caseId: string) {
+  const fn = useServerFn(updateCaseFinNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { noteId: string; body: string }) =>
+      fn({ data: { noteId: vars.noteId, body: vars.body } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseFin(caseId) }),
+  });
+}
+
+export function useSoftDeleteCaseFinNote(caseId: string) {
+  const fn = useServerFn(softDeleteCaseFinNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => fn({ data: { noteId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseFin(caseId) }),
   });
 }
 

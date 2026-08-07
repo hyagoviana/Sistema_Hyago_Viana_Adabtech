@@ -14,6 +14,7 @@
 // macrostatus_op — NÃO usa system_case_board_positions, NÃO toca o trigger, NÃO
 // toca system_cases. Regressão ZERO para op/fin.
 
+import { MACRO_OP_LABELS, type MacroOp } from "./cases/constants";
 import { getSupabaseAdmin } from "./supabase/server";
 import { getVisibleCaseIds } from "./visibility";
 
@@ -573,6 +574,103 @@ export async function listCaseBoards(caseId: string): Promise<string[]> {
     .eq("case_id", caseId);
   if (error) throw new BoardServiceError(error.message, 500);
   return (data ?? []).map((p) => p.board_id as string);
+}
+
+// C3 (Reunião 2026-08-05) — RASTRO OPERACIONAL agregado (multi-kanban). Devolve,
+// para UM caso, a lista de posições operacionais em TODOS os kanbans em que ele
+// está: (a) o board PRINCIPAL (virtual, derivado de macrostatus_op) SEMPRE em 1º;
+// (b) uma entrada por board CUSTOM ativo (system_case_board_positions_active), com
+// label do board e label da etapa (casado de stage_slug → stages.label). READ-ONLY
+// puro: jamais escreve, jamais toca o trigger/system_cases. As posições usam as
+// views _active, então boards/etapas soft-deletados não aparecem (AC-7).
+export type CaseOperationalTrailEntry = {
+  board_id: string | null; // null = principal (virtual, sem linha física)
+  board_label: string;
+  is_principal: boolean;
+  stage_slug: string | null;
+  stage_label: string;
+  entered_at: string | null;
+};
+
+export async function listCaseOperationalTrail(
+  caseId: string,
+): Promise<CaseOperationalTrailEntry[]> {
+  const sb = getSupabaseAdmin();
+
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, service_type_id, macrostatus_op, status_changed_at")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!caso) throw new BoardServiceError("Caso não encontrado", 404);
+
+  const entries: CaseOperationalTrailEntry[] = [];
+
+  // (a) Linha do PRINCIPAL. Label do board = board principal do tema (se houver);
+  // rótulo da etapa op = MACRO_OP_LABELS[macrostatus_op] (fallback: valor cru).
+  const boards = caso.service_type_id ? await listBoards(caso.service_type_id) : [];
+  const principal = boards.find((b) => b.is_principal);
+  const macroOp = caso.macrostatus_op as string | null;
+  entries.push({
+    board_id: null,
+    board_label: principal?.label ?? "Principal",
+    is_principal: true,
+    stage_slug: macroOp,
+    stage_label: macroOp ? (MACRO_OP_LABELS[macroOp as MacroOp] ?? macroOp) : "—",
+    entered_at: caso.status_changed_at ?? null,
+  });
+
+  // (b) Boards CUSTOM em que o caso tem posição ativa. Casa stage_slug → label da
+  // etapa do board (system_pipeline_stages_active). Ordena pela `ordem` do board.
+  const { data: positions, error: posErr } = await sb
+    .from("system_case_board_positions_active")
+    .select("board_id, stage_slug, entered_at")
+    .eq("case_id", caseId);
+  if (posErr) throw new BoardServiceError(posErr.message, 500);
+
+  const custom = (positions ?? []).filter((p) => p.board_id);
+  if (custom.length > 0) {
+    // Mapa board_id → board ativo (label/ordem). Só boards do tema entram (os que
+    // vieram de listBoards); posições de boards de outro tema são ignoradas.
+    const boardById = new Map(boards.map((b) => [b.id as string, b]));
+
+    // Rótulos das etapas: uma leitura das etapas ativas dos boards envolvidos,
+    // casando (board_id, slug) → label. Evita N+1.
+    const boardIds = Array.from(new Set(custom.map((p) => p.board_id as string)));
+    const { data: stages } = await sb
+      .from("system_pipeline_stages_active")
+      .select("board_id, slug, label")
+      .in("board_id", boardIds);
+    const stageLabel = new Map<string, string>();
+    for (const s of stages ?? []) {
+      stageLabel.set(`${s.board_id}::${s.slug}`, s.label as string);
+    }
+
+    const customEntries: (CaseOperationalTrailEntry & { ordem: number })[] = [];
+    for (const p of custom) {
+      const board = boardById.get(p.board_id as string);
+      if (!board) continue; // board de outro tema / soft-deletado → fora.
+      const slug = p.stage_slug as string | null;
+      customEntries.push({
+        board_id: p.board_id as string,
+        board_label: board.label as string,
+        is_principal: false,
+        stage_slug: slug,
+        stage_label: slug ? (stageLabel.get(`${p.board_id}::${slug}`) ?? "—") : "—",
+        entered_at: (p.entered_at as string | null) ?? null,
+        ordem: (board.ordem as number) ?? 0,
+      });
+    }
+    customEntries.sort((a, b) => a.ordem - b.ordem);
+    for (const e of customEntries) {
+      const { ordem: _ordem, ...rest } = e;
+      void _ordem;
+      entries.push(rest);
+    }
+  }
+
+  return entries;
 }
 
 // A4 — indica se o caso tem ALGUMA posição custom exclusiva ativa (foi MOVIDO

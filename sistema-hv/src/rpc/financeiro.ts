@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   getClientPaymentStatus,
   getDashboardFinanceiro,
+  getRastroFinanceiroCaso,
   getRelatorioFinanceiroPorCaso,
   listAllParcelas,
 } from "@/lib/financeiro-service";
@@ -79,6 +80,13 @@ export const getRelatorioFinanceiroFn = createServerFn({ method: "GET" }).handle
   handle("view", () => getRelatorioFinanceiroPorCaso()),
 );
 
+// F1 (AC-4) — rastro financeiro RESUMIDO de UM caso (a pagar/vencido/pago).
+// Gate `financeiro:view` (via handle) — nunca expõe $ a quem não tem acesso.
+const rastroCasoSchema = z.object({ caseId: z.string().uuid() });
+export const getRastroFinanceiroCasoFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => rastroCasoSchema.parse(d))
+  .handler(async ({ data }) => handle("view", () => getRastroFinanceiroCaso(data.caseId)));
+
 // Sync de pagamentos — dispara sync simultâneo no Asaas e Conta Azul.
 export const syncAllPagamentosFn = createServerFn({ method: "POST" }).handler(async () =>
   handle("edit", async () => {
@@ -87,8 +95,14 @@ export const syncAllPagamentosFn = createServerFn({ method: "POST" }).handler(as
       syncContaAzulPagamentos(),
     ]);
     return {
-      asaas: asaas.status === "fulfilled" ? asaas.value : { ok: false, nota: String((asaas as PromiseRejectedResult).reason) },
-      contaAzul: contaAzul.status === "fulfilled" ? contaAzul.value : { ok: false, nota: String((contaAzul as PromiseRejectedResult).reason) },
+      asaas:
+        asaas.status === "fulfilled"
+          ? asaas.value
+          : { ok: false, nota: String((asaas as PromiseRejectedResult).reason) },
+      contaAzul:
+        contaAzul.status === "fulfilled"
+          ? contaAzul.value
+          : { ok: false, nota: String((contaAzul as PromiseRejectedResult).reason) },
     };
   }),
 );

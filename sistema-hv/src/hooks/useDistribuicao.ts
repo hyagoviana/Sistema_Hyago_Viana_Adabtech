@@ -6,7 +6,28 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  getDistributionCredsFn,
+  saveDistributionCredsFn,
+  type DistributionCredsView,
+} from "@/rpc/distribuicao-config";
+import { sincronizarTiposTarefaFn, type SyncTaskTypesResult } from "@/rpc/distribuicao";
+import {
+  aprovarTarefaFn,
+  rejeitarTarefaFn,
+  editarExecutorFn,
+  aprovarBatchFn,
+} from "@/rpc/distribuicao-aprovacao";
+import {
+  previewWritebackFn,
+  efetivarWritebackFn,
+  type WritebackSummary,
+} from "@/rpc/distribuicao-writeback";
+
+export type { SyncTaskTypesResult };
+export type { WritebackSummary };
 
 const supabase = getSupabaseBrowserClient();
 
@@ -146,6 +167,19 @@ export function useUpsertTaskTypeMapping() {
   });
 }
 
+/**
+ * H6: dispara a sincronizacao de TIPOS de tarefa do ProJuris (de-para por nome).
+ * So leitura no ProJuris; escreve os codigos/descricoes no nosso banco. Idempotente.
+ */
+export function useSyncTaskTypes() {
+  const fn = useServerFn(sincronizarTiposTarefaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fn(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["task-type-mappings"] }),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Theme Mapping (Story 4.4)
 // ---------------------------------------------------------------------------
@@ -184,13 +218,18 @@ export function useUpsertThemeMapping() {
 // Configuracao Geral (Story 4.5)
 // ---------------------------------------------------------------------------
 
+// Config GERAL (mode/batch_hour) — SEM segredos. Os campos de credencial de
+// segredo (password/token/api_key) NAO sao mais lidos pelo browser client (H11):
+// a leitura passa por getDistributionCredsFn (service_role), que devolve so flags
+// "tem valor". Selecionamos colunas explicitas p/ garantir que nenhum segredo
+// trafega pro front por esta query.
 export function useDistributionConfig() {
   return useQuery({
     queryKey: ["distribution-config"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_distribution_config")
-        .select("*")
+        .select("id, organization_id, mode, batch_hour, active, updated_at")
         .eq("organization_id", ORG_ID)
         .single();
       if (error) throw error;
@@ -202,16 +241,9 @@ export function useDistributionConfig() {
 export function useUpdateDistributionConfig() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (config: {
-      mode?: string;
-      batch_hour?: number;
-      projuris_base_url?: string;
-      projuris_auth_type?: string;
-      projuris_username?: string | null;
-      projuris_password?: string | null;
-      projuris_token?: string | null;
-      projuris_api_key?: string | null;
-    }) => {
+    // Apenas campos NAO-secretos (mode/batch_hour). Credenciais/segredos passam
+    // por useSaveDistributionCreds (server fn com gate admin + write-only).
+    mutationFn: async (config: { mode?: string; batch_hour?: number }) => {
       const { error } = await supabase
         .from("system_distribution_config")
         .update({ ...config, updated_at: new Date().toISOString() })
@@ -219,6 +251,41 @@ export function useUpdateDistributionConfig() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["distribution-config"] }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Credenciais Projuris (H11) — leitura SEM segredos + gravacao write-only
+// ---------------------------------------------------------------------------
+
+export type { DistributionCredsView };
+
+/** Le a config de credenciais SEM os segredos (so flags "tem valor"). */
+export function useDistributionCreds() {
+  const fn = useServerFn(getDistributionCredsFn);
+  return useQuery<DistributionCredsView>({
+    queryKey: ["distribution-creds"],
+    queryFn: () => fn(),
+  });
+}
+
+/**
+ * Grava as credenciais (write-only p/ segredos, gate admin no servidor). Campos
+ * de segredo em branco/ausentes NAO sobrescrevem o valor gravado; `null` limpa.
+ */
+export function useSaveDistributionCreds() {
+  const fn = useServerFn(saveDistributionCredsFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      projuris_base_url: string;
+      projuris_auth_type: string;
+      projuris_username?: string | null;
+      projuris_password?: string | null;
+      projuris_token?: string | null;
+      projuris_api_key?: string | null;
+    }) => fn({ data }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["distribution-creds"] }),
   });
 }
 
@@ -235,6 +302,126 @@ export function useLastBatchLog() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Aprovacao da distribuicao (Story H2) — estado satelite + mutations.
+// So tarefas 'approved' ficam elegiveis a efetivacao/writeback (H3).
+// ---------------------------------------------------------------------------
+
+export type DistributionApprovalRow = {
+  id: string;
+  distribution_result_id: string;
+  status: "pending" | "approved" | "rejected";
+  decided_by: string | null;
+  decided_at: string | null;
+  reason: string | null;
+  original_executor_id: string | null;
+  override_executor_id: string | null;
+};
+
+/** Estado de aprovacao das tarefas de uma data (mapa result_id -> row). */
+export function useDistributionApprovals(date: string) {
+  return useQuery({
+    queryKey: ["distribution-approvals", date],
+    queryFn: async () => {
+      // Junta approvals -> results da data (via FK) para escopar por dia sem
+      // um IN(...) de ids gigante.
+      const { data, error } = await supabase
+        .from("system_distribution_approvals")
+        .select(
+          "id, distribution_result_id, status, decided_by, decided_at, reason, original_executor_id, override_executor_id, system_distribution_results!distribution_result_id(distribution_date)",
+        )
+        .eq("organization_id", ORG_ID);
+      if (error) throw error;
+      const byResultId: Record<string, DistributionApprovalRow> = {};
+      for (const row of (data ?? []) as Array<
+        DistributionApprovalRow & {
+          system_distribution_results?: { distribution_date?: string } | null;
+        }
+      >) {
+        if (row.system_distribution_results?.distribution_date === date) {
+          byResultId[row.distribution_result_id] = row;
+        }
+      }
+      return byResultId;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+function useInvalidateApprovals() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: ["distribution-approvals"] });
+}
+
+export function useAprovarTarefa() {
+  const fn = useServerFn(aprovarTarefaFn);
+  const invalidate = useInvalidateApprovals();
+  return useMutation({
+    mutationFn: (resultId: string) => fn({ data: { resultId } }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRejeitarTarefa() {
+  const fn = useServerFn(rejeitarTarefaFn);
+  const invalidate = useInvalidateApprovals();
+  return useMutation({
+    mutationFn: (vars: { resultId: string; reason?: string }) => fn({ data: vars }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useEditarExecutor() {
+  const fn = useServerFn(editarExecutorFn);
+  const invalidate = useInvalidateApprovals();
+  return useMutation({
+    mutationFn: (vars: { resultId: string; overrideExecutorId: string; reason?: string }) =>
+      fn({ data: vars }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useAprovarBatch() {
+  const fn = useServerFn(aprovarBatchFn);
+  const invalidate = useInvalidateApprovals();
+  return useMutation({
+    mutationFn: (vars: {
+      distributionDate: string;
+      action: "approve" | "reject";
+      reason?: string;
+    }) => fn({ data: vars }),
+    onSuccess: invalidate,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Write-back ao ProJuris (Story H3, RISCO ALTO). Preview = dry-run (nunca
+// escreve). Efetivar = irreversível (R1), exige confirmação humana (digitar a
+// data). Só tarefas 'approved' (H2) entram. Invalida approvals + results.
+// ---------------------------------------------------------------------------
+
+/** Dry-run: monta o plano de write-back sem escrever no ProJuris. */
+export function usePreviewWriteback() {
+  const fn = useServerFn(previewWritebackFn);
+  return useMutation({
+    mutationFn: (distributionDate: string) => fn({ data: { distributionDate } }),
+  });
+}
+
+/** Efetivação REAL (irreversível). confirmText deve ser igual à data. */
+export function useEfetivarWriteback() {
+  const fn = useServerFn(efetivarWritebackFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { distributionDate: string; confirmText: string }) =>
+      fn({ data: { ...vars, confirm: true as const } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["distribution-approvals"] });
+      qc.invalidateQueries({ queryKey: ["distribution-results"] });
     },
   });
 }

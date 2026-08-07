@@ -12,6 +12,7 @@ import {
   listClientsFn,
   resyncDriveFn,
   tornarClienteFn,
+  updateClientCpfFn,
   updateClientCustomFieldsFn,
   updateClientFn,
 } from "@/rpc/clients";
@@ -84,6 +85,20 @@ export function useUpdateClient() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.lists() });
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+    },
+  });
+}
+
+// J2 — preenche o CPF/CNPJ real (troca o marcador CL-XXXX). Invalida a ficha e as
+// listas (o CPF real aparece na lista/máscara e some o aviso de pendência).
+export function useUpdateClientCpf() {
+  const fn = useServerFn(updateClientCpfFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; cpf_cnpj: string }) => fn({ data: vars }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.lists() });
     },
   });
 }

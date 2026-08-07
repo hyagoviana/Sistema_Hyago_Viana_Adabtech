@@ -8,7 +8,7 @@
 //   • null  → campos do PAINEL PADRÃO do tema (valem para todas as frentes);
 //   • string → campos CONDICIONAIS de uma frente específica.
 
-import { Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -83,17 +83,78 @@ export function TemaFieldDefsEditor({
   // Reunião 2026-07-29: origem do valor (#3), ocultar só na lista (#5), nº de
   // preenchimentos do mesmo campo (#6).
   const [scope, setScope] = useState<"caso" | "cliente">("caso");
+  // A7 (2026-08-05) — só para scope='cliente': libera reusar a mesma chave do
+  // balde COMPARTILHADO do cliente mesmo com rótulo diferente (mesmo dado da pessoa).
+  const [allowSharedClientKey, setAllowSharedClientKey] = useState(false);
   const [hiddenInList, setHiddenInList] = useState(false);
   // A2 (2026-08-03): ocultar do painel de filtros (lista + Kanban) — independente
   // de "ocultar na lista"; o campo segue na ficha do caso.
   const [hiddenInFilters, setHiddenInFilters] = useState(false);
   const [maxOccurrences, setMaxOccurrences] = useState(1);
+  // A5 (2026-08-05) — nº de LINHAS que aparecem de largada (o usuário adiciona
+  // mais com "+" até maxOccurrences). Sempre <= maxOccurrences.
+  const [initialOccurrences, setInitialOccurrences] = useState(1);
   // A5 5c — etapa op destino ao marcar "Sim" (só p/ boolean). "" = não move.
   const [moveToStageSlug, setMoveToStageSlug] = useState("");
+  // A4 (2026-08-05) — campo dependente: checkbox + campo pai escolhido. "" = sem pai.
+  const [isDependent, setIsDependent] = useState(false);
+  const [parentId, setParentId] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Múltiplas ocorrências só para campos de valor livre (texto/número/data).
   const suportaOcorrencias = type === "text" || type === "number" || type === "date";
+
+  // A4 — todas as defs do tema/frente (o editor já é instanciado por frente, então
+  // `defs` compartilha (tema, frente)). Base p/ a lista de PAIS elegíveis e o badge.
+  const allDefs = (defs as TemaFieldDef[] | undefined) ?? [];
+  const MAX_DEPTH = 3;
+  const MAX_CHILDREN = 3;
+
+  // Profundidade (nível) de um campo: raiz=1, filho=2, neto=3. Guarda contra ciclo.
+  function depthOf(id: string): number {
+    let depth = 1;
+    const seen = new Set<string>();
+    let cursor: string | null | undefined = allDefs.find((x) => x.id === id)?.parent_field_def_id;
+    while (cursor) {
+      if (seen.has(cursor)) break;
+      seen.add(cursor);
+      depth += 1;
+      cursor = allDefs.find((x) => x.id === cursor)?.parent_field_def_id ?? null;
+    }
+    return depth;
+  }
+
+  // Conjunto de descendentes de `id` (para não deixar um campo depender do próprio filho).
+  function descendantsOf(id: string): Set<string> {
+    const out = new Set<string>();
+    const stack = allDefs.filter((x) => x.parent_field_def_id === id).map((x) => x.id);
+    while (stack.length) {
+      const cur = stack.pop() as string;
+      if (out.has(cur)) continue;
+      out.add(cur);
+      for (const c of allDefs.filter((x) => x.parent_field_def_id === cur)) stack.push(c.id);
+    }
+    return out;
+  }
+
+  // Pais ELEGÍVEIS para o campo em edição (ou novo): exclui a si mesmo, seus
+  // descendentes, campos no 3º nível (viraria 4º) e campos que já têm 3 filhos.
+  // Espelha `validateParent` no cliente (defesa em profundidade).
+  const selfDescendants = editingId ? descendantsOf(editingId) : new Set<string>();
+  const eligibleParents = allDefs.filter((d) => {
+    if (!d.active) return false;
+    if (editingId && d.id === editingId) return false;
+    if (selfDescendants.has(d.id)) return false;
+    if (depthOf(d.id) >= MAX_DEPTH) return false; // já no nível máx → filho estouraria
+    const childCount = allDefs.filter(
+      (x) => x.parent_field_def_id === d.id && x.id !== editingId,
+    ).length;
+    if (childCount >= MAX_CHILDREN) return false;
+    return true;
+  });
+
+  // Mapa id→label p/ o badge "(depende de X)" na lista.
+  const labelById = new Map(allDefs.map((d) => [d.id, d.label]));
 
   function resetForm() {
     setLabel("");
@@ -101,10 +162,14 @@ export function TemaFieldDefsEditor({
     setOptionsList([]);
     setRequired(false);
     setScope("caso");
+    setAllowSharedClientKey(false);
     setHiddenInList(false);
     setHiddenInFilters(false);
     setMaxOccurrences(1);
+    setInitialOccurrences(1);
     setMoveToStageSlug("");
+    setIsDependent(false);
+    setParentId("");
     setEditingId(null);
   }
 
@@ -127,6 +192,19 @@ export function TemaFieldDefsEditor({
   function removeOption(i: number) {
     setOptionsList((prev) => prev.filter((_, idx) => idx !== i));
   }
+  // A6 (2026-08-05) — reordena a opção uma posição p/ cima/baixo (swap no array).
+  // A ordem do array `options` (JSONB) É a ordem exibida; espelha o padrão de
+  // reordenação por setas de StageChecklistEditor.move. Persistência via
+  // parseOptions() no salvar — sem migration/RPC extra.
+  function moveOption(i: number, dir: -1 | 1) {
+    setOptionsList((prev) => {
+      const target = i + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const arr = [...prev];
+      [arr[i], arr[target]] = [arr[target], arr[i]];
+      return arr;
+    });
+  }
 
   function parseOptions(): string[] | null {
     if (!usaOpcoes(type)) return null;
@@ -146,8 +224,21 @@ export function TemaFieldDefsEditor({
     }
     try {
       const occ = suportaOcorrencias ? Math.max(1, Math.min(maxOccurrences || 1, 20)) : 1;
+      // A5 — linhas iniciais nunca acima do teto (CHECK do banco: initial <= max).
+      const initialOcc = suportaOcorrencias
+        ? Math.max(1, Math.min(initialOccurrences || 1, occ))
+        : 1;
       // A5 5c — só persiste destino em campos boolean; senão null (não move).
       const moveTo = type === "boolean" ? moveToStageSlug || null : null;
+      // A7 — o override só vale para scope='cliente' (balde compartilhado).
+      const shareOverride = scope === "cliente" ? allowSharedClientKey : false;
+      // A4 — dependência: só envia pai quando o checkbox está marcado E há pai
+      // escolhido; senão null (remove/sem dependência).
+      const parentDefId = isDependent ? parentId || null : null;
+      if (isDependent && !parentId) {
+        toast.error("Escolha o campo pai da dependência ou desmarque “Campo dependente”.");
+        return;
+      }
       if (editingId) {
         await updateDef.mutateAsync({
           id: editingId,
@@ -160,7 +251,10 @@ export function TemaFieldDefsEditor({
             hiddenInList,
             hiddenInFilters,
             maxOccurrences: occ,
+            initialOccurrences: initialOcc,
             moveToStageSlug: moveTo,
+            parentFieldDefId: parentDefId,
+            allowSharedClientKey: shareOverride,
           },
         });
         toast.success("Campo atualizado");
@@ -175,14 +269,30 @@ export function TemaFieldDefsEditor({
           hiddenInList,
           hiddenInFilters,
           maxOccurrences: occ,
+          initialOccurrences: initialOcc,
           moveToStageSlug: moveTo,
+          parentFieldDefId: parentDefId,
+          allowSharedClientKey: shareOverride,
           ordem: (defs ?? []).length,
         });
         toast.success("Campo criado");
       }
       resetForm();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar campo");
+      const msg = err instanceof Error ? err.message : "Falha ao salvar campo";
+      // A7 — colisão no balde compartilhado do cliente: orienta o override.
+      const isSharedClientConflict =
+        scope === "cliente" &&
+        !allowSharedClientKey &&
+        /dados COMPARTILHADOS do cliente/i.test(msg);
+      if (isSharedClientConflict) {
+        toast.error(msg, {
+          description:
+            'Se for o mesmo dado da pessoa, marque "Usar o mesmo campo do cliente (liberar chave compartilhada)" e salve de novo.',
+        });
+      } else {
+        toast.error(msg);
+      }
     }
   }
 
@@ -194,10 +304,19 @@ export function TemaFieldDefsEditor({
     setOptionsList(usaOpcoes(d.type) ? (opts.length ? opts : [""]) : []);
     setRequired(!!d.required);
     setScope(d.scope === "cliente" ? "cliente" : "caso");
+    // A7 — override não é persistido; ao editar, começa desmarcado (só marcar se
+    // reaparecer o conflito ao salvar).
+    setAllowSharedClientKey(false);
     setHiddenInList(!!d.hidden_in_list);
     setHiddenInFilters(!!d.hidden_in_filters);
     setMaxOccurrences(d.max_occurrences && d.max_occurrences > 1 ? d.max_occurrences : 1);
+    setInitialOccurrences(
+      d.initial_occurrences && d.initial_occurrences >= 1 ? d.initial_occurrences : 1,
+    );
     setMoveToStageSlug(d.move_to_stage_slug ?? "");
+    // A4 — recarrega a dependência do campo em edição.
+    setIsDependent(!!d.parent_field_def_id);
+    setParentId(d.parent_field_def_id ?? "");
   }
 
   async function excluir(d: TemaFieldDef) {
@@ -264,30 +383,54 @@ export function TemaFieldDefsEditor({
         <div className="space-y-1.5">
           <Label className="text-xs">Opções</Label>
           <div className="space-y-1.5">
-            {(optionsList.length ? optionsList : [""]).map((opt, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Input
-                  value={opt}
-                  onChange={(e) => setOptionAt(i, e.target.value)}
-                  placeholder={`Opção ${i + 1}`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addOption();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  title="Remover opção"
-                  onClick={() => removeOption(i)}
-                  disabled={optionsList.length <= 1}
-                  className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+            {(() => {
+              const shown = optionsList.length ? optionsList : [""];
+              return shown.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  {/* A6 — setas ↑↓ para reordenar (ordem do array = ordem exibida). */}
+                  <div className="flex flex-col">
+                    <button
+                      type="button"
+                      title="Mover para cima"
+                      onClick={() => moveOption(i, -1)}
+                      disabled={i === 0}
+                      className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
+                    >
+                      <ArrowUp size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      title="Mover para baixo"
+                      onClick={() => moveOption(i, 1)}
+                      disabled={i === shown.length - 1}
+                      className="text-muted-foreground hover:text-[var(--navy)] disabled:opacity-30"
+                    >
+                      <ArrowDown size={12} />
+                    </button>
+                  </div>
+                  <Input
+                    value={opt}
+                    onChange={(e) => setOptionAt(i, e.target.value)}
+                    placeholder={`Opção ${i + 1}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addOption();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    title="Remover opção"
+                    onClick={() => removeOption(i)}
+                    disabled={optionsList.length <= 1}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ));
+            })()}
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={addOption} className="mt-1">
             <Plus size={13} />
@@ -319,10 +462,10 @@ export function TemaFieldDefsEditor({
           </p>
         </div>
 
-        {/* #6 — nº de preenchimentos do MESMO campo (ex.: vários períodos). */}
+        {/* #6 / A5 — máximo de linhas (teto) do MESMO campo (ex.: vários períodos). */}
         {suportaOcorrencias && (
           <div className="space-y-1">
-            <Label className="text-xs">Nº de preenchimentos</Label>
+            <Label className="text-xs">Máximo de linhas</Label>
             <Input
               type="number"
               min={1}
@@ -330,15 +473,67 @@ export function TemaFieldDefsEditor({
               value={maxOccurrences}
               onChange={(e) => {
                 const n = parseInt(e.target.value, 10);
-                setMaxOccurrences(Number.isFinite(n) ? Math.max(1, Math.min(n, 20)) : 1);
+                const max = Number.isFinite(n) ? Math.max(1, Math.min(n, 20)) : 1;
+                setMaxOccurrences(max);
+                // Linhas iniciais nunca acima do teto.
+                setInitialOccurrences((prev) => Math.min(prev, max));
               }}
             />
             <p className="text-[10.5px] text-muted-foreground">
-              Mais de 1 abre várias caixinhas do mesmo campo (ex.: períodos).
+              Teto de ocorrências do mesmo campo (ex.: vários períodos). O usuário adiciona linhas
+              com “+” até esse limite.
             </p>
           </div>
         )}
       </div>
+
+      {/* A5 (2026-08-05) — linhas iniciais: quantas caixinhas aparecem de largada.
+          O usuário adiciona mais com o botão "+" até o "Máximo de linhas". */}
+      {suportaOcorrencias && (
+        <div className="space-y-1 sm:max-w-[50%]">
+          <Label className="text-xs">Linhas iniciais</Label>
+          <Input
+            type="number"
+            min={1}
+            max={maxOccurrences}
+            value={initialOccurrences}
+            onChange={(e) => {
+              const n = parseInt(e.target.value, 10);
+              setInitialOccurrences(
+                Number.isFinite(n) ? Math.max(1, Math.min(n, maxOccurrences)) : 1,
+              );
+            }}
+          />
+          <p className="text-[10.5px] text-muted-foreground">
+            Começa com {initialOccurrences} {initialOccurrences === 1 ? "linha" : "linhas"}; o
+            usuário adiciona com “+”, até {maxOccurrences}.
+          </p>
+        </div>
+      )}
+
+      {/* A7 (2026-08-05) — override do balde COMPARTILHADO do cliente. Só aparece
+          para scope='cliente'. O valor do cliente é compartilhado entre todos os
+          casos/temas; marcar isto assume que é o MESMO dado da pessoa e libera
+          reusar a mesma chave mesmo com rótulo diferente de outro tema. */}
+      {scope === "cliente" && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2">
+          <label className="flex items-start gap-2 text-[13px] text-[var(--navy)]">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={allowSharedClientKey}
+              onChange={(e) => setAllowSharedClientKey(e.target.checked)}
+            />
+            <span>
+              Usar o mesmo campo do cliente (liberar chave compartilhada)
+              <span className="mt-0.5 block text-[10.5px] text-muted-foreground">
+                Marque só se for o MESMO dado da pessoa que já existe em outro tema. Libera reusar a
+                chave no balde compartilhado do cliente mesmo com rótulo diferente.
+              </span>
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* A5 5c — CHECKBOX de auto-avanço: só p/ boolean. Ao marcar "Sim" na ficha,
           o caso é movido para a etapa OP escolhida. Vazio = não move (padrão). */}
@@ -369,6 +564,57 @@ export function TemaFieldDefsEditor({
           </p>
         </div>
       )}
+
+      {/* A4 (2026-08-05) — CAMPO DEPENDENTE: só é editável na ficha quando o campo
+          PAI estiver preenchido (ex.: Município → Período). Máx. 3 níveis e 3
+          filhos por pai — a lista de pais elegíveis já respeita esses limites. */}
+      <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 space-y-2">
+        <label className="flex items-start gap-2 text-[13px] text-[var(--navy)]">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={isDependent}
+            onChange={(e) => {
+              setIsDependent(e.target.checked);
+              if (!e.target.checked) setParentId("");
+            }}
+          />
+          <span>
+            Campo dependente
+            <span className="mt-0.5 block text-[10.5px] text-muted-foreground">
+              Só pode ser preenchido depois que o campo pai estiver preenchido (ex.: Município →
+              Período). Máximo de 3 níveis e 3 dependentes por campo.
+            </span>
+          </span>
+        </label>
+        {isDependent && (
+          <div className="space-y-1">
+            <Label className="text-xs">Depende do campo</Label>
+            <Select
+              value={parentId || "__none__"}
+              onValueChange={(v) => setParentId(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha o campo pai" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Escolha o campo pai</SelectItem>
+                {eligibleParents.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {eligibleParents.length === 0 && (
+              <p className="text-[10.5px] text-muted-foreground">
+                Nenhum campo elegível como pai (crie outro campo antes, ou os candidatos já estão no
+                limite de níveis/dependentes).
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
         <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} />
@@ -456,6 +702,12 @@ export function TemaFieldDefsEditor({
                     {d.type === "boolean" && d.move_to_stage_slug && (
                       <span className="text-[10px] text-[var(--gold-700)]">
                         → move p/ {d.move_to_stage_slug}
+                      </span>
+                    )}
+                    {/* A4 — dependência: mostra o pai (se ainda existe/ativo). */}
+                    {d.parent_field_def_id && labelById.has(d.parent_field_def_id) && (
+                      <span className="text-[10px] text-[var(--gold-700)]">
+                        depende de {labelById.get(d.parent_field_def_id)}
                       </span>
                     )}
                     {!d.active && (

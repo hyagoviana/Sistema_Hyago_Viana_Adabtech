@@ -9,9 +9,8 @@ import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAuth } from "@/lib/auth";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { useClientsByLifecycle, type LifecycleTab } from "@/hooks/useClients";
-import { can } from "@/lib/rbac";
 import type { Database } from "@/lib/supabase/types";
 
 type Client = Database["public"]["Tables"]["system_clients"]["Row"];
@@ -136,8 +135,9 @@ export function ClientRoster({
     showLifecycleTabs ? "lead" : (fixedLifecycle ?? "cliente"),
   );
 
-  const { role } = useAuth();
-  const canManageFields = can(role, "config.manage");
+  // B3 (2026-08-05) — gerir campos exige `sistema:edit` (mesma régua do servidor
+  // `requireModule('sistema','edit')`); honra overrides por usuário, não só admin.
+  const canManageFields = usePodeEditar("sistema");
 
   // Aba efetiva de lifecycle. Com sub-abas ocultas, sempre a fixa.
   const effectiveTab: LifecycleView = showLifecycleTabs

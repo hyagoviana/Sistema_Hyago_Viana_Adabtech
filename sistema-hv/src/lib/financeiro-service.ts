@@ -264,6 +264,51 @@ export async function getRelatorioFinanceiroPorCaso(): Promise<RelatorioCasoFina
     .sort((a, b) => b.total_centavos - a.total_centavos);
 }
 
+// ─── Rastro financeiro RESUMIDO por CASO (F1, AC-4) ───────────────────────────
+// Totais a_pagar (pendente) / vencido / pago das parcelas de UM caso, para a
+// linha resumida da ficha comum (só quem tem financeiro:view enxerga). Mesma
+// lógica de bucketização de getRelatorioFinanceiroPorCaso, filtrada por case_id.
+export type RastroFinanceiroCaso = {
+  case_id: string;
+  a_pagar_centavos: number;
+  vencido_centavos: number;
+  pago_centavos: number;
+  qtd_parcelas: number;
+};
+
+export async function getRastroFinanceiroCaso(caseId: string): Promise<RastroFinanceiroCaso> {
+  const vazio: RastroFinanceiroCaso = {
+    case_id: caseId,
+    a_pagar_centavos: 0,
+    vencido_centavos: 0,
+    pago_centavos: 0,
+    qtd_parcelas: 0,
+  };
+  if (!caseId) return vazio;
+  const sb = getSupabaseAdmin();
+  const { data: parcelas, error } = await sb
+    .from("system_parcelas")
+    .select("valor_centavos, valor_pago_centavos, status, vencimento")
+    .eq("organization_id", DEFAULT_ORG)
+    .eq("case_id", caseId);
+  if (error) throw new FinanceiroServiceError(error.message, 500);
+  if (!parcelas || parcelas.length === 0) return vazio;
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const out = { ...vazio, qtd_parcelas: parcelas.length };
+  for (const p of parcelas) {
+    const valor = p.valor_centavos ?? 0;
+    if (p.status === "PAGA") {
+      out.pago_centavos += p.valor_pago_centavos ?? valor;
+    } else if (p.status === "VENCIDA" || (p.vencimento && p.vencimento < hoje)) {
+      out.vencido_centavos += valor;
+    } else if (p.status === "PENDENTE") {
+      out.a_pagar_centavos += valor;
+    }
+  }
+  return out;
+}
+
 export async function getDashboardFinanceiro(): Promise<DashboardFinanceiro> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb

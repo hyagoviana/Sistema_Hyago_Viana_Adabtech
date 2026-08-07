@@ -37,6 +37,7 @@ import {
 } from "@/hooks/usePipeline";
 import { useBoards, useBoardStages, useCasesByBoard, useMoveCaseInBoard } from "@/hooks/useBoards";
 import { BoardsManagerDialog } from "@/components/pipeline/BoardsManagerDialog";
+import { KanbanPickerDialog } from "@/components/pipeline/KanbanPickerDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,8 +84,6 @@ function PipelinePage() {
   const { cat, catName, frente, board } = Route.useSearch();
   const navigate = useNavigate();
 
-  const onPick = (t: { id: string; name: string }) =>
-    navigate({ to: "/pipeline", search: { cat: t.id, catName: t.name } });
   const onBack = () => navigate({ to: "/pipeline", search: {} });
 
   if (cat) {
@@ -97,10 +96,10 @@ function PipelinePage() {
       />
     );
   }
-  return <ServiceTypeSelection onPick={onPick} />;
+  return <ServiceTypeSelection />;
 }
 
-function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: string }) => void }) {
+function ServiceTypeSelection() {
   // T1 (2026-07-19) — o seletor do Pipeline mostra SÓ os TEMAS (o dono não quer os
   // tipos legados aqui). Cada tema abre a esteira do seu service_type interno
   // (motor). Casos de tipos antigos ainda não vinculados a um tema seguem
@@ -113,6 +112,14 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
   // no tema clicado (lápis no card); null = abre no modo criar ("Novo tema").
   const [temasOpen, setTemasOpen] = useState(false);
   const [editTemaId, setEditTemaId] = useState<string | null>(null);
+  // C4 (2026-08-05) — pop-up de seleção de kanban. Ao clicar num tema, em vez de
+  // navegar direto, abrimos o KanbanPickerDialog: se o tema tem >1 kanban mostra os
+  // quadradinhos; se tem só 1, o próprio pop-up navega direto ao principal e fecha.
+  const [pickerFor, setPickerFor] = useState<{
+    serviceTypeId: string;
+    name: string;
+    temaId: string;
+  } | null>(null);
 
   function openTemas(temaId: string | null) {
     setEditTemaId(temaId);
@@ -161,6 +168,32 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
         />
       )}
 
+      {/* C4 — pop-up de seleção de kanban ao entrar no tema. Navega ao board
+          escolhido (null = principal) e fecha; com só 1 board navega direto. */}
+      {pickerFor && (
+        <KanbanPickerDialog
+          open={!!pickerFor}
+          onOpenChange={(o) => {
+            if (!o) setPickerFor(null);
+          }}
+          serviceType={{ id: pickerFor.serviceTypeId, name: pickerFor.name }}
+          temaId={pickerFor.temaId}
+          onNavigate={(boardId) => {
+            const target = pickerFor;
+            setPickerFor(null);
+            if (!target) return;
+            navigate({
+              to: "/pipeline",
+              search: {
+                cat: target.serviceTypeId,
+                catName: target.name,
+                ...(boardId ? { board: boardId } : {}),
+              },
+            });
+          }}
+        />
+      )}
+
       {isLoading ? (
         <div className="text-muted-foreground text-sm">Carregando temas…</div>
       ) : (temas ?? []).length === 0 ? (
@@ -182,7 +215,9 @@ function ServiceTypeSelection({ onPick }: { onPick: (t: { id: string; name: stri
                 <button
                   type="button"
                   disabled={!stId}
-                  onClick={() => stId && onPick({ id: stId, name: t.name })}
+                  onClick={() =>
+                    stId && setPickerFor({ serviceTypeId: stId, name: t.name, temaId: t.id })
+                  }
                   className="flex items-center gap-3 text-left w-full disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <div

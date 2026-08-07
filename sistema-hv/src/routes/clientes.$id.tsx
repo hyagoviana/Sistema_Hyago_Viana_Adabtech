@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
+import { ClientCpfFillDialog } from "@/components/clients/ClientCpfFillDialog";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFinanceiroSection } from "@/components/clients/ClientFinanceiroSection";
 import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
@@ -70,6 +71,8 @@ function ClienteDetalhe() {
   const tornarClienteMutation = useTornarCliente();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // J2 — preencher CPF real (troca o marcador CL-XXXX dos importados Mais Médicos).
+  const [cpfFillOpen, setCpfFillOpen] = useState(false);
 
   // R4-01 — gate de $ na ficha do cliente. Único booleano trocável.
   // Usa a infra efetiva de R3-01 (permissaoEfetiva): combina o PAPEL com
@@ -127,6 +130,19 @@ function ClienteDetalhe() {
   const ehCliente =
     Boolean((cliente as { marcado_cliente_at?: string | null }).marcado_cliente_at) ||
     cases.some((c) => (c as { lifecycle?: string | null }).lifecycle === "CLIENTE");
+  // J2 — CPF pendente: importados Mais Médicos (A8) vieram com o marcador CL-XXXX
+  // em cpf_cnpj e `custom_fields.cpf_pendente=true`. Detecta por qualquer um dos
+  // dois (o serviço limpa o flag ao gravar o CPF real).
+  const cpfCustom = ((): Record<string, unknown> => {
+    const cf = (cliente as { custom_fields?: unknown }).custom_fields;
+    return cf && typeof cf === "object" && !Array.isArray(cf)
+      ? (cf as Record<string, unknown>)
+      : {};
+  })();
+  const cpfPendente =
+    cpfCustom.cpf_pendente === true ||
+    cpfCustom.cpf_pendente === "true" ||
+    (cliente.cpf_cnpj ?? "").toUpperCase().startsWith("CL-");
   const totalCasos = cases.length;
   const receitaTotalCentavos = cases.reduce(
     (sum, c) => sum + (typeof c.valor_centavos === "number" ? c.valor_centavos : 0),
@@ -227,6 +243,26 @@ function ClienteDetalhe() {
         </Alert>
       )}
 
+      {/* J2 — CPF pendente (importados Mais Médicos): destaca o marcador CL-XXXX e
+          oferece preencher o CPF real. Só para quem pode editar o cadastro. */}
+      {cpfPendente && (
+        <Alert className="mb-6 border-[var(--gold)] bg-[var(--cream)]">
+          <AlertTriangle className="h-4 w-4 text-[var(--gold-700)]" />
+          <AlertTitle>CPF pendente</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-4">
+            <span className="text-xs opacity-90">
+              Este cadastro está com um marcador provisório ({cliente.cpf_cnpj}) no lugar do
+              CPF/CNPJ. Preencha o número real para completar o cadastro.
+            </span>
+            {podeEditarCadastro && (
+              <Button size="sm" variant="outline" onClick={() => setCpfFillOpen(true)}>
+                <Pencil size={14} className="mr-1.5" /> Preencher CPF
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid md:grid-cols-3 gap-4">
         <Stat label="Total de casos" value={totalCasos} />
         <Stat label="Receita total" value={formatBRL(receitaTotalCentavos)} />
@@ -322,6 +358,14 @@ function ClienteDetalhe() {
       <NotesBlock target="client" entityId={cliente.id} />
 
       <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
+
+      {/* J2 — preencher/trocar o CPF real (marcador CL-XXXX → CPF válido). */}
+      <ClientCpfFillDialog
+        open={cpfFillOpen}
+        onOpenChange={setCpfFillOpen}
+        clientId={cliente.id}
+        currentCpf={cliente.cpf_cnpj}
+      />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

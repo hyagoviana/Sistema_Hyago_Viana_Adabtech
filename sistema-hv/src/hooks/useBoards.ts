@@ -13,6 +13,7 @@ import {
   listBoardsFn,
   listBoardStagesFn,
   listCaseBoardsFn,
+  listCaseOperationalTrailFn,
   listCasesByBoardFn,
   moveCaseBetweenBoardsFn,
   moveCaseInBoardFn,
@@ -152,6 +153,19 @@ export function useCaseBoards(caseId: string | null) {
   });
 }
 
+// C3 (2026-08-05) — rastro operacional agregado (multi-kanban) do caso: principal
+// + boards custom com labels já resolvidos. Uma chamada (sem N+1). Invalidado
+// pelos mutations de board (add/move/remove/return) p/ refletir na hora.
+export function useCaseOperationalTrail(caseId: string | null) {
+  const fn = useServerFn(listCaseOperationalTrailFn);
+  return useQuery({
+    queryKey: ["case-op-trail", caseId],
+    queryFn: () => fn({ data: { caseId: caseId! } }),
+    enabled: !!caseId,
+    staleTime: 30 * 1000,
+  });
+}
+
 // TAREFA B (2026-08-04) — só os IDs dos casos num board custom (p/ filtrar a Lista
 // client-side ao escolher um kanban específico). Leve (não carrega os casos).
 export function useCaseIdsByBoard(boardId: string | null) {
@@ -204,6 +218,7 @@ export function useAddCaseToBoard() {
       qc.invalidateQueries({ queryKey: ["cases-by-service"] });
       qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-op-trail", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
@@ -228,6 +243,7 @@ export function useMoveCaseBetweenBoards() {
       qc.invalidateQueries({ queryKey: ["cases-by-service"] });
       qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-op-trail", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
@@ -246,6 +262,7 @@ export function useReturnCaseToPrincipal() {
       qc.invalidateQueries({ queryKey: ["cases-by-service"] });
       qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case-exclusive", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-op-trail", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case"] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
@@ -272,6 +289,7 @@ export function useRemoveCaseFromBoard() {
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ["cases-by-board", vars.boardId] });
       qc.invalidateQueries({ queryKey: ["case-boards", vars.caseId] });
+      qc.invalidateQueries({ queryKey: ["case-op-trail", vars.caseId] });
       qc.invalidateQueries({ queryKey: ["case-events"] });
     },
   });
@@ -303,8 +321,10 @@ export function useMoveCaseInBoard(boardId: string | null) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev !== undefined) qc.setQueryData(key, ctx.prev);
     },
-    onSettled: () => {
+    onSettled: (_res, _err, vars) => {
       qc.invalidateQueries({ queryKey: key });
+      // C3 — a etapa do board custom mudou → o rastro operacional da ficha reflete.
+      qc.invalidateQueries({ queryKey: ["case-op-trail", vars.caseId] });
     },
   });
 }

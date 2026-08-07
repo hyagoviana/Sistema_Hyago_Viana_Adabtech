@@ -1,0 +1,419 @@
+Adavio Tittoni [00:00]: É, estamos nos ajustes já do final, mas vai dar certo. A gente quer te mostrar algumas coisas que a gente já conseguiu fazer para ver se tá mais ou menos na ideia, para amanhã a gente conseguir marcar reunião ali com o Iago. Consegue? Quer que eu compartilhe aqui, Matheus?
+
+Matheus Torquato [02:50]: Vou compartilhar aqui, tô finalizando aqui, daí já pode fazer.
+
+Adavio Tittoni [03:30]: Tá, quando você fizer aí você me avisa. Está terminando só de rodar de novo o motor ali. A gente conseguir visualizar uma questão, tá?
+
+Matheus Torquato [04:41]: Vai mostrando o resto dos quiz.
+
+Adavio Tittoni [05:01]: A gente importou todos os casos, tá? Então pode ver que agora a gente tem 392 casos. Esses casos foram importados lá do Excel, tá? A gente puxou toda a base do Excel, ajustou de acordo com os nossos frentes e temas aqui do Mais Médicos e importamos eles. Tá, então aqui dentro do pipeline operacional agora a gente tem o Mais Médicos aqui dentro, tá. E aí dentro do Mais Médicos a gente já trouxe todos os seus filtros, tá, dentro desse processo aqui, porque a gente buscou lá das bases, né, do Excel. Então nós temos os filtros aqui dentro desse processo que a gente já puxou direto da sua base, né. Então a princípio é para estar tudo certo, nós já temos todos os clientes. Dentro dos clientes, né, como a gente tinha conversado com você, a gente colocou aquele dados do caso, né, que foi, antes estava dados de serviço, né. Então agora a gente tem os status aqui, que tanto são preenchidos como não são preenchidos. E também temos, na realidade retiramos, né, o processo de adicionar novos filtros aqui dentro desse espaço de caso. Tudo isso se baseia com base na pipeline que tá sendo criada, certo? Lá nos campos da pipeline. Outra coisa que a gente alterou aqui também, é que eu já já eu vou mostrar, é o checklist da etapa do Kanban. Então quando a gente tá dentro de uma etapa de Kanban, da mesma forma que a gente tinha lá no financeiro, como a gente te mostrou, a gente adicionou esse checklist dentro da pipeline de Kanban em que a pessoa se encontra. Então para, se ele preencher esses checklists, automaticamente ele vai para a próxima etapa.
+
+Dr. Thiago Correia [22:30]: Né?
+
+Adavio Tittoni [22:30]: Em alguns casos a gente pode colocar como obrigatório também. Aí uma coisa que a gente não botou nesse caso aqui, que é como tá lá no financeiro, é que a pessoa pode adicionar itens ao checklist. Aí se for para retirar você nos avisa depois, tá? Que aí a gente não tirou porque realmente no financeiro já estava assim. Então como a gente tinha replicado, esse checklist é só o checklist, não só os administradores, é o checklist do Kanban ali, né? Para pessoa poder adicionar alguma camada ali dentro. Esses daqui são os obrigatórios, que eles já vêm daquele determinado, daquela determinada lista. E esse aqui a pessoa pode adicionar, entendeu? Que é critério específico deste caso. Então se ela quiser adicionar mais um checklist a este caso em específico, ela pode adicionar, certo? Mas eles não são baseados no pipeline do Kanban. O Kanban é esses daqui que são criados lá dentro.
+
+Dr. Thiago Correia [30:40]: Os administradores fazem isso do Kanban, sim, pode manter então.
+
+Adavio Tittoni [31:21]: Aí a linha do tempo a gente subiu para cá, né, para ficar mais próximo ao checklist, como você tinha solicitado, e tiramos aquela parte dele poder conversar dentro da linha do tempo. Só vai ficar dentro das notas agora, né. Então o que tá fora do checklist, o que tá fora da parte de dados do caso, que agora é os filtros da pipeline, né, ele vai retirar dentro desse processo. Nós temos as tarefas e temos os documentos aqui embaixo. Então isso é dentro de um caso da pipeline normal, né, que ele ainda não tá dentro do financeiro, certo? E aí também a gente colocou aqui, ó, dentro dos botões aqui, né, iniciais. Deixa eu voltar ele para 100% aqui.
+
+Matheus Torquato [38:20]: Aqui tem agora o tema lá primeiro, depois vai funcionar isso, é mais fácil.
+
+Adavio Tittoni [39:11]: É, pode ser também. Vamos lá para o pipeline operacional aqui, vou voltar aqui para área de mais médicos. Tá, então aqui dentro da área de Mais Médicos agora a gente tem algumas diferenças dentro daquele processo que a gente tinha te mostrado conforme a sua solicitação, tá. Primeira coisa que quando a gente vai em editar campos agora, nós temos os campos, né. Lembrando que esses campos são os campos preenchidos que aparecem lá no contrato, naquele processo, certo, mas eles não são obrigados a serem filtros ou não são obrigados a aparecerem na lista, tá. E aí como é que a gente muda isso? Dentro da configuraçãozinha do lápis aqui. Então, por exemplo, aqui temos o tipo de grupo, certo, que é uma múltipla escolha, que pode escolher Gol G1, G2, G3, G4, G5, G6, G7, até o G13 aqui, por exemplo. Então, se eu clicar aqui no lápis, eu tenho as opções, né, e o tipo que ele tá fazendo aqui. E aqui embaixo eu tenho aqui, ó, se ele é obrigatório ou não obrigatório dentro desse processo. Eu tenho ocultar na lista, então ele some lá naquela parte de listas, lembra, dentro daquele processo. E eu tenho como ocultar do filtro, Então ele some do painel de filtros, como eu tinha te falado que a gente ia colocar essas duas caixinhas aqui. Então ele tanto pode sumir do painel de filtros, mas ele não some, por exemplo, do caso do cliente lá. Ele só não aparece aqui nos filtros da determinada pipeline, que era mais ou menos o que a gente tinha conversado dentro desse processo, né, que você tinha solicitado, tá? Então só para a gente visualizar como é que fica, então você vê aqui, por exemplo, esse tipo de grupo se encontra aqui, certo? Tipo de grupo. Então eu posso vir editar campo.
+
+Dr. Thiago Correia [54:21]: Eu acho que essa aí da última vez a gente já tinha visto essa operação aí também, né?
+
+Adavio Tittoni [55:01]: A gente não tinha feito, né? A gente só tinha visualizado. Então tô dando uma mostrada aqui para você ver como é que ele tá funcionando dentro desse processo, tá? Você vem aqui em ocultar filtro, por exemplo, salva o campo. Aí o filtro automaticamente é ocultado daqui, mas ele não some daqui do tipo de grupo de dentro do do usuário, certo? Foi com base na solicitação que foi feita para nós aqui.
+
+Matheus Torquato [59:01]: Então deixa eu voltar aqui.
+
+Adavio Tittoni [59:31]: Tipo de grupo, aí é só desmarcar aqui o processo, que aí ele aparece para tudo dentro disso, tá? Volta para cá e aí você vai poder selecionar por aqui, tá? Outra coisa que a gente tinha falado também era sobre as etapas de Kanban serem diferentes dentro do processo do Mais Médicos, né? Então hoje a gente tem aqui o Kanban Mais Médicos, certo, que é o primeiro Kanban inicial onde o lead cai. Então depois você pode vir aqui em criar novo Kanban. Então dentro do Kanban, né, dentro da pipeline Mais Médicos, vou criar um novo Kanban aqui escrito inadimplência, por exemplo, né, dentro aqui só um exemplo dentro desse processo. Eu vou criar esse Kanban novo e aí vou criar as etapas que eu quero. É, entrei, entrar em contato embaixo ali, ó. Aí isso vai criar, é verdade, verdade, aqui a gente tá criando um novo campo. É que eu tenho aqui, ó, nova é aqui dentro. Vou botar aqui entrar em contato, cliente não respondeu. Cliente respondeu. Beleza, salvei aqui, né? Eu tenho as etapas dessa determinada nova área de Kanban, posso fechar aqui. Aí agora, além dos Mais Médicos, eu tenho a etapa de Kanban inadimplência dentro do Mais Médicos, né? Então clica aqui em inadimplência, ele vai virar a nova etapa aqui, mas não tem ninguém dentro dela porque todos estão dentro da pipeline principal, como você tinha me informado. Certo. Aí, por exemplo, eu posso pegar aqui o teste Thiago, que se encontra dentro desta pipeline. E agora a gente tem um novo botão aqui que é vincular ao tema ou ao Kanban. Lembra que você tinha dito que a gente poderia mudar o tema? Então agora, quando você clica aqui em tema, por exemplo, você pode escolher o tema que você quer alterar, e você pode ou mover e transferir para que ele saia do tema atual e vá direto para lá, ou duplicar caso seja necessário dentro desse processo, que é a mesma coisa que foi feito no financeiro. E o Yab tinha nos informado, se você duplicar e depois quiser apagar, não tem problema, que é só apagar do outro pipeline, entendeu? É só para não perder esse rastro. Então, se a pessoa quiser realmente duplicar, ela vai poder duplicar como uma cópia. E se ela quiser mover e transferir, ele vai para lá zerado e sai daquele tema atual, certo? E também você vai fazer isso dentro do Kanban. Então eu selecionei ele aqui, ele tá no Kanban principal, né, dentro desse processo. Eu vou botar ele no inadimplência. Posso mover e transferir, jogar ele só para aquela etapa específica daquele Kanban, como eu posso também duplicá-lo para aquela etapa. Então eu tô no Kanban agora inadimplência, eu vou selecionar a primeira etapa aqui, eu vou duplicar no Kanban. Então ele foi duplicado. Agora dentro do pipeline operacional você vem mais médicos. Agora eu tenho aqui a mais médicos, que é a principal, certo? E o Thiago se encontra aqui. Como eu também tenho aí na inadimplência. E o Thiago se encontra aqui naquele, tava lá dentro desse processo, né, que agora ele fica no sentido de que ele só espelha em dois lugares e não é aqui dentro, é a mesma coisa.
+
+Dr. Thiago Correia [01:32:50]: E não só do passado, tipo, é o mesmo caso só que em dois lugares diferentes. Se você escrever alguma coisa ali no comentário, vai ser a mesma coisa.
+
+Adavio Tittoni [01:34:00]: Tanto que tem aqui, ó, linha do tempo adicionado ao Kanban, inadimplência duplicado, tá vendo?
+
+Dr. Thiago Correia [01:35:10]: Então não é como se fabrisse uma cópia lá, né?
+
+Adavio Tittoni [01:35:30]: Só muda, ele só abre mais um card na realidade, né? Porque agora você tem dois cards. Você tem um card dentro do Mais Médicos normal aqui na pipeline, dentro do pipeline Mais Médicos você tem esse caso aqui como documento inicial. Mas se ele for além de documento inicial, for para inadimplência, Ele vai cair aqui, você vai poder manipular ele normal. É só uma visualização do pipeline que é diferente, certo? Que é isso aí, né, que você tinha me solicitado, que ele tivesse outros pipelines.
+
+Dr. Thiago Correia [01:41:10]: Era nesse sentido mesmo. Eu tô só, enquanto tá mexendo aqui, eu tô aproveitando para cutucar aqui também, tá?
+
+Matheus Torquato [01:42:11]: Legal também, Thiago, que você pode agora em ver em lista os Kanbans ali e tudo mais, colocar o que você quiser, igual funciona o Kanban mãe, né?
+
+Adavio Tittoni [01:43:41]: Pode mexer o que você quiser. Quando você selecionar o Kanban inadimplência aqui, ó, por exemplo, que é o Kanban pai dentro desse processo, né, que é o Mais Médicos. Então aqui em editar etapas, como a gente tinha falado sobre a parte de checklist, certo, ele fica aqui, ó. Abriu a etapa, né, isso, contratar novo, abre aqui, vai selecionar o checklist desta determinada etapa, né. Então, por exemplo, quando a gente puxou lá de vocês do documentos iniciais já vinha com esses checklists aqui pré-definidos lá por conta da tabela que você nos enviou, certo? Então a gente já cadastrou aqui dentro, então ele vai criar ali aquele checklist para essa determinada etapa. Isso dentro do Mais Médicos. Se eu for para outra etapa do campo inadimplência e eu vim aí editar etapas, eu posso criar os checklists daqui agora. Então você tá lá em criar, entrar em contato, eu vou botar avisar quando entrar em contato, por exemplo. Não tem nenhum responsável. Eu vou adicionar ela como obrigatória e vou adicionar. Pronto, ela foi adicionada aqui dentro dessa etapa, certo? Então vamos voltar para cá, né, para o inadimplência. Quando eu abro ele dentro do inadimplência, ele tem aqui o checklist desta etapa que ele se encontra.
+
+Dr. Thiago Correia [01:55:41]: Tem uma questão aqui nessa opção de vincular ao tempo Kanban. É porque aí eu cliquei. O que que essas duas opções em cima? Tema, vincula o tempo, Kanban, outro Kanban.
+
+Adavio Tittoni [01:57:30]: É que um vincula o tema, se você quiser trocar ele de tema. Lembra que você tinha dito, às vezes a pessoa pode cadastrar no tema errado e eu quero trocar ele de tema totalmente. É para manter no mesmo tema, é manter no mesmo tema, só muda o Kanban. Ó, outro Kanban deste tema, não troca de tema, só muda o Kanban aqui, entendeu? Aí você pode duplicar ou mover. Era só porque senão ia ficar um monte de botão aqui, entendeu? Aí a gente tá reduzindo um pouco os botões.
+
+Dr. Thiago Correia [02:02:41]: Beleza, é só porque eu não tinha entendido.
+
+Adavio Tittoni [02:03:10]: Ah, tá, entendi.
+
+Dr. Thiago Correia [02:03:41]: Eu acho que aí só ficou dessa parte aí, só ficou faltando onde tá aqui rastro operacional, que a gente tinha que aparecer das duas, das duas que esse cara tá.
+
+Adavio Tittoni [02:05:20]: Entendi. Além de, por exemplo, vai ser rastro operacional, aí vai ter mais médicos Documentos iniciais, aí embaixo teste, por exemplo, é ficar mais médico. Inadimplência embaixo, cobrança total. Beleza, essa parte aqui realmente ficou nesse caso. Aí aqui dentro da pipeline, né, por exemplo, ele se encontra dentro dos mais médicos, dentro de documentos iniciais. Então se eu vim aqui e preencher todos os checklists que forem preenchidos Automaticamente, olha, foi lá e mudou para administrativo feito, tá vendo? Já mudou a pipeline automática. Aí o administrativo feito não tem nenhum checklist. Aí realmente, para eu trocar, só se eu mover ele para a próxima edição, né? Porque não tem checklist, então ele não troca automaticamente, certo? É só quando eu movimentar. Eu posso movimentar pelo caso, que é aqui em mover status. Como eu posso movimentar também diretamente lá pelo Kanban aqui, né? Posso movimentar ele aqui que não tem problema. E agora ele caiu aqui em administrativo feito, né, o Thiago, que a gente preencheu ele aqui dentro.
+
+Matheus Torquato [02:17:11]: Quando a gente for achar ele aqui, escreve ali em cima na busca, é mais fácil.
+
+Adavio Tittoni [02:19:20]: É que aí vai cair direto no caso. Eu queria que ele caísse aqui dentro. Eu queria que ele caísse dentro da pipeline. Mas aí, nesse caso, a gente tem a lista, né, que a gente consegue visualizar. Então, ver em lista. Agora eu posso buscar aqui o cliente. Aí eu posso botar Thiago. Aí vai aparecer todos os casos, né. Aí tem aqui, ó, mais médicos, mais médicos, né, que é os casos que o Thiago se encontra. E tá aqui, ó, teste Thiago 1. Eu posso abrir o Thiago aqui na lista, não pode mais editar nada, né? Como pode também já visualizar direto na lista. Aí na lista também a gente tem uma coisa.
+
+Dr. Thiago Correia [02:25:11]: Então na lista a gente tem, antes de avançar, tem uma informação ali na lista que tá ali, tipo de caso.
+
+Adavio Tittoni [02:26:01]: É o que que é o caso do tema que ele se encontra, né?
+
+Dr. Thiago Correia [02:27:00]: É que tá repetido aí então, não é tipo de caso e tema, tá repetido, né?
+
+Adavio Tittoni [02:27:40]: A gente pode retirar, é que aí quando ele tá lá na frente do processo, mas eu retiro aqui. Vou colocar uma opção para ele ocultar os filtros da lista também.
+
+Matheus Torquato [02:29:11]: Não é só para explicar porque que ele duplicou aí nesse caso, porque a gente importou manualmente, a gente não vinculou nenhum caso a esse caso de fato. Então quando você vincula, quando faz o processo inteiro, que é cadastrada e vincular um caso, assinar, vai estar ali qual é o caso e depois qual é o tema que esse caso tá aí, entendeu? Quer ver? Entra em um abatimento militar, exatamente, e faz o nome do tema que ele está aí, entendeu?
+
+Dr. Thiago Correia [02:34:00]: Mas isso aí é um campo que a gente preenche, por exemplo?
+
+Matheus Torquato [02:34:31]: Não, é porque quando faz a vinculação do cadastro, como a gente vinculou tudo manualmente de acordo com a sua planilha do Mais Médicos, ele contabilizou que o Mais Médicos desse que a gente importou manualmente, os dois são iguais, Mais Médicos, porque ele não tem um caso que é um documento vinculado a ele, entendeu? É tudo ele considerou Mais Médicos. Só que quando você segue o processo normal de cadastro aí manda um documento para assinar, você tem que selecionar um documento de caso, ele vincula o nome do documento do caso, entendeu? Aí por isso que fica na coluna certa ali o nome do caso e o nome do tema.
+
+Dr. Thiago Correia [02:40:30]: E onde é que a gente pode mudar isso?
+
+Matheus Torquato [02:40:50]: Por exemplo, se você tiver o nome dos casos desses mais médios, você pode mandar e eu importo manualmente, porque quando a gente importou manualmente isso tem alguns detalhes para ser ajustado. Por exemplo, não tem CPF do cliente, então tá em aberto para poder colocar. Então tem ajuste para se fazer, entendeu?
+
+Dr. Thiago Correia [02:43:51]: Aqui eu imagino, eu vou botar para o pessoal preencher isso aí na mão aí esses próximos dias.
+
+Adavio Tittoni [02:45:00]: A gente consiga alterar o nome do caso?
+
+Dr. Thiago Correia [02:45:40]: É, eu tô pensando mais para fins, por exemplo, vamos criar agora outro tema aqui do zero, como é que a gente faz esse vídeo?
+
+Matheus Torquato [02:46:51]: No tema do zero aí dá para fazer, que essa O tema do zero, aí faz tudo, faz o processo.
+
+Adavio Tittoni [02:47:50]: Selecionar o cliente aqui, ó, Thiago, certo? Então vou criar um novo caso. O Caso Mais Médicos, vamos pegar o Thiago lá do Caso Mais Médicos, que é o Thiago Teste. Aqui, ó, teste Thiago 1, certo? Então aqui você tá vendo que ele tá vinculado ao Caso Mais Médicos, certo? Que é o tema e o caso.
+
+Dr. Thiago Correia [02:51:10]: É porque aquela primeira informação, Mais Médicos, é ali onde tá o tema. Aparte lá no tema, e o caso vinculado a ele, entendeu?
+
+Adavio Tittoni [02:52:50]: É porque como a gente não tem o caso lá, ficou tudo como mais médicos. Mas, por exemplo, quando você vai vincular um novo, digamos que para esse teste Thiago, que é um cliente, eu vou adicionar agora 1% fiéis, certo? Aqui é o tema, então selecionei o tema 1% fiéis. Agora eu seleciono o caso, então vou escolher o caso 605, e aí eu vou criar e escolher os documentos. Então criou aqui. Agora vou escolher qual é o documento que ele vai assinar, né, dentro disso.
+
+Dr. Thiago Correia [02:57:21]: Botar o masculino, informação que tá redundante.
+
+Adavio Tittoni [02:57:51]: Então volta lá, quer apertar o mais médico duas vezes, mas pode ver que aqui agora o caso é conferir.
+
+Dr. Thiago Correia [02:58:51]: Volta lá para você ver, é só, é só a UI aí para ser ajustada. É porque aqui quando tá tema, se a gente tá vendo uma lista que é do tema, que é do Kanban mais médicos, Essa informação que tá aí, tema, ela é redundante. Por a gente tá vendo a lista desse tema e não precisa estar em todos os temas.
+
+Adavio Tittoni [03:02:50]: Mas entendi o que você falou. Tipo, quando eu clico no tema 1% fiéis, não é para aparecer o nome tema aqui. Exato.
+
+Matheus Torquato [03:04:10]: Ele é importante ter pela questão de ele já abre em todos os temas, né?
+
+Adavio Tittoni [03:04:51]: Então, padrão, ele abre numa lista geral de temas.
+
+Dr. Thiago Correia [03:05:31]: É, não, eu acho que essa questão aí de lista, quando— ah, entendi, aquele em cima ele fica casos lista, ele não tá. Se tiver como, eu acho que quando a gente clicar em lista, ela só aparecer uma lista daquela visualização que a gente tá ali na hora. A lista, eu tô no Kanban tal, só aparece daquela lista. Se eu— porque tem a opção de eu ver o Kanban todos, né? E aí lá eu vou cair na lista, que tem um Kanban todos, não tem?
+
+Adavio Tittoni [03:09:51]: Não, o Kanban é por frente.
+
+Dr. Thiago Correia [03:10:21]: Ah, o Kanban não tem essa lista que é por todos, entendeu? Mas aí não tem problema também, porque é só explicar ali.
+
+Adavio Tittoni [03:11:31]: É, aí vai mudar aqui, entendeu?
+
+Dr. Thiago Correia [03:12:00]: Assim você vai mudando aqui e vai escolhendo informação de frente aí que eu acho que precisaria então tirar.
+
+Adavio Tittoni [03:13:00]: O tema pode manter, e eu acho que pode ser tema e depois o tipo de caso, né, para ficar mais fácil de interpretar. Pode ser assim, porque aí o caso, ele puxa aqui no tipo de caso dentro disso, e aqui você escolhe qual é o tema que você tá progredindo, entendeu? Aí, de acordo com o tema, é que você puxa os filtros, entendeu? É tipo, no tema mais médicos, aí tem os filtros do tema Mais Médicos. E quando a gente tem todos aí, todos os temas, ele tem um padrão, né, que a etapa que ele se encontra, o tipo de caso, o financeiro, o responsável, município, enquadramento, todos, percentual portaria. E aqui você pode editar os campos, que é o tema geral, né, dentro disso.
+
+Dr. Thiago Correia [03:23:01]: Você consegue, sim. É uma questão que tu fez, editar em campos, que é o tema geral. Como seria isso aqui?
+
+Adavio Tittoni [03:24:41]: É editar a visualização do tema geral, entendeu? Porque, ó, por exemplo, tá vendo que aqui eu tô dentro de todos os temas?
+
+Dr. Thiago Correia [03:26:21]: Sim.
+
+Adavio Tittoni [03:26:31]: Aí ele tem esses filtros aqui. Agora eu tô no tema 1% fiéis. Ele já tem outro filtro aqui, ó, que é o FIES, tá vendo?
+
+Dr. Thiago Correia [03:27:50]: Que é o vinculado que a gente fez lá.
+
+Adavio Tittoni [03:28:10]: Isso. Aí tô no tema frente 3, já é outros, outros filtros. Tô no tema mais médico.
+
+Dr. Thiago Correia [03:29:00]: O de cada tema eu acho que já tá tudo dentro do que a gente conversou. É só a situação ali do, do, de quando tá em todos que pode gerar dúvida na hora.
+
+Adavio Tittoni [03:31:10]: É, quando tá em todos é porque você vai editar o campo de todos, entendeu? Que é o que você quer que apareça na lista Todos. Porque como são listas diferentes, senão ia ficar um filtro gigantesco, entendeu? Com todos os filtros. Ou se você quiser, a gente faz isso, a gente tira essa parte de Todos.
+
+Dr. Thiago Correia [03:34:50]: Só que aí, como é que eu posso, como é que eu posso mudar isso aí do Todos para fazer assim, no sentido de que como que eu seleciono um que eu faço como lista aí na lista Todos, por exemplo. Se eu criar um aqui na lista Todos, esse campo agora que eu acabei de criar como Todos, ele vai para todos os temas?
+
+Adavio Tittoni [03:37:31]: Não, vai só para lista Todos.
+
+Dr. Thiago Correia [03:38:00]: É só para filtro aí?
+
+Adavio Tittoni [03:38:30]: Isso, só para você filtrar dentro da lista Todos, entendeu?
+
+Dr. Thiago Correia [03:39:10]: Deixa eu te perguntar, se eu quisesse fazer um campo que vai para todos, teria como?
+
+Matheus Torquato [03:40:20]: Um campo assim, tem que fazer um cada um. É, para cada tema tem que ter esse mesmo filtro, entendeu?
+
+Dr. Thiago Correia [03:41:30]: Porque para fazer para todos os outros, informação, eu tenho uma informação de que é algo de caso, só que essa mesma informação ela pode ser utilizada em outro tema, em outro campo.
+
+Matheus Torquato [03:43:51]: Você pode fazer, colocar em todos os temas, adicionar um filtro que vai pesquisar em todos os temas esse filtro novo que você quer na tabela temas. Tabela temas, ou você pode colocar esse filtro em todos os temas. Aí você pode entrar no tema que você quiser.
+
+Dr. Thiago Correia [03:46:21]: Para fins do campo, para fins do filtro, eu acho que é mais tranquilo dessa forma. Mas quando a gente pensa em esse filtro como um campo de informação, por exemplo, eu tenho aí todos, entendeu?
+
+Adavio Tittoni [03:48:51]: A gente só botou todos como uma visualização, mas o filtro ele é feito pela frente. Então se a gente colocar botar em todas as frentes, não é possível, porque, por exemplo, só para você ver mais ou menos como é que funciona, o filtro ele vai baseado no ID, tá vendo aqui, ó? Aí tem o pipeline, tem o ID do pipeline, e a gente cadastra um filtro neste ID de pipeline. Então não é uma camada acima de todos, ela é dentro do filtro. Aí eu não tenho como, por exemplo, nesse filtro aqui, porque eu até entendi o que você quis dizer, eu poderia colocar um botão aqui funcionar em todos os pipelines, por exemplo. Só que ele é vinculado à entidade, não é acima da entidade. Isso daria certo se ele fosse acima da entidade. Por exemplo, lá no seu não tem problema porque é só uma entidade. Então a entidade é igual para todos os casos. Aqui, como a gente tem casos diferentes por frentes diferentes, nós estamos abaixo da entidade. É por isso que não dá para a gente criar para todos ao mesmo tempo. Aí ia quebrar a nossa lógica, entendeu?
+
+Dr. Thiago Correia [03:59:41]: O cliente estaria acima dessa entidade, por exemplo, as informações do cliente?
+
+Adavio Tittoni [04:00:31]: Sim.
+
+Dr. Thiago Correia [04:00:51]: Vou sugerir, vocês sabem que eu vou jogando as coisas, depois vocês falar que não tem sentido, vocês podem dizer. Eu teria como pegar um campo que é do cliente que tá acima e ter uma opção desse campo aparecer no caso? Porque até um problema que tem, eu tava testando ontem aqui para poder ver e vi justamente isso. A gente tem, por exemplo, nos campos personalizados do cliente a informação aqui, FIES. Isso para 3 ou 4 temas, inclusive para o Mais Médicos aí, é uma opção de segregação, é uma informação de caso. Ele é uma informação da pessoa, só que afeta o caso. Aí eu acho Quando eu imagino, eu imagino dessa forma: eu tenho opção de pegar esse campo que é do cliente e espelhar ele no caso. Não são todos os campos, só os campos que são do cliente. E aí ter como se fosse um checklist que eu posso falar onde esse campo aparece. E aí ele aparece dentro do caso, dentro dos temas daquele caso que a gente seleciona, meio que como se fosse um espelhamento de que esse campo que é do cliente ele se espelha na informação de casos daquele tema. Aí quando eu altero, por exemplo, no caso 1 do tema indenização, eu não tô alterando dentro daquele caso, eu tô só espelhando o que na verdade tá sendo alterado no dado do cliente. Então se esse mesmo campo aparecer em outro tema que a gente escolheu que ele apareça, ele tá só sendo refletido lá também. Então eu alterei aqui que tá espelhando, na verdade que é do cliente. Então a base é a mesma, tá sempre naquele campo do cliente, só quando eu altero em um eu já altero no outro.
+
+Adavio Tittoni [04:18:20]: Sim, entendi. É, a gente tem, a gente pode visualizar. Vou ter que pensar, eu não sei se até amanhã eu consigo entregar, mas dá para eu pensar. Porque o seguinte, hoje a gente consegue aqui dentro do cadastro, tá vendo? Nós temos essa parte aqui, ó, informação.
+
+Dr. Thiago Correia [04:20:50]: Amanhã não, viu?
+
+Adavio Tittoni [04:21:01]: Só tô, a gente tem essa parte de informação do cadastro, que o que que é isso? A gente colocou esse campo aqui para vocês poderem adicionar mais campos ao cliente. Então esses são os campos que a gente tem hoje obrigatórios. Eu posso adicionar mais campos para o cliente, entendeu? Para o tipo, para o cadastro do cliente. Aí o que a gente pode colocar é, na hora que for cadastrar isso daqui, colocar isso vai dentro de caso ou não.
+
+Dr. Thiago Correia [04:25:50]: Eu pensei, eu pensei, eu fiquei pensando que essa situação igual a gente tá falando aqui de adicionar esses campos, essas coisas Talvez fosse interessante nós termos um menu só disso, sabe, para ficar mais organizado. Tipo, um menu dentro da situação de configuração, ter ali a opção, ter como se fosse um submenu, situação que a gente vai lá e configura, né, que mexe com configuração, entre campos personalizados. E aí vou falar a ideia toda, que aí vocês veem se tem como. Eu teria ali dentro de configuração a situação de que eu vou alterar campo personalizado. Campos. Aí quando eu clico lá, aí tem lá os campos personalizados que eu já tenho. Tipo, eu tenho campo tal ali, a lista inteira, todos os campos personalizados que a gente clicou por higienização, por exemplo. E aí eu cliquei nesse campo, ele tem aquelas situações que são, que são, que a gente configurou.
+
+Adavio Tittoni [04:35:21]: Mas é porque são coisas diferentes, né? Porque aí é a pipeline. Aí, por exemplo, vai ser a mesma configuração que tá aqui Só num botão diferente, porque para você configurar você tem que entrar na pipeline e configurar no campo, porque os campos personalizados são abaixo da pipeline, entendeu?
+
+Dr. Thiago Correia [04:39:11]: Deixa eu só espelhar aqui para poder.
+
+Adavio Tittoni [04:39:31]: Então aí seria uma configuração lá embaixo que vai te levar para pipeline do mesmo jeito, entendeu? Mas eu consegui interpretar. Só que vai te levar para o mesmo local.
+
+Dr. Thiago Correia [04:41:30]: É tipo assim, eu cliquei aqui em configuração, tem configuração ali embaixo, cliquei aqui em configurações, aí vai ter um menu aqui, né, tipo seria, eu tô vendo as configurações de quê? Tô vendo as configurações do campo, dos campos, beleza.
+
+Adavio Tittoni [04:44:21]: Mas aí seria da pipeline, não pode ser do campo, entendeu? É exatamente isso, porque a gente tem que seguir a cadeia da hierarquia. Aí vai ter que ser configurações, pipeline, dentro da pipeline escolher os campos igual tá agora, por exemplo. Só seria uma visualização diferente da configuração, mas eu não tenho como colocar, por exemplo, configuração campos personalizados, que o campo personalizado é baseado na pipeline. Porque em um caso eu posso ter um tipo de campo personalizado para esse cliente E no outro caso eu vou ter outros tipos de campos personalizados para aquele cliente. Então os campos personalizados são baseados na pipeline que ele se encontra, entendeu? Porque ele pode estar em diversas pipelines.
+
+Dr. Thiago Correia [04:52:10]: Eu concordo, isso aí tá até dentro do que a gente tem feito aí nas alterações, né? Era mais no sentido de ficar mais intuitivo, sabe? E nada disso é para amanhã, inclusive, mas assim, é porque quando a gente vem aqui E aí sim vai ser o campo aqui que a gente tá fazendo para essa, para essa particular, tem alterado, né? Deixa eu clicar no outro.
+
+Adavio Tittoni [04:55:51]: Então aí, no caso, esse quadrozinho Editar Campos que iria lá para as configurações.
+
+Dr. Thiago Correia [04:56:40]: Isso, esse quadrozinho aqui que seria mostrado numa situação. E aí é uma tela só para isso, ao invés de ser um quadrozinho pequeno. E para o uso no dia a dia fica melhor. Então até quando a gente visualiza assim, né, ele fica melhor, que é específico, a tela inteira só para os campos. E aí quando a gente clica nesse menu campo, não é que seria uma coisa nova, é que é só uma forma de visualizar que quando eu clico nesse menu ele vai mostrar assim, hoje os campos existem nas pipelines e no cadastro do cliente. Isso, no cadastro do cliente. Então ele me mostra ali a lista de pipelines que tem criadas.
+
+Adavio Tittoni [05:02:41]: Isso, aí você clica na pipeline e edita esse campo dentro da pipeline. Aí sim. Aí é mesmo, mesmo que eu tô falando, aí muda a lógica.
+
+Dr. Thiago Correia [05:04:21]: E quando eu clicasse nos do cliente, aí é que pode ter um ganho.
+
+Adavio Tittoni [05:05:21]: Quando clicar adicionar ao caso ou não, isso, porque aí isso ajuda. E quando a gente adicionar o caso, aí é que é uma situação, certo? Porque aí, por exemplo, o dado do cliente ele é preenchido acima do caso, como a gente falou, certo? Aí quando ele adicionar o caso, não vai adicionar ao filtro da pipeline, porque a pipeline é uma entidade diferente, entendeu? Entendi, eu entendo que não dá para adicionar, mas a gente consegue espelhar, trazer para cá, aparecer aí, aí consegue, mas não consegue colocar lá no filtro Por exemplo, um campo personalizado de cliente no filtro da pipeline. Isso não vai ser, não é possível dentro desse processo. É possível a gente espelhar para cá, mas por exemplo, digamos que lá no filtro do cliente você colocou, deixa eu ver aqui, é assim, fiéis. Sim, beleza. E isso não tem, isso não tem, não tem o campo fiéis dentro da pipeline. Do cliente, você falou assim, adicionar ao campo, ao contrato fiéis, por exemplo, certo? Ele vai adicionar a essa visualização do contrato, né, do caso, na realidade, mas não vincula lá no filtro da pipeline porque eles são entidades diferentes, tá?
+
+Dr. Thiago Correia [05:20:11]: Então é só para ver se eu entendi. Vamos supor que esse campo aqui, Kinesis, Não exista, não exista na pipeline, certo? Não exista na pipeline. E aí ele existe no campo cliente, isso. E você marcou a caixinha aparecer em caso, e aí eu seleciono quais são os temas, as frentes que isso vai aparecer. Aí quando eu selecionar o tema mais médicos, essa informação agora vai ter aqui, isso.
+
+Adavio Tittoni [05:25:00]: Mas aí ela não vai ter no filtro Porque no filtro não tem QNAS. Aí, por exemplo, se vocês entrarem em um acordo e falar assim, ó, a partir de agora a gente adicionou no campo do cliente que ele vai ter QNAS, vamos adicionar no filtro da pipeline. Aí vai na configuração da pipeline, adiciona o filtro QNAS, aí dá certo, porque aí do cliente vai cair no QNAS, mas a pipeline tá dizendo que ela busca QNAS dentro do caso, entendeu? É só porque não dá para fazer o inverso.
+
+Dr. Thiago Correia [05:30:20]: Mas aí é só, é só uma situação de eu ter que vir aqui e adicionar um campo a mais.
+
+Adavio Tittoni [05:31:50]: Só que aí não faz diferença ser no cliente, entendeu? Porque aí você vai ter que fazer o mesmo trabalho de vir aqui e adicionar, o que já aconteceria de cair no caso. É isso que eu tô dizendo, entendeu? Acaba se tornando a mesma coisa. A diferença só é que um é só para ver se entendi aqui.
+
+Dr. Thiago Correia [05:34:50]: Esse campo aqui que seria do cliente, que tá lá aparecendo em casa, não aparece aqui.
+
+Adavio Tittoni [05:35:40]: Isso é só no cliente. Para poder você chegar aí na pipeline e conseguir filtrar o que nasce, tem que ter aí na pipeline. Não dá para ter só no cliente, porque o cliente não cria filtros para pipeline.
+
+Dr. Thiago Correia [05:38:10]: Espelhar do cliente nos campos que estão no caso, mas ele espelha no caso, seria espelhada aqui, mas ele espelha no caso.
+
+Adavio Tittoni [05:40:01]: Sim, o caso é do cliente.
+
+Dr. Thiago Correia [05:40:50]: Ah, então não, não, a ideia é que quando faça isso não é a que talvez vindo do negócio do cliente, entendeu?
+
+Adavio Tittoni [05:42:31]: Vai cair no caso daquele cliente, não na pipeline de filtros. Na pipeline de filtros a gente vai ter que criar, porque imagina que eu coloco assim, por exemplo, no caso do cliente, né, adicionei um campo para o cliente e eu coloco assim, é energia R$200, um exemplo, né, aleatório. Mas eu criei para o caso do Adávio Mais Médicos que a energia dele é R$200, certo? Mas na pipeline do Mais Médicos eu não tenho energia como filtro. Este campo que foi criado no caso do Adávio, R$200 de energia, só está dentro do caso relacionado. Então a pipeline não tem o filtro energia, tem dentro do meu caso.
+
+Dr. Thiago Correia [05:50:21]: Entendi, entendi. Então eu acho que a única forma de que talvez funcionasse, e sem mexer na forma que a gente já faz, Seria que quando eu tô ali colocando nos campos dos clientes, e aí eu não tô— é porque quando a gente fala em campo personalizado clientes, a gente tá falando um campo que aparece para todos os clientes, né?
+
+Adavio Tittoni [05:54:30]: Isso, que é que a gente registra no tema, né, na pipeline.
+
+Dr. Thiago Correia [05:55:20]: Pronto, então eu registro em todos os clientes que aquele campo personalizado existe.
+
+Adavio Tittoni [05:56:31]: Exato.
+
+Dr. Thiago Correia [05:56:41]: Então quando eu vou lá e registro, e aí seria realmente só para coisas, essa ideia seria só para algo que pode ser para todos, viu? Não é assim, é R$200, não, é algo que tem que ser que afete realmente possíveis. Então eu teria lá esse campo no cliente, nos personalizados dos clientes e não deste cliente, que quando eu marco isso de aparecer em casos Tipo assim, onde que esse campo personalizado aparece? Só em cliente ou em clientes e casos? Quando eu falo que é só clientes, só aparece naquele perfil cliente.
+
+Adavio Tittoni [06:02:40]: Fora do caso, né, que é o período, a entidade acima.
+
+Dr. Thiago Correia [06:03:21]: Então, porque de qualquer forma você está criando um caso, um campo personalizado aqui no cliente, no mínimo ele tem que aparecer lá, né?
+
+Adavio Tittoni [06:04:21]: Então isso vai aparecer na entidade de cima.
+
+Dr. Thiago Correia [06:04:41]: Isso. Aí agora que eu tenho esse campo personalizado, que eu também marco que aparece em casos, Eu não vinculo em casos específicos do cliente, eu vinculo o tema. Aí pode ser, aí é isso que eu pensei. Aí eu escolho que ele aparece em tais temas, ele vai aparecer para um filtro, isso, de todo mundo dentro daquele caso. Só que a informação que vem não é para a gente, busca nas informações dos clientes daquele caso. Que é como eu não tinha conhecimento desse negócio de entidade aí que você falou. Para mim, entidade é de possessão, mas, mas a gente considera, talvez assim possa funcionar.
+
+Adavio Tittoni [06:11:40]: É porque aqui dentro do desenvolvimento tem a hierarquia, né, que a gente chama de entidade normalmente, que é no sentido de que qual é a que comanda a outra, o que que depende da outra. Então, por exemplo, casos depende da pipeline. E o cliente é vinculado ao caso, que é vinculado à pipeline, entendeu?
+
+Dr. Thiago Correia [06:15:21]: Então ele faz a intermediação, aí a gente consegue isso.
+
+Adavio Tittoni [06:15:51]: Aí dentro do cliente eu posso dizer se aquele dado cai no caso, mas eu não tenho acesso à pipeline. Aí agora a gente vai criar. Na realidade, o que você vai ter é uma bifurcação desse jeito que você tá falando. Eu consigo criar Certo, a etapa para pipeline, tanto por dentro da pipeline, na configuração da pipeline, quanto eu consigo criar o filtro de pipeline dentro do cliente. Porque quando eu vou editar o cliente, eu posso dizer, ó, essa edição também vai ser um filtro na pipeline, mais médicos e 1% fiéis, por exemplo, entendeu? Este campo personalizado.
+
+Dr. Thiago Correia [06:22:30]: Não, beleza, eu acho que seria, seria isso aí. Se tiver, se tiver como, você falava assim, Thiago, para fazer isso aqui eu tenho que quebrar Tudo desse jeito que tá.
+
+Adavio Tittoni [06:23:50]: Não, assim, a gente pensa, dá para a gente pensar dentro disso, entendeu?
+
+Dr. Thiago Correia [06:24:30]: Eu vou ver como é possível, experimento assim, é uma bifurcação, né?
+
+Adavio Tittoni [06:25:20]: O mesmo comando ele vai vir de dois lugares agora.
+
+Dr. Thiago Correia [06:26:20]: Do tema do cliente desse e que naquele outro tema dele que esse cliente também tem é a mesma informação, a exata mesma informação. Que tá sendo puxada aqui do cliente. Se eu mudo aqui, na verdade eu só tô mudando no do cliente, aí reflete nos dois. Sim, é uma informação só que tá refletindo em 3 lugares.
+
+Adavio Tittoni [06:29:51]: Fora isso, que vai aparecer aí, entendeu?
+
+Dr. Thiago Correia [06:30:30]: Não tem problema não, é porque a ideia é essa mesmo, é que apareça um novo campo.
+
+Adavio Tittoni [06:31:20]: Por exemplo, você tá no cliente Adávio, né? E aí a gente criou o nosso caso de energia lá. Aí energia a gente criou um campo para o cadastro do cliente chamado energia. E esse campo agora, além de ser vinculado para o cliente, que é o ponto zero, eu botei um botãozinho que eu vou vincular a um tema. Então eu vinculei ao tema Mais Médicos automaticamente. Aí dentro da visualização dos filtros vai ter um novo campo chamado energia, porque ele foi criado baseado no cliente.
+
+Dr. Thiago Correia [06:36:01]: Exatamente isso aí.
+
+Adavio Tittoni [06:36:20]: Beleza, aí dá para fazer. Fora isso, que eu tinha pensado, vai então cadastrar novos campos de clientes também serão administradores, porque é praticamente a mesma base de criar pipelines dentro desse processo.
+
+Dr. Thiago Correia [06:39:00]: Sim, sim, sempre, sempre campos. É porque eu acho que campo aqui para gente é muito sensível, são o que que a gente decide que é mostrado ou não, né? Então eu acho que é sempre administrador que a gente fala de campos. É como um menuzinho de configuração, que é mais fácil do que ficar pensando assim de quem pode configurar etapa dentro da parte, quem pode configurar. Não, está lá no campo menu, naquele menu, tá?
+
+Adavio Tittoni [06:42:50]: Pode ser, se a gente consegue editar.
+
+Dr. Thiago Correia [06:43:20]: É quem acessa configurações, os administradores, certo? Aqui e pronto, né?
+
+Adavio Tittoni [06:44:11]: Isso aí dá para a gente fazer tranquilo. E aí dá para fazer isso, essa forma de bifurcação, não tem problema.
+
+Dr. Thiago Correia [06:45:10]: É aqui nos campos já como filtros mesmo. Eu imagino que seja interessante ter uma caixinha que a gente pode selecionar mais de um. Tipo aqui, eu quero ver o muito baixo, baixa junto, não só um deles.
+
+Adavio Tittoni [06:48:01]: A gente colocou em todos, mas dá para a gente colocar nessa opção.
+
+Matheus Torquato [06:49:01]: Até tem a parte de filtros, tem a opção de ser múltipla escolha. Se você setou como múltipla escolha, ele vai deixar você setar mais de um. Senão não, porque daí ele tá como uma opção só. Mas se você, quando for criar um filtro, você tem a opção de múltipla escolha também.
+
+Adavio Tittoni [06:51:40]: Não, mas não é nem de múltiplas escolhas, mas não é questão de múltipla escolha, Matheus. É questão de que ele quer selecionar mais de um na opção múltipla escolha, entendeu? Porque aqui é opção múltipla escolha.
+
+Matheus Torquato [06:53:40]: Não, mas é isso mesmo que eu tô te falando, ele dá certo também.
+
+Adavio Tittoni [06:54:31]: Então seleciona aí, por favor, nesse edital. Seleciona o 10 e o 20, vê se é possível nesse artigo 19 que você tava.
+
+Dr. Thiago Correia [06:55:50]: Aí ele muda de um para o outro, ele vai mudar, entendeu?
+
+Adavio Tittoni [06:56:11]: É múltipla escolha, é múltipla escolha esse.
+
+Dr. Thiago Correia [06:56:41]: Mas não para mudar que esse campo agora seja múltipla escolha, é só para a gente ter mais opções, né? É porque eu vejo isso em muitos sistemas, eu não sei se teria como, mas é que eu quero ver agora mais de um tipo de situação dessa.
+
+Adavio Tittoni [06:59:20]: É possível.
+
+Dr. Thiago Correia [06:59:21]: Algo assim.
+
+Matheus Torquato [06:59:50]: Mas você quer que sete para todos os filtros ou só quando a opção for múltipla escolha?
+
+Adavio Tittoni [07:00:40]: Todos, todos poder selecionar mais de um.
+
+Matheus Torquato [07:01:01]: Então todos os filtros dos temas ali, Kanban, do Inlista Kanban, posso selecionar mais de uma opção no filtro.
+
+Dr. Thiago Correia [07:02:20]: Beleza. É que o padrão sempre vai ser o em branco, né? Todos, na verdade, né? Que o padrão é sempre todos, né? Tudo que tiver. Aqui em município contém, o que que seria assim quando a gente coloca que contém?
+
+Adavio Tittoni [07:05:20]: É que se você botar o nome do município, né, contém Maceió.
+
+Matheus Torquato [07:05:51]: Essa questão de município vem do cadastro. Como ele não, esse aí não veio do cadastro, como a questão do CPF, ele não puxa, entendeu, as opções.
+
+Dr. Thiago Correia [07:07:40]: É, mas eu ia ficar até pensando que talvez seja melhor não puxar mesmo, porque isso aqui Quantos municípios vão ter lá, né?
+
+Adavio Tittoni [07:08:41]: São diferentes, né? Aí é para você escrever o nome do município que você quer, entendeu?
+
+Dr. Thiago Correia [07:09:31]: Eu acho que nessa opção aqui seria uma situação de vocês definirem um limite, né? Tipo, quantas coisas, quer ver? Eu acho que tem um edital, né? Quantas coisas podem aparecer aqui para ficar como seleção mesmo? Porque municípios, a gente for pensar, se tiver um cliente cada município aqui, vai aparecer 5.000.
+
+Adavio Tittoni [07:12:50]: Por isso que a gente normalmente não coloca múltipla escolha em município, coloca texto livre. Que aí esse caso é texto livre.
+
+Matheus Torquato [07:13:50]: Quando você for criar um filtro, tem opção de colocar texto livre, múltipla escolha, número, porcentagem.
+
+Dr. Thiago Correia [07:14:31]: Então daí faz, por exemplo, é porque o filtro hoje tá puxando dos campos, né? E a gente só marca se ele aparece como—
+
+Adavio Tittoni [07:15:50]: não, ali embaixo, ali embaixo você cria um novo filtro. Aí, ó, tá vendo? Ó, você tá aí, ó, último andamento. Aí tá o tipo dele, tá como data, tá vendo? Aí você muda para texto ou para múltipla escolha. Texto é o que você escreve.
+
+Dr. Thiago Correia [07:18:00]: É isso mesmo, é porque aqui a gente vai mudar as coisas que já existem, tá?
+
+Adavio Tittoni [07:18:51]: Aí você pode cancelar. Aí você quer criar um novo, aí embaixo ali, ó, rótulo do campo, aí fica embaixo que tá dividido, né? A gente vai criar aquele novo menu para ficar melhor para você ver.
+
+Dr. Thiago Correia [07:20:51]: É porque quando a gente coloca aqui dessa forma, nós estamos criando não é só um novo filtro, nós estamos criando também um um novo campo para o cliente, para o caso, campo para todo tema. Então eu posso, dentro desse, botar aqui município, vamos pegar o exemplo aqui. É preciso que o registro aqui município seja realmente texto para a gente digitar, mas pode ser que para cá Cadê aqui? Meu Deus, é para cá. Isso aqui não, vamos manter isso aqui desse jeito aqui mesmo. Vamos complicar o que não é tão importante não. Deixa esse negócio aí para depois.
+
+Adavio Tittoni [07:28:11]: A gente tem tempo, a gente vai montar mais coisas.
+
+Dr. Thiago Correia [07:28:50]: É porque eu fico, eu fico, eu e minha esquizofrenia aqui batalhando.
+
+Adavio Tittoni [07:29:21]: A gente vai montando conforme for os ajustes das necessidades ali do campo.
+
+Matheus Torquato [07:30:31]: Só aqui de usando o sistema ali, vocês usando exatamente para ter esses micro ajustes.
+
+Dr. Thiago Correia [07:31:51]: Problema também que pode ser que nem tenha depois. Eu fiquei pensando aqui que seria interessante nós termos aqui na, quando a gente abre aqui, por exemplo, a pipeline, ter como se fosse um quadrinho em que a gente pode meio que adicionar link links úteis é um quadro de texto. Acho que é isso, né? Teria um campo tipo assim, links úteis, e aí a gente adiciona um quadro de texto porque é mais de forma geral, tipo, eu tenho aqui um link que é o manual de como a pessoa faz tal coisa.
+
+Matheus Torquato [07:38:21]: E aí, mas esse link útil fica disponível para usuário baixar e olhar tipo um processo?
+
+Dr. Thiago Correia [07:39:11]: Seria isso, mais um link para ela poder clicar e abrir lá, entendeu? Tipo, o manual tá lá no nosso Drive. Aí o que que acontece ao longo do tempo? Eu crio um manual hoje ensinando tal coisa, aí vou, escrevo, porque você fala só, as pessoas esquecem, sabe? Aí você escreve para não esquecer. Aí dá, depois de um tempo as pessoas esquecem que esse manual existe.
+
+Matheus Torquato [07:42:31]: Mas esse link útil, ele ficaria usual para o Kanban inteiro, ou você quer colocar ele especificamente para um tipo de caso? Para o Kanban, que vai servir para todos os casos que estão dentro do Kanban do tema. Isso, isso, porque não é nem assim uma situação do sistema, é só um lugar que a gente pode deixar um aviso, deixar, sabe, a pessoa anexa esse link, ele salva no Drive, mas daí a pessoa pode olhar quais são os links úteis ali, olhar e clicar em baixar ali ou entrar no Drive direto, vai para lá.
+
+Dr. Thiago Correia [07:49:11]: Aí seria, eu acho que é basicamente um campo de texto mesmo assim, onde os administradores podem escrever. Aí teria ali, tipo, não sei como é que é o nome que a gente daria, né, um titulozinho só para ficar bonitinho. E aí seria um campo em que a gente pode escrever algumas questões simples mesmo assim, porque não é, a ideia não é de ser complexa aqui.
+
+Adavio Tittoni [07:52:41]: E também você quer um bloco de notas também para escrever Eu acho que nem um bloco, talvez um tipo um post-it, né, algo que mostra ali que tem aquela informação para disparar para outro lugar, um quadrinho assim mesmo que a gente pode anotar, né.
+
+Dr. Thiago Correia [07:55:11]: Tipo, aí eu acho que pode ser interessante a gente poder alterar o nome desse quadrinho, o título dele, né. Tipo, para esse tema aqui eu vou ter links úteis, para aquele tema eu vou ter manuais, para esse tema eu vou ter observações que a gente queira passar. E aí dentro desse quadrinho seriam caixinhas de texto, seriam caixinhas de texto em que a gente pode adicionar tipo texto ou link. Eu tô pensando um link só para essa situação de ter URL, né, para não ficar URL fina, página web, né. Escrevo lá manual de solicitação tal coisa, é um linkzinho.
+
+Adavio Tittoni [08:00:51]: Beleza.
+
+Dr. Thiago Correia [08:01:01]: Aí até algo, não sei se é grande, talvez dentro dessa ideia, que era uma coisa que vocês comentaram antes também, ter tipo um submenu aqui entre, entre, clicou aqui, né, antes de cair realmente no Kanban, ter o submenu dessa pipeline. E que esse, para não mexer nessa tela, por exemplo, né, só uma tela prévia em que a gente escolhe em qual dessas listas quer cair, em qual das listas vai cair, e ter esse campinho de essa caixinha que dá até para ficar mais visualmente bonito.
+
+Matheus Torquato [08:06:20]: É porque o caso já cai, ele já cai na pipeline operacional, a principal. Na principal já, já cai na principal.
+
+Adavio Tittoni [08:07:21]: A gente coloca os clientes, tem que cair primeiro na pipeline principal, aí depois você muda nada disso, é só uma telinha antes mesmo assim, só selecionar em qual ele cai em vez de ser naquele botãozinho de lista. Mas você vai querer a lista também, né, do mesmo jeito que tá agora, é só mais um, só mais uma tela, não muda nada do que tem, o cliente vai cair no lugar tal e tal normal.
+
+Dr. Thiago Correia [08:11:20]: Não é nenhuma coisa que quando a gente vai, vou criar um novo cliente, vou criar um novo caso do cliente, eu possa selecionar antes disso. Ele sempre vai cair da forma que tá configurada aqui já na principal. É só uma tela visual mesmo antes, só uma tela.
+
+Matheus Torquato [08:13:50]: A gente pode colocar quando você clicar no profissional e clicar no tema, ele te abre um pop-up, uma opção. Ah, é para você selecionar qual Kanban você quer entrar daquele tema.
+
+Dr. Thiago Correia [08:15:30]: Isso. É assim, o que eu tinha pensado de ter uma tela antes é porque além de eu ter essa opção de qual tela eu quero ir, e o tema só tem uma tela, só vai ter uma opção, né, teria essa situação de informações que eu posso, esse campozinho que a gente tá conversando, que tanto dá para adicionar ele aqui, eu pensei, né, sem mexer muito na coisa, como até para ficar uma coisa mais bonitinha ter uma tela antes em que o cara Ele tá em pipeline, ele vai clicar aqui, ao invés dele cair na esteira direto, ele só cai uma tela antes, que não é uma tela que muda para onde os casos vão nem nada, só muda mesmo a visualização antes de cair aqui.
+
+Matheus Torquato [08:22:10]: Você só quer ver os funis que tem em cada Kanban criado, mais ou menos isso.
+
+Dr. Thiago Correia [08:22:51]: E aí, além desse funil, teria esse lugar que são um campo de notas, igual, igual já tem aqui.
+
+Matheus Torquato [08:24:30]: É porque assim, eu não sei a visão da Davi para isso, tá? Mas pelo que eu entendi, ele teria uma tela a mais, é uma tela mais no meio. Eu acho que isso quebra um pouco a usabilidade do sistema, de tipo, pô, ter que cair ali para escolher um Kanban e depois olhar quais são os funis que tem para escolher um. Eu não sei se é mais fácil às vezes, como já vai criar o Kanban com nome intuitivo, ele simplesmente só escolher o nome e já entrar no Kanban direto, não pop-up. Acho que ele entrar outra tela, olhar, fica muito poluído, tipo um monte de funil assim com os nomes, né?
+
+Adavio Tittoni [08:30:00]: Acho que é mais fácil fazer assim, ó, ele vai ali no pipeline operacional. Vamos imaginar uma rota, caiu no pipeline operacional, eu vou escolher a mais médicos. Quando eu clico em mais médicos, em vez de eu cair direto na esteira, eu vou abrir vários quadradinhos com os Kanbans que tem dentro desse. Se só tiver um o cara cai direto nessa. Se ele tiver, por exemplo, mais médicos lá em cima e o inadimplência dentro do mais médicos, ele vai abrir a caixinha: você quer cair no mais médicos ou na inadimplência? É isso, né?
+
+Matheus Torquato [08:35:00]: Abrir essa caixinha, aí tipo assim, vai ter os quadrados com todos os Kanbans criados. Aí cada quadrado vai ter o título e todos os funis que tem dentro desse Kanban. Isso dentro de um pop-up, um quadradinho.
+
+Adavio Tittoni [08:36:50]: É, de um quadradinho.
+
+Dr. Thiago Correia [08:37:01]: Para fins de só selecionar para qual vai, eu concordo com o Matheus que acaba ocupando mais um tempo, menos eficiente, e como um pop-up já serviria. Só que eu tô pensando nessa tela não só para seleção de qual eu quero ir, mas também para eu ter esse lugar de registrar essas notas, de registrar essas informações gerais. Então seria o que a gente tava falando para colocar aqui, que as notas também fiquem nessa página do meio. Isso também não, né? Se a gente for criar essa página do meio, ela só ficaria lá, que a gente não precisa mexer no que já tem aqui.
+
+Adavio Tittoni [08:42:11]: Só cria uma tela prévia e pensando que então quando o cara clicar aparece o aviso e volta.
+
+Dr. Thiago Correia [08:43:11]: E para Kanban, é tipo, imagina que aqui tá zerado, que tá zerado, tem nada.
+
+Matheus Torquato [08:44:10]: Ele quer que clica no pipeline operacional e entra nessa segunda página, escolhe o Kanban, mas também vai ter essa tela de avisos aonde ele vai ter que selecionar o Kanban para o aviso aparecer e depois ele cair na tela do Kanban.
+
+Adavio Tittoni [08:46:31]: Aí são 3 páginas.
+
+Dr. Thiago Correia [08:46:50]: Eu chegaria aqui, eu chegaria aqui, eu quero ir lá dentro eu quero ver os casos do mais médico, eu quero ver o caminhão dos mais médicos. Eu vou abrir aqui, ajeitar aqui. Aí eu cliquei aqui, abriu a outra tela com todos os cardzinhos, abriu a tela que seria igual vocês estão vendo aí, né, ó, os quadradinhos de quais listas, quais caminhões diferentes existem dentro dessa pipeline aqui. No começo dessa página, abriu outra página aqui, no começo dessa página tem lá esse campo que a gente vai adicionar de de texto, né, de poder adicionar os campos. E aí tem os quadradinhos que são as opções aqui.
+
+Matheus Torquato [08:53:10]: Então, como escolher um Kanban?
+
+Adavio Tittoni [08:53:41]: Então, os menus, as ajudas, as wikis, né, por exemplo, mais ou menos dentro desse processo que você tá falando, ela é vinculada ao tema E não é o caso do tema, ou é o caso do tema? Que aí não dá certo dessa forma que vocês estão falando.
+
+Dr. Thiago Correia [08:56:40]: Como é o negócio aí?
+
+Adavio Tittoni [08:57:11]: Você tem aquelas ajudas ali, não tem? O link, o manual, menu. É vinculado ao tema mais médicos, ou é vinculado ao caso do tema? Ah, então tá. Então pode ser na primeira, ele clicou, cai num Kanban diferente.
+
+Dr. Thiago Correia [09:00:00]: Entendi. Na minha cabeça era assim, porque seria só uma tela mesmo assim, não seria?
+
+Adavio Tittoni [09:00:40]: Não, dá para fazer. É que eu achei que cada Kanban tinha um tipo de manual, mas não é cada Kanban, é só o tema.
+
+Dr. Thiago Correia [09:02:11]: A gente já tá facilitando de deixar na cara da pessoa, ela não tem como caçar qual é o manual de qual Kanban ela precisa. Aí também, né? Aí, aí, que como, né?
+
+Adavio Tittoni [09:04:00]: Eu achei que a gente ia clicar no Kanban e ia mostrar o manual daquele Kanban, entendeu? Mas não é. É um manual completo de tudo.
+
+Dr. Thiago Correia [09:05:00]: E falou, é porque vai ser geral, porque assim, ah, é como registrar as coisas do processo desse tema aqui, que vai ser o que que a pessoa vai registrar aqui dentro. Então serve para tudo que foi dentro, né? É para ser mais geral assim. Eu acho que isso aqui já foi, isso aqui já foi.
+
+Matheus Torquato [09:08:31]: Tem, Thiago, eu vou ter uma outra agenda lá, mas obrigado pela reunião aí. O Adávio termina com Pode ser, tranquilo.
+
+Dr. Thiago Correia [09:09:40]: Beleza, eu não vou ocupar muito a Dávia agora não, vou só passar umas ideias aqui que não são para amanhã também, mas ele vai mostrar a controladoria também que já tá funcionando.
+
+Adavio Tittoni [09:11:10]: Eu queria ver com você aqui, Thiago, se der. Talvez não dê para a gente deixar ele 100% pronto até amanhã porque eu ainda não entendo muito bem como é que funciona o ProJuris, né? Eu talvez— você falou que ia ver comigo e tudo mais, aí eu queria ver se a gente podia ver agora para poder né? Amanhã pelo menos eu passar para o Iago, que a gente já montou. Até queria ver se dava para a gente fazer amanhã 1 hora. Vocês têm tempo? Dá para fazer?
+
+Dr. Thiago Correia [09:15:01]: Eu consigo. Eu vou só—
+
+Adavio Tittoni [09:15:11]: o Iago gosta de fazer 1 hora da tarde, normalmente fala comigo nesse horário ali. Aí pode ser 1 hora da tarde.
+
+Dr. Thiago Correia [09:16:11]: Eu vou, eu vou ver na agenda dele. Deixa eu só te passar umas coisas aqui que eu fiquei, na verdade, que ontem eu fiquei tentando, eu já fiquei tentando meio que fazer a ideia do Mais Médicos para poder a gente poder depois botar para rodar, né? Daí quando eu fui fazer, eu encontrei algumas dificuldades que eu não sei se a gente conseguiria, mas que seriam importantes se fosse possível. Uma situação que aconteceu, isso aqui foi erro mesmo do sistema: quando eu vou gerar um campo em alguns temas, se esse campo já tiver em algum outro tema, ele não tava me permitindo gerar.
+
+Adavio Tittoni [09:22:50]: Ah, tava dizendo que o campo estava duplicado.
+
+Dr. Thiago Correia [09:23:10]: Exato, exato.
+
+Adavio Tittoni [09:23:21]: E aí tem muito campo que repete, não que é igual, mas porque isso aí deve estar mesmo, porque é por padrão que a gente normalmente bloqueia isso, entendeu? Mas aí eu boto lá para editar, não tem problema, posso liberar.
+
+Dr. Thiago Correia [09:25:31]: Ele tava tendo essa proibição. Outra coisa dos campos personalizados também é que para a gente começar a rodar os campos personalizados é importantíssimo. Dos campos personalizados, tem uma situação que é o linha complementar. Isso tem informação, Andávio, que é meio que seria interessante se a gente tivesse como criar campos vinculados entre si dentro do mesmo caso, da mesma pipeline, tá? Não é fora não, é campos meio que vinculados, condicionados, como se eles fossem complementares. Tipo, eu vou adicionar o IVS. Aí esse IVS ser um campo vinculado no campo município. Tipo, se município estiver preenchido, eu tenho opção de, como se eu fosse abrir aqui, a gente vê mais visual, como se eu fosse criar um campo aqui, e aí eu tivesse a opção de esse campo ser vinculado Algo assim.
+
+Adavio Tittoni [09:36:11]: Mas essa vinculação seria uma dependência? Por exemplo, seria que os dois são juntos, só cadastro um quando o outro existe. Isso posso fazer, mas eu preciso saber qual é a hierarquia. Por exemplo, o município depende do IVS ou IVS depende do município?
+
+Dr. Thiago Correia [09:40:21]: Eu acho que até para não ficar dependendo de vocês fazerem depois nos outros temas, seria algo que seria na configuração. E aí, isso tendo a telazinha de campo, fica melhor para fazer, né, na mão. Seria como se, tipo assim, eu tô criando esse campo aqui, aí eu posso colocar vincular, depende ou não depende. Isso. E aí, ao invés de vincular em outra situação que já tá criada e ter que mexer, é na hora da criação aqui Na hora da criação, a gente vai ter que fazer dependência, porque vincular é como se fosse juntar. Mas é meio que isso mesmo, é como se eles fossem— é que eles são dois campos de informações diferentes, mas são juntos.
+
+Adavio Tittoni [09:47:40]: Quando a gente pega dentro desse daqui, por exemplo, vou mandar outra chamada para você.
+
+Dr. Thiago Correia [09:48:41]: Pera aí, pode mandar aí.

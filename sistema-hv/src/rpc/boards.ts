@@ -15,6 +15,7 @@ import {
   exclusiveCaseIds,
   listBoards,
   listCaseBoards,
+  listCaseOperationalTrail,
   listCasesByBoard,
   listStagesByBoard,
   moveCaseBetweenBoards,
@@ -182,6 +183,12 @@ export const addCaseToBoardFn = createServerFn({ method: "POST" })
 export const listCaseBoardsFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => listCaseBoards(data.caseId)));
+
+// C3 (2026-08-05) — rastro operacional agregado (multi-kanban) do caso: principal
+// + boards custom com labels resolvidos. Leitura (requireAuth). READ-ONLY.
+export const listCaseOperationalTrailFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listCaseOperationalTrail(data.caseId)));
 
 // A4 — o caso está movido exclusivamente para fora do principal?
 export const caseHasExclusivePositionFn = createServerFn({ method: "GET" })
