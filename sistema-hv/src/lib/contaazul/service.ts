@@ -20,6 +20,7 @@ import {
   type CAContaAReceberItem,
   type CAContaReceberParcela,
   type CAPessoa,
+  type CAPessoaCreate,
 } from "./client";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -94,6 +95,9 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
 
   // Payload completo conforme doc oficial da API v2 Conta Azul.
   // TODOS os campos são obrigatórios no PUT — enviamos tudo sempre.
+  // Payload da API v2 do Conta Azul: superset de CAPessoaCreate (campos extras como
+  // ativo/codigo/enderecos/inscricoes e `perfis` como objeto). Tipado como Record e
+  // convertido no ponto de chamada (createPessoa) — o tipo CAPessoaCreate é um subset.
   const caPayload: Record<string, unknown> = {
     ativo: true,
     agencia_publica: false,
@@ -170,7 +174,7 @@ export async function syncClientToContaAzul(clientId: string): Promise<{
     } else {
       try {
         console.log("contaazul: criando pessoa com payload:", JSON.stringify(caPayload));
-        const newPessoa = await createPessoa(caPayload);
+        const newPessoa = await createPessoa(caPayload as unknown as CAPessoaCreate);
         caCustomerId = newPessoa.id;
         created = true;
       } catch (err) {

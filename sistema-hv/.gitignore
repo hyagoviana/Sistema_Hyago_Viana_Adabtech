@@ -44,3 +44,4 @@ backup-cadastros-*.json
 
 # smoke de UI (screenshots gerados)
 .smoke-ui/
+.smoke-ui-session/

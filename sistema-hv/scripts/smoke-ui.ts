@@ -169,7 +169,7 @@ async function main() {
       await page.waitForTimeout(400);
     }
 
-    // 4c) Ficha do caso — bloco "Dados do serviço" (#2 exposto na ficha).
+    // 4c) Ficha do caso — bloco "Dados do caso" (#2 exposto na ficha; rótulo atualizado de "Dados do serviço").
     if (casoRow?.id) {
       await page.goto(`${BASE}/casos/${casoRow.id}`, {
         waitUntil: "networkidle",
@@ -178,8 +178,8 @@ async function main() {
       await page.waitForTimeout(1500);
       const fichaText = await page.locator("body").innerText();
       check("ficha renderiza (tem o código do caso)", fichaText.includes(casoRow.case_code ?? "§"));
-      check("ficha mostra bloco 'Dados do serviço' (#2)", /Dados do serviço/i.test(fichaText));
-      await page.screenshot({ path: `${SHOTS}/3-ficha-dados-servico.png`, fullPage: true });
+      check("ficha mostra bloco 'Dados do caso' (#2)", /Dados do caso/i.test(fichaText));
+      await page.screenshot({ path: `${SHOTS}/3-ficha-dados-caso.png`, fullPage: true });
     } else {
       console.log("  ⏭️ Sem caso com tema — pulando checagem da ficha.");
     }

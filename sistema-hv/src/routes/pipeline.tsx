@@ -37,7 +37,7 @@ import {
 } from "@/hooks/usePipeline";
 import { useBoards, useBoardStages, useCasesByBoard, useMoveCaseInBoard } from "@/hooks/useBoards";
 import { BoardsManagerDialog } from "@/components/pipeline/BoardsManagerDialog";
-import { KanbanPickerDialog } from "@/components/pipeline/KanbanPickerDialog";
+import { KanbanPickerPage } from "@/components/pipeline/KanbanPickerPage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +60,10 @@ const searchSchema = z.object({
   frente: z.string().optional().catch(undefined),
   // A3 — board/lista selecionado (undefined = board principal / operacional).
   board: z.string().uuid().optional().catch(undefined),
+  // C4/C5 (correção 2026-08-07) — tela intermediária de escolha de kanban + notas do
+  // tema. `picker=true` renderiza a página de escolha; `temaId` alimenta o bloco de notas.
+  picker: z.boolean().optional().catch(undefined),
+  temaId: z.string().uuid().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/pipeline")({
@@ -81,10 +85,33 @@ function roleColor(role: string): string {
 }
 
 function PipelinePage() {
-  const { cat, catName, frente, board } = Route.useSearch();
+  const { cat, catName, frente, board, picker, temaId } = Route.useSearch();
   const navigate = useNavigate();
 
   const onBack = () => navigate({ to: "/pipeline", search: {} });
+
+  // C4/C5 — tela intermediária: escolher o kanban + ver/editar as notas do tema.
+  // Aparece SEMPRE que se clica num tema (mesmo com 1 kanban), antes da esteira.
+  if (cat && picker) {
+    return (
+      <KanbanPickerPage
+        serviceTypeId={cat}
+        name={catName ?? "—"}
+        temaId={temaId ?? null}
+        onBack={onBack}
+        onPick={(boardId) =>
+          navigate({
+            to: "/pipeline",
+            search: {
+              cat,
+              ...(catName ? { catName } : {}),
+              ...(boardId ? { board: boardId } : {}),
+            },
+          })
+        }
+      />
+    );
+  }
 
   if (cat) {
     return (
@@ -112,14 +139,6 @@ function ServiceTypeSelection() {
   // no tema clicado (lápis no card); null = abre no modo criar ("Novo tema").
   const [temasOpen, setTemasOpen] = useState(false);
   const [editTemaId, setEditTemaId] = useState<string | null>(null);
-  // C4 (2026-08-05) — pop-up de seleção de kanban. Ao clicar num tema, em vez de
-  // navegar direto, abrimos o KanbanPickerDialog: se o tema tem >1 kanban mostra os
-  // quadradinhos; se tem só 1, o próprio pop-up navega direto ao principal e fecha.
-  const [pickerFor, setPickerFor] = useState<{
-    serviceTypeId: string;
-    name: string;
-    temaId: string;
-  } | null>(null);
 
   function openTemas(temaId: string | null) {
     setEditTemaId(temaId);
@@ -168,32 +187,6 @@ function ServiceTypeSelection() {
         />
       )}
 
-      {/* C4 — pop-up de seleção de kanban ao entrar no tema. Navega ao board
-          escolhido (null = principal) e fecha; com só 1 board navega direto. */}
-      {pickerFor && (
-        <KanbanPickerDialog
-          open={!!pickerFor}
-          onOpenChange={(o) => {
-            if (!o) setPickerFor(null);
-          }}
-          serviceType={{ id: pickerFor.serviceTypeId, name: pickerFor.name }}
-          temaId={pickerFor.temaId}
-          onNavigate={(boardId) => {
-            const target = pickerFor;
-            setPickerFor(null);
-            if (!target) return;
-            navigate({
-              to: "/pipeline",
-              search: {
-                cat: target.serviceTypeId,
-                catName: target.name,
-                ...(boardId ? { board: boardId } : {}),
-              },
-            });
-          }}
-        />
-      )}
-
       {isLoading ? (
         <div className="text-muted-foreground text-sm">Carregando temas…</div>
       ) : (temas ?? []).length === 0 ? (
@@ -216,7 +209,11 @@ function ServiceTypeSelection() {
                   type="button"
                   disabled={!stId}
                   onClick={() =>
-                    stId && setPickerFor({ serviceTypeId: stId, name: t.name, temaId: t.id })
+                    stId &&
+                    navigate({
+                      to: "/pipeline",
+                      search: { cat: stId, catName: t.name, temaId: t.id, picker: true },
+                    })
                   }
                   className="flex items-center gap-3 text-left w-full disabled:opacity-60 disabled:cursor-not-allowed"
                 >
