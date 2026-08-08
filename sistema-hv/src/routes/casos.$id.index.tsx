@@ -408,12 +408,9 @@ function CasoDetalhe() {
         </div>
       )}
 
-      {/* M1 (2026-08-07) — Feed unificado "Notas / Linha do tempo" perto do topo:
-          eventos automáticos + comentários das pessoas num fluxo cronológico só. */}
-      <CaseFeed caseId={caso.id} />
-
-      <OrnamentalDivider />
-
+      {/* Ordem da ficha (2026-08-08): Rastro Operacional → Checklist → Sigilo →
+          Judicial → Dados do caso → Notas/Linha do tempo → Tarefas/Prazos/
+          Comunicações (CaseDossie) → Observações. */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
@@ -549,6 +546,24 @@ function CasoDetalhe() {
         )}
       </div>
 
+      <OrnamentalDivider />
+
+      <CaseChecklistPanel
+        caseId={caso.id}
+        currentStageSlugs={[caso.macrostatus_op, caso.macrostatus_fin].filter(
+          (s): s is string => !!s && s !== "NAO_APLICAVEL",
+        )}
+        canEdit={podeGerirCaso}
+      />
+
+      {/* G4 — gestão de sigilo (só gestor do caso). */}
+      {podeGerirCaso && (
+        <>
+          <OrnamentalDivider />
+          <CaseSigiloSection caseId={caso.id} />
+        </>
+      )}
+
       {/* G1/G4 — Rastro JUDICIAL resumido (tribunal + nº + etapa) + "Abrir
           judicial". Some para não-autorizados em caso sigiloso (usePodeVerJudicial). */}
       {podeVerJudicial && (
@@ -611,24 +626,13 @@ function CasoDetalhe() {
         </>
       )}
 
+      {/* M1 (2026-08-07) — Feed "Notas / Linha do tempo": eventos automáticos +
+          comentários das pessoas num fluxo cronológico só. */}
       <OrnamentalDivider />
 
-      <CaseChecklistPanel
-        caseId={caso.id}
-        currentStageSlugs={[caso.macrostatus_op, caso.macrostatus_fin].filter(
-          (s): s is string => !!s && s !== "NAO_APLICAVEL",
-        )}
-        canEdit={podeGerirCaso}
-      />
+      <CaseFeed caseId={caso.id} />
 
-      {/* G4 — gestão de sigilo (só gestor do caso). */}
-      {podeGerirCaso && (
-        <>
-          <OrnamentalDivider />
-          <CaseSigiloSection caseId={caso.id} />
-        </>
-      )}
-
+      {/* CaseDossie = Tarefas + Prazos + Comunicações (nesta ordem). */}
       <OrnamentalDivider />
 
       <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />

@@ -54,3 +54,10 @@ COMMENT ON COLUMN system_users.cargo IS 'M8: cargo/nível do colaborador.';
 COMMENT ON COLUMN system_users.peticionante IS 'M8 flag (a): Não => colaborador NEM entra no motor de distribuição.';
 COMMENT ON COLUMN system_users.participa_distribuicao_padrao IS 'M8 flag (b): só quem é true entra na fila geral/ordinária (senão só por exceção).';
 COMMENT ON COLUMN system_users.status_projuris IS 'M8: habilitado|desabilitado no ProJuris (arquivado). Separado do status de login.';
+
+-- GOTCHA SELECT *: a view system_users_active é `SELECT *` (congela colunas na
+-- criação). Reexpande p/ incluir as colunas novas — senão listUsers (que lê da
+-- view) quebra com "column ... does not exist". Ver 20260808000050 (mesmo fix).
+CREATE OR REPLACE VIEW system_users_active AS
+  SELECT * FROM system_users WHERE deleted_at IS NULL;
+GRANT SELECT ON system_users_active TO anon, authenticated, service_role;
