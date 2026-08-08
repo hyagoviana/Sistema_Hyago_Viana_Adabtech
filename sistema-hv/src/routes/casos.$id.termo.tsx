@@ -6,7 +6,7 @@
 // Estado vazio amigável quando não há termo.
 
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, Lock } from "lucide-react";
 import { useEffect } from "react";
 
 import { Breadcrumb, Eyebrow } from "@/components/hv/primitives";
@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/useCases";
 import { useTermos } from "@/hooks/useTermo";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
+import { useAuth } from "@/lib/auth";
+import { podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { setRouteTitle, usePublishRouteTitle } from "@/lib/route-title";
 
@@ -45,6 +48,14 @@ function TermoPreview() {
   const { id } = useParams({ from: "/casos/$id/termo" });
   const { data: termos, isLoading } = useTermos(id);
   const { data: caso, isLoading: casoLoading, isError: casoError } = useCase(id);
+
+  // M4 (2026-08-07) — Termo é 100% financeiro: exige financeiro:view (client
+  // guard, espelha casos.$id.financeiro.tsx). Sem isso, a URL direta /termo
+  // vazava os honorários. O servidor (rpc/termo.ts) também barra as leituras.
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  const { data: values } = useMyModuleValues();
+  const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
 
   // S4-06 — nome do caso resolvido para breadcrumb e título (nunca UUID).
   const casoLabel = resolveEntityLabel(caso?.case_code, {
@@ -81,12 +92,34 @@ function TermoPreview() {
       }
     | undefined;
 
+  // M4 — bloqueio para quem não tem financeiro:view (nunca ver honorários).
+  if (!podeVerFinanceiro) {
+    return (
+      <div className="page-container">
+        <Breadcrumb
+          items={[
+            { label: "Casos", to: "/casos" },
+            { label: casoLabel, to: `/casos/${id}` },
+            { label: "Termo" },
+          ]}
+        />
+        <div className="card-hero p-10 text-center">
+          <Lock size={28} className="mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Você não tem permissão para ver o termo de honorários deste caso.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <Breadcrumb
         items={[
           { label: "Casos", to: "/casos" },
           { label: casoLabel, to: `/casos/${id}` },
+          { label: "Financeiro", to: `/casos/${id}/financeiro` },
           { label: "Termo" },
         ]}
       />

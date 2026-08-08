@@ -30,6 +30,7 @@ import {
   softDeleteCaseFn,
   updateCaseCanonicalFieldsFn,
   updateCaseFn,
+  updateCaseObservacoesFn,
 } from "@/rpc/cases";
 import { confirmarAssinaturaManualFn } from "@/rpc/case-documents";
 
@@ -213,6 +214,17 @@ export function useUpdateCaseCanonicalFields() {
       qc.invalidateQueries({ queryKey: ["cases-by-service"] });
       qc.invalidateQueries({ queryKey: queryKeys.checklistItems.byCase(vars.id) });
     },
+  });
+}
+
+// M2 (2026-08-07) — salva o campo Observações (texto livre) do caso. Invalida só
+// o detalhe do caso (não mexe em listas/eventos — não é evento de timeline).
+export function useUpdateCaseObservacoes(caseId: string) {
+  const fn = useServerFn(updateCaseObservacoesFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (observacoes: string) => fn({ data: { id: caseId, observacoes } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) }),
   });
 }
 

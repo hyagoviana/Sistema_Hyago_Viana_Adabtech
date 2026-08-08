@@ -35,13 +35,11 @@ import {
   ChecklistInconsistencyAlert,
 } from "@/components/cases/CaseChecklistPanel";
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
-import { CaseDocumentsTab } from "@/components/cases/CaseDocumentsTab";
 import { CaseDossie } from "@/components/cases/CaseDossie";
-import { CaseTimeline } from "@/components/cases/CaseTimeline";
+import { CaseFeed } from "@/components/cases/CaseFeed";
 import { CaseSigiloSection } from "@/components/cases/CaseSigiloSection";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
-import { NotesBlock } from "@/components/notes/NotesBlock";
 import { CaseNameEditDialog } from "@/components/cases/CaseNameEditDialog";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
@@ -61,6 +59,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
   Dialog,
@@ -90,6 +89,7 @@ import {
   useCaseResponsaveis,
   useDeleteCase,
   usePromoverCasoManual,
+  useUpdateCaseObservacoes,
 } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import { useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
@@ -171,6 +171,13 @@ function CasoDetalhe() {
   const [fillFiltersOpen, setFillFiltersOpen] = useState(false);
   const [nameEditOpen, setNameEditOpen] = useState(false);
 
+  // M2 (2026-08-07) — Observações (texto livre do caso). O rascunho é semeado a
+  // partir de caso.observacoes; `obsSeededFor` garante o seed 1x por caso (e re-
+  // seed se a rota trocar de caso), sem sobrescrever a edição do usuário.
+  const salvarObs = useUpdateCaseObservacoes(id);
+  const [obsDraft, setObsDraft] = useState("");
+  const [obsSeededFor, setObsSeededFor] = useState<string | null>(null);
+
   async function handlePromover() {
     try {
       await promover.mutateAsync(id);
@@ -208,6 +215,24 @@ function CasoDetalhe() {
   }
 
   if (!caso) throw notFound();
+
+  // M2 — semeia o rascunho de Observações 1x por caso (padrão React de derivar
+  // estado durante o render, guardado por id → sem loop e sem useEffect).
+  const casoObservacoes = (caso as { observacoes?: string | null }).observacoes ?? "";
+  if (obsSeededFor !== caso.id) {
+    setObsSeededFor(caso.id);
+    setObsDraft(casoObservacoes);
+  }
+  const obsDirty = obsDraft !== casoObservacoes;
+
+  async function handleSalvarObs() {
+    try {
+      await salvarObs.mutateAsync(obsDraft);
+      toast.success("Observações salvas");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar observações");
+    }
+  }
 
   const dias = daysSince(caso.status_changed_at);
   const diasFin = daysSince(caso.status_fin_changed_at);
@@ -382,6 +407,12 @@ function CasoDetalhe() {
           </a>
         </div>
       )}
+
+      {/* M1 (2026-08-07) — Feed unificado "Notas / Linha do tempo" perto do topo:
+          eventos automáticos + comentários das pessoas num fluxo cronológico só. */}
+      <CaseFeed caseId={caso.id} />
+
+      <OrnamentalDivider />
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
@@ -590,15 +621,6 @@ function CasoDetalhe() {
         canEdit={podeGerirCaso}
       />
 
-      <OrnamentalDivider />
-
-      {/* A6 — Linha do tempo (F1: já filtra eventos fin_* internamente). */}
-      <CaseTimeline caseId={caso.id} />
-
-      <OrnamentalDivider />
-
-      <NotesBlock target="case" entityId={caso.id} />
-
       {/* G4 — gestão de sigilo (só gestor do caso). */}
       {podeGerirCaso && (
         <>
@@ -611,22 +633,38 @@ function CasoDetalhe() {
 
       <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
 
+      {/* M3 (2026-08-07) — O CaseDocumentsTab saiu daqui: virou a aba de topo
+          "Documentos" (casos.$id.documentos.tsx). O docAutoFill PERMANECE nesta
+          ficha porque ainda alimenta o GenerateCaseDocumentFlow (contrato/procuração). */}
+
+      {/* M2 (2026-08-07) — Observações: texto grande e livre do caso inteiro,
+          separado da linha do tempo (NÃO emite evento). Fica no fim da ficha.
+          Read-only para quem não pode gerir o caso (operacional:edit). */}
       <OrnamentalDivider />
 
-      <CaseDocumentsTab
-        caseId={caso.id}
-        caseType={caso.case_type}
-        frenteSlug={caso.frente_slug}
-        temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
-        clientId={caso.client_id}
-        canonicalFields={
-          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
-        }
-        clientName={cliente?.full_name}
-        clientCpf={cliente?.cpf_cnpj}
-        municipio={caso.municipio ?? undefined}
-        autoFillExtra={docAutoFill}
-      />
+      <div>
+        <Eyebrow>Observações</Eyebrow>
+        <p className="text-[13px] text-muted-foreground mt-1 mb-3">
+          Texto livre sobre o desenvolvimento do caso. Fica só registrado aqui — não entra na linha
+          do tempo.
+        </p>
+        <Textarea
+          value={obsDraft}
+          onChange={(e) => setObsDraft(e.target.value)}
+          rows={8}
+          className="resize-y"
+          placeholder="Escreva livremente o histórico e as particularidades deste caso…"
+          disabled={!podeGerirCaso || salvarObs.isPending}
+          readOnly={!podeGerirCaso}
+        />
+        {podeGerirCaso && (
+          <div className="mt-2 flex justify-end">
+            <Button size="sm" onClick={handleSalvarObs} disabled={salvarObs.isPending || !obsDirty}>
+              {salvarObs.isPending ? "Salvando…" : "Salvar observações"}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* J2 — editar o nome do caso (caso_pasta_nome). */}
       <CaseNameEditDialog

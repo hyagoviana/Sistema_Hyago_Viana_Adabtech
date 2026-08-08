@@ -92,6 +92,7 @@ import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.fin
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
 import { Route as CasosIdJudicialRouteImport } from './routes/casos.$id.judicial'
 import { Route as CasosIdFinanceiroRouteImport } from './routes/casos.$id.financeiro'
+import { Route as CasosIdDocumentosRouteImport } from './routes/casos.$id.documentos'
 import { Route as ApiWebhooksZapsignRouteImport } from './routes/api.webhooks.zapsign'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
@@ -538,6 +539,11 @@ const CasosIdFinanceiroRoute = CasosIdFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => CasosIdRoute,
 } as any)
+const CasosIdDocumentosRoute = CasosIdDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => CasosIdRoute,
+} as any)
 const ApiWebhooksZapsignRoute = ApiWebhooksZapsignRouteImport.update({
   id: '/api/webhooks/zapsign',
   path: '/api/webhooks/zapsign',
@@ -679,6 +685,7 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/documentos': typeof CasosIdDocumentosRoute
   '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
   '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -773,6 +780,7 @@ export interface FileRoutesByTo {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/documentos': typeof CasosIdDocumentosRoute
   '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
   '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -872,6 +880,7 @@ export interface FileRoutesById {
   '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
   '/api/webhooks/zapsign': typeof ApiWebhooksZapsignRoute
+  '/casos/$id/documentos': typeof CasosIdDocumentosRoute
   '/casos/$id/financeiro': typeof CasosIdFinanceiroRoute
   '/casos/$id/judicial': typeof CasosIdJudicialRoute
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
@@ -972,6 +981,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/documentos'
     | '/casos/$id/financeiro'
     | '/casos/$id/judicial'
     | '/casos/$id/termo'
@@ -1066,6 +1076,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/documentos'
     | '/casos/$id/financeiro'
     | '/casos/$id/judicial'
     | '/casos/$id/termo'
@@ -1164,6 +1175,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/asaas'
     | '/api/webhooks/n8n'
     | '/api/webhooks/zapsign'
+    | '/casos/$id/documentos'
     | '/casos/$id/financeiro'
     | '/casos/$id/judicial'
     | '/casos/$id/termo'
@@ -1852,6 +1864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIdFinanceiroRouteImport
       parentRoute: typeof CasosIdRoute
     }
+    '/casos/$id/documentos': {
+      id: '/casos/$id/documentos'
+      path: '/documentos'
+      fullPath: '/casos/$id/documentos'
+      preLoaderRoute: typeof CasosIdDocumentosRouteImport
+      parentRoute: typeof CasosIdRoute
+    }
     '/api/webhooks/zapsign': {
       id: '/api/webhooks/zapsign'
       path: '/api/webhooks/zapsign'
@@ -1974,6 +1993,7 @@ const CasosIdTermoRouteWithChildren = CasosIdTermoRoute._addFileChildren(
 )
 
 interface CasosIdRouteChildren {
+  CasosIdDocumentosRoute: typeof CasosIdDocumentosRoute
   CasosIdFinanceiroRoute: typeof CasosIdFinanceiroRoute
   CasosIdJudicialRoute: typeof CasosIdJudicialRoute
   CasosIdTermoRoute: typeof CasosIdTermoRouteWithChildren
@@ -1981,6 +2001,7 @@ interface CasosIdRouteChildren {
 }
 
 const CasosIdRouteChildren: CasosIdRouteChildren = {
+  CasosIdDocumentosRoute: CasosIdDocumentosRoute,
   CasosIdFinanceiroRoute: CasosIdFinanceiroRoute,
   CasosIdJudicialRoute: CasosIdJudicialRoute,
   CasosIdTermoRoute: CasosIdTermoRouteWithChildren,

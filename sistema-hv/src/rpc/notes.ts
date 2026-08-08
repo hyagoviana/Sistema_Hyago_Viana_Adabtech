@@ -131,6 +131,9 @@ export const createClientNoteFn = createServerFn({ method: "POST" })
 // ----------------------------------------------------------------------------
 // EDIÇÃO / SOFT-DELETE (autenticada).
 // ----------------------------------------------------------------------------
+// M1 (2026-08-07) — regra Trello imposta no SERVIDOR: editar SÓ o autor; excluir
+// o autor OU um admin. `enforceOwner: true` liga a validação (os RPCs financeiros
+// seguem sem enforceOwner — gate por módulo). `role` vem de requireAnyModule.
 export const updateNoteFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ target: targetSchema, noteId: z.string().uuid(), body: z.string().min(1) }).parse(d),
@@ -138,7 +141,7 @@ export const updateNoteFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handle(async () => {
       const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
-      return updateNote(data.target, data.noteId, data.body, userId);
+      return updateNote(data.target, data.noteId, data.body, userId, { enforceOwner: true });
     }),
   );
 
@@ -148,7 +151,10 @@ export const softDeleteNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) =>
     handle(async () => {
-      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
-      return softDeleteNote(data.target, data.noteId, userId);
+      const { id: userId, role } = await requireAnyModule(["comercial", "operacional"], "edit");
+      return softDeleteNote(data.target, data.noteId, userId, {
+        enforceOwner: true,
+        isAdmin: role === "admin",
+      });
     }),
   );

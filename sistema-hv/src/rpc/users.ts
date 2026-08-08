@@ -86,9 +86,27 @@ export const getMyProfileFn = createServerFn({ method: "GET" }).handler(async ()
   }),
 );
 
+// M8 — cadastro do colaborador (perfil/cargo/unidade + 2 flags do motor),
+// compartilhado entre convite e edição.
+type CadastroColaboradorInput = {
+  perfil?: string | null;
+  cargo?: string | null;
+  unidade_organizacional?: string | null;
+  peticionante?: boolean;
+  participa_distribuicao_padrao?: boolean;
+  status_projuris?: string | null;
+};
+
 export const inviteUserFn = createServerFn({ method: "POST" })
   .inputValidator(
-    (d: { email: string; full_name?: string; role: string; redirectTo?: string }) => d,
+    (
+      d: {
+        email: string;
+        full_name?: string;
+        role: string;
+        redirectTo?: string;
+      } & CadastroColaboradorInput,
+    ) => d,
   )
   .handler(async ({ data }) => handle(() => inviteUser(data)));
 
@@ -102,18 +120,43 @@ export const activateUserFn = createServerFn({ method: "POST" }).handler(async (
 
 // Edita nome/telefone de um usuário. Autorização: o PRÓPRIO usuário ou um admin.
 export const updateUserProfileFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { id?: string; full_name?: string | null; phone?: string | null }) => d)
+  .inputValidator(
+    (
+      d: {
+        id?: string;
+        full_name?: string | null;
+        phone?: string | null;
+      } & CadastroColaboradorInput,
+    ) => d,
+  )
   .handler(async ({ data }) =>
     handle(async () => {
       const me = await requireAuth();
       const targetId = data.id ?? me.id;
-      if (targetId !== me.id) {
+      const isSelf = targetId === me.id;
+      if (!isSelf) {
         const myRole = await getUserRole(me.id);
         if (myRole !== "admin") {
           throw new UsersServiceError("Sem permissão para editar outro usuário.", 403);
         }
       }
-      return updateUserProfile(targetId, { full_name: data.full_name, phone: data.phone });
+      // M8 — os campos de CADASTRO (perfil/cargo/unidade/flags do motor) só o
+      // admin grava; o próprio usuário edita apenas nome/telefone (auto-serviço).
+      const isAdmin = isSelf ? (await getUserRole(me.id)) === "admin" : true;
+      return updateUserProfile(targetId, {
+        full_name: data.full_name,
+        phone: data.phone,
+        ...(isAdmin
+          ? {
+              perfil: data.perfil,
+              cargo: data.cargo,
+              unidade_organizacional: data.unidade_organizacional,
+              peticionante: data.peticionante,
+              participa_distribuicao_padrao: data.participa_distribuicao_padrao,
+              status_projuris: data.status_projuris,
+            }
+          : {}),
+      });
     }),
   );
 

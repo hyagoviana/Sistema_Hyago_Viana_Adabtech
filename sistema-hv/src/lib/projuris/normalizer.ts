@@ -135,7 +135,7 @@ function flattenCampo(raw: Record<string, unknown>): CampoPersonalizado {
 }
 
 /** Extrai nomes de marcadores de um marcadorWs[] (formato varia: string ou {valor}). */
-function marcadorNames(raw: unknown): string[] {
+export function marcadorNames(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((m) =>

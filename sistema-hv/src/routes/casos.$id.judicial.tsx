@@ -9,7 +9,7 @@
 // já barra os RPCs com requireJudicial — a UI é só conforto.
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { Gavel, Lock, RefreshCw, ScrollText } from "lucide-react";
+import { Gavel, Link2, Lock, Pencil, RefreshCw, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -17,14 +17,18 @@ import { Eyebrow } from "@/components/hv/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCase } from "@/hooks/useCases";
 import {
   useCaseJudicial,
   useCaseJudicialAndamentos,
+  useSetCaseProjurisLink,
   useSyncCaseJudicial,
 } from "@/hooks/useJudicial";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 
 export const Route = createFileRoute("/casos/$id/judicial")({
@@ -50,9 +54,12 @@ function fmtDate(d: string | null): string {
 function CasoJudicial() {
   const { id } = useParams({ from: "/casos/$id/judicial" });
   const { podeVer, isLoading: sigiloLoading } = usePodeVerJudicial(id);
+  const podeEditar = usePodeEditar("controladoria"); // M5 — gate de EDIÇÃO do vínculo
   const { data: caso } = useCase(id);
   const { data: judicial, isLoading } = useCaseJudicial(id, podeVer);
   const sync = useSyncCaseJudicial(id);
+
+  const [linkOpen, setLinkOpen] = useState(false); // M5 — dialog de vincular/editar
 
   const [andamentosOpen, setAndamentosOpen] = useState(false);
   const [andamentosLimit, setAndamentosLimit] = useState(30);
@@ -135,17 +142,37 @@ function CasoJudicial() {
           <p className="text-[12px] text-muted-foreground mt-1">
             O vínculo (código do processo) é preenchido pela controladoria/importação.
           </p>
+          {podeEditar && (
+            <Button size="sm" className="mt-4" onClick={() => setLinkOpen(true)}>
+              <Link2 size={14} className="mr-1.5" /> Vincular ao ProJuris
+            </Button>
+          )}
         </div>
       ) : (
         <>
           {/* Quadro-resumo (G3). */}
           <div className="card-hero p-6 mb-6">
-            <Eyebrow>Resumo do processo</Eyebrow>
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow>Resumo do processo</Eyebrow>
+              {podeEditar && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 -mt-1 text-[12px]"
+                  onClick={() => setLinkOpen(true)}
+                >
+                  <Pencil size={13} className="mr-1.5" /> Editar vínculo
+                </Button>
+              )}
+            </div>
             <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[13px]">
               <Field label="Tribunal/órgão" value={processo?.tribunal || processo?.orgao || "·"} />
               <Field label="Nº do processo" value={judicial.numeroProcesso ?? "·"} />
+              <Field
+                label="Código ProJuris"
+                value={judicial.codigoProcesso ? `PRO.${String(judicial.codigoProcesso)}` : "·"}
+              />
               <Field label="Etapa/fase" value={processo?.fase ?? "·"} />
-              <Field label="Assunto" value={processo?.assunto ?? "·"} />
             </div>
           </div>
 
@@ -191,6 +218,17 @@ function CasoJudicial() {
             )}
           </div>
         </>
+      )}
+
+      {/* M5 — vincular/editar o identificador do processo no ProJuris. */}
+      {podeEditar && (
+        <ProjurisLinkDialog
+          caseId={id}
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
+          codigoAtual={judicial?.codigoProcesso ?? null}
+          numeroAtual={judicial?.numeroProcesso ?? null}
+        />
       )}
 
       {/* Andamentos com scroll + limite (G5). */}
@@ -256,5 +294,113 @@ function Field({ label, value }: { label: string; value: string }) {
       <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</dt>
       <dd className="text-[var(--navy)] font-medium mt-0.5 break-words">{value}</dd>
     </div>
+  );
+}
+
+// M5 — mini-form para preencher/editar/limpar o vínculo ProJuris do caso.
+// O identificador amigável `PRO.0007713` é o CÓDIGO interno do ProJuris; o input
+// aceita `PRO.0007713` ou só o número (`7713`). O nº CNJ é texto livre. Salvar
+// com ambos os campos vazios LIMPA o vínculo. A normalização real do código roda
+// no servidor (setCaseProjurisLinkFn).
+function ProjurisLinkDialog({
+  caseId,
+  open,
+  onOpenChange,
+  codigoAtual,
+  numeroAtual,
+}: {
+  caseId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  codigoAtual: number | null;
+  numeroAtual: string | null;
+}) {
+  const setLink = useSetCaseProjurisLink(caseId);
+  const [codigo, setCodigo] = useState(codigoAtual ? `PRO.${String(codigoAtual)}` : "");
+  const [numero, setNumero] = useState(numeroAtual ?? "");
+
+  // Reidrata os campos quando o dialog abre (pré-preenche com o vínculo atual).
+  function handleOpenChange(v: boolean) {
+    if (v) {
+      setCodigo(codigoAtual ? `PRO.${String(codigoAtual)}` : "");
+      setNumero(numeroAtual ?? "");
+    }
+    onOpenChange(v);
+  }
+
+  async function handleSave() {
+    try {
+      await setLink.mutateAsync({
+        codigoProcesso: codigo.trim() === "" ? null : codigo.trim(),
+        numeroProcesso: numero.trim() === "" ? null : numero.trim(),
+      });
+      const limpou = codigo.trim() === "" && numero.trim() === "";
+      toast.success(limpou ? "Vínculo ProJuris removido." : "Vínculo ProJuris salvo.");
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar o vínculo.");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Vincular ao ProJuris</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="projuris-codigo">Código do processo (ProJuris)</Label>
+            <Input
+              id="projuris-codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              placeholder="PRO.0007713 ou 7713"
+              autoComplete="off"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Aceita o identificador (ex.: <code>PRO.0007713</code>) ou só o número. É o que o botão
+              “Atualizar do ProJuris” usa para puxar o processo.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="projuris-numero">Nº do processo (CNJ)</Label>
+            <Input
+              id="projuris-numero"
+              value={numero}
+              onChange={(e) => setNumero(e.target.value)}
+              placeholder="0733583-07.2026.8.07.0016"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex justify-between gap-2 pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={setLink.isPending || (codigo.trim() === "" && numero.trim() === "")}
+              onClick={() => {
+                setCodigo("");
+                setNumero("");
+              }}
+            >
+              Limpar campos
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={setLink.isPending}
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+              <Button size="sm" disabled={setLink.isPending} onClick={handleSave}>
+                {setLink.isPending ? "Salvando…" : "Salvar vínculo"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

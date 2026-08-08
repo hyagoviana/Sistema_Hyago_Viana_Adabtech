@@ -7,6 +7,7 @@ import {
   getCaseJudicialFn,
   getCaseSigiloStatusFn,
   listCaseJudicialAndamentosFn,
+  setCaseProjurisLinkFn,
   syncCaseJudicialFn,
 } from "@/rpc/judicial";
 
@@ -24,6 +25,19 @@ export function useSyncCaseJudicial(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => fn({ data: { caseId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-judicial", caseId] }),
+  });
+}
+
+// M5 — grava/edita/limpa MANUALMENTE o vínculo ProJuris (código + nº CNJ).
+// `codigoProcesso` aceita `PRO.0007713` ou o número puro (normalizado no servidor);
+// vazio/null limpa o vínculo. Invalida o espelho ao concluir.
+export function useSetCaseProjurisLink(caseId: string) {
+  const fn = useServerFn(setCaseProjurisLinkFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { codigoProcesso: string | null; numeroProcesso: string | null }) =>
+      fn({ data: { caseId, ...vars } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["case-judicial", caseId] }),
   });
 }

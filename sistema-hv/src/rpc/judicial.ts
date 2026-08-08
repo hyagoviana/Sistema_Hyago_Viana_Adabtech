@@ -11,7 +11,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { AuthError } from "@/lib/supabase/auth-guard";
+import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
 import { requireJudicial } from "@/lib/judicial-authz";
 import {
   JudicialSyncError,
@@ -67,6 +67,64 @@ export const getCaseJudicialFn = createServerFn({ method: "GET" })
         processo: processo ?? null,
         tarefas: tarefas ?? [],
       };
+    }),
+  );
+
+// ----------------------------------------------------------------------------
+// ESCRITA do VÍNCULO ProJuris (Story M5) — preenche/edita MANUALMENTE o
+// identificador do processo no ProJuris que casa caso↔ProJuris.
+//   - `codigoProcesso` (BIGINT) = código INTERNO do ProJuris. O identificador
+//     amigável `PRO.0007713` é ESTE código: `PRO.` + zeros à esquerda → 7713.
+//     O input aceita `PRO.0007713` OU o número puro (`7713`); a normalização
+//     defensiva (strip `PRO.`/não-dígitos/zeros à esquerda) roda no SERVIDOR.
+//   - `numeroProcesso` (TEXT) = nº judicial CNJ (ex.: 0733583-07.2026.8.07.0016),
+//     texto livre.
+// Valores vazios/nulos → limpam o vínculo (NULL). Gate: requireJudicial(caseId)
+// (sigilo, G4) + requireModule("controladoria","edit") — o judicial é da
+// controladoria, e o 403 é no SERVIDOR (não só na UI).
+// ----------------------------------------------------------------------------
+const linkSchema = z.object({
+  caseId: z.string().uuid(),
+  // aceita `PRO.0007713`, `7713`, "" ou null; normalizado abaixo.
+  codigoProcesso: z.union([z.string(), z.number(), z.null()]).optional(),
+  numeroProcesso: z.union([z.string(), z.null()]).optional(),
+});
+
+/** Normaliza o identificador do código do processo → BIGINT ou null.
+ *  De `PRO.0007713` extrai `7713`; aceita número puro; strip de não-dígitos e
+ *  zeros à esquerda. Vazio/sem-dígito → null. Lança 4xx se o valor tem dígitos
+ *  mas estoura o range de BIGINT (defensivo). */
+function normalizeCodigoProcesso(raw: string | number | null | undefined): number | null {
+  if (raw === null || raw === undefined) return null;
+  const digits = String(raw).replace(/\D/g, "").replace(/^0+/, "");
+  if (digits === "") return null;
+  const n = Number(digits);
+  if (!Number.isSafeInteger(n) || n <= 0) {
+    throw new AuthError("Código do processo inválido.", 422);
+  }
+  return n;
+}
+
+export const setCaseProjurisLinkFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => linkSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireJudicial(data.caseId); // sigilo (G4)
+      await requireModule("controladoria", "edit"); // gate de EDIÇÃO
+      const codigo = normalizeCodigoProcesso(data.codigoProcesso);
+      const numeroRaw = data.numeroProcesso;
+      const numero =
+        typeof numeroRaw === "string" && numeroRaw.trim() !== "" ? numeroRaw.trim() : null;
+      const sb = getSupabaseAdmin();
+      const { error } = await sb
+        .from("system_cases")
+        .update({
+          projuris_codigo_processo: codigo,
+          projuris_numero_processo: numero,
+        })
+        .eq("id", data.caseId);
+      if (error) throw new AuthError("Falha ao salvar o vínculo ProJuris.", 500);
+      return { codigoProcesso: codigo, numeroProcesso: numero };
     }),
   );
 

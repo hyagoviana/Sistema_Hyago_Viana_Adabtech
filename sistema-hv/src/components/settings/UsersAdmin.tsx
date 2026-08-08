@@ -31,6 +31,7 @@ import {
   useSetUserDistribution,
 } from "@/hooks/useUsers";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
+import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
 
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
@@ -65,6 +66,13 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     role: string;
     originalRole: string;
     isSelf: boolean;
+    // Cadastro do colaborador (M8).
+    perfil: string;
+    cargo: string;
+    unidadeOrg: string;
+    statusProjuris: string;
+    peticionante: boolean;
+    participaGeral: boolean;
     // Distribuição (ProJuris) — H5.
     projurisId: string;
     participa: boolean;
@@ -85,6 +93,13 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         id: editing.id,
         full_name: editing.full_name.trim() || null,
         phone: editing.phone.trim() || null,
+        // Cadastro do colaborador (M8) — só o admin grava (gate no RPC).
+        perfil: editing.perfil || null,
+        cargo: editing.cargo || null,
+        unidade_organizacional: editing.unidadeOrg.trim() || null,
+        status_projuris: editing.statusProjuris || null,
+        peticionante: editing.peticionante,
+        participa_distribuicao_padrao: editing.participaGeral,
       });
       // Se o cargo mudou (e é permitido), atualiza também.
       if (
@@ -100,7 +115,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         id: editing.id,
         projuris_responsavel_id: editing.projurisId.trim() || null,
         participa: editing.participa,
-        weight: Number.isFinite(w) && w > 0 ? w : 1.0,
+        weight: Number.isFinite(w) && w > 0 ? w : 100,
         eligible_complex: editing.eligibleComplex,
       });
       toast.success("Dados do usuário atualizados.");
@@ -256,10 +271,16 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                       role: u.role,
                       originalRole: u.role,
                       isSelf,
+                      perfil: u.perfil ?? "",
+                      cargo: u.cargo ?? "",
+                      unidadeOrg: u.unidade_organizacional ?? "",
+                      statusProjuris: u.status_projuris ?? "",
+                      peticionante: u.peticionante ?? false,
+                      participaGeral: u.participa_distribuicao_padrao ?? false,
                       projurisId: u.projuris_responsavel_id ?? "",
                       participa: u.participa_distribuicao ?? false,
                       eligibleComplex: u.eligible_complex ?? true,
-                      weight: String(u.weight ?? 1),
+                      weight: String(u.weight ?? 100),
                     })
                   }
                   title="Editar dados e cargo"
@@ -358,6 +379,109 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 )}
               </div>
 
+              {/* Cadastro do colaborador (M8) — Perfil / Cargo-nível / Unidade /
+                  Status ProJuris + as DUAS flags do motor. */}
+              <div className="border-t border-[var(--border)] pt-3 space-y-3">
+                <p className="text-[12px] font-semibold text-[var(--navy)]">
+                  Cadastro do colaborador
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Perfil</Label>
+                    <Select
+                      value={editing.perfil || NONE}
+                      onValueChange={(v) => setEditing({ ...editing, perfil: v === NONE ? "" : v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>—</SelectItem>
+                        {PERFIL_OPTS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Cargo / nível</Label>
+                    <Select
+                      value={editing.cargo || NONE}
+                      onValueChange={(v) => setEditing({ ...editing, cargo: v === NONE ? "" : v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>—</SelectItem>
+                        {CARGO_OPTS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Unidade organizacional</Label>
+                    <Input
+                      value={editing.unidadeOrg}
+                      onChange={(e) => setEditing({ ...editing, unidadeOrg: e.target.value })}
+                      placeholder="Unidade / filial"
+                    />
+                  </div>
+                  <div>
+                    <Label>Status ProJuris</Label>
+                    <Select
+                      value={editing.statusProjuris || NONE}
+                      onValueChange={(v) =>
+                        setEditing({ ...editing, statusProjuris: v === NONE ? "" : v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>—</SelectItem>
+                        {STATUS_PROJURIS_OPTS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Peticionante</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Se desligado, o colaborador não entra no motor de distribuição.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.peticionante}
+                    onCheckedChange={(v) => setEditing({ ...editing, peticionante: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Participa da distribuição geral</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Só quem participa entra na fila ordinária; os demais recebem só por exceção.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.participaGeral}
+                    onCheckedChange={(v) => setEditing({ ...editing, participaGeral: v })}
+                  />
+                </div>
+              </div>
+
               {/* Distribuição (ProJuris) — H5. Fonte da verdade do executor do
                   motor: ID ProJuris + participa + peso + elegível-complexo.
                   Grava em system_projuris_executor_mapping por executor_id. */}
@@ -370,8 +494,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <Input
                     value={editing.projurisId}
                     onChange={(e) => setEditing({ ...editing, projurisId: e.target.value })}
-                    placeholder="ex.: 128858"
-                    inputMode="numeric"
+                    placeholder="ex.: PES.0000030"
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">
                     Código do usuário no ProJuris. Vazio = sem código (não distribui).
@@ -395,12 +518,18 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <Label>Peso na fila</Label>
                   <Input
                     type="number"
-                    min="0.1"
-                    max="10"
-                    step="0.1"
+                    min="0"
+                    max="200"
+                    step="5"
                     value={editing.weight}
                     onChange={(e) => setEditing({ ...editing, weight: e.target.value })}
                   />
+                  {/* M9 (2026-08-07) — base 100 = "distribui igual". */}
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Padrão <strong>100</strong> = distribui igual. Reduza para quem está saindo
+                    (recebe menos); aumente para quem está entrando/voltando. Vale já na próxima
+                    rodada. Não confunda com tirar do rodízio (use a flag acima).
+                  </p>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Um usuário suspenso não distribui, mesmo com a flag ligada.

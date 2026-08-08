@@ -20,7 +20,13 @@
 import { AuthError } from "@/lib/supabase/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { ProjurisClient } from "@/lib/projuris/client";
-import { buildThemeMap, type ThemeMapRow, normalizeTemaKey } from "@/lib/projuris/normalizer";
+import {
+  buildThemeMap,
+  marcadorNames,
+  type ThemeMapRow,
+  normalizeTemaKey,
+} from "@/lib/projuris/normalizer";
+import { deriveFromMarcadores } from "@/lib/distribuicao/marcadores";
 import { distributeBatch } from "@/lib/distribuicao/engine/motor";
 import { buildBatchInput } from "@/lib/distribuicao/engine/transformer";
 import type {
@@ -184,6 +190,9 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     prazo_interno: string | null;
   }> = [];
   const processAssunto = new Map<string, string>();
+  // M13 — marcadores por processo (v1 de COMPLEXO/COLETIVO). Capturados no mesmo
+  // GET /processo/{cod} (sem request extra), como o normalizer já faz p/ tema.
+  const processMarcadores = new Map<string, string[]>();
 
   const MAX_PROC = Number(process.env.DISTRIBUICAO_MAX_PROCESSOS ?? "150") || 150;
   const chosen = procCodes.slice(0, MAX_PROC);
@@ -194,6 +203,8 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       const proc = await client.projurisGet<Record<string, unknown>>(`processo/${pid}`);
       const assunto = String(proc.assunto ?? proc.nomeAssunto ?? "");
       processAssunto.set(pid, assunto);
+      // M13 — marcadores do processo (COMPLEXO/COLETIVO v1). SÓ LEITURA.
+      processMarcadores.set(pid, marcadorNames(proc.marcadorWs));
     } catch {
       // Processo ilegivel -> pula (sem tema nao ha o que distribuir).
       continue;
@@ -243,7 +254,10 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       )
       .eq("organization_id", ORG_ID)
       .eq("active", true),
-    supabase.from("system_users").select("id, full_name, status").eq("organization_id", ORG_ID),
+    supabase
+      .from("system_users")
+      .select("id, full_name, status, peticionante, participa_distribuicao_padrao")
+      .eq("organization_id", ORG_ID),
     supabase
       .from("system_distribution_calendar")
       .select("date, block_type, executor_id")
@@ -289,12 +303,31 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   const execMappingIds = new Set(execRows.map((r) => r.executor_id));
   const execById = new Map(execRows.map((r) => [r.executor_id, r]));
 
-  type UserRow = { id: string; full_name: string; status: string };
+  type UserRow = {
+    id: string;
+    full_name: string;
+    status: string;
+    // M8 (2026-08-07) — DUAS flags do motor.
+    peticionante: boolean | null;
+    participa_distribuicao_padrao: boolean | null;
+  };
   const users = (usersRes.data ?? []) as UserRow[];
   const nameById = new Map(users.map((u) => [u.id, u.full_name]));
 
+  // M8: a FILA GERAL/ordinária exige as DUAS flags além de mapping ativo + ACTIVE:
+  //   (a) peticionante === true  → senão o colaborador NEM entra no motor;
+  //   (b) participa_distribuicao_padrao === true → senão fica fora da fila geral
+  //       (só recebe por EXCEÇÃO/responsável exclusivo — ver M14/flow-selector).
+  // As flags nascem false na migration; até serem populadas (M15/admin), o pool
+  // geral pode ficar vazio (o guard logo abaixo lança 422 com mensagem clara).
   const executors: Executor[] = users
-    .filter((u) => execMappingIds.has(u.id) && u.status === "ACTIVE")
+    .filter(
+      (u) =>
+        execMappingIds.has(u.id) &&
+        u.status === "ACTIVE" &&
+        u.peticionante === true &&
+        u.participa_distribuicao_padrao === true,
+    )
     .map((u) => {
       const m = execById.get(u.id);
       return {
@@ -355,6 +388,11 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   };
   // Diagnostico (AC-6): por processo, o assunto cru e o tema resolvido/motivo.
   const temaDiag = new Map<string, { assunto: string; resolvido: string | null }>();
+  // M13 — diagnóstico dos marcadores derivados por processo (auditoria do owner).
+  const marcadorDiag = new Map<
+    string,
+    { marcadores: string[]; collective: boolean; complexity_level: number }
+  >();
 
   const tasks: Task[] = [];
   const processMap = new Map<string, Process>();
@@ -379,11 +417,22 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     }
 
     if (!processMap.has(rt.process_id)) {
+      // M13 — deriva COMPLEXO/COLETIVO dos MARCADORES do processo (v1). Sem
+      // marcador conhecido ⇒ individual/não-complexo (fallback determinístico).
+      // temporal_level segue 0 aqui — o URGENTE/PRIORITÁRIO nativo (campo nosso →
+      // temporal) é follow-up (precisa do join processo→caso + migration/UI).
+      const marc = processMarcadores.get(rt.process_id) ?? [];
+      const der = deriveFromMarcadores(marc);
+      marcadorDiag.set(rt.process_id, {
+        marcadores: marc,
+        collective: der.collective,
+        complexity_level: der.complexity_level,
+      });
       processMap.set(rt.process_id, {
         process_id: rt.process_id,
         theme_id: th.motor_theme_id,
-        collective: false,
-        complexity_level: 0,
+        collective: der.collective,
+        complexity_level: der.complexity_level,
         temporal_level: 0,
         directed_executor_id: null,
       });
@@ -545,6 +594,17 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       tema_diag: [...temaDiag.entries()]
         .slice(0, 50)
         .map(([process_id, d]) => ({ process_id, assunto: d.assunto, resolvido: d.resolvido })),
+      // M13 (AC-6): amostra do de-para de MARCADOR → collective/complexity
+      // derivado (para o owner auditar o casamento). Só entradas com marcador.
+      marcador_diag: [...marcadorDiag.entries()]
+        .filter(([, d]) => d.marcadores.length > 0)
+        .slice(0, 50)
+        .map(([process_id, d]) => ({
+          process_id,
+          marcadores: d.marcadores,
+          collective: d.collective,
+          complexity_level: d.complexity_level,
+        })),
       source: "on_demand_sync",
     },
     is_simulation: true,

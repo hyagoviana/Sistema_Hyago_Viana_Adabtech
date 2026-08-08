@@ -179,19 +179,45 @@ export async function createClientNote(clientId: string, body: string, userId: s
   return data;
 }
 
+// M1 (2026-08-07) — regra Trello opcional (só a ficha comua liga). Busca o dono
+// da nota e valida: editar SÓ o autor; excluir o autor OU admin. `enforceOwner`
+// fica FALSE por padrão para não regredir os RPCs financeiros (gate por módulo).
+async function loadNoteOwner(
+  table: "system_case_notes" | "system_client_notes",
+  noteId: string,
+): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from(table)
+    .select("created_by")
+    .eq("id", noteId)
+    .is("deleted_at", null)
+    .single();
+  if (error || !data) throw new NoteServiceError("Nota não encontrada", 404);
+  return (data as { created_by: string | null }).created_by;
+}
+
 // ----------------------------------------------------------------------------
 // EDIÇÃO — atualiza body (updated_at via trigger). Só notas não-excluídas.
+//   - `enforceOwner`: quando true (ficha comum/M1), SÓ o autor edita (403).
 // ----------------------------------------------------------------------------
 export async function updateNote(
   target: "case" | "client",
   noteId: string,
   body: string,
   userId: string,
+  opts?: { enforceOwner?: boolean },
 ) {
   requireUser(userId);
   const cleanBody = requireBody(body);
   const sb = getSupabaseAdmin();
   const table = target === "case" ? "system_case_notes" : "system_client_notes";
+
+  if (opts?.enforceOwner) {
+    const owner = await loadNoteOwner(table, noteId);
+    if (owner !== userId)
+      throw new NoteServiceError("Você só pode editar os seus próprios comentários", 403);
+  }
 
   const { data, error } = await sb
     .from(table)
@@ -206,11 +232,26 @@ export async function updateNote(
 
 // ----------------------------------------------------------------------------
 // SOFT-DELETE — grava deleted_by/deleted_at. NUNCA hard-delete.
+//   - `enforceOwner`: quando true (ficha comum/M1), exclui o autor OU um admin.
 // ----------------------------------------------------------------------------
-export async function softDeleteNote(target: "case" | "client", noteId: string, userId: string) {
+export async function softDeleteNote(
+  target: "case" | "client",
+  noteId: string,
+  userId: string,
+  opts?: { enforceOwner?: boolean; isAdmin?: boolean },
+) {
   requireUser(userId);
   const sb = getSupabaseAdmin();
   const table = target === "case" ? "system_case_notes" : "system_client_notes";
+
+  if (opts?.enforceOwner) {
+    const owner = await loadNoteOwner(table, noteId);
+    if (owner !== userId && !opts.isAdmin)
+      throw new NoteServiceError(
+        "Você só pode excluir os seus próprios comentários (admin pode excluir de qualquer um)",
+        403,
+      );
+  }
 
   const { data, error } = await sb
     .from(table)

@@ -1282,6 +1282,7 @@ export type Database = {
           provider: string | null;
           provider_ext_id: string | null;
           boleto_url: string | null;
+          contaazul_fatura_numero: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1300,6 +1301,7 @@ export type Database = {
           provider?: string | null;
           provider_ext_id?: string | null;
           boleto_url?: string | null;
+          contaazul_fatura_numero?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1418,6 +1420,7 @@ export type Database = {
           projuris_codigo_processo: number | null;
           projuris_numero_processo: string | null;
           sigiloso: boolean;
+          observacoes: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1466,6 +1469,7 @@ export type Database = {
           projuris_codigo_processo?: number | null;
           projuris_numero_processo?: string | null;
           sigiloso?: boolean;
+          observacoes?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1878,6 +1882,12 @@ export type Database = {
           phone: string | null;
           role: string;
           status: string;
+          perfil: string | null;
+          cargo: string | null;
+          unidade_organizacional: string | null;
+          peticionante: boolean;
+          participa_distribuicao_padrao: boolean;
+          status_projuris: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -1890,6 +1900,12 @@ export type Database = {
           phone?: string | null;
           role?: string;
           status?: string;
+          perfil?: string | null;
+          cargo?: string | null;
+          unidade_organizacional?: string | null;
+          peticionante?: boolean;
+          participa_distribuicao_padrao?: boolean;
+          status_projuris?: string | null;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;

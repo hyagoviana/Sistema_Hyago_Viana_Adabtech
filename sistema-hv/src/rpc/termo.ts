@@ -22,6 +22,7 @@ import {
   listParcelas,
   listTermos,
   recusarTermo,
+  setParcelaContaAzulFatura,
 } from "@/lib/termo-service";
 import { AuthError, requireAuth, requireModule, requireRole } from "@/lib/supabase/auth-guard";
 
@@ -42,8 +43,13 @@ function run<T>(guard: () => Promise<unknown>, fn: () => Promise<T>): Promise<T>
   })();
 }
 
-// Leitura: qualquer autenticado. Escrita (A7, 2026-07-20): exige financeiro:edit.
+// Leitura genérica: qualquer autenticado.
 const handle = <T>(fn: () => Promise<T>) => run(() => requireAuth(), fn);
+// M4 (2026-08-07) — Leitura de VALORES do termo (honorários/parcelas) é financeira:
+// exige financeiro:view (senão a URL /termo vazava honorários). NÃO se aplica a
+// getCaseHonorarios, que alimenta o autofill de documentos de quem não tem financeiro.
+const handleFinView = <T>(fn: () => Promise<T>) =>
+  run(() => requireModule("financeiro", "view"), fn);
 const handleWrite = <T>(fn: () => Promise<T>) => run(() => requireModule("financeiro", "edit"), fn);
 
 const calcSchema = z.object({
@@ -57,11 +63,11 @@ const calcSchema = z.object({
 
 export const listTermosFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => listTermos(data.caseId)));
+  .handler(async ({ data }) => handleFinView(() => listTermos(data.caseId)));
 
 export const getTermoFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => getTermo(data.id)));
+  .handler(async ({ data }) => handleFinView(() => getTermo(data.id)));
 
 // S7-02 — honorários persistidos da procuração (para pré-preencher a elaboração).
 export const getCaseHonorariosFn = createServerFn({ method: "GET" })
@@ -176,7 +182,7 @@ export const recusarTermoFn = createServerFn({ method: "POST" })
 
 export const listParcelasFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => handle(() => listParcelas(data.caseId)));
+  .handler(async ({ data }) => handleFinView(() => listParcelas(data.caseId)));
 
 export const darBaixaParcelaFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -211,3 +217,13 @@ export const deleteParcelaFn = createServerFn({ method: "POST" })
 export const deleteAllParcelasFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handleWrite(() => deleteAllParcelasDoCaso(data.caseId)));
+
+// M6 (2026-08-07) — nº da fatura do Conta Azul por cobrança/parcela (manual).
+// Escrita gate-ada por financeiro:edit (handleWrite). faturaNumero vazio → NULL.
+export const setParcelaContaAzulFaturaFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ parcelaId: z.string().uuid(), faturaNumero: z.string().nullish() }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handleWrite(() => setParcelaContaAzulFatura(data.parcelaId, data.faturaNumero ?? null)),
+  );

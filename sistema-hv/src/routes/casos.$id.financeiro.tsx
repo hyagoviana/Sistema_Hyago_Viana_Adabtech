@@ -9,8 +9,8 @@
 // permissão" e não monta nenhum bloco de $ (os hooks nem disparam). O servidor
 // (rpc/financeiro.ts) já barra os RPCs com requireModule('financeiro', ...).
 
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { ArrowRightLeft, DollarSign, Lock, RefreshCw } from "lucide-react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { ArrowRightLeft, DollarSign, FileText, Lock, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -102,6 +102,14 @@ function CasoFinanceiro() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
+          {/* M4 (2026-08-07) — Termo é 100% financeiro: acessível DE DENTRO do
+              Financeiro (saiu da nav de topo). A rota /termo é gate-ada por
+              financeiro:view, mas aqui já estamos nesse gate. */}
+          <Link to="/casos/$id/termo" params={{ id }}>
+            <Button variant="outline" size="sm">
+              <FileText size={14} className="mr-1.5" /> Termo de honorários
+            </Button>
+          </Link>
           {finBifurcated && podeFinanceiro && (
             <Button variant="outline" size="sm" onClick={() => setMoveFinOpen(true)}>
               <ArrowRightLeft size={14} className="mr-1.5" /> Mover etapa
@@ -186,7 +194,11 @@ function CasoFinanceiro() {
 
           {/* Cobranças / faturas. */}
           <div className="card-hero p-6">
-            <AsaasCobrancasPanel caseId={caso.id} clientId={caso.client_id} />
+            <AsaasCobrancasPanel
+              caseId={caso.id}
+              clientId={caso.client_id}
+              podeEditarFin={podeEditarFin}
+            />
           </div>
         </div>
       ) : (

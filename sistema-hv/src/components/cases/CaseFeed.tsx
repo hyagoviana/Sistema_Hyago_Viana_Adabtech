@@ -1,0 +1,512 @@
+// M1 (2026-08-07) — Feed UNIFICADO "Notas / Linha do tempo" (estilo Trello).
+//   - Mescla, em memória, os eventos automáticos/manuais (system_case_events) e
+//     os comentários da ficha comum (system_case_notes scope='geral') num ÚNICO
+//     array cronológico, renderizado como CARDS.
+//   - Caixa de comentário no topo (useCreateCaseNote → scope 'geral').
+//   - Isolamento financeiro (F1): filtra eventos `fin_*`; o feed só lê as notas
+//     'geral' (nunca as 'financeiro' do submenu).
+//   - Sem duplicação nota × evento `note_added` (D-M1a): o evento `note_added` é
+//     filtrado do feed; o comentário aparece pela fonte system_case_notes (que
+//     tem body/autor/editar/excluir). O `note_added` continua gravado (auditoria).
+//   - Regra Trello (imposta TAMBÉM no servidor): o AUTOR edita/exclui o próprio
+//     comentário; um ADMIN pode EXCLUIR de qualquer um (mas não editar alheio).
+//     Eventos automáticos = read-only; marcos/notas manuais seguem o padrão atual.
+//   - Container com barra de rolagem quando passa da altura-limite.
+
+import { Pencil, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useCaseNotes,
+  useCreateCaseNote,
+  useSoftDeleteNote,
+  useUpdateNote,
+} from "@/hooks/useNotes";
+import { useCaseEvents } from "@/hooks/useCases";
+import { useDeleteManualCaseEvent, useUpdateManualCaseEvent } from "@/hooks/useTimeline";
+import { useAuth } from "@/lib/auth";
+
+const MANUAL_ACTIONS = new Set(["nota_manual", "marco"]);
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+type CaseEvent = {
+  id: string;
+  action: string;
+  from_macrostatus_op: string | null;
+  to_macrostatus_op: string | null;
+  diff: Record<string, unknown> | null;
+  created_at: string;
+  triggered_by_name?: string | null;
+};
+
+// É manual (editável) somente se a action for de entrada manual E diff.manual = true.
+function isManualEvent(e: CaseEvent): boolean {
+  return MANUAL_ACTIONS.has(e.action) && !!(e.diff as { manual?: boolean } | null)?.manual;
+}
+
+// Rótulo legível de cada `action` de system_case_events (espelha o do CaseTimeline).
+function renderEventLabel(e: CaseEvent): string {
+  const d = (e.diff as Record<string, string> | null) ?? null;
+  switch (e.action) {
+    case "created":
+      return "Caso criado";
+    case "created_comercial":
+      return "Caso criado (comercial · aguardando assinatura da procuração)";
+    case "status_changed":
+      return `Status mudou: ${e.from_macrostatus_op ?? "·"} → ${e.to_macrostatus_op ?? "·"}`;
+    case "updated":
+      return "Caso editado";
+    case "soft_deleted":
+      return "Caso excluído";
+    case "stage_auto_advanced":
+      return `Avanço automático por checklist: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
+    case "stage_moved_by_checkbox":
+      return `Avanço por checkbox do caso: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
+    case "checklist_inconsistente":
+      return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "·"}" da etapa ${d?.stage_slug ?? "·"} foi desmarcado após avanço`;
+    case "canonical_fields_updated":
+      return "Dados do serviço atualizados";
+    case "vinculado_a_tema":
+      return "Caso transferido para outro tema";
+    case "duplicado_em_tema":
+      return "Caso duplicado em outro tema";
+    case "board_added":
+      return `Adicionado ao kanban${d?.board_label ? `: ${d.board_label}` : ""} (duplicado)`;
+    case "board_moved_exclusive":
+      return `Movido para o kanban${d?.board_label ? `: ${d.board_label}` : ""} (saiu do principal)`;
+    case "board_removed":
+      return `Removido do kanban${d?.board_label ? `: ${d.board_label}` : ""}`;
+    case "board_returned_to_principal":
+      return "Voltou ao kanban principal";
+    case "board_stage_changed":
+      return `Mudou de etapa no kanban: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
+    case "duplicado_de_caso":
+      return "Caso criado por duplicação de outro caso";
+    case "andamento_importado":
+      return `Andamento (importado): ${d?.descricao ?? "·"}${
+        d?.autor_texto ? ` · ${d.autor_texto}` : ""
+      }`;
+    case "task_created":
+      return `Tarefa criada: ${d?.task_title ?? "·"}`;
+    case "task_started":
+      return `Tarefa iniciada: ${d?.task_title ?? "·"}`;
+    case "task_completed":
+      return `Tarefa concluída: ${d?.task_title ?? "·"}`;
+    case "task_status_changed":
+      return `Tarefa "${d?.task_title ?? "·"}" → ${d?.status ?? "·"}`;
+    case "task_deleted":
+      return `Tarefa excluída: ${d?.task_title ?? "·"}`;
+    case "doc_generated":
+      return `Documento gerado: ${d?.doc_title ?? "·"}`;
+    case "doc_finalized":
+      return `Documento finalizado: ${d?.doc_title ?? "·"}`;
+    case "doc_reopened":
+      return `Documento reaberto: ${d?.doc_title ?? "·"}`;
+    case "doc_sent_zapsign":
+      return `Documento enviado para assinatura: ${d?.doc_title ?? "·"}`;
+    case "doc_deleted":
+      return `Documento excluído: ${d?.doc_title ?? "·"}`;
+    case "procuracao_preparada":
+      return "Procuração preparada";
+    case "liberado_comercial":
+      return d?.via === "manual"
+        ? "Promovido para cliente (manual)"
+        : `Procuração assinada · caso liberado para operação${d?.via ? ` (${d.via})` : ""}`;
+    case "perdido":
+      return `Caso marcado como perdido${d?.motivo ? ` · ${d.motivo}` : ""}`;
+    case "deadline_created":
+      return `Prazo criado: ${d?.deadline_title ?? "·"} (${d?.fatal_date ?? "·"})`;
+    case "deadline_completed":
+      return `Prazo cumprido: ${d?.deadline_title ?? "·"}`;
+    case "deadline_missed":
+      return `Prazo perdido: ${d?.deadline_title ?? "·"}`;
+    case "deadline_status_changed":
+      return `Prazo "${d?.deadline_title ?? "·"}" → ${d?.status ?? "·"}`;
+    case "deadline_deleted":
+      return `Prazo excluído: ${d?.deadline_title ?? "·"}`;
+    case "communication_logged":
+      return `Comunicação registrada (${d?.channel ?? "·"}): ${d?.summary ?? "·"}`;
+    case "communication_deleted":
+      return `Comunicação excluída: ${d?.summary ?? "·"}`;
+    // Manuais (S4-04)
+    case "marco":
+      return d?.body ?? "Marco";
+    case "nota_manual":
+      return d?.body ?? "Nota";
+    default:
+      return e.action;
+  }
+}
+
+// Item normalizado do feed — origem 'comment' (nota geral) ou 'event' (timeline).
+type FeedItem =
+  | {
+      kind: "comment";
+      id: string;
+      created_at: string;
+      body: string;
+      author: string | null;
+      edited: boolean;
+      createdBy: string | null;
+    }
+  | {
+      kind: "event";
+      id: string;
+      created_at: string;
+      event: CaseEvent;
+      manual: boolean;
+    };
+
+export function CaseFeed({ caseId }: { caseId: string }) {
+  const { profile, role } = useAuth();
+  const currentUserId = profile?.id ?? null;
+  const isAdmin = role === "admin";
+
+  const eventsQuery = useCaseEvents(caseId);
+  const notesQuery = useCaseNotes(caseId);
+
+  const create = useCreateCaseNote(caseId);
+  const updateNote = useUpdateNote("case", caseId);
+  const removeNote = useSoftDeleteNote("case", caseId);
+  const updateEvent = useUpdateManualCaseEvent(caseId);
+  const removeEvent = useDeleteManualCaseEvent(caseId);
+
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState<{ kind: "comment" | "event"; id: string } | null>(null);
+  const [editBody, setEditBody] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<{
+    kind: "comment" | "event";
+    id: string;
+  } | null>(null);
+
+  // D-M1a / F1 — feed = eventos (sem `fin_*` e sem `note_added`) + notas 'geral',
+  // ordenado por created_at DESC (mais recente no topo, como a timeline atual).
+  const feed: FeedItem[] = useMemo(() => {
+    const events = ((eventsQuery.data ?? []) as CaseEvent[])
+      .filter((e) => !e.action.startsWith("fin_") && e.action !== "note_added")
+      .map<FeedItem>((e) => ({
+        kind: "event",
+        id: e.id,
+        created_at: e.created_at,
+        event: e,
+        manual: isManualEvent(e),
+      }));
+    const notes = (notesQuery.data ?? []).map<FeedItem>((n) => ({
+      kind: "comment",
+      id: n.id,
+      created_at: n.created_at,
+      body: n.body,
+      author: n.created_by_name ?? null,
+      edited: n.updated_at !== n.created_at,
+      createdBy: n.created_by ?? null,
+    }));
+    return [...events, ...notes].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+  }, [eventsQuery.data, notesQuery.data]);
+
+  const loading = eventsQuery.isLoading || notesQuery.isLoading;
+
+  async function handleCreate() {
+    const body = draft.trim();
+    if (!body) {
+      toast.error("O comentário não pode ficar vazio");
+      return;
+    }
+    try {
+      await create.mutateAsync(body);
+      setDraft("");
+      toast.success("Comentário adicionado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao comentar");
+    }
+  }
+
+  async function handleUpdate() {
+    if (!editing) return;
+    const body = editBody.trim();
+    if (!body) {
+      toast.error("O texto não pode ficar vazio");
+      return;
+    }
+    try {
+      if (editing.kind === "comment") {
+        await updateNote.mutateAsync({ noteId: editing.id, body });
+      } else {
+        await updateEvent.mutateAsync({ eventId: editing.id, body });
+      }
+      setEditing(null);
+      setEditBody("");
+      toast.success("Atualizado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao editar");
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) return;
+    try {
+      if (confirmDelete.kind === "comment") {
+        await removeNote.mutateAsync(confirmDelete.id);
+      } else {
+        await removeEvent.mutateAsync(confirmDelete.id);
+      }
+      setConfirmDelete(null);
+      toast.success("Removido");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao remover");
+    }
+  }
+
+  const savingEdit = updateNote.isPending || updateEvent.isPending;
+  const deleting = removeNote.isPending || removeEvent.isPending;
+
+  return (
+    <div>
+      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
+        Notas / Linha do tempo
+      </h2>
+
+      {/* Caixa de comentário — cria uma nota 'geral' (aparece no feed na hora). */}
+      <div className="card-editorial p-4 mb-4">
+        <Textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Escreva um comentário, andamento ou observação pontual deste caso…"
+          rows={3}
+          className="resize-y"
+        />
+        <div className="mt-2 flex justify-end">
+          <Button size="sm" onClick={handleCreate} disabled={create.isPending || !draft.trim()}>
+            {create.isPending ? "Salvando…" : "Adicionar"}
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      ) : feed.length === 0 ? (
+        <p className="text-sm text-muted-foreground px-1">Nada registrado ainda.</p>
+      ) : (
+        <ul className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
+          {feed.map((item) => {
+            const beingEdited = editing?.kind === item.kind && editing.id === item.id;
+
+            if (item.kind === "comment") {
+              // Regra Trello (UI): autor vê editar+excluir; admin vê só excluir.
+              const isOwner = !!currentUserId && item.createdBy === currentUserId;
+              const canEdit = isOwner;
+              const canDelete = isOwner || isAdmin;
+              return (
+                <li key={`c-${item.id}`} className="card-editorial p-4">
+                  {beingEdited ? (
+                    <EditForm
+                      value={editBody}
+                      onChange={setEditBody}
+                      onCancel={() => {
+                        setEditing(null);
+                        setEditBody("");
+                      }}
+                      onSave={handleUpdate}
+                      saving={savingEdit}
+                    />
+                  ) : (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words">
+                          {item.body}
+                        </p>
+                        <div className="mt-1.5 text-[11px] text-muted-foreground">
+                          {fmtDateTime(item.created_at)}
+                          {item.author && (
+                            <span className="ml-2">
+                              por <strong>{item.author}</strong>
+                            </span>
+                          )}
+                          {item.edited && <span className="ml-2">(editada)</span>}
+                        </div>
+                      </div>
+                      {(canEdit || canDelete) && (
+                        <div className="flex gap-1 shrink-0">
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              title="Editar"
+                              onClick={() => {
+                                setEditing({ kind: "comment", id: item.id });
+                                setEditBody(item.body);
+                              }}
+                            >
+                              <Pencil size={14} />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              title="Excluir"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setConfirmDelete({ kind: "comment", id: item.id })}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            }
+
+            // kind === 'event'
+            const e = item.event;
+            return (
+              <li key={`e-${item.id}`} className="card-editorial p-4">
+                {beingEdited ? (
+                  <EditForm
+                    value={editBody}
+                    onChange={setEditBody}
+                    onCancel={() => {
+                      setEditing(null);
+                      setEditBody("");
+                    }}
+                    onSave={handleUpdate}
+                    saving={savingEdit}
+                  />
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                          item.manual ? "bg-[var(--navy)]" : "bg-[var(--gold)]"
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-[13px] text-[var(--navy)] font-medium whitespace-pre-wrap break-words">
+                          {item.manual && (
+                            <span className="text-[10px] uppercase tracking-wider text-[var(--gold-700)] mr-1.5">
+                              {e.action === "marco" ? "Marco" : "Nota"}
+                            </span>
+                          )}
+                          {renderEventLabel(e)}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {fmtDateTime(item.created_at)}
+                          {e.triggered_by_name && (
+                            <span className="ml-2">
+                              por <strong>{e.triggered_by_name}</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Editar/apagar SÓ em marcos/notas manuais. Automáticos = read-only. */}
+                    {item.manual && (
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Editar"
+                          onClick={() => {
+                            setEditing({ kind: "event", id: item.id });
+                            setEditBody((e.diff as { body?: string } | null)?.body ?? "");
+                          }}
+                        >
+                          <Pencil size={13} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Excluir"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setConfirmDelete({ kind: "event", id: item.id })}
+                        >
+                          <Trash2 size={13} />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <AlertDialog open={confirmDelete !== null} onOpenChange={(v) => !v && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir este item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDelete?.kind === "comment"
+                ? "O comentário some da lista (soft-delete). O histórico de quem escreveu e excluiu é preservado para auditoria."
+                : "Apenas marcos/notas manuais podem ser removidos. Eventos automáticos do sistema são somente-leitura."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function EditForm({
+  value,
+  onChange,
+  onCancel,
+  onSave,
+  saving,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  return (
+    <div>
+      <Textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        className="resize-y"
+        autoFocus
+      />
+      <div className="mt-2 flex justify-end gap-2">
+        <Button size="sm" variant="outline" onClick={onCancel} disabled={saving}>
+          Cancelar
+        </Button>
+        <Button size="sm" onClick={onSave} disabled={saving || !value.trim()}>
+          {saving ? "Salvando…" : "Salvar"}
+        </Button>
+      </div>
+    </div>
+  );
+}

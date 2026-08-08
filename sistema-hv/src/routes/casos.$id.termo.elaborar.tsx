@@ -5,7 +5,7 @@
 // placeholder do documento na S6-04. S6-04 acopla o botão "Gerar documento".
 
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Lock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,7 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCase } from "@/hooks/useCases";
 import { useCalcTermo, useCaseHonorarios, useCreateTermo, useTermos } from "@/hooks/useTermo";
+import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
+import { podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { setRouteTitle, usePublishRouteTitle } from "@/lib/route-title";
 
@@ -56,7 +58,11 @@ type CalcResult = {
 function ElaborarTermo() {
   const { id } = useParams({ from: "/casos/$id/termo/elaborar" });
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  // M4 (2026-08-07) — elaboração do termo é financeira: exige financeiro:view.
+  const { data: perms } = useMyModulePerms();
+  const { data: values } = useMyModuleValues();
+  const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
   const { data: caso, isLoading, isError } = useCase(id);
   const { data: termos } = useTermos(id);
   const { data: honorarios } = useCaseHonorarios(id); // S7-02
@@ -194,8 +200,7 @@ function ElaborarTermo() {
         formaPagamento: "PARCELADO",
         elaboradoPorId: profile?.id ?? null,
         // S7-02 — remanescente anterior (só COMPLEMENTAR) persistido no snapshot.
-        remanescenteAnteriorCentavos:
-          tipo === "COMPLEMENTAR" ? toCents(remanescente) : null,
+        remanescenteAnteriorCentavos: tipo === "COMPLEMENTAR" ? toCents(remanescente) : null,
       },
       {
         onSuccess: () => {
@@ -207,12 +212,34 @@ function ElaborarTermo() {
     );
   }
 
+  // M4 — bloqueio para quem não tem financeiro:view (elaboração = honorários).
+  if (!podeVerFinanceiro) {
+    return (
+      <div className="page-container">
+        <Breadcrumb
+          items={[
+            { label: "Casos", to: "/casos" },
+            { label: casoLabel, to: `/casos/${id}` },
+            { label: "Termo" },
+          ]}
+        />
+        <div className="card-hero p-10 text-center">
+          <Lock size={28} className="mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Você não tem permissão para elaborar o termo de honorários deste caso.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <Breadcrumb
         items={[
           { label: "Casos", to: "/casos" },
           { label: casoLabel, to: `/casos/${id}` },
+          { label: "Financeiro", to: `/casos/${id}/financeiro` },
           { label: "Termo", to: `/casos/${id}/termo` },
           { label: "Elaborar" },
         ]}

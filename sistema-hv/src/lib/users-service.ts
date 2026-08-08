@@ -35,7 +35,19 @@ const now = () => new Date().toISOString();
 // ----------------------------------------------------------------------------
 // Usuários
 // ----------------------------------------------------------------------------
-export type UserWithDistribution = {
+// M8 (2026-08-07) — cadastro real do colaborador (Perfil/Cargo/Unidade) + DUAS
+// flags do motor. Domínios validados pela CHECK do banco (ver migration
+// 20260808000030). Campos nascem NULL/false nos usuários existentes.
+export type CadastroColaborador = {
+  perfil: string | null;
+  cargo: string | null;
+  unidade_organizacional: string | null;
+  peticionante: boolean;
+  participa_distribuicao_padrao: boolean;
+  status_projuris: string | null;
+};
+
+export type UserWithDistribution = CadastroColaborador & {
   id: string;
   email: string;
   full_name: string | null;
@@ -54,7 +66,9 @@ export async function listUsers(): Promise<UserWithDistribution[]> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_users_active")
-    .select("id, email, full_name, phone, role, status, created_at")
+    .select(
+      "id, email, full_name, phone, role, status, created_at, perfil, cargo, unidade_organizacional, peticionante, participa_distribuicao_padrao, status_projuris",
+    )
     .order("created_at", { ascending: true });
   check(error);
   const users = (data ?? []) as Array<{
@@ -65,6 +79,12 @@ export async function listUsers(): Promise<UserWithDistribution[]> {
     role: string;
     status: string;
     created_at: string;
+    perfil: string | null;
+    cargo: string | null;
+    unidade_organizacional: string | null;
+    peticionante: boolean | null;
+    participa_distribuicao_padrao: boolean | null;
+    status_projuris: string | null;
   }>;
 
   // Join com o mapping de executores (H5) — 1 lookup por lista, mapeado por
@@ -89,6 +109,8 @@ export async function listUsers(): Promise<UserWithDistribution[]> {
     const m = byExecutor.get(u.id);
     return {
       ...u,
+      peticionante: u.peticionante ?? false,
+      participa_distribuicao_padrao: u.participa_distribuicao_padrao ?? false,
       projuris_responsavel_id: m?.projuris_responsavel_id ?? null,
       participa_distribuicao: m?.active ?? false,
       weight: m?.weight ?? null,
@@ -121,7 +143,8 @@ export async function setUserDistribution(
 
   const codigo = (input.projuris_responsavel_id ?? "").trim();
   const participa = !!input.participa;
-  const weight = input.weight != null && input.weight > 0 ? input.weight : 1.0;
+  // M9 (2026-08-07) — peso em BASE 100 (100 = distribui igual). Default 100.
+  const weight = input.weight != null && input.weight > 0 ? input.weight : 100;
   const eligibleComplex = input.eligible_complex ?? true;
 
   // Mapping ATUAL deste usuário (por executor_id), se houver.
@@ -206,14 +229,34 @@ export async function setUserDistribution(
  * Edita dados de perfil de um usuário (nome e telefone). Chamado tanto pelo
  * próprio usuário quanto pelo admin — a autorização é feita no RPC.
  */
-export async function updateUserProfile(
-  id: string,
-  patch: { full_name?: string | null; phone?: string | null },
-) {
+export type CadastroColaboradorPatch = Partial<{
+  full_name: string | null;
+  phone: string | null;
+  perfil: string | null;
+  cargo: string | null;
+  unidade_organizacional: string | null;
+  peticionante: boolean;
+  participa_distribuicao_padrao: boolean;
+  status_projuris: string | null;
+}>;
+
+export async function updateUserProfile(id: string, patch: CadastroColaboradorPatch) {
   const sb = getSupabaseAdmin();
   const fields: Record<string, unknown> = {};
-  if (patch.full_name !== undefined) fields.full_name = patch.full_name;
-  if (patch.phone !== undefined) fields.phone = patch.phone;
+  // M8 — nome/telefone + cadastro do colaborador (perfil/cargo/unidade/flags).
+  const keys = [
+    "full_name",
+    "phone",
+    "perfil",
+    "cargo",
+    "unidade_organizacional",
+    "peticionante",
+    "participa_distribuicao_padrao",
+    "status_projuris",
+  ] as const;
+  for (const k of keys) {
+    if (patch[k] !== undefined) fields[k] = patch[k];
+  }
   if (Object.keys(fields).length === 0) {
     throw new UsersServiceError("Nada para atualizar.", 400);
   }
@@ -231,12 +274,14 @@ export async function updateUserProfile(
  * Convida um usuário: cria a conta no Supabase Auth (envia e-mail de convite)
  * e registra o perfil em system_users com status INVITED.
  */
-export async function inviteUser(input: {
-  email: string;
-  full_name?: string;
-  role: string;
-  redirectTo?: string;
-}) {
+export async function inviteUser(
+  input: {
+    email: string;
+    full_name?: string;
+    role: string;
+    redirectTo?: string;
+  } & CadastroColaboradorPatch,
+) {
   assertRole(input.role);
   const sb = getSupabaseAdmin();
 
@@ -248,16 +293,30 @@ export async function inviteUser(input: {
     throw new UsersServiceError(inviteErr?.message ?? "Falha ao convidar usuário.", 400);
   }
 
+  // M8 — grava também o cadastro do colaborador (perfil/cargo/unidade/flags) no
+  // mesmo insert. Campos ausentes ficam no default (NULL/false).
+  const insertFields: Record<string, unknown> = {
+    id: invited.user.id,
+    organization_id: DEFAULT_ORG_ID,
+    email: input.email,
+    full_name: input.full_name ?? null,
+    role: input.role,
+    status: "INVITED",
+  };
+  for (const k of [
+    "perfil",
+    "cargo",
+    "unidade_organizacional",
+    "peticionante",
+    "participa_distribuicao_padrao",
+    "status_projuris",
+  ] as const) {
+    if (input[k] !== undefined) insertFields[k] = input[k];
+  }
+
   const { data, error } = await sb
     .from("system_users")
-    .insert({
-      id: invited.user.id,
-      organization_id: DEFAULT_ORG_ID,
-      email: input.email,
-      full_name: input.full_name ?? null,
-      role: input.role,
-      status: "INVITED",
-    })
+    .insert(insertFields as never)
     .select("id, email, full_name, role, status, created_at")
     .single();
   check(error);

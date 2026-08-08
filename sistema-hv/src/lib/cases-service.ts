@@ -1980,3 +1980,24 @@ export async function setCaseSigilo(
 
   return { ok: true as const, sigiloso, autorizados: wanted };
 }
+
+// ----------------------------------------------------------------------------
+// M2 (2026-08-07) — Observações do caso (texto livre). Diferente das notas: é um
+// ÚNICO campo (system_cases.observacoes) do caso inteiro, editável in-place.
+// NÃO grava evento em system_case_events (não polui a linha do tempo / feed M1).
+// ----------------------------------------------------------------------------
+export async function updateCaseObservacoes(caseId: string, observacoes: string) {
+  const sb = getSupabaseAdmin();
+  // Normaliza: string vazia vira NULL (mantém o JSONB/coluna limpa).
+  const value = observacoes.trim() === "" ? null : observacoes;
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ observacoes: value })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select("id, observacoes")
+    .single();
+  if (error || !data)
+    throw new CaseServiceError(error?.message ?? "Falha ao salvar observações", 500);
+  return data;
+}

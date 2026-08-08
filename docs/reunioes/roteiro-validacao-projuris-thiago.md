@@ -9,9 +9,17 @@
 
 ### Bloco A — Executores (quem entra na distribuição)
 1. "Dos usuários que estão no ProJuris, **quais realmente entram no rodízio** de distribuição?"
+R- No rodizio de distribuição são os seniores (hyago vai me mandar o nome de quem é) Precisamos colocar no cadastro do colaborador um campo para fazer o nível desse colaborador (nomenclaturas estagio, Junior e sênior) e quando for convidar alguém para o sistema é preenchido isso para puxar no motor) 
+
 2. "Para cada um: **qual o peso** dele (recebe mais ou menos que os outros) e **ele pode pegar caso complexo** ou não?"
+R- todo mundo que entra é peso 100 distribui igualmente, e também fazer o motor sobre quando estiver saindo ganha menos, ver a regra atual 
+
 3. "A exceção **TEMFC → Patrícia**: a Patrícia é a **'Ana Patricia Cruz'** que aparece no ProJuris, ou é outra pessoa?"
+R- mesma pessoa 
+
 4. "Confirmando: **Thiago = 128858** e **Thaíse = 204546**, certo?"
+R- isso 
+
 
 ### Bloco B — Responsável exclusivo (quem sempre pega certo tipo/tema)
 5. "As regras de exclusividade são essas — **falta alguma**?
@@ -19,23 +27,37 @@
    - Sustentação Oral → Thiago (e/ou PMMB)
    - INDENIZAÇÃO PMMB → Thaíse
    - TEMFC → Patrícia"
+R- isso mesmo perfeito 
+
 
 ### Bloco C — Tipos de tarefa e prazos
 6. "Tem 5 tipos que não bateram automático. Me diz qual é o certo:
    - **'Diligências/Balcão'** (no ProJuris tem 3 parecidos — qual usar?)
+R- Ele removeu e deixou o certo la no projuris depois q ele fizer a gente vai ver
    - **'Emenda'** → é 'Emenda à Inicial'?
+R- Sim isso mesmo 
    - **'Manifestação'** → tem de 5, 10 e 15 dias — usamos qual? (ou os três?)
+R- Vam os fazer uma logica para cada 
    - **'Réplica'** → é 'Réplica à Contestação'?"
+R- Sim isso mesmo 
+
 7. "Tem 14 tipos que existem no ProJuris mas **não estão na sua planilha de pontos**. Você quer **pontuar** eles ou **ignorar**?"
+R- Vou receber um retorno sobre ainda 
+
 8. "Para cada tipo, **quantos dias** é o **prazo previsto** e o **prazo fatal**? (o motor usa isso pra calcular a data quando o ProJuris não mandar)."
+R- Para cada tarefa tem que puxar do projuris, la dentro tem os campos prazo previsto, quantos dias e prazo fatal, e quando alterar no projuris altera no sistema 
 
 ### Bloco D — O ponto mais importante: onde fica a complexidade
 9. "No ProJuris, **onde você marca** se um caso é **complexo / individual / coletivo / prioritário**? É um **marcador** ou um **campo personalizado**? Me mostra na tela e me diz o **nome exato** desse campo."
    - *(Sem isso, o motor não consegue puxar essas variáveis pra pontuação — é o único buraco real.)*
+R- esta como marcador, mas o melhor seria mlehor em campo personalizados mas hoje não são, primeira versão vamos puxar de marcador, e depois vamos usar como campos personalizados 
 
 ### Bloco E — Escrita no ProJuris (a parte irreversível)
 10. "Pra gente **testar o envio** (o motor colocar a tarefa na agenda da pessoa no ProJuris): posso usar **1 caso seu** de teste? Confirma que o certo é o **'adicionar/substituir responsável em lote'**?"
+R- Pode usar o caso numero 0733583-07.2026.8.07.0016 esse aqui para teste identificador PRO.0007713
+
 11. "A API do ProJuris deixa **criar um tipo de tarefa** por fora, ou o certo é **criar no ProJuris primeiro** e depois a gente vincula no nosso sistema?"
+R- o ideia é criar dentro do sistema e espelha no projuris cria lá, mas precisa funcionar a agenda muita bem, mas de começo vamos criar no projuris primeiro e espelha no sistema, se a api não permitir seguimos assim, mas se permitir pr criamos no sistema. 
 
 ---
 
@@ -48,6 +70,7 @@
 **Passo 1 — Cadastrar os executores**
 - Entrar em: **Menu → Permissões** → `/permissoes`
 - Em cada usuário que participa: preencher **ID ProJuris**, ligar **"Participa da distribuição"** e definir o **peso**. Salvar.
+R- hyago vai mANDAR o identificado de cada participante 
 
 **Passo 2 — Ajustar os tipos de tarefa (pontos + prazos)**
 - Entrar em: **Menu → Distribuição → aba "Tipos de tarefa"** → `/controladoria/distribuicao/tipos-tarefa`

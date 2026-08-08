@@ -1,11 +1,14 @@
 import {
+  Check,
   Copy,
   ExternalLink,
   Loader2,
+  Pencil,
   Plus,
   QrCode,
   Receipt,
   RefreshCw,
+  X,
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
@@ -32,8 +35,12 @@ import {
   useSyncAsaasPagamentos,
   useSyncClientToAsaas,
 } from "@/hooks/useAsaas";
-import { useCancelContaAzulCharge, useSyncClientToContaAzul, useSyncContaAzulPagamentos } from "@/hooks/useContaAzul";
-import { useParcelas } from "@/hooks/useTermo";
+import {
+  useCancelContaAzulCharge,
+  useSyncClientToContaAzul,
+  useSyncContaAzulPagamentos,
+} from "@/hooks/useContaAzul";
+import { useParcelas, useSetParcelaContaAzulFatura } from "@/hooks/useTermo";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   PENDENTE: { label: "Pendente", cls: "bg-amber-100 text-amber-800" },
@@ -46,9 +53,11 @@ const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
 type Props = {
   caseId: string;
   clientId: string;
+  // M6 (2026-08-07) — habilita a edição do nº da fatura Conta Azul por parcela.
+  podeEditarFin?: boolean;
 };
 
-export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
+export function AsaasCobrancasPanel({ caseId, clientId, podeEditarFin = false }: Props) {
   const { data: parcelas, isLoading } = useParcelas(caseId);
   const syncClient = useSyncClientToContaAzul();
   const syncAsaasClient = useSyncClientToAsaas();
@@ -148,11 +157,12 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
       {hasParcelas && (
         <div className="rounded-md border border-[var(--border)] overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2 bg-[var(--muted)] text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+          <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2 bg-[var(--muted)] text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
             <span>#</span>
             <span>Vencimento</span>
             <span>Valor</span>
             <span>Status</span>
+            <span>Fatura CA</span>
             <span>Ações</span>
           </div>
 
@@ -168,7 +178,7 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-t border-[var(--border)] items-center text-[13px] hover:bg-[var(--cream)] transition-colors"
+                className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-t border-[var(--border)] items-center text-[13px] hover:bg-[var(--cream)] transition-colors"
               >
                 <span className="font-mono text-[12px] text-muted-foreground w-6">
                   {String(p.numero).padStart(2, "0")}
@@ -194,10 +204,26 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
 
                 <Badge className={`${meta.cls} text-[10px]`}>{meta.label}</Badge>
 
+                {/* M6 — nº da fatura Conta Azul (manual, por cobrança). */}
+                <FaturaContaAzulCell
+                  caseId={caseId}
+                  parcelaId={p.id}
+                  value={
+                    (p as { contaazul_fatura_numero?: string | null }).contaazul_fatura_numero ??
+                    null
+                  }
+                  canEdit={podeEditarFin}
+                />
+
                 <span className="flex items-center gap-1.5">
                   {/* Link da cobrança (ambos: Asaas e Conta Azul) */}
                   {p.boleto_url && isActive && (
-                    <a href={p.boleto_url} target="_blank" rel="noreferrer" title="Ver fatura/cobrança">
+                    <a
+                      href={p.boleto_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Ver fatura/cobrança"
+                    >
                       <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-[var(--navy)]">
                         <ExternalLink size={13} />
                       </Button>
@@ -260,7 +286,7 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
           })}
 
           {/* Rodapé */}
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-t-2 border-[var(--navy)] bg-[var(--cream)]">
+          <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-2.5 border-t-2 border-[var(--navy)] bg-[var(--cream)]">
             <span />
             <span className="text-[12px] font-medium text-[var(--navy)]">
               {(parcelas ?? []).length} parcela(s)
@@ -273,6 +299,7 @@ export function AsaasCobrancasPanel({ caseId, clientId }: Props) {
                 {(parcelas ?? []).filter((p) => p.status === "PAGA").length} paga(s)
               </Badge>
             </span>
+            <span />
             <span />
           </div>
         </div>
@@ -363,5 +390,110 @@ function PixQrCodeDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── M6: Nº da fatura do Conta Azul por parcela (edição inline) ──────────────
+
+function FaturaContaAzulCell({
+  caseId,
+  parcelaId,
+  value,
+  canEdit,
+}: {
+  caseId: string;
+  parcelaId: string;
+  value: string | null;
+  canEdit: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const setFatura = useSetParcelaContaAzulFatura(caseId);
+
+  function save() {
+    const next = draft.trim() ? draft.trim() : null;
+    setFatura.mutate(
+      { parcelaId, faturaNumero: next },
+      {
+        onSuccess: () => {
+          toast.success(next ? "Nº da fatura salvo" : "Nº da fatura removido");
+          setEditing(false);
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar"),
+      },
+    );
+  }
+
+  if (editing) {
+    return (
+      <span className="flex items-center gap-1">
+        <Input
+          value={draft}
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") setEditing(false);
+          }}
+          placeholder="Nº fatura CA"
+          className="h-7 w-28 text-[12px]"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 text-green-700"
+          disabled={setFatura.isPending}
+          onClick={save}
+          title="Salvar"
+        >
+          {setFatura.isPending ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Check size={13} />
+          )}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 text-muted-foreground"
+          onClick={() => {
+            setDraft(value ?? "");
+            setEditing(false);
+          }}
+          title="Cancelar"
+        >
+          <X size={13} />
+        </Button>
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1 text-[12px] min-w-0">
+      {value ? (
+        <span
+          className="font-mono text-[var(--navy)] truncate"
+          title={`Fatura Conta Azul: ${value}`}
+        >
+          {value}
+        </span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      )}
+      {canEdit && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 text-muted-foreground shrink-0"
+          onClick={() => {
+            setDraft(value ?? "");
+            setEditing(true);
+          }}
+          title={value ? "Editar nº da fatura" : "Adicionar nº da fatura"}
+        >
+          <Pencil size={12} />
+        </Button>
+      )}
+    </span>
   );
 }

@@ -4,14 +4,6 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/hv/primitives";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,6 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import {
   useClientFieldDefs,
@@ -253,15 +253,18 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[680px] max-h-[88vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Informações de cadastro de clientes</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-[680px] overflow-y-auto flex flex-col gap-4"
+      >
+        <SheetHeader>
+          <SheetTitle>Informações de cadastro de clientes</SheetTitle>
+          <SheetDescription>
             Veja como está o formulário de cadastro e acrescente campos próprios. Os campos fixos
             não podem ser alterados; os que você cria podem ser editados, ocultados ou excluídos.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         {/* Campos fixos do formulário (referência, somente leitura) */}
         <div className="space-y-2">
@@ -515,12 +518,12 @@ export function ClientFieldsManagerDialog({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        <DialogFooter>
+        <SheetFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

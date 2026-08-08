@@ -10,7 +10,7 @@
 //                 em caso sigiloso (G4). Casos normais → todos veem.
 
 import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
-import { DollarSign, FileText, Gavel, Layers } from "lucide-react";
+import { DollarSign, FolderOpen, Gavel, Layers } from "lucide-react";
 
 import { Breadcrumb } from "@/components/hv/primitives";
 import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
@@ -49,9 +49,13 @@ function CasoLayout() {
 
   const isFin = !!matchRoute({ to: "/casos/$id/financeiro", params: { id } });
   const isJud = !!matchRoute({ to: "/casos/$id/judicial", params: { id } });
-  const isTermo = !!matchRoute({ to: "/casos/$id/termo", params: { id }, fuzzy: true });
+  // M3 (2026-08-07) — Documentos virou aba de topo (ao lado de Judicial).
+  const isDoc = !!matchRoute({ to: "/casos/$id/documentos", params: { id } });
+  // M4 (2026-08-07) — Termo saiu da nav de topo: agora vive DENTRO do Financeiro
+  // (é 100% financeiro). As rotas casos.$id.termo(.elaborar) continuam existindo,
+  // mas são alcançadas pelo submenu Financeiro (e gate-adas por financeiro:view).
   // "Ficha" é a rota index — ativa quando não estamos em nenhum submenu.
-  const isIndex = !isFin && !isJud && !isTermo;
+  const isIndex = !isFin && !isJud && !isDoc;
 
   const tabCls = (active: boolean) =>
     `inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border-b-2 transition-colors ${
@@ -73,14 +77,14 @@ function CasoLayout() {
               <DollarSign size={14} /> Financeiro
             </Link>
           )}
+          <Link to="/casos/$id/documentos" params={{ id }} className={tabCls(isDoc)}>
+            <FolderOpen size={14} /> Documentos
+          </Link>
           {podeVerJudicial && (
             <Link to="/casos/$id/judicial" params={{ id }} className={tabCls(isJud)}>
               <Gavel size={14} /> Judicial
             </Link>
           )}
-          <Link to="/casos/$id/termo" params={{ id }} className={tabCls(isTermo)}>
-            <FileText size={14} /> Termo
-          </Link>
         </nav>
       </div>
       <Outlet />

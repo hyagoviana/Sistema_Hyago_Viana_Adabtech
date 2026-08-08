@@ -10,6 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,9 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useInviteUser } from "@/hooks/useUsers";
+import { Switch } from "@/components/ui/switch";
+import { useInviteUser, useSetUserDistribution } from "@/hooks/useUsers";
 import { useSetUserModulePerms } from "@/hooks/usePermissions";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
+import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
 
 import { ModulePermsGrid, type ModulePermsValue } from "./ModulePermsGrid";
 
@@ -34,18 +38,42 @@ const ASSIGNABLE: Role[] = ROLES.filter((r) => r !== "admin");
 export function InviteUserDialog({ open, onOpenChange }: Props) {
   const invite = useInviteUser();
   const setPerms = useSetUserModulePerms();
+  const setDistribution = useSetUserDistribution();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<Role>("operacional");
   // Overrides por aba definidos JÁ no convite (2026-07-19). Vazio = tudo no
   // padrão do papel escolhido.
   const [modulePerms, setModulePerms] = useState<ModulePermsValue>({ access: {}, values: {} });
+  // Cadastro do colaborador (M8) — igualar a tela de convite à de editar.
+  const [perfil, setPerfil] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [unidadeOrg, setUnidadeOrg] = useState("");
+  const [statusProjuris, setStatusProjuris] = useState("");
+  const [peticionante, setPeticionante] = useState(false);
+  const [participaGeral, setParticipaGeral] = useState(false);
+  // Distribuição (ProJuris) — H5.
+  const [projurisId, setProjurisId] = useState("");
+  const [participaDist, setParticipaDist] = useState(false);
+  const [eligibleComplex, setEligibleComplex] = useState(true);
+  // M9 — peso em base 100 (100 = distribui igual).
+  const [weight, setWeight] = useState("100");
 
   function reset() {
     setEmail("");
     setFullName("");
     setRole("operacional");
     setModulePerms({ access: {}, values: {} });
+    setPerfil("");
+    setCargo("");
+    setUnidadeOrg("");
+    setStatusProjuris("");
+    setPeticionante(false);
+    setParticipaGeral(false);
+    setProjurisId("");
+    setParticipaDist(false);
+    setEligibleComplex(true);
+    setWeight("100");
   }
 
   async function handleConfirm() {
@@ -54,12 +82,23 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
       toast.error("Informe um e-mail válido.");
       return;
     }
+    if (participaDist && !projurisId.trim()) {
+      toast.error("Informe o ID ProJuris antes de marcar como participante da distribuição.");
+      return;
+    }
     try {
       const created = await invite.mutateAsync({
         email: cleanEmail,
         full_name: fullName.trim() || undefined,
         role,
         redirectTo: `${window.location.origin}/nova-senha`,
+        // Cadastro do colaborador (M8) — gravado já no convite.
+        perfil: perfil || null,
+        cargo: cargo || null,
+        unidade_organizacional: unidadeOrg.trim() || null,
+        status_projuris: statusProjuris || null,
+        peticionante,
+        participa_distribuicao_padrao: participaGeral,
       });
       // Grava os overrides por aba definidos no convite. O usuário já existe em
       // system_users (status INVITED), então o user_id está disponível. Se essa
@@ -77,6 +116,27 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
         } catch {
           toast.warning(
             "Convite enviado, mas não consegui salvar as permissões por aba. Ajuste na tela de Permissões.",
+          );
+          reset();
+          onOpenChange(false);
+          return;
+        }
+      }
+      // Distribuição (ProJuris) — H5. Mesmo padrão do setPerms: se falhar, o
+      // convite já foi enviado; avisamos sem reverter.
+      if (created?.id && (projurisId.trim() || participaDist)) {
+        try {
+          const w = parseFloat(weight);
+          await setDistribution.mutateAsync({
+            id: created.id,
+            projuris_responsavel_id: projurisId.trim() || null,
+            participa: participaDist,
+            weight: Number.isFinite(w) && w > 0 ? w : 1.0,
+            eligible_complex: eligibleComplex,
+          });
+        } catch {
+          toast.warning(
+            "Convite enviado, mas não consegui salvar a distribuição (ProJuris). Ajuste em Editar usuário.",
           );
           reset();
           onOpenChange(false);
@@ -136,6 +196,133 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Cadastro do colaborador (M8) — mesmos campos da tela de editar. */}
+          <div className="border-t border-[var(--border)] pt-3 space-y-3">
+            <p className="text-[12px] font-semibold text-[var(--navy)]">Cadastro do colaborador</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Perfil</Label>
+                <Select
+                  value={perfil || NONE}
+                  onValueChange={(v) => setPerfil(v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {PERFIL_OPTS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Cargo / nível</Label>
+                <Select value={cargo || NONE} onValueChange={(v) => setCargo(v === NONE ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {CARGO_OPTS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Unidade organizacional</Label>
+                <Input
+                  value={unidadeOrg}
+                  onChange={(e) => setUnidadeOrg(e.target.value)}
+                  placeholder="Unidade / filial"
+                />
+              </div>
+              <div>
+                <Label>Status ProJuris</Label>
+                <Select
+                  value={statusProjuris || NONE}
+                  onValueChange={(v) => setStatusProjuris(v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {STATUS_PROJURIS_OPTS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Peticionante</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Se desligado, não entra no motor de distribuição.
+                </p>
+              </div>
+              <Switch checked={peticionante} onCheckedChange={setPeticionante} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Participa da distribuição geral</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Só quem participa entra na fila ordinária; os demais só por exceção.
+                </p>
+              </div>
+              <Switch checked={participaGeral} onCheckedChange={setParticipaGeral} />
+            </div>
+          </div>
+
+          {/* Distribuição (ProJuris) — H5. */}
+          <div className="border-t border-[var(--border)] pt-3 space-y-3">
+            <p className="text-[12px] font-semibold text-[var(--navy)]">Distribuição (ProJuris)</p>
+            <div>
+              <Label>ID ProJuris (executor)</Label>
+              <Input
+                value={projurisId}
+                onChange={(e) => setProjurisId(e.target.value)}
+                placeholder="ex.: PES.0000030"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Código do usuário no ProJuris. Vazio = sem código (não distribui).
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="mb-0">Participa da distribuição</Label>
+              <Switch checked={participaDist} onCheckedChange={setParticipaDist} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="mb-0">Elegível a tarefas complexas</Label>
+              <Switch checked={eligibleComplex} onCheckedChange={setEligibleComplex} />
+            </div>
+            <div>
+              <Label>Peso na fila</Label>
+              <Input
+                type="number"
+                min="0"
+                max="200"
+                step="5"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Padrão <strong>100</strong> = distribui igual.
+              </p>
+            </div>
           </div>
 
           <div className="border-t border-[var(--border)] pt-3">

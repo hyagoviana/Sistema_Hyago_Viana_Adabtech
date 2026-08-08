@@ -20,6 +20,7 @@ import {
   listParcelasFn,
   listTermosFn,
   recusarTermoFn,
+  setParcelaContaAzulFaturaFn,
 } from "@/rpc/termo";
 
 export type TermoCalcInput = {
@@ -221,6 +222,18 @@ export function useDeleteParcela(caseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
       qc.invalidateQueries({ queryKey: ["dashboard-financeiro"] });
+    },
+  });
+}
+
+// M6 (2026-08-07) — grava/limpa o nº da fatura do Conta Azul de uma parcela.
+export function useSetParcelaContaAzulFatura(caseId: string) {
+  const fn = useServerFn(setParcelaContaAzulFaturaFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { parcelaId: string; faturaNumero: string | null }) => fn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["parcelas", caseId] });
     },
   });
 }

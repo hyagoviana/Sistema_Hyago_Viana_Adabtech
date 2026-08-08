@@ -30,6 +30,7 @@ import {
   softDeleteCase,
   updateCase,
   updateCaseCanonicalFields,
+  updateCaseObservacoes,
 } from "@/lib/cases-service";
 import { AuthError, requireAuth, requireAnyModule, requireModule } from "@/lib/supabase/auth-guard";
 import {
@@ -237,6 +238,18 @@ export const updateCaseCanonicalFieldsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handleManage((userId) => updateCaseCanonicalFields(data.id, data.patch, userId)),
   );
+
+// M2 (2026-08-07) — salva o campo Observações (texto livre) do caso. Gate de
+// escrita compartilhado (comercial OU operacional : edit). NÃO grava evento na
+// timeline (diferente das notas). Aceita string vazia (limpa a coluna → NULL).
+const observacoesSchema = z.object({
+  id: z.string().uuid(),
+  observacoes: z.string(),
+});
+
+export const updateCaseObservacoesFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => observacoesSchema.parse(data))
+  .handler(async ({ data }) => handleBiz(() => updateCaseObservacoes(data.id, data.observacoes)));
 
 // (2026-07-09) — `to` é o SLUG da etapa op. Aceita qualquer slug (as etapas são
 // configuráveis por categoria em system_pipeline_stages; o CHECK fixo já foi

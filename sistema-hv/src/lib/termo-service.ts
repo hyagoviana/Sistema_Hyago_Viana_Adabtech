@@ -215,10 +215,7 @@ export async function deleteTermoAdmin(termoId: string, triggeredBy: string) {
     .select("id");
 
   // Remove o snapshot (qualquer status).
-  const { error } = await sb
-    .from("system_termo_snapshots")
-    .delete()
-    .eq("id", termoId);
+  const { error } = await sb.from("system_termo_snapshots").delete().eq("id", termoId);
   if (error) throw new TermoServiceError(error.message, 500);
 
   await sb.from("system_audit_log").insert({
@@ -569,10 +566,7 @@ export async function aceitarTermo(termoId: string) {
         // 3) Monta parcelas para o Conta Azul
         const descricaoBase = `Honorários advocatícios — ${caso.case_code}`;
         const parcelasPayload: CAContaReceberParcela[] = rows.map((r, i) => ({
-          descricao:
-            rows.length > 1
-              ? `${descricaoBase} (${i + 1}/${rows.length})`
-              : descricaoBase,
+          descricao: rows.length > 1 ? `${descricaoBase} (${i + 1}/${rows.length})` : descricaoBase,
           data_vencimento: r.vencimento,
           nota: caso.case_code,
           conta_financeira: contaFinanceiraId,
@@ -593,10 +587,7 @@ export async function aceitarTermo(termoId: string) {
         });
 
         // 5) Marca as parcelas locais como provider "conta_azul" para o cron de sync
-        await sb
-          .from("system_parcelas")
-          .update({ provider: "conta_azul" })
-          .eq("termo_id", termoId);
+        await sb.from("system_parcelas").update({ provider: "conta_azul" }).eq("termo_id", termoId);
 
         console.log(
           `contaazul: cobrança criada automaticamente para caso ${caso.case_code} (${rows.length} parcelas)`,
@@ -628,6 +619,24 @@ export async function listParcelas(caseId: string) {
     .order("numero", { ascending: true });
   if (error) throw new TermoServiceError(error.message, 500);
   return data ?? [];
+}
+
+// M6 (2026-08-07) — grava o nº da fatura do Conta Azul da parcela (identificação
+// MANUAL, texto livre; não fala com a API do CA). Vazio/whitespace → NULL (limpa).
+// O trigger system_fn_audit já registra o UPDATE. Independe do provider.
+export async function setParcelaContaAzulFatura(parcelaId: string, faturaNumero: string | null) {
+  const sb = getSupabaseAdmin();
+  const value = faturaNumero && faturaNumero.trim() ? faturaNumero.trim() : null;
+  const { data, error } = await sb
+    .from("system_parcelas")
+    .update({ contaazul_fatura_numero: value })
+    .eq("id", parcelaId)
+    .select("id")
+    .single();
+  if (error || !data) {
+    throw new TermoServiceError(error?.message ?? "Parcela não encontrada", 404);
+  }
+  return { ok: true as const, id: parcelaId, contaazul_fatura_numero: value };
 }
 
 // (item 5, 2026-07-10) — exclui UMA parcela (soft-delete; some da lista/relatório).

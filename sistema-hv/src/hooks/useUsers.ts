@@ -16,6 +16,17 @@ import {
 } from "@/rpc/users";
 import type { ReassignMapping } from "@/lib/users-service";
 
+// M8 — campos de cadastro do colaborador (perfil/cargo/unidade + flags do motor),
+// aceitos tanto no convite quanto na edição.
+type CadastroColaboradorVars = {
+  perfil?: string | null;
+  cargo?: string | null;
+  unidade_organizacional?: string | null;
+  peticionante?: boolean;
+  participa_distribuicao_padrao?: boolean;
+  status_projuris?: string | null;
+};
+
 export function useUserReport(userId: string | null) {
   const fn = useServerFn(getUserReportFn);
   return useQuery({
@@ -47,8 +58,14 @@ export function useInviteUser() {
   const fn = useServerFn(inviteUserFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { email: string; full_name?: string; role: string; redirectTo?: string }) =>
-      fn({ data: input }),
+    mutationFn: (
+      input: {
+        email: string;
+        full_name?: string;
+        role: string;
+        redirectTo?: string;
+      } & CadastroColaboradorVars,
+    ) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-users"] }),
   });
 }
@@ -76,8 +93,13 @@ export function useUpdateUserProfile() {
   const fn = useServerFn(updateUserProfileFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id?: string; full_name?: string | null; phone?: string | null }) =>
-      fn({ data: vars }),
+    mutationFn: (
+      vars: {
+        id?: string;
+        full_name?: string | null;
+        phone?: string | null;
+      } & CadastroColaboradorVars,
+    ) => fn({ data: vars }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["system-users"] });
       qc.invalidateQueries({ queryKey: ["me"] });

@@ -1,0 +1,439 @@
+Matheus Torquato [06:01]: Opa, Thiago, tudo bem?
+
+Dr. Thiago Correia [06:03]: Fala, Matheus, beleza, cara? Como é que tá?
+
+Matheus Torquato [06:04]: Beleza, tranquilo, tranquilo.
+
+Dr. Thiago Correia [06:09]: Eu acho que tem algumas questões que vocês querem ver.
+
+Matheus Torquato [06:13]: Na verdade, eu queria te mostrar as correções que a gente, nós fizemos de ontem para hoje, né? E também eu tenho alguns pontos que eu preciso confirmar com você. E também algumas configurações que a gente vai precisar fazer ali no ProJuris, tá?
+
+Dr. Thiago Correia [06:32]: Para poder dar certo aqui. Beleza.
+
+Matheus Torquato [06:35]: Primeiro levantar esses, perguntar os questionamentos para você antes ali também, as configurações. Depois eu mostro para você o que a gente fez aqui no sistema, pode ser?
+
+Dr. Thiago Correia [06:45]: Pronto, pode ser. Eu não consegui usar tanto, né, desses 2 dias para cá. Até porque eu já tinha visto ali com vocês, então sabia que vocês estavam mexendo aí. Deixei para não ficar mexendo, porque depois eu ia mexer e mexer de novo, né? Aí deixei para ver depois. Esse final de semana que eu quero finalizar algumas configurações do tema ali que a gente já tá transferindo, para até para na segunda, quando for mostrar para Iago, tá algo mais redondo ali dentro do uso. Que a ideia é semana que vem, pessoal, já assim A ideia não, na semana que vem, menos que tem algum problema, o pessoal já vai estar usando indenização aí dentro, mais médicos. E aí já alimentando o resto das informações que faltam e tudo. Eu, o que eu teria seriam alguns ajustes de mais coisa nova também, né?
+
+Matheus Torquato [07:36]: Eu acho que se a gente for para fazer ajuste, vamos fazer ajuste que a gente já tem aqui. Se for coisa nova, a gente pode fazer depois, mais para frente.
+
+Dr. Thiago Correia [07:43]: Mas aí a gente faz isso aí, essas questões que vocês precisam que mude nas configurações e tudo, depois a gente entra no pode ter aqui.
+
+Matheus Torquato [07:51]: Isso aí, se você quiser, a gente, se você quiser passar algumas alterações que você vê que seria relevante, a gente já pega e já faz, não tem problema nenhum.
+
+Dr. Thiago Correia [07:59]: Da última, o que ficou foi, não sei se vocês conseguiram fazer, seria a questão dos campos A gente conversou, tudo que a gente conversou lá na última reunião foi tudo feito.
+
+Matheus Torquato [08:16]: Só ficou realmente algumas configurações sobre a parte ali do motor, tudo mais. É isso que eu vou tirar mais essa dúvida contigo agora. Mas o resto ali, aquelas, a outra aba ali da pipeline operacional, tudo aquilo já foi feito. Aí eu vou te mostrar essas coisas que a gente já fez, mas só para a gente fechar o ciclo desse motor. Por isso que a gente tá com essas dúvidas e precisa fazer uma configuração dentro do ProJuris também.
+
+Dr. Thiago Correia [08:38]: É por isso que a gente já não ficar, a gente não se enrolar muito. Essas questões que tinha da quarta para cá eu tenho anotado, e aí no final de semana eu dou uma olhada.
+
+Matheus Torquato [08:52]: Também vou te mostrar todos os pontos. Eu tenho, como a gente fez aqui, eu tenho tudo anotado, tudo feito. Eu vou te mostrando aí. Então já quer a gente Eu prefiro tirar essa dúvida do motor primeiro e a configuração, aí depois no final eu te mostro tudo que foi feito. Acho que é melhor.
+
+Dr. Thiago Correia [09:11]: Então vamos no motor então. O que que você tá precisando?
+
+Matheus Torquato [09:13]: Tá, eu tenho algumas perguntas, eu vou te fazer, aí as suas respostas eu vou anotando aqui, tá? Fechou. Do bloco ali de usuários do ProJuris, né, na parte ali de distribuição, entre a distribuição, qual realmente entra no rodízio de distribuição? Você sabe quais usuários, né, entram nesse rodízio de distribuição?
+
+Dr. Thiago Correia [09:40]: Quem vai entrar nesse rodízio de distribuição são os sêniores. Você precisava do nome? Seria o nome, né, que você precisaria?
+
+Matheus Torquato [09:50]: Não, ele vem, ele vem, sênior, sêniores.
+
+Dr. Thiago Correia [09:58]: É porque essa distribuição ela funciona assim: a tarefa é distribuída para o time, que é pelo sênior, o júnior e o estagiário. Então você vai olhar nas tarefas do ProJuris, vai ter lá 3 usuários vinculados nela, ter 3 pessoas.
+
+Matheus Torquato [10:16]: Vem falando quem é sênior, quem não é.
+
+Dr. Thiago Correia [10:21]: Não, é porque está na cabeça da pessoa que distribui que o motor vai substituir. Mas eu posso te mandar o nome de quem são essas pessoas.
+
+Matheus Torquato [10:29]: Eu precisava, isso eu precisava. Vou até anotar aqui, Iago vai me mandar.
+
+Dr. Thiago Correia [10:35]: Eu tenho que passar algumas outras coisas aí também hoje.
+
+Matheus Torquato [10:39]: Você quer que no cadastro do usuário tenha essa parte de colocar se ele é sênior ou não? Que daí a gente já Deixa isso no cadastro.
+
+Dr. Thiago Correia [10:48]: Eu acho que tem já alguma coisa assim para outra questão que a gente tava vendo esse tema aí também, mas acho que seria bem importante.
+
+Matheus Torquato [10:58]: Operacional, nome, não tem aqui a parte operacional só, mas não tem essa questão de se é sênior ou não.
+
+Dr. Thiago Correia [11:07]: Deixa eu ver se é bem importante ter, porque tem algumas outras coisas depois a gente vai usar no financeiro, em alguns outros pontos que precisaria, mas Mas isso tá até meio projetado errado na construção que eu fiz do motor. É porque eu não consegui pensar nisso lá na época, na hora que foi muita coisa. Que é o quê? Hoje, de fato, essa distribuição ela vai para os sêniores, que vai para o time, na agenda vai para o time. Mas na hora de distribuir é pensado assim, ó, tem 4 pessoas, pronto. Então essas 4 pessoas é quem vão receber a tarefa. E aí Dessa pessoa lá na agenda aparece o time dela inteiro, o sênior, júnior, então aparece na agenda dos 3, mas foi distribuído porque esse sênior tá nesse grupo, esse sênior tá nesse.
+
+Matheus Torquato [11:53]: Então os cargos são júnior, sênior e pleno, seriam esses 3?
+
+Dr. Thiago Correia [11:59]: Estagiário, júnior e sênior.
+
+Matheus Torquato [12:03]: Nomenclaturas, estagiário, Sênior e estagiário, júnior e sênior.
+
+Dr. Thiago Correia [12:12]: Isso, eu vou fazer assim, eu vou te mandar escrito quem são as pessoas, qual é o cargo delas e de qual time ela faz parte. Eu acho que seria todas as informações que precisa. Beleza, acho que seria isso aí. Aí no motor é isso, ele vai rodar Entendi.
+
+Matheus Torquato [12:36]: Aí depois você me passa essa lista de quem são as pessoas, que daí eu já coloco no cadastro deles. Se puder me passar os usuários, eu já deixo cadastrado. Aí se puder ter nomenclatura, esse é Júnior, esse é Sênior, já deixo tudo já pré-montado.
+
+Dr. Thiago Correia [12:49]: Aí eu vou deixar essa informação, que é assim, ó, participa da distribuição sim ou não, porque esse Sênior participa, mas é o time dele não participa da distribuição, ele só vai aparecer na hora que a tarefa tá na agenda. Mas seja no momento de gerar tarefa lá na agenda, depois do motor.
+
+Matheus Torquato [13:10]: Dessa parte eu queria saber também uma coisa, é qual é o peso que um recebe mais ou recebe menos que os outros, se ele pode gerar caso complexo ou não, se tem algum peso ou é distribuído igualmente para todo mundo.
+
+Dr. Thiago Correia [13:27]: Aí seria uma situação de não é geral, né? Essa métrica, ela no usuário que é vinculado, que seria o status atual dele, tipo, esse sênior aqui recebe 100%, 700%, quanto pode ir, né? É porque isso aí é algo que a gente faz hoje de fato. De que forma? O cara tá aqui, aí a pessoa vai sair daqui um mês, sabe? Aí você tem que reduzir na agenda dele. Né, para ele não ficar com nada em pendência. A pessoa acabou de entrar, então esse cara vai passar por 2 meses que ele vai recebendo um pouquinho mais. Então seria o peso, todo mundo hoje seria peso 100 aí, né? Então seria algo, seria peso 100. Então todo mundo que entra seria peso 100.
+
+Matheus Torquato [14:14]: Agora, e aí eu vou mandar nessa lista também o peso, coloca ali mais ou menos, e talvez a gente possa fazer também um mecanismo aonde você consiga fazer essa redução se ele for saindo, ele consegue também colocar, caso ele entre, ele receba mais do que os outros, entendeu? O que que você acha?
+
+Dr. Thiago Correia [14:35]: Eu acho que isso já tá dentro da regra, dentro do código, da ideia de código que eu tinha passado, né, que é, tem essa informação no cadastro ali dos usuários, dos peticionantes, né, e se o motor sempre vai considerar a informação da data. Então, pô, quando foi distribuir ontem, essa pessoa tava lá marcado com 50%, quer dizer que ela tem que receber menos. Em teoria, cada duas tarefas para um, vai um para ele, né? Então pensa, é meio que isso, ó, tem 6 tarefas e tem 3 pessoas. Então essa tem que receber duas, duas, e essa aqui teria que receber só uma. Só que aí vai o arredondamento, né? Não foi exemplo bom porque não dá arredondado. Então seria mais ou menos isso. E aí eu vou deixar dessa, vou te mandar com esses dados, mas na lógica é isso. O sistema distribuiu ontem, ontem ela tava lá no sistema com 50%. Se ele vai distribuir hoje, hoje ele tá com 70%, ele só vê a regra atual.
+
+Matheus Torquato [15:35]: Entendi.
+
+Dr. Thiago Correia [15:36]: Beleza. Informação sim ou não para petição complexa. Eu vou te mandar como se fosse essa planilha assim, e vai estar como se fosse os campinhos, né, que a gente marca Tá, beleza.
+
+Matheus Torquato [15:49]: Aí você me manda também. Aí se você quiser me mandar hoje ainda, eu já vou passar final de semana terminando o sistema. Então quanto antes você me mandar, mais eu consigo deixar redondo para segunda-feira.
+
+Dr. Thiago Correia [15:59]: Tá, vou tentar fazer isso ainda hoje aqui antes de sair.
+
+Matheus Torquato [16:02]: Se não der também, não tem problema.
+
+Dr. Thiago Correia [16:04]: Mas hoje eu vou mandar amanhã cedo, que amanhã cedo eu tenho que estar aqui 8 horas seguindo o negócio.
+
+Matheus Torquato [16:09]: Tá bom, é, me mandando no final de semana, tá bom.
+
+Dr. Thiago Correia [16:12]: Beleza.
+
+Matheus Torquato [16:13]: Aqui, a execução, que é o Team FC, né, que a Patrícia, Patrícia Ana Cruz, é quem aparece no ProJuris. Pera aí, acho que eu não entendi a pergunta. Ah tá, ele quer saber se lá no Team FC a Patrícia seria Ana Patrícia Cruz que aparece lá no ProJuris, é a mesma pessoa ou seria uma outra pessoa?
+
+Dr. Thiago Correia [16:41]: É a mesma pessoa, a mesma pessoa. Aí eu acho que quando eu te mandar os dados vai ter lá o nome da pessoa, quem é usuário do ProIuris e o Gmail dela, que ela usa aqui.
+
+Matheus Torquato [17:06]: Então só aí, vamos para um outro bloco de perguntas agora. Que é o responsável exclusivo. Aí o Thiago é sempre de audiência. Aí também tem o Thiago, que é você, ele é também a sustentação oral. Aí tem a indenização PMMB, a Thaís, e o TIM FC, a Patrícia. Seria esses que são os obrigatórios, né?
+
+Dr. Thiago Correia [17:33]: Toda vez que tiver uma tarefa dessa, independentemente do tempo, Então eu acho que essa opção aí, por exemplo, ela tem que estar lá na configuração de tarefas, né?
+
+Matheus Torquato [17:45]: Ah, tá. Mas acho que realmente tá em tarefas, eu acho. Deixa eu ver. Depois a gente olha. Vamos seguir as perguntas.
+
+Dr. Thiago Correia [17:54]: Até você entender onde é que você coloca. Vai estar lá em tarefas, ó, essa tarefa. Aí vai ter tipo pessoa obrigatória, algo assim.
+
+Matheus Torquato [18:06]: Tá aqui. Aí agora é outro bloco, tipo de tarefas e prazo. Tem 5 tipos que não bateram automático aqui. Aí eu preciso saber qual que é a certa, que é a diligência de balcão. No Projuros tem 3 parecidos, qual usar? Aí tem a emenda A emenda é a emenda inicial. A manifestação tem 5, 10 e 15 dias. Usamos qual, qual desses dias? E a réplica, se a réplica é a contestação.
+
+Dr. Thiago Correia [18:44]: Eu tenho que abrir aqui. Você falou primeiro diligência e balcão, né?
+
+Matheus Torquato [18:50]: Então, isso. E no Poder Judiciário tem 3 parecidos. Qual que eu devo usar?
+
+Dr. Thiago Correia [18:54]: Você sabe quais são os que tem no, no, acho que você jogar dele diligência, ele deve aparecer os 3 já aqui, porque balcão apareceu 3. Entendi, é porque tem alguns aqui que não estão configurados os prazos. Eu acho que você quer só eu de cadastro pessoal aí.
+
+Matheus Torquato [19:23]: Eu vou fechar minha câmera que eu tô meio travando na câmera aqui, mas eu tô aqui, tá? Não ficar chato.
+
+Dr. Thiago Correia [19:43]: Como é que a gente separa para você que qual que é o que seria para usar? Porque para mim eles aparecem 3 informações iguais aqui.
+
+Matheus Torquato [19:49]: Deixa eu ver, compartilhar a tela aí, te dar uma olhada.
+
+Dr. Thiago Correia [19:52]: Colocar aqui, é porque para mim ele aparece 3 iguais. Os outros 2 eu vou ter que pedir para o pessoal corrigir, apagar. Tem esses 3 aqui, né?
+
+Matheus Torquato [20:01]: Então qual que eu devo usar daí que você acha? Porque eles estão escritos até de formas diferentes, né? Um tem um balcão antes. É esse daí que tem que usar?
+
+Dr. Thiago Correia [20:13]: Dá tudo igual, sabe? A gente tem que apagar 2 e deixar 1. Bota esse aqui, ó, bota esse aqui, esse do meio aqui. Eu não sei se tem alguma diferença para pagar um ou outro, mas eu já pago.
+
+Matheus Torquato [20:28]: Volta lá, volta lá, por favor. Tá vendo que um até tem, um até tem um negócio aqui, ó, que é o prazo. Tem um que tem aqui, ó, 1/8, só que esse que não é usual é o prazo previsto fatal.
+
+Dr. Thiago Correia [20:45]: Eu tenho uma dúvida se isso aqui, quando tá 0, 0, quer dizer que na hora que o sistema gera ele não puxa automático esse prazo, e é meio que é mais variável, sabe?
+
+Matheus Torquato [20:57]: Bom, vamos deixar esses 3, aí eu faço para pegar informação dos 3 e unir no sistema em um só, pode ser?
+
+Dr. Thiago Correia [21:05]: Mas vai dar bagunça, eu acho, porque o nosso sistema precisaria refletir, né? Tem outras coisas aqui que são para 00, que aí depois a gente vai descobrir o que, como é que o sistema se comporta de verdade. Então vamos fazer assim, ó, eu vou remover 3, só usa esse do meio aqui. Cadê? Deixa esse do meio que tá escrito aqui. Eu vou mudar aqui um prazo aqui, vou botar e voltar no outro. Aí esses dois eu vou apagar, então você não vai ter nem que escolher. Apagar os outros dois, depois eu apago aqui porque pode ter alguma coisa que eu não sei o que que é. Mas hoje à noite só vai ter um aí para vocês puxarem, que eu acho que a ideia é tudo que for registrado aqui como tarefa também ter lá no nosso sistema, né? E lá vai ter algumas coisas a mais, tipo, para quem que vai na regra obrigatória. E esse prazo previsto e fatal aqui é o que o sistema puxa de informação para poder considerar a data na agenda, seria Tá bom, tá.
+
+Matheus Torquato [22:06]: Agora a emenda, é a emenda inicial, é a mesma coisa? É a mesma coisa, só tem um aqui, não é assim? Então acho que é, então é a mesma coisa.
+
+Dr. Thiago Correia [22:25]: Ah, pode ser que na minha planilha eu só deixei o nome emenda.
+
+Matheus Torquato [22:29]: Entenda, é só para a gente saber, só fazer a comparação.
+
+Dr. Thiago Correia [22:33]: Isso é a mesma coisa, porque o lado humano teve preguiça de escrever tudo.
+
+Matheus Torquato [22:37]: Manifestação tem 5, 10 e 15 dias. Qual que eu uso? Qual dos 3 dias? Ou faço uma para cada?
+
+Dr. Thiago Correia [22:49]: Vamos trabalhar primeiro uma para cada, tá? Uma para cada, como ele identifica aqui. Pode ser que o pessoal queira Queria fazer de outra forma.
+
+Matheus Torquato [23:00]: Tá, a réplica é a réplica, é a contestação, é réplica, é a contestação, só para saber.
+
+Dr. Thiago Correia [23:08]: Provavelmente deve ser igual essa situação aí, no mesmo tamanho, menor.
+
+Matheus Torquato [23:12]: Beleza, fechou. Agora vamos para o outro. Tem 14 tipos que existem no pró-júris, 14 tipos, mas não estão na sua planilha de pontos. Você quer pontuar eles ou ignorar?
+
+Dr. Thiago Correia [23:29]: Você sabe quais são eles?
+
+Matheus Torquato [23:32]: Deixa eu pegar aqui.
+
+Dr. Thiago Correia [23:33]: Ou então, se você depois me passar quais são, aí eu mudo.
+
+Matheus Torquato [23:40]: Vamos pular esse, eu vou pegando aqui, daí a gente vai para os próximos.
+
+Dr. Thiago Correia [23:45]: Faz assim, reflete eles no meu sistema e reflete eles na lista do sistema. E coloca, só coloca a menor pontuação que tiver para qualquer uma das tarefas que tá lá, que aí depois eu vou poder mudar essas pontuações. E se for o caso, a gente apaga, e aqui também vai mudar igual.
+
+Matheus Torquato [24:05]: Para cada tipo, quantos dias e qual é o prazo previsto e o prazo fatal que eu devo colocar no motor?
+
+Dr. Thiago Correia [24:13]: Pronto, aí essa informação é para cada tarefa, e é isso aqui, ó. Deixa eu colocar. O motor tem que puxar essa informação do ProYours.
+
+Matheus Torquato [24:27]: Tem que puxar o ProYours lá dentro.
+
+Dr. Thiago Correia [24:34]: Na verdade, você não tem que puxar do ProYours se for direto daqui, mas se a gente trabalhar no sentido de que tudo que for alterado lá no sistema vai alterar no ProYours, a gente pode ter o mesmo registro lá, né? E aí, uma vez que a gente altere lá, a tarefa aqui vai ser alterada também.
+
+Matheus Torquato [24:48]: Mas a data, essa data aí essa informação aqui.
+
+Dr. Thiago Correia [24:55]: Beleza. Acho que fica melhor, mais fácil para o sistema ter essa informação interna no sistema. Pode manter.
+
+Matheus Torquato [25:04]: Sim, fechou.
+
+Dr. Thiago Correia [25:05]: Acho que faça mais sentido também.
+
+Matheus Torquato [25:10]: No ProJus, onde você marca se o caso é complexo, individual, coletivo e prioritário. É um marcador ou um campo personalizado? Aí eu preciso que você me mostre a tela e me diz o nome exato desse campo.
+
+Dr. Thiago Correia [25:27]: Deixa eu ver se eu consigo puxar um que tem marcador. Quais são todas as informações aí? Falou complexo, individual, coletivo.
+
+Matheus Torquato [25:44]: Complexo, dual, coletivo e prioritário. Quero saber se é um marcador ou é um campo personalizado essas informações.
+
+Dr. Thiago Correia [26:03]: Hoje elas são marcadores, tá? Acredito que campo personalizado no ProEures vai dar melhor. Só que ainda não tem, a gente teria que fazer manual. Eu acho que, assim, se tiver como nós projetarmos, puxar primeiro do marcador que tá mais fácil, e depois, até com o tempo que o pessoal vai ganhar com essa situação, a gente possa alterar aqui e depois alterar na regra do sistema. Isso é tranquilo de fazer.
+
+Matheus Torquato [26:35]: Cortou um pouco, você consegue me falar de novo?
+
+Dr. Thiago Correia [26:37]: É porque hoje essas informações estão como marcadores. Aí eu perguntei para o Dadá, faz diferença ser como marcador ou campo personalizado? Ele falou, não, só vou mudar onde o sistema busca. Mas eu acredito que seja melhor como campo personalizado por conta da facilidade da pessoa fazer um marcador, sabe? É só escrever o que ela quiser que ela cria. Então eu acho que seja o caso de serem campos personalizados, mas hoje não são. A gente consegue na primeira versão puxar de marcador e uma vez que esteja rodando e vai até livrar tempo do pessoal, depois eles colocarem manualmente em campo personalizado e a gente só mudar no sistema para poder puxar de outros lugares? Tem como?
+
+Matheus Torquato [27:17]: Sim, sim, sim.
+
+Dr. Thiago Correia [27:18]: Então, de hoje em dia tá em marcadores e vai ser puxado de marcadores, tá? Então, coletivo Coletivo e complexo está em marcadores. Beleza. Se não tiver informação se é coletivo ou complexo, aí é uma regra de fallback, né, de que não é complexo e de que não é coletivo, é individual. Então é meio que Fora isso, a informação de urgente e prioritário, se eu não me engano, não tem lugar nenhum. Isso é algo que humanamente a pessoa tinha na cabeça, sabe? Puts, esse aqui é urgente. Então seria algo que eu acho que nós temos que adicionar.
+
+Matheus Torquato [28:29]: Eu consegui a lista aqui.
+
+Dr. Thiago Correia [28:33]: É esse aí, considera assim, considera que vai estar como emarcador também, porque aí eu vou falar, pessoal, começa a preencher aí e, né, começar a preencher aqui.
+
+Matheus Torquato [28:43]: Não, eu falo a lista dos 14 tipos lá.
+
+Dr. Thiago Correia [28:49]: Mas para fins do, do, não entendi.
+
+Matheus Torquato [28:52]: Lembra que você me perguntou quais eram os 14 tipos? Eu peguei aqui já. Esses aqui, ó, consegue ver aí ou tá muito pequeno?
+
+Dr. Thiago Correia [29:08]: Muito grande. Alguns desses vão sair. Alguns desses vão sair. Lembrete, lembrete, isso aqui tem que sair, isso aqui tem que sair. Alguns tem que sair, outros tem que ser mantido. Me passa os nomes que aí eu vou, eu vou te passar quais deles ficam e quais vão ser mantidos. Aí a gente adiciona, né, na minha lista, a gente adiciona na lista do sistema. Aí eu vou te passar qual é a pontuação, qual é o É qual é a pontuação deles.
+
+Matheus Torquato [29:39]: Tá bom, beleza.
+
+Dr. Thiago Correia [29:40]: Eu vou escrever um texto aqui, mas esse aí, até por conta das outras coisas que eu tenho que passar, isso aí eu vou passar só amanhã. Tá bom, vamos lá.
+
+Matheus Torquato [30:03]: Para a gente testar o envio, né? O motor colocar a tarefa na agenda da pessoa no ProJuris. Posso usar um caso seu de teste? Pode, pode.
+
+Dr. Thiago Correia [30:14]: Tem um caso, eu posso usar. Eu tinha passado para dar o número. Ele te mandou o número de um processo que eu passei para ele?
+
+Matheus Torquato [30:23]: Não, não, não.
+
+Dr. Thiago Correia [30:27]: Tá, deixa eu puxar aqui. Esse aqui é um processo judicial que tá cadastrado no sistema, mas assim, tá só no sistema, né? No que vocês fizerem aí não afeta o judicial. E é um caso que é meu pessoal, assim, cliente meu de fora. Então a gente pode fazer o que quiser aí. Você quiser gerar nesse processo aí, apagar, subir, sumir do mapa, no processo aqui no ProEuri você pode fazer, tá? Você não peticionando na justiça para mim. É esse caso aqui, ó.
+
+Matheus Torquato [30:55]: Qual que é o número do caso?
+
+Dr. Thiago Correia [30:57]: Eu te mandei esse número aqui, que é um identificador, e vou te mandar esse numerozinho aqui, ó, que é esse pró não sei o quê. Isso aqui é um identificador interno do ProYuris, tá? Eu acho que inclusive é o melhor identificador que a gente pode usar aí para o sistema para identificação. Eu acho que esse aqui é do próprio ProYuris.
+
+Matheus Torquato [31:18]: Pode mandar no WhatsApp aí também. Esse aqui é o identificador, né?
+
+Dr. Thiago Correia [31:28]: Isso, o que tem um número maior é o número judicial. Esse aqui vai ser exemplo.
+
+Matheus Torquato [31:47]: Fiz um textinho aqui, vou te mandar sobre um dos tipos lá, tá? Te mandei também. Vamos seguir aqui. API do ProJuris, você sabe se deixa criar um tipo de tarefa por fora ou é certo criar no ProJuris primeiro e depois a gente vincula no sistema?
+
+Dr. Thiago Correia [32:08]: Eu não entendi exatamente. Seria se pode criar direto pela API a tarefa, seria isso?
+
+Matheus Torquato [32:14]: Isso é pela API, seria pelo sistema, né? Se deixa criar um tipo de tarefa por fora, que seria pelo sistema, ou é certo criar no ProJuris primeiro e depois vincular no sistema? O que você acha melhor? Eu não sei fazer dentro para criar esse tipo de tarefa dentro do nosso sistema. Automaticamente espera a criação no ProJuris e depois, aí depois segue o processo, não é?
+
+Dr. Thiago Correia [32:46]: Dessa parte eu acho que assim, o ideal, o ideal seria criar dentro do sistema, porque a gente teria a situação de que não precisaria o sistema depois ficar puxando como é que tá as agendas direto do ProJuris, teria a própria agenda. Só que aí já tem que estar rodando bem agenda em si dentro do sistema, porque de certa forma estaria substituindo. Então acho que pelo menos de começo é criar no ProYuris, criar no ProYuris, e um dos campos que daria para puxar do ProYuris, porque eu acho que assim, você criar a tarefa no ProYuris e aí o sistema vai, puxa essa tarefa para ele. Eu acho que dá para o sistema criar no ProYuris a tarefa normal E aí um dos campos que o sistema puxa do ProYuri são as tarefas. Então já viria de toda forma sem ter que na criação puxar, sabe? Cria lá e depois ele vai ser puxado com todas as tarefas que já tem normal. Porque ele mantém o registro aqui, é porque esse aqui é o teste, não tá puxando, mas ele fica um registro aqui de tudo que já foi feito.
+
+Matheus Torquato [33:54]: Fechou, beleza. Tá, agora vamos para as integrações ali que tá Ficou faltando ali do ProJuros, tá? Eu preciso que você entre em menu e permissões.
+
+Dr. Thiago Correia [34:15]: Cara, eu não sei se eu tenho.
+
+Matheus Torquato [34:21]: Escreve, escreve.
+
+Dr. Thiago Correia [34:24]: Mas você tá dizendo que É um pouco da API que não tem.
+
+Matheus Torquato [34:29]: É, não, já fazer uma, é, eu preciso de algumas configurações ali, ó. É, achou permissões?
+
+Dr. Thiago Correia [34:34]: Eu tenho aqui permissões, perfis.
+
+Matheus Torquato [34:38]: Calma aí, deixa eu dar uma olhada aqui.
+
+Dr. Thiago Correia [34:41]: É porque, se eu não me engano, eu coloquei tudo que existe aqui.
+
+Matheus Torquato [34:48]: É porque o que eu preciso é que cada usuário que participa, eu preciso preencher o ID do ProJuris. E ligar é a parte que liga a participação das distribuições e definir o peso. Definir o peso a gente pode definir no sistema, né? Mas eu precisava que tenha preenchido ali em cada usuário que participa do ProJuris o ID do ProJuris dele, entendeu? Você consegue tirar um relatório talvez dos usuários do ProJuris com o ID?
+
+Dr. Thiago Correia [35:18]: Ah, tá, sim, sim, só entendi.
+
+Matheus Torquato [35:20]: Isso já ajuda, né? Aí, ó. Você tem um email?
+
+Dr. Thiago Correia [35:27]: É, aqui deve ter, deve ter algum lugar aqui o identificador.
+
+Matheus Torquato [35:39]: Não tem um relatório que dá para tirar, né?
+
+Dr. Thiago Correia [35:45]: Ele tem um identificador aqui, ó.
+
+Matheus Torquato [35:46]: É isso aí que eu precisava.
+
+Dr. Thiago Correia [35:49]: Pronto, eu vou, quando eu te mandar essa lista que eu tenho que te mandar dos usuários, eu já mando com a informação do identificador para o Yuri de cada um. Pode deixar.
+
+Matheus Torquato [36:00]: No final de tudo aqui eu vou te mandar uma mensagem com tudo que ficou para você mandar, tá?
+
+Dr. Thiago Correia [36:04]: Não precisa anotar aqui, mas provavelmente eu vou esquecer de alguma coisa.
+
+Matheus Torquato [36:14]: Beleza. Agora eu preciso que você entra no menu distribuição.
+
+Dr. Thiago Correia [36:24]: Do nosso sistema ou do de como a gente distribui tarefa no Prioris?
+
+Matheus Torquato [36:33]: Eu preciso entrar na distribuição, tipo de, eu não sei se é no nosso, acho que é no nosso sistema que ele tá falando. Tipo de tarefa, tá?
+
+Dr. Thiago Correia [36:54]: Como é que era, cara? É que eu tava lendo outra coisa aqui, desculpa.
+
+Matheus Torquato [37:00]: Não, eu acho que isso aqui são configurações que vocês vão fazer manual no nosso sistema para dar certo. Eu tô confundindo.
+
+Dr. Thiago Correia [37:06]: Seria só para entender também, já que se eu conseguir ajudar em algo, já posto também.
+
+Matheus Torquato [37:25]: Eu vou te mandar depois junto um texto sobre o que que eu preciso que você faça no sistema para— é mais fácil você me mandar tudo, que daí eu inputo tudo, né? Mas vamos fazer só a configuração do do pró-juros ali que eu preciso fazer.
+
+Dr. Thiago Correia [37:45]: Tá, deixa eu pegar aqui que eu também não tenho outro lugar.
+
+Matheus Torquato [38:04]: Ah, isso aqui eu só posso fazer depois, depois que der certo o preenchimento das outras coisas. É, então fechou. Eu vou te mandar um texto daí depois para você me mandar tudo que eu preciso de informação. Pode ser um Excel, daí eu preencho aqui, não tem problema não. Aí vai ficar mais fácil. Aí depois a gente inicia a fase 3 aqui, que é só dá certo depois que a gente completar essa fase que eu preciso que você me mande as informações. Beleza, deixa eu salvar isso aqui. Eu vou te mostrar como tá o sistema hoje. Compartilhar a tela.
+
+Dr. Thiago Correia [38:39]: Deixa eu fechar.
+
+Matheus Torquato [38:46]: Você tá vendo minha tela aí? Beleza. Ó, como que ficou aquela primeira questão ali de— tem aqui a parte, coloquei aqui o campo de campos personalizados, tá? Aí tu consegue abrir e editar a pipeline aqui também, tá? Como tá, entendeu? Tem os campos personalizados, você pode vir aqui, clicar em campo personalizado que você pediu, acho que foi para o Adávio, né? Isso, mexer nesses vínculos. Aí você pode escolher qual pipeline você quer, qual tema, né? Fica também, pode ser aqui nesse campo.
+
+Dr. Thiago Correia [39:22]: A gente dessa situação tem opção de puxar pelo cliente, puxar para mais de um tema também, ficou mais ajustado.
+
+Matheus Torquato [39:31]: Perdão, encurtou.
+
+Dr. Thiago Correia [39:32]: Eu puxar um cliente, a gente tinha falado daquela situação de ter um campo que é do cliente, mas que ele poderia ser refletido em mais de um tema, porque como o cliente era uma hierarquia maior que o tema, seria isso aqui, ó.
+
+Matheus Torquato [39:48]: Entrar em cliente aqui, tem que ser um caso.
+
+Dr. Thiago Correia [39:54]: É que seria, seria tipo, eu tenho um campo que é do cliente, um campo que é do cliente. Não era nem campos personalizados mesmo, era tipo, eu tenho informação FIES, isso não é um campo, pode ser um campo de caso. Como é que eu explico? A gente tinha conversado no estilo de que, por exemplo, eu tenho um campo personalizado no tema, nos casos, né, é 1% FIES, que é o tema FIES, sim ou não, e Esse campo, como ele era um dado que na verdade é da pessoa, ele é do cliente ali, né? Então a gente poderia refletir o mesmo campo com a mesma informação em mais de um tema, mais de uma pipeline, se esse cliente tivesse nessa outra pipeline. E aí, como tem a situação de eu não posso ter campos que são de pipelines diferentes porque pensado justamente para os campos serem da pipeline, a gente conversou sobre esse campo ser vinculado no cadastro cliente e ter uma opção dele poder aparecer em determinados temas. E aí a gente escolheria quais são esses temas daquele campo, ele apareceria como campo do caso.
+
+Matheus Torquato [41:10]: Vou até, eu acho que assim, acho que isso eu não fiz, mas eu posso revisar para ver se foi feito em algum lugar. Eu acho que não, acho que não tem isso aqui, ó.
+
+Dr. Thiago Correia [41:30]: Tá aqui, tá aqui. Quando a gente coloca aqui em campos, ali quando você coloca em campos do cliente, eu acho, está campos do cliente. É para você aparece nos casos, é isso aí. Aí a gente vai, que adiciona no caso, entendi. Beleza, a gente salva o campo para escolher quais temas ele aparece. Eu acho que só já passar essa situação ali onde tá o campus do cliente, acho que você Mateus, seria interessante essas configurações de campos do cliente ser parecido com que a gente fez ali para campos da pipeline, tem uma aqui onde faz edição, é igual tá ali, volta aí uma página antes do papai, igual tá aqui em casos, você não quer que ele abre esse pop-up, você quer que ele abre do lado aqui, porque aí fica igual, fica mais fácil.
+
+Matheus Torquato [42:34]: Então quando eu clicar em cadastro do cliente, editar campos cliente, ele abre uma página do lado, não um pop-up, tá? Beleza, fechou. Deixa eu entender. Beleza. Aí eu coloquei aquele, aquela questão da outra página quando você entra no tema, né? Aqui o Fies, ele não vai ter, vai ter só um, então ele vai puxar só o dele. Mas você pode criar aqui o quadro. Vou puxar aqui do Mais Médico, tem mais de um, tá vendo? Aí eu posso escolher, ele traz quais são os funis que tem ali, né? Se você quiser escolher, você pode clicar, ele vai entrar na esteira. Ou eu posso criar anotações em links aqui que vai ficar. Eu posso colocar um novo quadro, certo? Esse novo quadro eu posso editar aqui, colocar o que eu quiser escrever e adicionar um texto ou adicionar um link. Posso adicionar texto e link, eu posso mudar aqui para link ou texto.
+
+Dr. Thiago Correia [43:27]: Beleza.
+
+Matheus Torquato [43:28]: Aí você pode anexar e vai ficar salvo o quadro aqui, a pessoa pode entrar e ver. Entendeu?
+
+Dr. Thiago Correia [43:32]: Beleza, ele sai mesmo.
+
+Matheus Torquato [43:34]: Aí você pode mexer tranquilo aqui nos negócios que tem para mexer. Aqui também eu fiz o que você tinha pedido, selecionar mais de uma coisa, né? Tipo, tá ligado, você pode ir acrescentando tranquilo, pode ocultar o campo se você quiser, pode ver outro Kanban, também funciona para os outros, tranquilo.
+
+Dr. Thiago Correia [43:58]: Beleza.
+
+Matheus Torquato [43:59]: Aí aqui dentro do cliente, aqui do caso, né, tem a parte de ficha, parte financeira, como ele tá, a parte judicial, os termos, né. Só que eu não sei o que você quer que seja construído mais aqui, ou é só para ver como é que tá o andamento mesmo. Mas tem isso aqui, aqui não sei como que você conversou com o Adávio sobre isso, mas eu trouxe a parte que ele me falou, que trouxe da reunião também.
+
+Dr. Thiago Correia [44:26]: Dessa parte aqui eu acho que já foi tudo também. Tem uma questão que eu não sei se já fez, eu tô tentando achar um caso aqui que teria essa situação só para mim testar. Foi, foi feito. Era quando o campo personalizado tem mais de uma linha de texto e ao invés de aparecer as linhas fosse um maisinho limitado. Já foi feito também, já foi feito também. Isso aqui já foi.
+
+Matheus Torquato [45:07]: Aqui também na parte de clientes colocou, caso o cliente não tenha o CPF, tem aqui a tarja, né, para preencher o CPF dele.
+
+Dr. Thiago Correia [45:15]: Também, né?
+
+Matheus Torquato [45:16]: Esse você tinha pedido também.
+
+Dr. Thiago Correia [45:19]: Beleza, aí já foi então.
+
+Matheus Torquato [45:22]: Isso. Aí na parte de permissões eu vou ajustar isso. Eu acabei de ver, ele tá diferente de como tá aí editar, como tá em convidar, tá faltando informação. Mas daí eu vou ajustar para ficar igual isso aqui. Quando você convidar alguém, sabe, você coloca se ele participa da distribuição ou não. Vou colocar também Aqui, se é sênior, se ele é júnior, estagiário e tal. E também para ficar bonito, para ficar certinho, né? Mas também já foi mexido. Deixa eu ver se tem algum outro campo a mais que foi feito. Aí, a controladoria, eu tô fechando essa parte da distribuição ali. Acho que com o que você me mandar, consigo fechar certo. Você lembra que tinha mais alguma coisa?
+
+Dr. Thiago Correia [46:19]: Pode ter algumas coisas que seriam mais do uso. Eu acho que a gente poderia ver se você conseguisse já para reunião, por conta da gente usar na semana que vem. Nessa parte aqui da linha do tempo, essa forma que tá agora dentro do caso, né, essa forma que tá agora, agora ela tá meio que visualmente ela não é, ela não tá tão interessante para trabalhar, sabe, que tá um negócio grande e pequeno. A gente, porque a gente tá um pouco acostumado nessa parte aqui, ela substituiria os comentários do Trello, por exemplo, né. Então a gente tá meio com a metodologia que o Trello traz, que é um negócio um pouquinho mais visual.
+
+Matheus Torquato [47:07]: Deixa eu ver como é que é.
+
+Dr. Thiago Correia [47:09]: Não sei se você já usou muito Trello, mas seria próximo disso aqui. Vou pegar um qualquer aqui. Agora o negócio ficou lento. Peguei um que é tudo curtinho aqui, mas aqui fica um pouquinho mais visual, né?
+
+Matheus Torquato [47:47]: Assim, só que eu acho que Faz o seguinte, me tira um print desse como você quer essa estrutura e me manda, que daí eu faço igual.
+
+Dr. Thiago Correia [48:01]: Beleza, beleza. Assim, eu acho que a estrutura que tá boa com data e a situação e tal, quem foi. Aí eu não sei como é que ele tá, ele tá projetado, no sentido de se isso aqui ficar muito grande ele vai abrir para baixo, igual aqui, ó. Aqui ele abre para baixo, né, quando fica grande.
+
+Matheus Torquato [48:17]: É, mas tem a barra de rolagem. Você quer a barra de rolagem também na linha do tempo para ficar melhor?
+
+Dr. Thiago Correia [48:23]: É, o próprio comentário aqui vai ficar maior, né? Só que tem um momento que não tem mais jeito, então ele vai ter a barra. Mas aqui não sei se tem essa opção dele ficar maiorzinho também.
+
+Matheus Torquato [48:36]: Você quer que coloque essa parte de dar um comentário na linha do tempo? Porque não tem isso aí.
+
+Dr. Thiago Correia [48:42]: Eu acho que vocês projetaram dessa forma aqui, ó, que é o notas. Quer ver? É aqui, é aqui.
+
+Matheus Torquato [48:54]: Você quer que tenha o Notas também, mas também eu consiga editar alguma linha do tempo?
+
+Dr. Thiago Correia [49:03]: Notas aqui, o Notas aqui tem que subir e vir para cá. É porque essa linha do tempo e esses comentários, elas teriam que meio que ser uma coisa só, entendeu? Que, ó, esse cliente apareceu aqui, o caso, porque ele foi movimentado por tal coisa. Aí agora ele foi, ele passou de etapa na pipeline, tá? Mas agora tem um comentário de alguém, né, que alguma coisa do próprio caso. E aí isso sucessivamente, entendeu? Me manda um print ali dessa forma que apareceu aqui em notas para aparecer aqui Se esses comentários aqui, ó, já aparecerem aqui dessa forma, já fica melhor, entendeu? Tudo em uma forma só, porque aqui já ficou mais visual, mais interessante.
+
+Matheus Torquato [49:53]: É, entendi que tem uma separação do que é, né? Ele tá separado, na verdade. Ali ele tá meio que numa página única, tudo junto, né?
+
+Dr. Thiago Correia [50:00]: Entendi. É porque tá esse monte de dados do serviço atualizado, não sei o quê, não sei o quê. Isso aí foi da importação, né?
+
+Matheus Torquato [50:10]: Foi da apresentação, exatamente. Vamos pegar um cliente aqui que seja a gente só para você ver.
+
+Dr. Thiago Correia [50:19]: É, mas assim, é, de toda forma precisa ajustar isso aqui. Coloca da forma que você fez nesse aqui, ó, para aqui aparecer com esse mesmo visual que você fez aqui, que fica mais legal. Aí essa situação que eu digitei aqui e apareceu aqui aparece na verdade aqui dentro, de acordo com a cronologia.
+
+Matheus Torquato [50:41]: Aí você quer o visual da linha do tempo igual ficou a anotação aqui no Notas, tá bom?
+
+Dr. Thiago Correia [50:45]: Isso. E aí não precisa repetir, né? Volta aqui, tá repetindo nos dois. E tem que ter realmente um campinho de notas, que eu acho que seria um campo observações. Aí sim chega aqui observações, mas isso aqui, ó, de registro, andamento, observação e tals, É outra coisa. Tem um campo que é o desenvolvimento do caso da pessoa, fechou o contrato, enviou procuração.
+
+Matheus Torquato [51:15]: Posso colocar então assim, ó, onde eu digito notas, eu colocar notas linha do tempo, pode ser? Daí tem um processo que ele faz sozinho ali de ir colocando a linha do tempo conforme vai preenchendo documentação e tal. E também tem a opção de colocar uma nota na linha do tempo. E mais para baixo eu deixo um campo tipo observações, que são para observações sobre o caso completo, com um texto mesmo que não vai para lugar nenhum, só fica registrado no caso.
+
+Dr. Thiago Correia [51:44]: Isso é observação, ser um texto, poder ser um texto grande, sabe?
+
+Matheus Torquato [51:49]: Eu vou trocar o nome de notas para notas linha do tempo e vou acrescentar um campo observação, vai ficar embaixo de documentos aqui da última aba, aqui embaixo no caso. Que essa observação para escrever texto completo, vocês colocar o que quiser e tudo mais.
+
+Dr. Thiago Correia [52:04]: Essa parte aqui de documentos, inclusive, se a gente conseguisse jogar para cima, né, aqui, ó, menuzinho à parte, porque eu tenho certeza que isso aqui vai virar uma bagunça, esse negócio de documento aqui, porque é muito documento para cada pasta, para cada cliente.
+
+Matheus Torquato [52:19]: Você quer então que documentos seja uma aba aqui em cima que a pessoa clica em documentos e abre só a parte de documentação do cliente?
+
+Dr. Thiago Correia [52:27]: Isso sim.
+
+Matheus Torquato [52:28]: Então tipo, do lado do termo eu posso colocar documentos que é referente a esses documentos aqui que estão, que vão ficar aqui embaixo?
+
+Dr. Thiago Correia [52:35]: Sim, esse termo aqui inclusive ele é dentro dessa aba aqui de financeiro, né? Ele é uma situação 100% financeira. O termo aqui é 100% financeiro.
+
+Matheus Torquato [52:47]: Então o termo tem que estar dentro de financeiro? Tem que estar dentro, ele tem que ser um Beleza, então o termo fica dentro de financeiro, aí do lado do judicial eu crio o campo documentação, que é onde você clica e vê toda a documentação sobre aquele caso.
+
+Dr. Thiago Correia [53:02]: Exato, fechou, beleza. Acho que até quando a gente trabalhando aí agora na integração Conta Azul e Pro Iuris, que a gente ainda vai projetar, né, quais são os campos que vai aparecer, mas vocês organizem essa Conta Azul, como vai funcionar o processo para a gente poder organizar no sistema, né? Quase morrendo de trabalhar para fechar esse negócio com a Tasoeira, tão bagunçado. Mas eu acho que precisaria ter, como a gente tá lidando com a situação que tem novos e antigos, precisaria ter já no começo uma opção da gente poder adicionar tipo o número, o identificador. Agora a gente tá conversando, ó, no ProIuris tem um identificador tal, do processo, né? É opção aqui na aba judicial a gente poder identificar isso, porque a gente tá aqui já importando 400 casos, eles podem ter judicial. Então a gente já tem um, já tem um campinho que vai vincular, que o sistema já sabe que esse aqui é aquele caso lá do ProJuris, né? E no financeiro a mesma coisa, tem a opção da gente poder adicionar para aquela cobrança qual que é a fatura do Conta Azul. Do Conta Azul, porque a gente vai, o caso desse cara aqui, ele já tem várias cobranças lá, né? Então acho que só para facilitar nessa parte da identificação, se nós mesmos também podemos adicionar aqui, aí seria adicionar informação que é o que depois a TI vai puxar de lá. Bateria, que seria, não seria tanto, é para depois. Os usuários aí, Matheus, para a gente poder rodar semana que vem, é quando você criar, ele já vai vir com login e senha de cada um?
+
+Matheus Torquato [55:04]: Eles não vão vir. Eu posso colocar uma senha padrão, a gente pode fazer o seguinte, posso colocar uma senha padrão Aí quando não, uma senha padrão, posso colocar eles cadastrado, aí quando eles entrarem no sistema pela primeira vez solicitar uma senha, você acha?
+
+Dr. Thiago Correia [55:22]: Aí depois, ah tá, solicita uma senha deles própria, beleza, pode ser.
+
+Matheus Torquato [55:25]: Eles vão entrar no sistema pela primeira vez, bota o email, aí vai identificar aqui.
+
+Dr. Thiago Correia [55:30]: Isso, porque depois que o pessoal concluir a configuração desse, na verdade acho que a gente pode fazer o seguinte, acho que vai ficar até melhor, tá?
+
+Matheus Torquato [55:37]: Para ficar mais seguro, até mesmo para gente. Você tem ali o cadastro, tem todos os nomes e tem os emails dos colaboradores que vão usar, não tem? Me manda essa lista, eu vou fechar ali a parte de cadastro. Eu posso te mandar também no texto que eu vou te mandar quais são as informações que eu preciso desses funcionários, que é nome, telefone, é se ele é estagiário, júnior, tal, e as outras informações ali. E também seria interessante para a gente também setar qual as abas que eles podem olhar, que são tipo, eu posso até tirar do sistema que eu já tenho uma planilha, criar uma planilha para o seu sistema e você só bate, vê se tá certo. Aí colocar quais são as áreas que eles vão poder olhar, observar, quem vê valor, quem não vê, tipo passar essa planilha para você só validar para mim, você me devolve ela, aí eu coloco no sistema. Aí quando você me der um ok, tipo, ô Mateus, o pessoal vai começar a usar, aí o que que eu faço? Eu vou disparar um email para cada um receber um email de confirmação desse email lá no email que tá registrado. E daí eles vão clicar no link, vai ser direcionado para o sistema, eles criam uma senha, aí eles entram no sistema de acordo com as permissões que eles têm. Por que eu falo isso? Porque se a gente deixar só cadastrado e eles digitarem um email uma vez lá só e já pedir a senha pela primeira vez, Vai que uma pessoa descobre, sei lá, não vai acontecer, lógico, mas a pessoa descobre e ela já tem acesso ao sistema, a gente nem sabe, entendeu? Então fica vinculado ao email da pessoa que tá usando.
+
+Dr. Thiago Correia [57:07]: Tranquilo, do jeito que você achar melhor. Dessa situação do email, eu só queria confirmar se quando a gente faz isso aí vinculado no email, que vai ser o email corporativo aqui, né, quando a pessoa saiu, a gente apaga esse email corporativo? Porque a gente paga por usuário, né, do workspace, do email. Então eu só queria confirmar se quando a gente apagar esse email lá, as informações aqui do nosso sistema vinculado àqueles usuários não vão sumir.
+
+Matheus Torquato [57:37]: Tipo, vocês têm aquele negócio do Google de email corporativo, né?
+
+Dr. Thiago Correia [57:42]: Todo mundo usa o mesmo Aí quando a pessoa sai, por exemplo, a gente remove o usuário dela, o email é pago, né? Então É só para confirmar se quando esse email some lá, o usuário da pessoa aqui que a gente desativaria no nosso sistema, ele continua existindo para fins de informação, sabe? Pô, a pessoa comentou em mil casos aqui, aí esses casos sumir porque o email não existe mais, sei lá, o sistema perdeu o vínculo, alguma coisa assim, sabe?
+
+Matheus Torquato [58:14]: Vocês usam aquele email que é o final do ano?
+
+Dr. Thiago Correia [58:18]: Isso, é só para confirmar assim, se o email que a pessoa usa no usuário Deu uma merda, usuário aqui do sistema não some.
+
+Matheus Torquato [58:28]: É, não, ele vai ficar registrado no banco de dados, tá? Porque o que que acontece, acho que a gente pode fazer, tá, que eu acho que vai ser a melhor opção para a gente nesse momento. Vamos disparar os emails para o pessoal, pessoal vai lá, entra com login, entra senha, tal, a pessoa usa, vai lá no sistema, vai estar registrado lá e tudo mais. Ali pelas permissões. O que acontece, esse colaborador saiu, quando esse colaborador saiu, o que que vocês têm que fazer? Ele não vai tirar a permissão desse cara quando você desvincular o email dele do corporativo de vocês. Vocês têm que fazer, você tem que entrar em permissões, aí tipo assim, ah, beleza, a Keylane saiu aqui, tá? Aí que eu vou fazer, eu vou Suspender. Quer ver? Clica aí, clica em suspender essa controladoria aí, a primeira de baixo. O administrador não dá, tem que ser um que não é administrador. Pode ser o meu nome ali, Matheus Torquato. Ah não, você só suspendeu?
+
+Dr. Thiago Correia [59:30]: Eu cliquei aqui, ela sumiu.
+
+Matheus Torquato [59:33]: Ah não, ela só ficou invisível, eu acho. Depois eu volto. A Keylane é a Keylane ou a contabilidade? Controladoria. Depois, depois eu faço. O que que tem que fazer, tá? Você tá vendo minha tela aqui? Se quiser aumentar minha tela ali, eu te mostro. Ó, tem meu nome aqui. Eu não tenho nada vinculado no meu nome porque eu tava fazendo um teste, mas como que funciona, tá? Eu venho excluir essa pessoa. Tudo que tiver vínculo a mim, caso eu tô citado em algum lugar Ele vai aparecer aqui, aí eu posso vincular, escolher um outro usuário que vai começar, que vai ser transferido todas as informações que estavam no meu nome para esse novo usuário. Então isso precisa para fins das responsabilidades, tarefa consignada, aí o cara vai estar lá com as tarefas da outra pessoa, só agora são dele, ele precisa dar continuidade.
+
+Dr. Thiago Correia [01:00:33]: Eu só queria que ficasse mantido, no caso vinculado mesmo a um usuário ali suspenso, o que é, por exemplo, comentário e tarefas. Porque faz diferença eu saber que quem fez aquela tarefa que gerou uma merda grande daqui 3 anos atrás era um usuário tal, entendeu?
+
+Matheus Torquato [01:00:52]: E quem ele vai ser transferido a responsabilidade da continuação daquele processo, mas no histórico vai ficar o nome da pessoa que preencheu, que escreveu, enfim, entendeu? No histórico fica. Por exemplo, se eu transferir um, eu fiz um comentário em um caso, um comentário fica nome. Deixa eu, agora você me pegou nisso aqui. Fica nome, beleza. E aí eu saí e transferi para o Thiago. Quando o Thiago entrar naquele caso, vai ter um comentário lá no meu, com meu nome, mas não vai mudar para o nome dele, vai ficar no meu nome aí, entendeu? Então eu consigo puxar no caso quem comentou aquilo ali, entendeu? Então consigo ver quem que fez o nome ali. Ele não vai transferir o nome do Mateus para o Thiago, ele vai transferir o processo. Processo continua. Aí dali para frente o Thiago foi lá e escreveu alguma coisa naquele processo que era do Mateus. Aí vai ficar no nome do Thiago aquele comentário, porque foi o Thiago que fez, entendeu? Então fica tudo vinculado ao nome da pessoa que tá mexendo no sistema, entendeu?
+
+Dr. Thiago Correia [01:01:51]: Entendi. Beleza, isso aí entendi. Ainda aqui nos comentários do campo aqui, né? Esse campo eu acho que seria interessante, e aí seria até uma coisa que tem no Trello também. O Trello tá lento para caramba para abrir, e o computador na verdade tá travando. Travou tudo, mas eu acho que é o quê? É ter a opção de você editar o comentário, entendeu?
+
+Matheus Torquato [01:02:21]: Comentário da linha do tempo, você fala?
+
+Dr. Thiago Correia [01:02:24]: É isso, isso.
+
+Matheus Torquato [01:02:25]: Sim, mas eu vou fazer, eu vou fazer igual tá aqui agora, aqui na parte do— no caso aqui não tem nada aqui, mas eu vou fazer igual, igual tá no, igual tá aqui na linha do tempo, tá? A linha do tempo vai aparecer ali, certo? Só que vai ter um botão de editar ali, igual tá no negócio de notas, fica embaixo, editar ou apagar, sabe? Só que a gente pode fazer o seguinte, a gente pode setar. É que assim, editar fica um pouco ruim porque às vezes alguém pode agir de má-fé e editar essa linha do tempo, tá?
+
+Dr. Thiago Correia [01:03:01]: O que que eu pensei? A gente seguir a mesma metodologia do Trello. Quando é um comentário do usuário, ele pode excluir ou editar, tá? O dos outros não pode, entendeu? Pode excluir de qualquer pessoa. Ele pode excluir o de qualquer pessoa. Eu não vou poder mudar para não ficar sacaneando, né, o que que a pessoa colocou, não. Mas eu vou poder excluir também, que eu sou administrador, tem um negócio errado, eu posso apagar. E o próprio usuário, ele pode tanto excluir o dele como editar. O dos outros ele não faz nada se ele não for administrador.
+
+Matheus Torquato [01:03:36]: Entendi, tá bom. Eu posso fazer assim, que fica igual o que tá na linha em notas, que agora a gente vai mudar o nome para notas ao mesmo tempo, sem a linha excluir e editar.
+
+Dr. Thiago Correia [01:03:46]: É isso, fechou.
+
+Matheus Torquato [01:03:51]: Mais alguma coisa tu pensa sobre o sistema assim, Iago? Ou que você queira ver alguma lógica? Eu vou juntar, tá gravada a reunião, eu vou juntar tudo que a gente conversou aqui. Eu preciso te mandar muita coisa, te mandar também uma planilha ali com os cadastros do link já aqui.
+
+Dr. Thiago Correia [01:04:10]: Eu vou te consumir só 10 minutinhos, não vou É porque vai cair esse link aqui, ó. Vamos gerar o código.
+
+Matheus Torquato [01:04:21]: Se quiser, se quiser, eu gero aqui e daí eu te mando, que eu vou colocar meu televisor para continuar.
+
+Dr. Thiago Correia [01:04:25]: Pronto, coloca aí, coloca aí, por favor.
+
+Matheus Torquato [01:04:28]: Tá, eu vou gerar aqui, vou te mandar. Aguenta aí, fechou?
+
+Dr. Thiago Correia [01:04:33]: Fechou. Valeu.
