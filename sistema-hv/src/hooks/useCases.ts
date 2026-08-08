@@ -27,6 +27,7 @@ import {
   previewProcuracaoFn,
   promoverCasoManualFn,
   setCaseSigiloFn,
+  setCaseUrgencyFn,
   softDeleteCaseFn,
   updateCaseCanonicalFieldsFn,
   updateCaseFn,
@@ -224,6 +225,17 @@ export function useUpdateCaseObservacoes(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (observacoes: string) => fn({ data: { id: caseId, observacoes } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) }),
+  });
+}
+
+// M13 (T3) — urgência do caso (normal/prioritario/urgente) p/ o motor.
+export function useSetCaseUrgency(caseId: string) {
+  const fn = useServerFn(setCaseUrgencyFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (urgency: "normal" | "prioritario" | "urgente") =>
+      fn({ data: { id: caseId, urgency } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) }),
   });
 }

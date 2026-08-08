@@ -27,6 +27,7 @@ import {
   previewProcuracao,
   promoverCasoManual,
   setCaseSigilo,
+  setCaseUrgency,
   softDeleteCase,
   updateCase,
   updateCaseCanonicalFields,
@@ -250,6 +251,19 @@ const observacoesSchema = z.object({
 export const updateCaseObservacoesFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => observacoesSchema.parse(data))
   .handler(async ({ data }) => handleBiz(() => updateCaseObservacoes(data.id, data.observacoes)));
+
+// M13 (T3) — urgência do caso (prioritário/urgente/normal) p/ o motor. Gate
+// operacional:edit (mesma régua das mutações operacionais do caso).
+const urgencySchema = z.object({
+  id: z.string().uuid(),
+  urgency: z.enum(["normal", "prioritario", "urgente"]),
+});
+
+export const setCaseUrgencyFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => urgencySchema.parse(data))
+  .handler(async ({ data }) =>
+    handleManage(() => setCaseUrgency(data.id, data.urgency === "normal" ? null : data.urgency)),
+  );
 
 // (2026-07-09) — `to` é o SLUG da etapa op. Aceita qualquer slug (as etapas são
 // configuráveis por categoria em system_pipeline_stages; o CHECK fixo já foi

@@ -90,6 +90,7 @@ import {
   useDeleteCase,
   usePromoverCasoManual,
   useUpdateCaseObservacoes,
+  useSetCaseUrgency,
 } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import { useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
@@ -175,6 +176,8 @@ function CasoDetalhe() {
   // partir de caso.observacoes; `obsSeededFor` garante o seed 1x por caso (e re-
   // seed se a rota trocar de caso), sem sobrescrever a edição do usuário.
   const salvarObs = useUpdateCaseObservacoes(id);
+  // M13 (T3) — urgência do caso (prioritário/urgente) p/ o motor de distribuição.
+  const setUrgency = useSetCaseUrgency(id);
   const [obsDraft, setObsDraft] = useState("");
   const [obsSeededFor, setObsSeededFor] = useState<string | null>(null);
 
@@ -333,6 +336,31 @@ function CasoDetalhe() {
           >
             {lcMeta.label}
           </span>
+          {/* M13 (T3) — urgência p/ o motor (prioritário/urgente). Campo nosso,
+              não existe no ProJuris. Só quem gere o caso edita. */}
+          {podeGerirCaso && (
+            <select
+              value={
+                (caso as { distribution_urgency?: string | null }).distribution_urgency ?? "normal"
+              }
+              onChange={(e) => {
+                const v = e.target.value as "normal" | "prioritario" | "urgente";
+                setUrgency.mutate(v, {
+                  onSuccess: () =>
+                    toast.success(v === "normal" ? "Urgência removida" : `Marcado como ${v}`),
+                  onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : "Falha ao salvar urgência"),
+                });
+              }}
+              disabled={setUrgency.isPending}
+              title="Urgência para o motor de distribuição"
+              className="self-center h-7 rounded-full border border-[var(--border)] bg-white px-2 text-[11px] font-semibold text-[var(--navy)]"
+            >
+              <option value="normal">Normal</option>
+              <option value="prioritario">Prioritário</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          )}
           {podeGerirCaso &&
             lifecycle !== "CLIENTE" &&
             lifecycle !== "PERDIDO" &&

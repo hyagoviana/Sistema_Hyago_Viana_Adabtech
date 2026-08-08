@@ -42,11 +42,14 @@ const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Ativo",
   INVITED: "Convidado",
   SUSPENDED: "Suspenso",
+  // M17 — registro sem acesso (arquivado/desabilitado no ProJuris).
+  ARCHIVED: "Arquivado / sem acesso",
 };
 const STATUS_TONE: Record<string, string> = {
   ACTIVE: "var(--gold-700)",
   INVITED: "#6b7280",
   SUSPENDED: "#b4232a",
+  ARCHIVED: "#6b7280",
 };
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {

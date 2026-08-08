@@ -13,7 +13,6 @@
 //     Eventos automáticos = read-only; marcos/notas manuais seguem o padrão atual.
 //   - Container com barra de rolagem quando passa da altura-limite.
 
-import { Pencil, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -44,6 +43,26 @@ const MANUAL_ACTIONS = new Set(["nota_manual", "marco"]);
 
 function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+// Iniciais p/ o avatar (estilo Trello): 1ª + última palavra do nome.
+function initials(name: string | null): string {
+  if (!name) return "?";
+  const p = name.trim().split(/\s+/).filter(Boolean);
+  const s = (p[0]?.[0] ?? "") + (p.length > 1 ? (p[p.length - 1]?.[0] ?? "") : "");
+  return s.toUpperCase() || "?";
+}
+
+function Avatar({ name }: { name: string | null }) {
+  return (
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-[var(--navy)] shrink-0"
+      style={{ background: "linear-gradient(135deg, #fbf3dd, #d4a832)" }}
+      title={name ?? undefined}
+    >
+      {initials(name)}
+    </div>
+  );
 }
 
 type CaseEvent = {
@@ -308,147 +327,156 @@ export function CaseFeed({ caseId }: { caseId: string }) {
       ) : feed.length === 0 ? (
         <p className="text-sm text-muted-foreground px-1">Nada registrado ainda.</p>
       ) : (
-        <ul className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
+        <ul className="space-y-4 max-h-[560px] overflow-y-auto pr-1">
           {feed.map((item) => {
             const beingEdited = editing?.kind === item.kind && editing.id === item.id;
 
+            // ── Comentário manual (nota 'geral') — cartão estilo Trello ──────────
             if (item.kind === "comment") {
-              // Regra Trello (UI): autor vê editar+excluir; admin vê só excluir.
+              // Regra Trello (UI): autor edita+exclui; admin só exclui.
               const isOwner = !!currentUserId && item.createdBy === currentUserId;
               const canEdit = isOwner;
               const canDelete = isOwner || isAdmin;
               return (
-                <li key={`c-${item.id}`} className="card-editorial p-4">
-                  {beingEdited ? (
-                    <EditForm
-                      value={editBody}
-                      onChange={setEditBody}
-                      onCancel={() => {
-                        setEditing(null);
-                        setEditBody("");
-                      }}
-                      onSave={handleUpdate}
-                      saving={savingEdit}
-                    />
-                  ) : (
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words">
-                          {item.body}
-                        </p>
-                        <div className="mt-1.5 text-[11px] text-muted-foreground">
-                          {fmtDateTime(item.created_at)}
-                          {item.author && (
-                            <span className="ml-2">
-                              por <strong>{item.author}</strong>
-                            </span>
-                          )}
-                          {item.edited && <span className="ml-2">(editada)</span>}
-                        </div>
-                      </div>
-                      {(canEdit || canDelete) && (
-                        <div className="flex gap-1 shrink-0">
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Editar"
-                              onClick={() => {
-                                setEditing({ kind: "comment", id: item.id });
-                                setEditBody(item.body);
-                              }}
-                            >
-                              <Pencil size={14} />
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Excluir"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => setConfirmDelete({ kind: "comment", id: item.id })}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          )}
-                        </div>
+                <li key={`c-${item.id}`} className="flex items-start gap-2.5">
+                  <Avatar name={item.author} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                      <span className="text-[13px] font-semibold text-[var(--navy)]">
+                        {item.author ?? "—"}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {fmtDateTime(item.created_at)}
+                      </span>
+                      {item.edited && (
+                        <span className="text-[11px] text-muted-foreground">· editada</span>
                       )}
                     </div>
-                  )}
+                    {beingEdited ? (
+                      <EditForm
+                        value={editBody}
+                        onChange={setEditBody}
+                        onCancel={() => {
+                          setEditing(null);
+                          setEditBody("");
+                        }}
+                        onSave={handleUpdate}
+                        saving={savingEdit}
+                      />
+                    ) : (
+                      <>
+                        <div className="rounded-xl border border-[var(--border)] bg-white px-3.5 py-2.5 text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words shadow-sm">
+                          {item.body}
+                        </div>
+                        {(canEdit || canDelete) && (
+                          <div className="mt-1 flex gap-3 text-[11px] text-muted-foreground pl-1">
+                            {canEdit && (
+                              <button
+                                type="button"
+                                className="hover:underline hover:text-[var(--navy)] transition-colors"
+                                onClick={() => {
+                                  setEditing({ kind: "comment", id: item.id });
+                                  setEditBody(item.body);
+                                }}
+                              >
+                                Editar
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                className="hover:underline hover:text-destructive transition-colors"
+                                onClick={() => setConfirmDelete({ kind: "comment", id: item.id })}
+                              >
+                                Excluir
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </li>
               );
             }
 
-            // kind === 'event'
+            // ── Marco / nota manual (system_case_events) — mesmo cartão Trello ───
             const e = item.event;
-            return (
-              <li key={`e-${item.id}`} className="card-editorial p-4">
-                {beingEdited ? (
-                  <EditForm
-                    value={editBody}
-                    onChange={setEditBody}
-                    onCancel={() => {
-                      setEditing(null);
-                      setEditBody("");
-                    }}
-                    onSave={handleUpdate}
-                    saving={savingEdit}
-                  />
-                ) : (
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div
-                        className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                          item.manual ? "bg-[var(--navy)]" : "bg-[var(--gold)]"
-                        }`}
+            if (item.manual) {
+              return (
+                <li key={`e-${item.id}`} className="flex items-start gap-2.5">
+                  <Avatar name={e.triggered_by_name ?? null} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                      <span className="text-[13px] font-semibold text-[var(--navy)]">
+                        {e.triggered_by_name ?? "—"}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--gold-700)]">
+                        {e.action === "marco" ? "Marco" : "Nota"}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {fmtDateTime(item.created_at)}
+                      </span>
+                    </div>
+                    {beingEdited ? (
+                      <EditForm
+                        value={editBody}
+                        onChange={setEditBody}
+                        onCancel={() => {
+                          setEditing(null);
+                          setEditBody("");
+                        }}
+                        onSave={handleUpdate}
+                        saving={savingEdit}
                       />
-                      <div className="min-w-0">
-                        <div className="text-[13px] text-[var(--navy)] font-medium whitespace-pre-wrap break-words">
-                          {item.manual && (
-                            <span className="text-[10px] uppercase tracking-wider text-[var(--gold-700)] mr-1.5">
-                              {e.action === "marco" ? "Marco" : "Nota"}
-                            </span>
-                          )}
+                    ) : (
+                      <>
+                        <div className="rounded-xl border border-[var(--border)] bg-white px-3.5 py-2.5 text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words shadow-sm">
                           {renderEventLabel(e)}
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {fmtDateTime(item.created_at)}
-                          {e.triggered_by_name && (
-                            <span className="ml-2">
-                              por <strong>{e.triggered_by_name}</strong>
-                            </span>
-                          )}
+                        <div className="mt-1 flex gap-3 text-[11px] text-muted-foreground pl-1">
+                          <button
+                            type="button"
+                            className="hover:underline hover:text-[var(--navy)] transition-colors"
+                            onClick={() => {
+                              setEditing({ kind: "event", id: item.id });
+                              setEditBody((e.diff as { body?: string } | null)?.body ?? "");
+                            }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className="hover:underline hover:text-destructive transition-colors"
+                            onClick={() => setConfirmDelete({ kind: "event", id: item.id })}
+                          >
+                            Excluir
+                          </button>
                         </div>
-                      </div>
-                    </div>
-                    {/* Editar/apagar SÓ em marcos/notas manuais. Automáticos = read-only. */}
-                    {item.manual && (
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title="Editar"
-                          onClick={() => {
-                            setEditing({ kind: "event", id: item.id });
-                            setEditBody((e.diff as { body?: string } | null)?.body ?? "");
-                          }}
-                        >
-                          <Pencil size={13} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title="Excluir"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setConfirmDelete({ kind: "event", id: item.id })}
-                        >
-                          <Trash2 size={13} />
-                        </Button>
-                      </div>
+                      </>
                     )}
                   </div>
-                )}
+                </li>
+              );
+            }
+
+            // ── Evento AUTOMÁTICO — linha de atividade slim (sem balão, read-only) ─
+            return (
+              <li key={`e-${item.id}`} className="flex items-start gap-2.5">
+                <Avatar name={e.triggered_by_name ?? null} />
+                <div className="flex-1 min-w-0 pt-1">
+                  <div className="text-[12.5px] whitespace-pre-wrap break-words">
+                    {e.triggered_by_name && (
+                      <strong className="font-semibold text-[var(--navy)]">
+                        {e.triggered_by_name}
+                      </strong>
+                    )}{" "}
+                    <span className="text-muted-foreground">{renderEventLabel(e)}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {fmtDateTime(item.created_at)}
+                  </div>
+                </div>
               </li>
             );
           })}

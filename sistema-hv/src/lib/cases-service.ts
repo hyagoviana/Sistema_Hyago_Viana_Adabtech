@@ -2001,3 +2001,19 @@ export async function updateCaseObservacoes(caseId: string, observacoes: string)
     throw new CaseServiceError(error?.message ?? "Falha ao salvar observações", 500);
   return data;
 }
+
+// M13 (T3, 2026-08-07) — urgência do caso p/ o motor (prioritario|urgente|NULL).
+// Campo NOSSO (não vem do ProJuris). Alimenta o temporal_level da distribuição.
+export async function setCaseUrgency(caseId: string, urgency: string | null) {
+  const sb = getSupabaseAdmin();
+  const value = urgency === "prioritario" || urgency === "urgente" ? urgency : null; // 'normal'/null → NULL
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ distribution_urgency: value })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select("id, distribution_urgency")
+    .single();
+  if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao salvar urgência", 500);
+  return data;
+}

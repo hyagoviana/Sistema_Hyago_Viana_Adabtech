@@ -1421,6 +1421,7 @@ export type Database = {
           projuris_numero_processo: string | null;
           sigiloso: boolean;
           observacoes: string | null;
+          distribution_urgency: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1470,6 +1471,7 @@ export type Database = {
           projuris_numero_processo?: string | null;
           sigiloso?: boolean;
           observacoes?: string | null;
+          distribution_urgency?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1888,6 +1890,7 @@ export type Database = {
           peticionante: boolean;
           participa_distribuicao_padrao: boolean;
           status_projuris: string | null;
+          equipe: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -1906,6 +1909,7 @@ export type Database = {
           peticionante?: boolean;
           participa_distribuicao_padrao?: boolean;
           status_projuris?: string | null;
+          equipe?: string | null;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;

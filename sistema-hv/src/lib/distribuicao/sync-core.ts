@@ -394,6 +394,27 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     { marcadores: string[]; collective: boolean; complexity_level: number }
   >();
 
+  // M13 (T3) — URGENTE/PRIORITÁRIO é campo NOSSO (system_cases.distribution_urgency),
+  // não vem do ProJuris. Casa o caso pelo código ProJuris (projuris_codigo_processo)
+  // e vira temporal_level: prioritario=1, urgente=2. Sem marca ⇒ 0 (normal).
+  const urgencyByCode = new Map<string, number>();
+  {
+    const { data: urgRows } = await supabase
+      .from("system_cases")
+      .select("projuris_codigo_processo, distribution_urgency")
+      .eq("organization_id", ORG_ID)
+      .not("distribution_urgency", "is", null);
+    for (const r of (urgRows ?? []) as {
+      projuris_codigo_processo: number | null;
+      distribution_urgency: string | null;
+    }[]) {
+      if (r.projuris_codigo_processo == null) continue;
+      const lvl =
+        r.distribution_urgency === "urgente" ? 2 : r.distribution_urgency === "prioritario" ? 1 : 0;
+      if (lvl > 0) urgencyByCode.set(String(r.projuris_codigo_processo), lvl);
+    }
+  }
+
   const tasks: Task[] = [];
   const processMap = new Map<string, Process>();
   let order = 0;
@@ -419,8 +440,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     if (!processMap.has(rt.process_id)) {
       // M13 — deriva COMPLEXO/COLETIVO dos MARCADORES do processo (v1). Sem
       // marcador conhecido ⇒ individual/não-complexo (fallback determinístico).
-      // temporal_level segue 0 aqui — o URGENTE/PRIORITÁRIO nativo (campo nosso →
-      // temporal) é follow-up (precisa do join processo→caso + migration/UI).
+      // temporal_level vem do URGENTE/PRIORITÁRIO nativo do caso (campo nosso).
       const marc = processMarcadores.get(rt.process_id) ?? [];
       const der = deriveFromMarcadores(marc);
       marcadorDiag.set(rt.process_id, {
@@ -433,7 +453,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
         theme_id: th.motor_theme_id,
         collective: der.collective,
         complexity_level: der.complexity_level,
-        temporal_level: 0,
+        temporal_level: (urgencyByCode.get(rt.process_id) ?? 0) as 0 | 1 | 2,
         directed_executor_id: null,
       });
     }

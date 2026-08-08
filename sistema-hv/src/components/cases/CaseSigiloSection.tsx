@@ -60,7 +60,15 @@ export function CaseSigiloSection({ caseId }: { caseId: string }) {
     }
   }
 
-  const userList = (users ?? []) as Array<{ id: string; full_name: string | null; email: string }>;
+  // M17 — só usuários ATIVOS podem autorizar sigilo (arquivados não entram).
+  const userList = (
+    (users ?? []) as Array<{
+      id: string;
+      full_name: string | null;
+      email: string;
+      status: string;
+    }>
+  ).filter((u) => u.status === "ACTIVE");
 
   return (
     <div className="card-hero p-7">

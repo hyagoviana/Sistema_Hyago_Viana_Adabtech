@@ -2,7 +2,7 @@
 
 - **Épico:** ProJuris / Distribuição — Reunião 2026-08-07
 - **ID:** M17
-- **Status:** Draft
+- **Status:** Implementado (mecanismo) — consumido pelo M15 no import em massa
 - **Estimativa relativa:** S/M
 - **Executor sugerido:** @data-engineer + @dev · Quality gate: @qa
 - **Risco:** MÉDIO — mexe no CHECK de `status` de `system_users` (ou adiciona flag) e na regra de quem aparece em seletores de atribuição; erro pode (a) deixar um arquivado logar ou (b) sumir com o histórico/autor de tarefa espelhada. Mitigado por: arquivado **não tem conta Auth** (não consegue autenticar de qualquer jeito) + gate de exibição por `requireAuth`.
@@ -133,3 +133,4 @@
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
 | 2026-08-08 | v0.1 | Draft. Usuários **arquivados/desabilitados** do ProJuris entram como **REGISTRO sem acesso** em `system_users` (sem conta Auth, sem convite, sem login) para não quebrar o **espelho de tarefas do ProJuris** (aparecem como autor/responsável histórico). Mecanismo: `status='ARCHIVED'` (Opção A, recomendada) ou flag `sem_acesso` (Opção B) — a decidir em T0. Reusa o gate `requireAuth`/`requireRole` (já rejeita ≠ ACTIVE) + a ausência de conta Auth. Novo: `createArchivedUser`, `listAssignableUsers` (esconde arquivado dos seletores de atribuição ativa), badge na admin. Consumido por **M15** (importador cria os ~24 arquivados da planilha). | @sm (Bob) |
+| 2026-08-08 | v1.0 | **Implementado** (@aios-master/Orion). **T0 = Opção A** (`status='ARCHIVED'`). Migration `20260808000060_users_archived_status.sql` (CHECK de status += `'ARCHIVED'` + reexpande view `system_users_active`) aplicada 2×. `createArchivedUser` em `users-service.ts`: insert SEM Auth/convite, `status='ARCHIVED'`+`status_projuris='desabilitado'`, id via `randomUUID()`, e-mail NOT NULL → sentinela `arquivado.<PES|slug>@sem-acesso.local`; idempotente (por e-mail, senão nome). `setUserStatus` passa a aceitar `ARCHIVED` (arquivar/desarquivar via RPC admin). **Some dos seletores de atribuição:** os principais (Tarefas/Prazos/Checklist/CaseForm/StageEditor) JÁ filtravam `status==='ACTIVE'` → arquivado excluído automático; corrigido também o `CaseSigiloSection` (não filtrava). Badge **"Arquivado / sem acesso"** no `UsersAdmin`. `sync-core` já ignora ≠ ACTIVE (M8). Typecheck+lint verdes. PENDENTE: RPC/hook `createArchivedUserFn` + wiring de-para código→system_users no `judicial-sync` (T4) ficam com o **M15** (importador em massa), que é o consumidor real. Não commitado. | @aios-master (Orion) |

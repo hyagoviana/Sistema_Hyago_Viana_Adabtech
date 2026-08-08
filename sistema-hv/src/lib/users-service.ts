@@ -1,5 +1,7 @@
 // Server-only — gestão de usuários do sistema (RBAC) e consentimento (LGPD).
 // NUNCA importe este arquivo em código que roda no browser (usa service_role).
+import { randomUUID } from "node:crypto";
+
 import { listCaseResponsaveis, setCaseResponsaveis } from "./case-responsaveis-service";
 import { ROLES, type Role } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
@@ -324,6 +326,82 @@ export async function inviteUser(
 }
 
 /**
+ * M17 (2026-08-07) — cria um REGISTRO SEM ACESSO (colaborador arquivado/
+ * desabilitado no ProJuris). NÃO cria conta no Supabase Auth e NÃO envia
+ * convite: serve só de vínculo/autoria para o espelho de tarefas do ProJuris não
+ * quebrar. Idempotente: casa por e-mail (quando houver) ou por full_name.
+ * O e-mail é NOT NULL no schema → quando não houver, usa um sentinela único
+ * derivado do ID ProJuris (ou do nome) no domínio @sem-acesso.local.
+ */
+export async function createArchivedUser(input: {
+  full_name: string;
+  email?: string | null;
+  role?: string;
+  cargo?: string | null;
+  projuris_responsavel_id?: string | null;
+}) {
+  const sb = getSupabaseAdmin();
+  const role = input.role && ROLES.includes(input.role as Role) ? input.role : "operacional";
+  const email = input.email?.trim().toLowerCase() || null;
+
+  // Idempotência: por e-mail (se houver), senão por nome exato (case-insensitive).
+  let existing: { id: string } | null = null;
+  if (email) {
+    const { data } = await sb
+      .from("system_users")
+      .select("id")
+      .eq("organization_id", DEFAULT_ORG_ID)
+      .eq("email", email)
+      .is("deleted_at", null)
+      .maybeSingle();
+    existing = (data as { id: string } | null) ?? null;
+  } else {
+    const { data } = await sb
+      .from("system_users")
+      .select("id")
+      .eq("organization_id", DEFAULT_ORG_ID)
+      .ilike("full_name", input.full_name.trim())
+      .is("deleted_at", null)
+      .maybeSingle();
+    existing = (data as { id: string } | null) ?? null;
+  }
+
+  if (existing) {
+    const { error } = await sb
+      .from("system_users")
+      .update({
+        status: "ARCHIVED",
+        status_projuris: "desabilitado",
+        ...(input.cargo !== undefined ? { cargo: input.cargo } : {}),
+      } as never)
+      .eq("id", existing.id);
+    check(error);
+    return { ok: true as const, id: existing.id, created: false };
+  }
+
+  const slug = (input.projuris_responsavel_id ?? input.full_name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const emailToStore = email ?? `arquivado.${slug || randomUUID()}@sem-acesso.local`;
+  const id = randomUUID();
+
+  const { error } = await sb.from("system_users").insert({
+    id,
+    organization_id: DEFAULT_ORG_ID,
+    email: emailToStore,
+    full_name: input.full_name.trim(),
+    role,
+    status: "ARCHIVED",
+    cargo: input.cargo ?? null,
+    status_projuris: "desabilitado",
+  } as never);
+  check(error);
+  return { ok: true as const, id, created: true };
+}
+
+/**
  * Ativa o usuário recém-convidado depois que ele define a senha (INVITED → ACTIVE).
  * O papel (admin/comercial/financeiro/…) já foi gravado no convite e é preservado.
  * Idempotente: se já estiver ACTIVE (ex.: reset de senha), não altera nada.
@@ -520,7 +598,8 @@ export async function setUserRole(id: string, role: string) {
 }
 
 export async function setUserStatus(id: string, status: string) {
-  if (!["INVITED", "ACTIVE", "SUSPENDED"].includes(status)) {
+  // M17 — 'ARCHIVED' = registro sem acesso (arquivar/desarquivar pelo admin).
+  if (!["INVITED", "ACTIVE", "SUSPENDED", "ARCHIVED"].includes(status)) {
     throw new UsersServiceError(`Status inválido: ${status}`, 400);
   }
   const sb = getSupabaseAdmin();

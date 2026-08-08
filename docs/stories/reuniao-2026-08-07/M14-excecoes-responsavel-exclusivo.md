@@ -2,7 +2,7 @@
 
 - **Épico:** ProJuris / Distribuição — Reunião 2026-08-07
 - **ID:** M14
-- **Status:** Ready for Development (recorte pequeno — seed + validação; 1 dos 4 ainda não está semeado)
+- **Status:** Done (4 exceções semeadas; migration `20260808000010` aplicada 2× idempotente)
 - **Estimativa relativa:** S
 - **Executor sugerido:** @data-engineer · Quality gate: @qa
 - **Risco:** BAIXO — mecanismo já existe e é honrado pelo engine; falta 1 seed (Sustentação Oral→Thiago) + validação dos 3 já semeados.
@@ -115,3 +115,4 @@
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
 | 2026-08-07 | v0.1 | Draft. Mecanismo de responsável exclusivo já existe e é honrado (`flow-selector.detectAbsoluteResponsible` → ABSOLUTE); 3/4 já semeados em `20260805000002` (Audiência→Thiago, PMMB→Thaíse, TEMFC→Ana Patricia=Patrícia). Esta story = seed da 4ª (**Sustentação Oral→Thiago**, resolvendo o código via H6) + validação dos 4 + documentar que a "config de tarefa" é `tipos-tarefa` (não `excecoes.tsx`, que é triagem de bloqueio). Sem tabela/UI nova; sem 3ª fonte de verdade. | @sm (Bob) |
+| 2026-08-08 | v1.0 | **DONE** (@aios-master/Orion). Migration `20260808000010_sustentacao_oral_exclusivo.sql` (Sustentação Oral TIPO `6050441` → Thiago 128858, via `system_projuris_executor_mapping`; `GET DIAGNOSTICS` exige 1 linha) **aplicada 2× (idempotente)** no banco — o UPDATE afetou exatamente 1 linha, confirmando que o tipo existe e ficou vinculado. Rollback simétrico presente. As 4 exceções (Audiência→Thiago, Sustentação Oral→Thiago, PMMB→Thaíse, TEMFC→Ana Patrícia) agora completas; honradas pelo engine sem código novo. Validação real (fluxo ABSOLUTE) fica para quando a auth ProJuris estiver viva. | @aios-master (Orion) |
