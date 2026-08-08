@@ -1,0 +1,129 @@
+PEDIDO DE INFORMACOES - MOTOR DE DISTRIBUICAO / PROJURIS (08/08/2026)
+
+Thiago, consegui conectar no ProJuris e ja puxei os colaboradores, os tipos de
+tarefa e os temas. Para eu terminar de ligar o motor de distribuicao e a aba
+Judicial, preciso que voce me passe/confirme os pontos abaixo. Deixei tudo
+numerado; pode responder item por item.
+
+
+1) OS 51 TIPOS DE TAREFA - QUAIS FICAM E A PONTUACAO DE CADA
+
+   A API do ProJuris me retornou 51 tipos de tarefa. Para cada um, preciso que
+   voce diga:
+     (a) FICA ou SAI (se deve continuar valendo no sistema)
+     (b) A PONTUACAO (quantos pontos vale) - se ficar
+
+   Segue a lista com o codigo do ProJuris e o nome. Pode anotar na frente de
+   cada linha, tipo: "FICA - 3 pontos" ou "SAI".
+
+     6476501  Audiencia
+     4191945  Administrativo
+     6476507  Agendamento de despacho
+     3843102  Agravo de Instrumento
+     3843103  Agravo Interno
+     6476503  Analise de caso
+     6450638  Analise Processual
+     3843106  Apelacao
+     6476505  Atendimento
+     6483955  Balcao
+     3843104  Contestacao
+     6450640  Contrarrazoes de Apelacao
+     6450639  Contrarrazoes de Embargos
+     3843107  Contrarrazoes de recurso
+     6476442  Contrarrazoes de recurso inominado
+     3923169  Cumprimento de Sentenca
+     6056891  Cumprimento provisorio de sentenca
+     3923168  DC
+     6476499  Defesa Administrativa
+     3925771  Despacho
+     3843090  Diligencia/Balcao
+     6727881  Distribuir sucumbencia
+     6476497  Embargos a Execucao
+     3843111  Embargos de Declaracao
+     3843115  Emenda a Inicial
+     6476498  Execucao Extrajudicial
+     6476509  Gerar Custas
+     3843083  Inicial
+     4239949  Lembrete
+     6476510  Lembrete (2o - duplicado)
+     6577642  Manifestacao (5 dias)
+     6577646  Manifestacao (10 dias)
+     3843118  Manifestacao (15 dias)
+     4353972  Memoriais
+     4249139  Parecer
+     4259855  Pesquisa
+     6476506  Peticao de Juntada
+     6476440  Peticao Intercorrente
+     3843093  Protocolo
+     4327344  Protocolo Inicial
+     6476441  Protocolo Intercorrente
+     6450641  Recurso Administrativo
+     3843108  Recurso Especial
+     3843109  Recurso Extraordinario
+     3843087  Recurso Inominado
+     3843110  Recurso Ordinario
+     3843117  Replica a Contestacao
+     3843089  Reuniao
+     6476508  Solicitacao administrativa
+     6050441  Sustentacao Oral
+     3985878  Tutela Antecipada
+
+
+2) PONTUACAO DAS 3 MANIFESTACOES (5, 10 e 15 dias)
+
+   Os 3 tipos ja existem no ProJuris com estes codigos:
+     - Manifestacao (5 dias)  = 6577642
+     - Manifestacao (10 dias) = 6577646
+     - Manifestacao (15 dias) = 3843118
+   Preciso so da PONTUACAO de cada um (a logica de prazo por dias eu ja trato).
+
+
+3) DUPLICADOS PARA VOCE APAGAR NO PROJURIS (deixar so 1 de cada)
+
+   - Diligencia/Balcao: existem DOIS - "Diligencia/Balcao" (3843090) e
+     "Balcao" (6483955). Voce disse que ia deixar so um; me confirma qual fica.
+   - Lembrete: existem DOIS - 4239949 e 6476510. Voce comentou que "Lembrete"
+     sai; me confirma se apaga os dois ou mantem um.
+   - Se tiver outros tipos indevidos (voce citou "analise processual" que e o
+     mesmo que "analise de caso"), me diz quais unir/apagar.
+
+
+4) NOMES DOS MARCADORES DE COMPLEXO E COLETIVO
+
+   Hoje o COMPLEXO e o COLETIVO ficam como MARCADOR no processo. Preciso saber
+   os NOMES EXATOS desses marcadores como estao escritos no ProJuris (ex.:
+   "COMPLEXO", "COLETIVO", "ACAO COLETIVA", "MUITO COMPLEXO"...). Se preferir,
+   me passa um numero de processo que ja tenha esses marcadores (ex.: o
+   PRO.0007684) que eu leio o nome direto de la.
+
+
+5) IDENTIFICADOR "PES." x CODIGO NUMERICO (importante)
+
+   Na planilha de colaboradores voce colocou o ID no formato PES.0000030. Mas a
+   API do ProJuris usa um CODIGO NUMERICO para o colaborador (ex.: seu usuario
+   Thiago = 128858; Wdyson = 131022; Ana Patricia = 131021; Keilane = 207254).
+   Sao dois identificadores diferentes (PES = "pessoa"; o motor usa o codigo de
+   "usuario"). Me confirma:
+     (a) O PES.* aparece onde? (nas tarefas do processo, no espelho judicial?)
+     (b) Existe uma tela/relatorio no ProJuris que mostra, lado a lado, o
+         PES.* e o codigo numerico de cada pessoa? Isso me ajuda a amarrar os
+         dois sem erro.
+
+
+6) TELEFONES DOS COLABORADORES
+
+   A coluna de telefone veio em branco na planilha. Quando puder, me manda os
+   telefones (nome + telefone). Eu completo depois sem refazer nada.
+
+
+7) PRAZOS PREVISTO E FATAL (confirmacao)
+
+   O sistema vai puxar o prazo previsto e o prazo fatal direto do ProJuris.
+   So confirma que esses prazos estao preenchidos certos nos tipos/tarefas de
+   voces (voce comentou que ia revisar isso com a equipe).
+
+
+Obrigado! Com esses pontos eu fecho a pontuacao (itens 1, 2), limpo os
+duplicados (item 3), ligo o complexo/coletivo (item 4) e amarro os
+colaboradores certo (item 5). Os itens 6 e 7 nao travam nada, pode mandar
+depois.

@@ -314,27 +314,30 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   const users = (usersRes.data ?? []) as UserRow[];
   const nameById = new Map(users.map((u) => [u.id, u.full_name]));
 
-  // M8: a FILA GERAL/ordinária exige as DUAS flags além de mapping ativo + ACTIVE:
-  //   (a) peticionante === true  → senão o colaborador NEM entra no motor;
-  //   (b) participa_distribuicao_padrao === true → senão fica fora da fila geral
-  //       (só recebe por EXCEÇÃO/responsável exclusivo — ver M14/flow-selector).
-  // As flags nascem false na migration; até serem populadas (M15/admin), o pool
-  // geral pode ficar vazio (o guard logo abaixo lança 422 com mensagem clara).
+  // M8 (revisado 2026-08-08): as DUAS flags têm papéis DIFERENTES —
+  //   (a) peticionante === true  → condição de ENTRAR no POOL do motor. Quem é
+  //       false NEM é considerado. Quem é true PODE receber (fila geral E/OU por
+  //       exceção/responsável exclusivo). Executor exclusivo (ex.: Thiago/Audiência)
+  //       precisa estar no pool mesmo com participa=false — por isso o filtro do
+  //       pool usa SÓ peticionante.
+  //   (b) participa_distribuicao_padrao === true → controla a FILA GERAL/ordinária.
+  //       false ⇒ general_weight = 0 (não entra na eleição da fila geral; só recebe
+  //       por exceção). O engine já ignora general_weight=0 na fila GENERAL e honra
+  //       o fluxo ABSOLUTE (exclusivo) independentemente do peso.
+  // As flags nascem false na migration; até serem populadas (M15/admin/seed), o
+  // pool pode ficar vazio (o guard abaixo lança 422 com mensagem clara).
   const executors: Executor[] = users
-    .filter(
-      (u) =>
-        execMappingIds.has(u.id) &&
-        u.status === "ACTIVE" &&
-        u.peticionante === true &&
-        u.participa_distribuicao_padrao === true,
-    )
+    .filter((u) => execMappingIds.has(u.id) && u.status === "ACTIVE" && u.peticionante === true)
     .map((u) => {
       const m = execById.get(u.id);
+      // participa=false ⇒ fora da fila geral (peso 0), mas continua no pool p/ exceção.
+      const inGeneral = u.participa_distribuicao_padrao === true;
       return {
         executor_id: u.id,
         active: true,
-        general_weight: m?.weight ?? 1,
-        complex_eligible: m?.eligible_complex ?? true,
+        general_weight: inGeneral ? (m?.weight ?? 100) : 0,
+        // Complexidade: só quem tem eligible_complex=true (regra do Thiago: 4 pessoas).
+        complex_eligible: m?.eligible_complex ?? false,
         authorized_task_types: m?.authorized_task_types ?? [],
         authorized_themes: m?.authorized_themes ?? [],
       };
