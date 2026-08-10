@@ -134,6 +134,58 @@ export const listDistributionTasksByDayFn = createServerFn({ method: "GET" })
     }
   });
 
+// ---------------------------------------------------------------------------
+// CALENDÁRIO — contagem de tarefas por DIA de um mês (para pintar um selo nos
+// dias que têm tarefa). Mesmo RBAC do dia: admin conta as de TODOS; demais só
+// as suas. Só leitura. Gate: controladoria (view).
+// ---------------------------------------------------------------------------
+export const getDistributionMonthCountsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        year: z.number().int().min(2000).max(2100),
+        month: z.number().int().min(1).max(12),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<Record<string, number>> => {
+    try {
+      const { id: userId, role } = await requireModule("controladoria", "view");
+      const isAdmin = role === "admin";
+      const sb = getSupabaseAdmin();
+
+      const mm = String(data.month).padStart(2, "0");
+      const firstDay = `${data.year}-${mm}-01`;
+      const lastDayNum = new Date(data.year, data.month, 0).getDate();
+      const lastDay = `${data.year}-${mm}-${String(lastDayNum).padStart(2, "0")}`;
+
+      let q = sb
+        .from("system_distribution_results")
+        .select("final_date")
+        .eq("organization_id", ORG_ID)
+        .eq("blocked", false)
+        .gte("final_date", firstDay)
+        .lte("final_date", lastDay);
+      if (!isAdmin) q = q.eq("executor_id", userId);
+
+      const { data: rows, error } = await q;
+      if (error) throw new AuthError(error.message, 500);
+
+      const counts: Record<string, number> = {};
+      for (const r of rows ?? []) {
+        if (r.final_date) counts[r.final_date] = (counts[r.final_date] ?? 0) + 1;
+      }
+      return counts;
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err instanceof Error ? new Error(err.message) : new Error(String(err));
+    }
+  });
+
 // H6: Sincronizar TIPOS de tarefa do ProJuris (de-para por nome, so leitura no
 // ProJuris; escrita apenas dos codigos/descricoes no nosso banco). Idempotente.
 export const sincronizarTiposTarefaFn = createServerFn({ method: "POST" }).handler(

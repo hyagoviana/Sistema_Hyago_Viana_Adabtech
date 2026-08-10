@@ -2,10 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight, IdCard, Layers, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
-import { ClientFieldsManagerDialog } from "@/components/clients/ClientFieldsManagerDialog";
+import { ClientFieldsManagerPanel } from "@/components/clients/ClientFieldsManagerDialog";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
-import { Button } from "@/components/ui/button";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
@@ -29,13 +28,15 @@ function CamposPersonalizados() {
   const podeGerir = usePodeEditar("sistema");
   const { data: temas, isLoading: temasLoading } = useTemas();
 
-  // Tema (pipeline) selecionado para editar seus campos. Null = nenhum ainda.
-  const [selectedTemaId, setSelectedTemaId] = useState<string | null>(null);
-  // Dialog de campos do cadastro do cliente.
-  const [clientFieldsOpen, setClientFieldsOpen] = useState(false);
+  // O que está aberto no painel à direita: um TEMA (pipeline) ou o CADASTRO DO
+  // CLIENTE. Selecionar um minimiza o outro (abre ao lado, sem drawer).
+  type View = { kind: "tema"; id: string } | { kind: "client" } | null;
+  const [view, setView] = useState<View>(null);
 
   const temasList = temas ?? [];
-  const selectedTema = temasList.find((t) => t.id === selectedTemaId) ?? null;
+  const selectedTema =
+    view?.kind === "tema" ? (temasList.find((t) => t.id === view.id) ?? null) : null;
+  const clientSelected = view?.kind === "client";
 
   return (
     <div className="page-container">
@@ -74,12 +75,12 @@ function CamposPersonalizados() {
               ) : (
                 <ul className="space-y-1">
                   {temasList.map((t) => {
-                    const active = t.id === selectedTemaId;
+                    const active = view?.kind === "tema" && view.id === t.id;
                     return (
                       <li key={t.id}>
                         <button
                           type="button"
-                          onClick={() => setSelectedTemaId(t.id)}
+                          onClick={() => setView({ kind: "tema", id: t.id })}
                           className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] transition-colors ${
                             active
                               ? "bg-[var(--muted)] font-medium text-[var(--navy)]"
@@ -109,19 +110,26 @@ function CamposPersonalizados() {
               <p className="mb-3 text-[12.5px] text-muted-foreground">
                 Campos próprios do formulário de cadastro do cliente (podem aparecer nos casos).
               </p>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setClientFieldsOpen(true)}
+                onClick={() => setView({ kind: "client" })}
+                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] transition-colors ${
+                  clientSelected
+                    ? "bg-[var(--muted)] font-medium text-[var(--navy)]"
+                    : "text-[var(--navy)] hover:bg-[var(--muted)]/60"
+                }`}
               >
-                <SlidersHorizontal size={14} />
-                Editar campos do cliente
-              </Button>
+                <SlidersHorizontal
+                  size={14}
+                  className={clientSelected ? "text-[var(--gold-700)]" : "text-muted-foreground"}
+                />
+                <span className="flex-1 truncate">Editar campos do cliente</span>
+                {clientSelected && <ChevronRight size={14} className="text-[var(--gold-700)]" />}
+              </button>
             </section>
           </aside>
 
-          {/* Coluna direita — editor dos campos do tema selecionado */}
+          {/* Coluna direita — editor do que estiver selecionado (tema ou cliente) */}
           <div className="min-w-0">
             {selectedTema ? (
               <section className="card-editorial !p-5">
@@ -139,6 +147,20 @@ function CamposPersonalizados() {
                   frenteSlug={null}
                   title="Campos personalizados"
                 />
+              </section>
+            ) : clientSelected ? (
+              <section className="card-editorial !p-5">
+                <div className="mb-4">
+                  <div className="text-[15px] font-semibold text-[var(--navy)]">
+                    Cadastro do cliente
+                  </div>
+                  <p className="text-[12.5px] text-muted-foreground">
+                    Veja como está o formulário de cadastro e acrescente campos próprios. Os campos
+                    fixos não podem ser alterados; os que você cria podem ser editados, ocultados ou
+                    excluídos.
+                  </p>
+                </div>
+                <ClientFieldsManagerPanel />
               </section>
             ) : (
               <div className="card-editorial !p-8 text-center">
@@ -162,8 +184,6 @@ function CamposPersonalizados() {
           </div>
         </div>
       )}
-
-      <ClientFieldsManagerDialog open={clientFieldsOpen} onOpenChange={setClientFieldsOpen} />
     </div>
   );
 }

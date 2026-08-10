@@ -29,6 +29,7 @@ import {
   useRemoveCalendarBlock,
   useExecutorMappings,
   useDistributionTasksByDay,
+  useDistributionMonthCounts,
 } from "@/hooks/useDistribuicao";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
@@ -51,6 +52,8 @@ function CalendarioPage() {
   // Dia selecionado → abre o painel de tarefas do dia (RBAC no servidor).
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const { data: dayTasks, isLoading: dayLoading } = useDistributionTasksByDay(selectedDay);
+  // Contagem de tarefas por dia do mês → selo nos dias que têm tarefa.
+  const { data: monthCounts } = useDistributionMonthCounts(year, month);
 
   const { data: blocks, isLoading } = useCalendarBlocks(year, month);
   const { data: yearBlocks } = useCalendarBlocksYear(year);
@@ -305,20 +308,29 @@ function CalendarioPage() {
                 const indivExecs = individualBlocks.get(iso);
                 const dow = new Date(year, month - 1, day).getDay();
                 const isWeekend = dow === 0 || dow === 6;
+                const taskCount = monthCounts?.[iso] ?? 0;
+                const hasTasks = taskCount > 0;
                 return (
                   <div
                     key={day}
                     onClick={() => setSelectedDay(iso)}
-                    className={`p-2 rounded text-sm relative cursor-pointer transition-colors min-h-[38px] ${isGeneral ? "bg-red-100 text-red-800 dark:bg-red-900/30" : isWeekend ? "bg-muted text-muted-foreground hover:bg-muted/80" : "hover:bg-accent"}`}
+                    className={`px-1.5 pt-1.5 pb-1 rounded text-sm relative cursor-pointer transition-colors min-h-[56px] flex flex-col items-center ${isGeneral ? "bg-red-100 text-red-800 dark:bg-red-900/30" : isWeekend ? "bg-muted text-muted-foreground hover:bg-muted/80" : "hover:bg-accent"} ${hasTasks && !isGeneral ? "ring-1 ring-inset ring-[var(--gold-700)]/30" : ""}`}
                     title={
-                      isGeneral
+                      (hasTasks ? `${taskCount} tarefa(s) neste dia — ` : "") +
+                      (isGeneral
                         ? "Bloqueio geral — clique para ver as tarefas do dia"
                         : indivExecs
                           ? `Bloqueados: ${indivExecs.length} — clique para ver as tarefas do dia`
-                          : "Clique para ver as tarefas do dia"
+                          : "Clique para ver as tarefas do dia")
                     }
                   >
-                    {day}
+                    <span>{day}</span>
+                    {hasTasks && (
+                      <span className="mt-auto inline-flex items-center gap-1 text-[10px] font-semibold leading-none px-1.5 py-1 rounded-full bg-[var(--gold-700)]/15 text-[var(--gold-700)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--gold-700)]" />
+                        {taskCount}
+                      </span>
+                    )}
                     {indivExecs && (
                       <Users className="h-3 w-3 absolute top-0.5 right-0.5 text-amber-500" />
                     )}

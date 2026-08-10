@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Plus, Pencil, Download, Search, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +21,10 @@ import {
   useTaskTypeMappings,
   useUpsertTaskTypeMapping,
   useSyncTaskTypes,
+  useExecutorMappings,
 } from "@/hooks/useDistribuicao";
+
+const NONE = "__none__"; // sentinela do Select p/ "nenhum executor exclusivo"
 
 export const Route = createFileRoute("/controladoria/distribuicao/tipos-tarefa")({
   component: TiposTarefaPage,
@@ -40,6 +43,7 @@ const TEMPORAL_LABELS: Record<number, string> = {
 
 function TiposTarefaPage() {
   const { data: mappings, isLoading } = useTaskTypeMappings();
+  const { data: executors } = useExecutorMappings();
   const upsert = useUpsertTaskTypeMapping();
   const syncTipos = useSyncTaskTypes();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,7 +58,28 @@ function TiposTarefaPage() {
   const [temporal, setTemporal] = useState("0");
   const [prazoPrevisto, setPrazoPrevisto] = useState("");
   const [prazoFatal, setPrazoFatal] = useState("");
+  const [exclusiveExecutor, setExclusiveExecutor] = useState<string>(NONE);
   const [active, setActive] = useState(true);
+
+  // Executores ativos p/ o seletor de "executor exclusivo" (valor = system_users.id).
+  const execOptions = useMemo(
+    () =>
+      (
+        (executors ?? []) as Array<{
+          executor_id: string;
+          active: boolean;
+          system_users?: { full_name?: string | null } | null;
+        }>
+      )
+        .filter((e) => e.active && e.executor_id)
+        .map((e) => ({ id: e.executor_id, nome: e.system_users?.full_name ?? e.executor_id })),
+    [executors],
+  );
+  const execNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of execOptions) m.set(e.id, e.nome);
+    return m;
+  }, [execOptions]);
 
   const filtered = (mappings ?? []).filter(
     (m) =>
@@ -72,6 +97,7 @@ function TiposTarefaPage() {
     setTemporal(String(m.temporal_level));
     setPrazoPrevisto(m.prazo_previsto_dias != null ? String(m.prazo_previsto_dias) : "");
     setPrazoFatal(m.prazo_fatal_dias != null ? String(m.prazo_fatal_dias) : "");
+    setExclusiveExecutor((m.exclusive_executor_id as string | null) ?? NONE);
     setActive(m.active as boolean);
     setDialogOpen(true);
   }
@@ -86,6 +112,7 @@ function TiposTarefaPage() {
     setTemporal("0");
     setPrazoPrevisto("");
     setPrazoFatal("");
+    setExclusiveExecutor(NONE);
     setActive(true);
     setDialogOpen(true);
   }
@@ -113,6 +140,7 @@ function TiposTarefaPage() {
         temporal_level: parseInt(temporal),
         prazo_previsto_dias: parseDias(prazoPrevisto),
         prazo_fatal_dias: parseDias(prazoFatal),
+        exclusive_executor_id: exclusiveExecutor === NONE ? null : exclusiveExecutor,
         active,
       });
       toast.success(editing ? "Tipo atualizado" : "Tipo adicionado");
@@ -166,11 +194,6 @@ function TiposTarefaPage() {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/controladoria/distribuicao/excecoes">
-            <ShieldCheck className="h-4 w-4 mr-1" /> Executor exclusivo
-          </Link>
-        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -203,6 +226,7 @@ function TiposTarefaPage() {
                   <th className="text-center py-2">Temporalidade</th>
                   <th className="text-center py-2">Prazo prev. (d)</th>
                   <th className="text-center py-2">Prazo fatal (d)</th>
+                  <th className="text-left py-2">Exclusivo</th>
                   <th className="text-center py-2">Status</th>
                   <th className="text-center py-2">Acoes</th>
                 </tr>
@@ -228,6 +252,16 @@ function TiposTarefaPage() {
                     </td>
                     <td className="py-2 text-center text-muted-foreground">
                       {m.prazo_fatal_dias ?? "·"}
+                    </td>
+                    <td className="py-2 text-xs">
+                      {m.exclusive_executor_id ? (
+                        <Badge variant="outline" className="text-[11px] gap-1">
+                          <ShieldCheck className="h-3 w-3" />
+                          {execNameById.get(m.exclusive_executor_id as string) ?? "definido"}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">·</span>
+                      )}
                     </td>
                     <td className="py-2 text-center">
                       {m.active ? (
@@ -354,16 +388,28 @@ function TiposTarefaPage() {
               Default interno de prazo (fallback do motor quando a tarefa do ProJuris nao trouxer o
               prazo). Vazio = sem default.
             </p>
-            <div className="rounded-md border p-3 text-xs text-muted-foreground flex items-start gap-2">
-              <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>
-                Regra <b>exclusiva</b> (tarefa deste tipo/tema vai direto a um executor): configure
-                em{" "}
-                <Link to="/controladoria/distribuicao/excecoes" className="underline">
-                  Executor exclusivo
-                </Link>
-                .
-              </span>
+            <div>
+              <Label className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" /> Executor exclusivo (opcional)
+              </Label>
+              <Select value={exclusiveExecutor} onValueChange={setExclusiveExecutor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Nenhum (distribui normalmente)</SelectItem>
+                  {execOptions.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Se preenchido, toda tarefa deste tipo vai <b>direto</b> a esse executor (fluxo
+                ABSOLUTE), ignorando fila e preferência. Regra por <b>tema</b> tem precedência sobre
+                a de tipo.
+              </p>
             </div>
             <div className="flex items-center justify-between">
               <Label>Ativo</Label>

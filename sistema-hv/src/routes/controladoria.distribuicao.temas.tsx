@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Tag, Plus, Pencil, Search } from "lucide-react";
+import { Plus, Pencil, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,12 +17,17 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
-import { useThemeMappings, useUpsertThemeMapping } from "@/hooks/useDistribuicao";
+import {
+  useThemeMappings,
+  useUpsertThemeMapping,
+  useExecutorMappings,
+} from "@/hooks/useDistribuicao";
 
 export const Route = createFileRoute("/controladoria/distribuicao/temas")({
   component: TemasPage,
 });
+
+const NONE = "__none__";
 
 const TEMPORAL_LABELS: Record<number, string> = {
   0: "Normal",
@@ -30,8 +35,20 @@ const TEMPORAL_LABELS: Record<number, string> = {
   2: "Urgente (+30%)",
 };
 
+type ThemeRow = {
+  id: string;
+  projuris_tema_codigo: string;
+  projuris_tema_descricao: string | null;
+  motor_theme_id: string;
+  multiplier: number;
+  temporal_level: number;
+  exclusive_executor_id: string | null;
+  active: boolean;
+};
+
 function TemasPage() {
   const { data: mappings, isLoading } = useThemeMappings();
+  const { data: executors } = useExecutorMappings();
   const upsert = useUpsertThemeMapping();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
@@ -42,7 +59,27 @@ function TemasPage() {
   const [motorId, setMotorId] = useState("");
   const [multiplier, setMultiplier] = useState("1.0");
   const [temporal, setTemporal] = useState("0");
+  const [exclusiveExecutor, setExclusiveExecutor] = useState<string>(NONE);
   const [active, setActive] = useState(true);
+
+  const execOptions = useMemo(
+    () =>
+      (
+        (executors ?? []) as Array<{
+          executor_id: string;
+          active: boolean;
+          system_users?: { full_name?: string | null } | null;
+        }>
+      )
+        .filter((e) => e.active && e.executor_id)
+        .map((e) => ({ id: e.executor_id, nome: e.system_users?.full_name ?? e.executor_id })),
+    [executors],
+  );
+  const execNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of execOptions) m.set(e.id, e.nome);
+    return m;
+  }, [execOptions]);
 
   const previewPoints = useMemo(
     () => (10 * parseFloat(multiplier || "1")).toFixed(2),
@@ -62,6 +99,7 @@ function TemasPage() {
     setMotorId(m.motor_theme_id as string);
     setMultiplier(String(m.multiplier));
     setTemporal(String(m.temporal_level));
+    setExclusiveExecutor((m.exclusive_executor_id as string | null) ?? NONE);
     setActive(m.active as boolean);
     setDialogOpen(true);
   }
@@ -73,6 +111,7 @@ function TemasPage() {
     setMotorId("");
     setMultiplier("1.0");
     setTemporal("0");
+    setExclusiveExecutor(NONE);
     setActive(true);
     setDialogOpen(true);
   }
@@ -94,6 +133,7 @@ function TemasPage() {
         motor_theme_id: motorId,
         multiplier: mult,
         temporal_level: parseInt(temporal),
+        exclusive_executor_id: exclusiveExecutor === NONE ? null : exclusiveExecutor,
         active,
       });
       toast.success(editing ? "Tema atualizado" : "Tema adicionado");
@@ -132,12 +172,13 @@ function TemasPage() {
                   <th className="text-left py-2">Motor ID</th>
                   <th className="text-right py-2">Multiplicador</th>
                   <th className="text-center py-2">Temporalidade</th>
+                  <th className="text-left py-2">Exclusivo</th>
                   <th className="text-center py-2">Status</th>
                   <th className="text-center py-2">Acoes</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((m: any) => (
+                {(filtered as ThemeRow[]).map((m) => (
                   <tr key={m.id} className="border-b hover:bg-accent/50">
                     <td className="py-2 font-medium">{m.projuris_tema_codigo}</td>
                     <td className="py-2 text-muted-foreground">{m.motor_theme_id}</td>
@@ -146,6 +187,16 @@ function TemasPage() {
                       <Badge variant="outline" className="text-xs">
                         {TEMPORAL_LABELS[m.temporal_level]}
                       </Badge>
+                    </td>
+                    <td className="py-2 text-xs">
+                      {m.exclusive_executor_id ? (
+                        <Badge variant="outline" className="text-[11px] gap-1">
+                          <ShieldCheck className="h-3 w-3" />
+                          {execNameById.get(m.exclusive_executor_id) ?? "definido"}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">·</span>
+                      )}
                     </td>
                     <td className="py-2 text-center">
                       {m.active ? (
@@ -228,6 +279,28 @@ function TemasPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" /> Executor exclusivo (opcional)
+              </Label>
+              <Select value={exclusiveExecutor} onValueChange={setExclusiveExecutor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Nenhum (distribui normalmente)</SelectItem>
+                  {execOptions.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Se preenchido, toda tarefa deste <b>tema</b> vai direto a esse executor (fluxo
+                ABSOLUTE). A regra de tema tem <b>precedência</b> sobre a regra por tipo de tarefa.
+              </p>
             </div>
             <div className="flex items-center justify-between">
               <Label>Ativo</Label>

@@ -18,6 +18,7 @@ import {
 import {
   sincronizarTiposTarefaFn,
   listDistributionTasksByDayFn,
+  getDistributionMonthCountsFn,
   type SyncTaskTypesResult,
   type CalendarTask,
 } from "@/rpc/distribuicao";
@@ -46,6 +47,16 @@ export function useDistributionTasksByDay(date: string | null, enabled = true) {
     queryKey: ["distribution-tasks-day", date],
     queryFn: () => fn({ data: { date: date! } }),
     enabled: !!date && enabled,
+  });
+}
+
+// Contagem de tarefas por dia do MÊS (RBAC no servidor) — pinta o selo nos dias
+// que têm tarefa. Retorna { "YYYY-MM-DD": qtd }.
+export function useDistributionMonthCounts(year: number, month: number) {
+  const fn = useServerFn(getDistributionMonthCountsFn);
+  return useQuery({
+    queryKey: ["distribution-month-counts", year, month],
+    queryFn: () => fn({ data: { year, month } }),
   });
 }
 
