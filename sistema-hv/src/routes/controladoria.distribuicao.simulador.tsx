@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { FlaskConical, BarChart3, CheckCircle, XCircle, Users } from "lucide-react";
+import { FlaskConical, CheckCircle, XCircle, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useExecutorMappings } from "@/hooks/useDistribuicao";
 
 const supabase = getSupabaseBrowserClient();
 
@@ -20,6 +20,23 @@ const ORG_ID = "00000000-0000-0000-0000-000000000001";
 function SimuladorPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [onlyDivergences, setOnlyDivergences] = useState(false);
+  const { data: executors } = useExecutorMappings();
+
+  // De-para executor_id (UUID) → nome (curto). Fallback ao código truncado.
+  const execName = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of (executors ?? []) as Array<{
+      executor_id: string;
+      system_users?: { full_name?: string | null } | null;
+    }>) {
+      if (e.executor_id && e.system_users?.full_name)
+        m.set(e.executor_id, e.system_users.full_name);
+    }
+    return (id: unknown) => {
+      const s = id == null ? "" : String(id);
+      return s ? (m.get(s) ?? `${s.slice(0, 8)}…`) : "·";
+    };
+  }, [executors]);
 
   // Buscar simulacoes do dia
   const { data: simResults, isLoading: simLoading } = useQuery({
@@ -207,12 +224,8 @@ function SimuladorPage() {
                         className={`border-b ${c.match === false ? "bg-red-50 dark:bg-red-900/10" : ""}`}
                       >
                         <td className="py-2 font-mono text-xs">{c.task_id}</td>
-                        <td className="py-2 text-center text-xs">
-                          {c.sim_executor?.slice(0, 8) ?? "·"}
-                        </td>
-                        <td className="py-2 text-center text-xs">
-                          {c.real_executor ? String(c.real_executor).slice(0, 8) : "·"}
-                        </td>
+                        <td className="py-2 text-center text-xs">{execName(c.sim_executor)}</td>
+                        <td className="py-2 text-center text-xs">{execName(c.real_executor)}</td>
                         <td className="py-2 text-center">
                           {c.match === true ? (
                             <CheckCircle className="h-4 w-4 text-green-500 inline" />
@@ -252,7 +265,9 @@ function SimuladorPage() {
                       );
                       return (
                         <div key={executor} className="space-y-1">
-                          <span className="text-xs">{executor.slice(0, 8)}...</span>
+                          <span className="text-xs" title={executor}>
+                            {execName(executor)}
+                          </span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs w-12 text-right text-blue-600">
                               {sim.toFixed(0)}

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useExecutorMappings, useUpsertExecutorMapping } from "@/hooks/useDistribuicao";
+import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/controladoria/distribuicao/executores")({
   component: ExecutoresPage,
@@ -27,6 +28,7 @@ type ExecutorRow = {
 };
 
 function ExecutoresPage() {
+  const podeEditar = usePodeEditar("controladoria");
   const { data: executors, isLoading } = useExecutorMappings();
   const upsert = useUpsertExecutorMapping();
   const [editing, setEditing] = useState<ExecutorRow | null>(null);
@@ -139,9 +141,13 @@ function ExecutoresPage() {
                       )}
                     </td>
                     <td className="py-2 text-center">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {podeEditar ? (
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">·</span>
+                      )}
                     </td>
                   </tr>
                 ))}

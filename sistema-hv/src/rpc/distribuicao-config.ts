@@ -136,3 +136,51 @@ export const saveDistributionCredsFn = createServerFn({ method: "POST" })
       return { ok: true };
     }),
   );
+
+// ----------------------------------------------------------------------------
+// Config GERAL do motor (mode/batch_hour) — escrita via SERVER (service_role),
+// com gate requireModule("controladoria","edit"). Antes ia direto pelo browser
+// client, e a RLS de config estava aberta (qualquer autenticado escrevia). Agora
+// o único caminho de escrita é este server fn gateado.
+// ----------------------------------------------------------------------------
+const updateConfigSchema = z.object({
+  mode: z.enum(["HIGH_PRODUCTION", "HIGH_CONTROL"]).optional(),
+  batch_hour: z.number().int().min(0).max(23).optional(),
+});
+
+export const updateDistributionConfigFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => updateConfigSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<{ ok: true }> => {
+      await requireModule("controladoria", "edit");
+      const patch: ConfigUpdate = { updated_at: new Date().toISOString() };
+      if (data.mode !== undefined) patch.mode = data.mode;
+      if (data.batch_hour !== undefined) patch.batch_hour = data.batch_hour;
+      const sb = getSupabaseAdmin();
+      const { error } = await sb
+        .from("system_distribution_config")
+        .update(patch)
+        .eq("organization_id", ORG_ID);
+      if (error) throw new AuthError("Falha ao salvar configuração", 500);
+      return { ok: true };
+    }),
+  );
+
+// ----------------------------------------------------------------------------
+// LIGAR/DESLIGAR o motor em produção (`active`) — ação crítica. Gate de edição
+// do módulo controladoria no SERVIDOR (a RLS sozinha não bastava).
+// ----------------------------------------------------------------------------
+export const setDistributionActiveFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ active: z.boolean() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<{ ok: true; active: boolean }> => {
+      await requireModule("controladoria", "edit");
+      const sb = getSupabaseAdmin();
+      const { error } = await sb
+        .from("system_distribution_config")
+        .update({ active: data.active, updated_at: new Date().toISOString() })
+        .eq("organization_id", ORG_ID);
+      if (error) throw new AuthError("Falha ao alterar o estado do motor", 500);
+      return { ok: true, active: data.active };
+    }),
+  );

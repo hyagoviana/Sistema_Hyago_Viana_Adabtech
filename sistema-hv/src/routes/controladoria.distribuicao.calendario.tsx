@@ -20,25 +20,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import {
   useCalendarBlocks,
   useCalendarBlocksYear,
   useAddCalendarBlock,
   useRemoveCalendarBlock,
   useExecutorMappings,
+  useDistributionTasksByDay,
 } from "@/hooks/useDistribuicao";
+import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/controladoria/distribuicao/calendario")({
   component: CalendarioPage,
 });
 
+const FLOW_COLORS: Record<string, string> = {
+  ABSOLUTE: "bg-purple-100 text-purple-700",
+  COMPLEX: "bg-amber-100 text-amber-700",
+  GENERAL: "bg-blue-100 text-blue-700",
+};
+
 function CalendarioPage() {
+  const podeEditar = usePodeEditar("controladoria");
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [view, setView] = useState<"month" | "year">("month");
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Dia selecionado → abre o painel de tarefas do dia (RBAC no servidor).
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const { data: dayTasks, isLoading: dayLoading } = useDistributionTasksByDay(selectedDay);
 
   const { data: blocks, isLoading } = useCalendarBlocks(year, month);
   const { data: yearBlocks } = useCalendarBlocksYear(year);
@@ -66,6 +78,19 @@ function CalendarioPage() {
     }
     return map;
   }, [blocks]);
+
+  // De-para executor_id (UUID = system_users.id) → nome, p/ a visão Ano.
+  const execNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of (executors ?? []) as Array<{
+      executor_id: string;
+      system_users?: { full_name?: string | null } | null;
+    }>) {
+      if (e.executor_id && e.system_users?.full_name)
+        m.set(e.executor_id, e.system_users.full_name);
+    }
+    return m;
+  }, [executors]);
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
@@ -177,11 +202,13 @@ function CalendarioPage() {
         </Button>
         <div className="ml-auto">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> Bloqueio
-              </Button>
-            </DialogTrigger>
+            {podeEditar && (
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" /> Bloqueio
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Bloqueio</DialogTitle>
@@ -214,7 +241,8 @@ function CalendarioPage() {
                           .filter((e) => e.active)
                           .map((e) => (
                             <SelectItem key={e.id} value={e.executor_id}>
-                              {(e as any).system_users?.full_name ?? e.executor_id}
+                              {(e as { system_users?: { full_name?: string | null } | null })
+                                .system_users?.full_name ?? e.executor_id}
                             </SelectItem>
                           ))}
                       </SelectContent>
@@ -280,13 +308,14 @@ function CalendarioPage() {
                 return (
                   <div
                     key={day}
-                    className={`p-2 rounded text-sm relative cursor-pointer transition-colors ${isGeneral ? "bg-red-100 text-red-800 dark:bg-red-900/30" : isWeekend ? "bg-muted text-muted-foreground" : "hover:bg-accent"}`}
+                    onClick={() => setSelectedDay(iso)}
+                    className={`p-2 rounded text-sm relative cursor-pointer transition-colors min-h-[38px] ${isGeneral ? "bg-red-100 text-red-800 dark:bg-red-900/30" : isWeekend ? "bg-muted text-muted-foreground hover:bg-muted/80" : "hover:bg-accent"}`}
                     title={
                       isGeneral
-                        ? "Bloqueio geral"
+                        ? "Bloqueio geral — clique para ver as tarefas do dia"
                         : indivExecs
-                          ? `Bloqueados: ${indivExecs.length}`
-                          : ""
+                          ? `Bloqueados: ${indivExecs.length} — clique para ver as tarefas do dia`
+                          : "Clique para ver as tarefas do dia"
                     }
                   >
                     {day}
@@ -329,12 +358,16 @@ function CalendarioPage() {
                         {b.block_type === "general" ? "Geral" : "Individual"}
                       </span>
                     </td>
-                    <td className="py-2">{b.executor_id ?? "·"}</td>
+                    <td className="py-2">
+                      {b.executor_id ? (execNameById.get(b.executor_id) ?? b.executor_id) : "·"}
+                    </td>
                     <td className="py-2">{b.reason ?? "·"}</td>
                     <td className="py-2 text-center">
-                      <Button variant="ghost" size="icon" onClick={() => handleRemove(b.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {podeEditar && (
+                        <Button variant="ghost" size="icon" onClick={() => handleRemove(b.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -343,6 +376,55 @@ function CalendarioPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Tarefas do dia (clique num dia). RBAC no servidor: admin vê de todos,
+          demais só as próprias. */}
+      <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" /> Tarefas de{" "}
+              {selectedDay ? selectedDay.split("-").reverse().join("/") : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {dayLoading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : (dayTasks ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma tarefa distribuída para este dia.
+            </p>
+          ) : (
+            <div className="max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="py-2">Processo</th>
+                    <th className="py-2">Número do processo</th>
+                    <th className="py-2">Tipo</th>
+                    <th className="py-2">Executor</th>
+                    <th className="py-2 text-center">Fluxo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(dayTasks ?? []).map((t) => (
+                    <tr key={t.id} className="border-b hover:bg-accent/50">
+                      <td className="py-2 pr-2">{t.nome_processo || t.numero_processo || "·"}</td>
+                      <td className="py-2 pr-2 font-mono text-[11px]">
+                        {t.numero_processo || "·"}
+                      </td>
+                      <td className="py-2 pr-2 text-xs">{t.tipo_nome || "·"}</td>
+                      <td className="py-2 pr-2 text-xs">{t.executor_nome || "·"}</td>
+                      <td className="py-2 text-center">
+                        <Badge className={`text-xs ${FLOW_COLORS[t.flow] ?? ""}`}>{t.flow}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

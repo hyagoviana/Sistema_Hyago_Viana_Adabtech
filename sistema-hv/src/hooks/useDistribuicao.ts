@@ -11,9 +11,16 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   getDistributionCredsFn,
   saveDistributionCredsFn,
+  updateDistributionConfigFn,
+  setDistributionActiveFn,
   type DistributionCredsView,
 } from "@/rpc/distribuicao-config";
-import { sincronizarTiposTarefaFn, type SyncTaskTypesResult } from "@/rpc/distribuicao";
+import {
+  sincronizarTiposTarefaFn,
+  listDistributionTasksByDayFn,
+  type SyncTaskTypesResult,
+  type CalendarTask,
+} from "@/rpc/distribuicao";
 import {
   aprovarTarefaFn,
   rejeitarTarefaFn,
@@ -28,6 +35,19 @@ import {
 
 export type { SyncTaskTypesResult };
 export type { WritebackSummary };
+export type { CalendarTask };
+
+// Tarefas distribuídas de UM dia (por final_date), já filtradas por RBAC no
+// servidor (admin vê todas; demais só as próprias). `enabled` liga a query só
+// quando o usuário clica num dia.
+export function useDistributionTasksByDay(date: string | null, enabled = true) {
+  const fn = useServerFn(listDistributionTasksByDayFn);
+  return useQuery({
+    queryKey: ["distribution-tasks-day", date],
+    queryFn: () => fn({ data: { date: date! } }),
+    enabled: !!date && enabled,
+  });
+}
 
 const supabase = getSupabaseBrowserClient();
 
@@ -238,18 +258,25 @@ export function useDistributionConfig() {
   });
 }
 
+// mode/batch_hour agora vão por SERVER FN (updateDistributionConfigFn) com gate
+// requireModule("controladoria","edit"). O browser client não escreve mais na
+// config (a RLS foi fechada — ver migration de segurança).
 export function useUpdateDistributionConfig() {
   const qc = useQueryClient();
+  const fn = useServerFn(updateDistributionConfigFn);
   return useMutation({
-    // Apenas campos NAO-secretos (mode/batch_hour). Credenciais/segredos passam
-    // por useSaveDistributionCreds (server fn com gate admin + write-only).
-    mutationFn: async (config: { mode?: string; batch_hour?: number }) => {
-      const { error } = await supabase
-        .from("system_distribution_config")
-        .update({ ...config, updated_at: new Date().toISOString() })
-        .eq("organization_id", ORG_ID);
-      if (error) throw error;
-    },
+    mutationFn: (config: { mode?: "HIGH_PRODUCTION" | "HIGH_CONTROL"; batch_hour?: number }) =>
+      fn({ data: config }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["distribution-config"] }),
+  });
+}
+
+// Liga/desliga o motor em produção (ação crítica) — server fn gateado.
+export function useSetDistributionActive() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setDistributionActiveFn);
+  return useMutation({
+    mutationFn: (active: boolean) => fn({ data: { active } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["distribution-config"] }),
   });
 }

@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import {
   useDistributionConfig,
   useUpdateDistributionConfig,
@@ -37,6 +36,7 @@ import {
   useLastBatchLog,
   useAlertsSummary30d,
 } from "@/hooks/useDistribuicao";
+import { usePodeEditar } from "@/hooks/usePermissions";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const supabase = getSupabaseBrowserClient();
@@ -46,6 +46,7 @@ export const Route = createFileRoute("/controladoria/distribuicao/configuracao")
 });
 
 function ConfiguracaoPage() {
+  const podeEditar = usePodeEditar("controladoria");
   const { data: config, isLoading: configLoading } = useDistributionConfig();
   const { data: creds, isLoading: credsLoading } = useDistributionCreds();
   const { data: lastBatch, isLoading: batchLoading } = useLastBatchLog();
@@ -149,8 +150,28 @@ function ConfiguracaoPage() {
   );
 
   function handleModeChange(newMode: string) {
+    if (!podeEditar) return;
     setMode(newMode);
     debouncedSave("mode", newMode);
+  }
+
+  // Salva o horário do batch ao sair do campo (antes o valor nunca era persistido).
+  function handleBatchHourBlur() {
+    if (!podeEditar) return;
+    const h = Number(batchHour);
+    if (!Number.isInteger(h) || h < 0 || h > 23) {
+      toast.error("Horário deve ser um número de 0 a 23");
+      setBatchHour(String(config?.batch_hour ?? 6));
+      return;
+    }
+    if (config && h === config.batch_hour) return;
+    updateConfig.mutate(
+      { batch_hour: h },
+      {
+        onSuccess: () => toast.success("Horário salvo"),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),
+      },
+    );
   }
 
   async function executeBatch(simulate: boolean) {
@@ -169,11 +190,16 @@ function ConfiguracaoPage() {
         },
         body: JSON.stringify({ simulate, manual: true }),
       });
+      // A Edge Function pode devolver 4xx/5xx — não trate erro como sucesso.
+      if (!response.ok) {
+        const msg = await response.text().catch(() => "");
+        throw new Error(msg || `Falha na execução (HTTP ${response.status})`);
+      }
       const result = (await response.json()) as BatchExecutionResult;
       setExecutionResult(result);
       toast.success(simulate ? "Simulacao concluida" : "Batch executado");
     } catch (error) {
-      toast.error("Erro na execucao");
+      toast.error(error instanceof Error ? error.message : "Erro na execucao");
     } finally {
       setExecuting(false);
     }
@@ -346,14 +372,16 @@ function ConfiguracaoPage() {
                 </div>
               )}
 
-              <Button onClick={saveCredentials} disabled={savingCredentials || !projurisBaseUrl}>
-                {savingCredentials ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <Key className="h-4 w-4 mr-1" />
-                )}
-                Salvar Credenciais
-              </Button>
+              {podeEditar && (
+                <Button onClick={saveCredentials} disabled={savingCredentials || !projurisBaseUrl}>
+                  {savingCredentials ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Key className="h-4 w-4 mr-1" />
+                  )}
+                  Salvar Credenciais
+                </Button>
+              )}
             </>
           )}
         </CardContent>
@@ -418,25 +446,29 @@ function ConfiguracaoPage() {
                 max="23"
                 value={batchHour}
                 onChange={(e) => setBatchHour(e.target.value)}
+                onBlur={handleBatchHourBlur}
+                disabled={!podeEditar}
                 className="w-24"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Proxima execucao: proximo dia util as {batchHour}:00
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={() => executeBatch(false)} disabled={executing}>
-                {executing ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4 mr-1" />
-                )}{" "}
-                Executar Agora
-              </Button>
-              <Button variant="outline" onClick={() => executeBatch(true)} disabled={executing}>
-                <FlaskConical className="h-4 w-4 mr-1" /> Simular
-              </Button>
-            </div>
+            {podeEditar && (
+              <div className="flex gap-2">
+                <Button onClick={() => executeBatch(false)} disabled={executing}>
+                  {executing ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-1" />
+                  )}{" "}
+                  Executar Agora
+                </Button>
+                <Button variant="outline" onClick={() => executeBatch(true)} disabled={executing}>
+                  <FlaskConical className="h-4 w-4 mr-1" /> Simular
+                </Button>
+              </div>
+            )}
             {executionResult && (
               <div className="text-sm p-3 bg-muted rounded">
                 <p>

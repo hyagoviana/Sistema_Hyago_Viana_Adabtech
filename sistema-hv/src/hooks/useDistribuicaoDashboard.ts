@@ -62,6 +62,58 @@ export function useDistributionResults(
   });
 }
 
+// Agregado do DIA INTEIRO (não só a página de 50). Busca todas as linhas do dia
+// (colunas mínimas) e calcula fluxo/carga/alertas — corrige o Painel, que antes
+// derivava os KPIs de no máximo 50 resultados.
+export type DayAggregate = {
+  count: number;
+  flowCounts: { ABSOLUTE: number; COMPLEX: number; GENERAL: number };
+  executorLoads: Array<{ executor_id: string; points: number }>;
+  alertRows: Array<{ id: string; task_id: string; alerts: string[]; final_date: string | null }>;
+};
+
+export function useDistributionDayAggregate(date: string) {
+  return useQuery({
+    queryKey: ["distribution-day-aggregate", date],
+    queryFn: async (): Promise<DayAggregate> => {
+      // A tabela de resultados só guarda NÃO-bloqueadas (as bloqueadas viram
+      // exceções); por isso não há filtro de blocked aqui.
+      const { data, error } = await supabase
+        .from("system_distribution_results")
+        .select("id, task_id, flow, executor_id, final_points, alerts, final_date")
+        .eq("distribution_date", date)
+        .eq("organization_id", ORG_ID);
+      if (error) throw error;
+      const rows = data ?? [];
+      const flowCounts = { ABSOLUTE: 0, COMPLEX: 0, GENERAL: 0 };
+      const loads = new Map<string, number>();
+      const alertRows: DayAggregate["alertRows"] = [];
+      for (const r of rows) {
+        if (r.flow in flowCounts) flowCounts[r.flow as keyof typeof flowCounts]++;
+        if (r.executor_id)
+          loads.set(r.executor_id, (loads.get(r.executor_id) ?? 0) + r.final_points);
+        if ((r.alerts?.length ?? 0) > 0) {
+          alertRows.push({
+            id: r.id,
+            task_id: r.task_id,
+            alerts: r.alerts ?? [],
+            final_date: r.final_date,
+          });
+        }
+      }
+      return {
+        count: rows.length,
+        flowCounts,
+        executorLoads: [...loads.entries()]
+          .map(([executor_id, points]) => ({ executor_id, points }))
+          .sort((a, b) => b.points - a.points),
+        alertRows,
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useBatchLog(date: string) {
   return useQuery({
     queryKey: ["batch-log", date],
@@ -128,6 +180,10 @@ export function useResolveException() {
       override_reason?: string;
       ignore_reason?: string;
     }) => {
+      // action_by = quem resolveu (auditoria); antes ficava sempre nulo.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const { error } = await supabase
         .from("system_distribution_exceptions")
         .update({
@@ -135,6 +191,7 @@ export function useResolveException() {
           manual_executor_id: params.manual_executor_id,
           override_reason: params.override_reason,
           ignore_reason: params.ignore_reason,
+          action_by: user?.id ?? null,
           action_at: new Date().toISOString(),
         })
         .eq("id", params.id);
@@ -166,6 +223,49 @@ export function useBatchHistory(startDate: string, endDate: string, page = 0) {
         .range(offset, offset + 29);
       if (error) throw error;
       return { data, count };
+    },
+  });
+}
+
+// KPIs do histórico sobre o PERÍODO INTEIRO (não só a página de 30). Busca só as
+// colunas necessárias de todos os batches do intervalo e agrega.
+export type BatchHistoryStats = {
+  total: number;
+  successRate: number;
+  avgTasks: number;
+  avgDuration: number;
+};
+
+export function useBatchHistoryStats(startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: ["batch-history-stats", startDate, endDate],
+    queryFn: async (): Promise<BatchHistoryStats> => {
+      const { data, error } = await supabase
+        .from("system_distribution_batch_logs")
+        .select("status, total_tasks, metrics")
+        .gte("batch_date", startDate)
+        .lte("batch_date", endDate)
+        .eq("organization_id", ORG_ID);
+      if (error) throw error;
+      const rows = data ?? [];
+      const total = rows.length;
+      if (total === 0) return { total: 0, successRate: 0, avgTasks: 0, avgDuration: 0 };
+      const success = rows.filter((b) => b.status === "completed").length;
+      const avgTasks = Math.round(rows.reduce((s, b) => s + (b.total_tasks ?? 0), 0) / total);
+      const withDur = rows.filter(
+        (b) => (b.metrics as { duration_ms?: number } | null)?.duration_ms,
+      );
+      const avgDuration = withDur.length
+        ? Math.round(
+            withDur.reduce(
+              (s, b) => s + ((b.metrics as { duration_ms?: number } | null)?.duration_ms ?? 0),
+              0,
+            ) /
+              withDur.length /
+              1000,
+          )
+        : 0;
+      return { total, successRate: Math.round((success / total) * 100), avgTasks, avgDuration };
     },
   });
 }

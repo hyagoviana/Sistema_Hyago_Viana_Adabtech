@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
@@ -13,12 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import {
-  useDistributionResults,
+  useDistributionDayAggregate,
   useBatchLog,
   useSincronizarDistribuicao,
 } from "@/hooks/useDistribuicaoDashboard";
+import { useExecutorMappings } from "@/hooks/useDistribuicao";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/controladoria/distribuicao/")({
@@ -27,8 +27,10 @@ export const Route = createFileRoute("/controladoria/distribuicao/")({
 
 function DistribuicaoPainelPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const { data: resultsData, isLoading: resultsLoading } = useDistributionResults(date);
+  // Agregado do DIA INTEIRO (não só 50 linhas) — KPIs/fluxo/carga corretos.
+  const { data: agg, isLoading: resultsLoading } = useDistributionDayAggregate(date);
   const { data: batchLog, isLoading: batchLoading } = useBatchLog(date);
+  const { data: executors } = useExecutorMappings();
 
   // Sincronizacao sob demanda — mesmo gate da rota (controladoria/edit).
   const podeSincronizar = usePodeEditar("controladoria");
@@ -52,29 +54,30 @@ function DistribuicaoPainelPage() {
     );
   }
 
-  const results = resultsData?.data ?? [];
-  const flowCounts = useMemo(() => {
-    const counts = { ABSOLUTE: 0, COMPLEX: 0, GENERAL: 0 };
-    results.forEach((r) => {
-      if (!r.blocked && r.flow in counts) counts[r.flow as keyof typeof counts]++;
-    });
-    return counts;
-  }, [results]);
+  // De-para executor_id (UUID) → nome, p/ a "Carga por Executor".
+  const execNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of (executors ?? []) as Array<{
+      executor_id: string;
+      system_users?: { full_name?: string | null } | null;
+    }>) {
+      if (e.executor_id && e.system_users?.full_name)
+        m.set(e.executor_id, e.system_users.full_name);
+    }
+    return m;
+  }, [executors]);
 
-  const executorLoads = useMemo(() => {
-    const loads: Record<string, { name: string; points: number }> = {};
-    results
-      .filter((r) => !r.blocked)
-      .forEach((r) => {
-        if (!loads[r.executor_id]) loads[r.executor_id] = { name: r.executor_id, points: 0 };
-        loads[r.executor_id].points += r.final_points;
-      });
-    return Object.values(loads).sort((a, b) => b.points - a.points);
-  }, [results]);
-
-  const alertResults = results.filter((r) => r.alerts?.length > 0);
-  const blockedCount = results.filter((r) => r.blocked).length;
-  const successCount = results.filter((r) => !r.blocked).length;
+  const flowCounts = agg?.flowCounts ?? { ABSOLUTE: 0, COMPLEX: 0, GENERAL: 0 };
+  const executorLoads = (agg?.executorLoads ?? []).map((l) => ({
+    name: execNameById.get(l.executor_id) ?? `${l.executor_id.slice(0, 8)}…`,
+    points: l.points,
+  }));
+  const alertResults = agg?.alertRows ?? [];
+  // successCount = distribuídas do dia; blockedCount vem do batch (autoritativo,
+  // pois a tabela de resultados só guarda as não-bloqueadas).
+  const successCount = agg?.count ?? 0;
+  const hasData = successCount > 0;
+  const blockedCount = batchLog?.failed ?? 0;
 
   const statusColors: Record<string, string> = {
     completed: "bg-green-100 text-green-700",
@@ -127,7 +130,7 @@ function DistribuicaoPainelPage() {
 
       {resultsLoading || batchLoading ? (
         <Skeleton className="h-[400px]" />
-      ) : results.length === 0 ? (
+      ) : !hasData ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             Nenhuma distribuicao realizada em {date}
@@ -249,8 +252,6 @@ function DistribuicaoPainelPage() {
                       <th className="text-left py-2">Tarefa</th>
                       <th className="text-left py-2">Alertas</th>
                       <th className="text-left py-2">Data Final</th>
-                      <th className="text-center py-2">Status</th>
-                      <th className="py-2">Acao</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -265,25 +266,6 @@ function DistribuicaoPainelPage() {
                           ))}
                         </td>
                         <td className="py-2">{r.final_date}</td>
-                        <td className="py-2 text-center">
-                          {r.blocked ? (
-                            <Badge variant="destructive" className="text-xs">
-                              Bloqueada
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-green-100 text-green-700 text-xs">OK</Badge>
-                          )}
-                        </td>
-                        <td className="py-2 text-center">
-                          {r.blocked && (
-                            <Link
-                              to="/controladoria/distribuicao/excecoes"
-                              className="text-xs text-primary underline"
-                            >
-                              Tratar
-                            </Link>
-                          )}
-                        </td>
                       </tr>
                     ))}
                   </tbody>

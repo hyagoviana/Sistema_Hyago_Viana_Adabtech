@@ -13,7 +13,8 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
-import { runSync, ymd, type SyncSummary } from "@/lib/distribuicao/sync-core";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { runSync, ymd, ORG_ID, type SyncSummary } from "@/lib/distribuicao/sync-core";
 import { syncTaskTypesCore, type SyncTaskTypesResult } from "@/lib/distribuicao/sync-task-types";
 
 export type { SyncSummary } from "@/lib/distribuicao/sync-core";
@@ -38,6 +39,91 @@ export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
       const distributionDate = data.distributionDate ?? ymd(new Date());
       const windowDays = data.windowDays ?? 3;
       return await runSync(distributionDate, windowDays);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err instanceof Error ? new Error(err.message) : new Error(String(err));
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// CALENDÁRIO — tarefas distribuídas de UM dia (por final_date), com RBAC:
+//   • admin  → vê as tarefas de TODOS os executores;
+//   • demais → vê SÓ as suas (executor_id = próprio system_users.id).
+// O executor_id nos resultados é FK direto p/ system_users, então o filtro por
+// usuário é trivial. Só leitura. Gate: módulo controladoria (view).
+// ---------------------------------------------------------------------------
+export type CalendarTask = {
+  id: string;
+  task_id: string;
+  nome_processo: string | null;
+  numero_processo: string | null;
+  tipo_nome: string | null;
+  flow: string;
+  final_date: string | null;
+  executor_id: string | null;
+  executor_nome: string | null;
+};
+
+export const listDistributionTasksByDayFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "date deve ser YYYY-MM-DD") })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<CalendarTask[]> => {
+    try {
+      const { id: userId, role } = await requireModule("controladoria", "view");
+      const isAdmin = role === "admin";
+      const sb = getSupabaseAdmin();
+
+      let q = sb
+        .from("system_distribution_results")
+        .select("id, task_id, flow, final_date, executor_id, raw_data")
+        .eq("organization_id", ORG_ID)
+        .eq("final_date", data.date)
+        .eq("blocked", false)
+        .order("executor_id");
+      // RBAC: não-admin só enxerga as próprias tarefas.
+      if (!isAdmin) q = q.eq("executor_id", userId);
+
+      const { data: rows, error } = await q;
+      if (error) throw new AuthError(error.message, 500);
+
+      // De-para executor_id → nome (system_users). Uma query só.
+      const execIds = [
+        ...new Set((rows ?? []).map((r) => r.executor_id).filter((v): v is string => !!v)),
+      ];
+      const nameById = new Map<string, string>();
+      if (execIds.length) {
+        const { data: users } = await sb
+          .from("system_users")
+          .select("id, full_name")
+          .in("id", execIds);
+        for (const u of users ?? []) if (u.full_name) nameById.set(u.id, u.full_name);
+      }
+
+      return (rows ?? []).map((r) => {
+        const rd = (r.raw_data ?? {}) as {
+          nome_processo?: string | null;
+          numero_processo?: string | null;
+          tipo_nome?: string | null;
+        };
+        return {
+          id: r.id,
+          task_id: r.task_id,
+          nome_processo: rd.nome_processo ?? null,
+          numero_processo: rd.numero_processo ?? null,
+          tipo_nome: rd.tipo_nome ?? null,
+          flow: r.flow,
+          final_date: r.final_date,
+          executor_id: r.executor_id,
+          executor_nome: r.executor_id ? (nameById.get(r.executor_id) ?? null) : null,
+        };
+      });
     } catch (err: unknown) {
       if (err instanceof AuthError) {
         setResponseStatus(err.status);
