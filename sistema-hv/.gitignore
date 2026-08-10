@@ -42,6 +42,10 @@ dist-ssr
 # Backups de cadastros (contêm CPF/dados pessoais — NUNCA versionar)
 backup-cadastros-*.json
 
+# De-para PES↔nome↔código do ProJuris (dados pessoais — NUNCA versionar)
+scripts/depara-pes-codigo.json
+scripts/colaboradores-normalizado.json
+
 # smoke de UI (screenshots gerados)
 .smoke-ui/
 .smoke-ui-session/

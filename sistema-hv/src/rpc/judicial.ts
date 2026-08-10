@@ -46,7 +46,9 @@ export const getCaseJudicialFn = createServerFn({ method: "GET" })
       const [{ data: caso }, { data: processo }, { data: tarefas }] = await Promise.all([
         sb
           .from("system_cases")
-          .select("id, projuris_codigo_processo, projuris_numero_processo, sigiloso")
+          .select(
+            "id, projuris_codigo_processo, projuris_numero_processo, sigiloso, honorarios_estimados_centavos, honorarios_provisionados_centavos",
+          )
           .eq("id", data.caseId)
           .maybeSingle(),
         sb
@@ -66,6 +68,13 @@ export const getCaseJudicialFn = createServerFn({ method: "GET" })
         numeroProcesso: caso?.projuris_numero_processo ?? processo?.numero_processo ?? null,
         processo: processo ?? null,
         tarefas: tarefas ?? [],
+        // Honorários MANUAIS do SHV (não vêm do ProJuris) — em centavos.
+        honorariosEstimadosCentavos:
+          (caso as { honorarios_estimados_centavos?: number | null } | null)
+            ?.honorarios_estimados_centavos ?? null,
+        honorariosProvisionadosCentavos:
+          (caso as { honorarios_provisionados_centavos?: number | null } | null)
+            ?.honorarios_provisionados_centavos ?? null,
       };
     }),
   );
@@ -125,6 +134,38 @@ export const setCaseProjurisLinkFn = createServerFn({ method: "POST" })
         .eq("id", data.caseId);
       if (error) throw new AuthError("Falha ao salvar o vínculo ProJuris.", 500);
       return { codigoProcesso: codigo, numeroProcesso: numero };
+    }),
+  );
+
+// ----------------------------------------------------------------------------
+// Honorários contratuais MANUAIS (estimados/provisionados) — campos do SHV, NÃO
+// vêm do ProJuris. Em centavos; null limpa. Gate: judicial (sigilo) + controladoria:edit.
+// ----------------------------------------------------------------------------
+const honorariosSchema = z.object({
+  caseId: z.string().uuid(),
+  estimadosCentavos: z.number().int().nonnegative().nullable().optional(),
+  provisionadosCentavos: z.number().int().nonnegative().nullable().optional(),
+});
+
+export const setCaseHonorariosJudicialFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => honorariosSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireJudicial(data.caseId);
+      await requireModule("controladoria", "edit");
+      const patch: Record<string, number | null> = {};
+      if (data.estimadosCentavos !== undefined)
+        patch.honorarios_estimados_centavos = data.estimadosCentavos;
+      if (data.provisionadosCentavos !== undefined)
+        patch.honorarios_provisionados_centavos = data.provisionadosCentavos;
+      if (Object.keys(patch).length === 0) return { ok: true as const };
+      const sb = getSupabaseAdmin();
+      const { error } = await sb
+        .from("system_cases")
+        .update(patch as never)
+        .eq("id", data.caseId);
+      if (error) throw new AuthError("Falha ao salvar os honorários.", 500);
+      return { ok: true as const };
     }),
   );
 

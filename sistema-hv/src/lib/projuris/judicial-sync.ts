@@ -60,6 +60,23 @@ function asStr(v: unknown): string | null {
   return null;
 }
 
+// A API ADV devolve MUITOS campos do processo como {chave, valor} (ex.:
+// orgaoJudicial, classeCnj, situacaoProcesso, fase, instanciaCnj, vara). Extrai o
+// RÓTULO legível (valor). Aceita também string/número cru.
+function pickValor(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === "object" && !Array.isArray(v)) {
+    const o = v as Record<string, unknown>;
+    return asStr(o.valor) ?? asStr(o.nome) ?? asStr(o.descricao);
+  }
+  return asStr(v);
+}
+
+// valor da ação → centavos. Só converte número (reais); string/objeto → null.
+function toCentavos(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? Math.round(v * 100) : null;
+}
+
 // Mapa código→nome dos usuários ProJuris (/usuario → simpleDto[{chave,valor}]).
 // Cacheado por processo de sync (é a mesma lista para todos os casos).
 async function fetchUserMap(client: ProjurisClient): Promise<Map<string, string>> {
@@ -140,10 +157,9 @@ export async function syncCaseJudicial(caseId: string): Promise<JudicialSyncResu
     const proc = await client.projurisGet<Record<string, unknown>>(`processo/${pid}`);
     const numero =
       asStr(proc.numeroProcesso) ?? asStr(proc.numeroProcessoUnico) ?? asStr(proc.numero);
-    const tribunal =
-      asStr(proc.tribunal) ?? asStr(proc.nomeTribunal) ?? asStr(proc.orgaoJulgador) ?? null;
-    const orgao = asStr(proc.orgao) ?? asStr(proc.nomeOrgao) ?? asStr(proc.orgaoJulgador) ?? null;
-    const fase = asStr(proc.fase) ?? asStr(proc.nomeFase) ?? null;
+    // No ADV o "órgão judicial" concentra tribunal/órgão julgador. Vem {chave,valor}.
+    const orgaoJulgador = pickValor(proc.orgaoJudicial) ?? pickValor(proc.orgaoJulgador);
+    const fase = pickValor(proc.fase) ?? pickValor(proc.nomeFase);
     const assunto = asStr(proc.assunto) ?? asStr(proc.nomeAssunto) ?? null;
 
     const { error: upErr } = await sb.from("system_case_judicial_processos").upsert(
@@ -152,10 +168,27 @@ export async function syncCaseJudicial(caseId: string): Promise<JudicialSyncResu
         case_id: caseId,
         projuris_codigo_processo: codigo,
         numero_processo: numero,
-        tribunal,
-        orgao,
+        tribunal: orgaoJulgador,
+        orgao: orgaoJulgador,
         fase,
         assunto,
+        // Campos judiciais espelhados (docx Thiago) — extraídos do {chave,valor}.
+        orgao_julgador: orgaoJulgador,
+        classe_cnj: pickValor(proc.classeCnj),
+        situacao: pickValor(proc.situacaoProcesso),
+        instancia: pickValor(proc.instanciaCnj),
+        vara: pickValor(proc.vara),
+        tipo_justica: pickValor(proc.tipoJustica),
+        data_distribuicao: msToIso(proc.dataDistribuicao),
+        valor_causa_centavos: toCentavos(proc.valorAcao),
+        // Monitoramento (Push) + última decisão (docx Thiago, parte 2). Tudo do
+        // próprio /processo (o endpoint de andamentos é instável/524).
+        monitoramento_push:
+          typeof proc.capturaHabilitada === "boolean" ? proc.capturaHabilitada : null,
+        data_julgamento: msToIso(proc.dataJulgamento),
+        resultado_encerramento: pickValor(proc.resultadoEncerramento),
+        descricao_encerramento: asStr(proc.descricaoEncerramento),
+        data_ultima_modificacao: msToIso(proc.dataUltimaModificacao),
         raw: proc as never,
         synced_at: new Date().toISOString(),
       },

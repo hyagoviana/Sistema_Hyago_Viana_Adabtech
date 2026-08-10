@@ -7,6 +7,7 @@ import {
   getCaseJudicialFn,
   getCaseSigiloStatusFn,
   listCaseJudicialAndamentosFn,
+  setCaseHonorariosJudicialFn,
   setCaseProjurisLinkFn,
   syncCaseJudicialFn,
 } from "@/rpc/judicial";
@@ -38,6 +39,20 @@ export function useSetCaseProjurisLink(caseId: string) {
   return useMutation({
     mutationFn: (vars: { codigoProcesso: string | null; numeroProcesso: string | null }) =>
       fn({ data: { caseId, ...vars } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-judicial", caseId] }),
+  });
+}
+
+// Campos judiciais espelhados — honorários MANUAIS (estimados/provisionados, em
+// centavos). null limpa. Gate controladoria:edit no servidor. Invalida o espelho.
+export function useSetCaseHonorariosJudicial(caseId: string) {
+  const fn = useServerFn(setCaseHonorariosJudicialFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      estimadosCentavos?: number | null;
+      provisionadosCentavos?: number | null;
+    }) => fn({ data: { caseId, ...vars } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["case-judicial", caseId] }),
   });
 }
