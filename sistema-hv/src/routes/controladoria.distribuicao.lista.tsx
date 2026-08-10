@@ -73,6 +73,7 @@ const FLOW_COLORS: Record<string, string> = {
 
 type ResultRaw = {
   numero_processo?: string | null;
+  nome_processo?: string | null;
   tipo_codigo?: string | null;
   tipo_nome?: string | null;
 } | null;
@@ -224,9 +225,17 @@ function ListaDistribuicoesPage() {
     return "·";
   }
 
-  function resolveProcesso(r: ResultRow): string {
+  // "Processo" = NOME/descrição do processo (assunto do ProJuris). Fallback ao
+  // nº CNJ e por fim ao código interno, para linhas antigas sem nome gravado.
+  function resolveNomeProcesso(r: ResultRow): string {
     const rd = (r?.raw_data ?? {}) as NonNullable<ResultRaw>;
-    return rd.numero_processo || r?.process_id || "·";
+    return rd.nome_processo || rd.numero_processo || r?.process_id || "·";
+  }
+
+  // "Número do processo" = nº judicial CNJ.
+  function resolveNumeroProcesso(r: ResultRow): string {
+    const rd = (r?.raw_data ?? {}) as NonNullable<ResultRaw>;
+    return rd.numero_processo || "·";
   }
 
   function toggleFlow(f: string) {
@@ -236,12 +245,14 @@ function ListaDistribuicoesPage() {
 
   function exportCSV() {
     const csvEscape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
-    const header = "Task ID;Processo;Executor;Tipo;Fluxo;Data Final;Pontos;Alertas;Status\n";
+    const header =
+      "Task ID;Processo;Numero do processo;Executor;Tipo;Fluxo;Data Final;Pontos;Alertas;Status\n";
     const rows = results
       .map((r) =>
         [
           r.task_id,
-          resolveProcesso(r),
+          resolveNomeProcesso(r),
+          resolveNumeroProcesso(r),
           resolveExecutor(r),
           resolveTipo(r),
           r.flow,
@@ -415,6 +426,7 @@ function ListaDistribuicoesPage() {
                   <tr className="border-b">
                     <th className="text-left py-2">Tarefa</th>
                     <th className="text-left py-2">Processo</th>
+                    <th className="text-left py-2">Número do processo</th>
                     <th className="text-left py-2">Executor</th>
                     <th className="text-left py-2">Tipo</th>
                     <th className="text-center py-2">Fluxo</th>
@@ -440,7 +452,10 @@ function ListaDistribuicoesPage() {
                         >
                           {r.task_id}
                         </td>
-                        <td className="py-2 text-xs">{resolveProcesso(r)}</td>
+                        <td className="py-2 text-xs">{resolveNomeProcesso(r)}</td>
+                        <td className="py-2 text-xs font-mono text-[11px]">
+                          {resolveNumeroProcesso(r)}
+                        </td>
                         <td className="py-2 text-xs">
                           {overridden
                             ? (executorNameById.get(appr!.override_executor_id!) ??
@@ -570,7 +585,11 @@ function ListaDistribuicoesPage() {
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Processo:</span>{" "}
-                  {resolveProcesso(selected)}
+                  {resolveNomeProcesso(selected)}
+                </div>
+                <div>
+                  <span className="font-medium text-muted-foreground">Número do processo:</span>{" "}
+                  {resolveNumeroProcesso(selected)}
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Tipo:</span>{" "}

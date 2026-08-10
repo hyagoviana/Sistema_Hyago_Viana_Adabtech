@@ -41,6 +41,13 @@ import { useAuth } from "@/lib/auth";
 
 const MANUAL_ACTIONS = new Set(["nota_manual", "marco"]);
 
+// Cartão de alto relevo de cada item da linha do tempo (estilo Trello elevado).
+// Sombra em duas camadas + leve elevação no hover para separar bem os cards.
+const CARD =
+  "flex items-start gap-3 rounded-xl border border-[var(--border)] bg-white p-3.5 " +
+  "shadow-[0_1px_2px_rgba(16,24,40,0.06),0_2px_6px_rgba(16,24,40,0.08)] " +
+  "hover:shadow-[0_6px_18px_rgba(16,24,40,0.12)] hover:-translate-y-px transition-all";
+
 function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
@@ -338,7 +345,7 @@ export function CaseFeed({ caseId }: { caseId: string }) {
               const canEdit = isOwner;
               const canDelete = isOwner || isAdmin;
               return (
-                <li key={`c-${item.id}`} className="flex items-start gap-2.5">
+                <li key={`c-${item.id}`} className={CARD}>
                   <Avatar name={item.author} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 flex-wrap mb-1">
@@ -365,7 +372,7 @@ export function CaseFeed({ caseId }: { caseId: string }) {
                       />
                     ) : (
                       <>
-                        <div className="rounded-xl border border-[var(--border)] bg-white px-3.5 py-2.5 text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words shadow-sm">
+                        <div className="text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words">
                           {item.body}
                         </div>
                         {(canEdit || canDelete) && (
@@ -404,7 +411,7 @@ export function CaseFeed({ caseId }: { caseId: string }) {
             const e = item.event;
             if (item.manual) {
               return (
-                <li key={`e-${item.id}`} className="flex items-start gap-2.5">
+                <li key={`e-${item.id}`} className={CARD}>
                   <Avatar name={e.triggered_by_name ?? null} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 flex-wrap mb-1">
@@ -431,7 +438,7 @@ export function CaseFeed({ caseId }: { caseId: string }) {
                       />
                     ) : (
                       <>
-                        <div className="rounded-xl border border-[var(--border)] bg-white px-3.5 py-2.5 text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words shadow-sm">
+                        <div className="text-[13.5px] text-[var(--navy)] whitespace-pre-wrap break-words">
                           {renderEventLabel(e)}
                         </div>
                         <div className="mt-1 flex gap-3 text-[11px] text-muted-foreground pl-1">
@@ -460,21 +467,23 @@ export function CaseFeed({ caseId }: { caseId: string }) {
               );
             }
 
-            // ── Evento AUTOMÁTICO — linha de atividade slim (sem balão, read-only) ─
+            // ── Evento AUTOMÁTICO — card read-only (mesmo alto relevo) ───────────
             return (
-              <li key={`e-${item.id}`} className="flex items-start gap-2.5">
+              <li key={`e-${item.id}`} className={CARD}>
                 <Avatar name={e.triggered_by_name ?? null} />
-                <div className="flex-1 min-w-0 pt-1">
-                  <div className="text-[12.5px] whitespace-pre-wrap break-words">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
                     {e.triggered_by_name && (
-                      <strong className="font-semibold text-[var(--navy)]">
+                      <span className="text-[13px] font-semibold text-[var(--navy)]">
                         {e.triggered_by_name}
-                      </strong>
-                    )}{" "}
-                    <span className="text-muted-foreground">{renderEventLabel(e)}</span>
+                      </span>
+                    )}
+                    <span className="text-[11px] text-muted-foreground">
+                      {fmtDateTime(item.created_at)}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {fmtDateTime(item.created_at)}
+                  <div className="text-[13px] text-[var(--navy)]/80 whitespace-pre-wrap break-words">
+                    {renderEventLabel(e)}
                   </div>
                 </div>
               </li>

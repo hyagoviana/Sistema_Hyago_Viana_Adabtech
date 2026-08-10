@@ -606,6 +606,11 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
         blocked: false,
         raw_data: {
           numero_processo: numeroProcessoByCode.get(r.process_id) ?? null,
+          // Nome/descrição do processo = assunto do ProJuris (descricao/nomePasta
+          // vêm quase sempre nulos; o assunto é o rótulo legível: "INDENIZAÇÃO
+          // PMMB", "PREVIDENCIÁRIO"...). Coluna "Processo" da lista usa isto; o
+          // CNJ vai na coluna "Número do processo".
+          nome_processo: processAssunto.get(r.process_id) || null,
           tipo_codigo: tipo?.codigo ?? null,
           tipo_nome: tipo?.nome ?? null,
         },
