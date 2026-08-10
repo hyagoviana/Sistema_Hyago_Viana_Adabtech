@@ -193,6 +193,12 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // M13 — marcadores por processo (v1 de COMPLEXO/COLETIVO). Capturados no mesmo
   // GET /processo/{cod} (sem request extra), como o normalizer já faz p/ tema.
   const processMarcadores = new Map<string, string[]>();
+  // DESCOBERTA (2026-08-08): agrega TODOS os marcadores CRUS vistos em qualquer
+  // processo (independe de casar no MARCADOR_MAP ou de ter tema mapeado). Vai no
+  // relatório (metrics.marcadores_vistos) — quando a equipe do Thiago começar a
+  // preencher COMPLEXO/COLETIVO, os nomes REAIS aparecem aqui e é só adicioná-los
+  // em src/lib/distribuicao/marcadores.ts (sem adivinhar).
+  const marcadoresVistos = new Map<string, number>();
 
   const MAX_PROC = Number(process.env.DISTRIBUICAO_MAX_PROCESSOS ?? "150") || 150;
   const chosen = procCodes.slice(0, MAX_PROC);
@@ -204,7 +210,9 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       const assunto = String(proc.assunto ?? proc.nomeAssunto ?? "");
       processAssunto.set(pid, assunto);
       // M13 — marcadores do processo (COMPLEXO/COLETIVO v1). SÓ LEITURA.
-      processMarcadores.set(pid, marcadorNames(proc.marcadorWs));
+      const marc = marcadorNames(proc.marcadorWs);
+      processMarcadores.set(pid, marc);
+      for (const m of marc) marcadoresVistos.set(m, (marcadoresVistos.get(m) ?? 0) + 1);
     } catch {
       // Processo ilegivel -> pula (sem tema nao ha o que distribuir).
       continue;
@@ -421,9 +429,33 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   const tasks: Task[] = [];
   const processMap = new Map<string, Process>();
   let order = 0;
+  // Thiago (2026-08-08): tipos de tarefa que caíram no FALLBACK (sem de-para) —
+  // para o relatório. A controladoria ajusta a pontuação depois no ProJuris.
+  const tipoFallback = new Set<string>();
+  // De-dup por task_id: tarefas sem codigoTarefa geram id `pid-tipo`, que pode
+  // colidir (2 tarefas do mesmo tipo no mesmo processo). O results tem UNIQUE
+  // (task_id, date, org) — sem dedup, o insert quebra.
+  const seenTaskIds = new Set<string>();
   for (const rt of rawTasks) {
-    const tt = ttMap.get(rt.tipo_codigo);
-    if (!tt) continue; // tipo nao mapeado
+    if (seenTaskIds.has(rt.task_id)) continue;
+    seenTaskIds.add(rt.task_id);
+    // "Puxa TODAS as tarefas do ProJuris." Se o tipo não está no de-para, usa
+    // FALLBACK (pontuação padrão 1, sem complexidade/temporal/exclusivo) em vez
+    // de descartar a tarefa. Assim nada é bloqueado por "tipo não mapeado".
+    let tt = ttMap.get(rt.tipo_codigo);
+    if (!tt) {
+      tipoFallback.add(rt.tipo_codigo);
+      tt = {
+        projuris_tipo_codigo: rt.tipo_codigo,
+        motor_task_type_id: "FALLBACK",
+        points: 1,
+        complexity_level: 0,
+        temporal_level: 0,
+        exclusive_executor_id: null,
+        prazo_previsto_dias: null,
+        prazo_fatal_dias: null,
+      };
+    }
     const assunto = processAssunto.get(rt.process_id) ?? "";
     // H4: casamento por NOME NORMALIZADO (acento/caixa/espaco) contra o de-para,
     // no lugar do get exato do assunto cru. O assunto do PROCESSO e a fonte
@@ -612,6 +644,12 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       tarefas_mapeadas: tasks.length,
       // H4: quantos processos ficaram sem tema mapeado (auditoria de cobertura).
       temas_nao_mapeados: preBatchAlerts["ALT-TEMA-001"] ?? 0,
+      // Thiago (2026-08-08): tipos de tarefa que caíram no FALLBACK (pontuação 1).
+      // A controladoria ajusta no ProJuris; o motor NÃO descarta a tarefa.
+      tipos_fallback: [...tipoFallback],
+      // Descoberta de marcadores: TODOS os marcadores crus vistos (nome → qtd).
+      // Quando aparecer COMPLEXO/COLETIVO real, adicionar em marcadores.ts.
+      marcadores_vistos: Object.fromEntries(marcadoresVistos),
       // H4 (AC-6): amostra de diagnostico do de-para de tema (assunto cru ->
       // motor_theme_id resolvido ou null) — cap 50 p/ nao inflar o metrics.
       tema_diag: [...temaDiag.entries()]

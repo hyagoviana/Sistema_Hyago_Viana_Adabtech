@@ -16,7 +16,11 @@ export type MarcadorSignal = { collective?: boolean; complexity_level?: 1 | 2 };
 
 // Mapa de marcador NORMALIZADO → sinal. Lista inicial tolerante a grafia; os
 // nomes EXATOS no ProJuris devem ser confirmados com o owner (o time "começa a
-// preencher"). Estender aqui conforme os marcadores reais aparecem no diag.
+// preencher"). ⚠️ Em 2026-08-08 o `marcadorWs` dos processos estava VAZIO (a
+// equipe ainda não marcou nada) — por isso nada casa ainda. DESCOBERTA: rode o
+// motor e olhe `metrics.marcadores_vistos` no system_distribution_batch_logs;
+// assim que um COMPLEXO/COLETIVO real aparecer, é só adicioná-lo aqui (sem
+// adivinhar). A chave é o nome NORMALIZADO (normalizeTemaKey).
 export const MARCADOR_MAP: Record<string, MarcadorSignal> = {
   COLETIVO: { collective: true },
   "ACAO COLETIVA": { collective: true },
