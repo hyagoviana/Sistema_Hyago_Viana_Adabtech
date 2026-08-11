@@ -100,7 +100,7 @@ export async function createCase(
   // Validar cliente existe e está ativo (já busca drive_folder_id para criar subpasta)
   const { data: client, error: clientErr } = await sb
     .from("system_clients")
-    .select("id, drive_folder_id")
+    .select("id, full_name, drive_folder_id")
     .eq("id", input.client_id)
     .is("deleted_at", null)
     .single();
@@ -279,10 +279,9 @@ export async function createCase(
   let result = created;
   if (client.drive_folder_id) {
     try {
-      // #5 (reunião 2026-08-10) — nome humanizado da pasta: "{Tema} - {código}"
-      // (ex.: "Indenização Mais Médicos - MAISMEDICOS-2026-0173") em vez de
-      // "Caso-CÓDIGO". A pasta já fica DENTRO da pasta do cliente, então não
-      // repetimos o nome do cliente.
+      // #5 (reunião 2026-08-10) — nome humanizado da pasta: "{Tema} — {Cliente}"
+      // (ex.: "Indenização Mais Médicos — Luciano Holanda") em vez de "Caso-CÓDIGO".
+      // Thiago pediu o nome da pessoa no nome da pasta, igual aos documentos.
       let temaNome: string | null = null;
       try {
         const { data: st } = await sb
@@ -295,9 +294,9 @@ export async function createCase(
       } catch {
         temaNome = null;
       }
-      const folderName = temaNome
-        ? `${temaNome} - ${created.case_code}`
-        : `Caso ${created.case_code}`;
+      const clienteNome = client.full_name?.trim() || null;
+      const folderName =
+        [temaNome, clienteNome].filter(Boolean).join(" — ") || `Caso ${created.case_code}`;
       const folder = await createFolder(folderName, client.drive_folder_id);
       await sb
         .from("system_cases")
@@ -1190,6 +1189,20 @@ export async function updateCaseCanonicalFields(
     const v = merged[k];
     if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0))
       delete merged[k];
+  }
+
+  // #9 (reunião 2026-08-10) — NO-OP guard. Se o merge não muda NADA em relação ao
+  // que já está gravado, não grava nem emite o evento "Dados do serviço
+  // atualizados" (antes ele spammava a linha do tempo quando um write redundante
+  // chegava — ex.: edição de def na pipeline reprocessando casos sem mudar valor).
+  const stableEq = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+    const ak = Object.keys(a).sort();
+    const bk = Object.keys(b).sort();
+    if (ak.length !== bk.length) return false;
+    return ak.every((k, i) => bk[i] === k && JSON.stringify(a[k]) === JSON.stringify(b[k]));
+  };
+  if (stableEq(merged, current)) {
+    return { id: caseId, canonical_fields: current as never };
   }
 
   const { data, error } = await sb
