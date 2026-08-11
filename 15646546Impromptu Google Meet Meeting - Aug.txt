@@ -1,0 +1,427 @@
+Impromptu Google Meet Meeting - August 10
+VIEW RECORDING - 68 mins (No highlights): 
+
+---
+
+0:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mandei link de novo aqui para Iago, mas eu já estava sabendo também.
+
+0:22 - Controladoria HV
+  Nicole, está aí? Oi, Tito, sim. Iago está aí na sala dele? Está sim. Se eu puder só lembrar ele lá da reunião.
+
+0:36 - Dr. Thiago Correia
+  Vou falar com Só dá uma passadinha.
+
+1:32 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Opa, tudo bom, gente? Boa tarde. Boa tarde. Boa Boa tarde, Matheus.
+
+1:43 - Hyago Viana
+  Boa tarde.
+
+1:45 - Matheus Torquato
+  Podemos iniciar? Você quer falar alguma coisa, Thiago?
+
+1:50 - Dr. Thiago Correia
+  Tem umas questões que eu anotei aqui quando eu fui mexendo, mas como já tem um tempo que a gente reuniu todo mundo, eu não sei se vocês querem começar e...
+
+2:00 - Hyago Viana
+  Passaram alguma questão direto para o Hyago também, ou se vocês querem começar com outro ponto do que a gente estava conversando, ou se eu começo e a vai conversando como a gente já estava fazendo, e o Hyago vai entendendo e trazendo o que ele queira pontuar.  Tá, eu vou dar uma passada então nas mudanças para o Hyago conseguir visualizar, porque aí qualquer coisa, como a gente ainda está ali na parte do motor, se o Hyago precisar fazer outra coisa, ele pode sair e a gente continua conversando.  Acho que fica melhor que atualizei também. Isso, então pronto. Beleza.
+
+2:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Boa tarde, pessoal. A gente fez algumas atualizações aqui, Hyago, inclusive já importamos toda aquela parte do Mais Médicos para cá, por isso que tem 393 casos que o Thiago tinha pedido para a gente importar, e a gente fez algumas mudanças aqui.  foram mais mudanças em relação à utilização do que propriamente integrações, eram mudanças que a gente fez. Fiz aqui para a utilização do time operacional, que é como o Thiago foi nos passando.  Então, agora, continuando aquele processo dentro das pipelines operacionais, aí dentro da pipeline operacional agora, a gente tem essa visualização aqui, que mostra qual é o processo do funil que ela se encontra, e cada um desses processos tem vários funils.  Então, tem nove funils, oito funils, oito funils, dez funils dentro dessa esteira. Então, eu entro na esteira, dentro da esteira eu tenho todos os casos, né, que estão vinculados aqui, dos clientes.  Então, essa é uma das esteiras mais médicos, e eu consigo visualizar entre esteiras que são deste determinado tema. Então, eu consigo ir para inadimplência deste determinado tema.  Se siguem primeira parcela, segunda parcela, terceira parcela, então seriam Kanbans dentro do Kanban do mais novo. Ele vai ser duplicado para aquela determinada esteira para poderes trabalharem dentro daquela esteira, porque ela é diferente desta aqui de visualização, tanto que aqui é menorzinho e os outros vão ficando maior dentro deste processo.
+
+4:14 - Dr. Thiago Correia
+  Foram muitas utilizações baseadas no que o Thiago disse que o pessoal precisaria utilizar.
+
+4:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, dentro das etapas agora, a gente tem checklists também, dentro da etapa que a gente se encontra do Kanban, então a gente consegue vir editar etapas e colocar um checklist para passar, igual a gente fez no financeiro, agora tem dentro desse lado operacional, caso a pessoa queira prosseguir dentro daquele determinado campo, então ele preencheu as datas do checklist dessa determinada base da pipeline, ele pula para a próxima etapa.  E assim ele vai fazendo, consequentemente, dentro dos processos que a gente tem. A gente também subiu a área de clientes para cá, para conseguir visualizar esses clientes e quais são os casos dele, porque eles só ficavam dentro...  A dá parte de cadastro aqui, então a gente subiu para cá dentro desse processo, e agora dentro do cliente os casos são separados, quando a gente abre aqui, agora a gente melhorou a visualização dessa determinada esteira, que em vez do financeiro ficar aqui alocado, fica só o rastro desse determinado cliente, mas a visualização financeira fica aqui dentro desse processo, então a vai vincular com a conta azul, para poder fazer a sincronatização que a gente já fez e gerar toda a parte financeira, então ficou uma partezinha separada.  A parte de documentos, a gente também deixou ela separada, antes ela ficava dentro da mesma ficha do cliente ali, para poder melhorar a visualização, e essa parte judicial é a parte que a gente está agora em relação ao motor do ProJuris, já está integrado, mas aí a gente está mapeando ali alguns processos para poder fazer, já mostro aqui onde é ele fica dentro disso.  Então aqui dentro dessa ficha, agora esses são os checklists das etapas, que eles se encontram, mas a gente tem também a parte de dados do caso.
+
+5:57 - Hyago Viana
+  Então, todos...
+
+6:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  os campos que são feitos lá na pipeline deste determinado caso, eles são gerados para cá, para que a gente consiga buscar ele como filtros lá naquelas pipelines de Kanban.  Tudo foi para poderem se conectarem dentro desse processo, né? Então, a gente vai na pipeline do Kanban e cria esses determinados filtros, que podem ser filtros de adicionar, mais uma opção, filtro pai e filho dentro do processo.  E aí eles caem como dados deste caso naquele determinado cliente. Então, essa construção ocorre aqui dentro da criação das etapas, que é em editar campos.  Esses campos aqui é um processo que a gente fez, mas a gente também fez daquele outro formato que foi criado pelo Thiago, que é campos personalizados.  Aqui dentro de campos personalizados é a mesma visualização que a gente viu lá do outro processo, só que aqui é separado de uma forma melhor para visualizar.  Por exemplo... Aqui tem os campos, que estão lá pertencentes, e temos também como editar os campos dentro do cliente, que são aqueles campos que a gente já tinha montado, para poder ser campo adicional ou não ser campo adicional.  Às vezes eles precisam de um campo adicional dentro do caso, mas ele não é um filtro para pipeline, então a gente colocou essa opção aqui para poder criar nesses casos diferentes.  São campos específicos para cada tema operacional. O que mais a gente teve de diferente desta parte aqui? Tivemos a parte da controladoria, com esse motor de distribuição, que é o que a gente está fazendo agora com o Thiago.  A gente já está integrado com o ProJuris, já conseguimos puxar a lista de tarefas do dia, e conseguimos visualizar de acordo com o motor quem pode ser ou não o executor, e aí a gente pode aprovar essa determinada ação.  Rejeitar, que é mandar a tarefa para a pessoa, ou trocar o executor que está dentro dessa tarefa. Agora o que a gente está tentando fazer ali é conseguir subir a tarefa para o ProJuris no local correto, que é o que a gente está fazendo nessa parte de testes, porque a gente conseguiu fazer essa integração na quinta-feira.  Aqui a gente já puxou todos os executores também, Thiago, com os determinados campos. Os calendários agora, quando a gente abre o calendário, a gente já consegue ver as tarefas, que é aquilo que você tinha solicitado.  Só que eu já falei, a gente já está tentando para ficar um pouco maior aqui, como se um Trello, mostrando aqueles cardzinhos que você tinha pedido para a gente colocar.  Mas estamos movimentando, mas ele já bate aqui, identificado. Estou retirando essas partes que aparecem aqui de absoluto, pode ser general, que fazem parte do motor de distribuição que a gente está construindo.
+
+8:51 - Hyago Viana
+  Então ele vai sair aqui dentro desse processo.
+
+8:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E fizemos a nossa tela de permissões e subimos todos os usuários que você tinha nos passado. Já com a distribuição dentro do ProJuris, então agora dentro do usuário a gente consegue vincular o ID do ProJuris para poder a gente encontrar ele dentro do motor, então normalmente só vai para o motor, participa da distribuição e for marcado aqui e for elegível ou não para tarefas complexas, como a gente tinha falado.  Aí a gente já subiu todos esses usuários, aí agora já dá para os usuários entrarem e operarem caso vocês queiram, porque aqui dentro das permissões a gente já consegue distribuir o que ele consegue visualizar e quais são os filtros e menus que cada usuário consegue ver.  A gente tem um tipo de usuário que pode liberar uma coisa, mas gente também colocou para cada usuário ver.  Então se vocês quiserem passar para a gente, a gente pode montar os usuários já mostrando que eles podem ou não ver, mas a gente já subiu todos aqueles bases que você tinha espaçado.
+
+9:51 - Matheus Torquato
+  Adavio, na planilha que o Thiago me mandou já tinha as abas lá e já está precentado por colaborador, aí caso ele queira mudar alguma coisa...  Mas já está, de acordo com o procurador, já tem a aba que ele pode olhar.
+
+10:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, porque ele tinha passado mais esses daqui do ProJuris, né?
+
+10:07 - Matheus Torquato
+  É, já estava no último príncipe que ele mandou, já está correto. É que depois eu mandei uma pro Matheus no sábado, que tem todos.
+
+10:15 - Dr. Thiago Correia
+  Acho que ele já está com essa informação do sábado, Matheus?
+
+10:22 - Hyago Viana
+  Gente, eu vou mexer aí no sistema aí, mas andou muita coisa, né? É, e não somos bem. Agora rodou muita coisa do indenização aí, então já está o pressional, Thiago, isso aqui está...  Ainda não.
+
+10:36 - Dr. Thiago Correia
+  Tem uns ajustezinhos que eu vou passar, de pontuações mesmo que a gente vai ajustar, algumas coisinhas, mas depois disso eu já passo para a Pabllo hoje e amanhã também algumas questões que a gente precisa revisar, aliás, gente mesmo na mão, para identificar e aprimorar.  Mas, no máximo, na semana que vem já está rodando tudo por aqui, né? Vamos começar usando essa semana, ajustando na mão, e semana que vem já rodando, e ao longo desse tempo a gente também já vai trazendo alguns opções menores, aos poucos.
+
+11:11 - Hyago Viana
+  Eu tenho uma dúvida, Adavio, dúvida mesmo. Como é que a gente está fazendo para trazer os contatos, os registros nossos para essa base nossa agora, né?  De importação? Isso, importação. O Thiago tinha feito um sistema para vocês, aí era um Google Sheets.
+
+11:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente integrou com o Google Sheets, puxou para cá, aí como as pipelines são totalmente editáveis, né, que a gente fez, a gente pegou todos os filtros que tinha no sistema dele, criou dentro da nossa pipeline, e aí a gente trouxe todos os dados.  A só fez uma integração com o Google Sheets, puxamos do Google Sheets.
+
+11:52 - Hyago Viana
+  E aí depois, Thiago, quando a gente estiver funcionando, aí a gente vai pegar esses casos e... Por exemplo, pega o nome lá de um cliente para poder preencher aquelas informações do cadastro, né, porque ainda não tem, né, tipo assim, CPF, tem muitos que não tem no CPF ainda.  Isso aí, normalmente a gente organiza, o importante hoje é colocar para funcionar, para ficar usual aí para o pessoal.  Eu conversei com o Matheus na sexta, a ideia que a gente está vendo se vai dar certo, não sei se já te passou, Adavio, que seria o quê?
+
+12:32 - Dr. Thiago Correia
+  Agora que a gente sabe que tem como, né, essa importação funcionar, a gente tentar algo no meio do caminho, então nós temos todas essas bases aqui despadronizadas, bagunçadas e tem o sistema com determinada padronização.  E a gente já sabe como que o sistema agora aceita aqui, né, então a gente tem algo no meio do caminho e aí, até para não bagunçar que não seria direto no sistema, mas talvez uma coisa...
+
+12:58 - Hyago Viana
+  Uma parte, né?
+
+13:00 - Dr. Thiago Correia
+  Isso, a parte, que iria identificar essas informações a partir das bases que a gente tem, consolidar em uma só situação, já entregável do jeito que o sistema nosso precisa para a entrada.  Eu estava conversando com o Matheus na sexta. Tem alguma base? Você tem alguma base para nos passar, por exemplo, inicial, assim, para a gente ter uma noção?
+
+13:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só para eu ter o arquivo, para eu conseguir saber o que a gente vai subir. Por exemplo, é um Excel, é um PDF?
+
+13:30 - Dr. Thiago Correia
+  é o problema, né? São várias bases. Então, no Trello existem todos os casos das pessoas e os comentários, os andamentos desse caso.  No Drive existe lá a planilha que existe, as etapas desse caso, onde é que ele está. Então, eu estava conversando isso com o Matheus, a dificuldade da gente ter uma coisa pronta para isso, não importar, é justamente porque é pulverizado e não tem todas as informações.  Eu o CPF o Então seria uma coisa intermediária que iria, tema por tema, identificar nessas informações desses temas quais aquilo que a gente já tem e aí entregar já dentro de uma forma que o sistema permita a entrada, né, já como um Gesson, Java, alguma coisa assim, né, então teria uma cor no meio do caminho aqui que a gente faria.  Aí eu pensei de tanto ter uma coisa que entra, essas fontes que a gente já existe, como também ter uma vinculação com o Gemini, por exemplo, do escritório, que, ah, esse cliente aqui não tem nenhuma base do CPF, mas no documento da pasta tem, e aí ele vai lá e tenta fazer essa identificação, sabe assim, seria pensar em algo do meio do caminho, que faria essa identificação.  Para fazer as transformações, né?
+
+14:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, dá para a gente montar, a gente só precisa, assim, por exemplo, exportar um do Trello, pegar quais são as bases que a gente...  A vai puxar o trelo, Adavio, por causa que é muito bagunçado por caso, por tema, está tudo meio, sem estar definido.
+
+15:13 - Hyago Viana
+  Eu vou dar uma sugestão assim, eu acredito que a questão do trelo é muito difícil, porque tem muita coisa lá e assim, a boa parte é histórico, não é mais...  Sim, mas nós temos uma notícia muito boa, Iago.
+
+15:31 - Dr. Thiago Correia
+  Eu trouxe uma notícia boa para o Thiago. O trelo, eu também senti essa visão, a mesma que a sua, a maior dificuldade é o trelo e tem um zilhão de coisas lá para trás.
+
+15:42 - Hyago Viana
+  O único sistema que a gente usa, desde quando a gente começou até agora, é o trelo. Todos os restos, de vez ou outra, teve alguma atualização e melhoria.  O trelo, ele existe a API oficial e, além da própria API, ele já tem uma opção própria de exportação.
+
+15:55 - Dr. Thiago Correia
+  Tem como, se nós tivermos a identificação de qual caso... Aquele card é nós puxarmos todos os comentários com data, quem comentou, e importarmos os andamentos do sistema.
+
+16:10 - Hyago Viana
+  Assim, vocês dominam essa parte, eu te falei, Adavio, que eu comecei a fazer sozinho, uma bagunça, eu tentei consertar essa bagunça e lascou tudo.  Eu tentei fazer um sistema no começo lá do curso que você estava ensinando, aí não acertava qual era o caso, mas vocês dominam, vocês vão conseguir chegar no sistema.
+
+16:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Esse é o grande jeito, a gente tem que organizar primeiro os casos bonitinhos para aí puxar esse histórico direto.
+
+16:36 - Hyago Viana
+  A minha sugestão é que o cliente tem lá os dados, que são dados que não vão mudar, essa questão do CPF, se o cara, assim, não nem que não vão mudar.  Aqueles dados que são os dados que hoje já estão lá, as informações a serem preenchidas. E essas outras situações...  Aí vão para o serviço, né? Então, assim, se a gente vai preenchendo, e aí faz sentido o que o Thiago falou, né?  É uma forma da gente poder ir preenchendo do cliente lá esses dados, o restante é igual a gente fez aqui hoje, do Indenização Mais Médicos, aí a gente vai fazer depois para a questão do Fieis, aí do outro, então a gente vai fazendo aos poucos ali, conforme a gente for colocar.  operacionalizou aqui o Indenização, aí a gente pega lá do outro, que tem essas peculiaridades que o Thiago está falando, Um é Trello, o outro é uma lista do Excel, o Transferência Mais Médicos é uma lista lá no Excel, assim, que um serviço bem menor, assim.  Sim. Eu acredito que seria por aí, esse meio do caminho que o Thiago está falando, talvez seria essa situação, a gente poder fazer esse caminho das informações principais, e depois a gente vai fazendo...  Por serviço. Só fazendo a importação daquele momento, né? Vendo dessas indenizações aí, dos 380 aí, aí tem, sei lá, metade disso aí também tem processo de Fies, então aí já tá, o cara já tá lá no sistema, então agora a gente vai criar, talvez faça isso, não sei, não sei se vão falar.  Só os filtros, é.
+
+18:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É por isso que eu disse, se a gente pegar a base, o do Trello a gente pode exportar, porque ele exporta via CSV também, dá pra gente colocar lá dentro e dá pra fazer por API, e como o Matheus deu uma visualizada lá.  Os outros, é que dá pra gente construir o motor, a gente vai ter que usar uma IA mesmo, o problema não é nem a construção do motor, é quais são os tipos de arquivo, aí depois você me passa, Thiago, tipo assim, por exemplo, o Drive, o Drive vai ter PDF, que aí eu tenho que trabalhar de uma forma, ah, vai ter DocX, aí é uma outra forma, só pra eu saber como são as bases pra gente construir.
+
+18:52 - Dr. Thiago Correia
+  A forma que eu tinha imaginado é o quê? Primeiro a gente, a minha ideia era mais, ao invés de que todos os clientes depois não tem, vamos  A gente constrói tudo a cada tema. Então, por exemplo, para a indenização que a gente importou, a primeira grande coisa que a gente tem que fazer, e esse seria esse motor intermediário, seria pegar essas informações e consolidar em um só lugar.
+
+19:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aquele sistema, aquilo, lá, não sei o quê, era uma informação e um cheats, né?
+
+19:17 - Dr. Thiago Correia
+  Que tinha qual era o caso do cliente, qual era o status dele, blá blá blá. Aí, quando importa para cá, tendo o local que entrega essas informações, ele vai importar para cá.
+
+19:29 - Hyago Viana
+  Quem é o cliente? Qual é o caso que ele está vinculado ali dentro daquele tema?
+
+19:33 - Dr. Thiago Correia
+  E faz informações dessa situação. Tipo os filtros aqui, né? Dos casos. Isso, aí ele faz dessa forma que a gente já fez nesse sentido, que é o quê?  Trouxe para cá, mas esse cara não tem informação se tem residência médica ou não. O sistema, eles fizeram de um jeito que o sistema importa isso, né?  E fica lá como cadastro pendente. E que algo assim, eu vi uma anotação.
+
+19:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Fica cadastro pendente. Isso, mas ele ele importou...
+
+20:00 - Dr. Thiago Correia
+  Agora, na mão, tem que ir depois e revisar esse cadastro, mas o sistema já permite usar o caso e tudo dessa forma.  Agora a gente vai importar, por exemplo, Desenrola Fieis. Vai vir ali o pipeline operacional, montar a pipeline Desenrola Fieis, montar ela, quais são os campos personalizados que puxa e tudo.  E aí, ok, eu sei quais são os campos que eu preciso para o cliente, quais são os campos que eu preciso para o caso.  A gente vai no motor intermediário organizar essas informações para o que precisa e traz para cá. Aí vai ficar as coisas que vão ficar manuais depois e tudo mais, mas aí a gente já tem mais um tema com vários casos, mais um tema com vários clientes que foram importados e sim o tema por tema aos poucos.
+
+20:49 - Hyago Viana
+  Para o trelo, qual seria o ponto do trelo? O ruim do trelo é isso, né? A gente não tem essa identificação de qual o caso é, então eu tinha pensado ser o segundo momento mesmo.  Agora a gente já tem aqui todos... Então, gente já sabe o código que o nosso sistema tem para a auto-identização.
+
+21:06 - Dr. Thiago Correia
+  A gente só precisa agora pegar no Trello e fazer uma identificação de saber, ó, esse card do Trello é desse cara aqui.  E aí, uma vez que eles têm identificado, eles conseguem, via API ou via a forma que eles fazem, puxar todos os comentários desse card e jogar aqui.  Porque agora já sabem no nosso sistema qual é o caso e aqui a gente já vinculou. Então, seria um momento depois, quando o cara está aqui, o caso está aqui, a gente pode trazer o Trello para cá.  Tema por tema também. Tema por tema.
+
+21:38 - Hyago Viana
+  Beleza. Só aquela situação que a gente tinha conversado de não ficar o Thiago Correia, indenização. Daqui a pouco aparece o Thiago Correia, como se fosse pessoas duplicadas.  Não, vai ser a mesma pessoa. O é o caso e o que é diferente.
+
+21:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, não, beleza.
+
+21:53 - Hyago Viana
+  Eu entendi aí, o Thiago está à frente dessa parte de indenização e é muito importante para a gente. E aí você falou para mim que...  E já começou essa questão da controladoria. E a nossa programação para agosto? Só para eu entender o nosso planejamento para agosto.  Essa semana a gente já termina a controladoria, a parte do ProJuris, porque eles já estão integrados.
+
+22:16 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente já está conseguindo puxar os dados, já consegue fazer toda a conexão. A única coisa que a gente está ainda do lado meio mais do Matheus é que a gente não sabe muito bem como é que funciona.  A gente está aprendendo. O Thiago já me mostrou, eu aprendi, ele me deu acesso a um caso específico lá, que é dele mesmo, que eu posso testar.  Então, eu estou testando aquilo para a gente poder fazer a distribuição.
+
+22:38 - Hyago Viana
+  Então, acho que até sexta-feira, essa parte aqui do motor já vai estar pronta.
+
+22:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na realidade, a gente já está tudo integrado, a gente só está entendendo como é que funciona. A gente vai abrir agora o nosso próximo anexo, porque a gente terminou essas duas primeiras fases.  A controladoria, sim, do marketing digital.
+
+23:00 - Hyago Viana
+  É, mas assim, por exemplo, a controladoria, a controladoria aqui, pegou esse motor aí, igual você falou, que é bem importante, que acho que é o que mais dá trabalho, né, da gente ali, retrabalho, né?  Pode dar a página pra gente, favor? Sabe aí que a questão, que aí é, era aquela ideia de inteligência do escritório, no sentido de gerar uma inteligência do escritório, fez determinada situação, determinada demanda, aí aquilo ali vira uma expertise.
+
+23:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Uma base de dados, né?
+
+23:38 - Hyago Viana
+  Essa parte aí, que é um, primeiro, a gente poder organizar o que está gerando mais retrabalho, aí depois seria esse lado, assim, porque eu vou te dar uma, assim, tem vários exemplos que a gente pode dar, mas é que a gente faz várias decisões aqui, todo dia, toda hora, toda hora a gente está fazendo situações, toma decisão.  Toma decisão, toma decisão, então... É armazenar essas decisões para construir uma base de conhecimento para a gente. são pequenos workflows, assim, como se fosse...  Cada decisão é um workflow, né? Se acontecer aquilo e tal. Aí, a gente já faz isso sem que tenha produção de uma inteligência no sentido da pessoa.  Aqui, a Patricia está aqui. A Patricia foi lá e fez determinadas ações. Aí, se amanhã ela não estiver aqui, aquilo ali, a gente tem que treinar a pessoa para ela poder aprender.  E aí, gente não está gerando um conhecimento. A ideia era essa, que a gente pegasse o que a gente faz todo dia e que isso virasse inteligência, né?  Porque aí, na hora que a pessoa for fazer uma situação, puxa para o lado, por exemplo, de uma petição, um exemplo, né?  Vai fazer lá a petição, já tem uma inteligência no sentido de falar assim, ó... Olha, aqui normalmente é o protocolo em tal lugar, é essa tese que se usa, o entendimento favorável, a gente chama de jurimetria, né, o entendimento favorável é esse, esse, esse, esse outro juiz aqui já nega, assim, já tem esse, a gente já sabe isso, mas sabe de cabeça ou até mesmo de planilha também, né, Thiago?  Dependendo do tema, a gente também usa uma planilha para saber qual que o entendimento do juízo, o exemplo. juízo, entendi.
+
+25:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí, só que isso daí, é, é muito, você acha que um, um, não sei, uma parte de como se fosse um agente de IA, seria mais ou menos isso?  Porque isso está mais voltado para agente, né, vou ter que ter uma mentalidade no agente, ele poderia ou ter um chatzinho aqui embaixo, que é o edict, né, que a gente fala, ou poderia ter dentro do caso, talvez, um chatzinho de IA, que aí, com base no tipo de caso, a gente tenha uma base de conhecimento, sabe?  Por exemplo, base de conhecimento do Mais Médicos. Aí, gente tem um agentezinho dentro daquele caso, ele sabe que é Mais Médico, ele busca lá dentro do Mais Médico.
+
+26:05 - Hyago Viana
+  É que eu estou tentando pensar em como é que eu monto a estrutura, mas eu acho que dá para a gente fazer.  É que eu não sei bem qualquer diferença, no caso talvez seria agente mesmo, talvez não seria um agente, seria um agente.  Isso, são agentes de cada lugar. Daquela situação, então a gente pega aqui de um processo, por exemplo, Covid, um exemplo aqui, só para os meninos entenderem.  Covid, aí a gente tem uma base de conhecimento do Covid, do abatimento do Covid. Então, quando for protocolar, ah não, está protocolando aqui agora em São Paulo, aí quais são os TRF lá, qual que é o entendimento, já tem decisão, favorável, se entende isso, se entende aquilo.  Então já tem um conhecimento ali. Ah não, está fazendo aqui a petição do Covid e tem lá uma... Eu acho que talvez, se tiver algum tipo de segregação entre o que seria isso de jurisprudência processual e questões internas, não?  Porque eu acho que dessa conversa... Covid é modelo, mas assim, por exemplo, no Covid lá, que é modelão, ainda assim tem várias situações que acontecem, do tipo, ah, se o juiz vai lá e dá uma decisão falando que não cabe o processo, xingue lá o processo.  Assim, quando acontece uma situação dessa química, aí a gente já tomou uma decisão e já fez uma resposta. Na próxima vez que acontecer, o sistema já fala para ela o que ela tem que fazer.  Então assim, estou pegando um caso modelo, que é modelão que acontece isso e hoje volta para você, volta para...  Fathom vem para mim, porque é uma questão nova, assim, diferente, aí quando você toma a decisão já fica, aí a gente avalia, e aí fica na base do conhecimento, é como se fosse a cabeça de nós três aqui, todo mundo, é o que a gente toma de decisão, já fica ali, para aquela situação, o tema, entendeu?  Talvez esse agente poderia ser, meio que de início aí, ele ser algo que está ali olhando o motor, sabe, Adavio?
+
+28:29 - Dr. Thiago Correia
+  Tipo assim, teve tal intimação no processo, e aí o Proiuris mostra o texto da intimação, né? Sim. Acho que no motor ali a gente não colocou isso, porque a pessoa vai abrir no processo, mas tem nas informações o texto.  Então, tal intimação, e aí a controladoria decidiu que vai ser distribuída uma tarefa, qual é o tipo da tarefa.  Então, se a gente estaria olhando isso para identificar, olha, quando acontece tal coisa de intimação, né, acontece tal texto de intimação, em tal tema, a tomada...  O decisão é X, distribuir apelação, não distribuir, entendeu? Onde ele vai só aprender, eu acho que a ideia de água é esse sistema é só olhando e aprendendo, seria mais...
+
+29:10 - Hyago Viana
+  Não, mas assim, a gente pode pegar a base, colocar a base, se acontece aqui, assim, sai uma sentença, é apelação.  Ah, beleza, é uma sentença contrária, então agora tem que fazer uma apelação. O sistema já sugere essa situação lá da apelação, aí é mais simples você ver.  Agora, se for, por exemplo, ah, não, surgiu uma sentença, agora a sentença, nesses termos, aí eu sugiro a apelação nesse sentido.  Aí você já começa a criar um know-how maior. A inteligência, a gente vai estabelecer, não é deles, né, essa situação, mas a gente estabelece a base.  E aí a gente vai acrescentando, conforme for acontecendo. E até o próprio sistema pode sugerir, que aí eu acredito que é a sacada da...  Sim, de autoalimentar, né? Isso. Mas a gente tem essa base hoje... Não, mas assim, a gente tem na nossa cabeça, se acontece tal situação, a gente faz tal coisa, mas aí se o sistema for colocando isso, a gente agora, não é que a ideia é essa, não é que isso daí vai fazer sem que Nicole decida, mas sugere, aí ela analisa, e aí fica mais fácil essa situação, porque sim, uma parte boa ela já ia fazer, mas ainda assim facilita o trabalho dela, ela vai só conferir no futuro.  Mas naqueles casos, que são aquelas coisas diferentes, você fez um negócio desse há três anos atrás, o sistema já tá lá, essa inteligência em relação a isso, a gente esquece, aí vai lembrar dessa situação, então seria essa a ideia desse produzir, a gente já faz todo dia, a gente produz conhecimento interno, e aí a gente poder fazer isso dentro de um banco de dados, seriam agentes mesmo, mas não é um agente que faz tudo, obviamente, né?  Não, é, são agentes que que só... Ele é um auxiliador do trabalho de vocês. Ele vai estar lá aberto e ele vai, por exemplo, vai chegar aqui nessa lista aqui, a tarefa, e ele vai identificar para a Keilani.
+
+31:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele vai dizer, ó, eu fiz essa tarefa para a Keilani porque no dia tal o juiz, tal, tal, tal, tal, tal, tal, isso e disse isso no caso.
+
+31:18 - Hyago Viana
+  Entendimento, ele já decidiu em outro processo assim, acredito que tem que seguir para o outro caminho, assim, é mais ou menos, não é nem seguir.  Talvez assim, ó, esse juiz já decidiu assim, você não vai lembrar. Mas agora com a questão da IA consegue, essa base, aí isso daí vai conforme o Thiago estava falando aí da controladoria, da sugestão.  Mas aí quando for para a questão do peticionamento, também dá para ajudar. Como é que a gente poderia fazer isso?  Aí fica a pergunta, assim, e também se é viável para a questão de, que aí é custo, né? Custo financeiramente, é, assim, o custo com a gente de IA não é muito alto, não.  isso? Ele não vai consumir muito, não.
+
+32:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O que a gente tem que pensar nessa parte é de onde a gente obtém a informação, porque, por exemplo, aqui no caso, ali nas notas, você pode colocar o juiz tal, fez tal coisa, mas de onde é que vem realmente?  A sentença vem do pró-júris. Então, o que cair no pró-júris, eu jogo para uma base de conhecimento? Para ela?  Não. Se caiu a sentença do pró-júris, existe uma parte que fala o que o juiz aprovou. Isso é que eu jogo na base de conhecimento desse agente?  Eu só preciso entender essa parte, sabe? É, aí eu acredito que é a gente pegar, delimitar um pouquinho e passar para você, mas é tranquilo.
+
+32:41 - Hyago Viana
+  Isso, é tranquilo.
+
+32:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente vai ter uma base de documentação, provavelmente, ou um supabase que a gente já tem ali, com um inbind, né, que você viu lá comigo, mas é uma base vetorial de agente, que se chama.  Então, a gente vai ter uma base inteira e aí nessa base vai ter uma vinculação.
+
+33:08 - Hyago Viana
+  Então, Thiago, sabe como é que a gente pode fazer? A gente pode fazer uma base, um agente de jurimetria, e aí esse agente vai falar sobre aquela questão das decisões, não é que ele vai indicar, mas ele vai apresentar aquela situação.  Aí a gente pode fazer, sim, uma base que é para a questão de sugerir a situação para Nicole, por exemplo, e aí em relação a isso, já não é uma base de jurimetria, aquela decisão não quer dizer que ela vai entrar na decisão que a controladoria tomaria, mas aí a pode construir essa base, então a gente faz pequenos agentes, é isso, Adavio?  Isso, isso. Aí, por exemplo, ela está aqui nessa parte aqui da controladoria, e aí vai dividir a tarefa.
+
+33:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ela pode ter um agentezinho que ela clica aqui e fala, ó, essa tarefa aqui eu acho complexa. Quem já fez essa tarefa, por exemplo?  Porque o agente, como ele tem uma base, ele consegue ver mais ou menos, tem uma base, porque ele vai ser um agente conversacional, né, ele pode ser uma base de ajuda para ela e pode também informar a ela algumas coisas, né, dentro disso, ela pode pegar o processo, falar, nesse processo aqui, o que já aconteceu e tal, tudo mais, porque como agente, a gente tem acesso a essas coisas, entendeu?
+
+34:22 - Hyago Viana
+  Vamos começando pela controladoria, tipo, com essa questão, assim, entendeu o conceito do agente? Eu entendi, eu entendi, eu só não sei como é que eles vão conseguir fazer isso aí, mas é porque eu fico pensando para ver como é que eu consigo ajudar, né, mas...  Mas é aquela aula que o Adavio deu lá do, daquele, o Opizion, né, que coloca, Obsidian, é, que vai distingindo lá como é que é a IA, informação, enfim, se a gente passar a base certinho, como é que funciona, a IA faz o negócio bacana, eles conseguem fazer lá.  Então, vamos... Então, esse caminho aí, eu acredito que a gente começa com a controladoria, com essas decisões, e aí a gente vê direitinho como é que passa para vocês essa parte, e aí gente vai estabelecendo e vai construindo.  Então, a gente consegue fazer os poucos?
+
+35:16 - Dr. Thiago Correia
+  É o seguinte, eu acho que o que a gente poderia fazer que ajudaria nessas primeiras etapas seria nós pegarmos o que são orientações internas quanto a essas tarefas e escrever tudo isso, no sentido de que, olha, quando é uma decisão liminar negada de X situação, a orientação é não recorrer agora, mas se for tal caso, aí recorre.  Então, apresento o agravo instrumento, seria escrever isso, aí eu acho que, assim, ajudaria, porque a já teria uma base para o sistema começar a analisar, né, assim, começar a visualizar.  Aí eu sugeriria a gente... A trabalhar isso em dois momentos, que é o antes e o depois de a gente finalizar o motor, porque quando a gente conseguir que o motor esteja rodando, teoria, elas vão ter um tempo a mais lá que conseguiria parar para destinar para ir de forma mais tranquila.  Sim, mas o motor é o principal, porque aí a gente vai, validou, é uma coisa cada vez. É que agora mesmo, se a gente precisa corrigir um negócio com as tarefas lá, que o Matheus e o Adav passaram, e eu passei para eles, deve levar uns cinco dias só para corrigir essas tarefas, por exemplo, lá.  Então, beleza. Então, eu acredito que esse mês a gente consegue finalizar a integração do financeiro e essas partes aí, né?
+
+36:42 - Hyago Viana
+  Isso. Se não me engano, a Controladoria já tem também um arquivo de orientações, mais ou menos nesse sentido. É, mas é bem...
+
+36:50 - Patricia Cruz
+  Seria a gente pegar, validar o que está lá também e acrescentar outras, porque pelo menos já teria uma parte que já base, né?  É. Poderia conferir o que é que tem, sem olhar as coisas que é embrionário demais. Exato, mas assim, já tem uma ideia do que é feito por elas ali manualmente, que eles não sempre leem, que são orientações que a gente passa sobre recorrer ou não, em qual situação recorrer, então atualizar aquele próprio arquivo delas para mandar.
+
+37:21 - Hyago Viana
+  É, a gente vai trabalhando ao longo desse, só que a gente pega um ponto, quando vocês veem que realmente, que eu vi, né, eu também duvidava, quando eu vi que realmente era possível, né, o negócio do agente de A, de tomar a decisão, fazer, porque a gente tá falando muito aqui sobre, até agora, a questão do...  Humano, operacional, humano, fácil, clicando. a primeira vez que a tá falando de IA é basicamente agora, mesmo, antes era, se fizer isso, faz aquilo, né?  Sim. Aí da IA, que realmente eu ouvi, falei assim, pô, esse negócio existe, né? Realmente, não necessariamente precisa ser a pessoa fazer, e aí eu entendi depois como é que é que...  O isso se constrói, a lógica por trás. Então, realmente, cada situaçãozinha dessa é viável. A gente só tem que começar por uma, depois vai fazendo outra e outra.  Mas beleza, então, a minha ideia, Adavio, é que a gente possa finalizar essas integrações financeiro, essa parte aí. Da controladoria aqui, né?  Do motor. E aí, mês que vem, a gente vai para essa parte aí, vai ser mais eu mesmo, que é essa parte do comercial, que é essa parte mais, né?  Do marketing também, né? Isso, isso, isso. Que a gente entraria ali, marketing, vendas, né? Quem vai ser essa questão do CRM, como é que identifica o que chegou, enfim.  Aí eu acredito que finalizando essa coisa ao longo de agosto, e aí em setembro a gente... Já faz esse.  Beleza. Beleza. E esse aí do agente vocês vão falando, porque assim, a pode colocar primeiro esses agentes readings, né?
+
+39:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  São auxiliadores, eles vão perguntar para o pessoal ir se acostumando e a gente depois vai implementando ele. Qual? O Gemini, que é mais barato?
+
+39:08 - Hyago Viana
+  É, Gemini, a gente só precisaria de uma API nesse processo, mas o OpenAI também, tá?
+
+39:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A OpenAI tem os minis, que não é nada caro, só que está no máximo aí 30 dólares mensais, né?
+
+39:22 - Hyago Viana
+  Assim, na IA. Já tem a assinatura em um dos e-mails, inclusive nesse aí do jurídico que vocês têm acesso, tem a assinatura do Pro nele, eu não sei se você reduziria mais.  É porque nesse caso, é API mesmo, porque é a gente, a gente não usa subscrição, né, que seria esse processo, por exemplo.  No Gemini é a mesma coisa?
+
+39:42 - Dr. Thiago Correia
+  Mesma coisa. O mundo já tem esse negócio pago aí, tá? Mas não compensa, se for só esse valor aí que ele tá falando, nossa.
+
+39:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, mas é nessa média mesmo, porque um milhão de tokens é 0.025 cento de dólar, no 4.1 mil, 5.1 mil.  Da minha parte é isso, vou mexer pra...
+
+40:00 - Hyago Viana
+  para entender algumas coisas aqui, mas eu gostei para caramba, agora a gente está funcionando o negócio de bola, que bom.  Quebrou na cabeça, né Adavio?
+
+40:08 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Esses dias a gente tem falado bastante com o Thiago aí, o Thiago tem visto bastante noite.
+
+40:12 - Dr. Thiago Correia
+  Nós três estamos conversando mais do que eu e minha mulher. Pois é, ultimamente tem sido mesmo. Beleza então, gente.
+
+40:20 - Hyago Viana
+  Obrigadão, Iago.
+
+40:21 - Dr. Thiago Correia
+  Valeu, até mais. E Adavio, passar umas coisas aqui.
+
+40:24 - Patricia Cruz
+  Sim, pode passar.
+
+40:26 - Dr. Thiago Correia
+  Fath, vou te liberar também para você poder fazer o negócio lá, Nicole também. Obrigado, gente. Tchau, tchau.
+
+40:34 - Controladoria HV
+  Tchau, tchau.
+
+40:36 - Dr. Thiago Correia
+  Deixa eu ver, que eu estive olhando aqui, né, para a gente colocar. Aqui na pipeline, quando abre aqui, deixa eu espelhar o meu que eu vou mostrando para vocês.  Quando abre na pipeline ali, tem essa parte de onde mostra o Kanban, fica muito grande da forma que está aqui.  é mais questão visual de forma geral, viu? Tá, você abriu aí para para nós. Nossa. Apareceu a minha? Apareceu, mas apareceu num docs.  Essa aqui é a coisa que eu anotei, eu e minhas ideias doidas aqui, aqui quando a gente puxa aqui, fica enorme, sabe, porque vai ter isso aqui em muitos casos, a maioria deles é volumoso, então acho que precisava ter como se fosse uma limitação, tipo, vai mostrar 10 e depois é uma barra de rolagem por situação aqui também.  Isso acontece no Trello, eles, vou mostrar porque é uma coisa que quer... Para ele não ficar extenso, né? É, no Trello já é assim, tipo, esse aqui, ele vai até mais lá embaixo, só que ele tem uma tela, uma barra de rolagem própria, e aí ele tem uma limitação, então a gente não vai acontecer de ficar assim, porque isso aqui acaba muito grande, eu acho, né?
+
+41:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, então a gente tem que ele seja pequeno e a tela de rolagem seja dentro da pipeline, no caso da...  Dentro da própria coluna aqui, né?
+
+42:01 - Dr. Thiago Correia
+  Da etapa, isso. É porque embaixo a gente tem essa de rolagem aqui. E aí às vezes eu tô aqui, ó, só que eu quero ver aquela primeira etapa lá, aí eu não consigo, eu tenho que rolar até lá embaixo pra puxar essa outra, entendeu?  E aí se tiver uma limitação, tipo, ah, aqui vai mostrar sete, oito, sei lá. E aí ali embaixo fica até a parte de girar mais próxima, né?
+
+42:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  De você não ter que descer até lá embaixo. No Trello isso funciona bem.
+
+42:30 - Dr. Thiago Correia
+  Eu mostro sempre pro Trello porque ele é um sistema só de Kanban, então eles já quebraram muito a cabeça pra achar como é que eles vão fazer as coisas.  Então aqui a gente consegue ter essa visualização mais fácil. E aí eles limitam isso com uma barra de rolagem dentro da própria coluna.  Aí depois vocês veem se teria como. Isso daí é possível. Não, isso aí é tranquilo. Isso aí a gente consegue.  Seria uma barrinha aqui que mais... Tem todos os temas, estão com o campo aqui na pipeline, que é esse campo aqui.  Obrigado. O município? Deixa eu ver se tem outro que é ele mesmo. Acho que é município que a gente botou aqui.  Eu não achei de onde que é essa informação. Não é dos campos, não é do caso, entendeu? Não, ela é do campo, ali no editar campos?
+
+43:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá vendo? Nem tem aqui, ó. Então acho que ele sabe onde ele tá puxando? Do cliente.
+
+43:25 - Dr. Thiago Correia
+  Pois é, no do cliente eu acho que também não tá esse negócio desse campo, porque... Não, mas não é impersonalizado, é lá no próprio cliente mesmo.
+
+43:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na hora que a gente puxa da pipeline, você pode ver que responsável ele já puxa automaticamente e nome ele puxa automaticamente.  Acho que ele tá querendo puxar município daí do cliente mesmo, aí no editar. É, eu não sei, mas ele tá puxando esse responsável, esse município e esse financeiro de forma automática.  Eu não entendi... Eu seria o financeiro, acho que seria a etapa do financeiro, algo assim, não?
+
+44:06 - Dr. Thiago Correia
+  Preciso dar uma olhada no que seria esses três, acho que não precisa, inclusive, né? A responsável acho que faz sentido, né, manter...  É, responsável é tipo o responsável do caso, né? É, acho que pode, pode, vamos manter esse aqui de início, mas esse município dá uma olhada de onde que é, para a gente se envolver, porque está em todos os temas, está em todas as pipelines, todos os temas, essa situação, mesmo que o tema não tenha esse campo, está puxando, viu?  Não é nem aquela situação de ser um campo do cliente que mostra em determinados temas, não é nem isso, porque esse, esse tema aqui que eu fiz hoje com o Pathy, para a gente começar a usar, não tem essa, não tem esse campo, então, está puxando de algum lugar aí, que eu não sei de onde, é, acho que seria interessante a gente remover, a gente identificar e remover quais são esses clientes testes aqui que a gente criou, esses casos, clientes testes que a gente foi criando, como já está começando a botar para o pessoal usar...  Deletar ele. E isso já tirar, pegar quem são esses que a gente foi criando ao longo do tempo e talvez manter um ou um, assim, só para, né, ter o teste, né, para testar mais.  É, mas os outros já remover para evitar a identificação difícil para na frente. Dar parte de implantação, tem duas coisas que eu observei.  O caso que a gente está importando, não está puxando pasta. Então, aqui é um do do indenização, né, que a gente puxou.  Esse cliente não está com pasta no caso, no caso dele não tem pasta. Tá. A pasta do cliente lá no Drive está criada, né?  Sim. Aqui. Só não tem a pasta do caso. Isso, a pasta do caso não tem. Aí, a minha ideia é que o pessoal agora, quando for corrigir essas situações, preencher os campos obrigados.  de alguns documentos. Isso, já pegar. e transferir a pasta para cá para o sistema, porque aí já fica dentro mesmo.  Aí, até nisso de transferir, eu fui tentar fazer um teste de tipo pegar uma pasta e jogar aqui para o Drive.  Deixa eu só pegar uma que a gente criou realmente aqui dentro do sistema. Peraí, funciona. Então tá, aqui foi um que a gente criou direto por dentro, né, gerando certinho já o cliente, gerando certinho a pasta.  A do caso. É, isso aí, tudo ok. Mas quando eu vou tentar puxar de lá para cá, tentar puxar a pasta do caso aqui no nosso Drive atual para lá, ele não me permite.  E eu acho que alguma configuração não do sistema, mas sim do Drive. E aí vocês conseguissem ver, porque a gente...  tá, jogada aí para o Drive. É, não tô conseguindo. Provavelmente algum... Eu coloquei o relacionado ao drive compartilhado, né?  Algum tipo de situação que não permite, mas se vocês conseguirem depois só me ajudar, onde é que eu desfaço para poder permitir, deve ser alguma questão de segurança.  Beleza. Que aí a gente joga aqui, ele vai estar dentro da pasta da pessoa aqui, então os documentos e tudo, já vai estar bonitinho, A ideia é a gente vai expurgar tudo aos poucos para cá.  Ainda que na questão de pasta, esse nome, tá um nome que fica robótico, né? Se a gente conseguir, assim como a gente viu nos documentos, de quando cria, cria lá o nome bonitinho, humanizado, Tipo, caso, aqui, Luciano Holanda, né?  Então, Luciano Holanda, tal, tal, tal, nome da pessoa. Aí, aqui no caso, caso na adimplência. Então, é... Sim, essas numerações.  Essas numerações são numerações que tem problema, não.
+
+47:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas se tiver como deixar um pouco mais humanizado, nem cheguei a passar de ponto.
+
+48:03 - Dr. Thiago Correia
+  Está aqui no sistema ainda, o botão de sigilo que a gente conversou, eu acho que esse aqui é uma informação bem irrelevante, de forma geral, que vai ser bem rara.  Então, deixar aqui no finalzão, e só os administradores poder ver esse botão, aqui para baixo, nas importações dos casos.  Eu não sei se a gente ainda consegue desses do indenização, se não conseguir não tem problema, não é uma coisa nem que vai ficar para os outros também, porque os outros a gente vai importar de outra forma, né, de forma mais pensada, mas a gente puxou para cá, finalizou aquela alteração, né, Matheus, ficou bom aqui.
+
+48:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente não puxou desses casos de indenização que a gente importou os andamentos, nós só importamos os comentários, que seria isso aqui.
+
+48:59 - Dr. Thiago Correia
+  Tchau, tchau. Vou até tirar um print e mandar para vocês, é, opa, né, o logo, é no logo. Eu não puxei do trelo ainda, fala do trelo?  Não, não é nem do trelo. Não, é do lado do sistema mesmo. A gente puxou os comentários, mas não puxamos os andamentos, tem andamentos.  Como se fosse a linha do tempo, entendeu? Tem uma informação que a gente não puxou, deixa eu ver se eu consigo abrir rapidinho, só para mostrar a vocês, enquanto abre eu vou lembrar essa cena, depois eu vou, depois eu mando ali qual que é a parte que não puxou, que aí se você conseguir ainda dar aquela base que a gente trabalhou, puxar para cá e trazer, beleza.  Você vai lá ver se, Thiago, aí eu tenho que recomeçar esse troço que está aqui. Não, não, não, de boa.  Pode deixar, não precisa, porque assim, não são tantos casos que tem, mas os que teriam, ajudaria o pessoal a não ter que conferir também isso automático, né?
+
+49:57 - Matheus Torquato
+  Tá, aqui nesse tema que a gente importou,
+
+50:00 - Dr. Thiago Correia
+  Eu fui começar a organizar ele e mudei o nome dele, eu mudei o nome do tema aqui da Pipeline, mudei para a Indenização Mais Médicos, estava o nome aqui Mais Médicos, não era o nome que a gente usava.  Quando eu mudei para a Indenização Mais Médicos, ele mudou ali no sistema, mas é como se ele só tivesse mudado o visual e em todos os lugares ele continuou com o nome antigo.  Então aquele que continua aqui, Mais Médicos, quando a gente abre um caso, ele ainda está aqui como Mais Médicos, então provavelmente lá na pasta...  Esses são os nomes dos casos, que quando foram registrados, entendeu?
+
+50:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele não mudou o legado, ele mudou aquela Pipeline. Agora, a partir de agora, quem se cadastrar sobe, mas tudo bem, eu entendi.  Porque nesse caso, imagine que aí é uma outra tabela dentro do nosso sistema, né?
+
+50:54 - Dr. Thiago Correia
+  Ele já tinha criado com esse nome Mais Médicos.
+
+50:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele não, porque você mudou... mudou... Então, pipeline, ele não foi até o cliente e mudou mais médicos. Entendi, entendi.  Então, aqui foi mais algo, então, porque a gente já tinha importado com aquele nome.
+
+51:11 - Dr. Thiago Correia
+  Então, por exemplo, se a gente for importar agora o Desenrola Fies, aí se eu tiver criado aqui Desenrola, para frente já vai estar dessa foto.  Isso, novos casos que foram criados dentro dessa pipeline, né? Beleza, beleza, é tranquilo, então. Tem a parte do motor que a gente está fazendo ali agora.  É do motor. Só para ver essas questões aqui que eu tinha visto, sei lá o que mais. Ah, ele está ficando com um negócio assim, dados do serviço atualizados, várias vezes repetidas.  Eu não sei se foi algo da implantação ou se é algo mais geral. Está vendo? Várias vezes repetido. Uhum.
+
+52:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí eu não sei de onde que ele tá tirando essas tantas coisas.
+
+52:04 - Dr. Thiago Correia
+  Eu tô achando que talvez isso aqui possa ser porque a gente tá atualizando, por exemplo, atualizei o campo da pipeline, aí ele tá puxando tudo.
+
+52:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tudo, não puxando, tá entrando no caso do cliente o que é da própria pipeline. É, e não foi necessariamente alterado nada no caso da pessoa, sabe?
+
+52:23 - Dr. Thiago Correia
+  Aí vai ficar... Sim, sim, foi alterado só na pipeline, não no caso em específico, ele tá pegando outras alterações.  Então seria, seria mudar isso aqui, eu acho, né? Pra não aparecer, se tiver como. Porque se for algo que afeta o caso da pessoa, beleza, tipo, mudou a etapa tal que o caso da pessoa tá lá, né?  Ela tá na etapa aguardando documentos. A gente mudou o nome dessa etapa pra documentos ok, a pessoa mudou a etapa.  Então, mas aqui é algo que não afeta, não é nada do caso da pessoa, e aí fica bem... Sim, é, e nem faz parte desse processo, né?  Então, a gente puder retificar isso aí, tanto nos que já existem, seria ótimo, mas é claro que existem as imitações, mas se puder seria ótimo, acho que desse aqui, ah, esse caso aqui também, eu fiz um teste nele, eu mudei aqui essa informação, que vem, esse campo aqui é um campo que está lá marcado como do cliente, viu, que vem para os casos, quando eu mudei aqui, não está mudando no cliente lá, então eu mudo aqui, eu vou lá no cliente, ele não preencheu, quer ver?  Ele não preencheu aqui, tá vendo?
+
+53:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Alguns campos então estão sendo preenchidos ali e não foram aí, aí é o campo do cliente ali, é o campo do dado do cliente, mas eu lembro que a gente tinha falado sobre isso.  Isso, que o que fosse preenchido ali tinha que subir para o cliente também.
+
+54:02 - Dr. Thiago Correia
+  É a mesma informação, é até a questão da hierarquia de que só está vindo de lá para cá, então é esse aqui, do cliente, ele é um campo lá que é do cliente e só está sendo mostrado aqui, entendi, aí não está atualizando, então em teoria todo mundo que está ali em indenização, que tem esse mesmo campo, no cadastro deles do cliente a informação já tem que estar preenchida, em teoria, aí teria que dar uma olhada nisso.  Tem algumas questões de sugestão que eu tenho, mas tanto a gente pode ver na semana, depois de concluir tudo o que precisa do motor, ou a gente pode ver agora e também ver do motor e deixa vocês trabalhando nisso, que às vezes fica melhor vocês estarem duas coisas ao mesmo tempo.  Vocês que sabem, se vocês quiserem só ver o motor daqui nesses próximos dias e depois que concluirem... Não, a gente faz essa parte aí, não tem problema, que a gente monta agora, e a gente vai estar fazendo o motor.
+
+55:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Para o motor a gente ainda está mexendo, então nós não temos muita base, eu estou mudando ali. Ali na parte do motor, você quer que tenha uma tela de configuração do motor, não é isso?  Sim, sim.
+
+55:26 - Dr. Thiago Correia
+  Não seja aí, ela seja separada.
+
+55:29 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas ele está certo, essas daí que eu deixei, painel, que vai ficar só essas, né? Painel, lista, que é a lista que agora a gente consegue aprovar.  Eu ainda estou tendo um problema nesse sentido de conseguir identificar qual é a tarefa e tudo mais, entendeu?
+
+55:42 - Dr. Thiago Correia
+  Do tipo da tarefa. Eu tinha pensado para trazer para vocês, se ficar melhor para vocês também, até porque às vezes eu estou com uma ideia na cabeça e eu não consigo explicar tanto.  Então, deixa eu ver se foi esse. Pensei em tentar bolar... Então, eu pensei em se ajudar para vocês, eu posso fazer algo com as telas aqui que seriam, eu vou printar aqui, colocar, isso aqui seria isso, isso aqui seria isso, para ver se ajuda para vocês, se dificulta ou ajuda, vocês que me dizem.  Não, ajuda sim, a gente utiliza dentro desse tipo de O que é para ficar assim, é só para ter um visual da ideia, sabe?  Sim, do novo mundo. Exemplo está bagunçado, não é nem ideal se é daquela forma, mas só para ter um visual.  Isso é lá nas edições, né? Não, aqui assim... Só, por exemplo, eu ia printar isso aqui e mostrar, aqui vai ficar a tela tal, aqui vai ficar a tela tal, aqui a tela tal, entendeu?  Ah, pode ser.
+
+57:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só desenhar a ideia.
+
+57:10 - Dr. Thiago Correia
+  Aí a tela de configurações, que é esses temas, tipos de tarefas, eu vou jogar para uma parte de baixo, ali onde fica, por exemplo, a dashboard, vai ter configuração do motor, por exemplo.  Sim, sim, porque o que eu imagino? É porque quando a gente fala em configuração do motor aqui, a gente vai estar falando só sobre o que é especificamente motor.  Isso. Aqui, aí tem que ter a tela que é tarefas, que é quando a gente vai falar de configurações da tarefa, ponto base e tal, tal, sei o que, né?  Beleza, a gente fala aqui em temas, a gente vai falar aqui sobre, são, então... Casos, né? Casos, né? Isso, isso.  Da questão do motor, eu acho que seria mais, mas só para entender, eu queria ver com vocês se tem alguma parte dessa ideia do motor.  O motor que para vocês ainda está meio obscura para conseguir a gente direcionar.
+
+58:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu estou tentando trazer primeiro as coisas melhores do ProJuris, entendeu? A forma de conceito do ProJuris.
+
+58:12 - Dr. Thiago Correia
+  Quando eu conseguir trazer os dados que eu quero trazer, que a gente ainda não conseguiu direito, aí eu vou conseguir conversar melhor com você nesse sentido do motor.
+
+58:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu vou conseguir trazer mais especificações. Porque primeiro eu preciso conseguir puxar tudo, entendeu?
+
+58:27 - Dr. Thiago Correia
+  Uma coisa que dá para fazer, que talvez ajude vocês aí, é se você quiser falar direto com o suporte do ProJuris.  Pode ser. Na sua conta eu posso, né?
+
+58:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pode. Tem um canal aqui que eles colocam, que você fala...
+
+58:42 - Dr. Thiago Correia
+  Eu vou te mandar o link. Se você manda um ticket, aí vai para o suporte interno deles lá. Por exemplo, aquela questão de o código que mostra para a pessoa lá no ProJuris, né?  Para que só conheça aquele PES, não sei o quê. Aí vocês perguntam, eles vão te saber de falar, não, isso aí é tal coisa aí na API.  É isso, é isso que eu quero, que eu preciso fazer, entendeu? Eu acho que você consegue com eles direto no WhatsApp, cara, direto no WhatsApp deles, que é bem rápido, na verdade, o suporte deles para o WhatsApp, só que eles não colocam muito direcionado.  Então, vou te passar o contato do suporte deles, e aí, toda vez que você for mandar um negócio, ele só vai te perguntar assim, seu e-mail de cadastro, aí você coloca lá o do meu usuário, e eu acho que eles devem te responder tranquilo, porque aí você consegue...  Então, esse tipo de informação aí, tenta direto com esse suporte deles para ver o que eles trazem, porque pode ser mais rápido.  Se eles não souberem, eles vão te indicar e você tem que fazer o ticket lá. O ticket, tá?
+
+59:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, eu vou precisar muito desse processo agora, sabe? Depois você me envia direitinho o número que não apareceu para mim, não, aqui.
+
+59:52 - Dr. Thiago Correia
+  Eu vou te mandar, vou te mandar esse WhatsApp e esse... Porque eu vou ter que, o que eu preciso agora é mais essa, vai ser mais eu e eles mesmo, assim, que é o que eu tô...  Estou tentando fazer aqui, que é ficar procurando qual é o caminho, entendeu?
+
+1:00:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí com eles eu acho que eu consigo resolver isso mais rápido. Aí eu consigo te passar essa semana melhor, quando a gente estiver mais atualizado disso.  Beleza, e aí aqui em tipo de tarefa, que a gente ainda tem algumas situações com isso, é aquilo.
+
+1:00:17 - Dr. Thiago Correia
+  Puxar tudo que tem lá no ProIur, eu acho que é meio esperar entre os temas e outros. Se eu posso criar um novo tipo aqui, aí ele vai criar um novo tipo lá.  O que é obrigatório para eles lá como tipo de tarefa, tal e tal informação. Então o nosso tem que ter também para poder criar lá.  Para poder criar todos. Data previsto, data base, vai puxar do que eles têm lá. Se a gente mudar aqui, muda lá.  Então tanto faz se a pessoa muda aqui ou lá. E aí a única coisa que o nosso sistema não teria que, no deles, não teria que ter no nosso, seria essas informações aqui, né?  Que são únicas. Isso aqui é da tarefa do motor. É, mas aí às vezes até para fins de espelhamento, vocês podem definir que isso aqui entra como marcador lá.  A gente já anota aqui, vai colocando como marcador, porque tem marcador de tarefa lá. Por exemplo, a gente pode...  ou na configuração da tarefa. Então, acho que seria interessante você pegar aquele acesso que eu te passei lá para o Iuris, e pode futucar aí, cara, não tem medo não, só que você conta aí, vocês podem mexer à vontade, vocês podem vir aqui, ó, aqui em configurações, cadastro gerais e as configurações deles, tem tudo que tem de configuração nesse sistema, vai estar aqui dentro, e vocês podem vir aí, mexer no que vocês quiserem aí, para testar o que eles pedem, o que não pedem, o eles consideram, pode ficar à vontade aí.  Tá. É, do que precisar.
+
+1:01:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu acho que o motor é a principal questão que a gente tá, fazendo. Essa semana eu tô, né, focado nisso daí, pra poder a gente conseguir integrar.
+
+1:01:40 - Dr. Thiago Correia
+  Beleza, e aí eu tô, vai ser o tempo que o pessoal vai corrigir a questão do indenização, eu vou, se vocês conseguirem me passar só aquela ideia, Matheus, que eu falei, se conseguirem me passar, o que que vocês precisariam de entregável de entrada pro sistema aqui, pra mim ver se eu consigo fazer aquele negócio do...  Porque tem um tema que eu tenho que trazer, que é algo que eu faço a gestão desse tema, e é horrível, cara, é horrível ter conhecimento, é por isso que conhecimento é uma merda, porque quando eu não sabia porra nenhuma isso aqui, um mês atrás, eu fazia lá no Excel, eu ficava feliz, controlando minhas coisas pelo Excel, agora que eu sei, eu olho para aquilo, eu falo, esse bicho não é possível, que eu ainda estou tendo que digitar isso aqui, eu preciso...  E a minha ideia é pegar esses que eu estou mais perto e bolar esse motor intermediário, então só precisava entender como vocês precisam do entregado.
+
+1:02:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí essa parte, é como eu disse, a parte da importação, certo? A gente depende só do tipo de arquivo, agora a IA rodando dentro é outra coisa.
+
+1:02:44 - Dr. Thiago Correia
+  Não, a IA é outra coisa a mais, eu quero nesse meu motor intermediário entregar para vocês o organizado, e eu entregar a base de dados ali do itemização mais organizada, eu quero entregar para vocês todos esses mais organizados, eu só preciso entender como que eu...
+
+1:03:12 - Matheus Torquato
+  Eu vou te mandar um exemplo, por exemplo, eu vou te mandar um eu vou te mandar um Excel, que nem o Timaneio de cadastro de cliente, de colaborador, é a mesma coisa, você só segue aquele modelo e você pode fazer, entendeu?
+
+1:03:38 - Dr. Thiago Correia
+  Pronto, isso, isso, assim, como se, Thiago, é porque pode ser que não, é cada informação dentro de uma coluna, cada informação como uma página aí, aí a minha ideia é entregar isso já pronto, porque aí vou...
+
+1:03:51 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, porque aí a gente pegando uma base, sempre, aí eu acho que o melhor, se puder, se for possível para vocês, é a gente trabalhar sempre com Excel, porque aí...  Fica mais fácil, porque aí, por exemplo, do Excel, certo? Vou botar o motor do meio que vocês estão falando.  Do Excel importado, eu consigo botar uma IA para transformar aquilo nas lacunas que a gente precisa, que é o que a gente fez aqui no Mais Médicos.  Pronto, é exatamente isso.
+
+1:04:15 - Dr. Thiago Correia
+  Só ter essa planilha de importação, até eu vou botar o sistema para encontrar as informações, entregar nessa planilha e rodar.  Acho que seria isso. Do Conta Azul, eu estou fixando ali como que a gente vai ajustar para frente, até para o sistema já ter isso pronto, mas até sexta-feira eu entrego para vocês.  Aí vai ficar um pouquinho mais simples, na verdade, do que estava de início aí, porque qual que era o problema?  Por que eu pedi para a gente parar as questões do financeiro antes de isso ficar pronto? A gente tem hoje o Conta Azul e o Asas, e no sistema a gente integrou os dois API, só que o que acontece?  O Conta Azul, ele é um... Então, tudo que recebe no Asas, a gente concilia no Conta Azul. Então, se a gente tivesse o registro igual tem Asas e Conta Azul, esse cara que está no Asas teria uma receita e esse cara que está no Asas.  Exato. Então, a gente precisa, não é o Conta Azul e Asas, a gente precisa só do Conta Azul. É a situação de como que a gente automatiza o Conta Azul e o Asas para o nosso sistema identificar o Conta Azul aqui com todas as informações.  Então, aí não vai ter como criar a conta do Asas pelo sistema.
+
+1:05:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tem, tem.
+
+1:05:37 - Dr. Thiago Correia
+  A Conta Azul cria no Asas? Exato, exato. Infelizmente, não é nativo, é pelo Pluga, mas tem algumas opções nesse sentido e aí ele sabe, sabe que essa fatura dessa pessoa é...  Aí pode ser, que aí a gente consegue só mandar a fatura no Conta Azul escolhendo o Geto e Asas.  Só que se o Conta Azul não tiver essa integração...
+
+1:06:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente não consegue, do sistema, mandar para o Asus, porque se for, imagina um quadrado assim, eles estão fora do quadrado, vão se integrar fora do nosso sistema, aí você vai ter que continuar criando no Asus, mas se dá pelo Asus, não tem problema.  Ele é automático lá, de uma forma, sabe?
+
+1:06:17 - Dr. Thiago Correia
+  Eu só tenho que definir certinho como que a gente vai criar, mas tem como. Não é perfeito, não, infelizmente.  Talvez a gente precise até do nosso sistema fazer algum tipo de identificação mais afinada, mas tudo isso puxando do Conta Azul, não puxando de dois, porque dois já é geralista de duplicidade, o nosso sistema precisaria identificar qual que recebeu lá e aqui, excluir, viraria um rolo muito grande por conta de uma bagunça, a gente tem que organizar, porque o sistema precisa das coisas organizadas, acho que isso é o principal.  Isso, mas a gente vai ajudando vocês, vai auxiliando vocês no que a gente possa ir aqui também. Mas, beleza, do motor, o pessoal vai corrigir as questões das tarefas, eu vou tentar trazer essa visualização para vocês, as questões...  Eu vou te mandar qual é contato, vou te passar a página do suporte, e a gente vai trabalhando no motor, e aí quando você mandar a parte do Conta Azul, gente na outra semana faz o Conta Azul, essa semana a gente faz o motor, e a gente tem essas questões que você mandou aí que são mais tranquilas de front-end.  Vou colocar a escrita, escrevi aqui até para ficar mais fácil também.
+
+1:07:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pronto, que é essa parte do front-end, e a gente ajusta essa parte do motor para a Yuris.
+
+1:07:32 - Dr. Thiago Correia
+  Beleza, beleza, vou mandar esses daqui, tinha outras questõezinhas que eu tinha umas ideias, mas deixa para a gente ver mais para frente, até como o Hyago não passou, porque eu acreditava que o Hyago ia passar mais algumas questões para a gente fazer agora, né?  Como ele passou, ele vai viajar uns 10 dias aí, é o tempo que a gente consegue concluir, voltar, terminar essas outras ideias que eu possa ter aqui, e aí quando ele voltar, ver o que ele tem de ideia para vocês seguirem.  Beleza, combinado então. Fechou, fechou então, gente. Beleza, brigadão, Thiago. Valeu. Obrigado, tchau, tchau.
