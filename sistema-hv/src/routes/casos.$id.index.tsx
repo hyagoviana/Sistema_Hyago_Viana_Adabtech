@@ -136,6 +136,7 @@ function CasoDetalhe() {
   const voltar = useVoltarOperacional();
   const promover = usePromoverCasoManual();
   const { role } = useAuth();
+  const isAdmin = role === "admin";
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = usePodeEditar("operacional");
   const { data: perms } = useMyModulePerms();
@@ -584,8 +585,8 @@ function CasoDetalhe() {
         canEdit={podeGerirCaso}
       />
 
-      {/* G4 — gestão de sigilo (só gestor do caso). */}
-      {podeGerirCaso && (
+      {/* G4 — gestão de sigilo: só ADMINISTRADORES (pedido reunião 2026-08-10). */}
+      {isAdmin && (
         <>
           <OrnamentalDivider />
           <CaseSigiloSection caseId={caso.id} />

@@ -279,7 +279,26 @@ export async function createCase(
   let result = created;
   if (client.drive_folder_id) {
     try {
-      const folder = await createFolder(`Caso-${created.case_code}`, client.drive_folder_id);
+      // #5 (reunião 2026-08-10) — nome humanizado da pasta: "{Tema} - {código}"
+      // (ex.: "Indenização Mais Médicos - MAISMEDICOS-2026-0173") em vez de
+      // "Caso-CÓDIGO". A pasta já fica DENTRO da pasta do cliente, então não
+      // repetimos o nome do cliente.
+      let temaNome: string | null = null;
+      try {
+        const { data: st } = await sb
+          .from("system_service_types")
+          .select("name")
+          .eq(input.tema_id ? "tema_id" : "slug", input.tema_id ?? caseType)
+          .is("deleted_at", null)
+          .maybeSingle();
+        temaNome = st?.name?.trim() || null;
+      } catch {
+        temaNome = null;
+      }
+      const folderName = temaNome
+        ? `${temaNome} - ${created.case_code}`
+        : `Caso ${created.case_code}`;
+      const folder = await createFolder(folderName, client.drive_folder_id);
       await sb
         .from("system_cases")
         .update({

@@ -174,9 +174,11 @@ function DroppableColumn<C extends string>({
           {count}
         </span>
       </div>
+      {/* Estilo Trello: cada coluna tem altura-limite e rola verticalmente por
+          conta própria (o header/contador fica fixo acima). */}
       <div
         ref={setNodeRef}
-        className={`space-y-2 rounded-[10px] transition-colors min-h-[48px] ${
+        className={`space-y-2 rounded-[10px] transition-colors min-h-[48px] max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-hidden pr-1 kanban-col-scroll ${
           isOver
             ? "bg-[rgba(152,120,20,0.08)] outline-2 outline-dashed outline-[rgba(152,120,20,0.4)]"
             : ""

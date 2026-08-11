@@ -336,7 +336,8 @@ export function CaseFiltersPanel({
               </div>
             )}
 
-            {!hide.has("etapaFin") && (
+            {/* Só aparece onde HÁ etapa financeira (não vaza para todos os temas). */}
+            {!hide.has("etapaFin") && etapaFinOptions.length > 0 && (
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
                   Financeiro
@@ -396,7 +397,8 @@ export function CaseFiltersPanel({
               </div>
             )}
 
-            {!hide.has("municipio") && (
+            {/* Só aparece onde HÁ município nos casos (não vaza para todos os temas). */}
+            {!hide.has("municipio") && municipioOptions.length > 0 && (
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">
                   Município

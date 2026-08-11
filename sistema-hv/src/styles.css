@@ -545,3 +545,24 @@
   background-clip: content-box;
   border: 2px solid transparent;
 }
+
+/* Colunas do Kanban (estilo Trello): scrollbar fininha e discreta, só ao passar
+   o mouse na coluna, para não competir com os cards. */
+.kanban-col-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.kanban-col-scroll:hover {
+  scrollbar-color: rgba(15, 17, 35, 0.18) transparent;
+}
+.kanban-col-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.kanban-col-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 0;
+}
+.kanban-col-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(15, 17, 35, 0.18);
+  border: 0;
+}
