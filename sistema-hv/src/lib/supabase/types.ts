@@ -1921,6 +1921,7 @@ export type Database = {
           participa_distribuicao_padrao: boolean;
           status_projuris: string | null;
           equipe: string | null;
+          must_change_password: boolean;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -1940,6 +1941,7 @@ export type Database = {
           participa_distribuicao_padrao?: boolean;
           status_projuris?: string | null;
           equipe?: string | null;
+          must_change_password?: boolean;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;

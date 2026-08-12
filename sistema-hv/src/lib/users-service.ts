@@ -815,10 +815,54 @@ export async function updateUserPassword(userId: string, newPassword: string) {
     .select("status")
     .eq("id", userId)
     .maybeSingle();
-  if (profile?.status === "INVITED") {
-    await sb.from("system_users").update({ status: "ACTIVE" }).eq("id", userId);
-  }
+  // Definir a senha SEMPRE zera a marca de senha provisória; se estava INVITED,
+  // ativa junto. (O usuário acabou de escolher a própria senha.)
+  await sb
+    .from("system_users")
+    .update({
+      must_change_password: false,
+      ...(profile?.status === "INVITED" ? { status: "ACTIVE" } : {}),
+    } as never)
+    .eq("id", userId);
 
+  return { ok: true as const };
+}
+
+/**
+ * Zera a marca de senha provisória do usuário (chamado ao concluir a troca
+ * obrigatória em /nova-senha). Idempotente; não altera a senha.
+ */
+export async function clearMustChangePassword(userId: string) {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb
+    .from("system_users")
+    .update({ must_change_password: false } as never)
+    .eq("id", userId);
+  check(error);
+  return { ok: true as const };
+}
+
+/**
+ * Admin define/redefine a senha de um colaborador diretamente (tela de
+ * Permissões). `requireChange` liga a marca de senha provisória — o colaborador
+ * é obrigado a trocar no próximo login. Gate admin é feito no RPC.
+ */
+export async function adminSetUserPassword(
+  userId: string,
+  newPassword: string,
+  opts?: { requireChange?: boolean },
+) {
+  if (!newPassword || newPassword.length < 6) {
+    throw new UsersServiceError("A senha deve ter no mínimo 6 caracteres.", 400);
+  }
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) throw new UsersServiceError(error.message, 400);
+  const { error: flagErr } = await sb
+    .from("system_users")
+    .update({ must_change_password: !!opts?.requireChange } as never)
+    .eq("id", userId);
+  check(flagErr);
   return { ok: true as const };
 }
 

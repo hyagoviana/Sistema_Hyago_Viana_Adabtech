@@ -18,6 +18,8 @@ import {
   type ReassignMapping,
   requestPasswordReset,
   updateUserPassword,
+  clearMustChangePassword,
+  adminSetUserPassword,
   updateUserProfile,
   recordConsent,
   listConsents,
@@ -70,6 +72,31 @@ export const updatePasswordFn = createServerFn({ method: "POST" })
     handle(async () => {
       const user = await requireAuth();
       return updateUserPassword(user.id, data.newPassword);
+    }),
+  );
+
+// Zera a marca de senha provisória do próprio usuário — chamado ao concluir a
+// troca obrigatória em /nova-senha (após ele já ter definido a nova senha).
+export const markPasswordChangedFn = createServerFn({ method: "POST" }).handler(async () =>
+  handle(async () => {
+    const me = await requireAuth();
+    return clearMustChangePassword(me.id);
+  }),
+);
+
+// Admin define/redefine a senha de um colaborador (tela de Permissões). Se
+// `requireChange` for true, o colaborador é obrigado a trocar no próximo login.
+export const adminSetUserPasswordFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { userId: string; newPassword: string; requireChange?: boolean }) => d)
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const me = await requireAuth();
+      if ((await getUserRole(me.id)) !== "admin") {
+        throw new UsersServiceError("Apenas o administrador pode redefinir a senha.", 403);
+      }
+      return adminSetUserPassword(data.userId, data.newPassword, {
+        requireChange: data.requireChange,
+      });
     }),
   );
 

@@ -13,6 +13,8 @@ import {
   setUserDistributionFn,
   removeUserFn,
   updateUserProfileFn,
+  adminSetUserPasswordFn,
+  requestPasswordResetFn,
 } from "@/rpc/users";
 import type { ReassignMapping } from "@/lib/users-service";
 
@@ -124,6 +126,23 @@ export function useSetUserDistribution() {
       qc.invalidateQueries({ queryKey: ["system-users"] });
       qc.invalidateQueries({ queryKey: ["executor-mappings"] });
     },
+  });
+}
+
+// Admin define/redefine a senha de um colaborador (tela de Permissões).
+export function useAdminSetUserPassword() {
+  const fn = useServerFn(adminSetUserPasswordFn);
+  return useMutation({
+    mutationFn: (vars: { userId: string; newPassword: string; requireChange?: boolean }) =>
+      fn({ data: vars }),
+  });
+}
+
+// Dispara o e-mail de redefinição de senha (link → /nova-senha) para um e-mail.
+export function useRequestPasswordReset() {
+  const fn = useServerFn(requestPasswordResetFn);
+  return useMutation({
+    mutationFn: (vars: { email: string; redirectTo: string }) => fn({ data: vars }),
   });
 }
 

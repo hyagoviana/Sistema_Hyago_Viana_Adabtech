@@ -10,6 +10,9 @@ export type UserProfile = {
   full_name: string | null;
   role: Role;
   status: string;
+  // Senha provisória: quando true, o app força a definição de uma senha nova
+  // (guard no RootLayout desvia para /nova-senha).
+  must_change_password: boolean;
 };
 
 type AuthState = {
@@ -47,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const { data, error } = await sb
         .from("system_users_active")
-        .select("id, email, full_name, role, status")
+        .select("id, email, full_name, role, status, must_change_password")
         .eq("id", s.user.id)
         .maybeSingle();
       // Erro transitório de rede: não desloga (evita falso logout).

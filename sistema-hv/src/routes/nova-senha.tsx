@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Eyebrow } from "@/components/hv/primitives";
 import { useAuth } from "@/lib/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { activateUserFn, updateUserProfileFn } from "@/rpc/users";
+import { activateUserFn, markPasswordChangedFn, updateUserProfileFn } from "@/rpc/users";
 import symbolHV from "@/assets/symbol-hv.png";
 
 export const Route = createFileRoute("/nova-senha")({
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/nova-senha")({
 });
 
 function NovaSenhaPage() {
-  const navigate = useNavigate();
   const { session, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +95,22 @@ function NovaSenhaPage() {
       /* admin pode ajustar manualmente se necessário */
     }
 
+    // Zera a marca de senha provisória (caso de troca obrigatória no 1º login).
+    // No fluxo de convite a flag já é false — chamada é um no-op inofensivo.
+    try {
+      await markPasswordChangedFn();
+    } catch {
+      /* não bloqueia o acesso */
+    }
+
     setSuccess(true);
     toast.success("Senha definida com sucesso!");
-    setTimeout(() => navigate({ to: "/hoje" }), 2000);
+    // Reload COMPLETO (não navigate): o guard de senha provisória no RootLayout
+    // lê o perfil do contexto; só um reload recarrega o perfil com a flag zerada
+    // e evita o loop de redirecionamento de volta a esta tela.
+    setTimeout(() => {
+      window.location.assign("/hoje");
+    }, 1500);
   }
 
   return (

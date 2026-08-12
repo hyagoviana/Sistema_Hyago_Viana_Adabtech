@@ -35,6 +35,7 @@ import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadas
 
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
+import { PasswordAdminSection } from "./PasswordAdminSection";
 import { UserModulePermsEditor } from "./UserModulePermsEditor";
 import { UserReportDialog } from "./UserReportDialog";
 
@@ -552,6 +553,10 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <UserModulePermsEditor userId={editing.id} />
                 )}
               </div>
+
+              {/* Senha de acesso — admin define manualmente ou dispara e-mail de
+                  redefinição para o colaborador (2026-08-12). */}
+              <PasswordAdminSection userId={editing.id} email={editing.email} />
             </div>
           )}
           <DialogFooter>

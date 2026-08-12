@@ -160,7 +160,7 @@ function RootComponent() {
 
 function RootLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
   const navigate = useNavigate();
   // Telas de autenticação: redirecionam para /hoje se já houver sessão.
   const isAuthPage = path === "/entrar" || path === "/login";
@@ -171,13 +171,33 @@ function RootLayout() {
     path === "/nova-senha" ||
     path === "/definir-senha";
 
+  // Senha provisória: enquanto a flag estiver ligada, o colaborador é OBRIGADO a
+  // definir uma senha nova. Bloqueia todo o app e desvia para /nova-senha (que,
+  // já com a sessão ativa, mostra o formulário de definição). Ao concluir, a tela
+  // faz um reload completo → o perfil recarrega com a flag zerada e libera.
+  const mustChangePassword = !!session && profile?.must_change_password === true;
+
   useEffect(() => {
     if (loading) return;
     if (!session && !isPublic) navigate({ to: "/login" });
     if (session && isAuthPage) navigate({ to: "/hoje" });
-  }, [loading, session, isAuthPage, isPublic, navigate]);
+    if (mustChangePassword && path !== "/nova-senha") navigate({ to: "/nova-senha" });
+  }, [loading, session, isAuthPage, isPublic, mustChangePassword, path, navigate]);
 
   if (isPublic) return <Outlet />;
+
+  // Trava dura: nunca renderiza o app com senha provisória pendente (evita flash
+  // do conteúdo antes do redirecionamento do efeito acima).
+  if (mustChangePassword) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{ background: "var(--bg-page)" }}
+      >
+        <div className="text-sm text-[var(--ink-400)]">Redirecionando para a definição de senha…</div>
+      </div>
+    );
+  }
   if (loading || !session) {
     return (
       <div
