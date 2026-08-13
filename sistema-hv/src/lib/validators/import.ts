@@ -214,6 +214,8 @@ export const importExecuteSchema = z.object({
   temaId: z.string().uuid().optional().nullable(),
   fileName: z.string().min(1),
   fileSize: z.number().optional(),
+  criarPastaDrive: z.boolean().optional().default(false),
+  marcarComoCliente: z.boolean().optional().default(false),
 });
 
 export type ImportExecuteInput = z.infer<typeof importExecuteSchema>;

@@ -1,8 +1,11 @@
 // Server-only — orquestra importacao em massa de clientes/casos.
 // NUNCA importe este arquivo em codigo que roda no browser.
 
+import slugify from "slugify";
+
 import { createCase } from "./cases-service";
 import { findOrCreateClient } from "./clients-service";
+import { createFolder, DriveError } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 import {
   applyTransform,
@@ -141,6 +144,38 @@ function buildNestedObject(
 
 type ImportRowError = { row: number; field?: string; message: string };
 
+// Cria pasta de cliente no Drive (best-effort — não bloqueia a importação).
+async function criarPastaCliente(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  clientId: string,
+  fullName: string,
+  cpfCnpj: string,
+): Promise<void> {
+  const parentId = process.env.GOOGLE_DRIVE_CLIENTS_FOLDER_ID;
+  if (!parentId) return; // sem env var, ignora silenciosamente
+
+  const folderName = `${slugify(fullName, { lower: true, strict: true, locale: "pt" })}-${cpfCnpj}`;
+  try {
+    const folder = await createFolder(folderName, parentId);
+    await sb
+      .from("system_clients")
+      .update({
+        drive_folder_id: folder.id,
+        drive_folder_url: folder.url,
+        drive_sync_failed: false,
+        drive_sync_error: null,
+      })
+      .eq("id", clientId);
+  } catch (err) {
+    const msg =
+      err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
+    await sb
+      .from("system_clients")
+      .update({ drive_sync_failed: true, drive_sync_error: msg.slice(0, 2000) })
+      .eq("id", clientId);
+  }
+}
+
 export async function executeImport(
   input: ImportExecuteInput,
   userId?: string,
@@ -151,7 +186,7 @@ export async function executeImport(
   importRunId: string;
 }> {
   const sb = getSupabaseAdmin();
-  const { rows, mappings, targetEntity, templateId, temaId, fileName, fileSize } = input;
+  const { rows, mappings, targetEntity, templateId, temaId, fileName, fileSize, criarPastaDrive, marcarComoCliente } = input;
 
   // Separar mapeamentos por entidade
   const clientMappings = mappings.filter((m) => {
@@ -218,6 +253,20 @@ export async function executeImport(
               });
             }
           }
+
+          // Pasta do Drive — se o cliente já existia e não tem pasta, cria agora
+          const cli = result.client as Record<string, unknown>;
+          if (criarPastaDrive && !cli.drive_folder_id) {
+            await criarPastaCliente(sb, result.client.id, String(cli.full_name), String(cli.cpf_cnpj));
+          }
+
+          // Marcar como cliente (se ainda não é)
+          if (marcarComoCliente && !cli.marcado_cliente_at) {
+            await sb
+              .from("system_clients")
+              .update({ marcado_cliente_at: new Date().toISOString() })
+              .eq("id", result.client.id);
+          }
         } else {
           // Sem CPF — insert direto com placeholder unico
           const placeholder = `IMP${Date.now()}${i}`.slice(0, 14).padEnd(14, "0");
@@ -234,11 +283,12 @@ export async function executeImport(
             birth_date: clientData.birth_date ?? null,
             tipo: clientData.tipo ?? null,
             professional_data: clientData.professional_data ?? null,
+            ...(marcarComoCliente ? { marcado_cliente_at: new Date().toISOString() } : {}),
           };
           const { data: inserted, error: insertErr } = await sb
             .from("system_clients")
             .insert(insertPayload)
-            .select("id")
+            .select("id, full_name, cpf_cnpj")
             .single();
           if (insertErr || !inserted) {
             errors.push({ row: rowNum, message: insertErr?.message ?? "Erro ao criar cliente" });
@@ -247,6 +297,11 @@ export async function executeImport(
           }
           clientId = inserted.id;
           imported++;
+
+          // Criar pasta no Drive (best-effort)
+          if (criarPastaDrive) {
+            await criarPastaCliente(sb, inserted.id, inserted.full_name, inserted.cpf_cnpj);
+          }
         }
 
         // --- Criar caso vinculado ao cliente (se tem tema selecionado) ---

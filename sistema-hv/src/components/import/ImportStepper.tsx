@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -70,6 +71,10 @@ export function ImportStepper() {
     errors: Array<{ row: number; field?: string; message: string }>;
     status: "completed" | "partial" | "failed";
   } | null>(null);
+
+  // Opcoes de importacao
+  const [criarPastaDrive, setCriarPastaDrive] = useState(false);
+  const [marcarComoCliente, setMarcarComoCliente] = useState(false);
 
   // Template
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -142,6 +147,8 @@ export function ImportStepper() {
         temaId: selectedTemaId || null,
         fileName: parsedFile.fileName,
         fileSize: parsedFile.fileSize,
+        criarPastaDrive,
+        marcarComoCliente,
       });
 
       const errorRows = res.errors.filter(
@@ -164,7 +171,7 @@ export function ImportStepper() {
       });
       setStep(2);
     }
-  }, [parsedFile, mappings, detectedTarget, selectedTemplateId, executeImport]);
+  }, [parsedFile, mappings, detectedTarget, selectedTemplateId, selectedTemaId, criarPastaDrive, marcarComoCliente, executeImport]);
 
   const handleSaveTemplate = useCallback(async () => {
     if (!templateName.trim()) return;
@@ -189,6 +196,8 @@ export function ImportStepper() {
     setSelectedTemplateId("");
     setSelectedTemaId("");
     setShowSaveTemplate(false);
+    setCriarPastaDrive(false);
+    setMarcarComoCliente(false);
   }, []);
 
   const activeMappings = mappings.filter((m) => m.targetField && m.targetField !== "");
@@ -261,6 +270,33 @@ export function ImportStepper() {
             <p className="text-[11px] text-muted-foreground">
               Selecione para ter acesso aos campos personalizados da pipeline no mapeamento.
             </p>
+          </div>
+
+          {/* Opcoes de importacao */}
+          <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+            <Label className="text-sm font-medium">Opções da importação</Label>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="criar-pasta-drive"
+                checked={criarPastaDrive}
+                onCheckedChange={(v) => setCriarPastaDrive(v === true)}
+              />
+              <label htmlFor="criar-pasta-drive" className="text-sm cursor-pointer">
+                Criar pasta de cliente no Google Drive
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="marcar-como-cliente"
+                checked={marcarComoCliente}
+                onCheckedChange={(v) => setMarcarComoCliente(v === true)}
+              />
+              <label htmlFor="marcar-como-cliente" className="text-sm cursor-pointer">
+                Marcar como cliente (se desmarcado, entra como lead)
+              </label>
+            </div>
           </div>
 
           <DownloadTemplate extraFields={extraFields} temaName={selectedTemaName} />
