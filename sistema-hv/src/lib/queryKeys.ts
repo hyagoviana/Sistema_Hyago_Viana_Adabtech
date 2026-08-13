@@ -42,4 +42,9 @@ export const queryKeys = {
     comercial: () => [...queryKeys.cases.all, "comercial"] as const,
     conferenciaFin: (caseId: string) => [...queryKeys.cases.all, "conferenciaFin", caseId] as const,
   },
+  import_: {
+    all: ["import"] as const,
+    templates: () => [...queryKeys.import_.all, "templates"] as const,
+    runs: () => [...queryKeys.import_.all, "runs"] as const,
+  },
 } as const;

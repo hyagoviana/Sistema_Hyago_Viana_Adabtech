@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
+import { FileSpreadsheet, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
@@ -82,6 +82,25 @@ function Configuracoes() {
             </div>
             <div className="text-[12px] text-muted-foreground">
               Crie e organize os campos de cada pipeline/tema e do cadastro do cliente.
+            </div>
+          </div>
+          <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
+        </Link>
+      )}
+
+      {/* Importar dados — mesmo guard de campos personalizados */}
+      {podeGerirCampos && (
+        <Link
+          to="/configuracoes/importacao"
+          className="card-editorial !p-5 mt-5 flex items-center gap-3 hover:border-[var(--gold)] transition-colors"
+        >
+          <FileSpreadsheet size={18} className="text-[var(--gold-700)]" />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold text-[var(--navy)]">
+              Importar dados
+            </div>
+            <div className="text-[12px] text-muted-foreground">
+              Importe clientes e casos a partir de planilhas (CSV/XLSX) de sistemas externos.
             </div>
           </div>
           <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
