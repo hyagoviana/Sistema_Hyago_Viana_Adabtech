@@ -443,23 +443,47 @@ function CasoDetalhe() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
-          {/* C3 (2026-08-05) — MULTI-KANBAN (preservado). */}
+          {/* C3 (2026-08-05) — MULTI-KANBAN com cards clicáveis por board. */}
           {opTrail && opTrail.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {opTrail.map((t) => (
-                <div
+              {opTrail.map((t, idx) => (
+                <Link
                   key={t.board_id ?? "__principal__"}
-                  className="flex items-center gap-3 flex-wrap"
+                  to="/pipeline"
+                  search={{
+                    cat: caso.service_type_id ?? undefined,
+                    catName: tipoLabel,
+                    ...(t.board_id ? { board: t.board_id } : {}),
+                  }}
+                  className="block rounded-lg border border-[rgba(30,32,68,0.10)] px-4 py-3 hover:border-[var(--gold-400,rgba(180,155,80,0.4))] hover:bg-[rgba(180,155,80,0.03)] transition-colors cursor-pointer"
                 >
-                  <span className="text-[17px] font-semibold text-[var(--navy)]">
-                    {t.is_principal ? t.stage_label : `${t.board_label} › ${t.stage_label}`}
-                  </span>
-                  {t.entered_at && (
-                    <span className="text-[12px] text-muted-foreground">
-                      há {daysSince(t.entered_at)} dia(s) neste estado
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{
+                        background: t.is_principal
+                          ? "var(--gold-100, rgba(180,155,80,0.15))"
+                          : "rgba(30,32,68,0.08)",
+                        color: t.is_principal
+                          ? "var(--gold-700, #8a6d1b)"
+                          : "var(--navy, #1e2044)",
+                      }}
+                    >
+                      {t.is_principal ? "Kanban Principal" : `Kanban ${idx + 1} · ${t.board_label}`}
                     </span>
-                  )}
-                </div>
+                    {t.entered_at && (
+                      <span className="text-[11px] text-muted-foreground">
+                        há {daysSince(t.entered_at)} dia(s)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[16px] font-semibold text-[var(--navy)]">
+                      {t.stage_label}
+                    </span>
+                    <ExternalLink size={13} className="text-muted-foreground opacity-50" />
+                  </div>
+                </Link>
               ))}
             </div>
           ) : (
@@ -579,9 +603,17 @@ function CasoDetalhe() {
 
       <CaseChecklistPanel
         caseId={caso.id}
-        currentStageSlugs={[caso.macrostatus_op, caso.macrostatus_fin].filter(
-          (s): s is string => !!s && s !== "NAO_APLICAVEL",
-        )}
+        currentStageSlugs={[
+          caso.macrostatus_op,
+          // C3-ext — inclui os stage slugs dos boards CUSTOM (multi-kanban)
+          ...(opTrail ?? [])
+            .filter((t) => !t.is_principal && t.stage_slug)
+            .map((t) => t.stage_slug!),
+          caso.macrostatus_fin,
+        ].filter((s): s is string => !!s && s !== "NAO_APLICAVEL")}
+        boardTrail={opTrail}
+        serviceTypeId={caso.service_type_id}
+        serviceTypeName={tipoLabel}
         canEdit={podeGerirCaso}
       />
 

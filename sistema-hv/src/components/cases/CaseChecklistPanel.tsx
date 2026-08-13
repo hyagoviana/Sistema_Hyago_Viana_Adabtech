@@ -1,4 +1,5 @@
-import { AlertTriangle, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, ExternalLink, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,19 +25,41 @@ import {
 } from "@/hooks/useChecklist";
 import { useUsers } from "@/hooks/useUsers";
 
+// Trail de boards (rastro multi-kanban) — usado p/ agrupar o checklist por board
+// e exibir labels amigáveis em vez do slug cru. Opcional: quando ausente, o painel
+// agrupa pela lista de slugs como antes.
+export type BoardTrailEntry = {
+  board_id: string | null;
+  board_label: string;
+  is_principal: boolean;
+  stage_slug: string | null;
+  stage_label: string;
+};
+
 // S9-11 — Painel de checklist do caso. Além de MARCAR os itens herdados do
 // modelo (por tipo de serviço) e os ad-hoc, permite ACRESCENTAR / EDITAR /
 // EXCLUIR critérios AD-HOC (específicos deste caso) nas etapas ATUAIS (op/fin).
 // currentStageSlugs = etapas em que a criação de ad-hoc faz sentido (o card está
 // nelas agora). Se `canEdit=false`, o painel volta ao comportamento anterior
 // (só marcação), sem afetar os itens herdados (que nunca são editáveis por caso).
+//
+// boardTrail (opcional, C3-ext): quando fornecido, agrupa os itens por BOARD
+// (kanban) em vez de mostrar o slug cru. Cada seção exibe "Board › Etapa" para
+// boards custom e só "Etapa" para o principal. Evita conflitos quando o caso está
+// em múltiplos kanbans com checklists distintos.
 export function CaseChecklistPanel({
   caseId,
   currentStageSlugs = [],
+  boardTrail,
+  serviceTypeId,
+  serviceTypeName,
   canEdit = false,
 }: {
   caseId: string;
   currentStageSlugs?: string[];
+  boardTrail?: BoardTrailEntry[];
+  serviceTypeId?: string | null;
+  serviceTypeName?: string;
   canEdit?: boolean;
 }) {
   const { data: items, isLoading } = useCaseChecklistItems(caseId);
@@ -66,6 +89,27 @@ export function CaseChecklistPanel({
   const currentSet = new Set(currentStageSlugs.filter(Boolean));
   const busy =
     marcarMut.isPending || createMut.isPending || updateMut.isPending || deleteMut.isPending;
+
+  // C3-ext — lookup slug → board info (label amigável + link p/ cada seção do checklist).
+  const slugToBoard = new Map<
+    string,
+    { boardId: string | null; boardLabel: string; stageLabel: string; isPrincipal: boolean; idx: number }
+  >();
+  if (boardTrail) {
+    let idx = 0;
+    for (const entry of boardTrail) {
+      idx++;
+      if (entry.stage_slug) {
+        slugToBoard.set(entry.stage_slug, {
+          boardId: entry.board_id,
+          boardLabel: entry.board_label,
+          stageLabel: entry.stage_label,
+          isPrincipal: entry.is_principal,
+          idx,
+        });
+      }
+    }
+  }
 
   async function toggle(item: Item, done: boolean) {
     try {
@@ -132,10 +176,61 @@ export function CaseChecklistPanel({
         {[...byStage.entries()].map(([slug, arr]) => {
           const isCurrent = currentSet.has(slug);
           const editable = canEdit && isCurrent;
+          const boardInfo = slugToBoard.get(slug);
+          const kanbanLabel = boardInfo
+            ? boardInfo.isPrincipal
+              ? "Kanban Principal"
+              : `Kanban ${boardInfo.idx} · ${boardInfo.boardLabel}`
+            : "Etapa";
+          const pipelineLink =
+            boardInfo && serviceTypeId
+              ? {
+                  to: "/pipeline" as const,
+                  search: {
+                    cat: serviceTypeId,
+                    catName: serviceTypeName,
+                    ...(boardInfo.boardId ? { board: boardInfo.boardId } : {}),
+                  },
+                }
+              : null;
           return (
-            <div key={slug}>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                {slug}
+            <div
+              key={slug}
+              className="rounded-lg border border-[rgba(30,32,68,0.10)] px-4 py-3"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {pipelineLink ? (
+                  <Link
+                    {...pipelineLink}
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity"
+                    style={{
+                      background: boardInfo && !boardInfo.isPrincipal
+                        ? "rgba(30,32,68,0.08)"
+                        : "var(--gold-100, rgba(180,155,80,0.15))",
+                      color: boardInfo && !boardInfo.isPrincipal
+                        ? "var(--navy, #1e2044)"
+                        : "var(--gold-700, #8a6d1b)",
+                    }}
+                  >
+                    {kanbanLabel}
+                    <ExternalLink size={9} />
+                  </Link>
+                ) : (
+                  <span
+                    className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    style={{
+                      background: "var(--gold-100, rgba(180,155,80,0.15))",
+                      color: "var(--gold-700, #8a6d1b)",
+                    }}
+                  >
+                    {kanbanLabel}
+                  </span>
+                )}
+                <span className="text-[13px] font-semibold text-[var(--navy)]">
+                  {boardInfo
+                    ? boardInfo.stageLabel
+                    : slug}
+                </span>
               </div>
               {arr.length > 0 ? (
                 <ChecklistItemsRows

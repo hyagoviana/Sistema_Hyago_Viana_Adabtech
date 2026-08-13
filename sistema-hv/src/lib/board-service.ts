@@ -15,6 +15,7 @@
 // toca system_cases. Regressão ZERO para op/fin.
 
 import { MACRO_OP_LABELS, type MacroOp } from "./cases/constants";
+import { instanciarChecklist } from "./checklist-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import { getVisibleCaseIds } from "./visibility";
 
@@ -558,6 +559,12 @@ export async function addCaseToBoard(
       () => {},
     );
 
+  // C3-ext — instancia o checklist da etapa de destino no board custom (idempotente,
+  // server-side). Sem isso os itens da etapa do board não apareceriam no painel.
+  if (target?.slug) {
+    await instanciarChecklist(caseId, target.slug).catch(() => {});
+  }
+
   return { ok: true as const, noop: false, id: data.id };
 }
 
@@ -881,6 +888,9 @@ export async function moveCaseInBoard(
       () => {},
       () => {},
     );
+
+  // C3-ext — instancia o checklist da nova etapa no board custom (idempotente).
+  await instanciarChecklist(caseId, stage.slug).catch(() => {});
 
   return { ok: true as const, noop: false, id: data.id, stage_slug: stage.slug };
 }
