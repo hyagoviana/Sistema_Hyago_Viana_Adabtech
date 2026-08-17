@@ -221,6 +221,9 @@ export function CaseFeed({ caseId }: { caseId: string }) {
     kind: "comment" | "event";
     id: string;
   } | null>(null);
+  // #7 (2026-08-17) — alternar entre "só manuais" (comentários + marcos) e "tudo"
+  // (inclui eventos automáticos/sistêmicos). Default = mostra tudo.
+  const [showSystemic, setShowSystemic] = useState(true);
 
   // D-M1a / F1 — feed = eventos (sem `fin_*` e sem `note_added`) + notas 'geral',
   // ordenado por created_at DESC (mais recente no topo, como a timeline atual).
@@ -249,6 +252,16 @@ export function CaseFeed({ caseId }: { caseId: string }) {
   }, [eventsQuery.data, notesQuery.data]);
 
   const loading = eventsQuery.isLoading || notesQuery.isLoading;
+
+  // #7 — quando "só manuais", esconde eventos AUTOMÁTICOS (mantém comentários e
+  // marcos/notas manuais).
+  const visibleFeed = useMemo(
+    () =>
+      showSystemic
+        ? feed
+        : feed.filter((it) => it.kind === "comment" || (it.kind === "event" && it.manual)),
+    [feed, showSystemic],
+  );
 
   async function handleCreate() {
     const body = draft.trim();
@@ -306,18 +319,47 @@ export function CaseFeed({ caseId }: { caseId: string }) {
 
   return (
     <div>
-      <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
-        Notas / Linha do tempo
-      </h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-[24px] font-semibold text-[var(--navy)]">
+          Andamentos do caso
+        </h2>
+        {/* #7 — filtro: só manuais × incluir movimentações do sistema. */}
+        <div className="inline-flex rounded-md border border-[var(--border)] overflow-hidden text-[12px] font-medium">
+          <button
+            type="button"
+            onClick={() => setShowSystemic(false)}
+            className={`px-3 py-1.5 transition-colors ${
+              !showSystemic ? "bg-[var(--navy)] text-white" : "bg-white text-[var(--navy)]"
+            }`}
+          >
+            Só manuais
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSystemic(true)}
+            className={`px-3 py-1.5 transition-colors border-l border-[var(--border)] ${
+              showSystemic ? "bg-[var(--navy)] text-white" : "bg-white text-[var(--navy)]"
+            }`}
+          >
+            Tudo
+          </button>
+        </div>
+      </div>
 
-      {/* Caixa de comentário — cria uma nota 'geral' (aparece no feed na hora). */}
+      {/* Caixa de comentário — cria uma nota 'geral' (aparece no feed na hora).
+          #7: altura dinâmica (cresce com o texto até ~400px). */}
       <div className="card-editorial p-4 mb-4">
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onInput={(e) => {
+            const t = e.currentTarget;
+            t.style.height = "auto";
+            t.style.height = `${Math.min(t.scrollHeight, 400)}px`;
+          }}
           placeholder="Escreva um comentário, andamento ou observação pontual deste caso…"
-          rows={3}
-          className="resize-y"
+          rows={4}
+          className="resize-y min-h-[110px]"
         />
         <div className="mt-2 flex justify-end">
           <Button size="sm" onClick={handleCreate} disabled={create.isPending || !draft.trim()}>
@@ -331,11 +373,13 @@ export function CaseFeed({ caseId }: { caseId: string }) {
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
         </div>
-      ) : feed.length === 0 ? (
-        <p className="text-sm text-muted-foreground px-1">Nada registrado ainda.</p>
+      ) : visibleFeed.length === 0 ? (
+        <p className="text-sm text-muted-foreground px-1">
+          {showSystemic ? "Nada registrado ainda." : "Nenhum comentário manual ainda."}
+        </p>
       ) : (
         <ul className="space-y-4 max-h-[560px] overflow-y-auto pr-1">
-          {feed.map((item) => {
+          {visibleFeed.map((item) => {
             const beingEdited = editing?.kind === item.kind && editing.id === item.id;
 
             // ── Comentário manual (nota 'geral') — cartão estilo Trello ──────────

@@ -96,7 +96,10 @@ export function KanbanBoard<TItem, C extends string>({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="overflow-x-auto -mx-1 pb-4">
+      {/* #19 (2026-08-17): a barra de rolagem HORIZONTAL fica ancorada dentro do
+          viewport (max-h + overflow-y-hidden), aparecendo sem precisar rolar a
+          página verticalmente antes. As colunas seguem rolando por conta própria. */}
+      <div className="overflow-x-auto overflow-y-hidden max-h-[calc(100vh-215px)] -mx-1 pb-2">
         <div className="flex items-start gap-4 px-1">
           {columns.map((col) => {
             const colItems = grouped.get(col.id) ?? [];

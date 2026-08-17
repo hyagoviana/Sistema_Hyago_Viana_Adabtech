@@ -21,7 +21,7 @@ const PER_KIND = 6;
 // Páginas/abas do sistema — para a lupa também navegar pela interface.
 const PAGES: { label: string; to: string; ram: string }[] = [
   { label: "Hoje", to: "/hoje", ram: "Operação" },
-  { label: "Pipeline Operacional", to: "/pipeline", ram: "Operação" },
+  { label: "Área de Trabalho", to: "/pipeline", ram: "Operação" },
   { label: "Clientes", to: "/clientes", ram: "Operação" },
   { label: "Tarefas", to: "/tarefas", ram: "Operação" },
   { label: "Cadastro (Leads)", to: "/inteligencia/leads", ram: "Comercial" },
@@ -93,7 +93,7 @@ export async function globalSearch(
         id: t.id,
         label: t.name,
         sublabel: "Tema",
-        ramificacao: "Operação › Pipeline Operacional",
+        ramificacao: "Operação › Área de Trabalho",
         to: "/pipeline",
       });
     }

@@ -40,7 +40,7 @@ export function KanbanPickerPage({ serviceTypeId, name, temaId, onPick, onBack }
       <Breadcrumb
         items={[
           { label: "Operação", to: "/hoje" },
-          { label: "Pipeline Operacional", to: "/pipeline" },
+          { label: "Área de Trabalho", to: "/pipeline" },
           { label: name },
         ]}
       />

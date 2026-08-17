@@ -616,31 +616,39 @@ export function TemaFieldDefsEditor({
         )}
       </div>
 
-      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-        <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} />
-        Obrigatório
-      </label>
-
-      {/* #5 — ocultar só na COLUNA da lista (continua no painel de busca/ficha). */}
-      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-        <input
-          type="checkbox"
-          checked={hiddenInList}
-          onChange={(e) => setHiddenInList(e.target.checked)}
-        />
-        Ocultar na lista (some da coluna; continua no filtro e na ficha)
-      </label>
-
-      {/* A2 (2026-08-03) — ocultar do PAINEL DE FILTROS (lista + Kanban);
-          continua na ficha e (se não ocultado na lista) na coluna. */}
-      <label className="flex items-center gap-2 text-[13px] text-[var(--navy)]">
-        <input
-          type="checkbox"
-          checked={hiddenInFilters}
-          onChange={(e) => setHiddenInFilters(e.target.checked)}
-        />
-        Ocultar do filtro (some do painel de filtros; continua na ficha)
-      </label>
+      {/* #11 (2026-08-17) — Obrigatório / Ocultar na lista / Ocultar do filtro
+          viraram BOTÕES toggle (antes eram checkboxes), no mesmo padrão visual do
+          bloco "Campo dependente" acima. */}
+      <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { on: required, set: setRequired, label: "Obrigatório" },
+              { on: hiddenInList, set: setHiddenInList, label: "Ocultar na lista" },
+              { on: hiddenInFilters, set: setHiddenInFilters, label: "Ocultar do filtro" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              aria-pressed={opt.on}
+              onClick={() => opt.set(!opt.on)}
+              className={`px-3 py-1.5 rounded-md border text-[12px] font-medium transition-colors ${
+                opt.on
+                  ? "bg-[var(--navy)] text-white border-[var(--navy)]"
+                  : "bg-white text-[var(--navy)] border-[var(--border)] hover:border-[var(--navy)]/40"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10.5px] text-muted-foreground leading-snug">
+          <strong>Obrigatório</strong>: precisa ser preenchido. · <strong>Ocultar na lista</strong>:
+          some da coluna (continua no filtro e na ficha). · <strong>Ocultar do filtro</strong>: some
+          do painel de filtros (continua na ficha).
+        </p>
+      </div>
 
       <div className="flex items-center gap-2">
         <Button variant="outline" onClick={salvar} disabled={saving || !label.trim()}>

@@ -78,7 +78,7 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Operação",
     items: [
       { to: "/hoje", label: "Hoje", icon: Home },
-      { to: "/pipeline", label: "Pipeline Operacional", icon: Briefcase },
+      { to: "/pipeline", label: "Área de Trabalho", icon: Briefcase },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/comercial/assinaturas", label: "Assinatura", icon: FileSignature, tone: "gold" },
       { to: "/tarefas", label: "Tarefas", icon: CheckSquare },

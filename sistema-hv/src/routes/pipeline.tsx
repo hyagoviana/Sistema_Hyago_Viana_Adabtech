@@ -147,11 +147,11 @@ function ServiceTypeSelection() {
 
   return (
     <div className="page-container !pb-10">
-      <Breadcrumb items={[{ label: "Operação", to: "/hoje" }, { label: "Pipeline Operacional" }]} />
+      <Breadcrumb items={[{ label: "Operação", to: "/hoje" }, { label: "Área de Trabalho" }]} />
       <PageHeader
         eyebrow="Operação"
-        title="Pipeline Operacional"
-        subtitle="Escolha o tema para abrir a esteira."
+        title="Área de Trabalho"
+        subtitle="Escolha o tema para abrir a área de trabalho."
         aside={
           <div className="flex items-center gap-2">
             {canManage && (
@@ -491,12 +491,12 @@ function PrincipalKanban({
       <Breadcrumb
         items={[
           { label: "Operação", to: "/hoje" },
-          { label: "Pipeline Operacional" },
+          { label: "Área de Trabalho" },
           { label: serviceType.name },
         ]}
       />
       <PageHeader
-        eyebrow="Esteira"
+        eyebrow="Área de Trabalho"
         title={serviceType.name}
         subtitle={
           isLoading || stagesLoading
@@ -828,7 +828,7 @@ function CustomBoardKanban({
       <Breadcrumb
         items={[
           { label: "Operação", to: "/hoje" },
-          { label: "Pipeline Operacional" },
+          { label: "Área de Trabalho" },
           { label: serviceType.name },
           { label: board.label },
         ]}

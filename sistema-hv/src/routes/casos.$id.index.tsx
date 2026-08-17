@@ -464,9 +464,7 @@ function CasoDetalhe() {
                         background: t.is_principal
                           ? "var(--gold-100, rgba(180,155,80,0.15))"
                           : "rgba(30,32,68,0.08)",
-                        color: t.is_principal
-                          ? "var(--gold-700, #8a6d1b)"
-                          : "var(--navy, #1e2044)",
+                        color: t.is_principal ? "var(--gold-700, #8a6d1b)" : "var(--navy, #1e2044)",
                       }}
                     >
                       {t.is_principal ? "Kanban Principal" : `Kanban ${idx + 1} · ${t.board_label}`}
@@ -617,14 +615,6 @@ function CasoDetalhe() {
         canEdit={podeGerirCaso}
       />
 
-      {/* G4 — gestão de sigilo: só ADMINISTRADORES (pedido reunião 2026-08-10). */}
-      {isAdmin && (
-        <>
-          <OrnamentalDivider />
-          <CaseSigiloSection caseId={caso.id} />
-        </>
-      )}
-
       {/* G1/G4 — Rastro JUDICIAL resumido (tribunal + nº + etapa) + "Abrir
           judicial". Some para não-autorizados em caso sigiloso (usePodeVerJudicial). */}
       {podeVerJudicial && (
@@ -730,6 +720,15 @@ function CasoDetalhe() {
           </div>
         )}
       </div>
+
+      {/* G4 — gestão de sigilo: só ADMINISTRADORES (pedido reunião 2026-08-10).
+          #14 (2026-08-17): movido para o FINAL da ficha (era no meio). */}
+      {isAdmin && (
+        <>
+          <OrnamentalDivider />
+          <CaseSigiloSection caseId={caso.id} />
+        </>
+      )}
 
       {/* J2 — editar o nome do caso (caso_pasta_nome). */}
       <CaseNameEditDialog

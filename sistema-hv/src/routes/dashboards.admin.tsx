@@ -45,10 +45,7 @@ function KpiCard({
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div
-            className="mt-2 text-[28px] font-semibold"
-            style={{ color: tone ?? "var(--navy)" }}
-          >
+          <div className="mt-2 text-[28px] font-semibold" style={{ color: tone ?? "var(--navy)" }}>
             {value}
           </div>
         </div>
@@ -280,9 +277,7 @@ function AdminDash() {
                           <Scale size={13} className="shrink-0 text-muted-foreground" />
                           {c.case_code}
                         </div>
-                        <div className="text-muted-foreground mt-0.5 truncate">
-                          {c.client_name}
-                        </div>
+                        <div className="text-muted-foreground mt-0.5 truncate">{c.client_name}</div>
                       </div>
                       <div className="text-right shrink-0 ml-3">
                         <div className="text-muted-foreground">{formatDate(c.created_at)}</div>
@@ -342,7 +337,7 @@ function AdminDash() {
             <SectionTitle>Acesso rápido</SectionTitle>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { to: "/pipeline", label: "Pipeline Operacional", icon: Briefcase },
+                { to: "/pipeline", label: "Área de Trabalho", icon: Briefcase },
                 { to: "/casos/financeiro", label: "Pipeline Financeiro", icon: DollarSign },
                 { to: "/clientes", label: "Clientes", icon: Users },
                 { to: "/dashboards/financeiro", label: "Dashboard Financeiro", icon: TrendingUp },
@@ -354,9 +349,15 @@ function AdminDash() {
                     to={link.to as any}
                     className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] hover:border-[var(--gold-500)] hover:bg-[var(--gold-50,#fef9ee)] transition-colors group"
                   >
-                    <Icon size={16} className="text-muted-foreground group-hover:text-[var(--gold-700)]" />
+                    <Icon
+                      size={16}
+                      className="text-muted-foreground group-hover:text-[var(--gold-700)]"
+                    />
                     <span className="text-[13px] font-medium text-[var(--navy)]">{link.label}</span>
-                    <ArrowRight size={12} className="ml-auto text-muted-foreground group-hover:text-[var(--gold-700)]" />
+                    <ArrowRight
+                      size={12}
+                      className="ml-auto text-muted-foreground group-hover:text-[var(--gold-700)]"
+                    />
                   </Link>
                 );
               })}
