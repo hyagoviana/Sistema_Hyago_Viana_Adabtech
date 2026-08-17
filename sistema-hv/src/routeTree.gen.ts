@@ -61,6 +61,7 @@ import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.
 import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
 import { Route as ControladoriaDistribuicaoRouteImport } from './routes/controladoria.distribuicao'
 import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
+import { Route as ConfiguracoesWorkflowsRouteImport } from './routes/configuracoes.workflows'
 import { Route as ConfiguracoesImportacaoRouteImport } from './routes/configuracoes.importacao'
 import { Route as ConfiguracoesCamposPersonalizadosRouteImport } from './routes/configuracoes.campos-personalizados'
 import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
@@ -372,6 +373,11 @@ const ControladoriaDecisoesRoute = ControladoriaDecisoesRouteImport.update({
   path: '/controladoria/decisoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiguracoesWorkflowsRoute = ConfiguracoesWorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
+  getParentRoute: () => ConfiguracoesRoute,
+} as any)
 const ConfiguracoesImportacaoRoute = ConfiguracoesImportacaoRouteImport.update({
   id: '/importacao',
   path: '/importacao',
@@ -661,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
@@ -760,6 +767,7 @@ export interface FileRoutesByTo {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
@@ -862,6 +870,7 @@ export interface FileRoutesById {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
@@ -966,6 +975,7 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
@@ -1065,6 +1075,7 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
@@ -1166,6 +1177,7 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
@@ -1685,6 +1697,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaDecisoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes/workflows': {
+      id: '/configuracoes/workflows'
+      path: '/workflows'
+      fullPath: '/configuracoes/workflows'
+      preLoaderRoute: typeof ConfiguracoesWorkflowsRouteImport
+      parentRoute: typeof ConfiguracoesRoute
+    }
     '/configuracoes/importacao': {
       id: '/configuracoes/importacao'
       path: '/importacao'
@@ -2027,6 +2046,7 @@ declare module '@tanstack/react-router' {
 interface ConfiguracoesRouteChildren {
   ConfiguracoesCamposPersonalizadosRoute: typeof ConfiguracoesCamposPersonalizadosRoute
   ConfiguracoesImportacaoRoute: typeof ConfiguracoesImportacaoRoute
+  ConfiguracoesWorkflowsRoute: typeof ConfiguracoesWorkflowsRoute
   ConfiguracoesIndexRoute: typeof ConfiguracoesIndexRoute
 }
 
@@ -2034,6 +2054,7 @@ const ConfiguracoesRouteChildren: ConfiguracoesRouteChildren = {
   ConfiguracoesCamposPersonalizadosRoute:
     ConfiguracoesCamposPersonalizadosRoute,
   ConfiguracoesImportacaoRoute: ConfiguracoesImportacaoRoute,
+  ConfiguracoesWorkflowsRoute: ConfiguracoesWorkflowsRoute,
   ConfiguracoesIndexRoute: ConfiguracoesIndexRoute,
 }
 

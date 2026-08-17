@@ -35,6 +35,7 @@ import {
   setCaseFieldsLocked,
 } from "@/lib/cases-service";
 import { AuthError, requireAuth, requireAnyModule, requireModule } from "@/lib/supabase/auth-guard";
+import { runWorkflowsFor } from "@/lib/workflow-engine";
 import {
   caseCreateSchema,
   caseUpdateSchema,
@@ -280,7 +281,15 @@ const moveSchema = z.object({ id: z.string().uuid(), to: z.string().min(1) });
 
 export const moveCaseStatusFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveSchema.parse(data))
-  .handler(async ({ data }) => handleManage((userId) => moveCaseStatus(data.id, data.to, userId)));
+  .handler(async ({ data }) =>
+    handleManage(async (userId) => {
+      const res = await moveCaseStatus(data.id, data.to, userId);
+      // #2 (2026-08-17) — dispara os workflows do gatilho "status_changed".
+      // Best-effort (o motor engole erros e é idempotente por evento).
+      await runWorkflowsFor(data.id, "status_changed", { toStageSlug: data.to }, userId);
+      return res;
+    }),
+  );
 
 const moveFinSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_FIN) });
 

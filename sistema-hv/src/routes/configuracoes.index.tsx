@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileSpreadsheet, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
+import { FileSpreadsheet, ShieldCheck, SlidersHorizontal, Users, Zap } from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
@@ -96,11 +96,26 @@ function Configuracoes() {
         >
           <FileSpreadsheet size={18} className="text-[var(--gold-700)]" />
           <div className="flex-1">
-            <div className="text-[14px] font-semibold text-[var(--navy)]">
-              Importar dados
-            </div>
+            <div className="text-[14px] font-semibold text-[var(--navy)]">Importar dados</div>
             <div className="text-[12px] text-muted-foreground">
               Importe clientes e casos a partir de planilhas (CSV/XLSX) de sistemas externos.
+            </div>
+          </div>
+          <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
+        </Link>
+      )}
+
+      {/* #2 — atalho para Workflows (automações) — mesmo guard de sistema:edit */}
+      {podeGerirCampos && (
+        <Link
+          to="/configuracoes/workflows"
+          className="card-editorial !p-5 mt-5 flex items-center gap-3 hover:border-[var(--gold)] transition-colors"
+        >
+          <Zap size={18} className="text-[var(--gold-700)]" />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold text-[var(--navy)]">Workflows</div>
+            <div className="text-[12px] text-muted-foreground">
+              Automatize ações do caso: ao mudar de etapa, crie tarefas e registre comentários.
             </div>
           </div>
           <span className="text-[var(--gold-700)] text-sm">Abrir →</span>

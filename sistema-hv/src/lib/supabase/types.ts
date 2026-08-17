@@ -1545,6 +1545,60 @@ export type Database = {
           },
         ];
       };
+      system_workflow_rules: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          active: boolean;
+          tema_id: string | null;
+          trigger_type: string;
+          trigger_config: Json;
+          actions: Json;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          active?: boolean;
+          tema_id?: string | null;
+          trigger_type: string;
+          trigger_config?: Json;
+          actions?: Json;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_workflow_rules"]["Insert"]>;
+        Relationships: [];
+      };
+      system_workflow_runs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          rule_id: string;
+          case_id: string;
+          event_key: string;
+          status: string;
+          detail: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          rule_id: string;
+          case_id: string;
+          event_key: string;
+          status?: string;
+          detail?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_workflow_runs"]["Insert"]>;
+        Relationships: [];
+      };
       system_case_links: {
         Row: {
           id: string;
