@@ -145,21 +145,36 @@ export async function buildProjurisClientFromConfig(
   });
 }
 
-// R5 — extrai os CÓDIGOS ProJuris dos responsáveis de uma tarefa (multi-modulo).
-function extractRespCodes(t: Record<string, unknown>): string[] {
-  const arr = t.usuarioResponsaveis;
-  if (!Array.isArray(arr)) return [];
-  const out: string[] = [];
-  for (const r of arr) {
-    if (r && typeof r === "object") {
-      const o = r as Record<string, unknown>;
-      const cod = o.codigoUsuario ?? o.chave ?? o.codigo;
-      if (cod != null) out.push(String(cod));
-    } else if (r != null) {
-      out.push(String(r));
-    }
+// R5 — extrai os NOMES dos responsáveis de uma tarefa (multi-modulo). ACHADO
+// 2026-08-17: no multi-modulo, `usuarioResponsaveis` vem como STRING de nome(s)
+// ("THAISE" ou "Fulano, Beltrano"), não como array de códigos. Casamos por NOME
+// contra system_users (ver normalizeNome / write do snapshot).
+function parseRespNames(t: Record<string, unknown>): string[] {
+  const raw = t.usuarioResponsaveis;
+  if (typeof raw === "string") {
+    return raw
+      .split(/[,;/]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
-  return out;
+  if (Array.isArray(raw)) {
+    return raw
+      .map((r) =>
+        r && typeof r === "object"
+          ? String(
+              (r as Record<string, unknown>).nome ?? (r as Record<string, unknown>).valor ?? "",
+            )
+          : String(r ?? ""),
+      )
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+// Normaliza nome p/ casamento (minúsculo, sem acento, espaços colapsados).
+function normalizeNome(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 // R5 — normaliza a situação da tarefa numa das COLUNAS do Kanban (estilo
@@ -266,7 +281,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     concluida: boolean;
     prazo_previsto: string | null;
     prazo_fatal: string | null;
-    respCodes: string[];
+    respNames: string[];
   }> = [];
 
   const MAX_PROC = Number(process.env.DISTRIBUICAO_MAX_PROCESSOS ?? "150") || 150;
@@ -301,7 +316,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
           concluida: t.flagSituacaoConcluida === true,
           prazo_previsto: msToIso(t.dataConclusaoPrevista),
           prazo_fatal: msToIso(t.dataLimite),
-          respCodes: extractRespCodes(t),
+          respNames: parseRespNames(t),
         });
         // So tarefas ABERTAS (nao concluidas) entram na DISTRIBUIÇÃO.
         if (t.flagSituacaoConcluida === true) continue;
@@ -825,46 +840,32 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // ---- 7c) SNAPSHOT de tarefas -> aba Kanban (R5) ----
   // Refresh completo por org (delete + insert). Não derruba o batch em erro.
   try {
-    // Mapa código ProJuris -> NOME (via /usuario).
-    const userNameByCode = new Map<string, string>();
-    try {
-      const raw = await client.projurisGet<{
-        simpleDto?: Array<{ chave: unknown; valor: unknown }>;
-      }>("usuario");
-      const list =
-        raw?.simpleDto ?? (firstArrayDeep(raw) as Array<{ chave: unknown; valor: unknown }>);
-      for (const u of list ?? []) {
-        const k = u.chave == null ? null : String(u.chave);
-        const v = typeof u.valor === "string" ? u.valor : null;
-        if (k && v) userNameByCode.set(k, v);
-      }
-    } catch {
-      /* /usuario indisponível — nomes caem para o código */
-    }
-    // Mapa código ProJuris do responsável -> nosso system_users.id (RBAC).
-    const userIdByCode = new Map<string, string>();
-    {
-      const { data: mapRows } = await supabase
-        .from("system_projuris_executor_mapping")
-        .select("projuris_responsavel_id, executor_id")
-        .eq("organization_id", ORG_ID);
-      for (const m of (mapRows ?? []) as {
-        projuris_responsavel_id: string | null;
-        executor_id: string | null;
-      }[]) {
-        if (m.projuris_responsavel_id && m.executor_id) {
-          userIdByCode.set(String(m.projuris_responsavel_id), m.executor_id);
-        }
-      }
-    }
+    // RBAC por NOME: o multi-modulo dá o NOME do responsável (não o código).
+    // Casamos contra system_users (índice normalizado). Match: full_name exato,
+    // ou startsWith, ou token exato (ex.: "THAISE" -> "Thaíse Correia").
+    const users = (usersRes.data ?? []) as Array<{ id: string; full_name: string | null }>;
+    const usersNorm = users
+      .filter((u) => u.full_name)
+      .map((u) => ({ id: u.id, norm: normalizeNome(u.full_name!) }));
+    const idByFullNorm = new Map<string, string>();
+    for (const u of usersNorm) if (!idByFullNorm.has(u.norm)) idByFullNorm.set(u.norm, u.id);
+    const matchUserId = (name: string): string | null => {
+      const n = normalizeNome(name);
+      if (!n) return null;
+      const exact = idByFullNorm.get(n);
+      if (exact) return exact;
+      const cand = usersNorm.find(
+        (u) => u.norm.startsWith(n + " ") || u.norm.split(" ").includes(n),
+      );
+      return cand?.id ?? null;
+    };
     // Dedup por task_id (a última vista vence).
     const snapByTask = new Map<string, (typeof snapshotRaw)[number]>();
     for (const s of snapshotRaw) snapByTask.set(s.task_id, s);
     const kanbanRows = [...snapByTask.values()].map((s) => {
       const ids = [
-        ...new Set(s.respCodes.map((c) => userIdByCode.get(c)).filter((v): v is string => !!v)),
+        ...new Set(s.respNames.map((nm) => matchUserId(nm)).filter((v): v is string => !!v)),
       ];
-      const nomes = s.respCodes.map((c) => userNameByCode.get(c) ?? c);
       return {
         organization_id: ORG_ID,
         task_id: s.task_id,
@@ -876,7 +877,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
         situacao_col: normalizeSituacaoCol(s.situacao, s.concluida),
         concluida: s.concluida,
         responsavel_ids: ids,
-        responsavel_nomes: nomes,
+        responsavel_nomes: s.respNames,
         prazo_previsto: s.prazo_previsto,
         prazo_fatal: s.prazo_fatal,
         synced_at: new Date().toISOString(),

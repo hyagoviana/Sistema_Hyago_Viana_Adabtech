@@ -78,7 +78,13 @@ async function fetchUserMap(client: ProjurisClient): Promise<Map<string, string>
 
 // Extrai ENVOLVIDOS de forma defensiva (o nome da chave varia; tentamos as mais
 // prováveis). Cada item vira { nome, papel } (papel = Autor/Réu/etc.).
+// Chaves reais confirmadas contra o ProJuris (2026-08-17):
+// processoEnvolvidoSimplificadoWs = [{ nomePessoaEnvolvido, participacaoTipo:"Autor",
+// participacao:"PARTE_ATIVA", flagCliente, flagPrincipal }]. As demais ficam como
+// fallback defensivo.
 const ENVOLVIDO_KEYS = [
+  "processoEnvolvidoSimplificadoWs",
+  "processoEnvolvidoWs",
   "envolvidoWs",
   "envolvidos",
   "parteWs",
@@ -105,6 +111,7 @@ function extractEnvolvidos(proc: Record<string, unknown>): ProcessoEnvolvido[] {
     }
     const o = it as Record<string, unknown>;
     const nome =
+      asStr(o.nomePessoaEnvolvido) ??
       asStr(o.nome) ??
       asStr(o.nomePessoa) ??
       asStr(o.nomeParte) ??
@@ -112,6 +119,8 @@ function extractEnvolvidos(proc: Record<string, unknown>): ProcessoEnvolvido[] {
       pickValor(o.pessoa) ??
       pickValor(o.valor);
     const papel =
+      pickValor(o.participacaoTipo) ??
+      pickValor(o.participacao) ??
       pickValor(o.papel) ??
       pickValor(o.tipoParticipacao) ??
       pickValor(o.tipoEnvolvido) ??
@@ -121,6 +130,19 @@ function extractEnvolvidos(proc: Record<string, unknown>): ProcessoEnvolvido[] {
     if (nome) out.push({ nome, papel });
   }
   return out;
+}
+
+// Número CNJ real: processoNumeroWs = [{ numeroDoProcesso, principal, ... }].
+function extractNumeroCnj(proc: Record<string, unknown>): string | null {
+  const arr = proc.processoNumeroWs;
+  if (Array.isArray(arr) && arr.length) {
+    const principal =
+      (arr as Array<Record<string, unknown>>).find((n) => n.principal === true) ??
+      (arr[0] as Record<string, unknown>);
+    const num = asStr(principal.numeroDoProcesso) ?? asStr(principal.numero);
+    if (num) return num;
+  }
+  return null;
 }
 
 function extractResponsaveis(t: Record<string, unknown>, userMap: Map<string, string>): string[] {
@@ -261,7 +283,10 @@ export async function fetchProcessoDetalhe(codigoProcesso: string): Promise<Proc
     ...empty(codigo, null),
     identificador: asStr(proc.identificador),
     numero_processo:
-      asStr(proc.numeroProcesso) ?? asStr(proc.numeroProcessoUnico) ?? asStr(proc.numero),
+      asStr(proc.numeroProcesso) ??
+      asStr(proc.numeroProcessoUnico) ??
+      asStr(proc.numero) ??
+      extractNumeroCnj(proc),
     assunto: asStr(proc.assunto) ?? asStr(proc.nomeAssunto),
     orgao: pickValor(proc.orgaoJudicial) ?? pickValor(proc.orgaoJulgador),
     classe: pickValor(proc.classeCnj),
