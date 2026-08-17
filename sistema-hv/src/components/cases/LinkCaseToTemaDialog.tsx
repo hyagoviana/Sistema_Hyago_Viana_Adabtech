@@ -159,8 +159,7 @@ export function LinkCaseToTemaDialog({
 
     // Alvo KANBAN — posiciona o caso num kanban do tema atual (NÃO troca de tema).
     //   • Destino = PRINCIPAL → "voltar ao principal": remove posições custom.
-    //   • Destino custom + MOVER  → move exclusivo (sai do principal e dos outros).
-    //   • Destino custom + DUPLICAR → aditivo (fica no principal e no destino).
+    //   • Destino custom → sempre ADITIVO (#5: o caso nunca sai do principal).
     if (!boardId) return;
 
     // Voltar ao principal (mover para o board principal). Duplicar-no-principal
@@ -338,11 +337,7 @@ export function LinkCaseToTemaDialog({
                 }`}
               >
                 <div className="font-semibold">Mover / Transferir</div>
-                <div className="opacity-80">
-                  {alvo === "tema"
-                    ? "Sai do tema atual e entra no destino."
-                    : "Sai do principal e vai SÓ para o kanban de destino."}
-                </div>
+                <div className="opacity-80">Sai do tema atual e entra no destino.</div>
               </button>
               <button
                 type="button"
@@ -354,11 +349,7 @@ export function LinkCaseToTemaDialog({
                 }`}
               >
                 <div className="font-semibold">Duplicar</div>
-                <div className="opacity-80">
-                  {alvo === "tema"
-                    ? "Cria uma cópia no destino; mantém o original."
-                    : "Mantém o caso no principal e no kanban de destino."}
-                </div>
+                <div className="opacity-80">Cria uma cópia no destino; mantém o original.</div>
               </button>
             </div>
           )}
@@ -422,7 +413,7 @@ export function LinkCaseToTemaDialog({
           </Button>
           <Button onClick={confirmar} disabled={confirmDisabled}>
             {pending
-              ? modo === "duplicar"
+              ? alvo === "tema" && modo === "duplicar"
                 ? "Duplicando…"
                 : alvo === "tema"
                   ? "Transferindo…"
