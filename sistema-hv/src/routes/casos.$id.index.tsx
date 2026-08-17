@@ -40,6 +40,7 @@ import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseFeed } from "@/components/cases/CaseFeed";
 import { CaseObservacoes } from "@/components/cases/CaseObservacoes";
+import { CaseLinkedCases } from "@/components/cases/CaseLinkedCases";
 import { CaseSigiloSection } from "@/components/cases/CaseSigiloSection";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
@@ -516,6 +517,25 @@ function CasoDetalhe() {
               </span>
             </div>
           )}
+
+          {/* #12 (2026-08-17) — Checklist da etapa DENTRO do Rastro Operacional
+              (antes era um painel separado abaixo). */}
+          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
+            <CaseChecklistPanel
+              caseId={caso.id}
+              currentStageSlugs={[
+                caso.macrostatus_op,
+                ...(opTrail ?? [])
+                  .filter((t) => !t.is_principal && t.stage_slug)
+                  .map((t) => t.stage_slug!),
+                caso.macrostatus_fin,
+              ].filter((s): s is string => !!s && s !== "NAO_APLICAVEL")}
+              boardTrail={opTrail}
+              serviceTypeId={caso.service_type_id}
+              serviceTypeName={tipoLabel}
+              canEdit={podeGerirCaso}
+            />
+          </div>
         </div>
 
         {/* F1 (AC-3/AC-4) — Rastro Financeiro RESUMIDO. O bloco integral
@@ -621,23 +641,19 @@ function CasoDetalhe() {
         )}
       </div>
 
+      {/* #13 + #6 (2026-08-17) — no lugar do antigo painel de Checklist (movido
+          para dentro do Rastro Operacional), 2 painéis lado a lado: Casos
+          vinculados + Observações gerais (estilo Trello). */}
       <OrnamentalDivider />
 
-      <CaseChecklistPanel
-        caseId={caso.id}
-        currentStageSlugs={[
-          caso.macrostatus_op,
-          // C3-ext — inclui os stage slugs dos boards CUSTOM (multi-kanban)
-          ...(opTrail ?? [])
-            .filter((t) => !t.is_principal && t.stage_slug)
-            .map((t) => t.stage_slug!),
-          caso.macrostatus_fin,
-        ].filter((s): s is string => !!s && s !== "NAO_APLICAVEL")}
-        boardTrail={opTrail}
-        serviceTypeId={caso.service_type_id}
-        serviceTypeName={tipoLabel}
-        canEdit={podeGerirCaso}
-      />
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="card-hero p-7">
+          <CaseLinkedCases caseId={caso.id} canEdit={podeGerirCaso} />
+        </div>
+        <div className="card-hero p-7">
+          <CaseObservacoes caseId={caso.id} legacyText={casoObservacoes} canEdit={podeGerirCaso} />
+        </div>
+      </div>
 
       {/* G1/G4 — Rastro JUDICIAL resumido (tribunal + nº + etapa) + "Abrir
           judicial". Some para não-autorizados em caso sigiloso (usePodeVerJudicial). */}
@@ -707,13 +723,10 @@ function CasoDetalhe() {
 
       <CaseFeed caseId={caso.id} />
 
-      {/* #6 (2026-08-17) — Observações gerais no modelo linha do tempo (autor/data),
-          movidas p/ cima (eram um campo único no fim da ficha). */}
-      <OrnamentalDivider />
+      {/* #6 (2026-08-17) — Observações agora vivem no painel de cima (ao lado de
+          Casos vinculados), não mais aqui embaixo. */}
 
-      <CaseObservacoes caseId={caso.id} legacyText={casoObservacoes} canEdit={podeGerirCaso} />
-
-      {/* CaseDossie = Tarefas + Prazos + Comunicações (nesta ordem). */}
+      {/* CaseDossie = só Tarefas (#15). */}
       <OrnamentalDivider />
 
       <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />

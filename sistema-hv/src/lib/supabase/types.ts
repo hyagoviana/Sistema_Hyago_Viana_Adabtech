@@ -1541,6 +1541,26 @@ export type Database = {
           },
         ];
       };
+      system_case_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          linked_case_id: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          linked_case_id: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_links"]["Insert"]>;
+        Relationships: [];
+      };
       system_case_events: {
         Row: {
           id: string;
