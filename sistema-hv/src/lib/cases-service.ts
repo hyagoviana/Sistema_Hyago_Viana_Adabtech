@@ -2049,3 +2049,18 @@ export async function setCaseUrgency(caseId: string, urgency: string | null) {
   if (error || !data) throw new CaseServiceError(error?.message ?? "Falha ao salvar urgência", 500);
   return data;
 }
+
+// #10 (2026-08-17) — cadeado dos campos do caso (só-leitura na ficha).
+export async function setCaseFieldsLocked(caseId: string, locked: boolean) {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_cases")
+    .update({ fields_locked: locked })
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .select("id, fields_locked")
+    .single();
+  if (error || !data)
+    throw new CaseServiceError(error?.message ?? "Falha ao alterar o cadeado", 500);
+  return data;
+}

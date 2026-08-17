@@ -32,6 +32,7 @@ import {
   updateCase,
   updateCaseCanonicalFields,
   updateCaseObservacoes,
+  setCaseFieldsLocked,
 } from "@/lib/cases-service";
 import { AuthError, requireAuth, requireAnyModule, requireModule } from "@/lib/supabase/auth-guard";
 import {
@@ -264,6 +265,12 @@ export const setCaseUrgencyFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) =>
     handleManage(() => setCaseUrgency(data.id, data.urgency === "normal" ? null : data.urgency)),
   );
+
+// #10 (2026-08-17) — cadeado dos campos do caso. Gate operacional:edit.
+const lockSchema = z.object({ id: z.string().uuid(), locked: z.boolean() });
+export const setCaseFieldsLockedFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => lockSchema.parse(data))
+  .handler(async ({ data }) => handleManage(() => setCaseFieldsLocked(data.id, data.locked)));
 
 // (2026-07-09) — `to` é o SLUG da etapa op. Aceita qualquer slug (as etapas são
 // configuráveis por categoria em system_pipeline_stages; o CHECK fixo já foi

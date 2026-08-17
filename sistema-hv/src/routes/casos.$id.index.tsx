@@ -101,6 +101,7 @@ import {
   useDeleteCase,
   usePromoverCasoManual,
   useSetCaseUrgency,
+  useSetCaseFieldsLocked,
 } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import { useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
@@ -185,6 +186,8 @@ function CasoDetalhe() {
 
   // M13 (T3) — urgência do caso (prioritário/urgente) p/ o motor de distribuição.
   const setUrgency = useSetCaseUrgency(id);
+  // #10 — cadeado dos campos do caso (só-leitura).
+  const setFieldsLocked = useSetCaseFieldsLocked(id);
 
   async function handlePromover() {
     try {
@@ -713,6 +716,16 @@ function CasoDetalhe() {
               (cliente as { custom_fields?: Record<string, unknown> | null } | undefined)
                 ?.custom_fields ?? null
             }
+            locked={(caso as { fields_locked?: boolean }).fields_locked ?? false}
+            togglingLock={setFieldsLocked.isPending}
+            onToggleLock={() => {
+              const next = !((caso as { fields_locked?: boolean }).fields_locked ?? false);
+              setFieldsLocked.mutate(next, {
+                onSuccess: () => toast.success(next ? "Campos bloqueados" : "Campos desbloqueados"),
+                onError: (e) =>
+                  toast.error(e instanceof Error ? e.message : "Falha ao alterar o cadeado"),
+              });
+            }}
           />
         </>
       )}

@@ -28,6 +28,7 @@ import {
   promoverCasoManualFn,
   setCaseSigiloFn,
   setCaseUrgencyFn,
+  setCaseFieldsLockedFn,
   softDeleteCaseFn,
   updateCaseCanonicalFieldsFn,
   updateCaseFn,
@@ -236,6 +237,16 @@ export function useSetCaseUrgency(caseId: string) {
   return useMutation({
     mutationFn: (urgency: "normal" | "prioritario" | "urgente") =>
       fn({ data: { id: caseId, urgency } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) }),
+  });
+}
+
+// #10 (2026-08-17) — cadeado dos campos do caso (só-leitura na ficha).
+export function useSetCaseFieldsLocked(caseId: string) {
+  const fn = useServerFn(setCaseFieldsLockedFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (locked: boolean) => fn({ data: { id: caseId, locked } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cases.detail(caseId) }),
   });
 }

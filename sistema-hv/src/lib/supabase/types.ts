@@ -384,9 +384,7 @@ export type Database = {
           prazo_fatal?: string | null;
           synced_at?: string;
         };
-        Update: Partial<
-          Database["public"]["Tables"]["system_distribution_kanban_tasks"]["Insert"]
-        >;
+        Update: Partial<Database["public"]["Tables"]["system_distribution_kanban_tasks"]["Insert"]>;
         Relationships: [];
       };
       system_distribution_manual_assignments: {
@@ -1466,6 +1464,7 @@ export type Database = {
           sigiloso: boolean;
           observacoes: string | null;
           distribution_urgency: string | null;
+          fields_locked: boolean;
           honorarios_estimados_centavos: number | null;
           honorarios_provisionados_centavos: number | null;
           created_by: string | null;
@@ -1518,6 +1517,7 @@ export type Database = {
           sigiloso?: boolean;
           observacoes?: string | null;
           distribution_urgency?: string | null;
+          fields_locked?: boolean;
           honorarios_estimados_centavos?: number | null;
           honorarios_provisionados_centavos?: number | null;
           created_by?: string | null;

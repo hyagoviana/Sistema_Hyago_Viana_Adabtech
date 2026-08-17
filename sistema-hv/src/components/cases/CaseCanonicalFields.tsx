@@ -1,4 +1,4 @@
-import { Plus, Trash2, X } from "lucide-react";
+import { Lock, LockOpen, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -50,11 +50,14 @@ function isValueFilled(value: unknown): boolean {
 export function CaseCanonicalFields({
   caseId,
   canonicalFields,
-  canEdit,
+  canEdit: canManage,
   temaId,
   frenteSlug,
   clientId,
   clientCustomFields,
+  locked = false,
+  onToggleLock,
+  togglingLock = false,
 }: {
   caseId: string;
   canonicalFields: Record<string, unknown> | null | undefined;
@@ -64,7 +67,14 @@ export function CaseCanonicalFields({
   // 2026-07-29 #3 — cliente do caso + seus custom_fields, para campos scope='cliente'.
   clientId?: string | null;
   clientCustomFields?: Record<string, unknown> | null;
+  // #10 (2026-08-17) — cadeado: quando `locked`, os campos ficam só-leitura mesmo
+  // com permissão. O botão (só p/ quem gere o caso) alterna via onToggleLock.
+  locked?: boolean;
+  onToggleLock?: () => void;
+  togglingLock?: boolean;
 }) {
+  // Edição efetiva = permissão E não bloqueado.
+  const canEdit = canManage && !locked;
   const updateMut = useUpdateCaseCanonicalFields();
   const updateClientMut = useUpdateClientCustomFields();
   // R2-07 — defs do tema+frente (só quando o caso tem tema).
@@ -126,10 +136,37 @@ export function CaseCanonicalFields({
 
   return (
     <div className="card-hero p-7">
-      <Eyebrow>Dados do caso</Eyebrow>
-      <p className="text-[12px] text-muted-foreground mt-1">
-        Campos do caso (ex.: nº do contrato). Distintos dos dados do cliente. Buscáveis.
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <Eyebrow>Dados do caso</Eyebrow>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            Campos do caso (ex.: nº do contrato). Distintos dos dados do cliente. Buscáveis.
+          </p>
+        </div>
+        {/* #10 — cadeado: bloqueia os campos para só-leitura (evita preenchimento
+            indevido). Só quem gere o caso pode alternar. */}
+        {canManage && onToggleLock && (
+          <button
+            type="button"
+            onClick={onToggleLock}
+            disabled={togglingLock}
+            title={locked ? "Desbloquear edição dos campos" : "Bloquear edição dos campos"}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+              locked
+                ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold-700)]"
+                : "border-[var(--border)] text-[var(--navy)] hover:border-[var(--navy)]/40"
+            }`}
+          >
+            {locked ? <Lock size={14} /> : <LockOpen size={14} />}
+            {locked ? "Bloqueado" : "Bloquear"}
+          </button>
+        )}
+      </div>
+      {locked && (
+        <p className="mt-2 text-[11px] text-[var(--gold-700)]">
+          Campos bloqueados para edição. Desbloqueie para alterar.
+        </p>
+      )}
 
       {/* R2-07 — campos DEFINIDOS para o tema+frente. #3: valor lido da fonte
           certa (caso × cliente). */}
