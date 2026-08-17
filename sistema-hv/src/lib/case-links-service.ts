@@ -154,7 +154,10 @@ export async function searchCasesForLink(
   // `.or()` do PostgREST e quebrariam a query (400) — ex.: cliente "Silva, João".
   // Também neutraliza tentativa de injeção de cláusula. Wildcards SQL (% _) viram
   // espaço para não alterar o match de forma inesperada.
-  const q = query.replace(/[,()"'\\%_]/g, " ").replace(/\s+/g, " ").trim();
+  const q = query
+    .replace(/[,()"'\\%_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (q.length < 2) return [];
   const sb = getSupabaseAdmin();
   const like = `%${q}%`;
