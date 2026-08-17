@@ -14,6 +14,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   ArrowRightLeft,
+  Check,
+  ChevronDown,
   DollarSign,
   ExternalLink,
   FileSignature,
@@ -58,6 +60,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
@@ -316,31 +326,86 @@ function CasoDetalhe() {
           >
             {lcMeta.label}
           </span>
-          {/* M13 (T3) — urgência p/ o motor (prioritário/urgente). Campo nosso,
-              não existe no ProJuris. Só quem gere o caso edita. */}
+          {/* #3 (2026-08-17) — EDITAR CASO: mudar tema/tipo (pipeline), preencher
+              campos e urgência (agrupa o antigo <select> + "Vincular" + "Preencher"). */}
           {podeGerirCaso && (
-            <select
-              value={
-                (caso as { distribution_urgency?: string | null }).distribution_urgency ?? "normal"
-              }
-              onChange={(e) => {
-                const v = e.target.value as "normal" | "prioritario" | "urgente";
-                setUrgency.mutate(v, {
-                  onSuccess: () =>
-                    toast.success(v === "normal" ? "Urgência removida" : `Marcado como ${v}`),
-                  onError: (err) =>
-                    toast.error(err instanceof Error ? err.message : "Falha ao salvar urgência"),
-                });
-              }}
-              disabled={setUrgency.isPending}
-              title="Urgência para o motor de distribuição"
-              className="self-center h-7 rounded-full border border-[var(--border)] bg-white px-2 text-[11px] font-semibold text-[var(--navy)]"
-            >
-              <option value="normal">Normal</option>
-              <option value="prioritario">Prioritário</option>
-              <option value="urgente">Urgente</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Pencil size={14} className="mr-1.5" /> Editar caso
+                  <ChevronDown size={13} className="ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem onClick={() => setLinkTemaOpen(true)}>
+                  <Layers size={14} className="mr-2" /> Mudar tema / tipo (pipeline)
+                </DropdownMenuItem>
+                {(caso as { tema_id?: string | null }).tema_id && (
+                  <DropdownMenuItem onClick={() => setFillFiltersOpen(true)}>
+                    <SlidersHorizontal size={14} className="mr-2" /> Preencher campos
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Urgência (motor de distribuição)</DropdownMenuLabel>
+                {(
+                  [
+                    { v: "normal", label: "Normal" },
+                    { v: "prioritario", label: "Prioritário" },
+                    { v: "urgente", label: "Urgente" },
+                  ] as const
+                ).map((o) => {
+                  const atual =
+                    ((caso as { distribution_urgency?: string | null }).distribution_urgency ??
+                      "normal") === o.v;
+                  return (
+                    <DropdownMenuItem
+                      key={o.v}
+                      disabled={setUrgency.isPending}
+                      onClick={() =>
+                        setUrgency.mutate(o.v, {
+                          onSuccess: () =>
+                            toast.success(
+                              o.v === "normal" ? "Urgência removida" : `Marcado como ${o.label}`,
+                            ),
+                          onError: (err) =>
+                            toast.error(
+                              err instanceof Error ? err.message : "Falha ao salvar urgência",
+                            ),
+                        })
+                      }
+                    >
+                      <Check size={14} className={`mr-2 ${atual ? "opacity-100" : "opacity-0"}`} />
+                      {o.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
+
+          {/* #4 (2026-08-17) — NOVO ESTÁGIO: mover no fluxo principal + adicionar a
+              outro kanban do mesmo tema. */}
+          {podeGerirCaso && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <ArrowRightLeft size={14} className="mr-1.5" /> Novo estágio
+                  <ChevronDown size={13} className="ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem onClick={() => setMoveOpen(true)}>
+                  <ArrowRightLeft size={14} className="mr-2" /> Mover etapa (fluxo principal)
+                </DropdownMenuItem>
+                {caso.service_type_id && (
+                  <DropdownMenuItem onClick={() => setAddBoardOpen(true)}>
+                    <ListPlus size={14} className="mr-2" /> Adicionar a outro kanban
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {podeGerirCaso &&
             lifecycle !== "CLIENTE" &&
             lifecycle !== "PERDIDO" &&
@@ -363,26 +428,6 @@ function CasoDetalhe() {
           <Button variant="outline" size="sm" onClick={() => setGenFlowOpen(true)}>
             <FileSignature size={14} className="mr-1.5" /> Enviar contrato e procuração
           </Button>
-          {podeGerirCaso && (
-            <Button variant="outline" size="sm" onClick={() => setLinkTemaOpen(true)}>
-              <Layers size={14} className="mr-1.5" /> Vincular ao tema ou kanban
-            </Button>
-          )}
-          {podeGerirCaso && caso.service_type_id && (
-            <Button variant="outline" size="sm" onClick={() => setAddBoardOpen(true)}>
-              <ListPlus size={14} className="mr-1.5" /> Adicionar à lista
-            </Button>
-          )}
-          {podeGerirCaso && (
-            <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
-              <ArrowRightLeft size={14} className="mr-1.5" /> Mover status
-            </Button>
-          )}
-          {podeGerirCaso && (caso as { tema_id?: string | null }).tema_id && (
-            <Button variant="outline" size="sm" onClick={() => setFillFiltersOpen(true)}>
-              <SlidersHorizontal size={14} className="mr-1.5" /> Preencher campos
-            </Button>
-          )}
           {podeGerirCaso && (
             <Button
               variant="outline"
