@@ -150,7 +150,11 @@ export async function searchCasesForLink(
   query: string,
   excludeCaseId: string,
 ): Promise<CaseSearchHit[]> {
-  const q = query.trim();
+  // Sanitiza o termo: vírgula/parênteses/aspas/barra têm significado no filtro
+  // `.or()` do PostgREST e quebrariam a query (400) — ex.: cliente "Silva, João".
+  // Também neutraliza tentativa de injeção de cláusula. Wildcards SQL (% _) viram
+  // espaço para não alterar o match de forma inesperada.
+  const q = query.replace(/[,()"'\\%_]/g, " ").replace(/\s+/g, " ").trim();
   if (q.length < 2) return [];
   const sb = getSupabaseAdmin();
   const like = `%${q}%`;
