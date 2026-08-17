@@ -85,7 +85,6 @@ export function TemaFieldDefsEditor({
   const [scope, setScope] = useState<"caso" | "cliente">("caso");
   // A7 (2026-08-05) — só para scope='cliente': libera reusar a mesma chave do
   // balde COMPARTILHADO do cliente mesmo com rótulo diferente (mesmo dado da pessoa).
-  const [allowSharedClientKey, setAllowSharedClientKey] = useState(false);
   const [hiddenInList, setHiddenInList] = useState(false);
   // A2 (2026-08-03): ocultar do painel de filtros (lista + Kanban) — independente
   // de "ocultar na lista"; o campo segue na ficha do caso.
@@ -162,7 +161,6 @@ export function TemaFieldDefsEditor({
     setOptionsList([]);
     setRequired(false);
     setScope("caso");
-    setAllowSharedClientKey(false);
     setHiddenInList(false);
     setHiddenInFilters(false);
     setMaxOccurrences(1);
@@ -230,8 +228,9 @@ export function TemaFieldDefsEditor({
         : 1;
       // A5 5c — só persiste destino em campos boolean; senão null (não move).
       const moveTo = type === "boolean" ? moveToStageSlug || null : null;
-      // A7 — o override só vale para scope='cliente' (balde compartilhado).
-      const shareOverride = scope === "cliente" ? allowSharedClientKey : false;
+      // #16 (2026-08-17) — campo "do cliente" SEMPRE cria/usa a chave compartilhada
+      // (não há mais a opção de "não compartilhado"). Antes dependia de um checkbox.
+      const shareOverride = scope === "cliente";
       // A4 — dependência: só envia pai quando o checkbox está marcado E há pai
       // escolhido; senão null (remove/sem dependência).
       const parentDefId = isDependent ? parentId || null : null;
@@ -280,19 +279,7 @@ export function TemaFieldDefsEditor({
       resetForm();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Falha ao salvar campo";
-      // A7 — colisão no balde compartilhado do cliente: orienta o override.
-      const isSharedClientConflict =
-        scope === "cliente" &&
-        !allowSharedClientKey &&
-        /dados COMPARTILHADOS do cliente/i.test(msg);
-      if (isSharedClientConflict) {
-        toast.error(msg, {
-          description:
-            'Se for o mesmo dado da pessoa, marque "Usar o mesmo campo do cliente (liberar chave compartilhada)" e salve de novo.',
-        });
-      } else {
-        toast.error(msg);
-      }
+      toast.error(msg);
     }
   }
 
@@ -306,7 +293,6 @@ export function TemaFieldDefsEditor({
     setScope(d.scope === "cliente" ? "cliente" : "caso");
     // A7 — override não é persistido; ao editar, começa desmarcado (só marcar se
     // reaparecer o conflito ao salvar).
-    setAllowSharedClientKey(false);
     setHiddenInList(!!d.hidden_in_list);
     setHiddenInFilters(!!d.hidden_in_filters);
     setMaxOccurrences(d.max_occurrences && d.max_occurrences > 1 ? d.max_occurrences : 1);
@@ -511,27 +497,12 @@ export function TemaFieldDefsEditor({
         </div>
       )}
 
-      {/* A7 (2026-08-05) — override do balde COMPARTILHADO do cliente. Só aparece
-          para scope='cliente'. O valor do cliente é compartilhado entre todos os
-          casos/temas; marcar isto assume que é o MESMO dado da pessoa e libera
-          reusar a mesma chave mesmo com rótulo diferente de outro tema. */}
+      {/* #16 (2026-08-17) — campo "do cliente" é SEMPRE chave compartilhada (a
+          antiga opção "não compartilhado" foi removida). Nota informativa só. */}
       {scope === "cliente" && (
-        <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2">
-          <label className="flex items-start gap-2 text-[13px] text-[var(--navy)]">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={allowSharedClientKey}
-              onChange={(e) => setAllowSharedClientKey(e.target.checked)}
-            />
-            <span>
-              Usar o mesmo campo do cliente (liberar chave compartilhada)
-              <span className="mt-0.5 block text-[10.5px] text-muted-foreground">
-                Marque só se for o MESMO dado da pessoa que já existe em outro tema. Libera reusar a
-                chave no balde compartilhado do cliente mesmo com rótulo diferente.
-              </span>
-            </span>
-          </label>
+        <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 text-[10.5px] text-muted-foreground">
+          Este campo é do <strong>cliente</strong>: o valor é <strong>compartilhado</strong> entre
+          todos os casos/temas da mesma pessoa (chave compartilhada automática).
         </div>
       )}
 
