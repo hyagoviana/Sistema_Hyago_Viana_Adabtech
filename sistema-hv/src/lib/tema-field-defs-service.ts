@@ -316,6 +316,10 @@ export async function createTemaFieldDef(input: {
   maxOccurrences?: number;
   // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto). Só p/ text/number/date.
   initialOccurrences?: number;
+  // #8 (2026-08-17) — subtítulo por linha (só multi-ocorrência). 'auto' = rótulo
+  // enumerado; 'custom' = textos de `subtitles`; null = sem subtítulo.
+  subtitleMode?: string | null;
+  subtitles?: string[];
   moveToStageSlug?: string | null;
   // A4 (2026-08-05) — campo PAI de quem este depende (mesmo tema/frente). null =
   // sem dependência. Validado (existência/mesma frente/ciclo/profundidade/filhos).
@@ -345,6 +349,15 @@ export async function createTemaFieldDef(input: {
   const initialOccurrences = supportsMulti
     ? normalizeInitialOccurrences(input.initialOccurrences, maxOccurrences)
     : 1;
+  // #8 — subtítulo: só em multi-ocorrência; 'custom' guarda os textos (até o teto).
+  const subtitleMode =
+    supportsMulti && (input.subtitleMode === "auto" || input.subtitleMode === "custom")
+      ? input.subtitleMode
+      : null;
+  const subtitles =
+    subtitleMode === "custom"
+      ? (input.subtitles ?? []).map((s) => String(s).trim()).slice(0, maxOccurrences)
+      : [];
   // B1 — `rawKey` usa a key fornecida sem re-slugar (casamento exato com o campo
   // do cliente). Caso contrário, deriva a key via toKey (comportamento padrão).
   const key =
@@ -432,6 +445,9 @@ export async function createTemaFieldDef(input: {
       move_to_stage_slug: normalizeMoveToStage(input.type, input.moveToStageSlug),
       // A4 — campo pai (dependência); null = sem dependência.
       parent_field_def_id: parentFieldDefId,
+      // #8 — subtítulo por linha (multi-ocorrência).
+      subtitle_mode: subtitleMode,
+      subtitles,
     })
     .select()
     .single();
@@ -455,6 +471,9 @@ export async function updateTemaFieldDef(
     maxOccurrences: number;
     // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
     initialOccurrences: number;
+    // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
+    subtitleMode: string | null;
+    subtitles: string[];
     moveToStageSlug: string | null;
     // A4 (2026-08-05) — reatribui/remove a dependência pai. null = remove.
     parentFieldDefId: string | null;
@@ -491,6 +510,19 @@ export async function updateTemaFieldDef(
   if (patch.scope !== undefined) clean.scope = patch.scope === "cliente" ? "cliente" : "caso";
   if (patch.hiddenInList !== undefined) clean.hidden_in_list = patch.hiddenInList;
   if (patch.hiddenInFilters !== undefined) clean.hidden_in_filters = patch.hiddenInFilters;
+  // #8 — subtítulo por linha. 'custom' guarda os textos; 'auto'/null limpam a lista.
+  if (patch.subtitleMode !== undefined) {
+    const m =
+      patch.subtitleMode === "auto" || patch.subtitleMode === "custom" ? patch.subtitleMode : null;
+    clean.subtitle_mode = m;
+    if (m === "custom") {
+      clean.subtitles = (patch.subtitles ?? []).map((s) => String(s).trim());
+    } else {
+      clean.subtitles = [];
+    }
+  } else if (patch.subtitles !== undefined) {
+    clean.subtitles = patch.subtitles.map((s) => String(s).trim());
+  }
   if (patch.maxOccurrences !== undefined) {
     // Só campos de valor livre (texto/nº/data) podem ter >1; senão trava em 1.
     const effectiveType = (patch.type ?? clean.type) as string | undefined;

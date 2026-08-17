@@ -1133,6 +1133,8 @@ export type Database = {
           initial_occurrences: number;
           move_to_stage_slug: string | null;
           parent_field_def_id: string | null;
+          subtitle_mode: string | null;
+          subtitles: Json;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1155,6 +1157,8 @@ export type Database = {
           hidden_in_filters?: boolean;
           max_occurrences?: number;
           initial_occurrences?: number;
+          subtitle_mode?: string | null;
+          subtitles?: Json;
           move_to_stage_slug?: string | null;
           parent_field_def_id?: string | null;
           created_by?: string | null;

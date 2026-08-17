@@ -519,33 +519,46 @@ function MultiOccurrenceField({
     <div className="space-y-1">
       {labelEl}
       <div className="space-y-1.5">
-        {slots.map((slot, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <Input
-              type={inputType}
-              value={slot}
-              disabled={!canEdit || disabled}
-              placeholder={`${def.label} ${i + 1}`}
-              onChange={(e) =>
-                setSlots((prev) => prev.map((s, idx) => (idx === i ? e.target.value : s)))
-              }
-              onBlur={() => commit(slots)}
-              className="flex-1"
-            />
-            {/* Remover linha — só quando há mais de uma caixinha (mantém ao menos 1). */}
-            {canEdit && slots.length > 1 && (
-              <button
-                type="button"
-                title="Remover linha"
-                onClick={() => removeRow(i)}
-                disabled={disabled}
-                className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        ))}
+        {slots.map((slot, i) => {
+          // #8 — subtítulo da linha: 'auto' = rótulo enumerado; 'custom' = texto
+          // configurado; senão sem subtítulo.
+          const sub =
+            def.subtitle_mode === "auto"
+              ? `${def.label} ${i + 1}`
+              : def.subtitle_mode === "custom" && Array.isArray(def.subtitles)
+                ? String(def.subtitles[i] ?? "")
+                : "";
+          return (
+            <div key={i} className="space-y-0.5">
+              {sub && <div className="text-[10.5px] text-muted-foreground">{sub}</div>}
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type={inputType}
+                  value={slot}
+                  disabled={!canEdit || disabled}
+                  placeholder={sub || `${def.label} ${i + 1}`}
+                  onChange={(e) =>
+                    setSlots((prev) => prev.map((s, idx) => (idx === i ? e.target.value : s)))
+                  }
+                  onBlur={() => commit(slots)}
+                  className="flex-1"
+                />
+                {/* Remover linha — só quando há mais de uma caixinha (mantém ao menos 1). */}
+                {canEdit && slots.length > 1 && (
+                  <button
+                    type="button"
+                    title="Remover linha"
+                    onClick={() => removeRow(i)}
+                    disabled={disabled}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-[var(--muted)] hover:text-destructive disabled:opacity-40"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
       {/* Botão "+" — adiciona uma ocorrência até o teto; desabilita no teto. */}
       {canEdit && (

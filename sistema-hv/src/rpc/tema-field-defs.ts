@@ -100,6 +100,9 @@ export const createTemaFieldDefFn = createServerFn({ method: "POST" })
         maxOccurrences: maxOccSchema.optional(),
         // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
         initialOccurrences: maxOccSchema.optional(),
+        // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
+        subtitleMode: z.enum(["auto", "custom"]).nullish(),
+        subtitles: z.array(z.string()).optional(),
         // A5 5c — auto-avanço: slug da etapa op destino ao marcar "Sim" (boolean).
         moveToStageSlug: z.string().nullish(),
         // A4 (2026-08-05) — campo pai (dependência); null/omisso = sem dependência.
@@ -129,6 +132,9 @@ export const updateTemaFieldDefFn = createServerFn({ method: "POST" })
           maxOccurrences: maxOccSchema.optional(),
           // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
           initialOccurrences: maxOccSchema.optional(),
+          // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
+          subtitleMode: z.enum(["auto", "custom"]).nullish(),
+          subtitles: z.array(z.string()).optional(),
           // A5 5c — auto-avanço: slug destino (null = não move).
           moveToStageSlug: z.string().nullish(),
           // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).

@@ -94,6 +94,10 @@ export function TemaFieldDefsEditor({
   // A5 (2026-08-05) — nº de LINHAS que aparecem de largada (o usuário adiciona
   // mais com "+" até maxOccurrences). Sempre <= maxOccurrences.
   const [initialOccurrences, setInitialOccurrences] = useState(1);
+  // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência): "none" | "auto" |
+  // "custom". Em "custom", subtitlesList tem 1 texto por linha (até o teto).
+  const [subtitleMode, setSubtitleMode] = useState<"none" | "auto" | "custom">("none");
+  const [subtitlesList, setSubtitlesList] = useState<string[]>([]);
   // A5 5c — etapa op destino ao marcar "Sim" (só p/ boolean). "" = não move.
   const [moveToStageSlug, setMoveToStageSlug] = useState("");
   // A4 (2026-08-05) — campo dependente: checkbox + campo pai escolhido. "" = sem pai.
@@ -166,6 +170,8 @@ export function TemaFieldDefsEditor({
     setHiddenInFilters(false);
     setMaxOccurrences(1);
     setInitialOccurrences(1);
+    setSubtitleMode("none");
+    setSubtitlesList([]);
     setMoveToStageSlug("");
     setIsDependent(false);
     setParentId("");
@@ -232,6 +238,9 @@ export function TemaFieldDefsEditor({
       // #16 (2026-08-17) — campo "do cliente" SEMPRE cria/usa a chave compartilhada
       // (não há mais a opção de "não compartilhado"). Antes dependia de um checkbox.
       const shareOverride = scope === "cliente";
+      // #8 — subtítulo só vale em multi-ocorrência; 'custom' envia os textos (<= teto).
+      const subMode = suportaOcorrencias && subtitleMode !== "none" ? subtitleMode : null;
+      const subList = subMode === "custom" ? subtitlesList.slice(0, occ).map((s) => s.trim()) : [];
       // A4 — dependência: só envia pai quando o checkbox está marcado E há pai
       // escolhido; senão null (remove/sem dependência).
       const parentDefId = isDependent ? parentId || null : null;
@@ -252,6 +261,8 @@ export function TemaFieldDefsEditor({
             hiddenInFilters,
             maxOccurrences: occ,
             initialOccurrences: initialOcc,
+            subtitleMode: subMode,
+            subtitles: subList,
             moveToStageSlug: moveTo,
             parentFieldDefId: parentDefId,
             allowSharedClientKey: shareOverride,
@@ -270,6 +281,8 @@ export function TemaFieldDefsEditor({
           hiddenInFilters,
           maxOccurrences: occ,
           initialOccurrences: initialOcc,
+          subtitleMode: subMode,
+          subtitles: subList,
           moveToStageSlug: moveTo,
           parentFieldDefId: parentDefId,
           allowSharedClientKey: shareOverride,
@@ -301,6 +314,11 @@ export function TemaFieldDefsEditor({
       d.initial_occurrences && d.initial_occurrences >= 1 ? d.initial_occurrences : 1,
     );
     setMoveToStageSlug(d.move_to_stage_slug ?? "");
+    // #8 — recarrega subtítulo do campo em edição.
+    setSubtitleMode(
+      d.subtitle_mode === "auto" || d.subtitle_mode === "custom" ? d.subtitle_mode : "none",
+    );
+    setSubtitlesList(Array.isArray(d.subtitles) ? d.subtitles.map((s) => String(s)) : []);
     // A4 — recarrega a dependência do campo em edição.
     setIsDependent(!!d.parent_field_def_id);
     setParentId(d.parent_field_def_id ?? "");
@@ -500,6 +518,50 @@ export function TemaFieldDefsEditor({
             Começa com {initialOccurrences} {initialOccurrences === 1 ? "linha" : "linhas"}; o
             usuário adiciona com “+”, até {maxOccurrences}.
           </p>
+        </div>
+      )}
+
+      {/* #8 (2026-08-17) — SUBTÍTULO por linha (só multi-ocorrência): rotula cada
+          linha na ficha. Padrão = rótulo enumerado; Personalizado = textos abaixo. */}
+      {suportaOcorrencias && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 p-2 space-y-2">
+          <Label className="text-xs">Subtítulo das linhas</Label>
+          <Select
+            value={subtitleMode}
+            onValueChange={(v) => setSubtitleMode(v as "none" | "auto" | "custom")}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              <SelectItem value="auto">Padrão (rótulo enumerado)</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
+          {subtitleMode === "auto" && (
+            <p className="text-[10.5px] text-muted-foreground">
+              Cada linha recebe “{label || "Rótulo"} 1”, “{label || "Rótulo"} 2”…
+            </p>
+          )}
+          {subtitleMode === "custom" && (
+            <div className="space-y-1">
+              {Array.from({ length: Math.max(1, maxOccurrences) }).map((_, i) => (
+                <Input
+                  key={i}
+                  value={subtitlesList[i] ?? ""}
+                  placeholder={`Subtítulo linha ${i + 1}`}
+                  onChange={(e) =>
+                    setSubtitlesList((prev) => {
+                      const next = [...prev];
+                      next[i] = e.target.value;
+                      return next;
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

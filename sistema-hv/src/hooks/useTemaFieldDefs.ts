@@ -50,6 +50,10 @@ export type TemaFieldDef = {
   // A4 (2026-08-05): campo PAI de quem este depende (mesmo tema/frente). NULL = sem
   // dependência. Na ficha, o filho só edita quando o valor do pai está preenchido.
   parent_field_def_id: string | null;
+  // #8 (2026-08-17): subtítulo por linha (multi-ocorrência). 'auto' = rótulo
+  // enumerado; 'custom' = textos em `subtitles`; NULL = sem subtítulo.
+  subtitle_mode: string | null;
+  subtitles: string[];
 };
 
 // FICHA do caso — defs do tema (frente NULL) + as da frente do caso, ordenadas.
@@ -110,6 +114,9 @@ export function useCreateTemaFieldDef(temaId: string) {
       maxOccurrences?: number;
       // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
       initialOccurrences?: number;
+      // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
+      subtitleMode?: string | null;
+      subtitles?: string[];
       moveToStageSlug?: string | null;
       // A4 (2026-08-05) — campo pai (dependência); null = sem dependência.
       parentFieldDefId?: string | null;
@@ -139,6 +146,9 @@ export function useUpdateTemaFieldDef(temaId: string) {
         maxOccurrences?: number;
         // A5 (2026-08-05) — nº de linhas mostradas de largada (<= teto).
         initialOccurrences?: number;
+        // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
+        subtitleMode?: string | null;
+        subtitles?: string[];
         moveToStageSlug?: string | null;
         // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).
         parentFieldDefId?: string | null;
