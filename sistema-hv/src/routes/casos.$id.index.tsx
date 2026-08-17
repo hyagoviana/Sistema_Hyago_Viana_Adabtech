@@ -730,19 +730,19 @@ function CasoDetalhe() {
         </>
       )}
 
-      {/* M1 (2026-08-07) — Feed "Notas / Linha do tempo": eventos automáticos +
-          comentários das pessoas num fluxo cronológico só. */}
+      {/* #15 (2026-08-17) — layout ⅔ / ⅓: "Andamentos do caso" (Feed) à esquerda
+          ocupando 2 colunas, "Tarefas" (CaseDossie) à direita em 1 coluna. Cada
+          um com rolagem própria. Observações vivem no painel de cima. */}
       <OrnamentalDivider />
 
-      <CaseFeed caseId={caso.id} />
-
-      {/* #6 (2026-08-17) — Observações agora vivem no painel de cima (ao lado de
-          Casos vinculados), não mais aqui embaixo. */}
-
-      {/* CaseDossie = só Tarefas (#15). */}
-      <OrnamentalDivider />
-
-      <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 min-w-0">
+          <CaseFeed caseId={caso.id} />
+        </div>
+        <div className="min-w-0">
+          <CaseDossie caseId={caso.id} canEdit={podeGerirCaso} />
+        </div>
+      </div>
 
       {/* M3 (2026-08-07) — O CaseDocumentsTab saiu daqui: virou a aba de topo
           "Documentos" (casos.$id.documentos.tsx). O docAutoFill PERMANECE nesta

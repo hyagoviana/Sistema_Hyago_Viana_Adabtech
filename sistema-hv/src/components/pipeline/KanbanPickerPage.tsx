@@ -62,28 +62,34 @@ export function KanbanPickerPage({ serviceTypeId, name, temaId, onPick, onBack }
           Carregando kanbans…
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {list.map((b) =>
-            b.is_principal ? (
-              <PrincipalCard
-                key={b.id}
-                serviceTypeId={serviceTypeId}
-                label={b.label}
-                onPick={() => onPick(null)}
-              />
-            ) : (
-              <CustomCard key={b.id} board={b} onPick={() => onPick(b.id)} />
-            ),
-          )}
+        /* #18a (2026-08-17) — disposição em ⅔/⅓: os KANBANS (grade) à esquerda e
+           os LINKS ÚTEIS / AVISOS do tema à direita, na mesma altura (antes o
+           wiki ficava numa faixa isolada embaixo). */
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 min-w-0">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {list.map((b) =>
+                b.is_principal ? (
+                  <PrincipalCard
+                    key={b.id}
+                    serviceTypeId={serviceTypeId}
+                    label={b.label}
+                    onPick={() => onPick(null)}
+                  />
+                ) : (
+                  <CustomCard key={b.id} board={b} onPick={() => onPick(b.id)} />
+                ),
+              )}
+            </div>
+          </div>
+          {/* C5 — bloco de notas + links úteis / avisos do TEMA. */}
+          {temaId ? (
+            <div className="min-w-0">
+              <TemaWikiBoard temaId={temaId} />
+            </div>
+          ) : null}
         </div>
       )}
-
-      {/* C5 — bloco de notas + links úteis do TEMA, embaixo de tudo. */}
-      {temaId ? (
-        <div className="mt-8 border-t border-[var(--border)] pt-6">
-          <TemaWikiBoard temaId={temaId} />
-        </div>
-      ) : null}
     </div>
   );
 }
