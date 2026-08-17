@@ -5,14 +5,18 @@ import { queryKeys } from "@/lib/queryKeys";
 import {
   createCaseNoteFn,
   createCaseFinNoteFn,
+  createCaseObsNoteFn,
   createClientNoteFn,
   listCaseNotesFn,
   listCaseFinNotesFn,
+  listCaseObsNotesFn,
   listClientNotesFn,
   softDeleteNoteFn,
   softDeleteCaseFinNoteFn,
+  softDeleteCaseObsNoteFn,
   updateNoteFn,
   updateCaseFinNoteFn,
+  updateCaseObsNoteFn,
 } from "@/rpc/notes";
 
 export type NoteTarget = "case" | "client";
@@ -73,6 +77,45 @@ export function useSoftDeleteCaseFinNote(caseId: string) {
   return useMutation({
     mutationFn: (noteId: string) => fn({ data: { noteId } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseFin(caseId) }),
+  });
+}
+
+// #6 (2026-08-17) — OBSERVAÇÕES do caso (scope='observacao'). Painel próprio na
+// ficha, no modelo da linha do tempo (autor/data).
+export function useCaseObsNotes(caseId: string) {
+  const fn = useServerFn(listCaseObsNotesFn);
+  return useQuery({
+    queryKey: queryKeys.notes.byCaseObs(caseId),
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId,
+  });
+}
+
+export function useCreateCaseObsNote(caseId: string) {
+  const fn = useServerFn(createCaseObsNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => fn({ data: { caseId, body } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseObs(caseId) }),
+  });
+}
+
+export function useUpdateCaseObsNote(caseId: string) {
+  const fn = useServerFn(updateCaseObsNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { noteId: string; body: string }) =>
+      fn({ data: { noteId: vars.noteId, body: vars.body } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseObs(caseId) }),
+  });
+}
+
+export function useSoftDeleteCaseObsNote(caseId: string) {
+  const fn = useServerFn(softDeleteCaseObsNoteFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => fn({ data: { noteId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notes.byCaseObs(caseId) }),
   });
 }
 

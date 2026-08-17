@@ -39,7 +39,7 @@ export type Note = {
 
 // F1 — escopos válidos das notas do CASO. 'geral' = bloco de Notas da ficha
 // comum; 'financeiro' = comentários dentro do submenu financeiro (gate próprio).
-export type CaseNoteScope = "geral" | "financeiro";
+export type CaseNoteScope = "geral" | "financeiro" | "observacao";
 
 function requireUser(userId: string) {
   if (!userId) throw new NoteServiceError("Ação exige usuário autenticado", 401);
@@ -131,9 +131,10 @@ export async function createCaseNote(
 
   // A6 (2026-08-03) — a linha do tempo registra TODA a movimentação do caso,
   // inclusive a criação de nota. Best-effort: nunca derruba a criação da nota.
-  // F1 — comentários do FINANCEIRO NÃO geram evento na timeline: eles são
-  // exclusivos do submenu financeiro e não devem vazar para a ficha comum.
-  if (scope !== "financeiro") {
+  // F1 — comentários do FINANCEIRO NÃO geram evento na timeline (exclusivos do
+  // submenu). #6 (2026-08-17) — Observações também têm painel PRÓPRIO (não vazam
+  // p/ a linha do tempo). Só o balde 'geral' registra evento na timeline.
+  if (scope === "geral") {
     await sb
       .from("system_case_events")
       .insert({

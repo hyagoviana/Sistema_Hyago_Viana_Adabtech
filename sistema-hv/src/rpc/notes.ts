@@ -94,6 +94,54 @@ export const softDeleteCaseFinNoteFn = createServerFn({ method: "POST" })
     }),
   );
 
+// ----------------------------------------------------------------------------
+// #6 (2026-08-17) — OBSERVAÇÕES do caso (scope='observacao'). Painel próprio na
+// ficha, no modelo da linha do tempo (autor/data). Leitura autenticada; escrita
+// comercial/operacional (mesma régua das notas gerais). NÃO entra na timeline.
+// ----------------------------------------------------------------------------
+export const listCaseObsNotesFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireAuth();
+      return listCaseNotes(data.caseId, "observacao");
+    }),
+  );
+
+export const createCaseObsNoteFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), body: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
+      return createCaseNote(data.caseId, data.body, userId, "observacao");
+    }),
+  );
+
+export const updateCaseObsNoteFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ noteId: z.string().uuid(), body: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireAnyModule(["comercial", "operacional"], "edit");
+      return updateNote("case", data.noteId, data.body, userId, { enforceOwner: true });
+    }),
+  );
+
+export const softDeleteCaseObsNoteFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ noteId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId, role } = await requireAnyModule(["comercial", "operacional"], "edit");
+      return softDeleteNote("case", data.noteId, userId, {
+        enforceOwner: true,
+        isAdmin: role === "admin",
+      });
+    }),
+  );
+
 export const listClientNotesFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) =>

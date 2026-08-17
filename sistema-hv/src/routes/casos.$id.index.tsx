@@ -37,6 +37,7 @@ import {
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
 import { CaseDossie } from "@/components/cases/CaseDossie";
 import { CaseFeed } from "@/components/cases/CaseFeed";
+import { CaseObservacoes } from "@/components/cases/CaseObservacoes";
 import { CaseSigiloSection } from "@/components/cases/CaseSigiloSection";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
 import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
@@ -59,7 +60,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import {
   Dialog,
@@ -89,7 +89,6 @@ import {
   useCaseResponsaveis,
   useDeleteCase,
   usePromoverCasoManual,
-  useUpdateCaseObservacoes,
   useSetCaseUrgency,
 } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
@@ -173,14 +172,8 @@ function CasoDetalhe() {
   const [fillFiltersOpen, setFillFiltersOpen] = useState(false);
   const [nameEditOpen, setNameEditOpen] = useState(false);
 
-  // M2 (2026-08-07) — Observações (texto livre do caso). O rascunho é semeado a
-  // partir de caso.observacoes; `obsSeededFor` garante o seed 1x por caso (e re-
-  // seed se a rota trocar de caso), sem sobrescrever a edição do usuário.
-  const salvarObs = useUpdateCaseObservacoes(id);
   // M13 (T3) — urgência do caso (prioritário/urgente) p/ o motor de distribuição.
   const setUrgency = useSetCaseUrgency(id);
-  const [obsDraft, setObsDraft] = useState("");
-  const [obsSeededFor, setObsSeededFor] = useState<string | null>(null);
 
   async function handlePromover() {
     try {
@@ -220,23 +213,9 @@ function CasoDetalhe() {
 
   if (!caso) throw notFound();
 
-  // M2 — semeia o rascunho de Observações 1x por caso (padrão React de derivar
-  // estado durante o render, guardado por id → sem loop e sem useEffect).
+  // #6 (2026-08-17) — texto legado de observações (campo único antigo), exibido
+  // como registro histórico read-only dentro do painel CaseObservacoes.
   const casoObservacoes = (caso as { observacoes?: string | null }).observacoes ?? "";
-  if (obsSeededFor !== caso.id) {
-    setObsSeededFor(caso.id);
-    setObsDraft(casoObservacoes);
-  }
-  const obsDirty = obsDraft !== casoObservacoes;
-
-  async function handleSalvarObs() {
-    try {
-      await salvarObs.mutateAsync(obsDraft);
-      toast.success("Observações salvas");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar observações");
-    }
-  }
 
   const dias = daysSince(caso.status_changed_at);
   const diasFin = daysSince(caso.status_fin_changed_at);
@@ -683,6 +662,12 @@ function CasoDetalhe() {
 
       <CaseFeed caseId={caso.id} />
 
+      {/* #6 (2026-08-17) — Observações gerais no modelo linha do tempo (autor/data),
+          movidas p/ cima (eram um campo único no fim da ficha). */}
+      <OrnamentalDivider />
+
+      <CaseObservacoes caseId={caso.id} legacyText={casoObservacoes} canEdit={podeGerirCaso} />
+
       {/* CaseDossie = Tarefas + Prazos + Comunicações (nesta ordem). */}
       <OrnamentalDivider />
 
@@ -691,35 +676,6 @@ function CasoDetalhe() {
       {/* M3 (2026-08-07) — O CaseDocumentsTab saiu daqui: virou a aba de topo
           "Documentos" (casos.$id.documentos.tsx). O docAutoFill PERMANECE nesta
           ficha porque ainda alimenta o GenerateCaseDocumentFlow (contrato/procuração). */}
-
-      {/* M2 (2026-08-07) — Observações: texto grande e livre do caso inteiro,
-          separado da linha do tempo (NÃO emite evento). Fica no fim da ficha.
-          Read-only para quem não pode gerir o caso (operacional:edit). */}
-      <OrnamentalDivider />
-
-      <div>
-        <Eyebrow>Observações</Eyebrow>
-        <p className="text-[13px] text-muted-foreground mt-1 mb-3">
-          Texto livre sobre o desenvolvimento do caso. Fica só registrado aqui — não entra na linha
-          do tempo.
-        </p>
-        <Textarea
-          value={obsDraft}
-          onChange={(e) => setObsDraft(e.target.value)}
-          rows={8}
-          className="resize-y"
-          placeholder="Escreva livremente o histórico e as particularidades deste caso…"
-          disabled={!podeGerirCaso || salvarObs.isPending}
-          readOnly={!podeGerirCaso}
-        />
-        {podeGerirCaso && (
-          <div className="mt-2 flex justify-end">
-            <Button size="sm" onClick={handleSalvarObs} disabled={salvarObs.isPending || !obsDirty}>
-              {salvarObs.isPending ? "Salvando…" : "Salvar observações"}
-            </Button>
-          </div>
-        )}
-      </div>
 
       {/* G4 — gestão de sigilo: só ADMINISTRADORES (pedido reunião 2026-08-10).
           #14 (2026-08-17): movido para o FINAL da ficha (era no meio). */}

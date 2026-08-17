@@ -439,13 +439,18 @@ export function TemaFieldDefsEditor({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="caso">Do caso (um por caso)</SelectItem>
-              <SelectItem value="cliente">Do cliente (compartilhado entre os casos)</SelectItem>
+              {/* #17 (2026-08-17) — "Do cliente" só aparece ao EDITAR um campo que
+                  JÁ é do cliente (compat). Campos NOVOS do cliente devem ser
+                  criados no menu "Cadastro do cliente" (com "Aparece nos casos"). */}
+              {scope === "cliente" && (
+                <SelectItem value="cliente">Do cliente (compartilhado entre os casos)</SelectItem>
+              )}
             </SelectContent>
           </Select>
           <p className="text-[10.5px] text-muted-foreground">
             {scope === "cliente"
               ? "Ex.: “é médico?”, nacionalidade · vale para todos os casos do cliente."
-              : "Ex.: enquadramento, período · específico deste caso."}
+              : "Específico deste caso. Para um dado DO CLIENTE que apareça nos casos, crie-o em “Cadastro do cliente” e marque “Aparece nos casos”."}
           </p>
         </div>
 

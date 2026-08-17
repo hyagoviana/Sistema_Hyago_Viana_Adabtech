@@ -29,6 +29,7 @@ export const queryKeys = {
     byCase: (caseId: string) => [...queryKeys.notes.all, "case", caseId] as const,
     byClient: (clientId: string) => [...queryKeys.notes.all, "client", clientId] as const,
     byCaseFin: (caseId: string) => [...queryKeys.notes.all, "case-fin", caseId] as const,
+    byCaseObs: (caseId: string) => [...queryKeys.notes.all, "case-obs", caseId] as const,
   },
   cases: {
     all: ["cases"] as const,
