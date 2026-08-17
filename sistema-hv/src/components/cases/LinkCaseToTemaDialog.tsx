@@ -179,20 +179,11 @@ export function LinkCaseToTemaDialog({
     // Destino custom: trava se já contém (mesmo board) ou se não tem etapa.
     if (boardJaContem || destSemEtapas || !stageId) return;
     try {
-      if (modo === "duplicar") {
-        await addToBoard.mutateAsync({ caseId, boardId, exclusive: false, stageId });
-        toast.success(`Caso duplicado no kanban "${boardDestinoNome}" (mantém no principal)`);
-      } else {
-        // MOVER exclusivo: sai do principal e dos demais boards custom; entra só
-        // no destino, na etapa escolhida.
-        await moveBetweenBoards.mutateAsync({
-          caseId,
-          toBoardId: boardId,
-          exclusive: true,
-          stageId,
-        });
-        toast.success(`Caso movido para o kanban "${boardDestinoNome}" (saiu do principal)`);
-      }
+      // #5 (2026-08-17) — o caso NUNCA sai do board PRINCIPAL: adicionar a um
+      // kanban custom é sempre ADITIVO (a antiga opção "mover exclusivo", que
+      // retirava do principal, foi removida).
+      await addToBoard.mutateAsync({ caseId, boardId, exclusive: false, stageId });
+      toast.success(`Caso adicionado ao kanban "${boardDestinoNome}" (continua no principal)`);
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao vincular ao kanban");
@@ -332,10 +323,10 @@ export function LinkCaseToTemaDialog({
             </div>
           )}
 
-          {/* Escolha do modo — espelha o popup do financeiro (duplicar × mover).
-              Para o alvo KANBAN quando o destino é o PRINCIPAL (voltar), o modo é
-              irrelevante (é só "voltar") → escondemos os botões. */}
-          {!(alvo === "kanban" && destIsPrincipal) && (
+          {/* Escolha do modo (duplicar × mover) — SÓ no alvo TEMA. No alvo KANBAN
+              o caso nunca sai do principal (#5): adicionar a um kanban custom é
+              sempre aditivo, e o principal é só "voltar". */}
+          {alvo === "tema" && (
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -413,16 +404,11 @@ export function LinkCaseToTemaDialog({
                     O caso <strong>volta ao kanban principal</strong> ({boardDestinoNome}) e sai de
                     todos os kanbans extras. Ele continua vinculado ao mesmo tema.
                   </>
-                ) : modo === "duplicar" ? (
-                  <>
-                    O caso é <strong>duplicado</strong> no kanban{" "}
-                    <strong>{boardDestinoNome}</strong> · continua também no kanban principal.
-                  </>
                 ) : (
                   <>
-                    O caso é <strong>movido</strong> para o kanban{" "}
-                    <strong>{boardDestinoNome}</strong>: <strong>sai do principal</strong> e dos
-                    demais kanbans, ficando só neste. Use "voltar ao principal" para reverter.
+                    O caso é <strong>adicionado</strong> ao kanban{" "}
+                    <strong>{boardDestinoNome}</strong> · continua também no kanban principal (um
+                    caso nunca sai do principal).
                   </>
                 )}
               </AlertDescription>
@@ -440,16 +426,14 @@ export function LinkCaseToTemaDialog({
                 ? "Duplicando…"
                 : alvo === "tema"
                   ? "Transferindo…"
-                  : "Movendo…"
+                  : "Salvando…"
               : alvo === "tema"
                 ? modo === "duplicar"
                   ? "Duplicar no tema"
                   : "Mover para o tema"
                 : destIsPrincipal
                   ? "Voltar ao principal"
-                  : modo === "duplicar"
-                    ? "Duplicar no kanban"
-                    : "Mover para o kanban"}
+                  : "Adicionar ao kanban"}
           </Button>
         </DialogFooter>
       </DialogContent>
