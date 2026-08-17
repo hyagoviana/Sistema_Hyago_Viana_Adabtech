@@ -11,6 +11,7 @@ import {
   FileText,
   Tags,
   Layers,
+  LayoutGrid,
 } from "lucide-react";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 
@@ -31,6 +32,7 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
       { to: "/controladoria/distribuicao/lista", label: "Lista", icon: List },
       { to: "/controladoria/distribuicao/excecoes", label: "Exceções", icon: AlertTriangle },
       { to: "/controladoria/distribuicao/calendario", label: "Calendário", icon: Calendar },
+      { to: "/controladoria/distribuicao/kanban", label: "Kanban", icon: LayoutGrid },
     ],
   },
   {

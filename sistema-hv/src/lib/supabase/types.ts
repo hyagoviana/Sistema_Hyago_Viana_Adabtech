@@ -327,6 +327,8 @@ export type Database = {
           action_by: string | null;
           action_at: string | null;
           created_at: string;
+          process_id: string | null;
+          detail: string | null;
         };
         Insert: {
           id?: string;
@@ -341,8 +343,50 @@ export type Database = {
           action_by?: string | null;
           action_at?: string | null;
           created_at?: string;
+          process_id?: string | null;
+          detail?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_distribution_exceptions"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_kanban_tasks: {
+        Row: {
+          id: string;
+          organization_id: string;
+          task_id: string;
+          process_id: string | null;
+          process_nome: string | null;
+          numero_processo: string | null;
+          tipo_nome: string | null;
+          situacao: string | null;
+          situacao_col: string;
+          concluida: boolean;
+          responsavel_ids: string[];
+          responsavel_nomes: string[];
+          prazo_previsto: string | null;
+          prazo_fatal: string | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          task_id: string;
+          process_id?: string | null;
+          process_nome?: string | null;
+          numero_processo?: string | null;
+          tipo_nome?: string | null;
+          situacao?: string | null;
+          situacao_col?: string;
+          concluida?: boolean;
+          responsavel_ids?: string[];
+          responsavel_nomes?: string[];
+          prazo_previsto?: string | null;
+          prazo_fatal?: string | null;
+          synced_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_distribution_kanban_tasks"]["Insert"]
+        >;
         Relationships: [];
       };
       system_distribution_manual_assignments: {

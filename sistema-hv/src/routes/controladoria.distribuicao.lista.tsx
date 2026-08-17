@@ -44,7 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useDistributionResults } from "@/hooks/useDistribuicaoDashboard";
+import { useDistributionResults, useProcessoDetalhe } from "@/hooks/useDistribuicaoDashboard";
 import {
   useExecutorMappings,
   useTaskTypeMappings,
@@ -70,6 +70,18 @@ const FLOW_COLORS: Record<string, string> = {
   COMPLEX: "bg-amber-100 text-amber-700",
   GENERAL: "bg-blue-100 text-blue-700",
 };
+
+// Par rótulo→valor para o grid 2-col do detalhe do processo (R2).
+function Detail({ k, v }: { k: string; v: string | null | undefined }) {
+  return (
+    <>
+      <span className="text-muted-foreground">{k}</span>
+      <span className="truncate" title={v ?? undefined}>
+        {v ?? "·"}
+      </span>
+    </>
+  );
+}
 
 type ResultRaw = {
   numero_processo?: string | null;
@@ -142,6 +154,8 @@ function ListaDistribuicoesPage() {
   const [hasAlerts, setHasAlerts] = useState(false);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ResultRow | null>(null);
+  // R2 — detalhe completo do processo (ProJuris ao vivo) quando o drawer abre.
+  const detalhe = useProcessoDetalhe(selected?.process_id ?? null);
 
   // H2: estado de aprovacao.
   const podeEditar = usePodeEditar("controladoria");
@@ -582,9 +596,9 @@ function ListaDistribuicoesPage() {
 
         {/* Sheet de detalhes */}
         <Sheet open={!!selected} onOpenChange={() => setSelected(null)}>
-          <SheetContent className="overflow-y-auto">
+          <SheetContent className="overflow-y-auto w-full sm:max-w-xl">
             <SheetHeader>
-              <SheetTitle>Detalhes da Distribuicao</SheetTitle>
+              <SheetTitle>Tudo sobre o processo</SheetTitle>
             </SheetHeader>
             {selected && (
               <div className="space-y-4 mt-4 text-sm">
@@ -669,6 +683,135 @@ function ListaDistribuicoesPage() {
                   ))
                 ) : (
                   <span className="text-muted-foreground">Nenhum</span>
+                )}
+
+                {/* R2 — TUDO do processo (ProJuris ao vivo) */}
+                <hr />
+                <div className="font-semibold text-base">Dados do processo (ProJuris)</div>
+                {detalhe.isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                ) : detalhe.data && detalhe.data.ok ? (
+                  <div className="space-y-4">
+                    {/* Resumo */}
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                      <Detail k="Assunto" v={detalhe.data.assunto} />
+                      <Detail k="Órgão" v={detalhe.data.orgao} />
+                      <Detail k="Classe" v={detalhe.data.classe} />
+                      <Detail k="Situação" v={detalhe.data.situacao} />
+                      <Detail k="Instância" v={detalhe.data.instancia} />
+                      <Detail k="Vara" v={detalhe.data.vara} />
+                      <Detail k="Fase" v={detalhe.data.fase} />
+                      <Detail k="Valor da causa" v={detalhe.data.valor_causa} />
+                      <Detail k="Distribuição" v={detalhe.data.data_distribuicao} />
+                      <Detail
+                        k="Monitoramento"
+                        v={
+                          detalhe.data.monitoramento_push == null
+                            ? null
+                            : detalhe.data.monitoramento_push
+                              ? "Ativo"
+                              : "Inativo"
+                        }
+                      />
+                    </div>
+
+                    {/* Envolvidos */}
+                    <div>
+                      <div className="font-medium text-muted-foreground mb-1">Envolvidos</div>
+                      {detalhe.data.envolvidos.length > 0 ? (
+                        <div className="space-y-1">
+                          {detalhe.data.envolvidos.map((e, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                              <span>{e.nome}</span>
+                              {e.papel && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {e.papel}
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Nenhum envolvido retornado.
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Tarefas */}
+                    <div>
+                      <div className="font-medium text-muted-foreground mb-1">
+                        Tarefas ({detalhe.data.tarefas.length})
+                      </div>
+                      {detalhe.data.tarefas.length > 0 ? (
+                        <div className="space-y-2">
+                          {detalhe.data.tarefas.map((t, i) => (
+                            <div key={i} className="rounded border p-2 text-xs space-y-0.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium">{t.tipo ?? "(sem tipo)"}</span>
+                                <Badge
+                                  variant="outline"
+                                  className={t.concluida ? "text-green-700" : "text-amber-700"}
+                                >
+                                  {t.situacao}
+                                </Badge>
+                              </div>
+                              {t.responsaveis.length > 0 && (
+                                <div className="text-muted-foreground">
+                                  Resp.: {t.responsaveis.join(", ")}
+                                </div>
+                              )}
+                              <div className="text-muted-foreground">
+                                {t.prazo_previsto && <>Previsto: {t.prazo_previsto} </>}
+                                {t.prazo_fatal && <>· Fatal: {t.prazo_fatal}</>}
+                              </div>
+                              {t.marcadores.length > 0 && (
+                                <div className="flex flex-wrap gap-1 pt-0.5">
+                                  {t.marcadores.map((m) => (
+                                    <Badge key={m} variant="secondary" className="text-[10px]">
+                                      {m}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Nenhuma tarefa.</span>
+                      )}
+                    </div>
+
+                    {/* Documentos */}
+                    <div>
+                      <div className="font-medium text-muted-foreground mb-1">
+                        Documentos ({detalhe.data.documentos.length})
+                      </div>
+                      {detalhe.data.documentos.length > 0 ? (
+                        <ul className="list-disc pl-4 text-xs space-y-0.5">
+                          {detalhe.data.documentos.map((d, i) => (
+                            <li key={i}>
+                              {d.nome}
+                              {d.data && <span className="text-muted-foreground"> — {d.data}</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Nenhum documento listado.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                    Não foi possível carregar os dados do ProJuris agora
+                    {detalhe.data?.erro ? `: ${detalhe.data.erro}` : "."}
+                  </div>
                 )}
               </div>
             )}

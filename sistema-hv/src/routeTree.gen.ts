@@ -82,6 +82,7 @@ import { Route as ControladoriaDistribuicaoTemasRouteImport } from './routes/con
 import { Route as ControladoriaDistribuicaoSimuladorRouteImport } from './routes/controladoria.distribuicao.simulador'
 import { Route as ControladoriaDistribuicaoRelatorioRouteImport } from './routes/controladoria.distribuicao.relatorio'
 import { Route as ControladoriaDistribuicaoListaRouteImport } from './routes/controladoria.distribuicao.lista'
+import { Route as ControladoriaDistribuicaoKanbanRouteImport } from './routes/controladoria.distribuicao.kanban'
 import { Route as ControladoriaDistribuicaoIndicadoresRouteImport } from './routes/controladoria.distribuicao.indicadores'
 import { Route as ControladoriaDistribuicaoHistoricoRouteImport } from './routes/controladoria.distribuicao.historico'
 import { Route as ControladoriaDistribuicaoExecutoresRouteImport } from './routes/controladoria.distribuicao.executores'
@@ -483,6 +484,12 @@ const ControladoriaDistribuicaoListaRoute =
     path: '/lista',
     getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
+const ControladoriaDistribuicaoKanbanRoute =
+  ControladoriaDistribuicaoKanbanRouteImport.update({
+    id: '/kanban',
+    path: '/kanban',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
 const ControladoriaDistribuicaoIndicadoresRoute =
   ControladoriaDistribuicaoIndicadoresRouteImport.update({
     id: '/indicadores',
@@ -711,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
+  '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
   '/controladoria/distribuicao/relatorio': typeof ControladoriaDistribuicaoRelatorioRoute
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
@@ -808,6 +816,7 @@ export interface FileRoutesByTo {
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
+  '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
   '/controladoria/distribuicao/relatorio': typeof ControladoriaDistribuicaoRelatorioRoute
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
@@ -910,6 +919,7 @@ export interface FileRoutesById {
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
+  '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
   '/controladoria/distribuicao/relatorio': typeof ControladoriaDistribuicaoRelatorioRoute
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
@@ -1013,6 +1023,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
     | '/controladoria/distribuicao/indicadores'
+    | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
     | '/controladoria/distribuicao/relatorio'
     | '/controladoria/distribuicao/simulador'
@@ -1110,6 +1121,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
     | '/controladoria/distribuicao/indicadores'
+    | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
     | '/controladoria/distribuicao/relatorio'
     | '/controladoria/distribuicao/simulador'
@@ -1211,6 +1223,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
     | '/controladoria/distribuicao/indicadores'
+    | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
     | '/controladoria/distribuicao/relatorio'
     | '/controladoria/distribuicao/simulador'
@@ -1819,6 +1832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaDistribuicaoListaRouteImport
       parentRoute: typeof ControladoriaDistribuicaoRoute
     }
+    '/controladoria/distribuicao/kanban': {
+      id: '/controladoria/distribuicao/kanban'
+      path: '/kanban'
+      fullPath: '/controladoria/distribuicao/kanban'
+      preLoaderRoute: typeof ControladoriaDistribuicaoKanbanRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
     '/controladoria/distribuicao/indicadores': {
       id: '/controladoria/distribuicao/indicadores'
       path: '/indicadores'
@@ -2075,6 +2095,7 @@ interface ControladoriaDistribuicaoRouteChildren {
   ControladoriaDistribuicaoExecutoresRoute: typeof ControladoriaDistribuicaoExecutoresRoute
   ControladoriaDistribuicaoHistoricoRoute: typeof ControladoriaDistribuicaoHistoricoRoute
   ControladoriaDistribuicaoIndicadoresRoute: typeof ControladoriaDistribuicaoIndicadoresRoute
+  ControladoriaDistribuicaoKanbanRoute: typeof ControladoriaDistribuicaoKanbanRoute
   ControladoriaDistribuicaoListaRoute: typeof ControladoriaDistribuicaoListaRoute
   ControladoriaDistribuicaoRelatorioRoute: typeof ControladoriaDistribuicaoRelatorioRoute
   ControladoriaDistribuicaoSimuladorRoute: typeof ControladoriaDistribuicaoSimuladorRoute
@@ -2097,6 +2118,7 @@ const ControladoriaDistribuicaoRouteChildren: ControladoriaDistribuicaoRouteChil
       ControladoriaDistribuicaoHistoricoRoute,
     ControladoriaDistribuicaoIndicadoresRoute:
       ControladoriaDistribuicaoIndicadoresRoute,
+    ControladoriaDistribuicaoKanbanRoute: ControladoriaDistribuicaoKanbanRoute,
     ControladoriaDistribuicaoListaRoute: ControladoriaDistribuicaoListaRoute,
     ControladoriaDistribuicaoRelatorioRoute:
       ControladoriaDistribuicaoRelatorioRoute,

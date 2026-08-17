@@ -30,12 +30,20 @@ const ALERT_COLORS: Record<string, string> = {
   "ALT-CAD-001": "bg-orange-100 text-orange-700",
   "ALT-RESP-001": "bg-orange-100 text-orange-700",
   "ALT-RESP-002": "bg-orange-100 text-orange-700",
+  "ALT-DUP-001": "bg-amber-100 text-amber-700",
+};
+
+// Rótulo humano por código de alerta (o duplicado é o R3).
+const ALERT_LABEL: Record<string, string> = {
+  "ALT-DUP-001": "Duplicado",
 };
 
 type ExcRow = {
   id: string;
   task_id: string;
   alert_code: string;
+  process_id?: string | null;
+  detail?: string | null;
   system_distribution_results?: { final_date?: string | null; process_id?: string | null } | null;
 };
 
@@ -128,13 +136,22 @@ function ExcecoesPage() {
                     : null;
                   return (
                     <tr key={exc.id} className="border-b hover:bg-accent/50">
-                      <td className="py-2 font-mono text-xs">{exc.task_id}</td>
-                      <td className="py-2 text-xs">{result?.process_id ?? "·"}</td>
-                      <td className="py-2 text-center">
+                      <td className="py-2 font-mono text-xs align-top">
+                        {exc.task_id}
+                        {exc.detail && (
+                          <div className="font-sans text-[11px] text-muted-foreground mt-0.5 max-w-xs">
+                            {exc.detail}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-2 text-xs align-top">
+                        {exc.process_id ?? result?.process_id ?? "·"}
+                      </td>
+                      <td className="py-2 text-center align-top">
                         <Badge
                           className={`text-xs ${ALERT_COLORS[exc.alert_code] ?? "bg-gray-100"}`}
                         >
-                          {exc.alert_code}
+                          {ALERT_LABEL[exc.alert_code] ?? exc.alert_code}
                         </Badge>
                       </td>
                       <td className="py-2">{fatalDate ?? "·"}</td>

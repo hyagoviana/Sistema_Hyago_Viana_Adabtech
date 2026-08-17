@@ -145,6 +145,47 @@ export async function buildProjurisClientFromConfig(
   });
 }
 
+// R5 — extrai os CÓDIGOS ProJuris dos responsáveis de uma tarefa (multi-modulo).
+function extractRespCodes(t: Record<string, unknown>): string[] {
+  const arr = t.usuarioResponsaveis;
+  if (!Array.isArray(arr)) return [];
+  const out: string[] = [];
+  for (const r of arr) {
+    if (r && typeof r === "object") {
+      const o = r as Record<string, unknown>;
+      const cod = o.codigoUsuario ?? o.chave ?? o.codigo;
+      if (cod != null) out.push(String(cod));
+    } else if (r != null) {
+      out.push(String(r));
+    }
+  }
+  return out;
+}
+
+// R5 — normaliza a situação da tarefa numa das COLUNAS do Kanban (estilo
+// ProJuris). Fallback determinístico: concluída→"Concluída com sucesso";
+// senão "Pendente".
+export const KANBAN_COLUMNS = [
+  "Pendente",
+  "Em execução",
+  "Concluída com sucesso",
+  "Concluída sem sucesso",
+  "Cancelado",
+  "A confirmar",
+  "Revisão",
+] as const;
+function normalizeSituacaoCol(situacao: string | null, concluida: boolean): string {
+  const s = (situacao ?? "").toLowerCase();
+  if (s.includes("cancel")) return "Cancelado";
+  if (s.includes("revis")) return "Revisão";
+  if (s.includes("confirm")) return "A confirmar";
+  if (s.includes("execu") || s.includes("andamento")) return "Em execução";
+  if (s.includes("sem sucesso") || s.includes("insucesso")) return "Concluída sem sucesso";
+  if (s.includes("sucesso") || s.includes("conclu")) return "Concluída com sucesso";
+  if (concluida) return "Concluída com sucesso";
+  return "Pendente";
+}
+
 /**
  * Gate de produção: o motor só roda AUTOMÁTICO (cron) quando o owner ligou a
  * chave em `system_distribution_config.active`. NÃO afeta o disparo MANUAL
@@ -215,6 +256,18 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // preencher COMPLEXO/COLETIVO, os nomes REAIS aparecem aqui e é só adicioná-los
   // em src/lib/distribuicao/marcadores.ts (sem adivinhar).
   const marcadoresVistos = new Map<string, number>();
+  // R5 — snapshot CRU de TODAS as tarefas (abertas E concluídas) p/ a aba Kanban.
+  // Enriquecido (nomes/uuids dos responsáveis) e persistido no passo de escrita.
+  const snapshotRaw: Array<{
+    task_id: string;
+    process_id: string;
+    tipo_nome: string | null;
+    situacao: string | null;
+    concluida: boolean;
+    prazo_previsto: string | null;
+    prazo_fatal: string | null;
+    respCodes: string[];
+  }> = [];
 
   const MAX_PROC = Number(process.env.DISTRIBUICAO_MAX_PROCESSOS ?? "150") || 150;
   const chosen = procCodes.slice(0, MAX_PROC);
@@ -237,7 +290,20 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       const raw = await client.projurisGet<unknown>(`processo/${pid}/tarefa/consulta-multi-modulo`);
       const arr = firstArrayDeep(raw) as Array<Record<string, unknown>>;
       for (const t of arr) {
-        // So tarefas ABERTAS (nao concluidas).
+        // R5 — snapshot de TODAS as tarefas (antes do filtro de abertas): a aba
+        // Kanban mostra pendentes E concluídas por coluna de situação.
+        const snapSituacao = typeof t.situacao === "string" ? t.situacao : null;
+        snapshotRaw.push({
+          task_id: String(t.codigoTarefa ?? `${pid}-${String(t.codigoTarefaTipo ?? "")}`),
+          process_id: pid,
+          tipo_nome: typeof t.nomeTarefaTipo === "string" ? t.nomeTarefaTipo : null,
+          situacao: snapSituacao,
+          concluida: t.flagSituacaoConcluida === true,
+          prazo_previsto: msToIso(t.dataConclusaoPrevista),
+          prazo_fatal: msToIso(t.dataLimite),
+          respCodes: extractRespCodes(t),
+        });
+        // So tarefas ABERTAS (nao concluidas) entram na DISTRIBUIÇÃO.
         if (t.flagSituacaoConcluida === true) continue;
         const tipoCodigo = String(t.codigoTarefaTipo ?? "");
         if (!tipoCodigo) continue;
@@ -452,8 +518,25 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // colidir (2 tarefas do mesmo tipo no mesmo processo). O results tem UNIQUE
   // (task_id, date, org) — sem dedup, o insert quebra.
   const seenTaskIds = new Set<string>();
+  // R3 — DUPLICADOS: em vez de descartar em silêncio, o motor manda os duplicados
+  // para a aba Exceções (o próprio sistema identifica e "joga ali", sem virar
+  // tarefa distribuída). Coletados aqui e gravados no passo de escrita.
+  const duplicateTasks: Array<{
+    task_id: string;
+    process_id: string;
+    tipo_codigo: string;
+    tipo_nome: string | null;
+  }> = [];
   for (const rt of rawTasks) {
-    if (seenTaskIds.has(rt.task_id)) continue;
+    if (seenTaskIds.has(rt.task_id)) {
+      duplicateTasks.push({
+        task_id: rt.task_id,
+        process_id: rt.process_id,
+        tipo_codigo: rt.tipo_codigo,
+        tipo_nome: rt.tipo_nome,
+      });
+      continue;
+    }
     seenTaskIds.add(rt.task_id);
     // "Puxa TODAS as tarefas do ProJuris." Se o tipo não está no de-para, usa
     // FALLBACK (pontuação padrão 1, sem complexidade/temporal/exclusivo) em vez
@@ -692,6 +775,125 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     is_simulation: true,
   });
   if (logErr) throw new AuthError(`insert do batch_log falhou: ${logErr.message}`, 500);
+
+  // ---- 7b) DUPLICADOS -> aba Exceções (R3) ----
+  // Idempotente: limpa as exceções de duplicado ainda PENDENTES antes de
+  // reinserir (não mexe nas já resolvidas/atribuídas/ignoradas). Assim o re-sync
+  // não empilha; e um duplicado que sumiu deixa de aparecer.
+  {
+    await supabase
+      .from("system_distribution_exceptions")
+      .delete()
+      .eq("organization_id", ORG_ID)
+      .eq("alert_code", "ALT-DUP-001")
+      .eq("status", "pending");
+    // Dedup por task_id (um mesmo id pode repetir várias vezes).
+    const dupByTask = new Map<
+      string,
+      { process_id: string; tipo_codigo: string; tipo_nome: string | null }
+    >();
+    for (const d of duplicateTasks) {
+      if (!dupByTask.has(d.task_id)) {
+        dupByTask.set(d.task_id, {
+          process_id: d.process_id,
+          tipo_codigo: d.tipo_codigo,
+          tipo_nome: d.tipo_nome,
+        });
+      }
+    }
+    const dupRows = [...dupByTask.entries()].map(([task_id, d]) => {
+      const nomeProc = processAssunto.get(d.process_id) || d.process_id;
+      const cnj = numeroProcessoByCode.get(d.process_id);
+      return {
+        organization_id: ORG_ID,
+        task_id,
+        alert_code: "ALT-DUP-001",
+        status: "pending" as const,
+        process_id: d.process_id,
+        detail: `Tarefa duplicada · Tipo ${d.tipo_nome ?? d.tipo_codigo} · Processo ${nomeProc}${cnj ? ` · CNJ ${cnj}` : ""}`,
+      };
+    });
+    if (dupRows.length > 0) {
+      const { error: dupErr } = await supabase
+        .from("system_distribution_exceptions")
+        .insert(dupRows);
+      // Não derruba o batch por causa das exceções (é enriquecimento).
+      if (dupErr) console.error("insert de exceções de duplicado falhou:", dupErr.message);
+    }
+  }
+
+  // ---- 7c) SNAPSHOT de tarefas -> aba Kanban (R5) ----
+  // Refresh completo por org (delete + insert). Não derruba o batch em erro.
+  try {
+    // Mapa código ProJuris -> NOME (via /usuario).
+    const userNameByCode = new Map<string, string>();
+    try {
+      const raw = await client.projurisGet<{
+        simpleDto?: Array<{ chave: unknown; valor: unknown }>;
+      }>("usuario");
+      const list =
+        raw?.simpleDto ?? (firstArrayDeep(raw) as Array<{ chave: unknown; valor: unknown }>);
+      for (const u of list ?? []) {
+        const k = u.chave == null ? null : String(u.chave);
+        const v = typeof u.valor === "string" ? u.valor : null;
+        if (k && v) userNameByCode.set(k, v);
+      }
+    } catch {
+      /* /usuario indisponível — nomes caem para o código */
+    }
+    // Mapa código ProJuris do responsável -> nosso system_users.id (RBAC).
+    const userIdByCode = new Map<string, string>();
+    {
+      const { data: mapRows } = await supabase
+        .from("system_projuris_executor_mapping")
+        .select("projuris_responsavel_id, executor_id")
+        .eq("organization_id", ORG_ID);
+      for (const m of (mapRows ?? []) as {
+        projuris_responsavel_id: string | null;
+        executor_id: string | null;
+      }[]) {
+        if (m.projuris_responsavel_id && m.executor_id) {
+          userIdByCode.set(String(m.projuris_responsavel_id), m.executor_id);
+        }
+      }
+    }
+    // Dedup por task_id (a última vista vence).
+    const snapByTask = new Map<string, (typeof snapshotRaw)[number]>();
+    for (const s of snapshotRaw) snapByTask.set(s.task_id, s);
+    const kanbanRows = [...snapByTask.values()].map((s) => {
+      const ids = [
+        ...new Set(s.respCodes.map((c) => userIdByCode.get(c)).filter((v): v is string => !!v)),
+      ];
+      const nomes = s.respCodes.map((c) => userNameByCode.get(c) ?? c);
+      return {
+        organization_id: ORG_ID,
+        task_id: s.task_id,
+        process_id: s.process_id,
+        process_nome: processAssunto.get(s.process_id) || null,
+        numero_processo: numeroProcessoByCode.get(s.process_id) ?? null,
+        tipo_nome: s.tipo_nome,
+        situacao: s.situacao,
+        situacao_col: normalizeSituacaoCol(s.situacao, s.concluida),
+        concluida: s.concluida,
+        responsavel_ids: ids,
+        responsavel_nomes: nomes,
+        prazo_previsto: s.prazo_previsto,
+        prazo_fatal: s.prazo_fatal,
+        synced_at: new Date().toISOString(),
+      };
+    });
+    await supabase.from("system_distribution_kanban_tasks").delete().eq("organization_id", ORG_ID);
+    for (let i = 0; i < kanbanRows.length; i += 100) {
+      const chunk = kanbanRows.slice(i, i + 100);
+      const { error: kErr } = await supabase.from("system_distribution_kanban_tasks").insert(chunk);
+      if (kErr) {
+        console.error("insert do snapshot Kanban falhou:", kErr.message);
+        break;
+      }
+    }
+  } catch (err) {
+    console.error("snapshot Kanban falhou:", err instanceof Error ? err.message : String(err));
+  }
 
   // ---- 8) Resumo ----
   const byExecMap = new Map<string, { tasks: number; points: number }>();

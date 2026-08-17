@@ -6,7 +6,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { sincronizarDistribuicaoFn } from "@/rpc/distribuicao";
+import {
+  sincronizarDistribuicaoFn,
+  getProcessoDetalheFn,
+  listKanbanTasksFn,
+} from "@/rpc/distribuicao";
 
 const supabase = getSupabaseBrowserClient();
 
@@ -26,6 +30,33 @@ export function useSincronizarDistribuicao() {
       qc.invalidateQueries({ queryKey: ["distribution-results"] });
       qc.invalidateQueries({ queryKey: ["batch-log"] });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// R2 — Detalhe completo do processo (drawer da Lista). LÊ o ProJuris ao vivo.
+// `enabled` só quando o drawer está aberto (evita chamada à toa).
+// ---------------------------------------------------------------------------
+export function useProcessoDetalhe(codigoProcesso: string | null | undefined) {
+  const fn = useServerFn(getProcessoDetalheFn);
+  return useQuery({
+    queryKey: ["processo-detalhe", codigoProcesso],
+    queryFn: () => fn({ data: { codigoProcesso: String(codigoProcesso) } }),
+    enabled: !!codigoProcesso,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// R5 — Kanban de tarefas (snapshot do sync, com RBAC no servidor).
+// ---------------------------------------------------------------------------
+export function useKanbanTasks() {
+  const fn = useServerFn(listKanbanTasksFn);
+  return useQuery({
+    queryKey: ["kanban-tasks"],
+    queryFn: () => fn(),
+    staleTime: 60 * 1000,
   });
 }
 

@@ -16,9 +16,11 @@ import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { runSync, ymd, ORG_ID, type SyncSummary } from "@/lib/distribuicao/sync-core";
 import { syncTaskTypesCore, type SyncTaskTypesResult } from "@/lib/distribuicao/sync-task-types";
+import { fetchProcessoDetalhe, type ProcessoDetalhe } from "@/lib/projuris/processo-detalhe";
 
 export type { SyncSummary } from "@/lib/distribuicao/sync-core";
 export type { SyncTaskTypesResult } from "@/lib/distribuicao/sync-task-types";
+export type { ProcessoDetalhe } from "@/lib/projuris/processo-detalhe";
 
 export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -48,6 +50,76 @@ export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
       throw err instanceof Error ? new Error(err.message) : new Error(String(err));
     }
   });
+
+// ---------------------------------------------------------------------------
+// R2 — DETALHE COMPLETO do processo (drawer da Lista). LÊ o ProJuris ao vivo
+// (resumo + envolvidos + tarefas + documentos). Só leitura. Gate: controladoria
+// (view). Degrada para { ok:false, erro } se o ProJuris estiver indisponível.
+// ---------------------------------------------------------------------------
+export const getProcessoDetalheFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ codigoProcesso: z.string().min(1) }).parse(d))
+  .handler(async ({ data }): Promise<ProcessoDetalhe> => {
+    try {
+      await requireModule("controladoria", "view");
+      return await fetchProcessoDetalhe(data.codigoProcesso);
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err instanceof Error ? new Error(err.message) : new Error(String(err));
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// R5 — KANBAN de tarefas (snapshot do sync). RBAC: admin vê TODAS; não-admin só
+// as tarefas onde o seu id está em responsavel_ids. Só leitura. Gate:
+// controladoria (view). A UI agrupa por situacao_col.
+// ---------------------------------------------------------------------------
+export type KanbanTask = {
+  id: string;
+  task_id: string;
+  process_id: string | null;
+  process_nome: string | null;
+  numero_processo: string | null;
+  tipo_nome: string | null;
+  situacao: string | null;
+  situacao_col: string;
+  concluida: boolean;
+  responsavel_nomes: string[];
+  prazo_previsto: string | null;
+  prazo_fatal: string | null;
+};
+
+export const listKanbanTasksFn = createServerFn({ method: "GET" }).handler(
+  async (): Promise<KanbanTask[]> => {
+    try {
+      const { id: userId, role } = await requireModule("controladoria", "view");
+      const isAdmin = role === "admin";
+      const sb = getSupabaseAdmin();
+      let q = sb
+        .from("system_distribution_kanban_tasks")
+        .select(
+          "id, task_id, process_id, process_nome, numero_processo, tipo_nome, situacao, situacao_col, concluida, responsavel_nomes, prazo_previsto, prazo_fatal",
+        )
+        .eq("organization_id", ORG_ID)
+        .order("prazo_fatal", { nullsFirst: false });
+      // RBAC: não-admin só vê as tarefas vinculadas ao seu nome (responsavel_ids).
+      if (!isAdmin) q = q.contains("responsavel_ids", [userId]);
+      const { data, error } = await q;
+      if (error) throw new AuthError(error.message, 500);
+      return (data ?? []) as KanbanTask[];
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setResponseStatus(err.status);
+        throw new Error(err.message);
+      }
+      setResponseStatus(500);
+      throw err instanceof Error ? new Error(err.message) : new Error(String(err));
+    }
+  },
+);
 
 // ---------------------------------------------------------------------------
 // CALENDÁRIO — tarefas distribuídas de UM dia (por final_date), com RBAC:
