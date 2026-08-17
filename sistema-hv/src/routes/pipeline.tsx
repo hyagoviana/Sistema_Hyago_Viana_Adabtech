@@ -235,7 +235,7 @@ function ServiceTypeSelection() {
                   <div>
                     <div className="text-[15px] font-semibold text-[var(--navy)]">{t.name}</div>
                     <div className="text-[12px] text-muted-foreground">
-                      {stId ? "Abrir esteira →" : "Sem pipeline (recadastre o tema)"}
+                      {stId ? "Abrir área de trabalho →" : "Sem pipeline (recadastre o tema)"}
                     </div>
                   </div>
                 </button>

@@ -145,7 +145,14 @@ export function InlineCanonicalCell({
     );
   }
 
-  const inputType = def.type === "number" ? "number" : def.type === "date" ? "date" : "text";
+  const inputType =
+    def.type === "number"
+      ? "number"
+      : def.type === "date"
+        ? "date"
+        : def.type === "link"
+          ? "url"
+          : "text";
   return (
     <input
       type={inputType}

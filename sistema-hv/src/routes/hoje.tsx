@@ -352,7 +352,7 @@ function HojePage() {
           count={totalAtivos}
           countSuffix="ativos"
           to="/pipeline"
-          cta="Ver esteira →"
+          cta="Ver área de trabalho →"
         >
           {isLoading ? (
             <ListSkeleton />

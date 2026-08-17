@@ -160,7 +160,7 @@ function BoardCard({
       )}
 
       <Btn variant="gold" onClick={onPick} className="mt-auto w-full justify-center">
-        Entrar nesta esteira →
+        Entrar →
       </Btn>
     </div>
   );

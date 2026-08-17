@@ -416,9 +416,9 @@ function CasoDetalhe() {
         </div>
       )}
 
-      {/* Ordem da ficha (2026-08-08): Rastro Operacional → Checklist → Sigilo →
-          Judicial → Dados do caso → Notas/Linha do tempo → Tarefas/Prazos/
-          Comunicações (CaseDossie) → Observações. */}
+      {/* Ordem da ficha (2026-08-17): Rastro Operacional → Checklist → Judicial →
+          Dados do caso → Andamentos (CaseFeed) → Observações gerais → Tarefas/
+          Prazos (CaseDossie) → Sigilo (fim, #14). */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
