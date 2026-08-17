@@ -445,13 +445,13 @@ function ListaDistribuicoesPage() {
                     const appr = approvalOf(r);
                     const overridden = !!appr?.override_executor_id;
                     return (
-                      <tr key={r.id} className="border-b hover:bg-accent/50">
-                        <td
-                          className="py-2 font-mono text-xs cursor-pointer"
-                          onClick={() => setSelected(r)}
-                        >
-                          {r.task_id}
-                        </td>
+                      <tr
+                        key={r.id}
+                        className="border-b hover:bg-accent/50 cursor-pointer"
+                        onClick={() => setSelected(r)}
+                        title="Ver tudo sobre o processo"
+                      >
+                        <td className="py-2 font-mono text-xs">{r.task_id}</td>
                         <td className="py-2 text-xs">{resolveNomeProcesso(r)}</td>
                         <td className="py-2 text-xs font-mono text-[11px]">
                           {resolveNumeroProcesso(r)}
@@ -509,7 +509,10 @@ function ListaDistribuicoesPage() {
                                   className="h-7 w-7"
                                   title="Aprovar"
                                   disabled={mutating}
-                                  onClick={() => aprovar.mutate(r.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    aprovar.mutate(r.id);
+                                  }}
                                 >
                                   <Check className="h-4 w-4 text-green-600" />
                                 </Button>
@@ -519,7 +522,10 @@ function ListaDistribuicoesPage() {
                                   className="h-7 w-7"
                                   title="Rejeitar"
                                   disabled={mutating}
-                                  onClick={() => openReject(r)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openReject(r);
+                                  }}
                                 >
                                   <X className="h-4 w-4 text-red-600" />
                                 </Button>
@@ -529,7 +535,10 @@ function ListaDistribuicoesPage() {
                                   className="h-7 w-7"
                                   title="Editar executor"
                                   disabled={mutating}
-                                  onClick={() => openEdit(r)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEdit(r);
+                                  }}
                                 >
                                   <UserCog className="h-4 w-4" />
                                 </Button>
