@@ -1,12 +1,12 @@
-// #2 (2026-08-17) — Workflows / automações (FUNDAÇÃO). Builder "Criar workflow":
-// Gatilho → Ações. v1: gatilho status_changed cabeado (dispara ao mover etapa);
-// checklist_completed / task_created / task_completed já aceitos pelo schema e
-// serão cabeados nos respectivos eventos em seguida.
+// #2 (2026-08-17) — Workflows / automações. Builder "Criar workflow": Gatilho → Ações.
+// Gatilhos cabeados: status_changed (mover etapa), checklist_completed (fechar checklist
+// da etapa), task_created e task_completed. Ao escolher um tema, os campos de etapa
+// viram dropdown (etapas op+fin do tema); em "Todos os temas" caem para texto livre.
 //
 // Gate: sistema (view p/ ver; edit p/ criar/editar/excluir) — herda dos RPCs.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ import {
   useDeleteWorkflowRule,
 } from "@/hooks/useWorkflows";
 import { useTemas } from "@/hooks/useTemas";
+import { useStages } from "@/hooks/usePipeline";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/configuracoes/workflows")({
@@ -59,6 +60,40 @@ const ACTION_LABELS: Record<ActionType, string> = {
   move_stage: "Mudar etapa",
 };
 
+// Campo de etapa: vira dropdown quando há etapas do tema; senão, texto livre
+// (caso "Todos os temas", onde não dá para resolver o service_type).
+function StageField({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: Array<{ slug: string; label: string }>;
+  placeholder: string;
+}) {
+  if (options.length === 0) {
+    return (
+      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    );
+  }
+  return (
+    <Select value={value || undefined} onValueChange={onChange}>
+      <SelectTrigger>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((s) => (
+          <SelectItem key={s.slug} value={s.slug}>
+            {s.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function WorkflowsPage() {
   const podeEditar = usePodeEditar("sistema");
   const { data: rules, isLoading } = useWorkflowRules();
@@ -74,7 +109,35 @@ function WorkflowsPage() {
   const [stageSlug, setStageSlug] = useState("");
   const [actions, setActions] = useState<Action[]>([{ type: "write_comment", body: "" }]);
 
-  const temaList = (temas as Array<{ id: string; name: string }> | undefined) ?? [];
+  const temaList = useMemo(
+    () =>
+      (temas as Array<{ id: string; name: string; service_type_id?: string | null }> | undefined) ??
+      [],
+    [temas],
+  );
+
+  // Etapas do tema selecionado (op + fin) para os dropdowns. Em "Todos os temas"
+  // não há service_type → os campos de etapa caem para texto livre.
+  const serviceTypeId = useMemo(
+    () =>
+      temaId === "__all__" ? "" : (temaList.find((t) => t.id === temaId)?.service_type_id ?? ""),
+    [temaId, temaList],
+  );
+  const { data: opStages } = useStages(serviceTypeId, "op");
+  const { data: finStages } = useStages(serviceTypeId, "fin");
+  const stageOptions = useMemo(() => {
+    type S = { slug: string; label: string };
+    const seen = new Map<string, string>();
+    for (const s of [...(opStages ?? []), ...(finStages ?? [])] as Array<{
+      slug: string;
+      label: string;
+    }>) {
+      // Slug pode existir em op e fin (ex.: CANCELADO): dedupe por slug, junta rótulos.
+      const prev = seen.get(s.slug);
+      seen.set(s.slug, prev && prev !== s.label ? `${prev} / ${s.label}` : s.label);
+    }
+    return Array.from(seen, ([slug, label]) => ({ slug, label })) as S[];
+  }, [opStages, finStages]);
 
   function reset() {
     setName("");
@@ -112,7 +175,9 @@ function WorkflowsPage() {
         triggerConfig:
           trigger === "status_changed" && stageSlug.trim()
             ? { to_stage_slug: stageSlug.trim() }
-            : {},
+            : trigger === "checklist_completed" && stageSlug.trim()
+              ? { stage_slug: stageSlug.trim() }
+              : {},
         actions: cleanActions,
       });
       toast.success("Workflow criado");
@@ -154,7 +219,13 @@ function WorkflowsPage() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Tema</Label>
-              <Select value={temaId} onValueChange={setTemaId}>
+              <Select
+                value={temaId}
+                onValueChange={(v) => {
+                  setTemaId(v);
+                  setStageSlug(""); // etapa depende do tema — evita slug de outro tema
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -182,7 +253,6 @@ function WorkflowsPage() {
                   {(Object.keys(TRIGGER_LABELS) as TriggerType[]).map((t) => (
                     <SelectItem key={t} value={t}>
                       {TRIGGER_LABELS[t]}
-                      {t !== "status_changed" ? " (em breve)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -190,11 +260,23 @@ function WorkflowsPage() {
             </div>
             {trigger === "status_changed" && (
               <div className="space-y-1">
-                <Label className="text-xs">Quando entrar na etapa (slug) — vazio = qualquer</Label>
-                <Input
+                <Label className="text-xs">Quando entrar na etapa — vazio = qualquer</Label>
+                <StageField
                   value={stageSlug}
-                  onChange={(e) => setStageSlug(e.target.value)}
-                  placeholder="EM_ANDAMENTO"
+                  onChange={setStageSlug}
+                  options={stageOptions}
+                  placeholder="Qualquer etapa"
+                />
+              </div>
+            )}
+            {trigger === "checklist_completed" && (
+              <div className="space-y-1">
+                <Label className="text-xs">Checklist de qual etapa — vazio = qualquer</Label>
+                <StageField
+                  value={stageSlug}
+                  onChange={setStageSlug}
+                  options={stageOptions}
+                  placeholder="Qualquer etapa"
                 />
               </div>
             )}
@@ -278,16 +360,15 @@ function WorkflowsPage() {
                   </div>
                 )}
                 {a.type === "move_stage" && (
-                  <Input
+                  <StageField
                     value={a.to_stage_slug ?? ""}
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setActions((prev) =>
-                        prev.map((x, idx) =>
-                          idx === i ? { ...x, to_stage_slug: e.target.value } : x,
-                        ),
+                        prev.map((x, idx) => (idx === i ? { ...x, to_stage_slug: v } : x)),
                       )
                     }
-                    placeholder="Slug da etapa destino"
+                    options={stageOptions}
+                    placeholder="Etapa destino"
                   />
                 )}
               </div>

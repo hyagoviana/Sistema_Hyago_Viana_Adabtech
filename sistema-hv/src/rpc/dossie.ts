@@ -20,6 +20,7 @@ import {
   listWorkItems,
 } from "@/lib/dossie-service";
 import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
+import { runWorkflowsFor } from "@/lib/workflow-engine";
 
 const caseIdSchema = z.object({ caseId: z.string().uuid() });
 const idSchema = z.object({ id: z.string().uuid() });
@@ -83,12 +84,26 @@ export const createCaseTaskFn = createServerFn({ method: "POST" })
       due_date?: string | null;
     }) => d,
   )
-  .handler(async ({ data }) => handleWrite((userId) => createCaseTask(data, userId)));
+  .handler(async ({ data }) =>
+    handleWrite(async (userId) => {
+      const task = await createCaseTask(data, userId);
+      // #2 Workflows — gatilho task_created (1x por tarefa via event_key).
+      if (task?.id)
+        await runWorkflowsFor(task.case_id, "task_created", { taskId: task.id }, userId);
+      return task;
+    }),
+  );
 
 export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; status: string }) => d)
   .handler(async ({ data }) =>
-    handleWrite((userId) => setCaseTaskStatus(data.id, data.status, userId)),
+    handleWrite(async (userId) => {
+      const task = await setCaseTaskStatus(data.id, data.status, userId);
+      // #2 Workflows — gatilho task_completed só na conclusão (1x por tarefa).
+      if (task?.id && data.status === "CONCLUIDA")
+        await runWorkflowsFor(task.case_id, "task_completed", { taskId: task.id }, userId);
+      return task;
+    }),
   );
 
 export const deleteCaseTaskFn = createServerFn({ method: "POST" })

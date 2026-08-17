@@ -77,13 +77,26 @@ async function runAction(
 }
 
 /**
+ * Contexto do evento que disparou o gatilho.
+ *  - toStageSlug: etapa de destino (status_changed)
+ *  - stageSlug: etapa cujo checklist foi concluído (checklist_completed)
+ *  - taskId: id da tarefa criada/concluída (task_created / task_completed) — usado
+ *    no event_key para que o motor dispare 1x POR TAREFA (e não 1x por caso).
+ */
+export type WorkflowCtx = {
+  toStageSlug?: string | null;
+  stageSlug?: string | null;
+  taskId?: string | null;
+};
+
+/**
  * Avalia e roda os workflows de um gatilho para um caso. NUNCA lança (best-effort).
- * ctx: dados do evento (ex.: { toStageSlug } para status_changed).
+ * ctx: dados do evento (ver WorkflowCtx).
  */
 export async function runWorkflowsFor(
   caseId: string,
   trigger: WorkflowTrigger,
-  ctx: { toStageSlug?: string | null } = {},
+  ctx: WorkflowCtx = {},
   actorUserId: string | null = null,
 ): Promise<void> {
   try {
@@ -107,13 +120,24 @@ export async function runWorkflowsFor(
     if (!rules || rules.length === 0) return;
 
     for (const rule of rules as Rule[]) {
-      // Filtro por trigger_config + event_key (idempotência).
+      // Filtro por trigger_config + event_key (idempotência). O event_key define
+      // a granularidade do "não repetir": por etapa (status/checklist) ou por
+      // tarefa (task_*), garantindo 1 disparo por ocorrência real.
       let eventKey: string = trigger;
       if (trigger === "status_changed") {
         const want = asStr(rule.trigger_config?.to_stage_slug);
         // Regra restrita a uma etapa: só dispara quando entra NELA.
         if (want && want !== (ctx.toStageSlug ?? null)) continue;
         eventKey = `status:${ctx.toStageSlug ?? ""}`;
+      } else if (trigger === "checklist_completed") {
+        const want = asStr(rule.trigger_config?.stage_slug);
+        // Regra restrita a uma etapa: só dispara quando o checklist DELA fecha.
+        if (want && want !== (ctx.stageSlug ?? null)) continue;
+        eventKey = `checklist:${ctx.stageSlug ?? ""}`;
+      } else if (trigger === "task_created") {
+        eventKey = `task_created:${ctx.taskId ?? ""}`;
+      } else if (trigger === "task_completed") {
+        eventKey = `task_completed:${ctx.taskId ?? ""}`;
       }
 
       // Idempotência: se já rodou esse (regra, caso, evento), pula.

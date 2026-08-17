@@ -10,6 +10,7 @@ import slugify from "slugify";
 
 import { isAutoCheckEnabled, matchDocPattern } from "./checklist/doc-matcher";
 import { getSupabaseAdmin } from "./supabase/server";
+import { runWorkflowsFor } from "./workflow-engine";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 
@@ -612,6 +613,30 @@ async function stageKindsForSlug(
   return new Set((data ?? []).map((r) => r.kind as "op" | "fin"));
 }
 
+// #2 Workflows — dispara o gatilho checklist_completed quando TODOS os itens
+// (não deletados) da etapa ficam concluídos. Best-effort: nunca lança.
+async function maybeFireChecklistCompleted(
+  caseId: string,
+  stageSlug: string,
+  userId?: string,
+): Promise<void> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data: items } = await sb
+      .from("system_case_checklist_items")
+      .select("done")
+      .eq("case_id", caseId)
+      .eq("stage_slug", stageSlug)
+      .is("deleted_at", null);
+    if (!items || items.length === 0) return;
+    // Só dispara quando não resta NENHUM item pendente na etapa.
+    if (items.some((it) => !it.done)) return;
+    await runWorkflowsFor(caseId, "checklist_completed", { stageSlug }, userId ?? null);
+  } catch (err) {
+    console.error("maybeFireChecklistCompleted:", err instanceof Error ? err.message : String(err));
+  }
+}
+
 // ----------------------------------------------------------------------------
 // MARCAR ITEM (S2-04 + S2-05) — server-side.
 //   - grava done/done_at/done_by;
@@ -666,6 +691,8 @@ export async function marcarItemChecklist(itemId: string, done: boolean, userId?
     // Roteia para op e/ou fin conforme o kind da etapa do item.
     if (kinds.size === 0 || kinds.has("op")) await avancarSeChecklistOk(item.case_id, userId);
     if (kinds.has("fin")) await avancarFinSeOk(item.case_id, userId);
+    // #2 Workflows — se a etapa inteira fechou, aciona o gatilho checklist_completed.
+    await maybeFireChecklistCompleted(item.case_id, item.stage_slug, userId);
     return updated;
   }
 
