@@ -35,6 +35,7 @@ import { useTemaServiceType } from "@/hooks/useTemas";
 
 const TYPE_OPTIONS: { value: TemaFieldType; label: string }[] = [
   { value: "text", label: "Texto" },
+  { value: "link", label: "Link (URL)" },
   { value: "multiselect", label: "Múltipla escolha" },
   { value: "boolean", label: "Sim / Não" },
   { value: "money", label: "Valor (R$)" },

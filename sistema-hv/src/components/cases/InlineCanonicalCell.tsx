@@ -48,6 +48,21 @@ export function InlineCanonicalCell({
   const strValue = value === null || value === undefined ? "" : String(value);
 
   if (!canEdit) {
+    // #9 (2026-08-17) — tipo "link": clicável mesmo na lista.
+    if (def.type === "link" && strValue) {
+      const href = /^https?:\/\//i.test(strValue) ? strValue : `https://${strValue}`;
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={stop}
+          className="text-[var(--gold-700)] underline break-all"
+        >
+          {strValue}
+        </a>
+      );
+    }
     // Só leitura (padrão da Lista, 2026-07-29 #4): reflete o valor da ficha; a
     // edição é só na ficha do caso. Formatação central cobre boolean/multiselect/
     // money/múltiplas ocorrências.

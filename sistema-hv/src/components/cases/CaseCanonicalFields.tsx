@@ -339,6 +339,37 @@ export function TemaFieldInput({
     );
   }
 
+  // #9 (2026-08-17) — tipo "link": input de URL + atalho clicável quando preenchido.
+  if (def.type === "link") {
+    const href = strValue
+      ? /^https?:\/\//i.test(strValue)
+        ? strValue
+        : `https://${strValue}`
+      : "";
+    return (
+      <div className="space-y-1">
+        {labelEl}
+        <Input
+          type="url"
+          defaultValue={strValue}
+          disabled={!canEdit || disabled}
+          placeholder="https://…"
+          onBlur={(e) => onSave(e.target.value.trim() || null)}
+        />
+        {href && (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-[12px] text-[var(--gold-700)] underline break-all"
+          >
+            Abrir link ↗
+          </a>
+        )}
+      </div>
+    );
+  }
+
   const inputType = def.type === "number" ? "number" : def.type === "date" ? "date" : "text";
   return (
     <div className="space-y-1">

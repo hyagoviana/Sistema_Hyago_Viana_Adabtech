@@ -28,6 +28,7 @@ export const TEMA_FIELD_TYPES = [
   "number",
   "date",
   "boolean",
+  "link",
 ] as const;
 export type TemaFieldType = (typeof TEMA_FIELD_TYPES)[number];
 

@@ -16,7 +16,8 @@ export type TemaFieldType =
   | "money"
   | "number"
   | "date"
-  | "boolean";
+  | "boolean"
+  | "link";
 
 // Origem do VALOR do campo: 'caso' → system_cases.canonical_fields (por caso);
 // 'cliente' → system_clients.custom_fields (compartilhado entre casos do cliente).
