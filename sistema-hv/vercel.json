@@ -2,16 +2,8 @@
   "regions": ["gru1"],
   "crons": [
     {
-      "path": "/api/cron/distribuicao",
+      "path": "/api/cron/daily",
       "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/sync-contaazul",
-      "schedule": "30 11 * * *"
-    },
-    {
-      "path": "/api/cron/sync-asaas",
-      "schedule": "0 12 * * *"
     }
   ]
 }

@@ -17,7 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { useSetDistributionActive } from "@/hooks/useDistribuicao";
+import { useSetDistributionActive, useDistributionConfig } from "@/hooks/useDistribuicao";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
 const supabase = getSupabaseBrowserClient();
@@ -110,6 +110,8 @@ function RelatorioPage() {
   // Ativar Motor — server fn gateado (requireModule controladoria:edit). A escrita
   // direta pelo browser foi removida (a RLS de config foi fechada).
   const setActive = useSetDistributionActive();
+  const { data: config } = useDistributionConfig();
+  const isActive = config?.active === true;
   function activateMotor() {
     setActive.mutate(true, {
       onSuccess: () => {
@@ -117,6 +119,12 @@ function RelatorioPage() {
         setActivateDialogOpen(false);
       },
       onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao ativar"),
+    });
+  }
+  function deactivateMotor() {
+    setActive.mutate(false, {
+      onSuccess: () => toast.success("Motor DESLIGADO. O cron diario nao vai mais distribuir."),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao desligar"),
     });
   }
 
@@ -306,14 +314,27 @@ function RelatorioPage() {
           <Download className="h-4 w-4 mr-1" /> Exportar CSV
         </Button>
         {podeEditar && (
-          <div className="ml-auto">
-            <Button
-              variant="destructive"
-              onClick={() => setActivateDialogOpen(true)}
-              disabled={!canGenerate}
-            >
-              <Rocket className="h-4 w-4 mr-1" /> Ativar Motor em Producao
-            </Button>
+          <div className="ml-auto flex items-center gap-2">
+            <Badge variant={isActive ? "default" : "secondary"}>
+              {isActive ? "Motor LIGADO" : "Motor desligado"}
+            </Badge>
+            {isActive ? (
+              <Button
+                variant="outline"
+                onClick={deactivateMotor}
+                disabled={setActive.isPending}
+              >
+                Desligar Motor
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={() => setActivateDialogOpen(true)}
+                disabled={!canGenerate}
+              >
+                <Rocket className="h-4 w-4 mr-1" /> Ativar Motor em Producao
+              </Button>
+            )}
           </div>
         )}
       </div>

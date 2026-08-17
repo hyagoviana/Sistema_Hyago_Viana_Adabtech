@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from "react";
 import {
   Settings,
   Play,
-  FlaskConical,
   Clock,
   AlertTriangle,
   CheckCircle,
@@ -36,10 +35,8 @@ import {
   useLastBatchLog,
   useAlertsSummary30d,
 } from "@/hooks/useDistribuicao";
+import { useSincronizarDistribuicao } from "@/hooks/useDistribuicaoDashboard";
 import { usePodeEditar } from "@/hooks/usePermissions";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-
-const supabase = getSupabaseBrowserClient();
 
 export const Route = createFileRoute("/controladoria/distribuicao/configuracao")({
   component: ConfiguracaoPage,
@@ -52,6 +49,7 @@ function ConfiguracaoPage() {
   const { data: lastBatch, isLoading: batchLoading } = useLastBatchLog();
   const { data: alertsSummary } = useAlertsSummary30d();
   const updateConfig = useUpdateDistributionConfig();
+  const sync = useSincronizarDistribuicao();
   const saveCreds = useSaveDistributionCreds();
 
   const [mode, setMode] = useState<string>("HIGH_PRODUCTION");
@@ -174,30 +172,22 @@ function ConfiguracaoPage() {
     );
   }
 
-  async function executeBatch(simulate: boolean) {
+  // Dispara o motor SEGURO (Node/server fn runSync): LÊ o ProJuris, distribui e
+  // grava em system_distribution_results. ZERO writeback ao ProJuris. Substitui a
+  // antiga chamada à Edge Function `projuris-sync` (que podia escrever no ProJuris
+  // sem trava). Idempotente por data.
+  async function executeBatch() {
     setExecuting(true);
     setExecutionResult(null);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/projuris-sync`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ simulate, manual: true }),
+      const summary = await sync.mutateAsync({});
+      setExecutionResult({
+        status: "completed",
+        total_tasks: summary.totalTasks,
+        successful: summary.distributed,
+        failed: summary.blocked,
       });
-      // A Edge Function pode devolver 4xx/5xx — não trate erro como sucesso.
-      if (!response.ok) {
-        const msg = await response.text().catch(() => "");
-        throw new Error(msg || `Falha na execução (HTTP ${response.status})`);
-      }
-      const result = (await response.json()) as BatchExecutionResult;
-      setExecutionResult(result);
-      toast.success(simulate ? "Simulacao concluida" : "Batch executado");
+      toast.success("Distribuicao sincronizada (leitura ProJuris, sem escrita)");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro na execucao");
     } finally {
@@ -456,16 +446,13 @@ function ConfiguracaoPage() {
             </div>
             {podeEditar && (
               <div className="flex gap-2">
-                <Button onClick={() => executeBatch(false)} disabled={executing}>
+                <Button onClick={() => executeBatch()} disabled={executing}>
                   {executing ? (
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   ) : (
                     <Play className="h-4 w-4 mr-1" />
                   )}{" "}
                   Executar Agora
-                </Button>
-                <Button variant="outline" onClick={() => executeBatch(true)} disabled={executing}>
-                  <FlaskConical className="h-4 w-4 mr-1" /> Simular
                 </Button>
               </div>
             )}

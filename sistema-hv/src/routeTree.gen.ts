@@ -100,6 +100,7 @@ import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaa
 import { Route as ApiCronSyncContaazulRouteImport } from './routes/api.cron.sync-contaazul'
 import { Route as ApiCronSyncAsaasRouteImport } from './routes/api.cron.sync-asaas'
 import { Route as ApiCronDistribuicaoRouteImport } from './routes/api.cron.distribuicao'
+import { Route as ApiCronDailyRouteImport } from './routes/api.cron.daily'
 import { Route as ApiContaazulCallbackRouteImport } from './routes/api.contaazul.callback'
 import { Route as CasosIdTermoElaborarRouteImport } from './routes/casos.$id.termo.elaborar'
 import { Route as ApiClientsIdDocumentsIndexRouteImport } from './routes/api.clients.$id.documents.index'
@@ -580,6 +581,11 @@ const ApiCronDistribuicaoRoute = ApiCronDistribuicaoRouteImport.update({
   path: '/api/cron/distribuicao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronDailyRoute = ApiCronDailyRouteImport.update({
+  id: '/api/cron/daily',
+  path: '/api/cron/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiContaazulCallbackRoute = ApiContaazulCallbackRouteImport.update({
   id: '/api/contaazul/callback',
   path: '/api/contaazul/callback',
@@ -686,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
   '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
   '/api/cron/distribuicao': typeof ApiCronDistribuicaoRoute
   '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
@@ -782,6 +789,7 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalIndexRoute
   '/whatsapp': typeof WhatsappIndexRoute
   '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
   '/api/cron/distribuicao': typeof ApiCronDistribuicaoRoute
   '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
@@ -883,6 +891,7 @@ export interface FileRoutesById {
   '/portal/': typeof PortalIndexRoute
   '/whatsapp/': typeof WhatsappIndexRoute
   '/api/contaazul/callback': typeof ApiContaazulCallbackRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
   '/api/cron/distribuicao': typeof ApiCronDistribuicaoRoute
   '/api/cron/sync-asaas': typeof ApiCronSyncAsaasRoute
   '/api/cron/sync-contaazul': typeof ApiCronSyncContaazulRoute
@@ -985,6 +994,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/whatsapp/'
     | '/api/contaazul/callback'
+    | '/api/cron/daily'
     | '/api/cron/distribuicao'
     | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
@@ -1081,6 +1091,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/whatsapp'
     | '/api/contaazul/callback'
+    | '/api/cron/daily'
     | '/api/cron/distribuicao'
     | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
@@ -1181,6 +1192,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/whatsapp/'
     | '/api/contaazul/callback'
+    | '/api/cron/daily'
     | '/api/cron/distribuicao'
     | '/api/cron/sync-asaas'
     | '/api/cron/sync-contaazul'
@@ -1279,6 +1291,7 @@ export interface RootRouteChildren {
   PortalIndexRoute: typeof PortalIndexRoute
   WhatsappIndexRoute: typeof WhatsappIndexRoute
   ApiContaazulCallbackRoute: typeof ApiContaazulCallbackRoute
+  ApiCronDailyRoute: typeof ApiCronDailyRoute
   ApiCronDistribuicaoRoute: typeof ApiCronDistribuicaoRoute
   ApiCronSyncAsaasRoute: typeof ApiCronSyncAsaasRoute
   ApiCronSyncContaazulRoute: typeof ApiCronSyncContaazulRoute
@@ -1932,6 +1945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronDistribuicaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/daily': {
+      id: '/api/cron/daily'
+      path: '/api/cron/daily'
+      fullPath: '/api/cron/daily'
+      preLoaderRoute: typeof ApiCronDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/contaazul/callback': {
       id: '/api/contaazul/callback'
       path: '/api/contaazul/callback'
@@ -2170,6 +2190,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalIndexRoute: PortalIndexRoute,
   WhatsappIndexRoute: WhatsappIndexRoute,
   ApiContaazulCallbackRoute: ApiContaazulCallbackRoute,
+  ApiCronDailyRoute: ApiCronDailyRoute,
   ApiCronDistribuicaoRoute: ApiCronDistribuicaoRoute,
   ApiCronSyncAsaasRoute: ApiCronSyncAsaasRoute,
   ApiCronSyncContaazulRoute: ApiCronSyncContaazulRoute,

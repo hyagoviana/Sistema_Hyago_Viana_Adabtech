@@ -145,6 +145,22 @@ export async function buildProjurisClientFromConfig(
   });
 }
 
+/**
+ * Gate de produção: o motor só roda AUTOMÁTICO (cron) quando o owner ligou a
+ * chave em `system_distribution_config.active`. NÃO afeta o disparo MANUAL
+ * (botão "Sincronizar"/"Simular"), que precisa funcionar mesmo com o motor
+ * desligado — é assim que se valida antes de ligar. Ver R6/ativação segura.
+ */
+export async function isDistributionActive(): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("system_distribution_config")
+    .select("active")
+    .eq("organization_id", ORG_ID)
+    .maybeSingle();
+  return data?.active === true;
+}
+
 export async function runSync(distributionDate: string, windowDays: number): Promise<SyncSummary> {
   const supabase = getSupabaseAdmin();
 

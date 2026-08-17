@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useBatchHistory, useBatchHistoryStats } from "@/hooks/useDistribuicaoDashboard";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-
-const supabase = getSupabaseBrowserClient();
+import {
+  useBatchHistory,
+  useBatchHistoryStats,
+  useSincronizarDistribuicao,
+} from "@/hooks/useDistribuicaoDashboard";
+import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/controladoria/distribuicao/historico")({
   component: HistoricoPage,
@@ -37,6 +39,9 @@ function HistoricoPage() {
   const { data: kpis = { total: 0, successRate: 0, avgTasks: 0, avgDuration: 0 } } =
     useBatchHistoryStats(startDate, endDate);
 
+  const podeEditar = usePodeEditar("controladoria");
+  const sync = useSincronizarDistribuicao();
+
   const statusColors: Record<string, string> = {
     completed: "bg-green-100 text-green-700",
     failed: "bg-red-100 text-red-700",
@@ -51,25 +56,13 @@ function HistoricoPage() {
       : `${Math.round(ms / 1000)}s`;
   }
 
+  // Re-executa um batch de UMA data pelo motor SEGURO (Node/runSync): LÊ o
+  // ProJuris e regrava system_distribution_results daquela data (idempotente).
+  // ZERO writeback ao ProJuris. Substitui a antiga chamada à Edge Function.
   async function reExecute(batchDate: string) {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/projuris-sync`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ manual: true, distribution_date: batchDate }),
-      });
-      // Não trate 4xx/5xx como sucesso.
-      if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(msg || `Falha na re-execução (HTTP ${res.status})`);
-      }
-      toast.success("Re-execucao iniciada");
+      await sync.mutateAsync({ distributionDate: batchDate });
+      toast.success("Re-execucao concluida (leitura ProJuris, sem escrita)");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -182,10 +175,11 @@ function HistoricoPage() {
                     <td className="py-2 text-right">{b.failed}</td>
                     <td className="py-2 text-right">{b.alerts_generated}</td>
                     <td className="py-2 text-center">
-                      {b.status === "failed" && (
+                      {b.status === "failed" && podeEditar && (
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={sync.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
                             reExecute(b.batch_date);

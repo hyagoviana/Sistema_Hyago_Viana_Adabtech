@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { runSync, ymd } from "@/lib/distribuicao/sync-core";
+import { runSync, ymd, isDistributionActive } from "@/lib/distribuicao/sync-core";
 
 // Cron DIÁRIO do Motor de Distribuicao (08:00 BRT = 11:00 UTC — ver `vercel.json`
 // → crons "0 11 * * *"). A Vercel invoca esta rota via GET com o header
@@ -17,15 +17,26 @@ export const Route = createFileRoute("/api/cron/distribuicao")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
+        // FAIL-CLOSED: sem CRON_SECRET setado, o endpoint NÃO roda (evita ficar
+        // público disparando ProJuris + gravando em produção). A Vercel injeta o
+        // header `Authorization: Bearer $CRON_SECRET` na chamada do cron.
         const secret = process.env.CRON_SECRET;
-        if (secret) {
-          const auth = request.headers.get("authorization");
-          if (auth !== `Bearer ${secret}`) {
-            return new Response("Forbidden", { status: 403 });
-          }
+        if (!secret) {
+          return new Response("CRON_SECRET nao configurado", { status: 403 });
+        }
+        const auth = request.headers.get("authorization");
+        if (auth !== `Bearer ${secret}`) {
+          return new Response("Forbidden", { status: 403 });
         }
 
         try {
+          // Gate de produção: só roda automático se o motor estiver LIGADO.
+          if (!(await isDistributionActive())) {
+            return new Response(JSON.stringify({ ok: true, skipped: "motor desligado" }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
           // Data = hoje (a Vercel roda em UTC; as 11:00 UTC ainda e o mesmo dia
           // civil no BRT). Janela de 3 dias cobre intimacoes recentes.
           const summary = await runSync(ymd(new Date()), 3);
