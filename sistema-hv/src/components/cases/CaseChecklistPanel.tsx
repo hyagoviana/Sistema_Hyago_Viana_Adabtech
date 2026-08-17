@@ -25,42 +25,21 @@ import {
 } from "@/hooks/useChecklist";
 import { useUsers } from "@/hooks/useUsers";
 
-// Trail de boards (rastro multi-kanban) — usado p/ agrupar o checklist por board
-// e exibir labels amigáveis em vez do slug cru. Opcional: quando ausente, o painel
-// agrupa pela lista de slugs como antes.
-export type BoardTrailEntry = {
-  board_id: string | null;
-  board_label: string;
-  is_principal: boolean;
-  stage_slug: string | null;
-  stage_label: string;
-};
-
-// S9-11 — Painel de checklist do caso. Além de MARCAR os itens herdados do
-// modelo (por tipo de serviço) e os ad-hoc, permite ACRESCENTAR / EDITAR /
-// EXCLUIR critérios AD-HOC (específicos deste caso) nas etapas ATUAIS (op/fin).
-// currentStageSlugs = etapas em que a criação de ad-hoc faz sentido (o card está
-// nelas agora). Se `canEdit=false`, o painel volta ao comportamento anterior
-// (só marcação), sem afetar os itens herdados (que nunca são editáveis por caso).
-//
-// boardTrail (opcional, C3-ext): quando fornecido, agrupa os itens por BOARD
-// (kanban) em vez de mostrar o slug cru. Cada seção exibe "Board › Etapa" para
-// boards custom e só "Etapa" para o principal. Evita conflitos quando o caso está
-// em múltiplos kanbans com checklists distintos.
-export function CaseChecklistPanel({
+// #3 (reunião 2026-08-17) — Checklist de UMA etapa, SEM card/título/explicação.
+// Serve para ficar aninhado logo abaixo do card da etapa no Rastro (o card acima
+// já mostra o kanban+etapa), eliminando a duplicação e o texto "Ao concluir…".
+// Reusa os mesmos hooks: a query de itens é cacheada por caseId, então múltiplas
+// instâncias (uma por etapa) compartilham os dados sem refetch.
+export function CaseStageChecklist({
   caseId,
-  currentStageSlugs = [],
-  boardTrail,
-  serviceTypeId,
-  serviceTypeName,
+  stageSlug,
   canEdit = false,
+  className,
 }: {
   caseId: string;
-  currentStageSlugs?: string[];
-  boardTrail?: BoardTrailEntry[];
-  serviceTypeId?: string | null;
-  serviceTypeName?: string;
+  stageSlug: string;
   canEdit?: boolean;
+  className?: string;
 }) {
   const { data: items, isLoading } = useCaseChecklistItems(caseId);
   const { data: users } = useUsers();
@@ -69,47 +48,17 @@ export function CaseChecklistPanel({
   const updateMut = useUpdateAdhocChecklistItem(caseId);
   const deleteMut = useDeleteAdhocChecklistItem(caseId);
   const assignMut = useSetChecklistItemAssignees(caseId);
+  const [editing, setEditing] = useState<Item | null>(null);
 
-  // Responsável do checklist vem de TODOS os usuários ativos do sistema (item 3).
   const assignees = (users ?? [])
     .filter((u) => u.status === "ACTIVE")
     .map((u) => ({ id: u.id, full_name: u.full_name, email: u.email }));
 
-  async function assign(item: Item, userIds: string[]) {
-    try {
-      await assignMut.mutateAsync({ itemId: item.id, userIds });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
-    }
-  }
-
-  const [editing, setEditing] = useState<Item | null>(null);
-
-  const list = (items ?? []) as Item[];
-  const currentSet = new Set(currentStageSlugs.filter(Boolean));
+  const list = ((items ?? []) as Item[])
+    .filter((it) => it.stage_slug === stageSlug)
+    .sort((a, b) => (a.def?.ordem ?? 0) - (b.def?.ordem ?? 0));
   const busy =
     marcarMut.isPending || createMut.isPending || updateMut.isPending || deleteMut.isPending;
-
-  // C3-ext — lookup slug → board info (label amigável + link p/ cada seção do checklist).
-  const slugToBoard = new Map<
-    string,
-    { boardId: string | null; boardLabel: string; stageLabel: string; isPrincipal: boolean; idx: number }
-  >();
-  if (boardTrail) {
-    let idx = 0;
-    for (const entry of boardTrail) {
-      idx++;
-      if (entry.stage_slug) {
-        slugToBoard.set(entry.stage_slug, {
-          boardId: entry.board_id,
-          boardLabel: entry.board_label,
-          stageLabel: entry.stage_label,
-          isPrincipal: entry.is_principal,
-          idx,
-        });
-      }
-    }
-  }
 
   async function toggle(item: Item, done: boolean) {
     try {
@@ -118,7 +67,13 @@ export function CaseChecklistPanel({
       toast.error(err instanceof Error ? err.message : "Falha ao marcar item");
     }
   }
-
+  async function assign(item: Item, userIds: string[]) {
+    try {
+      await assignMut.mutateAsync({ itemId: item.id, userIds });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao vincular responsável");
+    }
+  }
   async function removeAdhoc(item: Item) {
     if (!confirm(`Excluir o critério "${item.def?.label ?? ""}" deste caso?`)) return;
     try {
@@ -129,142 +84,38 @@ export function CaseChecklistPanel({
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="card-hero p-7">
-        <Eyebrow>Checklist</Eyebrow>
-        <p className="text-sm text-muted-foreground mt-2">Carregando…</p>
-      </div>
-    );
-  }
-
-  // (2026-07-09) — mostra SÓ a(s) etapa(s) ATUAL(is) do funil. Ao avançar de etapa,
-  // o painel exibe os itens da nova etapa (herdados do editor) e NÃO mantém os das
-  // etapas anteriores. Itens de etapas passadas ficam fora desta visão.
-  const byStage = new Map<string, Item[]>();
-  for (const slug of currentSet) byStage.set(slug, []);
-  for (const it of list) {
-    if (!currentSet.has(it.stage_slug)) continue; // ignora etapas passadas
-    const arr = byStage.get(it.stage_slug) ?? [];
-    arr.push(it);
-    byStage.set(it.stage_slug, arr);
-  }
-  for (const arr of byStage.values()) {
-    arr.sort((a, b) => (a.def?.ordem ?? 0) - (b.def?.ordem ?? 0));
-  }
-
-  if (byStage.size === 0) {
-    return (
-      <div className="card-hero p-7">
-        <Eyebrow>Checklist da etapa</Eyebrow>
-        <p className="text-sm text-muted-foreground mt-2">
-          Nenhum item de checklist para a etapa atual. Configure os itens no editor de funil ou
-          acrescente critérios específicos deste caso.
-        </p>
-      </div>
-    );
-  }
+  if (isLoading) return null;
+  // Sem itens e sem permissão de editar → não ocupa espaço embaixo do card.
+  if (list.length === 0 && !canEdit) return null;
 
   return (
-    <div className="card-hero p-7">
-      <Eyebrow>Checklist da etapa</Eyebrow>
-      <p className="text-[12px] text-muted-foreground mt-1">
-        Ao concluir todos os itens obrigatórios da etapa atual, o caso avança sozinho. Critérios
-        marcados como “deste caso” valem só para este caso.
-      </p>
-      <div className="mt-4 space-y-5">
-        {[...byStage.entries()].map(([slug, arr]) => {
-          const isCurrent = currentSet.has(slug);
-          const editable = canEdit && isCurrent;
-          const boardInfo = slugToBoard.get(slug);
-          const kanbanLabel = boardInfo
-            ? boardInfo.isPrincipal
-              ? "Kanban Principal"
-              : `Kanban ${boardInfo.idx} · ${boardInfo.boardLabel}`
-            : "Etapa";
-          const pipelineLink =
-            boardInfo && serviceTypeId
-              ? {
-                  to: "/pipeline" as const,
-                  search: {
-                    cat: serviceTypeId,
-                    catName: serviceTypeName,
-                    ...(boardInfo.boardId ? { board: boardInfo.boardId } : {}),
-                  },
-                }
-              : null;
-          return (
-            <div
-              key={slug}
-              className="rounded-lg border border-[rgba(30,32,68,0.10)] px-4 py-3"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                {pipelineLink ? (
-                  <Link
-                    {...pipelineLink}
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity"
-                    style={{
-                      background: boardInfo && !boardInfo.isPrincipal
-                        ? "rgba(30,32,68,0.08)"
-                        : "var(--gold-100, rgba(180,155,80,0.15))",
-                      color: boardInfo && !boardInfo.isPrincipal
-                        ? "var(--navy, #1e2044)"
-                        : "var(--gold-700, #8a6d1b)",
-                    }}
-                  >
-                    {kanbanLabel}
-                    <ExternalLink size={9} />
-                  </Link>
-                ) : (
-                  <span
-                    className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                    style={{
-                      background: "var(--gold-100, rgba(180,155,80,0.15))",
-                      color: "var(--gold-700, #8a6d1b)",
-                    }}
-                  >
-                    {kanbanLabel}
-                  </span>
-                )}
-                <span className="text-[13px] font-semibold text-[var(--navy)]">
-                  {boardInfo
-                    ? boardInfo.stageLabel
-                    : slug}
-                </span>
-              </div>
-              {arr.length > 0 ? (
-                <ChecklistItemsRows
-                  items={arr}
-                  onToggle={toggle}
-                  pending={busy}
-                  onEditAdhoc={editable ? (it) => setEditing(it) : undefined}
-                  onDeleteAdhoc={editable ? removeAdhoc : undefined}
-                  assignees={canEdit ? assignees : undefined}
-                  onAssign={canEdit ? assign : undefined}
-                />
-              ) : (
-                <p className="text-[12px] text-muted-foreground">Nenhum critério nesta etapa.</p>
-              )}
-              {editable && (
-                <AddAdhocForm
-                  disabled={busy}
-                  onAdd={async (label, required) => {
-                    try {
-                      await createMut.mutateAsync({ stageSlug: slug, label, required });
-                      toast.success("Critério adicionado");
-                    } catch (err) {
-                      toast.error(
-                        err instanceof Error ? err.message : "Falha ao adicionar critério",
-                      );
-                    }
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
+    <div className={className}>
+      {list.length > 0 ? (
+        <ChecklistItemsRows
+          items={list}
+          onToggle={toggle}
+          pending={busy}
+          onEditAdhoc={canEdit ? (it) => setEditing(it) : undefined}
+          onDeleteAdhoc={canEdit ? removeAdhoc : undefined}
+          assignees={canEdit ? assignees : undefined}
+          onAssign={canEdit ? assign : undefined}
+        />
+      ) : (
+        <p className="text-[12px] text-muted-foreground">Nenhum critério nesta etapa.</p>
+      )}
+      {canEdit && (
+        <AddAdhocForm
+          disabled={busy}
+          onAdd={async (label, required) => {
+            try {
+              await createMut.mutateAsync({ stageSlug, label, required });
+              toast.success("Critério adicionado");
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Falha ao adicionar critério");
+            }
+          }}
+        />
+      )}
       <EditAdhocDialog
         item={editing}
         onClose={() => setEditing(null)}

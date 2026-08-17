@@ -33,7 +33,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import {
-  CaseChecklistPanel,
+  CaseStageChecklist,
   ChecklistInconsistencyAlert,
 } from "@/components/cases/CaseChecklistPanel";
 import { CaseCanonicalFields } from "@/components/cases/CaseCanonicalFields";
@@ -471,74 +471,87 @@ function CasoDetalhe() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="card-hero p-7">
           <Eyebrow>Rastro Operacional</Eyebrow>
-          {/* C3 (2026-08-05) — MULTI-KANBAN com cards clicáveis por board. */}
+          {/* C3 (2026-08-05) — MULTI-KANBAN com cards clicáveis por board.
+              #3 (reunião 2026-08-17) — o checklist de cada etapa fica ANINHADO
+              logo abaixo do próprio card (sem bloco "Checklist da etapa" separado
+              nem a explicação "Ao concluir…"; maximiza o espaço e some com a
+              duplicação de kanban/etapa). */}
           {opTrail && opTrail.length > 0 ? (
             <div className="mt-4 space-y-3">
               {opTrail.map((t, idx) => (
-                <Link
+                <div
                   key={t.board_id ?? "__principal__"}
-                  to="/pipeline"
-                  search={{
-                    cat: caso.service_type_id ?? undefined,
-                    catName: tipoLabel,
-                    ...(t.board_id ? { board: t.board_id } : {}),
-                  }}
-                  className="block rounded-lg border border-[rgba(30,32,68,0.10)] px-4 py-3 hover:border-[var(--gold-400,rgba(180,155,80,0.4))] hover:bg-[rgba(180,155,80,0.03)] transition-colors cursor-pointer"
+                  className="rounded-lg border border-[rgba(30,32,68,0.10)] overflow-hidden"
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                      style={{
-                        background: t.is_principal
-                          ? "var(--gold-100, rgba(180,155,80,0.15))"
-                          : "rgba(30,32,68,0.08)",
-                        color: t.is_principal ? "var(--gold-700, #8a6d1b)" : "var(--navy, #1e2044)",
-                      }}
-                    >
-                      {t.is_principal ? "Kanban Principal" : `Kanban ${idx + 1} · ${t.board_label}`}
-                    </span>
-                    {t.entered_at && (
-                      <span className="text-[11px] text-muted-foreground">
-                        há {daysSince(t.entered_at)} dia(s)
+                  <Link
+                    to="/pipeline"
+                    search={{
+                      cat: caso.service_type_id ?? undefined,
+                      catName: tipoLabel,
+                      ...(t.board_id ? { board: t.board_id } : {}),
+                    }}
+                    className="block px-4 py-3 hover:bg-[rgba(180,155,80,0.03)] transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{
+                          background: t.is_principal
+                            ? "var(--gold-100, rgba(180,155,80,0.15))"
+                            : "rgba(30,32,68,0.08)",
+                          color: t.is_principal
+                            ? "var(--gold-700, #8a6d1b)"
+                            : "var(--navy, #1e2044)",
+                        }}
+                      >
+                        {t.is_principal
+                          ? "Kanban Principal"
+                          : `Kanban ${idx + 1} · ${t.board_label}`}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[16px] font-semibold text-[var(--navy)]">
-                      {t.stage_label}
-                    </span>
-                    <ExternalLink size={13} className="text-muted-foreground opacity-50" />
-                  </div>
-                </Link>
+                      {t.entered_at && (
+                        <span className="text-[11px] text-muted-foreground">
+                          há {daysSince(t.entered_at)} dia(s)
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[16px] font-semibold text-[var(--navy)]">
+                        {t.stage_label}
+                      </span>
+                      <ExternalLink size={13} className="text-muted-foreground opacity-50" />
+                    </div>
+                  </Link>
+                  {/* #3 — checklist DESTA etapa, embaixo do card correspondente. */}
+                  {t.stage_slug && (
+                    <div className="px-4 pb-3 pt-3 border-t border-[rgba(30,32,68,0.06)] bg-[rgba(30,32,68,0.015)]">
+                      <CaseStageChecklist
+                        caseId={caso.id}
+                        stageSlug={t.stage_slug}
+                        canEdit={podeGerirCaso}
+                      />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : (
-            <div className="mt-4 flex items-center gap-3">
-              <span className="text-[17px] font-semibold text-[var(--navy)]">{opLabel}</span>
-              <span className="text-[12px] text-muted-foreground">
-                há {dias} dia(s) neste estado
-              </span>
+            <div className="mt-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[17px] font-semibold text-[var(--navy)]">{opLabel}</span>
+                <span className="text-[12px] text-muted-foreground">
+                  há {dias} dia(s) neste estado
+                </span>
+              </div>
+              {caso.macrostatus_op && caso.macrostatus_op !== "NAO_APLICAVEL" && (
+                <CaseStageChecklist
+                  caseId={caso.id}
+                  stageSlug={caso.macrostatus_op}
+                  canEdit={podeGerirCaso}
+                  className="mt-3 pt-3 border-t border-[rgba(30,32,68,0.08)]"
+                />
+              )}
             </div>
           )}
-
-          {/* #12 (2026-08-17) — Checklist da etapa DENTRO do Rastro Operacional
-              (antes era um painel separado abaixo). */}
-          <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)]">
-            <CaseChecklistPanel
-              caseId={caso.id}
-              currentStageSlugs={[
-                caso.macrostatus_op,
-                ...(opTrail ?? [])
-                  .filter((t) => !t.is_principal && t.stage_slug)
-                  .map((t) => t.stage_slug!),
-                caso.macrostatus_fin,
-              ].filter((s): s is string => !!s && s !== "NAO_APLICAVEL")}
-              boardTrail={opTrail}
-              serviceTypeId={caso.service_type_id}
-              serviceTypeName={tipoLabel}
-              canEdit={podeGerirCaso}
-            />
-          </div>
         </div>
 
         {/* F1 (AC-3/AC-4) — Rastro Financeiro RESUMIDO. O bloco integral
@@ -569,6 +582,16 @@ function CasoDetalhe() {
                 </span>
               )}
             </div>
+
+            {/* #3 (2026-08-17) — checklist da etapa FINANCEIRA sob o próprio card. */}
+            {finBifurcated && caso.macrostatus_fin && caso.macrostatus_fin !== "NAO_APLICAVEL" && (
+              <CaseStageChecklist
+                caseId={caso.id}
+                stageSlug={caso.macrostatus_fin}
+                canEdit={podeGerirCaso}
+                className="mt-4 pt-4 border-t border-[rgba(30,32,68,0.08)]"
+              />
+            )}
 
             {finBifurcated && (
               <div className="mt-5 grid grid-cols-3 gap-3">
