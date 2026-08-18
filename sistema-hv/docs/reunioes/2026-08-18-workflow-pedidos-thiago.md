@@ -58,11 +58,24 @@ p/ herdar pontuação. Junta o melhor das duas sem travar nada.
 > cobrem TODAS as tarefas que vocês criam manualmente num caso? Se **sim** → Opção 1
 > (mais rápido). Se **não / na dúvida** → Opção 3 (recomendada).
 
-### Build (rápido) assim que ele decidir
+### Build
+
+**Já ADIANTADO (decisão-independente — commitado):**
+- ✅ Motor (`workflow-engine.ts`): `WorkflowCtx.taskTypeId` + filtro nos gatilhos
+  `task_created`/`task_completed` (regra com `trigger_config.task_type_id` só dispara
+  quando o tipo casa; sem o campo = qualquer tipo). Forward-compat: inerte até a tarefa
+  carregar tipo.
+- ✅ RPC (`rpc/dossie.ts`): passa `taskTypeId` do task ao motor (leitura defensiva —
+  null hoje; passa a fluir quando a coluna existir).
+- ✅ Builder (`configuracoes.workflows.tsx`): sub-opção **"Tipo de tarefa"** nos gatilhos
+  de tarefa (dropdown), gravando `trigger_config.task_type_id`.
+- ✅ Fonte do dropdown: `listTaskTypesFn` lê o catálogo da controladoria
+  (`system_task_type_mapping`) — **provisório**, trocável conforme a decisão.
+
+**FALTA (depende da decisão do Thiago):**
 1. Migration: campo `task_type_id` (FK) em `system_case_tasks` + (se Opção 2/3) tabela
    `system_case_task_types` (+ CRUD em Configurações).
-2. Formulário de tarefa (`CaseDossie.tsx`): dropdown de tipo (opcional).
-3. Builder de workflow: sub-opção `trigger_config.task_type_id` nos gatilhos
-   `task_created` / `task_completed` (dropdown de tipos).
-4. Motor (`workflow-engine.ts`): filtro — só dispara quando o tipo da tarefa casa
-   (tarefa sem tipo continua disparando as regras sem filtro de tipo · retrocompat).
+2. Formulário de tarefa (`CaseDossie.tsx`): dropdown de tipo (opcional) ao criar tarefa.
+3. Repontar `listTaskTypesFn` para a fonte final (se não for a controladoria).
+
+Depois desses 3 passos o filtro do motor (já pronto) passa a funcionar de ponta a ponta.

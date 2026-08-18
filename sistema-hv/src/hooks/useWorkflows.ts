@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   createWorkflowRuleFn,
   deleteWorkflowRuleFn,
+  listTaskTypesFn,
   listWorkflowRulesFn,
   updateWorkflowRuleFn,
 } from "@/rpc/workflows";
@@ -13,6 +14,16 @@ const KEY = ["workflow-rules"] as const;
 export function useWorkflowRules() {
   const fn = useServerFn(listWorkflowRulesFn);
   return useQuery({ queryKey: KEY, queryFn: () => fn() });
+}
+
+// Pedido A — tipos de tarefa p/ a sub-opção do gatilho (fonte provisória: controladoria).
+export function useTaskTypes() {
+  const fn = useServerFn(listTaskTypesFn);
+  return useQuery({
+    queryKey: ["workflow-task-types"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 type RuleInput = {

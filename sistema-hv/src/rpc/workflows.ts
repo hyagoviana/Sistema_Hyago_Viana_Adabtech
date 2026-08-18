@@ -5,6 +5,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   createWorkflowRule,
   deleteWorkflowRule,
@@ -42,6 +43,26 @@ export const listWorkflowRulesFn = createServerFn({ method: "GET" }).handler(asy
   handle(async (): Promise<WorkflowRule[]> => {
     await requireModule("sistema", "view");
     return listWorkflowRules();
+  }),
+);
+
+// Pedido A (sub-opção de tipo no gatilho) — lista de "tipos de tarefa" p/ o dropdown
+// do builder. FONTE PROVISÓRIA: catálogo da controladoria (system_task_type_mapping).
+// Se a decisão for por um catálogo próprio (Opção 2/3), basta repontar esta query.
+export type WorkflowTaskType = { id: string; label: string };
+export const listTaskTypesFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(async (): Promise<WorkflowTaskType[]> => {
+    await requireModule("sistema", "view");
+    const sb = getSupabaseAdmin();
+    const { data } = await sb
+      .from("system_task_type_mapping")
+      .select("id, projuris_tipo_descricao, projuris_tipo_codigo")
+      .eq("active", true)
+      .order("projuris_tipo_descricao", { ascending: true });
+    return (data ?? []).map((t) => ({
+      id: t.id,
+      label: t.projuris_tipo_descricao || t.projuris_tipo_codigo,
+    }));
   }),
 );
 

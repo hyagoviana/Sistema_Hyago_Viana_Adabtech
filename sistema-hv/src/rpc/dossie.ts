@@ -88,8 +88,17 @@ export const createCaseTaskFn = createServerFn({ method: "POST" })
     handleWrite(async (userId) => {
       const task = await createCaseTask(data, userId);
       // #2 Workflows — gatilho task_created (1x por tarefa via event_key).
-      if (task?.id)
-        await runWorkflowsFor(task.case_id, "task_created", { taskId: task.id }, userId);
+      // taskTypeId: forward-compat (a coluna de tipo ainda não existe → null; a
+      // sub-opção por tipo passa a funcionar assim que o campo for criado).
+      if (task?.id) {
+        const taskTypeId = (task as { task_type_id?: string | null }).task_type_id ?? null;
+        await runWorkflowsFor(
+          task.case_id,
+          "task_created",
+          { taskId: task.id, taskTypeId },
+          userId,
+        );
+      }
       return task;
     }),
   );
@@ -100,8 +109,15 @@ export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
     handleWrite(async (userId) => {
       const task = await setCaseTaskStatus(data.id, data.status, userId);
       // #2 Workflows — gatilho task_completed só na conclusão (1x por tarefa).
-      if (task?.id && data.status === "CONCLUIDA")
-        await runWorkflowsFor(task.case_id, "task_completed", { taskId: task.id }, userId);
+      if (task?.id && data.status === "CONCLUIDA") {
+        const taskTypeId = (task as { task_type_id?: string | null }).task_type_id ?? null;
+        await runWorkflowsFor(
+          task.case_id,
+          "task_completed",
+          { taskId: task.id, taskTypeId },
+          userId,
+        );
+      }
       return task;
     }),
   );

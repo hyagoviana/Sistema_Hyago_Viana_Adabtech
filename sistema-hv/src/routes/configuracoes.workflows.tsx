@@ -30,6 +30,7 @@ import {
   useCreateWorkflowRule,
   useUpdateWorkflowRule,
   useDeleteWorkflowRule,
+  useTaskTypes,
 } from "@/hooks/useWorkflows";
 import { useTemas } from "@/hooks/useTemas";
 import { useStages } from "@/hooks/usePipeline";
@@ -120,6 +121,8 @@ function WorkflowsPage() {
   const [trigger, setTrigger] = useState<TriggerType>("status_changed");
   // Kanban de onde as etapas do gatilho são puxadas: "op" | "fin" | boardId (custom).
   const [triggerKanban, setTriggerKanban] = useState<string>("op");
+  // Pedido A — tipo de tarefa que ativa o gatilho (task_created/task_completed).
+  const [taskTypeId, setTaskTypeId] = useState<string>("");
   const [stageSlug, setStageSlug] = useState("");
   const [actions, setActions] = useState<Action[]>([{ type: "write_comment", body: "" }]);
 
@@ -167,11 +170,16 @@ function WorkflowsPage() {
   // Ação "mudar etapa": só o kanban PRINCIPAL (o motor move macrostatus_op).
   const opStageOptions = useMemo(() => dedupeStages(opStages as never), [opStages]);
 
+  // Pedido A — tipos de tarefa (sub-opção dos gatilhos de tarefa).
+  const { data: taskTypes } = useTaskTypes();
+  const taskTypeList = (taskTypes as Array<{ id: string; label: string }> | undefined) ?? [];
+
   function reset() {
     setName("");
     setTemaId("__all__");
     setTrigger("status_changed");
     setTriggerKanban("op");
+    setTaskTypeId("");
     setStageSlug("");
     setActions([{ type: "write_comment", body: "" }]);
     setOpen(false);
@@ -210,7 +218,9 @@ function WorkflowsPage() {
               }
             : trigger === "checklist_completed" && stageSlug.trim()
               ? { stage_slug: stageSlug.trim() }
-              : {},
+              : (trigger === "task_created" || trigger === "task_completed") && taskTypeId
+                ? { task_type_id: taskTypeId }
+                : {},
         actions: cleanActions,
       });
       toast.success("Workflow criado");
@@ -317,6 +327,30 @@ function WorkflowsPage() {
                           {kanbanOptions.map((k) => (
                             <SelectItem key={k.key} value={k.key}>
                               {k.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {/* Pedido A (Thiago) — sub-opção de TIPO da tarefa. Fonte provisória:
+                      catálogo da controladoria. Vazio/"Qualquer tipo" = dispara p/ toda
+                      tarefa (só filtra de fato quando a tarefa passar a carregar tipo). */}
+                  {(trigger === "task_created" || trigger === "task_completed") && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tipo de tarefa — vazio = qualquer</Label>
+                      <Select
+                        value={taskTypeId || "__any__"}
+                        onValueChange={(v) => setTaskTypeId(v === "__any__" ? "" : v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Qualquer tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__any__">Qualquer tipo</SelectItem>
+                          {taskTypeList.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

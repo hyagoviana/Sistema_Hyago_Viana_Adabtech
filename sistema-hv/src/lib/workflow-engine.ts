@@ -91,6 +91,10 @@ export type WorkflowCtx = {
   // "fin" (financeiro) ou o boardId de um kanban custom. Permite que a regra dispare
   // só no kanban certo (um tema pode ter vários kanbans com etapas homônimas).
   boardKey?: string | null;
+  // Tipo da tarefa (task_created / task_completed). Permite a sub-opção "só quando a
+  // tarefa é do tipo X". Forward-compat: enquanto a tarefa não carrega tipo, chega
+  // null → regras SEM filtro de tipo disparam; regras COM filtro ficam inertes.
+  taskTypeId?: string | null;
 };
 
 /**
@@ -143,10 +147,12 @@ export async function runWorkflowsFor(
         // Regra restrita a uma etapa: só dispara quando o checklist DELA fecha.
         if (want && want !== (ctx.stageSlug ?? null)) continue;
         eventKey = `checklist:${ctx.stageSlug ?? ""}`;
-      } else if (trigger === "task_created") {
-        eventKey = `task_created:${ctx.taskId ?? ""}`;
-      } else if (trigger === "task_completed") {
-        eventKey = `task_completed:${ctx.taskId ?? ""}`;
+      } else if (trigger === "task_created" || trigger === "task_completed") {
+        // Sub-opção (Pedido A): regra restrita a um tipo de tarefa só dispara quando
+        // o tipo casa. Sem task_type_id na regra = qualquer tipo (comportamento atual).
+        const wantType = asStr(rule.trigger_config?.task_type_id);
+        if (wantType && wantType !== (ctx.taskTypeId ?? null)) continue;
+        eventKey = `${trigger}:${ctx.taskId ?? ""}`;
       }
 
       // Idempotência: se já rodou esse (regra, caso, evento), pula.
