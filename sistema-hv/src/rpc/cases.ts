@@ -295,7 +295,19 @@ const moveFinSchema = z.object({ id: z.string().uuid(), to: z.enum(MACRO_FIN) })
 
 export const moveCaseStatusFinFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => moveFinSchema.parse(data))
-  .handler(async ({ data }) => handleFin((userId) => moveCaseStatusFin(data.id, data.to, userId)));
+  .handler(async ({ data }) =>
+    handleFin(async (userId) => {
+      const res = await moveCaseStatusFin(data.id, data.to, userId);
+      // #2 Workflows — gatilho status_changed no kanban FINANCEIRO (board_key "fin").
+      await runWorkflowsFor(
+        data.id,
+        "status_changed",
+        { toStageSlug: data.to, boardKey: "fin" },
+        userId,
+      );
+      return res;
+    }),
+  );
 
 export const softDeleteCaseFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => idSchema.parse(data))

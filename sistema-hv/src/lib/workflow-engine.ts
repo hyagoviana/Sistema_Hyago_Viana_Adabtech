@@ -87,6 +87,10 @@ export type WorkflowCtx = {
   toStageSlug?: string | null;
   stageSlug?: string | null;
   taskId?: string | null;
+  // Kanban de origem do evento de etapa (status_changed): "op" (principal, padrão),
+  // "fin" (financeiro) ou o boardId de um kanban custom. Permite que a regra dispare
+  // só no kanban certo (um tema pode ter vários kanbans com etapas homônimas).
+  boardKey?: string | null;
 };
 
 /**
@@ -125,10 +129,15 @@ export async function runWorkflowsFor(
       // tarefa (task_*), garantindo 1 disparo por ocorrência real.
       let eventKey: string = trigger;
       if (trigger === "status_changed") {
+        // Escopo por kanban: board_key ausente = "op" (principal) — mantém as
+        // regras antigas funcionando. Só dispara quando o kanban do evento casa.
+        const wantBoard = asStr(rule.trigger_config?.board_key) ?? "op";
+        const ctxBoard = asStr(ctx.boardKey) ?? "op";
+        if (wantBoard !== ctxBoard) continue;
         const want = asStr(rule.trigger_config?.to_stage_slug);
         // Regra restrita a uma etapa: só dispara quando entra NELA.
         if (want && want !== (ctx.toStageSlug ?? null)) continue;
-        eventKey = `status:${ctx.toStageSlug ?? ""}`;
+        eventKey = `status:${ctxBoard}:${ctx.toStageSlug ?? ""}`;
       } else if (trigger === "checklist_completed") {
         const want = asStr(rule.trigger_config?.stage_slug);
         // Regra restrita a uma etapa: só dispara quando o checklist DELA fecha.

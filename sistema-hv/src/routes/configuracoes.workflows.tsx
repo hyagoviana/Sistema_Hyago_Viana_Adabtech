@@ -1,7 +1,8 @@
 // #2 (2026-08-17) — Workflows / automações. Builder "Criar workflow": Gatilho → Ações.
 // Gatilhos cabeados: status_changed (mover etapa), checklist_completed (fechar checklist
-// da etapa), task_created e task_completed. Ao escolher um tema, os campos de etapa
-// viram dropdown (etapas op+fin do tema); em "Todos os temas" caem para texto livre.
+// da etapa), task_created e task_completed. Ao escolher um tema, um seletor de KANBAN
+// (Principal/Financeiro/custom) define de qual kanban as etapas do gatilho são puxadas;
+// em "Todos os temas" os campos de etapa caem para texto livre.
 //
 // Gate: sistema (view p/ ver; edit p/ criar/editar/excluir) — herda dos RPCs.
 
@@ -32,6 +33,7 @@ import {
 } from "@/hooks/useWorkflows";
 import { useTemas } from "@/hooks/useTemas";
 import { useStages } from "@/hooks/usePipeline";
+import { useBoards, useBoardStages } from "@/hooks/useBoards";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/configuracoes/workflows")({
@@ -59,6 +61,16 @@ const ACTION_LABELS: Record<ActionType, string> = {
   create_task: "Criar tarefa",
   move_stage: "Mudar etapa",
 };
+
+// Dedupe de etapas por slug (um slug pode existir em op+fin; junta os rótulos).
+function dedupeStages(arr: Array<{ slug: string; label: string }> | undefined) {
+  const seen = new Map<string, string>();
+  for (const s of arr ?? []) {
+    const prev = seen.get(s.slug);
+    seen.set(s.slug, prev && prev !== s.label ? `${prev} / ${s.label}` : s.label);
+  }
+  return Array.from(seen, ([slug, label]) => ({ slug, label }));
+}
 
 // Campo de etapa: vira dropdown quando há etapas do tema; senão, texto livre
 // (caso "Todos os temas", onde não dá para resolver o service_type).
@@ -106,6 +118,8 @@ function WorkflowsPage() {
   const [name, setName] = useState("");
   const [temaId, setTemaId] = useState<string>("__all__");
   const [trigger, setTrigger] = useState<TriggerType>("status_changed");
+  // Kanban de onde as etapas do gatilho são puxadas: "op" | "fin" | boardId (custom).
+  const [triggerKanban, setTriggerKanban] = useState<string>("op");
   const [stageSlug, setStageSlug] = useState("");
   const [actions, setActions] = useState<Action[]>([{ type: "write_comment", body: "" }]);
 
@@ -125,24 +139,39 @@ function WorkflowsPage() {
   );
   const { data: opStages } = useStages(serviceTypeId, "op");
   const { data: finStages } = useStages(serviceTypeId, "fin");
-  const stageOptions = useMemo(() => {
-    type S = { slug: string; label: string };
-    const seen = new Map<string, string>();
-    for (const s of [...(opStages ?? []), ...(finStages ?? [])] as Array<{
-      slug: string;
-      label: string;
-    }>) {
-      // Slug pode existir em op e fin (ex.: CANCELADO): dedupe por slug, junta rótulos.
-      const prev = seen.get(s.slug);
-      seen.set(s.slug, prev && prev !== s.label ? `${prev} / ${s.label}` : s.label);
-    }
-    return Array.from(seen, ([slug, label]) => ({ slug, label })) as S[];
-  }, [opStages, finStages]);
+  const { data: boards } = useBoards(serviceTypeId);
+
+  // Kanbans do tema: Principal (op) + Financeiro (fin) + kanbans custom (boards).
+  const kanbanOptions = useMemo(() => {
+    const custom = ((boards ?? []) as Array<{ id: string; label: string; is_principal?: boolean }>)
+      .filter((b) => !b.is_principal)
+      .map((b) => ({ key: b.id, label: b.label }));
+    return [
+      { key: "op", label: "Kanban Principal" },
+      { key: "fin", label: "Financeiro" },
+      ...custom,
+    ];
+  }, [boards]);
+
+  // Etapas do kanban custom selecionado (quando triggerKanban é um boardId).
+  const customBoardId = triggerKanban === "op" || triggerKanban === "fin" ? null : triggerKanban;
+  const { data: boardStages } = useBoardStages(customBoardId);
+
+  // Etapas do GATILHO conforme o kanban escolhido.
+  const triggerStageOptions = useMemo(() => {
+    if (triggerKanban === "op") return dedupeStages(opStages as never);
+    if (triggerKanban === "fin") return dedupeStages(finStages as never);
+    return dedupeStages(boardStages as never);
+  }, [triggerKanban, opStages, finStages, boardStages]);
+
+  // Ação "mudar etapa": só o kanban PRINCIPAL (o motor move macrostatus_op).
+  const opStageOptions = useMemo(() => dedupeStages(opStages as never), [opStages]);
 
   function reset() {
     setName("");
     setTemaId("__all__");
     setTrigger("status_changed");
+    setTriggerKanban("op");
     setStageSlug("");
     setActions([{ type: "write_comment", body: "" }]);
     setOpen(false);
@@ -173,8 +202,12 @@ function WorkflowsPage() {
         temaId: temaId === "__all__" ? null : temaId,
         triggerType: trigger,
         triggerConfig:
-          trigger === "status_changed" && stageSlug.trim()
-            ? { to_stage_slug: stageSlug.trim() }
+          trigger === "status_changed"
+            ? {
+                ...(stageSlug.trim() ? { to_stage_slug: stageSlug.trim() } : {}),
+                // board_key só quando não é o principal (mantém regras antigas iguais).
+                ...(triggerKanban !== "op" ? { board_key: triggerKanban } : {}),
+              }
             : trigger === "checklist_completed" && stageSlug.trim()
               ? { stage_slug: stageSlug.trim() }
               : {},
@@ -223,6 +256,7 @@ function WorkflowsPage() {
                 value={temaId}
                 onValueChange={(v) => {
                   setTemaId(v);
+                  setTriggerKanban("op"); // kanban depende do tema
                   setStageSlug(""); // etapa depende do tema — evita slug de outro tema
                 }}
               >
@@ -242,45 +276,72 @@ function WorkflowsPage() {
           </div>
 
           {/* Gatilho */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Gatilho</Label>
-              <Select value={trigger} onValueChange={(v) => setTrigger(v as TriggerType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(TRIGGER_LABELS) as TriggerType[]).map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {TRIGGER_LABELS[t]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {trigger === "status_changed" && (
-              <div className="space-y-1">
-                <Label className="text-xs">Quando entrar na etapa — vazio = qualquer</Label>
-                <StageField
-                  value={stageSlug}
-                  onChange={setStageSlug}
-                  options={stageOptions}
-                  placeholder="Qualquer etapa"
-                />
-              </div>
-            )}
-            {trigger === "checklist_completed" && (
-              <div className="space-y-1">
-                <Label className="text-xs">Checklist de qual etapa — vazio = qualquer</Label>
-                <StageField
-                  value={stageSlug}
-                  onChange={setStageSlug}
-                  options={stageOptions}
-                  placeholder="Qualquer etapa"
-                />
-              </div>
-            )}
-          </div>
+          {(() => {
+            const isStageTrigger =
+              trigger === "status_changed" || trigger === "checklist_completed";
+            return (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Gatilho</Label>
+                    <Select value={trigger} onValueChange={(v) => setTrigger(v as TriggerType)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(TRIGGER_LABELS) as TriggerType[]).map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {TRIGGER_LABELS[t]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Pedido B (Thiago) — pré-seleção do KANBAN de onde puxar as etapas
+                      (Principal / Financeiro / kanbans custom do tema). Só aparece com
+                      tema escolhido; em "Todos os temas" a etapa vira texto livre. */}
+                  {isStageTrigger && serviceTypeId && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Kanban</Label>
+                      <Select
+                        value={triggerKanban}
+                        onValueChange={(v) => {
+                          setTriggerKanban(v);
+                          setStageSlug(""); // etapa pertence ao kanban
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {kanbanOptions.map((k) => (
+                            <SelectItem key={k.key} value={k.key}>
+                              {k.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                {isStageTrigger && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      {trigger === "status_changed"
+                        ? "Quando entrar na etapa — vazio = qualquer"
+                        : "Checklist de qual etapa — vazio = qualquer"}
+                    </Label>
+                    <StageField
+                      value={stageSlug}
+                      onChange={setStageSlug}
+                      options={triggerStageOptions}
+                      placeholder="Qualquer etapa"
+                    />
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* Ações */}
           <div className="space-y-2">
@@ -360,16 +421,21 @@ function WorkflowsPage() {
                   </div>
                 )}
                 {a.type === "move_stage" && (
-                  <StageField
-                    value={a.to_stage_slug ?? ""}
-                    onChange={(v) =>
-                      setActions((prev) =>
-                        prev.map((x, idx) => (idx === i ? { ...x, to_stage_slug: v } : x)),
-                      )
-                    }
-                    options={stageOptions}
-                    placeholder="Etapa destino"
-                  />
+                  <div className="space-y-1">
+                    <StageField
+                      value={a.to_stage_slug ?? ""}
+                      onChange={(v) =>
+                        setActions((prev) =>
+                          prev.map((x, idx) => (idx === i ? { ...x, to_stage_slug: v } : x)),
+                        )
+                      }
+                      options={opStageOptions}
+                      placeholder="Etapa destino (kanban principal)"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Move no kanban principal (etapa operacional).
+                    </p>
+                  </div>
                 )}
               </div>
             ))}

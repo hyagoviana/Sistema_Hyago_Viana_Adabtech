@@ -30,6 +30,7 @@ import {
   updateBoardStage,
 } from "@/lib/board-service";
 import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
+import { runWorkflowsFor } from "@/lib/workflow-engine";
 
 function run<T>(
   guard: () => Promise<{ id: string }>,
@@ -246,5 +247,18 @@ export const moveCaseInBoardFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) =>
-    handleOp((userId) => moveCaseInBoard(data.caseId, data.boardId, data.stageId, userId)),
+    handleOp(async (userId) => {
+      const res = await moveCaseInBoard(data.caseId, data.boardId, data.stageId, userId);
+      // #2 Workflows — gatilho status_changed no KANBAN CUSTOM (board_key = boardId).
+      // Só dispara em mudança real de etapa (noop=false).
+      if (res && !res.noop && res.stage_slug) {
+        await runWorkflowsFor(
+          data.caseId,
+          "status_changed",
+          { toStageSlug: res.stage_slug, boardKey: data.boardId },
+          userId,
+        );
+      }
+      return res;
+    }),
   );
