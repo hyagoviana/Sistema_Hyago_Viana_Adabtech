@@ -79,20 +79,24 @@ export async function criarTipoNoProjuris(taskTypeId: string): Promise<Resultado
 
   const ref = await client.projurisGet<Record<string, unknown>>(`tarefa-tipo/${codigoRef}`);
 
-  const corpo: Record<string, unknown> = {
-    nomeTipoTarefa: nome,
-    // Os três obrigatórios, herdados da configuração real do escritório.
-    tipoClassificacao: ref.tipoClassificacao ?? "TAREFA",
-    filaTrabalho: ref.filaTrabalho,
-    tipoContagemPrazo: ref.tipoContagemPrazo,
-    // "pode colocar para criar de tudo, todos os módulos" (Thiago, 19/08).
-    modulos: (ref.modulos as ChaveValor[] | undefined) ?? [],
-    tipoPrazo: ref.tipoPrazo,
-    // Prazos do SHV — o motivo de o tipo existir aqui.
-    prazoPadrao: tipo.prazo_previsto_dias ?? 0,
-    prazoFatal: tipo.prazo_fatal_dias ?? 0,
-    habilitado: true,
-  };
+  // Em vez de adivinhar campo a campo (a validação foi pedindo um de cada vez:
+  // classificação → fila → contagem de prazo → template de responsável → cor…),
+  // CLONAMOS o tipo de referência inteiro e trocamos só o que é nosso. O tipo
+  // novo nasce com exatamente a mesma configuração que o escritório já usa.
+  //
+  // ⚠️ O código PRECISA sair do clone: com ele, o POST viraria uma edição do tipo
+  // existente em vez de uma criação.
+  const corpo: Record<string, unknown> = { ...(ref as Record<string, unknown>) };
+  delete corpo.codigoTarefaTipo;
+  delete corpo.codigo;
+
+  corpo.nomeTipoTarefa = nome;
+  corpo.descricaoTarefa = null;
+  // "pode colocar para criar de tudo, todos os módulos" (Thiago, 19/08) — herdado
+  // do molde, que já vem com a lista completa.
+  corpo.prazoPadrao = tipo.prazo_previsto_dias ?? 0;
+  corpo.prazoFatal = tipo.prazo_fatal_dias ?? 0;
+  corpo.habilitado = true;
 
   let resposta: unknown;
   try {

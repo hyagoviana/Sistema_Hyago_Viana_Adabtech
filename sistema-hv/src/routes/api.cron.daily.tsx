@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { runSync, ymd, isDistributionActive } from "@/lib/distribuicao/sync-core";
+import { syncMovements } from "@/lib/distribuicao/staging-core";
 import { syncContaAzulPagamentos } from "@/lib/contaazul/service";
 import { syncAsaasPagamentos } from "@/lib/asaas/service";
 
@@ -43,6 +44,26 @@ export const Route = createFileRoute("/api/cron/daily")({
           result.distribuicao = {
             ok: false,
             error: err instanceof Error ? err.message : "erro na distribuicao",
+          };
+        }
+
+        // 1b) Fila de análise da controladoria (tela "Andamentos pendentes").
+        //
+        // Precisa rodar CEDO. O Thiago explicou (24/08) que as intimações nascem
+        // com status pendente e que a controladoria faz a varredura manual logo no
+        // início do dia: "se puxarem antes das 8h no início do dia, vai ter
+        // justamente as novas intimações que ainda não foram vistas". Por isso o
+        // cron foi antecipado para 06h BRT — e por isso a fila é montada aqui, e
+        // não só quando alguém clica em "Buscar no ProJuris".
+        //
+        // Só leitura no ProJuris; idempotente (não sobrescreve linha já decidida).
+        try {
+          result.fila_controladoria = await syncMovements(ymd(new Date()), 3);
+        } catch (err) {
+          console.error("cron/daily:fila:", err);
+          result.fila_controladoria = {
+            ok: false,
+            error: err instanceof Error ? err.message : "erro ao montar a fila",
           };
         }
 

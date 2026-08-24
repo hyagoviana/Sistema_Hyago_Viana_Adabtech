@@ -49,6 +49,7 @@ interface Row {
   projuris_tipo_codigo: string | null;
   projuris_tipo_descricao: string | null;
   motor_task_type_id: string | null;
+  archived_at?: string | null;
 }
 
 /** Um tipo de tarefa como o ProJuris devolve em /tarefa-tipo/consulta. */
@@ -127,6 +128,8 @@ export interface SyncTaskTypesResult {
   numericos: number;
   /** Linhas que receberam prazo previsto/fatal vindo do ProJuris. */
   prazosAplicados: number;
+  /** Tipos HABILITADOS que existiam só no ProJuris e foram criados aqui. */
+  importados: string[];
 }
 
 /**
@@ -153,14 +156,27 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
     porNome.set(key, arr);
   }
 
+  // DESEMPATE (Thiago, 24/08): "das tarefas, já concluímos essa limpeza desde o
+  // início do mês (...) tenho dito para puxarem direto da configuração do
+  // ProJuris". E é isso mesmo: os duplicados continuam lá, porém DESABILITADOS —
+  // 42 habilitados de 119. Antes olhávamos os 119 e víamos ambiguidade onde já
+  // havia resposta ("Audiência" 1/3 desabilitado × 10/10 habilitado).
+  //
+  // Regra: o HABILITADO manda. Se não houver nenhum habilitado com aquele nome,
+  // aceitamos o desabilitado — o SHV precisa manter o registro dos tipos antigos
+  // para espelhar tarefas já existentes (pedido do Thiago em 08/08).
   const byName = new Map<string, TipoProjuris>();
   const ambiguousNames = new Set<string>();
   for (const [key, arr] of porNome) {
-    if (arr.length === 1) {
-      byName.set(key, arr[0]);
+    const habilitados = arr.filter((t) => t.habilitado === true);
+    const candidatos = habilitados.length > 0 ? habilitados : arr;
+
+    if (candidatos.length === 1) {
+      byName.set(key, candidatos[0]);
       continue;
     }
-    const comPrazo = arr.filter((t) => t.prazoPrevisto != null || t.prazoFatal != null);
+    // Ainda empatado: fica com o único que tem prazo preenchido, se houver.
+    const comPrazo = candidatos.filter((t) => t.prazoPrevisto != null || t.prazoFatal != null);
     if (comPrazo.length === 1) byName.set(key, comPrazo[0]);
     else ambiguousNames.add(key);
   }
@@ -168,7 +184,7 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
   // 2) SHV mapping (org default).
   const { data, error } = await supabase
     .from("system_task_type_mapping")
-    .select("projuris_tipo_codigo, projuris_tipo_descricao, motor_task_type_id")
+    .select("projuris_tipo_codigo, projuris_tipo_descricao, motor_task_type_id, archived_at")
     .eq("organization_id", ORG_ID)
     .order("motor_task_type_id");
   if (error) throw new AuthError(`Falha ao ler tipos de tarefa: ${error.message}`, 500);
@@ -189,10 +205,26 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
   }
 
   for (const row of rows) {
+    // Arquivado saiu de circulação por decisão nossa — não faz sentido cobrar
+    // correspondência no ProJuris nem poluir o relatório com ele.
+    if (row.archived_at) continue;
+
     const name = logicalName(row);
     const key = normalizeName(name);
-    const hit = byName.get(key);
+    let hit = byName.get(key);
     const motor = row.motor_task_type_id ?? "(sem motor_id)";
+    // 2ª chance: o ProJuris às vezes usa o rótulo completo ("Emenda à Inicial")
+    // onde o SHV tem o curto ("Emenda"). Só aceitamos quando UM habilitado contém
+    // o nome do SHV — mais de um seria chute.
+    if (!hit && !ambiguousNames.has(key)) {
+      const contidos = tipos.filter(
+        (t) =>
+          t.habilitado === true &&
+          (normalizeName(t.nome).includes(key) || key.includes(normalizeName(t.nome))),
+      );
+      if (contidos.length === 1) hit = contidos[0];
+    }
+
     if (hit && !ambiguousNames.has(key)) {
       const dono = codigoDono.get(hit.codigo);
       if (dono !== undefined && dono !== (row.motor_task_type_id ?? "")) {
@@ -232,14 +264,65 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
       // Só conta DEPOIS de gravar — senão o relatório anuncia prazos que não foram.
       if (trouxePrazo) prazosAplicados++;
     } else {
+      const jaVinculada = /^[0-9]+$/.test((row.projuris_tipo_codigo ?? "").trim());
       nearMiss.push(
         `${motor} (nome logico="${name}") → ${
           ambiguousNames.has(key)
-            ? "AMBIGUO (multiplas variantes ProJuris com esse nome)"
-            : "sem correspondencia por nome"
+            ? "AMBIGUO (multiplas variantes habilitadas com esse nome)"
+            : jaVinculada
+              ? "já vinculado por código, mas o nome não bate mais com o do ProJuris"
+              : "sem correspondencia por nome"
         }`,
       );
     }
+  }
+
+  // 2b) IMPORTA os habilitados que o SHV ainda não tem.
+  //
+  // O Thiago mantém a configuração de tipos no ProJuris ("tenho dito para puxarem
+  // direto da configuração"), então o que está habilitado lá e falta aqui é
+  // simplesmente um tipo que o SHV ainda não conhece — inclusive as três
+  // "Manifestação (5/10/15 dias)" que estavam pendentes desde 08/08.
+  //
+  // Entram com pontuação neutra (1) e sem classe: quem define isso é o escritório,
+  // na tela de Configurações › Tipos de tarefa.
+  const importados: string[] = [];
+  const codigosNoShv = new Set([
+    ...rows.map((r) => (r.projuris_tipo_codigo ?? "").trim()).filter(Boolean),
+    // Inclui o que foi vinculado AGORA (ex.: "Emenda" ↔ "Emenda à Inicial"): sem
+    // isto, a importação tentaria criar o mesmo código e bateria na UNIQUE.
+    ...matched.map((m) => m.codigo),
+  ]);
+  const nomesNoShv = new Set(rows.map((r) => normalizeName(logicalName(r))));
+
+  for (const t of tipos) {
+    if (t.habilitado !== true) continue;
+    if (codigosNoShv.has(t.codigo)) continue;
+    if (nomesNoShv.has(normalizeName(t.nome))) continue;
+
+    const slug = normalizeName(t.nome)
+      .replace(/[^A-Z0-9]+/g, "_")
+      .replace(/^_|_$/g, "");
+    const { error: insErr } = await supabase.from("system_task_type_mapping").insert({
+      organization_id: ORG_ID,
+      projuris_tipo_codigo: t.codigo,
+      projuris_tipo_descricao: t.nome.trim(),
+      motor_task_type_id: slug || t.codigo,
+      points: 1,
+      prazo_previsto_dias: t.prazoPrevisto,
+      prazo_fatal_dias: t.prazoFatal,
+      projuris_classificacao: t.classificacao,
+      active: true,
+    } as never);
+    if (insErr) {
+      collisions.push(`importar "${t.nome}" → ${insErr.message}`);
+      continue;
+    }
+    codigosNoShv.add(t.codigo);
+    nomesNoShv.add(normalizeName(t.nome));
+    importados.push(
+      `${t.nome} (${t.codigo}, prazo ${t.prazoPrevisto ?? "·"}/${t.prazoFatal ?? "·"})`,
+    );
   }
 
   // 3) Confirmacao: quantos ficaram com codigo NUMERICO real.
@@ -259,5 +342,6 @@ export async function syncTaskTypesCore(): Promise<SyncTaskTypesResult> {
     collisions,
     numericos,
     prazosAplicados,
+    importados,
   };
 }

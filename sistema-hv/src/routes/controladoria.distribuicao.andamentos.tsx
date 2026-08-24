@@ -56,10 +56,12 @@ function AndamentosPendentesPage() {
     "PENDENTE",
   );
   const [data, setData] = useState<string>("");
-  // No ProJuris do escritório quase toda intimação já está ARQUIVADA (a equipe
-  // trata por lá). Por isso o padrão é MOSTRAR tudo — esconder deixaria a fila
-  // vazia. O toggle existe para quando o processo mudar.
-  const [ocultarArquivadas, setOcultarArquivadas] = useState(false);
+  // O Thiago explicou (24/08) que as intimações nascem PENDENTES: as que
+  // aparecem arquivadas são as que a controladoria já tratou na varredura manual
+  // do início do dia. Como o cron agora monta a fila às 06h BRT — antes dessa
+  // varredura — o padrão passa a ser ESCONDER as arquivadas: o que sobra é
+  // exatamente o trabalho ainda não visto. O toggle continua, para conferência.
+  const [ocultarArquivadas, setOcultarArquivadas] = useState(true);
 
   const {
     data: movs,
