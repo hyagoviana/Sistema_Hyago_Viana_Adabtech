@@ -14,7 +14,7 @@ import {
   updateTaskTypeFn,
   criarTipoNoProjurisFn,
 } from "@/rpc/task-types";
-import type { TaskType } from "@/lib/task-types-service";
+import type { TaskType } from "@/lib/task-types-shared";
 
 export type { TaskType };
 

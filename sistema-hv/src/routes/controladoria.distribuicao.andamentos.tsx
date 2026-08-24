@@ -28,7 +28,7 @@ import {
 import { useMovements, useSyncMovements, useDecideMovement } from "@/hooks/useDistribuicaoStaging";
 import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
 import { usePodeEditar } from "@/hooks/usePermissions";
-import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-service";
+import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-shared";
 
 export const Route = createFileRoute("/controladoria/distribuicao/andamentos")({
   component: AndamentosPendentesPage,

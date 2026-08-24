@@ -22,47 +22,25 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export const ORG_ID = "00000000-0000-0000-0000-000000000001";
 
-/** Classes internas do SHV (doc 21.08) — NÃO confundir com a "Classificação" do ProJuris. */
-export const TASK_TYPE_CLASSES = ["JUDICIAL", "ADMINISTRATIVO", "COMERCIAL", "FINANCEIRO"] as const;
-export type TaskTypeClasse = (typeof TASK_TYPE_CLASSES)[number];
+// As constantes e os tipos moram em `task-types-shared` porque a INTERFACE também
+// precisa deles — e uma rota importando deste arquivo arrastaria o auth-guard (e o
+// `@tanstack/react-start/server`) para o bundle do cliente, o que o
+// import-protection barra. Reexportamos para quem já importava daqui.
+export {
+  TASK_TYPE_CLASSES,
+  TASK_TYPE_CLASSE_LABEL,
+  type TaskTypeClasse,
+  type TaskTypeEstado,
+  type TaskType,
+  type TaskTypeThemeExclusive,
+} from "@/lib/task-types-shared";
 
-export const TASK_TYPE_CLASSE_LABEL: Record<TaskTypeClasse, string> = {
-  JUDICIAL: "Judicial",
-  ADMINISTRATIVO: "Administrativo",
-  COMERCIAL: "Comercial",
-  FINANCEIRO: "Financeiro",
-};
-
-export interface TaskType {
-  id: string;
-  nome: string;
-  classe: TaskTypeClasse | null;
-  points: number;
-  complexity_level: number;
-  temporal_level: number;
-  prazo_previsto_dias: number | null;
-  prazo_fatal_dias: number | null;
-  aparece_no_motor: boolean;
-  sync_projuris: boolean;
-  active: boolean;
-  archived_at: string | null;
-  exclusive_executor_id: string | null;
-  projuris_tipo_codigo: string;
-  projuris_tipo_descricao: string | null;
-  projuris_classificacao: string | null;
-  /** Exceções de exclusivo por tema (carregadas junto — a UI precisa do Sim/Não). */
-  excecoes: TaskTypeThemeExclusive[];
-}
-
-export interface TaskTypeThemeExclusive {
-  id: string;
-  task_type_id: string;
-  tema_id: string;
-  executor_id: string;
-}
-
-/** Filtro de estado da listagem (doc 21.08: "ativos / arquivados / todos"). */
-export type TaskTypeEstado = "ativos" | "arquivados" | "todos";
+import type {
+  TaskType,
+  TaskTypeClasse,
+  TaskTypeEstado,
+  TaskTypeThemeExclusive,
+} from "@/lib/task-types-shared";
 
 export class TaskTypeError extends Error {
   constructor(

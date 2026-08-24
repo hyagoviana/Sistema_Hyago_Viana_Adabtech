@@ -40,7 +40,7 @@ import { useAssignableUsers } from "@/hooks/useUsers";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useSyncTaskTypes } from "@/hooks/useDistribuicao";
 import { useCriarTipoNoProjuris } from "@/hooks/useTaskTypes";
-import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-service";
+import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-shared";
 
 export const Route = createFileRoute("/configuracoes/tipos-tarefa")({
   component: TiposTarefaPage,
