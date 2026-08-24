@@ -1,0 +1,303 @@
+// TELA 1 do motor (doc "21.08 _ Controladoria") — ANDAMENTOS PENDENTES.
+//
+// "Nessa página, o sistema apenas faz a listagem, a partir dos registros do
+//  ProJuris (para a data de referência), das intimações e andamentos."
+//
+// O sistema NÃO decide nada aqui. Por linha, uma pessoa escolhe:
+//   • Arquivar intimação   • Marcar lido (movimentação)   • Distribuir tarefa
+// Ao escolher "Distribuir tarefa", ela também escolhe QUAL tipo — e a linha
+// passa para a Tela 2 (Tarefas a distribuir) com as variáveis pré-preenchidas.
+
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Archive, CheckCheck, Download, Send } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMovements, useSyncMovements, useDecideMovement } from "@/hooks/useDistribuicaoStaging";
+import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
+import { usePodeEditar } from "@/hooks/usePermissions";
+import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-service";
+
+export const Route = createFileRoute("/controladoria/distribuicao/andamentos")({
+  component: AndamentosPendentesPage,
+});
+
+const TODAS = "__todas__";
+
+// O banco guarda o estado em maiúsculas; a tela fala português.
+const DECISAO_LABEL: Record<string, string> = {
+  PENDENTE: "Pendente",
+  ARQUIVADO: "Arquivado",
+  LIDO: "Marcado lido",
+  DISTRIBUIR: "Distribuiu tarefa",
+};
+const SITUACAO_PROJURIS_LABEL: Record<string, string> = {
+  ARQUIVADA: "Arquivada no ProJuris",
+  ATIVA: "Ativa no ProJuris",
+  PENDENTE: "Pendente no ProJuris",
+  PROCESSADA: "Processada no ProJuris",
+};
+
+function AndamentosPendentesPage() {
+  const podeEditar = usePodeEditar("controladoria");
+  const [filtro, setFiltro] = useState<"PENDENTE" | "ARQUIVADO" | "LIDO" | "DISTRIBUIR" | "TODAS">(
+    "PENDENTE",
+  );
+  const [data, setData] = useState<string>("");
+  // No ProJuris do escritório quase toda intimação já está ARQUIVADA (a equipe
+  // trata por lá). Por isso o padrão é MOSTRAR tudo — esconder deixaria a fila
+  // vazia. O toggle existe para quando o processo mudar.
+  const [ocultarArquivadas, setOcultarArquivadas] = useState(false);
+
+  const {
+    data: movs,
+    isLoading,
+    isError,
+    error,
+  } = useMovements(filtro, data || null, ocultarArquivadas);
+  const sync = useSyncMovements();
+
+  async function handleSync() {
+    try {
+      const r = await sync.mutateAsync({ data: data || null });
+      toast.success(
+        `${r.lidos} lido(s) no ProJuris · ${r.novos} novo(s) na fila · ${r.ignoradas} descartada(s)/duplicada(s)`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao buscar no ProJuris");
+    }
+  }
+
+  return (
+    <div className="space-y-5 p-6">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Situação</Label>
+          <Select value={filtro} onValueChange={(v) => setFiltro(v as typeof filtro)}>
+            <SelectTrigger className="w-[170px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PENDENTE">Pendentes de análise</SelectItem>
+              <SelectItem value="DISTRIBUIR">Mandados distribuir</SelectItem>
+              <SelectItem value="ARQUIVADO">Arquivados</SelectItem>
+              <SelectItem value="LIDO">Marcados como lidos</SelectItem>
+              <SelectItem value="TODAS">Todos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Data de referência</Label>
+          <Input
+            type="date"
+            className="w-[170px]"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+          />
+        </div>
+        <Button
+          variant={ocultarArquivadas ? "default" : "outline"}
+          onClick={() => setOcultarArquivadas((v) => !v)}
+          title="No ProJuris do escritório quase tudo já está arquivado — esconder pode zerar a lista"
+        >
+          {ocultarArquivadas ? "Escondendo arquivadas" : "Mostrando arquivadas"}
+        </Button>
+        {podeEditar && (
+          <Button variant="outline" onClick={handleSync} disabled={sync.isPending}>
+            <Download size={14} className="mr-1" />
+            {sync.isPending ? "Buscando…" : "Buscar no ProJuris"}
+          </Button>
+        )}
+      </div>
+
+      <p className="text-[12px] text-muted-foreground max-w-3xl">
+        Esta lista é o que o ProJuris registrou (intimações e movimentações) e o que foi mandado da
+        ficha Judicial dos casos. Nada é distribuído automaticamente: a análise é sua. O que você
+        marcar como <strong>distribuir</strong> segue para a aba "A distribuir".
+      </p>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        // Sem isto, uma falha de rede/permissão aparecia como "Nada aqui" — e a
+        // pessoa concluía que não havia trabalho na fila.
+        <div className="rounded-md border border-[var(--danger)] p-6 text-[13px]">
+          Não foi possível carregar a fila.{" "}
+          {error instanceof Error ? error.message : "Tente recarregar a página."}
+        </div>
+      ) : (movs ?? []).length === 0 ? (
+        <div className="rounded-md border border-dashed border-[var(--border)] p-6 text-[13px] text-muted-foreground">
+          Nada aqui. Use "Buscar no ProJuris" para trazer as intimações do período.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {(movs ?? []).map((m) => (
+            <LinhaMovimento key={m.id} mov={m} podeEditar={podeEditar} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LinhaMovimento({
+  mov,
+  podeEditar,
+}: {
+  mov: {
+    id: string;
+    numero_cnj: string | null;
+    descricao: string | null;
+    cliente_nome: string | null;
+    data_referencia: string | null;
+    case_id: string | null;
+    decisao: string;
+    situacao_projuris: string | null;
+    projuris_sync_at: string | null;
+    projuris_sync_error: string | null;
+  };
+  podeEditar: boolean;
+}) {
+  const decidir = useDecideMovement();
+  const [classe, setClasse] = useState<string>(TODAS);
+  const [tipoId, setTipoId] = useState<string>("");
+  const { data: tipos } = useTaskTypesCatalog({
+    estado: "ativos",
+    classe: classe === TODAS ? null : classe,
+    soMotor: true,
+  });
+
+  async function decide(decisao: "ARQUIVADO" | "LIDO" | "DISTRIBUIR") {
+    if (decisao === "DISTRIBUIR" && !tipoId) return toast.error("Escolha o tipo de tarefa");
+    try {
+      const r = await decidir.mutateAsync({
+        movementId: mov.id,
+        decisao,
+        taskTypeId: decisao === "DISTRIBUIR" ? tipoId : null,
+      });
+      const base =
+        decisao === "DISTRIBUIR"
+          ? "Tarefa enviada para a aba 'A distribuir'"
+          : decisao === "ARQUIVADO"
+            ? "Intimação arquivada"
+            : "Marcado como lido";
+      // Deixa claro se a ação chegou (ou não) ao ProJuris — nunca falha em silêncio.
+      const eco = r?.projuris?.enviado
+        ? " · refletido no ProJuris"
+        : r?.projuris?.motivo?.includes("desligado")
+          ? " · só no sistema (write-back desligado)"
+          : r?.projuris?.motivo
+            ? ` · NÃO refletido no ProJuris: ${r.projuris.motivo.slice(0, 80)}`
+            : "";
+      toast.success(base + eco);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao registrar decisão");
+    }
+  }
+
+  return (
+    <div className="rounded-md border border-[var(--border)] p-4 space-y-3">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="flex-1 min-w-[240px]">
+          <div className="text-[14px] font-medium whitespace-pre-line">{mov.descricao ?? "—"}</div>
+          <div className="text-[12px] text-muted-foreground">
+            {mov.numero_cnj ?? "sem CNJ"}
+            {mov.cliente_nome ? ` · ${mov.cliente_nome}` : ""}
+            {mov.data_referencia ? ` · ${mov.data_referencia}` : ""}
+          </div>
+        </div>
+        {!mov.case_id && (
+          <Badge variant="outline">
+            {mov.cliente_nome ? "Cliente sem caso vinculado" : "Sem caso vinculado"}
+          </Badge>
+        )}
+        {mov.situacao_projuris && (
+          <Badge variant="outline" title="Situação no ProJuris">
+            {SITUACAO_PROJURIS_LABEL[mov.situacao_projuris] ?? mov.situacao_projuris}
+          </Badge>
+        )}
+        {mov.decisao !== "PENDENTE" && (
+          <Badge variant="secondary">{DECISAO_LABEL[mov.decisao] ?? mov.decisao}</Badge>
+        )}
+        {mov.projuris_sync_at && <Badge variant="secondary">no ProJuris</Badge>}
+        {mov.projuris_sync_error && (
+          <Badge variant="destructive" title={mov.projuris_sync_error}>
+            falhou no ProJuris
+          </Badge>
+        )}
+      </div>
+
+      {podeEditar && mov.decisao === "PENDENTE" && (
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Classe</Label>
+            <Select value={classe} onValueChange={setClasse}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODAS}>Todas</SelectItem>
+                {TASK_TYPE_CLASSES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {TASK_TYPE_CLASSE_LABEL[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tipo de tarefa</Label>
+            <Select value={tipoId} onValueChange={setTipoId}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Escolha o tipo…" />
+              </SelectTrigger>
+              <SelectContent>
+                {(tipos ?? []).map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button size="sm" onClick={() => decide("DISTRIBUIR")} disabled={decidir.isPending}>
+            <Send size={13} className="mr-1" /> Distribuir tarefa
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => decide("ARQUIVADO")}
+            disabled={decidir.isPending}
+          >
+            <Archive size={13} className="mr-1" /> Arquivar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => decide("LIDO")}
+            disabled={decidir.isPending}
+          >
+            <CheckCheck size={13} className="mr-1" /> Marcar lido
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

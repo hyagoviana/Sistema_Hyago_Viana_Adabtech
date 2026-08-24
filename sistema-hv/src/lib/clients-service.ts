@@ -338,16 +338,11 @@ export async function updateClientCpf(id: string, rawCpf: string) {
   if (findErr) throw new ClientServiceError(findErr.message, "DB_ERROR", 500);
   if (!before) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
 
-  const current = (before.custom_fields as Record<string, unknown> | null) ?? {};
-  const nextCustom = { ...current };
-  delete nextCustom.cpf_pendente;
-
   const { data, error } = await sb
     .from("system_clients")
     .update({
       cpf_cnpj: clean,
       person_type,
-      custom_fields: nextCustom as never,
     } as ClientUpdate)
     .eq("id", id)
     .is("deleted_at", null)
@@ -367,12 +362,33 @@ export async function updateClientCpf(id: string, rawCpf: string) {
   }
   if (!data) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
 
+  // O flag `cpf_pendente` só sai do balde DEPOIS que o CPF entrou. Se a gravação
+  // acima falhar (CPF duplicado é caminho tratado logo acima), o cliente não pode
+  // perder o marcador de pendência sem ter ganho o CPF — sairia da lista de
+  // trabalho por engano. Merge atômico, e o erro é reportado.
+  const { error: errFlag } = await sb.rpc("system_merge_client_custom_fields", {
+    p_client_id: id,
+    p_patch: { cpf_pendente: "" } as never,
+  });
+  if (errFlag)
+    throw new ClientServiceError(
+      `CPF gravado, mas o marcador de pendência não foi removido: ${errFlag.message}`,
+      "DB_ERROR",
+      500,
+    );
+
   await sb.from("system_audit_log").insert({
     organization_id: data.organization_id,
     action: "client.fill_cpf",
     entity_type: "client",
     entity_id: data.id,
-    diff: { cpf_cnpj: clean, cpf_pendente_removed: "cpf_pendente" in current } as unknown as Json,
+    diff: {
+      cpf_cnpj: clean,
+      // A leitura anterior (`before`) ainda serve para o log: diz se o flag
+      // existia no momento em que o CPF foi preenchido.
+      cpf_pendente_removed:
+        "cpf_pendente" in ((before.custom_fields as Record<string, unknown> | null) ?? {}),
+    } as unknown as Json,
   });
 
   return data;
@@ -396,27 +412,27 @@ export async function updateClientCustomFields(clientId: string, patch: Record<s
     .single();
   if (!before) throw new ClientServiceError("Cliente não encontrado", "NOT_FOUND", 404);
 
-  const current = (before.custom_fields as Record<string, unknown> | null) ?? {};
-  const merged = { ...current, ...patch };
-  for (const k of Object.keys(merged)) {
-    const v = merged[k];
-    if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0))
-      delete merged[k];
-  }
-
-  const { data, error } = await sb
-    .from("system_clients")
-    .update({ custom_fields: merged as never })
-    .eq("id", clientId)
-    .is("deleted_at", null)
-    .select("id, custom_fields")
-    .single();
-  if (error || !data)
+  // MERGE ATÔMICO — mesma correção aplicada aos campos do caso (auditoria
+  // 2026-08-24). O campo do cliente é COMPARTILHADO entre todos os casos dele,
+  // então a chance de duas pessoas escreverem junto é ainda maior aqui.
+  const { data: rpcData, error } = await sb.rpc("system_merge_client_custom_fields", {
+    p_client_id: clientId,
+    p_patch: patch as never,
+  });
+  if (error)
     throw new ClientServiceError(
-      error?.message ?? "Falha ao salvar campos do cliente",
+      error.message ?? "Falha ao salvar campos do cliente",
       "DB_ERROR",
       500,
     );
+  const resultado = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+    | { custom_fields: Record<string, unknown>; mudou: boolean }
+    | undefined;
+  // Sem linha de retorno algo deu errado de verdade — devolver `{}` faria a ficha
+  // aparecer VAZIA para o usuário, como se os campos tivessem sumido.
+  if (!resultado)
+    throw new ClientServiceError("Falha ao salvar campos do cliente", "DB_ERROR", 500);
+  const data = { id: clientId, custom_fields: resultado.custom_fields as never };
 
   await sb.from("system_audit_log").insert({
     organization_id: before.organization_id,

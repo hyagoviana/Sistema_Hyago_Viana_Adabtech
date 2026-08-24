@@ -10,6 +10,9 @@ import {
   setCaseHonorariosJudicialFn,
   setCaseProjurisLinkFn,
   syncCaseJudicialFn,
+  listAndamentoPinsFn,
+  pinAndamentoFn,
+  unpinAndamentoFn,
 } from "@/rpc/judicial";
 
 export function useCaseJudicial(caseId: string, enabled = true) {
@@ -74,5 +77,47 @@ export function useCaseSigiloStatus(caseId: string, enabled = true) {
     queryKey: ["case-sigilo", caseId],
     queryFn: () => fn({ data: { caseId } }),
     enabled: !!caseId && enabled,
+  });
+}
+
+// Marcação "aparece na linha do tempo do caso" (doc 21.08, menu Judicial).
+export function useAndamentoPins(caseId: string, enabled = true) {
+  const fn = useServerFn(listAndamentoPinsFn);
+  return useQuery({
+    queryKey: ["judicial-andamento-pins", caseId],
+    queryFn: () => fn({ data: { caseId } }),
+    enabled,
+  });
+}
+
+export function usePinAndamento(caseId: string) {
+  const pin = useServerFn(pinAndamentoFn);
+  const unpin = useServerFn(unpinAndamentoFn);
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["judicial-andamento-pins", caseId] });
+    qc.invalidateQueries({ queryKey: ["case-events", caseId] });
+    qc.invalidateQueries({ queryKey: ["case-feed", caseId] });
+  };
+  return useMutation({
+    mutationFn: (vars: {
+      key: string;
+      marcar: boolean;
+      descricao?: string | null;
+      data?: string | null;
+      autor?: string | null;
+    }) =>
+      vars.marcar
+        ? (pin({
+            data: {
+              caseId,
+              key: vars.key,
+              descricao: vars.descricao ?? null,
+              data: vars.data ?? null,
+              autor: vars.autor ?? null,
+            },
+          }) as Promise<unknown>)
+        : (unpin({ data: { caseId, key: vars.key } }) as Promise<unknown>),
+    onSuccess: invalidate,
   });
 }

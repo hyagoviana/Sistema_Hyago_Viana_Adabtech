@@ -18,6 +18,12 @@ import {
   listCaseJudicialAndamentos,
   syncCaseJudicial,
 } from "@/lib/projuris/judicial-sync";
+import {
+  listAndamentoPins,
+  pinAndamento,
+  unpinAndamento,
+  type AndamentoPin,
+} from "@/lib/judicial-timeline-service";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -222,5 +228,60 @@ export const getCaseSigiloStatusFn = createServerFn({ method: "GET" })
         responsavel: caso?.responsavel ?? null,
         autorizados: (autorizados ?? []).map((r) => r.user_id),
       };
+    }),
+  );
+
+// ----------------------------------------------------------------------------
+// "Aparece na linha do tempo do caso" (doc 21.08, menu Judicial). Mesmo gate de
+// sigilo dos demais RPCs judiciais: quem não pode ver o processo não marca nada.
+// ----------------------------------------------------------------------------
+export const listAndamentoPinsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => caseSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<AndamentoPin[]> => {
+      await requireJudicial(data.caseId);
+      return listAndamentoPins(data.caseId);
+    }),
+  );
+
+export const pinAndamentoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        key: z.string().min(1),
+        descricao: z.string().nullish(),
+        data: z.string().nullish(),
+        autor: z.string().nullish(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireModule("operacional", "edit");
+      await requireJudicial(data.caseId);
+      return pinAndamento(
+        data.caseId,
+        {
+          key: data.key,
+          descricao: data.descricao ?? null,
+          data: data.data ?? null,
+          autor: data.autor ?? null,
+        },
+        userId,
+      );
+    }),
+  );
+
+export const unpinAndamentoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ caseId: z.string().uuid(), key: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireModule("operacional", "edit");
+      await requireJudicial(data.caseId);
+      await unpinAndamento(data.caseId, data.key);
+      return { ok: true as const };
     }),
   );

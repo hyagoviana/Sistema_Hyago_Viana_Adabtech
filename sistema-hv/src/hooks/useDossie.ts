@@ -75,6 +75,7 @@ export function useCreateCaseTask(caseId: string) {
       assignee?: string | null;
       assignee_id?: string | null;
       due_date?: string | null;
+      task_type_id?: string | null;
     }) => fn({ data: input }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });

@@ -1,0 +1,491 @@
+# Referência da API do ProJuris (extraída do WADL)
+
+> Fonte: `application.wadl` (enviado pelo Thiago em 2026-08-24) — 978 recursos.
+> Gerado por `scripts/gerar-referencia-api-projuris.mjs`. Base: `api.projurisadv.com.br/adv-service`.
+
+Este arquivo existe porque a integração foi construída por engenharia reversa antes
+da documentação chegar. Vários endpoints que procurávamos existem — e outros que
+usávamos eram os "errados" (mais pobres).
+
+## Endpoints que respondem pedidos do doc "21.08 _ Controladoria"
+
+| Pedido do doc | Endpoint |
+|---|---|
+| "Informar protocolo" — criar processo a partir do SHV | `POST /processo-judicial` (e `PUT` para editar) |
+| "Arquivar intimação" (botão da tela 1) | `PUT /intimacao/{codigo-intimacao}/situacao/{chave-situacao-intimacao}` |
+| Desfazer o arquivamento | `PUT /intimacao/{codigo-intimacao}/desarquivar` |
+| "Marcar lido" na movimentação (botão da tela 1) | `PUT /andamento/alterar-status-lido/{codigo-andamento}` |
+| "puxar o que é intimação **e movimentação**" | `POST /andamento/consulta-geral` (consulta global, não por processo) |
+| Motor "lança nas agendas" | `POST /tarefa` · `PUT /tarefa` · `PUT /tarefas-situacao` |
+| Criar tipo de tarefa do SHV no ProJuris | `POST /tarefa-tipo` · `PUT /tarefa-tipo` |
+| Prazo previsto/fatal por tipo | `POST /tarefa-tipo/consulta` · `GET /tarefa-tipo/{codigo}` |
+| Vincular intimação a um processo | `PUT /intimacao/{codigo}/vincular/processo/{codigo-processo}` |
+| Contador da fila | `GET /intimacao/contar-pendentes` |
+
+
+## Intimações
+
+- `POST /intimacao-eletronica/assinante`
+- `PUT /intimacao-eletronica/assinante`
+- `GET /intimacao-eletronica/assinante/{codigo-assinante}`
+- `DELETE /intimacao-eletronica/assinante/{codigo-assinante}`
+- `POST /intimacao-eletronica/assinante/{codigo-assinante}/ciencia-assinante-desabilitado`
+- `POST /intimacao-eletronica/assinante/contar`
+- `GET /intimacao-eletronica/assinante/obter-credenciais-invalidas`
+- `GET /intimacao-eletronica/assinante/obter-desabilitadas-sistema`
+- `GET /intimacao/{codigo-intimacao}`
+- `PUT /intimacao/{codigo-intimacao}/desarquivar`
+- `PUT /intimacao/{codigo-intimacao}/desvincular/processo`
+- `POST /intimacao/{codigo-intimacao}/extrair-processo`
+- `GET /intimacao/{codigo-intimacao}/resumo`
+- `POST /intimacao/{codigo-intimacao}/resumo`
+- `DELETE /intimacao/{codigo-intimacao}/resumo`
+- `GET /intimacao/{codigo-intimacao}/simplificacao`
+- `POST /intimacao/{codigo-intimacao}/simplificacao`
+- `DELETE /intimacao/{codigo-intimacao}/simplificacao`
+- `PUT /intimacao/{codigo-intimacao}/situacao/{chave-situacao-intimacao}`
+- `PUT /intimacao/{codigo-intimacao}/vincular/processo/{codigo-processo}`
+- `POST /intimacao/assinante`
+- `PUT /intimacao/assinante`
+- `GET /intimacao/assinante/{codigo-intimacao-assinante}`
+- `DELETE /intimacao/assinante/{codigo-intimacao-assinante}`
+- `POST /intimacao/assinante/{codigo-intimacao-assinante}/confirmar-erro`
+- `GET /intimacao/assinante/obter-assinaturas-erro`
+- `GET /intimacao/assinante/total`
+- `POST /intimacao/assinante/validar-termos-bloqueados`
+- `POST /intimacao/configuracao`
+- `GET /intimacao/configuracao/consultar/{codigoArrendatario}/{tipoConfiguracao}`
+- `GET /intimacao/configuracao/consultar/{tipoConfiguracao}`
+- `GET /intimacao/configuracao/obter-todas-arrendatario/{codigoArrendatario}`
+- `GET /intimacao/configuracao/obter-todas-usuario`
+- `DELETE /intimacao/configuracao/remover-configuracao-usuario`
+- `DELETE /intimacao/configuracao/remover/{codigoArrendatario}`
+- `GET /intimacao/consulta`
+- `POST /intimacao/consulta`
+- `POST /intimacao/consulta-indicadores`
+- `GET /intimacao/consulta/ordenacao`
+- `GET /intimacao/contar-pendentes`
+- `GET /intimacao/health-check`
+- `PUT /intimacao/recuperar-intimacao-termo-excecao-lote`
+- `PUT /intimacao/setar-intimacao-com-termo-excecao-lote`
+- `PUT /intimacao/sugestao/confirmar/{codigo-intimacao-sugestao}`
+- `PUT /intimacao/sugestao/desabilitar/{codigo-intimacao-sugestao}`
+- `GET /intimacao/total-intimacoes`
+
+## Andamentos (movimentações)
+
+- `POST /andamento` — Metódo responsável por criar um andamento.
+- `PUT /andamento` — Metódo responsável por editar o andamento.
+- `GET /andamento-tipo`
+- `GET /andamento-tipo/{codigo-andamento-tipo}`
+- `GET /andamento-tipo/consulta`
+- `POST /andamento-tipo/consulta`
+- `GET /andamento-tipo/consulta/ordenacao`
+- `GET /andamento/{codigo-andamento}/modulo/{codigo-modulo-vinculo}`
+- `POST /andamento/{codigo-andamento}/simplificacao`
+- `GET /andamento/{codigo-andamento}/simplificacao`
+- `DELETE /andamento/{codigo-andamento}/simplificacao`
+- `PUT /andamento/alterar-status-lido/{codigo-andamento}`
+- `POST /andamento/classificacao`
+- `PUT /andamento/classificacao/confirmar/{codigo-andamento-classificacao}`
+- `PUT /andamento/classificacao/desabilitar/{codigo-andamento-classificacao}`
+- `PUT /andamento/classificacao/desconfirmar/{codigo-andamento-classificacao}`
+- `GET /andamento/classificacao/obter/{codigo-andamento}`
+- `POST /andamento/consulta-geral`
+- `POST /andamento/grupo`
+- `GET /andamento/grupo/consultar`
+- `GET /andamento/grupo/consultar/{nome-grupo}`
+- `GET /andamento/grupo/consultar/principal`
+- `GET /andamento/modulo/{codigo-andamento}` — Metódo responsável por buscar o modulo principal do andamento.
+
+## Tarefas
+
+- `POST /kanban/tarefa`
+- `PUT /kanban/tarefa`
+- `GET /kanban/tarefa/{codigo}`
+- `POST /kanban/tarefa/exibir-kanban-em-lote`
+- `GET /permissao/tarefa`
+- `POST /tarefa`
+- `PUT /tarefa`
+- `POST /tarefa-compromisso`
+- `PUT /tarefa-compromisso`
+- `GET /tarefa-compromisso/{codigo-tarefa-evento}`
+- `DELETE /tarefa-compromisso/lembrete/{codigo-tarefa-evento-lembrete}` — Remove um lembrete apartir do seu código.
+- `GET /tarefa-pai/modulo/{codigo-tarefa-evento}`
+- `POST /tarefa-prazo-tipo`
+- `PUT /tarefa-prazo-tipo`
+- `GET /tarefa-prazo-tipo/{codigo-tarefa-prazo-tipo}`
+- `DELETE /tarefa-prazo-tipo/{codigo-tarefa-prazo-tipo}`
+- `POST /tarefa-prazo-tipo/consulta`
+- `POST /tarefa-tipo`
+- `PUT /tarefa-tipo`
+- `GET /tarefa-tipo/{codigo-tarefa-tipo}`
+- `DELETE /tarefa-tipo/{codigo-tarefa-tipo}`
+- `GET /tarefa-tipo/consulta`
+- `POST /tarefa-tipo/consulta`
+- `GET /tarefa-tipo/consulta/ordenacao`
+- `GET /tarefa-tipo/modulos`
+- `GET /tarefa-tipo/padrao`
+- `GET /tarefa/agenda/ical`
+- `PUT /tarefa/agenda/ical`
+- `GET /tarefa/agenda/ical/pessoal`
+- `PUT /tarefa/agenda/ical/pessoal`
+- `POST /tarefa/calendario/consulta-sem-paginacao`
+- `POST /tarefa/calendario/consulta-sem-paginacao-compromisso`
+- `POST /tarefa/calendario/consulta-sem-paginacao-tarefa`
+- `PUT /tarefa/compromisso/{codigo-tarefa-evento}`
+- `PUT /tarefa/compromisso/reabrir/{codigo-tarefa-evento}`
+- `POST /tarefa/consulta-codigos-listagem`
+- `GET /tarefa/consulta-com-paginacao`
+- `POST /tarefa/consulta-com-paginacao`
+- `GET /tarefa/consulta-com-paginacao-compromisso`
+- `GET /tarefa/consulta-com-paginacao-tarefa`
+- `POST /tarefa/consulta-detalhada`
+- `POST /tarefa/consulta-sem-paginacao`
+- `GET /tarefa/consulta-sem-paginacao`
+- `GET /tarefa/consulta-sem-paginacao-compromisso`
+- `GET /tarefa/consulta-sem-paginacao-tarefa`
+- `GET /tarefa/consulta-sem-paginacao/ordenacao`
+- `POST /tarefa/consulta/indicadores`
+- `PUT /tarefa/futuras`
+- `POST /tarefa/kanban/consulta-com-paginacao`
+- `POST /tarefa/kanban/consulta/indicadores`
+- `GET /tarefa/modulo/{codigo-tarefa-evento}`
+- `GET /tarefa/painel-tarefas/responsavel-por-data`
+- `GET /tarefa/painel-tarefas/usuario-criador`
+- `GET /tarefa/painel-tarefas/usuario-responsavel`
+- `GET /tarefa/prazo/tarefa-tipo/{codigo-tarefa-tipo}/{data-base-tarefa}`
+- `POST /tarefa/tarefa-tipo`
+- `GET /tarefa/total-do-dia/aberta-e-concluida/data-inicio/{data-inicio}/data-fim/{data-fim}`
+- `GET /tarefa/total-do-dia/data-inicio/{data-inicio}/data-fim/{data-fim}`
+- `GET /tarefa/total-por-status/data-base/{data-base}`
+- `GET /tarefa/total-por-tipo/data-base/{data-base}`
+- `GET /tarefa/total-recorrencia/codigo-tarefa-evento/{codigo-tarefa-evento}`
+- `GET /tarefa/total/atrasadas/data-base/{data-base}`
+- `POST /tarefa/vinculo-arquivo/{codigo-arquivo}`
+- `PUT /tarefas-situacao`
+
+## Processos
+
+- `POST /processo-extra-judicial` — Metódo responsável por criar um processo extra judicial.
+- `PUT /processo-extra-judicial` — Metódo responsável por editar um processo extra judicial.
+- `PUT /processo-extra-judicial/alterar-para-judicial/{codigo-processo}` — Metódo responsável por alterar o tipo de um processo Extrajudicial para Judicial.
+- `GET /processo-extra-judicial/atendimento/{codigo-atendimento}` — Metódo responsável por obter um processo extra judicial pelo código.
+- `POST /processo-judicial` — Metódo responsável por criar um processo judicial.
+- `PUT /processo-judicial` — Metódo responsável por editar um processo judicial.
+- `PUT /processo-judicial/alterar-para-extra-judicial/{codigo-processo}` — Metódo responsável por alterar o tipo de um processo Extrajudicial para Judicial.
+- `GET /processo-judicial/atendimento/{codigo-atendimento}` — Metódo responsável por obter um processo judicial pelo código.
+- `GET /processo-numero/{codigo-processo-numero}`
+- `POST /processo-numero/{codigo-processo}`
+- `PUT /processo-numero/{codigo-processo}`
+- `PUT /processo-numero/{codigo-processo}/{codigo-processo-numero}`
+- `GET /processo-numero/consulta/{codigo-processo-numero}`
+- `GET /processo-numero/consulta/inicio`
+- `GET /processo-numero/numero`
+- `PUT /processo-relacionado-tipo` — Edita um tipo de processo relacionado.
+- `POST /processo-relacionado-tipo` — Salva um tipo de processo relacionado.
+- `GET /processo/{codigo-processo}` — Metódo responsável por obter um processo pelo código.
+- `PUT /processo/{codigo-processo}/atendimento/{codigo-atendimento}` — Vincula um atendimento a um processo existente.
+- `DELETE /processo/{codigo-processo}/atendimento/{codigo-atendimento}` — Desvincula um atendimento de um processo.
+- `GET /processo/{codigo-processo}/captura-processo/{codigo-captura-processo}`
+- `GET /processo/{codigo-processo}/contar-processos-relacionados` — Conta a quantidade de processos relacionados ao processo informado.
+- `PUT /processo/{codigo-processo}/desabilitar-merge-captura` — Metódo responsável por desabilitar o merge de captura no processo.
+- `PUT /processo/{codigo-processo}/habilitar-merge-captura` — Metódo responsável por habilitar o merge de captura no processo.
+- `GET /processo/{codigo-processo}/intimacao` — Metódo responsável por obter um processo pelo código para intimacao.
+- `POST /processo/{codigo-processo}/prognostico`
+- `GET /processo/{codigo-processo}/prognostico/{codigo-prognostico}`
+- `DELETE /processo/{codigo-processo}/prognostico/{codigo-prognostico}`
+- `GET /processo/{codigo-processo}/resumir-peticao/{codigo-arquivo}`
+- `POST /processo/{codigo-processo}/resumir-peticao/{codigo-arquivo}`
+- `DELETE /processo/{codigo-processo}/resumir-peticao/{codigo-arquivo}`
+- `POST /processo/andamento-classificado/consulta`
+- `PUT /processo/apensar` — Metódo responsável por apensar um processo a outro.
+- `GET /processo/area` — Metódo responsável por buscar todos os processos areas.
+- `GET /processo/assunto`
+- `GET /processo/assunto/{codigo-assunto}`
+- `GET /processo/assunto/consulta`
+- `POST /processo/automatico`
+- `POST /processo/captura/central`
+- `PUT /processo/captura/central`
+- `GET /processo/captura/central/{codigo-captura-processo}`
+- `PUT /processo/captura/central/{codigo-captura-processo}`
+- `GET /processo/captura/central/{codigo-captura-processo}/codigo-processo/{codigo-processo}`
+- `PUT /processo/captura/central/{codigo-central-captura-processo}/capturas/descartar`
+- `GET /processo/captura/central/{codigo-central-captura-processo}/codigo-central-captura-processo`
+- `PUT /processo/captura/central/alterar/data-proxima-captura/frequencia`
+- `PUT /processo/captura/central/atualizar-numero-instancia/{codigo-central-captura-processo}`
+- `POST /processo/captura/central/broly`
+- `GET /processo/captura/central/captura-oab/codigo-captura-oab/{codigo-oab}`
+- `PUT /processo/captura/central/capturas/desvincular/{codigo-central-captura-processo}`
+- `PUT /processo/captura/central/capturas/parar`
+- `PUT /processo/captura/central/capturas/retomar`
+- `GET /processo/captura/central/codigo-central-captura/{codigo-central-captura-processo}`
+- `POST /processo/captura/central/codigos-acao-em-lote`
+- `POST /processo/captura/central/consulta/indicadores`
+- `POST /processo/captura/central/consultar-centrais-por-processos`
+- `POST /processo/captura/central/contar`
+- `POST /processo/captura/central/criar-captura-em-lote`
+- `POST /processo/captura/central/desabilitar-em-lote`
+- `GET /processo/captura/central/detalhe/{codigo-central-captura-processo}`
+- `PUT /processo/captura/central/nova-tentativa-em-lote`
+- `PUT /processo/captura/central/nova-tentativa/{codigo-central-captura-processo}`
+- `GET /processo/captura/central/numero-processo-unificado/{numero-processo-unificado}`
+- `POST /processo/captura/central/oab`
+- `GET /processo/captura/central/oab/{codigo-oab}`
+- `GET /processo/captura/central/oab/codigo-captura-oab/{codigo-oab}`
+- `GET /processo/captura/central/oab/contar`
+- `POST /processo/captura/central/oab/count`
+- `POST /processo/captura/central/oab/parar-captura/{codigo-oab}`
+- `POST /processo/captura/central/oab/recaptura/{codigo-oab}`
+- `PUT /processo/captura/central/parar-captura-excluir-central-em-andamento/{codigo-central-captura-processo}`
+- `PUT /processo/captura/central/parar-com-remocao-vinculo/{codigo-captura-processo}`
+- `PUT /processo/captura/central/parar-em-lote`
+- `PUT /processo/captura/central/parar/{codigo-captura-processo}`
+- `PUT /processo/captura/central/remover-instancia-em-lote`
+- `PUT /processo/captura/central/remover-instancia/{codigo-central-captura-processo}`
+- `POST /processo/captura/central/vincular-processo`
+- `GET /processo/captura/dados-auxiliar/instancia/tribunal/{codigo-tribunal}`
+- `GET /processo/captura/dados-auxiliar/justica`
+- `GET /processo/captura/dados-auxiliar/justica/justica-sistema/{codigo-justica-sistema}`
+- `GET /processo/captura/dados-auxiliar/localidade-segredo-justica/tribunal/{codigo-tribunal}/instancia/{chave-instancia}`
+- `GET /processo/captura/dados-auxiliar/localidade/tribunal/{codigo-tribunal}/instancia/{chave-instancia}`
+- `GET /processo/captura/dados-auxiliar/parametros-captura/localidade/{codigo-localidade}`
+- `GET /processo/captura/dados-auxiliar/tribunal`
+- `GET /processo/captura/dados-auxiliar/tribunal/credencial`
+- `GET /processo/captura/dados-auxiliar/tribunal/justica/{codigo-justica}`
+- `POST /processo/captura/historico/consulta`
+- `GET /processo/captura/historico/consulta/{codigo-captura-processo}/complemento`
+- `GET /processo/classe`
+- `GET /processo/classe/{codigo-classe}`
+- `GET /processo/classe/consulta`
+- `GET /processo/consulta` — Metódo responsável por consultar o processo através do filtro geral.
+- `POST /processo/consulta` — Metódo responsável por consultar o processo através da busca avançada contendo os filtros ProcessoConsultaFiltroWs.
+- `POST /processo/consulta-completa` — Metódo responsável por consultar o processo completa através da busca avançada contendo os filtros ProcessoConsultaFiltroWs.
+- `GET /processo/consulta-vinculo` — Metódo responsável por consultar o processo para vinculo.
+- `GET /processo/consulta/envolvido` — Metódo responsável por buscar o cliente e a envolvidos do processo atraves do nome.
+- `GET /processo/consulta/ordenacao`
+- `GET /processo/dados-basicos-status-completo/{codigo-processo}`
+- `GET /processo/deposito-tipo` — Metódo responsável por buscar todos os ProcessoGarantiaDepositoTipo do tipo Deposito.
+- `PUT /processo/desvincular/{codigo-processo}` — Metódo responsável por desvincular um processo de seu processo pai.
+- `PUT /processo/encerrar` — Metódo responsável por encerrar um processo.
+- `GET /processo/envolvido/{codigo-processo-envolvido}`
+- `PUT /processo/envolvido/{codigo-processo-envolvido}/tornar-cliente`
+- `PUT /processo/envolvido/{codigo-processo-envolvido}/tornar-principal`
+- `PUT /processo/envolvido/{codigo-processo}` — Metódo responsável por editar o processo envolvido.
+- `POST /processo/envolvido/{codigo-processo}` — Metódo responsável por salvar o processo envolvido.
+- `GET /processo/envolvido/{codigo-processo}/consulta`
+- `POST /processo/envolvido/{codigo-processo}/consulta`
+- `GET /processo/envolvido/{codigo-processo}/consulta/ordenacao`
+- `POST /processo/envolvido/{codigo-processo}/pai/consulta`
+- `PUT /processo/envolvido/{codigoProcesso}/atualizar-carteira-clientes`
+- `GET /processo/envolvido/obter-codigos-pessoas-selecionadas/{codigo-processo}`
+- `GET /processo/envolvido/obter-sugestao-participacao/{codigo-processo}`
+- `GET /processo/envolvido/primeiro/tipo-cliente/{codigo-processo}`
+- `GET /processo/envolvidos-status-completo/{codigo-processo}`
+- `GET /processo/fase` — Metódo responsável por buscar todos os processos fases.
+- `GET /processo/garantia-tipo` — Metódo responsável por buscar todos os ProcessoGarantiaDepositoTipo do tipo Garantia.
+- `GET /processo/garantia/{codigo-processo-garantia}` — Metódo responsável por obter uma garantia pelo código.
+- `POST /processo/garantia/{codigo-processo}` — Metódo responsável por criar uma garantia.
+- `PUT /processo/garantia/{codigo-processo}` — Metódo responsável por editar uma garantia.
+- `GET /processo/garantia/consulta/{codigo-processo}` — Metódo responsável por consultar as garantias de um processo através de um filtro geral
+- `POST /processo/garantia/consulta/{codigo-processo}` — Metódo responsável por consultar as garantias de um processo.
+- `GET /processo/garantia/consulta/ordenacao` — Retorna as chaves de ordenação de pesquisa para a entidade de garantias
+- `GET /processo/instancia-cnj/{codigo-justica}`
+- `GET /processo/intimacao/{codigo-intimacao}` — Retorna um processo com sugestões de informações extraidas da intimação informada.
+- `GET /processo/justica-por-codigo/{codigo-justica}`
+- `GET /processo/justica/{codigo-processo-orgao}`
+- `GET /processo/justica/extra-judicial`
+- `GET /processo/justica/judicial`
+- `GET /processo/linha-do-tempo/{codigo-processo}`
+- `GET /processo/linha-do-tempo/{codigo-processo}/{quantidade-eventos}`
+- `GET /processo/link-processo-orgao/{codigo-orgao}` — Metódo responsável por obter o link de consulta do processo no tribunal.
+- `POST /processo/obter-processo-automatico`
+- `POST /processo/orgao` — Método responsável por criar um órgão extra judicial.
+- `PUT /processo/orgao` — Método responsável por editar um órgão extra judicial.
+- `GET /processo/orgao`
+- `GET /processo/orgao/{codigo-processo-orgao}` — Método responsável por obter um órgão extra judicial pelo código.
+- `DELETE /processo/orgao/{codigo-processo-orgao}` — Método responsável por remover um órgão extra judicial.
+- `GET /processo/orgao/consulta`
+- `GET /processo/orgao/consulta/extra-judicial`
+- `GET /processo/orgao/consulta/judicial`
+- `GET /processo/orgao/consulta/judicial-codigo-justica-tribunal/{codigo-justica}/{codigo-tribunal}`
+- `GET /processo/orgao/consulta/peticionamento/{codigo-processo-orgao}`
+- `GET /processo/orgao/estado/{codigo-estado}`
+- `GET /processo/orgao/judicial/{codigo-processo-orgao}` — Método responsável por obter um órgão extra judicial pelo código.
+- `GET /processo/orgao/judicial/detalhe/{codigo-processo-orgao}` — Método responsável por obter órgão judicial pelo código.
+- `GET /processo/orgao/sugestao/{numero-cnj}` — Método responsável por obter um órgão pelo número CNJ.
+- `GET /processo/participacao-tipo/{participacao}`
+- `GET /processo/participacao-tipo/obter-arvore-completa`
+- `GET /processo/pedido-situacao`
+- `GET /processo/pedido/{codigo-processo-pedido}` — Metódo responsável por obter um pedido pelo código.
+- `POST /processo/pedido/{codigo-processo}` — Metódo responsável por criar um pedido.
+- `PUT /processo/pedido/{codigo-processo}` — Metódo responsável por editar um pedido.
+- `GET /processo/pedido/consulta/{codigo-processo}` — Metódo responsável por consultar os pedidos de um processo através de um filtro geral que irá pesquisar nos campos:
+- `POST /processo/pedido/consulta/{codigo-processo}` — Metódo responsável por consultar os pedidos de um processo.
+- `GET /processo/pedido/consulta/ordenacao` — Retorna as chaves de ordenação de pesquisa para a entidade de pedidos
+- `GET /processo/pedido/consultar-por-nome`
+- `GET /processo/processos-movimentados/consulta/ordenacao`
+- `PUT /processo/reabrir/{codigo-processo}` — Metódo responsável por reabrir um processo.
+- `POST /processo/remover-todos-dados/{codigo-processo}`
+- `GET /processo/responsaveis-grupos/{codigo-processo}`
+- `GET /processo/resumo/{codigo-processo}` — Obtém os dados de resumo de um processo.
+- `GET /processo/sem-atendimento` — Metódo responsável por consultar o processo através do filtro geral que não possuam vinculos com atendimento.
+- `GET /processo/sem-processo-pai` — Metódo responsável por consultar o processo através do filtro geral que não possuam processo pai.
+- `GET /processo/situacao` — Metódo responsável por buscar todos as situações.
+- `GET /processo/status-completo/{codigo-processo}`
+- `GET /processo/status-processo-envolvidos/{codigo-processo}`
+- `GET /processo/vara-numero`
+- `GET /processo/vara-tipo`
+- `PUT /processo/vincular-pai` — Metódo responsável por relacionar o processo pai de outro processo.
+- `GET /processocompartilhamento`
+- `POST /processocompartilhamento`
+
+## Pessoas / clientes
+
+- `GET /pessoa`
+- `PUT /pessoa`
+- `POST /pessoa`
+- `DELETE /pessoa/{codigo-pessoa-email}/email`
+- `GET /pessoa/{codigo-pessoa}`
+- `GET /pessoa/{codigo-pessoa}/dados-bancarios`
+- `POST /pessoa/{codigo-pessoa}/dados-bancarios`
+- `PUT /pessoa/{codigo-pessoa}/dados-bancarios`
+- `GET /pessoa/{codigo-pessoa}/dados-complementares`
+- `POST /pessoa/{codigo-pessoa}/dados-complementares`
+- `PUT /pessoa/{codigo-pessoa}/dados-complementares`
+- `GET /pessoa/{codigo-pessoa}/documento`
+- `POST /pessoa/{codigo-pessoa}/documento`
+- `PUT /pessoa/{codigo-pessoa}/documento`
+- `GET /pessoa/{codigo-pessoa}/email`
+- `POST /pessoa/{codigo-pessoa}/email`
+- `PUT /pessoa/{codigo-pessoa}/email`
+- `POST /pessoa/{codigo-pessoa}/email-simplificado`
+- `GET /pessoa/{codigo-pessoa}/endereco`
+- `POST /pessoa/{codigo-pessoa}/endereco`
+- `PUT /pessoa/{codigo-pessoa}/endereco`
+- `GET /pessoa/{codigo-pessoa}/telefone`
+- `POST /pessoa/{codigo-pessoa}/telefone`
+- `PUT /pessoa/{codigo-pessoa}/telefone`
+- `GET /pessoa/{codigoPessoa}/contato`
+- `POST /pessoa/{codigoPessoa}/contato`
+- `PUT /pessoa/{codigoPessoa}/contato`
+- `GET /pessoa/{codigoPessoa}/foto`
+- `DELETE /pessoa/{codigoPessoa}/foto`
+- `POST /pessoa/{codigoPessoa}/foto`
+- `GET /pessoa/autocomplete/{nome}`
+- `GET /pessoa/check-cnpj-duplicado/{cnpj}`
+- `GET /pessoa/check-cnpj-valido/{cnpj}`
+- `GET /pessoa/check-cpf-duplicado/{cpf}`
+- `GET /pessoa/check-cpf-valido/{cpf}`
+- `GET /pessoa/classificacao`
+- `GET /pessoa/consulta`
+- `POST /pessoa/consulta`
+- `POST /pessoa/consulta-completa`
+- `POST /pessoa/consulta/codigos-acao-em-lote`
+- `POST /pessoa/consulta/indicadores`
+- `GET /pessoa/consulta/ordenacao`
+- `GET /pessoa/consulta/tipo`
+- `GET /pessoa/contato/{codigo-pessoa-contato}`
+- `DELETE /pessoa/contato/{codigo-pessoa-contato}`
+- `GET /pessoa/dados-bancarios/{codigo-pessoa-dados-bancarios}`
+- `GET /pessoa/dados-bancarios/banco`
+- `GET /pessoa/dados-bancarios/tipo-conta`
+- `GET /pessoa/documento/{codigo-pessoa-documento}`
+- `GET /pessoa/email/{codigo-pessoa}` — Busca todos emails disponíveis no sistema (por arrendatário) filtrando pelo código da pessoa informado.
+- `GET /pessoa/email/codigo-email/{codigo-pessoa-email}`
+- `GET /pessoa/email/todos-por-nome` — Busca todos emails disponíveis no sistema (por arrendatário) filtrando pelo nome informado.
+- `GET /pessoa/endereco/{codigo-pessoa-endereco}`
+- `GET /pessoa/endereco/cidade`
+- `GET /pessoa/endereco/pais`
+- `GET /pessoa/endereco/pais/{codigo-pais}/estado`
+- `GET /pessoa/endereco/pais/estado/{codigo-estado}/cidade`
+- `GET /pessoa/endereco/pais/estado/cidade/{codigo-cidade}`
+- `GET /pessoa/endereco/pais/padrao`
+- `GET /pessoa/estado-civil`
+- `GET /pessoa/fisica/{nome}`
+- `GET /pessoa/fisica/cpf/{cpf}`
+- `GET /pessoa/foto/extensoes`
+- `GET /pessoa/juridica/{nome}`
+- `GET /pessoa/juridica/cnpj/{cnpj}`
+- `GET /pessoa/lista-codigo-pessoas`
+- `GET /pessoa/nome`
+- `POST /pessoa/pessoa-tipo-documento-identificacao` — Metódo responsável por criar um tipo de documento de identificacao.
+- `PUT /pessoa/pessoa-tipo-documento-identificacao` — Metódo responsável por editar um tipo de documento de identificacao.
+- `GET /pessoa/pessoa-tipo-documento-identificacao/{codigo-tipo-documento-identificacao}` — Metódo responsável por obter um tipo de documento de identificacao pelo código.
+- `GET /pessoa/pessoa-tipo-documento-identificacao/consulta` — Metódo responsável por consultar os tipos de documentos de identificação através de um filtro geral que irá pesquisar nos campos:
+- `POST /pessoa/pessoa-tipo-documento-identificacao/consulta` — Metódo responsável por consultar os tipos de documentos de identificação.
+- `GET /pessoa/pessoa-tipo-documento-identificacao/consulta/ordenacao` — Retorna as chaves de ordenação de pesquisa para a entidade de tipos de documentos de identificaçãos
+- `GET /pessoa/pessoa-tipo-documento-identificacao/todos-habilitado`
+- `GET /pessoa/profissao`
+- `POST /pessoa/remover-em-lote`
+- `GET /pessoa/resumo/{codigo-pessoa}`
+- `POST /pessoa/simplificada`
+- `PUT /pessoa/simplificada`
+- `GET /pessoa/sugestao`
+- `GET /pessoa/telefone/{codigo-telefone}`
+- `GET /pessoa/tipo-email`
+- `GET /pessoa/tipo-endereco`
+- `GET /pessoa/tipo-telefone`
+- `POST /pessoa/tornar-cliente-em-lote`
+- `POST /pessoa/unificar-cadastros`
+- `GET /pessoa/usuario/codigo`
+- `GET /pessoa/usuario/nome`
+- `POST /pessoas/cpf`
+
+## Marcadores e tipos
+
+- `POST /cadastro-tipo/{moduloCadastroTipo}` — Metódo responsável por criar um Tipo.
+- `PUT /cadastro-tipo/{moduloCadastroTipo}` — Metódo responsável por editar um Tipo.
+- `GET /cadastro-tipo/codigo-cadastro-tipo/{moduloCadastroTipo}/{codigoCadastroTipo}` — Metódo responsável por obter um cadastro tipo pelo codigo
+- `GET /cadastro-tipo/consulta/{moduloCadastroTipo}`
+- `GET /cadastro-tipo/modulos`
+- `GET /cadastro-tipo/modulos/areas`
+- `PUT /marcador`
+- `GET /marcador/consulta`
+- `POST /marcador/consulta`
+- `GET /marcador/consulta/codigos` — Retorna os marcadores ativos do arrendatário que possuem os códigos informados. Related Issues: ADV-15774
+- `GET /marcador/consulta/ordenacao`
+- `GET /tipo`
+
+## Usuários e grupos
+
+- `POST /grupo` — Metódo responsável por criar um grupo.
+- `PUT /grupo` — Metódo responsável por editar um grupo.
+- `GET /grupo` — Metódo responsável por consultar todos os grupos.
+- `POST /grupo-empresarial`
+- `PUT /grupo-empresarial`
+- `GET /grupo-empresarial/{codigo-grupo-empresarial}`
+- `GET /grupo-empresarial/{codigo-grupo-empresarial}/pessoas`
+- `DELETE /grupo-empresarial/{codigo-grupo-empresarial}/pessoas/{codigo-pessoa}`
+- `POST /grupo-empresarial/{codigo-grupo-empresarial}/pessoas/{codigo-pessoa}`
+- `POST /grupo-empresarial/consulta`
+- `GET /grupo-empresarial/nome`
+- `GET /grupo/{codigo-grupo}` — Metódo responsável por obter grupo por codigo.
+- `POST /grupo/consulta` — Metódo responsável por consultar todos os grupos por nome.
+- `GET /grupo/consulta/nome` — Metódo responsável por consultar todos os grupos por nome.
+- `GET /usuario` — Metódo responsável por consultar todos os usuarios.
+- `POST /usuario` — Metódo responsável por criar o usuario.
+- `PUT /usuario` — Metódo responsável por editar o usuario.
+- `POST /usuario-cliente` — Salva um usuário de cliente.
+- `PUT /usuario-cliente` — Edita um usuário de cliente.
+- `GET /usuario-cliente/{codigo-usuario-cliente}` — Gera uma senha aleatória nos padrões do ADV.
+- `POST /usuario-cliente/bloquear-entidade` — Salva um bloqueio de entidade para uma pessoa.
+- `PUT /usuario-cliente/bloquear-todas-entidades/{codigo-pessoa}` — Bloqueia todas as entidades do módulo informado para a pessoa informada.
+- `PUT /usuario-cliente/desbloquear-entidade` — Remove um bloqueio de entidade para uma pessoa.
+- `PUT /usuario-cliente/desbloquear-todas-entidades/{codigo-pessoa}` — Desbloqueia todas as entidades do módulo informado para a pessoa informada.
+- `GET /usuario-cliente/gerar-senha` — Gera uma senha aleatória nos padrões do ADV.
+- `GET /usuario-cliente/verificar-existencia-por-email-pessoa/{codigo-pessoa-email}` — Verifica se existe um usuario cliente vinculado ao email informado.
+- `POST /usuario-dados-complementares` — Metódo responsável por criar o usuarioDadosComplementares.
+- `GET /usuario-dados-complementares/{codigo-usuario}` — Metódo responsável por obter o usuarioDadosComplementares por codigo.
+- `POST /usuario-dados-rede-social` — Metódo responsável por criar o usuarioDadosRedeSocial.
+- `GET /usuario/{codigo-usuario}` — Metódo responsável por obter o usuario por codigo.
+- `PUT /usuario/{codigo-usuario}/alterar-senha` — Atualiza a senha de um usuário.
+- `GET /usuario/{codigo-usuario}/detalhe` — Metódo responsável por obter os detalhes do usuario por codigo.
+- `PUT /usuario/{codigo-usuario}/usuario-senha-alterada` — Atualiza a flag de alteracao de senha de um usuário.
+- `GET /usuario/consulta` — Metódo responsável por consultar usuários através de um filtro geral.
+- `POST /usuario/consulta` — Metódo responsável por consultar usuários através de filtros informados.
+- `GET /usuario/dados-usuario-logado` — Serviço para recuperar as informações do Usuario.
+- `GET /usuario/nome` — Metódo responsável por retorna o usuário pelo nome.
+- `GET /usuario/obter-dados-avatar/{codigo-usuario}` — Metódo responsável por obter os dados para o avatar do usuário.
+- `GET /usuario/ordenacao` — Retorna as chaves de ordenação de pesquisa para a entidade de usuário.
+- `GET /usuario/usuario-criador/{codigoArrendatario}` — Obter UsuarioResumoType criador por Arrendatario

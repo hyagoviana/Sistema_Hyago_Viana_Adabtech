@@ -36,7 +36,10 @@ export async function listCaseTasks(caseId: string) {
   check(error);
   return (data ?? []).map((t) => ({
     ...t,
-    assignee_name: (t.assigned_user as { id: string; full_name: string } | null)?.full_name ?? t.assignee ?? null,
+    assignee_name:
+      (t.assigned_user as { id: string; full_name: string } | null)?.full_name ??
+      t.assignee ??
+      null,
     assigned_user: undefined,
   }));
 }
@@ -50,6 +53,8 @@ export async function createCaseTask(
     assignee_id?: string | null;
     due_date?: string | null;
     description?: string | null;
+    // Tipo vindo do catálogo único do sistema (doc 21.08). Opcional.
+    task_type_id?: string | null;
   },
   triggeredBy?: string,
 ) {
@@ -186,7 +191,12 @@ export async function setCaseDeadlineStatus(id: string, status: string, triggere
   check(error);
 
   if (data) {
-    const action = status === "CUMPRIDO" ? "deadline_completed" : status === "PERDIDO" ? "deadline_missed" : "deadline_status_changed";
+    const action =
+      status === "CUMPRIDO"
+        ? "deadline_completed"
+        : status === "PERDIDO"
+          ? "deadline_missed"
+          : "deadline_status_changed";
     await sb.from("system_case_events").insert({
       case_id: data.case_id,
       organization_id: DEFAULT_ORG_ID,
@@ -263,7 +273,11 @@ export async function createCaseCommunication(
       case_id: input.case_id,
       organization_id: DEFAULT_ORG_ID,
       action: "communication_logged",
-      diff: { summary: input.summary, channel: input.channel ?? "OUTRO", direction: input.direction ?? "OUT" },
+      diff: {
+        summary: input.summary,
+        channel: input.channel ?? "OUTRO",
+        direction: input.direction ?? "OUT",
+      },
       triggered_by: triggeredBy ?? null,
     });
   }
@@ -359,7 +373,7 @@ export async function listWorkItems(
   const role = await getUserRole(viewerId);
   // Papéis que só veem os próprios casos → escopo travado em si mesmo.
   const canSeeAll = !seesOnlyOwnCases((role ?? "") as Role);
-  const scopeAssignee = canSeeAll ? (filters?.assigneeId || null) : viewerId;
+  const scopeAssignee = canSeeAll ? filters?.assigneeId || null : viewerId;
 
   // Tarefas (não concluídas).
   let tq = sb

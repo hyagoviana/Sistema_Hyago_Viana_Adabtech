@@ -45,7 +45,7 @@ import { useCreateCase } from "@/hooks/useCases";
 import { useServiceTypes } from "@/hooks/usePipeline";
 import { useTemas, useTemaServiceType } from "@/hooks/useTemas";
 import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
-import { useUsers } from "@/hooks/useUsers";
+import { useAssignableUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/lib/auth";
 import { isAdvogado, ROLE_LABELS, type Role } from "@/lib/rbac";
 import { caseCreateSchema, type CaseCreateInput } from "@/lib/validators/case";
@@ -97,7 +97,7 @@ export function CaseFormDialog({
   // R2-05 — TEMA→FRENTE é o fluxo principal quando há temas cadastrados. Categorias
   // legadas (service_types sem tema) continuam como fallback.
   const { data: temas } = useTemas();
-  const { data: users } = useUsers();
+  const { data: users } = useAssignableUsers();
   const { profile, role } = useAuth();
   const create = useCreateCase();
   const [clientPopOpen, setClientPopOpen] = useState(false);

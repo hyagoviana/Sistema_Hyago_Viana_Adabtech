@@ -670,11 +670,15 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // ajuste no trigger de imutabilidade (migration 20260805000003) permitindo
   // DELETE. Se ainda nao aplicado, o delete falha (trigger append-only) e o
   // erro sobe com instrucao clara.
+  // 🔴 origem='batch': NÃO tocar nas linhas que a controladoria distribuiu à mão
+  // pela tela "A distribuir" (origem='staging'). Antes deste filtro, o cron das
+  // 8h apagava o trabalho humano do dia — sem erro e sem aviso.
   const delRes = await supabase
     .from("system_distribution_results")
     .delete()
     .eq("organization_id", ORG_ID)
-    .eq("distribution_date", distributionDate);
+    .eq("distribution_date", distributionDate)
+    .eq("origem", "batch");
   if (delRes.error) {
     throw new AuthError(
       `Falha ao limpar distribuicao anterior de ${distributionDate}: ${delRes.error.message}. ` +

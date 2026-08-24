@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useCallback, useEffect } from "react";
 import {
   Settings,
@@ -53,6 +53,10 @@ function ConfiguracaoPage() {
   const saveCreds = useSaveDistributionCreds();
 
   const [mode, setMode] = useState<string>("HIGH_PRODUCTION");
+  // Doc 21.08 — média diária de produção agora é MANUAL (12 controle / 15 produção).
+  const [writebackAtivo, setWritebackAtivo] = useState(false);
+  const [ptsControle, setPtsControle] = useState<string>("12");
+  const [ptsProducao, setPtsProducao] = useState<string>("15");
   const [batchHour, setBatchHour] = useState("6");
   const [executing, setExecuting] = useState(false);
   type BatchExecutionResult = {
@@ -80,6 +84,9 @@ function ConfiguracaoPage() {
     if (config) {
       setMode(config.mode);
       setBatchHour(String(config.batch_hour));
+      setWritebackAtivo(config.projuris_writeback_ativo === true);
+      setPtsControle(String(config.pontos_dia_controle ?? 12));
+      setPtsProducao(String(config.pontos_dia_producao ?? 15));
     }
   }, [config]);
 
@@ -209,16 +216,18 @@ function ConfiguracaoPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Credenciais Projuris */}
-      <Card className={hasCredentials ? "border-green-200" : "border-amber-200"}>
+      {/* As credenciais da API saíram daqui: viraram configuração de SISTEMA
+          (doc 21.08 — "tirar margem de erro humano"). Esta tela guarda só o que
+          é operação do motor. */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Key className="h-4 w-4" />
-            Credenciais Projuris
+            Conexão com o ProJuris
             {hasCredentials ? (
               <Badge className="bg-green-100 text-green-700 text-xs ml-2">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Configurado
+                Configurada
               </Badge>
             ) : (
               <Badge className="bg-amber-100 text-amber-700 text-xs ml-2">
@@ -227,153 +236,16 @@ function ConfiguracaoPage() {
               </Badge>
             )}
           </CardTitle>
-          <CardDescription>Conexao com a API do Projuris para sincronizar tarefas</CardDescription>
+          <CardDescription>
+            As credenciais da API agora ficam em Configurações › Integrações.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {credsLoading ? (
-            <Skeleton className="h-[150px]" />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <Label>URL Base da API</Label>
-                  <Input
-                    placeholder="https://app.projuris.com.br/api/v1"
-                    value={projurisBaseUrl}
-                    onChange={(e) => setProjurisBaseUrl(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Ex: https://app.projuris.com.br/api/v1
-                  </p>
-                </div>
-                <div>
-                  <Label>Tipo de Autenticacao</Label>
-                  <Select value={projurisAuthType} onValueChange={setProjurisAuthType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oauth2_password">OAuth2 (usuario/senha)</SelectItem>
-                      <SelectItem value="bearer">Bearer Token</SelectItem>
-                      <SelectItem value="apikey">API Key</SelectItem>
-                      <SelectItem value="basic">Basic Auth (usuario/senha)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {projurisAuthType === "bearer" && (
-                <div>
-                  <Label>Token</Label>
-                  <div className="relative">
-                    <Input
-                      type={showSecret ? "text" : "password"}
-                      placeholder={
-                        creds?.has_token
-                          ? "•••• definido · digite para substituir"
-                          : "não definido · cole o token de acesso"
-                      }
-                      value={projurisToken}
-                      onChange={(e) => setProjurisToken(e.target.value)}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                    >
-                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Deixe em branco para não alterar o token já gravado.
-                  </p>
-                </div>
-              )}
-
-              {projurisAuthType === "apikey" && (
-                <div>
-                  <Label>API Key</Label>
-                  <div className="relative">
-                    <Input
-                      type={showSecret ? "text" : "password"}
-                      placeholder={
-                        creds?.has_api_key
-                          ? "•••• definido · digite para substituir"
-                          : "não definido · cole a API Key"
-                      }
-                      value={projurisApiKey}
-                      onChange={(e) => setProjurisApiKey(e.target.value)}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                    >
-                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Deixe em branco para não alterar a API Key já gravada.
-                  </p>
-                </div>
-              )}
-
-              {(projurisAuthType === "basic" || projurisAuthType === "oauth2_password") && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Usuario</Label>
-                    <Input
-                      placeholder="usuario@projuris"
-                      value={projurisUsername}
-                      onChange={(e) => setProjurisUsername(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Senha</Label>
-                    <div className="relative">
-                      <Input
-                        type={showSecret ? "text" : "password"}
-                        placeholder={
-                          creds?.has_password
-                            ? "•••• definido · digite para substituir"
-                            : "não definido"
-                        }
-                        value={projurisPassword}
-                        onChange={(e) => setProjurisPassword(e.target.value)}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSecret(!showSecret)}
-                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      >
-                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Deixe em branco para não alterar a senha já gravada.
-                      {projurisAuthType === "oauth2_password"
-                        ? " client_id/secret ficam no ambiente (.env)."
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {podeEditar && (
-                <Button onClick={saveCredentials} disabled={savingCredentials || !projurisBaseUrl}>
-                  {savingCredentials ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Key className="h-4 w-4 mr-1" />
-                  )}
-                  Salvar Credenciais
-                </Button>
-              )}
-            </>
-          )}
+        <CardContent>
+          <Link to="/configuracoes/integracoes">
+            <Button variant="outline" size="sm">
+              Abrir Configurações › Integrações
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
@@ -417,6 +289,104 @@ function ConfiguracaoPage() {
                     </div>
                   </div>
                 </label>
+
+                {/* Doc 21.08: "Converti esse dado em algo manual a ser preenchido
+                    (vinculado ao modo de produção baixa ou alta produção)." O motor
+                    usa o valor do modo selecionado como referência diária por pessoa. */}
+                <div className="pt-2 border-t space-y-3">
+                  <div className="text-sm font-medium">Média diária de pontos por pessoa</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Modo controle</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={ptsControle}
+                        disabled={!podeEditar}
+                        onChange={(e) => setPtsControle(e.target.value)}
+                        onBlur={() => {
+                          // Campo vazio vira 0 no JS — e 0 ponto/dia zeraria a
+                          // capacidade de todo mundo no motor.
+                          const n = Number(ptsControle.replace(",", "."));
+                          if (!Number.isFinite(n) || n <= 0) {
+                            setPtsControle(String(config?.pontos_dia_controle ?? 12));
+                            toast.error("A média diária precisa ser maior que zero");
+                            return;
+                          }
+                          updateConfig.mutate(
+                            { pontos_dia_controle: n },
+                            { onSuccess: () => toast.success("Média do modo controle salva") },
+                          );
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Modo produção</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={ptsProducao}
+                        disabled={!podeEditar}
+                        onChange={(e) => setPtsProducao(e.target.value)}
+                        onBlur={() => {
+                          const n = Number(ptsProducao.replace(",", "."));
+                          if (!Number.isFinite(n) || n <= 0) {
+                            setPtsProducao(String(config?.pontos_dia_producao ?? 15));
+                            toast.error("A média diária precisa ser maior que zero");
+                            return;
+                          }
+                          updateConfig.mutate(
+                            { pontos_dia_producao: n },
+                            { onSuccess: () => toast.success("Média do modo produção salva") },
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Substitui a média calculada pelos últimos 90 dias. O motor lê o número do modo
+                    que estiver selecionado acima.
+                  </p>
+                </div>
+
+                {/* Write-back ao ProJuris. Até 24/08 o sistema era leitura-only lá;
+                    o Thiago pediu (reunião 19/08) que arquivar e marcar lido valham
+                    nos dois sistemas. Fica atrás desta chave para poder desligar na
+                    hora, sem depender de deploy. */}
+                <div className="pt-2 border-t space-y-2">
+                  <div className="text-sm font-medium">Refletir ações no ProJuris</div>
+                  <p className="text-xs text-muted-foreground">
+                    Quando ligado, "arquivar intimação" e "marcar lido" na aba Andamentos pendentes
+                    também são aplicados no ProJuris. Desligado, valem só aqui. O arquivamento é
+                    reversível (existe desarquivar).
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={writebackAtivo ? "default" : "outline"}
+                    disabled={!podeEditar || updateConfig.isPending}
+                    onClick={() => {
+                      const novo = !writebackAtivo;
+                      setWritebackAtivo(novo);
+                      updateConfig.mutate(
+                        { projuris_writeback_ativo: novo },
+                        {
+                          onSuccess: () =>
+                            toast.success(
+                              novo
+                                ? "Ações passam a refletir no ProJuris"
+                                : "Ações voltam a valer só no sistema",
+                            ),
+                          onError: () => setWritebackAtivo(!novo),
+                        },
+                      );
+                    }}
+                  >
+                    {writebackAtivo ? "Ligado — reflete no ProJuris" : "Desligado — só no sistema"}
+                  </Button>
+                </div>
               </>
             )}
           </CardContent>

@@ -1182,38 +1182,41 @@ export async function updateCaseCanonicalFields(
   if (!before) throw new CaseServiceError("Caso não encontrado", 404);
 
   const current = (before.canonical_fields as Record<string, unknown> | null) ?? {};
-  const merged = { ...current, ...patch };
-  // Remove chaves com valor vazio/null para não poluir o JSONB. Array vazio
-  // (multiselect sem seleção) também é tratado como vazio.
-  for (const k of Object.keys(merged)) {
-    const v = merged[k];
-    if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0))
-      delete merged[k];
-  }
 
-  // #9 (reunião 2026-08-10) — NO-OP guard. Se o merge não muda NADA em relação ao
-  // que já está gravado, não grava nem emite o evento "Dados do serviço
-  // atualizados" (antes ele spammava a linha do tempo quando um write redundante
-  // chegava — ex.: edição de def na pipeline reprocessando casos sem mudar valor).
-  const stableEq = (a: Record<string, unknown>, b: Record<string, unknown>) => {
-    const ak = Object.keys(a).sort();
-    const bk = Object.keys(b).sort();
-    if (ak.length !== bk.length) return false;
-    return ak.every((k, i) => bk[i] === k && JSON.stringify(a[k]) === JSON.stringify(b[k]));
-  };
-  if (stableEq(merged, current)) {
-    return { id: caseId, canonical_fields: current as never };
-  }
+  // MERGE ATÔMICO (auditoria de 2026-08-24, relato de "dado que não salvou").
+  //
+  // Antes isto era SELECT → merge em memória → UPDATE do objeto inteiro. Entre a
+  // leitura e a escrita havia uma janela: duas pessoas editando o mesmo caso ao
+  // mesmo tempo liam a mesma base, e a última a salvar apagava o campo que a
+  // outra tinha acabado de gravar — em silêncio, sem erro nem log.
+  //
+  // A função do banco faz merge + limpeza de vazios + no-op guard numa única
+  // instrução, com FOR UPDATE na linha. Sem janela, sem perda.
+  const { data: rpcData, error } = await sb.rpc("system_merge_case_canonical_fields", {
+    p_case_id: caseId,
+    p_patch: patch as never,
+  });
+  if (error)
+    throw new CaseServiceError(
+      error.message ?? "Falha ao salvar campos do serviço",
+      // P0002 = a função não achou o caso (apagado durante a edição). É 404, não
+      // 500 — e a Vercel mascara 5xx, então o usuário nem veria a mensagem.
+      error.code === "P0002" ? 404 : 500,
+    );
 
-  const { data, error } = await sb
-    .from("system_cases")
-    .update({ canonical_fields: merged as never })
-    .eq("id", caseId)
-    .is("deleted_at", null)
-    .select("id, canonical_fields")
-    .single();
-  if (error || !data)
-    throw new CaseServiceError(error?.message ?? "Falha ao salvar campos do serviço", 500);
+  const resultado = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+    | { canonical_fields: Record<string, unknown>; mudou: boolean }
+    | undefined;
+  // Sem linha de retorno é falha real; cair em `current` faria a gravação passar
+  // por no-op silencioso.
+  if (!resultado) throw new CaseServiceError("Falha ao salvar campos do serviço", 500);
+  const merged = resultado.canonical_fields;
+
+  // Gravação redundante (nada mudou): não emite evento na linha do tempo.
+  if (!resultado.mudou) {
+    return { id: caseId, canonical_fields: merged as never };
+  }
+  const data = { id: caseId, canonical_fields: merged as never };
 
   await sb.from("system_case_events").insert({
     case_id: caseId,

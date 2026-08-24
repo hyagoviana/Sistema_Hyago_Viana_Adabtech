@@ -96,7 +96,7 @@ export function TemaWikiBoard({ temaId, className }: Props) {
           Nenhum quadro ainda. Crie o primeiro com "Novo quadro".
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           {list.map((b, i) => (
             <WikiBlockCard
               key={b.id}

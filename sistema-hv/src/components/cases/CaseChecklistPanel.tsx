@@ -23,7 +23,7 @@ import {
   useSetChecklistItemAssignees,
   useUpdateAdhocChecklistItem,
 } from "@/hooks/useChecklist";
-import { useUsers } from "@/hooks/useUsers";
+import { useAssignableUsers } from "@/hooks/useUsers";
 
 // #3 (reunião 2026-08-17) — Checklist de UMA etapa, SEM card/título/explicação.
 // Serve para ficar aninhado logo abaixo do card da etapa no Rastro (o card acima
@@ -42,7 +42,7 @@ export function CaseStageChecklist({
   className?: string;
 }) {
   const { data: items, isLoading } = useCaseChecklistItems(caseId);
-  const { data: users } = useUsers();
+  const { data: users } = useAssignableUsers();
   const marcarMut = useMarcarItemChecklist(caseId);
   const createMut = useCreateAdhocChecklistItem(caseId);
   const updateMut = useUpdateAdhocChecklistItem(caseId);

@@ -1,5 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileSpreadsheet, ShieldCheck, SlidersHorizontal, Users, Zap } from "lucide-react";
+import {
+  FileSpreadsheet,
+  ListChecks,
+  Plug,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+  Zap,
+} from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
@@ -99,6 +107,43 @@ function Configuracoes() {
             <div className="text-[14px] font-semibold text-[var(--navy)]">Importar dados</div>
             <div className="text-[12px] text-muted-foreground">
               Importe clientes e casos a partir de planilhas (CSV/XLSX) de sistemas externos.
+            </div>
+          </div>
+          <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
+        </Link>
+      )}
+
+      {/* Integrações — credenciais de sistemas externos (doc 21.08: tirar a API
+          das telas de operação). Mesmo gate do servidor: controladoria:edit. */}
+      {podeGerirCampos && (
+        <Link
+          to="/configuracoes/integracoes"
+          className="card-editorial !p-5 mt-5 flex items-center gap-3 hover:border-[var(--gold)] transition-colors"
+        >
+          <Plug size={18} className="text-[var(--gold-700)]" />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold text-[var(--navy)]">Integrações</div>
+            <div className="text-[12px] text-muted-foreground">
+              Credenciais de acesso ao ProJuris e demais sistemas externos.
+            </div>
+          </div>
+          <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
+        </Link>
+      )}
+
+      {/* Cadastros gerais → Tipos de tarefa (doc 21.08): o tipo de tarefa saiu de
+          dentro do motor e virou configuração do sistema. */}
+      {podeGerirCampos && (
+        <Link
+          to="/configuracoes/tipos-tarefa"
+          className="card-editorial !p-5 mt-5 flex items-center gap-3 hover:border-[var(--gold)] transition-colors"
+        >
+          <ListChecks size={18} className="text-[var(--gold-700)]" />
+          <div className="flex-1">
+            <div className="text-[14px] font-semibold text-[var(--navy)]">Tipos de tarefa</div>
+            <div className="text-[12px] text-muted-foreground">
+              Catálogo único do sistema: classe, pontuação, prazos, responsável exclusivo e o que
+              entra no motor de distribuição.
             </div>
           </div>
           <span className="text-[var(--gold-700)] text-sm">Abrir →</span>

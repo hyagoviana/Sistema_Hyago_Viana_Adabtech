@@ -1,0 +1,592 @@
+Reuniao de alinhamento sistema hyago - August 19
+VIEW RECORDING - 75 mins (No highlights): 
+
+---
+
+0:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim, velho. Quer pegar a Isadora? Que Isadora?
+
+0:08 - Matheus Torquato
+  Toda vez que o cara é...
+
+1:18 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Alô, boa tarde. Boa, boa tarde. Tudo bom? Ô moço, eu tô ocupado agora, eu não tenho não interesse. Muito obrigado, viu?  Bom trabalho. Até me ligar, terrível. Eu nem atento, porra.
+
+1:56 - Matheus Torquato
+  Eu tenho um negócio de bloqueador de chamada dessas porra aí. Fala pessoal, boa tarde. Oi Thiago, tudo bom? Tudo em paz.
+
+2:16 - Dr. Thiago Correia
+  Depende do que é bom para vocês, né, que eu estou para morrer aqui, puta que coisa... Tem um link aqui só para eu mandar para o Pablo, ele vai ficar responsável para ficar preenchendo esses dados lá no sistema, passar para ele aqui, que ele entra, só para ele começar a acompanhar a dinâmica, porque depois ele vai trazendo para mim esses ajustes que precisam ser feitos, né, testou isso, não está rodando assim, mas ele vai mais acompanhar aí.  Bicho do céu, foi puxado, viu? Hoje eu comecei quatro e meia da manhã.
+
+2:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá louca, porque processos do nada tem um monte de coisa de uma vez só, sabe?
+
+2:54 - Dr. Thiago Correia
+  É, sai muito assim, tem essas lindas também.
+
+2:57 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E advogada, advogada igual rapaz. ligar para a justiça, sabe?
+
+3:00 - Dr. Thiago Correia
+  Se a gente não faz no dia que eles mandam, é seu dia hoje, tá bom. Então, é foda. Mas de forma geral, eu não consegui testar 100% todas aquelas alterações que a gente fez.  Mas das que eu vi, a maioria estava rodando ok, já, né? Eu acho que a maioria estava ok. Só tem algumas que eu acho que são duas coisinhas só que eu tinha tratado.  Eu vou espelhar aqui para vocês. Eu vou passar esse arquivo também, esses dois arquivos que eu fiz, não concluí 100%, mas já passo para vocês também terem essa referência visual.  Eu acho que de forma geral, a gente fica mais fácil para todo mundo essa questão visual assim, né? Sim, esses prints ajudam muito a gente a entender até mesmo em que ponto que você está querendo dizer e o que você quer que altere, ajuda bastante.
+
+3:58 - Matheus Torquato
+  bom. E aí acho que Até que eles que você mandou no WhatsApp lá foram bem úteis também.
+
+4:03 - Dr. Thiago Correia
+  Eu acho que, assim, quando a gente está marcando as reuniões e acaba ocupando muito o tempo de vocês também nessas reuniões, é mais para a situação de conseguir explicar qual é a ideia doida que a está tentando botar no papel, né?  É, assim, questão de tomar tempo, ter falando por mim é ser tranquilo.
+
+4:20 - Matheus Torquato
+  Eu até prefiro ter essas reuniões exatamente para a alinhar rápido as coisas, mas o modo que você está trazendo, é essa questão de formulário, sprint, trazendo as informações, a gente só realmente testando ali, ver se deu certas alterações, já antecipa muito.  A gente evoluiu bastante o sistema nesses últimos dias ali, por exemplo, é percepção que eu tenho. Nesses últimos dias ele andou bastante.
+
+4:43 - Dr. Thiago Correia
+  Eu não sei mais se estou falando, aquele número é com a Dava, é com o Matheus ou quem que é.  Você conversa às vezes comigo, às vezes com ele, mas a gente já sempre conversa.
+
+4:51 - Matheus Torquato
+  a gente fala todo dia sobre isso. Então, com ele o clipe é igual, é a mesma coisa. Eu tenho parece o costume de não salvar os números no WhatsApp.
+
+4:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O que
+
+5:00 - Matheus Torquato
+  Aí eu tenho o número de Matheus do Adavio, agora tem outro número aí que eu não sei mais quem é.  Aí tem o da empresa também agora. Da empresa. É, o da empresa. Agora eu não sei quem me responde mais, mas...
+
+5:10 - Dr. Thiago Correia
+  Mas estamos conseguindo consolidá-los.
+
+5:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tanto, eu acho que nos próximos dias, eu passei lá no WhatsApp, eu acho que nos próximos dias a gente fecha o operacional.
+
+5:19 - Dr. Thiago Correia
+  A controladoria eu acho que vai ser muito rápido, porque é mais só destrazer o desenho e a única parte que fica mais assim é a questão do motor.
+
+5:27 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O financeiro, para fazer, eu acho que é tranquilo também.
+
+5:31 - Dr. Thiago Correia
+  É mais uma questão de ajustes que a vai precisar fazer nas anotações, que eu defini o método, mas eu queria marcar a reunião e deixar de passar só as ideias visuais ali, porque eu tenho algumas dúvidas o quanto que a gente vai conseguir fazer isso aí a várias mãos pela API.  Mas de forma geral, do que a gente viu. Essa parte aqui, acho que ficou melhor dessa forma que a gente colocou aqui, só que eu queria ver para esses links úteis ficar igual estava ali embaixo, eu quero...  essa um por linha, um embaixo do outro. Esse aqui ser uma linha, esse meta-API ser outra linha, esse material ser outra linha, para não ficar esse quadradinho assim, ele ficar um linha abaixo do outro, entende?
+
+6:12 - Matheus Torquato
+  Os Kanbans estarem em cima, daí embaixo dos Kanbans vêm os links úteis com as... uma aba maior, né? Eu acho que cada link seria uma lista, não isso?
+
+6:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Quando estava antes, estava desse jeito que você falou, e agora?
+
+6:28 - Dr. Thiago Correia
+  Que eram todos Kanbans e eles embaixo. E quando eles estavam aqui embaixo, era assim, esse aqui era um, aí aqui embaixo tem outro aqui, esse terceiro aqui estava aqui embaixo, então é só colocar nesse mesmo formato que estava, como se fosse uma linha para cada.
+
+6:44 - Matheus Torquato
+  tá, resulta aí se cada um tem uma... É, fica mais pessoal. Tá bom.
+
+6:50 - Dr. Thiago Correia
+  Diz aqui, eu acho que é isso. Tinha umas outras questões de campos, campos personalizados. tinha, tinha umas questões de campos, mas...  mas era mais porque a gente ainda tinha alguns campos que estavam sendo ajustados dentro daqueles itens que a gente passou lá.  Mas uma situação que eu acho que seria bem importante seria a gente padronizar a configuração de campos casos e campos clientes.  Então, quando a gente abre aqui em casos, nós temos, e a gente avançou muito, em várias situações que tem aqui de configuração.  Só que quando a gente vai para campos clientes, ainda é bastante limitado, não tem esse mesmo reflexo do avanço que a gente teve lá em campos casos, entende?  Então, a gente traz essas atualizações e melhorias que houve lá para cá, até porque tem a situação de que aqui em campos casos eu posso criar um campo que é cliente, mas eu tenho mais opções aqui do que eu tenho aqui.  Então, pode até gerar a situação de eu criar um tipo aqui que é mais complexo, mais amplo, e aqui não tem essa mesma opção.  Então, que para cá. E aí, até para a gente não ficar numa situação de, acho que ficar muito grande, algo assim, sempre que a gente for falar nesses campos que são compartilhados, ter fechado, até para ficar mais fechado, de que se a gente está falando de campo compartilhado, que é campo quente, só pode criar por aqui na parte quente.  E aí tem aquela situação de que a gente vem em marca, de que ele vai aparecer lá, quais temas e tudo, mas só cria por aqui, na aba cliente, esse tipo de campo que vai ser compartilhado, para evitar que alguém vá lá em uma situação de um caso específico e faça alguma coisa que muda depois em algo que é maior.  Entende? Não se isso fez sentido.
+
+8:49 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora, hoje a gente bota dentro do caso, a gente pode transformar em um campo de cliente. O campo de cliente não vira campo de caso.  A gente vai continuar bloqueando esse caminho. Porque hoje o cliente não vira campo de caso. Ele pode virar só nessa opção aqui, né?
+
+9:02 - Dr. Thiago Correia
+  Quando está aqui, aí a gente vem e coloca, aparece nos casos. É, mas aí ele aparece, né? Como um filtro de cliente dentro do caso, né?
+
+9:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exato. Mas não é um novo campo dentro do caso, entendeu? É só daquele cliente, né? Sim, não.
+
+9:24 - Dr. Thiago Correia
+  Tem a situação de que o campo vai ser só do cliente, mas tem essa situação de que é um campo que vai para casos.  Eu tenho uma tela mais diferente. Então, aqui, para a gente exemplificar. Aqui, eu tenho a opção de criar um campo que quando eu for criar, eu marco aqui que ele é um campo do caso.  Ah, já tinha visto isso aqui, né? Acho que a gente já tinha feito essa alteração, né?
+
+9:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É. Ah, então, já estava nas anteriores.
+
+9:50 - Dr. Thiago Correia
+  É porque a última vez que eu tinha visto, ainda estava aqui a opção de a gente poder criar o cliente.  É, então, por isso que eu falei, entendeu?
+
+9:56 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí a gente não tem essa parte. Eu acho que o cliente já fechou, tá bom? nas observações anteriores.
+
+10:02 - Dr. Thiago Correia
+  De campos, que eu tinha visto mais foi esse, das questões anteriores. Vou ver se eu anotei mais algo aqui.  Subtítulos, eu não cheguei a testar, mas eu passando hoje vi que vocês já fizeram subtítulos dos campos, né? Isso aqui já foi.
+
+10:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Dos campos vinculados, eu acho que já fizeram também, né?
+
+10:24 - Dr. Thiago Correia
+  Essa situação de ter campos vinculados. E esse é vinculado naquele. Na dependência, aquele ali, campo dependente.
+
+10:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, vai ser o campo dependente.
+
+10:36 - Dr. Thiago Correia
+  É que eu estava com a ideia de um campo vinculado, que é um pouquinho diferente, mas como eu não consegui estruturar a ideia, eu vou deixar para, se for o caso, eu passo depois mais explicado.  Esse campo dependente é daquele jeito que eu tinha falado, lembra?
+
+10:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Se você clicar ali, até aparece ali, campo pai, que vai ser o primeiro campo que eu só preencho os outros se eu preencher esse, entendeu?
+
+11:01 - Dr. Thiago Correia
+  eu lembro, esse campo dependente aqui tá bom, essa forma aqui ficou boa é que você escolhe o pai o principal, vai escolher os dependentes era uma outra ideia deles serem como se fossem dois campos que sempre aparecem juntos não tem como um aparecer sem o outro independente desse estar preenchido ou não algo assim mais ou menos esse daqui só que esse daqui é assim o pai é o principal, o pai vai ser sempre preenchido os outros só podem ser preenchidos se o pai for preenchido não é os dois que aparecem juntos pode ser que só tenha o campo pai preenchido a ideia de campo vinculado era meio que tipo isso aqui eu tenho aqui esse campo e aí eu tenho esse só que eles são vinculados então esse aqui sempre vai aparecer junto com esse é, do pai e do filho o pai e o filho fica assim mesmo sem ser dependente, não é que ele é dependente ele é vinculado, eles sempre aparecem juntos então é algo assim mas eu acho que mas aí é mais na visualização então...
+
+12:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  não no critério de regras. Isso, mas na visualização.
+
+12:04 - Dr. Thiago Correia
+  Só que a ideia de subtítulo, eu acho que talvez já incorporou isso aí mais ou menos. É porque eu vou ter que testar, se for caso, depois eu trago mais estruturada essa ideia.
+
+12:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A questão aqui é a diferença dos campos que eu passei aí.
+
+12:18 - Dr. Thiago Correia
+  Eu vi, só que é porque o computador que eu estou aqui, ele está dando umas travadas. E aí, o sistema, como todos os sistemas que eu estou usando de tudo aqui, está dando uma travadinha.  Mas quando eu trago aqui de peixe o sistema de lentidão, não é que o sistema está lento hoje, ele está bem responsivo na verdade.  Mas uma questão que eu fiquei pensando, e algo que quando a gente vai para o financeiro e o Conta Azul pode mudar, até hoje eu não parei para ver, eu queria entender de vocês isso, Adavio.  Eu preciso me preocupar de, sei lá, daqui cinco anos eu perder esse banco de dados, algo assim. O quão seguro isso é?  Eu não sei se o Hyago chegou se comece a entrar nesses detalhes.
+
+13:05 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Hoje, a nossa infraestrutura está toda na sua base. É um banco de dados que o Thiago paga vinculado na conta dele.  Então, a gente tem um projeto lá, que já está vinculado. Ele está num projeto PRO, que é um tipo de projeto pago, que, para a demanda de vocês, hoje, suporta tranquilamente.  A gente tem algumas coisas aqui que, normalmente, a gente já faz para o padrão, que é cacheamento. Então, normalmente, quando você entrar na primeira página, pode ser que você sinta uma lentidão inicial, que é normal, que é o carregamento da página.  Mas, depois, todas as vezes que você operar dentro da página, o cacheamento vai te liberar aquela determinada página, caso não ocorra uma alteração.  E isso vai fazer com que o sistema fique fluido e limpo. Eu acho que ele está bem fluido, ele está bem responsivo, na verdade.
+
+13:52 - Dr. Thiago Correia
+  Isso foi assim, o meu computador, de forma geral, estava um pouco lento quando anotei isso aqui. Mas, que eu tinha mais preocupação, e que eu ainda não tinha visto nada nesse sentido, era...  que talvez, a Dependê, a gente já pega depois tudo que está no Proiuris e traz para cá, para não precisar ficar esperando para lá.  Diminuindo o processo. Anos eu perdi. Porque a gente tem esse contrato de um ano, depois, lógico, que vai tendo sempre alguma atualização, alguma questão, pelo menos eu acredito que seja tudo sempre com vocês aí.  Mas eu vejo uns memes, o pessoal coloca, tipo assim, dá 10 anos, o pessoal coloca lá código, aí tem um comentário que o pessoal coloca dentro do código.  Não mexer nisso aqui, senão quebra tudo. O pessoal coloca. Essa parte aí pode ficar tranquilo. Em relação ao banco, tudo certo.
+
+14:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A estrutura que a gente tem hoje do Superbase, ele é um dos bancos maiores agora, até o momento. Está vinculado à AWS, mas a única coisa que tem que ser o quê?  Hoje está vinculado a essa conta do Hyago, eu acho que é na própria conta do Hyago mesmo. Então, assim, se...  quiser, por uma segurança, transferir para um setor do escritório, por exemplo, para que vincule a um cartão do escritório, algo do tipo, neste processo, eu não sei como é que está lá na conta, porque na época o Hyago já me deu esse Supabase e pago.  gente tem vinculado no Gmail pessoal dele. É, vinculado ao Gmail pessoal dele.
+
+15:21 - Dr. Thiago Correia
+  Só se eu marretar na cabeça desse homem, que eu falo para ele, mas quando você for criar essas coisas, faz no sistema de escritório, que alguém hackei esse mês, senhor, nós estamos fodidos.  O que eu posso fazer é, o projeto pode ser passado para outra pessoa, não tem problema.
+
+15:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, se quiser passar naquele jurídico, em algum desses, só temos que vincular um cartão lá, porque o pagamento é feito pelo cartão de crédito.  Então, fazendo essa vinculação, eu acho que fica mais voltado para o escritório. Então, provavelmente um cartão jurídico, que vocês tenham, ele deve estar sempre sendo atualizado, o Hyago pode trocar, pode acontecer algum sentido assim, que isso possa causar um problema.  Não, mas nada que... nós não temos aviso, né? Porque o Superbase nos avisa muitas coisas. A gente tem as déficit...  O Superbase é uma base de dados segura que a não pode... É, segura, sim, bem tranquilo. E a gente já opita por ele ser um sistema online, né?  Então, assim, os backups acontecem online nesse sentido. Então, a gente não tem essa preocupação, né? No sentido de, ah, ficou sem pagar, perdeu.  Não. O máximo que vai acontecer é ele pausar o projeto que você não pagou, entendeu? Então, a gente vai lá e restaura.  E a gente tem um backup lá, que ele ocorre durante sete dias, né? Então, a cada sete dias ele faz um backup ali naquele processo.  No caso, todos os dias tem um backup, só que só dura por sete dias. A gente não tem um backup de um mês, por exemplo.  Mas o backup ocorre hoje e ele armazena tudo que está no sistema, né? Então, a gente tem até o último sete dias atrás.  Então, se acontecer algum erro, é só voltar o backup ali que a gente consegue... Mas sabendo que está num lugar que é seguro, já me tranquiliza.  Eu brinco sempre assim, né?
+
+16:57 - Dr. Thiago Correia
+  Pode sempre dar um problema, igual o nosso botão de dados. que hoje está tudo no Google Drive, a gente não tem um arquivo pra isso, mas eu falo, ó, é porque se der merda, a gente está falando que deu merda no Google, então não foi só eu que me fudi, o mundo inteiro parou, acabou e tal, né, o Google deu problema na nuvem, acabou.
+
+17:12 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A AWS é do mesmo jeito, por exemplo, foi essa semana, segunda-feira, o GitHub caiu, por exemplo, e ele é muito importante pra nós desenvolvedores, né, passaram umas boas horas, e foi por conta de uma AWS que caiu lá, o cadastro da AWS caiu, caiu o GitHub.
+
+17:26 - Dr. Thiago Correia
+  O juizado para ali, né, esperamos, e caiu a internet dele também. É que hoje tem muita coisa, teve umas informações que a gente tinha preenchido aqui, que depois o Pablo estava preenchendo o pessoal, eles viram que não estava sendo salvo.  A gente fez alguns testes depois e ficou salvo normal, mas aconteceu, né, Pablo, alguns casos que a gente registrou aqui, algumas informações, e não apareceu.  Eu acho que foi ontem, bem na hora que a gente estava... mexendo aqui nessa questão da chavezinha.
+
+18:03 - Adavio Tittoni (adaviotittoni@gmail.com)
+  não sei se qualquer coisa seria um salvo e algo assim, sabe? Mas depois só confiar se tem algum tipo de situação.  Às vezes o que pode ter acontecido é que quando vocês salvem em uma tabela específica, neste momento que a gente está fazendo uma alteração, ele sobe com o que estava salvo até a nossa alteração, entendeu?  Aí pode ser que tenha sobrescrevido naquele determinado momento. Mas a gente vai passar uma análise nessas coisas, que são RPCs, e a gente olha se está tendo algum travamento.  E se você vê, Pablo, qualquer coisa também, se você quiser botar o Pablo em algum grupo com a gente, para ele avisar a gente, encontrei um erro aqui.  Quando for esses erros mais básicos, que são diários, pode nos enviar ali, porque normalmente a gente consegue resolver na hora.  Tipo aquele dia que você me falou assim, eu crio o rastreio e eu mandei no mesmo momento ali, por exemplo.  É, mas esse aí deixa Aqueles detalhes dá para a gente fazê-lo. Deixa ele passando por mim, porque eu vou...
+
+19:00 - Dr. Thiago Correia
+  filtrando, por conta que, como está tendo muita coisa ao mesmo tempo, para a gente balizar e ter a prioridade ali do que...  Olha, esse aqui, deixa para daqui a pouco, porque você tem que fazer outras coisas ali agora. Outra situação que eu notei aqui em tarefas, quando a gente vai criar, aparecem todos os responsáveis que estão vinculados lá naquelas listas.  Isso porque, por exemplo, os usuários do Ponta Azul pegam aquelas pessoas que já estão arquivadas e tudo. Então, o nosso próprio sistema aqui já tem essa lista de quem está ativo ou não, esse usuário.  Então, eu acho que poderia aparecer aqui só quem está como ativo. Não ficar aparecendo todo mundo, fica mais fácil ali na hora de selecionar e tudo.  Tá, só quem está como ativo dos usuários. Já tem até essa informação aqui, né? Seria só a gente fazer essa situação.
+
+19:47 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ativo, inativo. É que não todo mundo está ativo. É, aí por isso que eu fiquei nessa dúvida. Porque aí seria uma...  desabilitar o usuário, certo? aqui, né? Obrigado. Você quer desativar ele da tarefa ou quer desativar ele do sistema? Porque aí essa inatividade seria do sistema.  Ele não o logaria mais, por exemplo. Ah, é que a gente puxou só para cá, Desafilitado, proiores, mas aqui no nosso sistema ele continua...
+
+20:17 - Dr. Thiago Correia
+  Continua como um ativo.
+
+20:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí aquelas tarefas... Como é que eu, tipo, desligo esse usuário aqui?
+
+20:24 - Dr. Thiago Correia
+  Ele permanece para histórico e para tudo, né? Mas ele não é um usuário que vai... Que vai estar ativo.  Tem essa, né?
+
+20:34 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu acho que a gente não tem essa opção. A gente só tem a opção de deletar. Na realidade, tem aquele ali de suspender.  Está vendo ali do lado? Suspender. Suspender é suspender o acesso ao usuário, entendeu? Que seria esse desabilitar, por exemplo.  Suspendi um aqui. Ah, ele está como suspenso, está vendo? Vamos ver se ele já soma.
+
+21:00 - Dr. Thiago Correia
+  Se for o caso, já permitiu... Tem Maria Clara, mas...
+
+21:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Maria Flávia.
+
+21:27 - Dr. Thiago Correia
+  Eu acho que sumiu, acho que é algo que já vai... É, que é uma suspensão do usuário.
+
+21:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que aí ele não está suspenso só das tarefas, tá? É de tudo, né, assim? De tudo. Ele não entra mais no sistema, ele é um usuário bloqueado, como se ele tivesse saído da empresa nesse processo.  Só que aí para poder manter o legado no banco, porque o banco é vinculado ao ID do usuário, se a gente deletar, deleta o ID do usuário.  Aí perde o legado. Por isso que a gente coloca essa suspensão. Os comentários, as coisas... Isso, exato. A pessoa que manipulou e fez...  É dessa forma mesmo.
+
+21:59 - Dr. Thiago Correia
+  Outra observação... para a gente corrigir, eu acho que esse aqui eu tinha passado, só que não passei tão detalhado.  Todas as vezes que a gente altera, por exemplo, alterei um campo personalizado que é desse tema. Todos os casos geram comentário, assim, e aí fica aqui, dados a serviço atualizados, a gente não especifica o quê, sabe?  Eu acho que quando for uma configuração do tema, não precisa vir para casos.
+
+22:23 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não precisa vir para casos. É, não precisa. Eu lembro que você tinha passado para a gente isso aí mesmo, para a gente que não apliquei.  Até porque eu não sabia exatamente o que estava trazendo para cá, né? É, isso é quando a gente altera o tema ou quando a gente movimenta alguma coisa aqui em cima, nesses dados aí, por exemplo.
+
+22:39 - Dr. Thiago Correia
+  Aí aqui, por exemplo, aqui, eu acho interessante quando altera ali, alterar aqui. Dados alterados do usuário, por exemplo.
+
+22:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só que aí mostra qual, então acaba que perde o sentido. Então, serviço atualizado, mas o que eu atualizei? O eu mudei aqui, né?
+
+22:53 - Dr. Thiago Correia
+  Então, se tiver cor múltiplo, olha, aqui vai ficar dados do serviço atualizado. campo tal, aí já faz sentido. Se for aqui do caso, se for do tema como todo, aí nem precisa vir para cá.  Tá. Beleza. Acho que o tinha ali das últimas coisas que a gente passou foram só... Deixa eu colocar aqui.  Vai ter do financeiro, mas antes de entrar no financeiro, acho que a gente vê da controladoria, o financeiro não vai ter muita coisa, é só visual.  Quando eu tenho que fechar alguns itens, mas vamos ver da controladoria. Vou passar para vocês esse arquivo também, mas a gente precisava ver a questão das tarefas, que ficou até para aquela automação do workflow e também para automações do motor de distribuição.
+
+23:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Você tinha me passado...
+
+23:50 - Dr. Thiago Correia
+  Tinha alguma outra coisa que vocês queriam ver?
+
+23:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Não, de nós ficou só a parte de tarefas, porque a gente já está puxando lá do ProIuris, a gente já fez...  testes, porque a gente conseguiu entender como é que ele funcionava, por isso que eu tinha te pedido lá naquele dia o acesso, então a gente entrou ali e viu de onde puxava as partes de tarefas e tudo mais e já vinculamos lá na nossa parte do ProIuris se você conseguir entrar ali para você dar uma olhada eu vi como é que está aqui fica na parte da distribuição aí a gente vai tirar alguns menus ali dentro desse processo mas isso aí é o que a gente precisa da documentação porque a gente tem que fazer isso baseado no que vocês tem no ProIuris entendeu?
+
+24:39 - Dr. Thiago Correia
+  Essas tarefas Eu puxei algumas ideias para vir para cá aí aqui eu só vou mandar para vocês isso aí, mas só para detalhar também as ideias eu acho que dentro daquelas opções que você trouxe é ter realmente um registro nosso de tarefas que é...  não é? Obrigado. Proiores. Você trouxe a ideia de ser tarefa específico para o workflow ali, para tarefas de sistema, as tarefas específicas do Proiores para o motor de distribuição, ou ter algo vinculado.  Acho que serão essas três outras opções. Compensa mais a gente pensar em tarefas como algo mais amplo de o registro de tarefas, de tipos de tarefas, que são essas configurações, e é vinculado com o Proiores, mas é vinculado com o nosso interno aqui.  Daqui é que o sistema vai puxar para a parte do workflow, vai puxar para a parte do motor de distribuição e tudo.  Então, eu trouxe até isso mais detalhado. Por exemplo, eu acredito que seja o caso só...
+
+25:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Vai ter um problema aí nesse sentido, eu acho. Porque o problema é que a gente não cria, quer dizer, gente até cria a tarefa no Proiores, só que a tarefa é vinculada pelo ID do Proiores.  Como é que a gente faria... a isso internamente, por exemplo.
+
+26:02 - Dr. Thiago Correia
+  Eu consigo, daqui do sistema, ou da API ali, quando a gente for rodar, do sistema, eu criar uma tarefa aqui no nosso sistema e a API criar uma tarefa no ProIures, por exemplo?  Deixa eu confirmar, essa parte a gente não fez.
+
+26:17 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Eu acredito que tenha como, porque assim, a gente consegue vincular. Deixa eu só ver se... Ao contrário, criar lá e criar dentro do sistema.
+
+26:27 - Matheus Torquato
+  Não sei se a gente consegue criar, eu vou dar uma olhada aqui na documentação, porque isso aí eu não tinha olhado, porque a nossa intenção era trazer pra cá.
+
+26:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pode, pode. Não, eu olho aqui agora, não tem problema não.
+
+26:40 - Dr. Thiago Correia
+  Enquanto você vai olhando, depois eu vou mandar isso aqui também, de toda forma, eu tinha pensado de ficar assim, como igual a gente tem ali, mais uma questão de configuração meio específica, ficar junto, né?  Isso. Então, sai aqui de dentro do motor, e aí a gente já começa a quebrar essa ideia de que é a tarefa do motor, é a tarefa do...  workflow é a tarefa do sistema, é o tipo de tarefa do sistema. Daqui ele só vai puxar para cá isso que está lá.  E aí aqui dentro, eu e minha esquizofrenia aqui escrevendo, igual a gente tem lá as opçõezinhas do campo. Então vai ficar aqui as opçõezinhas do tipo de tarefa.  Aí poderia marcar se são as arquivadas, se são os ativos, se são todos. Por quê? Pode ter um tipo de tarefa que funcionava, que rodava, mas que a gente decidiu arquivar, fica lá para os registros legados.  Só não vai aparecer quando a gente clicar em criar tarefa, em criar algo assim. E aí seria uma chavezinha de a gente poder ter isso mais fácil.  Então todas aquelas que estão ali hoje, por exemplo, que a gente já tem essa lista do ProIures que está ali, seriam tarefas que estão ativas.  Então já viriam para esse registro como ativo. Aí a gente abriria esse registro, essa configuração, do mesmo jeito que está aqui.  A gente vai e faz esse detalhamento. Então a gente teria um campinho específico no sistema para isso, mas a gente vem...  e abre essa configuraçãozinha de tarefa. Aí, quando a gente abrisse essa configuraçãozinha de tarefa, essa situação, tudo que está aqui, eu acho que já funciona bem, porque a gente precisa, mas eu pensei em adicionar uma nova divisão, que seria se a tarefa é administrativa, judicial ou comercial, aí eu deixei especificado aqui, que é basicamente as identificações que o sistema vai fazer de cada tarefa.  Se ele é classe, nome esse, é classe, tal, tal, tal, se ele é pontuação, tarefa, tal, tal, tal, se ele espera no ProIuris, então eu pensei em ter a opção de nós criarmos aqui essa tarefa, uma tarefa, um tipo de tarefa, e do mesmo jeito que hoje a gente coloca aqui código ProIuris, teria essa opção de se é algo que está lá no ProIuris também ou não.  Então, exemplo, tarefa comercial, não vai precisar ter no ProIures essa configuração, porque isso não vai para lá nunca, entende?  Pensei até em deixar só esse tipo comercial, porque às vezes depois ele quer mexer em alguma coisa de configuração, de como essa tarefa vai funcionar na parte dele comercial, e a gente já faria pronto para, ele pode mexer no que ele quiser nisso lá, que não mexe nas configurações que a vai deixar pronta aqui.  Então, eu pensei em ter essa divisão só por conta disso. E aqui está dentro do que já está puxado, do que já tem de informação, com o ProIures e tal, dentro do que vocês já fizeram hoje.  Tem aqui essa situação do exclusivo, vou passar o arquivo detalhado para vocês, mas tem a subdivisão que está nas regras do motor, que é, pode ser que a exclusividade dessa tarefa não seja para todos os temas.  Então, inicial, quem é o responsável exclusivo? Thiago, hoje está construído só dessa forma, mas no motor tem uma regra aqui, pode ser que não seja para todas as  os outros temas. Se for um inicial do tema TMFC, o responsável exclusivo é Patrícia. Então, me dera que fosse adicionado dentro dessa configuração, assim como a gente tem lá nos campos do cliente, quando vai para vários casos, se vai para todos ou se eu vou selecionar quais os temas que essa regra se aplica.  Então, pensei nessa subconfiguração. Todo o resto já está... Mas aí... Não, vai dar, vai dar. Sub-regra de identificação, né?
+
+30:37 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Uhum. Estou pensando como encaixar. Agora, me diz uma coisa. Estou olhando aqui a documentação, Théo. Lá no ProIuris, a gente viu a parte de tarefas ali que a gente conseguiu puxar, mas a gente não criou, né?  Quando vocês criam a tarefa, vocês criam lá em tipo de tarefa, é isso? Sim, em tipo de tarefa.
+
+30:58 - Dr. Thiago Correia
+  gente tem aqui um... custo de tipo de tarefa.
+
+31:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Ele pede o seguinte, um código de tarefa, pra gente criar, e o módulo e a entidade. Então, eu preciso identificar isso.  Acho que sei o que vai ser isso aí. Aqui, ó.
+
+31:17 - Dr. Thiago Correia
+  Eles mudaram esse visual essa semana. Fiquei puto, passei meses achando que esse negócio era horrível.
+
+31:23 - Matheus Torquato
+  E eles mudaram essa semana.
+
+31:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas vai ser aqui, Quando a gente vai criar no sistema, na mão, ele vai me pedir o tipo de tarefa.  Acho que é essa. Tá. Isso.
+
+31:33 - Dr. Thiago Correia
+  Então, vou gerar um novo tipo. Um novo tipo, beleza.
+
+31:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É como eu tô aqui.
+
+31:37 - Dr. Thiago Correia
+  Quando eles estão falando de entidade, eu acredito que sejam essas opções de módulos, porque o sistema aqui é separado assim.  Então, em qual módulo esse tipo de tarefa pode aparecer? Isso aí, módulo de entidade.
+
+31:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Aí tem módulo e código registro de vínculo. E esse negócio aí é que eu não sei o que é esse código, não sei o que aí.  Nunca vi.
+
+31:56 - Dr. Thiago Correia
+  Tá. Aí outra. Identificador de registro...
+
+32:01 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Pode ser o código interno que gera, igual esses códigos que estão aqui nessas tarefas.
+
+32:07 - Dr. Thiago Correia
+  Eu lembro que a gente não tinha conseguido passar para vocês, vocês que identificaram por dentro.
+
+32:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Puxamos por dentro. Então pode ser esse troço aí, eu nunca... Tá, então o módulo em identidade é essa parte de módulos.  E os módulos vocês que criaram? É padrão deles, isso aqui é fixo.
+
+32:25 - Dr. Thiago Correia
+  sempre esses. deixa eu se eu acho...
+
+32:27 - Matheus Torquato
+  tem como criar os, não sei sempre esses aí. Esses módulos aí. É assim, a gente usa o atendimento que a gente não usa, processo, intimação, andamento.
+
+32:39 - Dr. Thiago Correia
+  Mas pode colocar, marcar tudo. Quando for criar, não tem problema não. É porque só vai mudar para se eu for criar uma tarefa que é relacionada a uma situação que é do atendimento, ele deixa ou não.  Só que pode colocar para criar de tudo, todos os módulos. Módulo e chave do módulo.
+
+32:55 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Dentro do módulo, buscar módulos. E aí tem a chave do módulo, que eu acho que seria... E E O nome do módulo.  Mas se já tem esses módulos criados, a gente pode criar para padrão para outros módulos. Por eu estou olhando aqui?  Porque tem como criar esse tipo de tarefa, certo? Que seria a tarefa que a gente vai criar aí. E a gente consegue mudar uma tarefa que está criada se a gente muda no nosso app e mudar algo que está aqui?
+
+33:19 - Dr. Thiago Correia
+  Consegue.
+
+33:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque eu consigo manipular tarefas. Aí seria um put. Só que aí a gente vai ter que primeiro pegar toda essa vinculação, sabe?  Vou ter que pegar quais são as tarefas pertencentes, que é essa que a gente está fazendo agora, neste processo.  E jogar no nosso banco para que quando você atualiza, a gente busca essa tarefa e mude lá dentro, entendeu?  Só que aí a única coisa que a gente vai ter que pensar é quais são os campos que nós temos no ProIuris e quais são os campos que a gente vai ter lá no nosso sistema.  Porque no nosso sistema de tarefas, você vai querer mais campos, né? Porque aí, por exemplo, a gente tem que...  É obrigado botar aí também. melhor, responsável padrão e grupo de trabalho padrão. É, vai ficar assim, essa opção. Mas eu vou passar para vocês quando a gente vai criar, qual que vai Como passa, pronto, pode ser.  Mas tem como a gente criar, sim, aqui na documentação. Isso aqui vai ser o prazo previsto, o prazo fatal, nosso sistema já está com essa ideia também, né, lá.  O nome vai ser o nome da tarefa.
+
+34:22 - Dr. Thiago Correia
+  Todo o resto, isso aqui é porque eles botam para preencher essa tanta coisa aqui. A não vai preencher isso aqui tudo, não.  Deixa aí sem, não o que, e funciona.
+
+34:28 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente não vai fazer controle por aqui, gente vai fazer controle pelo nosso.
+
+34:32 - Dr. Thiago Correia
+  Então, quando eu criar por aqui, é disso, como tem essa situação de código, pro iuris, se a gente cria por aqui, ele cria lá, ele já traz só, beleza.  dá para fazer. Aí a gente vai colocar tipo assim, então.
+
+34:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque aí é o tipo de tarefa do motor de distribuição, certo? Que seria só as tarefas vinculadas ao pro iuris.  Mas no caso, no tipo de módulo que você quer, vai entrar tudo dentro da controladoria, certo? É,
+
+35:00 - Dr. Thiago Correia
+  Eu penso em, eu não sei se, quando você fala controladoria, até para tirar dúvida, quando a está falando aqui de controladoria, isso aqui seria uma hierarquia, uma entidade própria?
+
+35:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É uma entidade própria, o responsável, pelo menos que assim, é o a não conhece muito, mas pelo que o Hyago tinha nos dito e a gente entendeu, controladoria é o setor geral de tarefas, que distribui tarefas.  Sim. Só que essas tarefas que são, por exemplo, como você falou, tarefas internas, a controladoria controla isso ou só o que é juridicamente, por exemplo?  Isso que deixou a nossa mente, por isso que a gente dividiu em duas etapas, entendeu? Hoje, o que ela controla é muito a parte do judicial, que é o que vai pro Iuris, que é o que o votor vai distribuir, por exemplo.
+
+35:44 - Dr. Thiago Correia
+  Mas quando eu coloco essas tarefas como algo mais amplo, não é nem que a controladoria vai ser responsável por elas, mas é porque a gente vai começar a registrar essas situações de administrativo para fins dos relatórios, das análises e tudo mais.  Então, nem todas...
+
+36:00 - Matheus Torquato
+  elas vão vir para o motor.
+
+36:01 - Dr. Thiago Correia
+  Aí, quando eu penso nessa questão de classe, por exemplo, é até por conta de classe ali, que seria uma categoria maior dentro das divisões das tarefas, dos tipos, seria já para isso, que quando a pessoa for clicar aqui para distribuir, ela vai, em vez de ver uma lista com 100 tipos de tarefas, que tem vários que não acessam judicial, ela clica ali nas que são judiciais e vai ter.  Aí eu vou detalhar melhor para vocês qual é essa ideia dessa parte do motor, deixa eu só avançar aqui já, aqui no motor, porque eu acho que isso pode até facilitar para vocês aí na conclusão dele, porque eu acho que hoje ainda não está bem fixada essa ideia.  Aqui a gente, quando coloca isso tudo, configuração para o motor, a gente mistura o que é a situação de configuração geral da coisa com o que é o motor em si.  Então, gente já começa aqui nessa parte da lista, como se... de alguma forma, o motor já estivesse fazendo essa distribuição para a pessoa aprovar.  Não seria exatamente isso, seria, por exemplo, uma primeira tela em que ele lista só isso aqui, que ele vai puxar, vou passar para vocês aqui, né?  Mas assim, ele só vai puxar o que é intimação e movimentação que o ProIuris registrou lá, então a gente só puxa de lá para cá, e tem um botãozinho para a pessoa, manualmente, tendo analisado o processo, falar bem assim, vou distribuir uma tarefa, não vou distribuir uma tarefa, e aí aqui, a pessoa quando clicar, ela veria tipo, vou distribuir uma tarefa, judicial, aí vai aparecer a lista de tarefas judiciais que está vindo do tipo, né?  Tipos, ela vai colocar inicial, agravo, emenda, ela vai escolher, aí daqui, uma vez que ela tenha marcado que vai ser feita alguma coisa, vai para esse segundo momento, se ela marcar arquivar ou alguma coisa assim, com o nome lá que está no ProIuris, quando é intimação...  ele dá a opção de arquivar. Quando é movimentação, ele dá a opção de marcar lido, que é o baixa, deu baixa, já viu.  Isso no ProIouris. Viria para essa segunda tela, que é todas as tarefas que a pessoa marcou que vai ser feita alguma coisa, que é uma etapa antes do motor rodar ainda.  Nessa parte aqui, ele vai identificar todas aquelas variáveis que vão ser usadas pelo motor. Então, daqui, qual é processo?
+
+38:27 - Matheus Torquato
+  Isso aqui está na informação daquela movimentação que veio do ProIouris, de qual caso é isso aqui, qual processo?
+
+38:33 - Dr. Thiago Correia
+  O cliente está aqui só para visual mesmo, mas qual é o tema? O tipo de tarefa? O tema está vinculado a qual é o caso, que o caso está vinculado no tema.
+
+38:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O tipo de tarefa a pessoa escolheu na mão.
+
+38:46 - Dr. Thiago Correia
+  Aquela informação, coletivo, individual, isso aqui está no registro do caso também, que a gente vai esperar para o ProIouris.  Se é complexo, se é urgente, a pessoa pode vir aqui alterar na mão, mas, ok, se aquele tipo de tarefa  daquele tema, tem um responsável exclusivo, não. A data fatal e a prevista configurada para aquele tipo de tarefa. E aqui ele atribui a pontuação.
+
+39:10 - Matheus Torquato
+  Aquela pontuação, né, que vai ser visto. Tudo isso antes, em um momento anterior.
+
+39:15 - Dr. Thiago Correia
+  Aí a pessoa vai, pô, distribuiu. Aí, nessa parte de distribuição, é quando o motor vai rodar isso aqui dentro das agendas e colocar.  Então, eu não sei como é que está o avanço dele 100% aí hoje, mas nos testes que eu tinha feito para passar para vocês aquela programação inicial dele, eu tinha feito nesse sentido, né?  Ele primeiro separa tudo, identifica o que é manualmente, depois ele identifica o que é as pontuações e as coisas, e no terceiro momento é que ele faz a distribuição com tudo isso já bem detalhado.  Mas a pessoa que vai clicar para enviar para a distribuição, porque a gente ficou com esse processo, né?
+
+39:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Sim. Sim. Aqui nessa primeira tela, ele puxa só o que está lá no ProIuris dentro daquela plataforma de referência, que não está marcado como baixado, como arquivado.  Vai puxar, está aqui. Chegou no sistema, tais coisas. A pessoa vai vir aqui, abrir o processo, decidir se ela vai colocar alguma coisa ou não, e o que ela vai colocar.
+
+40:18 - Dr. Thiago Correia
+  Aí daqui, nesse momento, o sistema já tem qual é o tipo de tarefa que a pessoa escolheu, e já tem qual é o tema.
+
+40:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Do tipo de tarefa e do tema, ele tem todas as outras variáveis.
+
+40:30 - Dr. Thiago Correia
+  Todas as outras variáveis, ele consegue puxar, porque isso aqui está na configuração.
+
+40:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Agora, por exemplo, essa parte de urgente, quem é que determina? Esse urgente tem lá na configuração do tipo de tarefa, já está construído...
+
+40:43 - Dr. Thiago Correia
+  Está baseado no motor.
+
+40:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Exato. Então o motor tem que rodar antes. O tipo de tarefa é uma hierarquia fora do motor, entendeu?
+
+40:52 - Dr. Thiago Correia
+  É que um tipo de tarefa como uma configuração do sistema, tipo de tarefa configurado do sistema. E lá dentro já tem essa...  Essa... Então, está aqui, se a temporalidade para essa tarefa é padrão urgente ou não, que o sistema vai usar ali.  Aí, nesse momento, a pessoa olhando, vai ter a lista aqui. Isso seria uma referência daquela determinada tarefa. Isso, ele puxa a variável padrão.  A pessoa olhando aqui, aqui é onde ela vai escolher o que vai ser pontuado pelo motor e o que vai ser distribuído.  Aqui, ainda antes do motor distribuir, vai ficar só aquelas que ela não marcou que não vai ser feito nada.  Só aquelas que marcou que vai ser feita alguma coisa. O motor pontuou e puxou as variáveis pela configuração padrão.  Aí, aqui a pessoa vai poder clicar e falar, ó, essa aqui, esse caso aqui, eu não acho que o urgente, que é o geral desse tipo de tarefa, aplica.  Eu acho que isso aqui vai ser um normal. A pessoa escolhe na mão, todas essas variáveis aqui, ela vai poder escolher na mão.  Tirando o tema e tipo, né, que ela já escolheu lá atrás. Todas essas outras aqui, ó, ela pode escolher na mão.  Não, essa tarefa específica, eu tomo a decisão... botão de não sei aí tá aqui configuradinho ela mexeu não mexeu ficou padrão ela quer que distribuir na hora que ela clica que é que o motor vai rodar e lançar nas agendas aí a terceira tela que seria conseguir fazer que seria a terceira tela que é só que né de e o histórico tempo foi distribuído para quem quando a gente vai enxugar toda essa parte do motor então vai ficar pouca coisa isso aqui eu acho que não é um tipo de tarefa para ser configurado um outro tipo de tarefa do sistema aí vai ter isso de poder ir para o iuris ou não é isso aqui não é um tipo de tema para o motor é o tipo de tema que a gente configurou para cá então quando a gente configura um tempo aqui nós estamos criando um tema para tudo do sistema né para isso aqui para fins de modelo de pasta para fins da distribuição dos casos que os casos vão ter que tá vinculado no tema né então é por isso que eu pensei dele eu vou deixar a referência visual lá E aí  Mas eu pensei de ficar aqui, como a configuração do sistema. Por que eu perguntei da hierarquia, porque se é algo que está vinculado só na controladoria, se a gente puxa para cá e daqui, a controladoria vai vir até aqui, o motor vai vir até aqui e pegar as referências daquele tipo de tarefa que vai ser distribuída.  Vem de lá para cá, é o contrário. Vem daqui para lá, vai daqui para lá. Entendi. É executável? Não sei se vocês me respondem.  É, a gente tem que avaliar essa parte.
+
+43:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas eu estou pensando já aqui, que, por exemplo, aí vai ficar as tarefas. Quando eu abrir a tarefa, já vai ter as tarefas que já são pré-definidas ali.  Mas quando a pessoa for criar uma tarefa, vai ter um botão. Vincula no ProJuris ou não vincula? vincula. Quais são os dados do ProJuris que é para fazer?  Esse, esse, esse, esse. fácil, se ficar mais fácil, para botar tudo que for criar de tarefa aqui, vai lá, não tem problema.
+
+43:54 - Dr. Thiago Correia
+  Se ficar mais fácil, pode deixar assim. Porque não tem problema aparecer lá. Lá no... configuração de tipo de tarefa, não tem problema estar lá, né, que a gente vai ter que configurar aquilo mesmo jeito que a vai que configurar lá, então o trabalho vai ser o mesmo, a gente vai ter que colocar as questões obrigatórias que eles pedem nesse sentido, então não tem problema aparecer lá, a gente só não vai usar lá, não problema.  Para essa parte, o que eu tinha pensado é isso, porque eu não sei como que estaria o motor, mas eu acho que talvez não tenha rodado 100% ainda, porque da forma que está construída aqui, parece que essas etapas estão um pouco misturadas, e aí pode estar dando dificuldade de execução em si, né, que aqui, por exemplo, a gente já vê a lista como se estivesse distribuído e a ideia é que primeiro a pessoa decida se vai ser distribuído ou não, entendeu, e depois ela revise se ela concorda com as regras gerais que foram puxadas ou não, e depois o motor distribui.  Tá, vai ficar 3, 4 telinhas só, mas eu vou... passar essa aí, essa referência, eu concluo ela até amanhã e passo setinho.  Tá bom. Da controladoria, além dessa questão do motor, acho que a gente já pode começar a trabalhar o... de vincular mesmo, isso aqui é tudo da tarefa, de vincular o Proiuris para cá.  A gente já tem a situação meio que pronta, né, mas deixar organizado já essa parte visual aqui. Eu deixei a ideia visual do que vai aparecer nessa abinha aqui, eu deixei...  dentro do caso. Isso, dentro do caso, né, para a gente vincular aquele processo judicial do Proiuris até aqui. Eu pensei já passar para vocês a ideia visual.  Então, vou mandar para vocês, está bem detalhado, estou fazendo daquele jeito que ficou bem detalhado, e, inclusive, já com o dicionário, né, então, ó, esse campo...  O que você está dizendo aqui, Thiago, onde é que eu acho?
+
+46:02 - Matheus Torquato
+  Vai estar aqui. Se é algo que a gente preenche no nosso sistema ou se é algo que puxa do proibido.  Já deixei destacado aí nesse sentido. Aí eu nem vou...
+
+46:12 - Dr. Thiago Correia
+  Isso aqui é mais a configuração visual. Eu nem vou gastar muito tempo em seus hoje nisso aqui, porque passando aí, se tiver qualquer dúvida, vocês me avisam.
+
+46:21 - Matheus Torquato
+  Mas estou deixando nesse sentido.
+
+46:25 - Dr. Thiago Correia
+  Isso aqui, essa parte que eu deixei em branco, é porque eu vou precisar da gente descobrir, porque eu não sei como que vai funcionar.  A gente está aqui trabalhando uma ideia de isso aqui vai para aquela lista que vai ser distribuída. Isso aqui eu vou pegar um caso, igual já está aqui hoje, vincular ao Proiores.  Vou pegar um caso que já existe lá no Proiores, um processo que já existe lá e vincular aqui. Esse aqui é para uma situação que hoje é muito manual, mas que eu gostaria de matar.  Quando tem um protocolo judicial hoje, de um processo novo, a gente precisa cadastrar na mão esse protocolo. processo novo no Proiores.  Só que a maioria dessas informações, qual é o cliente, o CPF, essas coisas e tudo, o nosso sistema aqui já tem, no caso da pessoa, né?  Então eu queria ver se dentro da API a gente consegue que quando for um protocolo novo judicial, ao invés de eu ter que ir lá no Proiores, alimentar as informações desse processo na mão, criar o processo judicial lá, ter que vir aqui e vincular, a gente conseguir daqui já abrir esse caso lá.  Aí a gente vai ter que alimentar os dados obrigatórios e tudo, Mas assim, daqui pra lá, entendeu? Quando for algo que não existe lá ainda, o processo, né?  Mas aí seria como...
+
+47:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  não tô pensando aqui. É porque assim, o protocolo... teria que criar o processo dentro do Proiores pra depois vincular a tarefa a ele, é isso?  Seria uma criação de processo. né? Nem vai ter tarefa, porque...
+
+48:00 - Dr. Thiago Correia
+  É aqui, tipo... Seria a camada acima da tarefa, seria a criação do processo mesmo, não isso?
+
+48:06 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, é a criação do processo judicial.
+
+48:09 - Dr. Thiago Correia
+  Na verdade, assim, quando a gente distribui um processo na justiça, protocolei agora um processo em qualquer tribunal. Ele sempre vai ter essa numeração aqui que é obrigatória, o Conselho Nacional.  Quando eu digito essa numeração, o sistema automaticamente pega várias informações que são obrigatórias para o sistema cadastrar isso aqui.  Quando isso aqui é cadastrado, aí ele vem e tem realmente um processo judicial novo aqui no Proiuris vinculado àquela pessoa.  aí dentro disso aqui é que o Proiuris vai alimentar as tarefas, os andamentos, é a partir desse registro do processo, né?  Então hoje, esse cadastro aqui de gerar esse novo registro de processo judicial é manual. As pessoas têm que vir e fazer.  Com a opção que o próprio sistema identifica o número do CNJ e puxa boa parte das coisas, sim, mas tem que fazer.  E É tão manual que o pessoal manda o PDF do protocolo na Justiça e as pessoas pegam e preenchem na mão, mandam no WhatsApp ainda.  É troço absurdo desse livro. Então, da forma que está aqui hoje, eu consigo pegar um caso que já existe e vincular aqui.  Mas eu não tenho essa opção de, daqui, criar um aqui no outro. Eu queria ver se a gente consegue, pela API, ter esse put aí.  Tá, consegui.
+
+49:31 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Na verdade, não vai ser um put, vai ser um post, né? Porque é para criar, não atualizá-lo, não isso?  Isso.
+
+49:39 - Dr. Thiago Correia
+  É, porque aí eu falei... Não, tranquilo.
+
+49:42 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É só para eu pensar aqui. É isso aí mesmo. Por exemplo, quando vocês criam, certo? Eu só vou ter que ver essa parte desse CNJ.  Porque eu não sei se na API eu consigo buscar todas as informações passando só o CNJ. CNJ, entendeu? Porque às vezes isso é uma parte, como é que eu posso dizer, do front-end deles, entendeu?  Não uma parte envolvendo a API. Aí eu vou ter que dar uma estudada. Talvez a gente consiga criar, certo?  Mas usar as informações do CNJ, que seria assunto e órgão, por exemplo, talvez a gente não consiga automaticamente. Vou dar uma olhada aqui.  Eu sempre vou dando uma olhada aqui pra ver se a gente consegue.
+
+50:26 - Dr. Thiago Correia
+  É, qualquer coisa, pra fazer isso aqui, vai ter que gerar esses cinco dados aqui não tem jeito. Na hora que vocês clicarem aqui nisso aqui vai abrir uma telinha que tem que gerar essas cinco informações.  Ainda vai ser menos manual do que é hoje.
+
+50:40 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, então beleza. Então se só o fato de eu criar e mandar pra eles ali, que já foi criado e eles conseguem preencher no nosso sistema, que, por exemplo, nome, CPF, dados, lá, lá, lá, do cliente, já seria a vinculação, não é isso?  Sim, sim. Que é vinculado nesse caso ao CNJ, não é isso? Sim. E até mesmo aí vou fazer
+
+51:00 - Dr. Thiago Correia
+  opção de, talvez, cria o sistema que pega os dados básicos que permite criar, cria, e depois ele lança outra tarefa, outra requisição, que ele complementa os dados a partir do que vai ter aqui, algo assim.  Mas a gente tem que ver o que realmente o sistema vai permitir nesse sentido.
+
+51:22 - Adavio Tittoni (adaviotittoni@gmail.com)
+  É, eu vou ter que dar uma estudada nessa parte, sabe? Do que ele pode trazer para nós ali. Mas assim, isso é mais tranquilo da gente resolver.  Dá para a gente fazer, Como eu já vou criar tarefa, em tese não muda muito a gente criar outra coisa.  Beleza.
+
+51:43 - Dr. Thiago Correia
+  Dessa parte aí do visual, vou passar para vocês detalhado, para vocês poderem ir rodando. Da parte do motor, é que eu queria ver se a gente consegue desenrolar esse negócio para semana que vem.  poder tirar esse pessoal disso aí.
+
+51:59 - Adavio Tittoni (adaviotittoni@gmail.com)
+  gente... A gente vai precisar daquele documento, talvez, das tarefas ali que a gente tinha solicitado só para a gente ter essa base.  Mas, assim, a gente já começa a implementar com base nesse documento que você nos enviar agora aí. Sim.
+
+52:14 - Matheus Torquato
+  Beleza.
+
+52:15 - Dr. Thiago Correia
+  Do financeiro, acabou pela correria, eu só preciso fixar mais alguns pontuzinhos, mas já dá para construir a ideia visual dessa aba aqui.  Seria aqui. Acho que já dá para a gente construir essa ideia visual, e esse eu já tinha andado um pouco mais, mas também vou concluir hoje, amanhã, e passo, que seria o que vai ficar registrado aqui e como.  Mas não vou conseguir, até provavelmente sexta, fazer o dicionário do que vai significar cada coisa, mas, pelo menos, a ideia visual dos registros para cá, de como isso aqui vai ficar, eu já consigo e já passo para vocês começarem também e desenrolando aos poucos, tem que ter esse mesmo sentido de...  de deixar sempre mais explicado possível, e até para mim poder fechar esses registros lá do financeiro, eu queria ver com vocês o que a gente consegue, de fato, para essa API do financeiro, dessa questão do Conta Azul e Aves, porque como que vai ser registrado tudo lá, isso eu já defini a regra, depois eu passo para vocês, está bem organizado já.  Mas a gente tem uma dificuldade hoje, que é, eu vou ter que mudar a forma que é registrado lá.  Aí eu queria ver se vocês conseguem confirmar, se pela API do Conta Azul que já está configurado, a gente consegue mudar alguns registros passados, para já ficar de uma forma mais correta dentro do que vai ser agora, que seria mudar a categoria financeira do lançamento e mudar o centro de custo, e vincular ele em um tipo de venda de serviço.  Essas são configurações. que o ponto azul existe lá, é qual é o item do serviço, qual é o serviço, qual é categoria de serviço, qual é a categoria financeira e qual é o centro de custo.  Porque hoje, o que está como categoria financeira, eu vou ter que transformar em centro de custo, para o registro ficar correto.  E o que está como centro de custo, o que está como centro de custo, eu vou ter que transformar em registro de serviço.  Então, para fazer manual vai ser impossível, mas se eu conseguir te passar assim, está aqui o registro de todos os registros do sistema, e o que vai mudar?  Esse aqui é...
+
+54:36 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Todos os registros eu nem preciso. O que eu preciso é, por exemplo, aqui dentro tem essa parte que se chama sei lá, conta dois.  Lembra que a gente teve aquele local ali? É que eu não lembro direitinho como é que é. Na hora que eu criava o usuário, ele caía num tipo e estava em outro local.  Então, seria mais ou menos isso. Davi estava nesse local aqui, e eu preciso que... mude para esse local aqui, porque a gente tem duas coisas.  Uma, primeiro, talvez a gente consiga mudar, que isso vai depender da estrutura do sistema deles, porque, por exemplo, uma venda em boleto é de um jeito, uma venda em cartão de crédito é outro.  Às vezes, eu não consigo atualizar, por exemplo, uma venda que já ocorreu de boleto, digamos. Eu estou dando um exemplo, mas não que seja isso.  Aí, o que a gente pode fazer? Às vezes, criar um novo registro, entendeu? Pegar um registro que estava cadastrado em uma coluna e cadastrá-lo novamente, só que na coluna certa.  Aí, talvez, na observação... Eu espero que a gente não precise fazer isso, porque tem a questão da conciliação desses lançamentos.  que eu ia dizer. Talvez a observação que a gente coloque foi na data tal, entendeu? Isso é eu não sei.  Depende da estrutura do software.
+
+55:50 - Dr. Thiago Correia
+  A dúvida vai ser mais se, por API, a gente consegue fazer esse tipo de alteração. Mas, na mão, eu sei que a gente consegue.  É por isso que eu me animo de, provavelmente, a gente conseguir.
+
+56:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Se for uma atualização dentro do próprio item, é dentro do item a atualização que você quer? Dentro do item.  Não, é em outro campo. Eu digo assim, outro menu. É dentro do próprio item ali. Dentro do próprio item.  Tem esse lançamento aqui que está registrado.
+
+56:17 - Dr. Thiago Correia
+  Tá, um extrato de movimentação.
+
+56:19 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Segoria tal e no centro de custo tal.
+
+56:22 - Dr. Thiago Correia
+  Eu posso, na mão, mudar ele. Entendeu?
+
+56:26 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Tá, então isso aí se chama... Fala para mim aí de novo o nome do caminho, só para eu ver ali.  Assim, aqui está o registro de um lançamento, né?
+
+56:39 - Dr. Thiago Correia
+  O lançamento financeiro, uma venda. Tá, mas fica em extrato de movimentações.
+
+56:46 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí é uma venda.
+
+56:47 - Dr. Thiago Correia
+  Isso, aqui eu estou vendo tudo o extrato. Conta Azul, isso aqui vai ser chamado de venda. É o nome que o sistema dá para isso aqui, é venda.  Isso aqui é vinculado.
+
+56:58 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso aqui é vinculado.
+
+57:00 - Dr. Thiago Correia
+  Um contrato, que é uma venda de serviço, e cada uma das parcelas, eles chamam o sistema de venda. Então, estou aqui dentro da venda.
+
+57:10 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Dentro da venda, consigo... Tem um put aqui, atualizar uma venda por ID. Vamos lá, que é o put, é a atualização.  O que eu consigo atualizar aqui nos campos? ID do cliente, ID do vendedor, número, data de venda, situação, que é em andamento, aprovado, faturado ou cancelado, observações, cliente solicitou entrega rápida, o exemplo, observações de pagamento, pagamento realizado em três parcelas, ID da natureza e versão da venda.  Isso é o que eu consigo na venda. Dentro aqui, tem aqui, condições de pagamento, tipo de pagamento, condições de pagamento, deixa eu ver tem mais alguma coisa.  Não. Então, em atualizar uma venda por ID, eu consigo só fazer isso, certo?
+
+58:00 - Dr. Thiago Correia
+  Mas dá uma olhada depois se tem alguma coisa específica que permita a gente alterar. É porque isso seria bem importante, porque quando a gente está falando de trazer para cá esses registros, o registro aqui, a gente vai configurar para já puxar do jeito correto novo.  E aí a gente vai precisar acabar criando duas situações, o que puxa da forma correta nova e o que puxa da forma correta antiga.  Porque aqui vai estar configurado para aparecer, tipo, aqui vai estar configurado para aparecer que tal cobrança, essa cobrança desse cara é registrada na categoria financeira tal.  E hoje a própria categoria é diferente. Então a gente precisaria ter tal cobrança, novo registro, registro antigo. Os temas precisariam ter duas configurações, entendeu?  Então a gente precisava ajustar, porque para aquilo tudo que já foi pago e morreu, é fácil, mas boa parte dos pagamentos são mensais, muita parcela.  Então a gente teria clientes... Obrigado. Obrigado. Obrigado. Obrigado. Será que é aqui em financeiro? Eu vou passar para você depois por escrito como que é esse registro aqui dentro, até para você conseguir identificar, mas o intuito da reunião era até para poder explicar qual que era a ideia dessa alteração.  E aí eu passo para você... O que precisaria mudar seria pegar as vendas que são assim e irem para assim.  Aí tem as formas que isso pode ser feito, mas aí eu te passo... Eu vou ter que dar uma estudada aqui para eu conseguir encontrar esse caminho.
+
+59:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E a gente ia precisar olhar na documentação, imaginei.
+
+59:37 - Dr. Thiago Correia
+  Vou dar uma lida, mas assim, provavelmente a gente vai conseguir contornar esse processo.
+
+59:43 - Adavio Tittoni (adaviotittoni@gmail.com)
+  A gente contorna o processo e faz ali dentro. Beleza.
+
+59:47 - Dr. Thiago Correia
+  Além disso, só tem mais uma dúvida que eu precisava entender com vocês para o financeiro, que é... Eu até tinha comentado com vocês, boa parte do que o financeiro tem aí, que a gente tem que...  resolver e tal, os diários que tinham passado das conciliações, sei o quê, isso não é uma questão exatamente, cara, que é o problema de a PI resolver, é o problema de a gente, quiser, fazer as conciliações das contas de uma forma mais automatizada.  E eu consegui, para boa parte das outras contas que o escritório tem, da PJ, fazer isso pelos próprios bancos.  Mas, infelizmente, o Conta Azul sumiu a parte que eu tinha escrito isso, tá? De outro arquivo. O Conta Azul e o Asa, deixa eu fechar aqui, porque nem precisa, mas, para explicar, o Conta Azul e o Asa, eles têm uma birra.
+
+1:00:33 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O Conta Azul é o nosso principal ARP, aqui, onde a gente registra tudo, e o Asa é o meio de recebimento que é mais efetivo hoje no mercado.
+
+1:00:41 - Dr. Thiago Correia
+  Eles estão brigados, o pessoal do Asa, os programadores, os dons do Asa, eles eram do Conta Azul, eles brigaram e saíram e criaram o Asa.
+
+1:00:50 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, são dois tipos de mercados que não se comunicam. Eles só fazem vinculação pela pluga. Que é um sistema terceiro, no caso.  Eles se odeiam, e e aí...
+
+1:01:00 - Dr. Thiago Correia
+  essas limitações, essas situações pela Fuga vão ter muitas limitações, mesmo assim. E eu não acho que a gente precise ter um registro.  Conta Azul e Asas, igual estava sendo construído ali, né? Eu acho que é, o sistema vai estar configurado para pegar do Conta Azul, pronto.  Só que a gente precisaria ter um caminho de estar lá no Asas, recebeu, a gente já tem isso hoje, que é, tem essa venda registrada aqui no Conta Azul, só que a gente tem que pegar essa conciliação manual, extrato, puxa, vem, o Conta Azul faz algumas identificações, a pessoa, o financeiro vai lá e tem que desgastar 200 recebimentos do mês e fala, ó, esse é dessa venda, esse é dessa venda, esse é dessa venda.  Baseado no Asas, né? É, baseado no que vem do extrato do Asas, é arcaico mesmo. Aí tem pela pluga hoje já, as opções de eu poder falar bem assim, quando gerar uma venda no Conta Azul, que tiver registrado com recebimento do Asas dentro de tais critérios, vai...  criar uma nova cobrança no Asas. Isso a pluga já faz. Quando essa cobrança no Asas for recebida, dar baixa nessa cobrança no ponto azul.  Isso é o que a gente precisa nesse momento. Até já deixei meio que estruturado de forma visual como que é esse fluxo de identificação entre eles.  Só que eu não fiz na prática, porque para que funcione exatamente bem, precisa, eles chamam de HTTP request. É uma API.
+
+1:02:35 - Adavio Tittoni (adaviotittoni@gmail.com)
+  O HTTP request é a forma de a gente solicitar a API.
+
+1:02:38 - Dr. Thiago Correia
+  Eu não fazia, o que era isso? tem precisa de uma HTTP request. E aí, por exemplo, a nossa API do ponto azul já está para cá, a API do Asa também já está para cá.  Seria uma outra situação. E era um armengo. Eu acho que a gente poderia tentar ver se esse meio do caminho dessa comunicação ao invés de pensar pela curva, que não seria uma situação ruim.  de ter que pagar e tudo lá. Mas esse meio do caminho é o nosso sistema. Aí não é que o sistema...  Na realidade, não dá para ser o nosso sistema.
+
+1:03:11 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Assim, recapitulando, vai ser o nosso sistema, mas não é o nosso sistema, entendeu? Mas pode ficar tranquilo.
+
+1:03:18 - Dr. Thiago Correia
+  Você vai ver dentro do nosso sistema.
+
+1:03:20 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Porque qual seria a ideia? Vou ter que conectar os dois.
+
+1:03:24 - Dr. Thiago Correia
+  Gerei ali no painel financeiro do caso, gerei que tem que pagar uma entrada. Ele já tem todas as configurações do que ele faz no Contazor.  O registro lá. Aí o sistema vai identificar, tem um registro no Contazor, tal e tal jeito, que está informado que o recebimento está no Asas.  Ele vai lá no Asas e registra. E aí eu descobri que tem essa opção já, que é o quê?  No Asas, no Contazor, existe lá o número da venda, o número do contrato, ID interno, de cada parcela. No Asas, existe essa opção de você poder indicar essa parcela aqui, o ID externo dela, o sistema interno é tal.  Então... ... ... O Asas registra o recebimento, informa o sistema, o sistema pega e identifica essa edital venda do Conta Azul e dá a baixa lá.  E aí, isso é só o nosso tema fazendo essa interligação entre os dois. Mas, na prática...
+
+1:04:14 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Só para eu entender. Hoje, por exemplo, porque a maior dificuldade que eu vejo aqui não é nem no recebimento, certo?  É na criação da Conta Azul. Porque, por exemplo, hoje, quando eu crio na Conta Azul uma venda, eu posso adicionar o Asas como um caminho?  Ou só quando o pluga funciona? Pode.
+
+1:04:34 - Dr. Thiago Correia
+  Como o Conta Azul é um ERP, ele tem a conta do outro lado, mas ele é um ERP financeiro.  Então, eu posso receber por qualquer conta. Lá, eu posso ter o registro de que eu tenho aquele valor para receber e posso indicar receber de qualquer conta, de qualquer meio de pagamento.  Aí, a gente vai lá e marca. Então, a gente pode fazer o seguinte.
+
+1:04:52 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Quando... Vou pensar aqui. Quando você cria uma conta, uma venda, dentro do Conta Conta Azul relacionado ao Asas, vou ver se é possível na Conta Azul, porque a gente tem duas opções.  Uma, o Webhook, que o Webhook é quando eu estou escutando, então acionado dispara. Ou pode ser por API também, que provavelmente é o que a Conta Azul deve ter.  Eu tenho que vir ali na criação da venda. Porque tem que ser o seguinte, criou a venda, eu tenho que vir lá do sistema por fora, por exemplo, seria, no caso, o que a gente vai usar agora de integração, provavelmente é o N8N, porque o Hyago já tem instalado um ali para nós.  Então, a gente vai buscar no Conta Azul todas as contas que foram geradas ontem, ou hoje, por exemplo, 6 horas da noite, e criar no Asas.  Só que aí, é isso que é ruim de se fazer quando a gente não tem o Webhook automático na Conta Azul.  Porque imagine que o seguinte, alguém foi lá, gerou na Conta Azul para o Asas, e quer agora a conta.  Ela vai ter que entrar no Asas se a gente trabalhar com API, porque o Asas não deixa eu ficar o tempo...  todo, chamando ele via API, entendeu? Ele me bloqueia. Ele tem um webhook, pra me dizer assim, uma nova conta foi criada no Asas, sabe?  Eu tinha estruturado esse fluxo aqui, que era tipo assim, né?
+
+1:06:16 - Dr. Thiago Correia
+  Aqui depende do todo esse envolvimento.
+
+1:06:21 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Quando a gente vai fazer aliar o recebimento do nosso sistema, pra gerar uma conta azul, ele vai acessar essa opção, gera contrato.
+
+1:06:27 - Dr. Thiago Correia
+  Aí eu deixei tudo depois bem detalhadinho, mas, né? Onde que vai as informações e tal? vou passar depois. Mas ele vai gerar um contrato na conta azul, que gera uma venda no conta azul, e aí ele identifica, ó, essa venda é pra receber no Asas.  Aí aciona o gatilho, Então gera cobrança no Asas.
+
+1:06:48 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí, essa gerar cobrança no Asas, quando você coloca no conta azul, automaticamente no Asas aparece essa cobrança, ou o seu funcionário tem que entrar no Asas e criar...  Então, aí boa. É isso que eu precisava entender. Então, na realidade, quem tem que me avisar alguma coisa na hora da construção é o nosso sistema, não a Conta Azul.  Então, quando eu entrar no nosso sistema, eu tenho que procurar, quando eu for criar uma nova venda, se o cara botar asas, eu disparo um webhook para o Asas e crio lá dentro do Asas.  E aí, no nosso sistema, eu vinculo o webhook de retorno. Porque aí, quando alguém pagar no Asas, eu sei qual é a conta que eu criei no nosso sistema vinculado ao Asas e eu consigo obter o webhook.  Aqui é o meu momento nerd aqui porque se não eu não consigo encaixar os espaços. Mas, para isso, primeiro, ele tem que também criar o registro no Conta Azul.
+
+1:07:49 - Dr. Thiago Correia
+  É, mas aí, porque é do nosso sistema que eu crio na Conta Azul, entendeu?
+
+1:07:54 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, assim, a única diferença é que eu vou ter que quando eu for criar na Conta Azul e tiver que  tiver o Asas, além de eu adicionar na conta azul, eu também adicionarei no Asas, entendeu?
+
+1:08:05 - Dr. Thiago Correia
+  Então, eu tenho uma bifurcação, por exemplo, quando tem o Asas.
+
+1:08:09 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Quando só é a conta azul para gerar os próprios boletos ou cartões, o cartão de crédito é que é no Asas, né?  Para gerar os boletos aqui diretamente na conta azul, eu não preciso acionar o Asas, entendeu?
+
+1:08:21 - Dr. Thiago Correia
+  É, seria basicamente isso aí, porque aí ele vai puxar e puxar de lá.
+
+1:08:25 - Adavio Tittoni (adaviotittoni@gmail.com)
+  E aí é baseado na conta de recebimento, né? Então, por exemplo, hoje, e isso não pode se mudar, tá?  Eu acho assim, pelo menos eu concordo que seja esse o processo, que hoje nós não devemos deixar para a pessoa conseguir criar contas de recebimento pelo nosso sistema, por enquanto, pelo menos.  Porque a gente precisa criar na conta azul a conta de recebimento, correto? Sim, sim.
+
+1:08:52 - Dr. Thiago Correia
+  Isso já está configurado nos temas nossas contas todas da PJ. Acho que é mais tranquilo. Dá para só puxar discussão.
+
+1:09:00 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Então, hoje, quando a gente for fazer uma venda, o cara vai clicar para fazer a venda e vai ter que escolher a conta de recebimento.  Então, Asas é uma conta de recebimento.
+
+1:09:09 - Dr. Thiago Correia
+  Ela não existe no Asas, mas vocês fazem a conciliação.
+
+1:09:13 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, é um banco. Mas, por exemplo, o Santander, quando você gera aí, automaticamente, ele já gera no Santander, não gera?  Não, porque ele...
+
+1:09:22 - Dr. Thiago Correia
+  Por sacanagem, ele não gera. Só que a conciliação é automática. Então, ele sabe que tem uma venda de um cara lá no Santander que tem uma venda aqui no Conta Azul.  Na hora que paga lá, o Santander sozinho envia o extrato. Aí, ele fala, olha, essa venda é do cliente tal ou de tal valor que foi pago aqui.  É essa tal venda do Conta Azul e dá baixa. Entendeu? Então, não é só o Gerar que dá trabalho.
+
+1:09:45 - Adavio Tittoni (adaviotittoni@gmail.com)
+  já dá um trabalho caramba.
+
+1:09:46 - Dr. Thiago Correia
+  Mas, o trabalho maior é a conciliação mês a mês. Porque você tem que pegar o extrato manual do Conta Azul, jogar, ou do Asas, jogar no Conta Azul para sair caçando bem assim, Receber...  Deu essa parcela. Opa, isso aqui é da venda de não sei quem. Você vincula e concilia. Para ter o registro certinho.  Então, tal cliente está aqui que não foi pago ainda. Mas ele já pagou lá naquela conta. Você tem que vir e fazer esse manual de falar que está pago lá.  Então, se o sistema tem a referência de qual é a venda do Conta Azul daquela parcela, na hora que o Asas dá baixa, eu vi quando eu estava olhando, eu vi que ele tem isso.  Alterou o status do pagamento lá. Lá deu como pago. Ele puxa para cá. E aí, informa o que está pago.  Então, é basicamente isso. Aí, pode até ser que dentro do nosso nível atual hoje de prioridades e de tudo mais, a gente faça isso primeiro via pluga e tem todo esse custo.  Só que como já tinha toda essa questão de request, não sei o que e tal, eu falei, cara, eu vou gastar o triplo tempo que eles vão gastar com isso aqui e provavelmente não vai ficar bom.  Então, se tiver como já ser pelo nosso sistema e evitar esse externo, beleza. Mas se você... Conseguir pelo pluga, fazendo, às vezes, trabalhando a duas mãos com os nossos sistemas, fazer funcionar também, beleza, é um curso muito tranquilo da gente ter dentro do trabalho que isso gera hoje manual, mas aí vai, é a liberdade criativa sua de ver como ele faz.  Não é, assim, eu acho que a construção hoje fica melhor começar por lá e daqui a uns meses a gente volta e vincula direto para o nosso, alguma coisa assim, não teria problema, entendeu?  Porque, Thiago, para a gente conseguir desenrolar o resto, o trabalho que isso aqui vai dar, a gente consegue botar para rodar dessa forma pelo pluga, para mês que vem vocês não estarem mais fazendo essa conciliação manual, bota para rodar, daqui dois, três vezes a gente volta e tira do pluga e traz para dentro, beleza.  Depende muito do trabalho que cada uma dessas situações vai gerar, né, mas são opções válidas.
+
+1:11:53 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Boa, beleza, dá para a gente fazer, tranquilo. Já ficou avançado demais.
+
+1:12:00 - Dr. Thiago Correia
+  mais para mim dessa parte, aí eu falei, bicho, isso aqui não vai dar certo.
+
+1:12:04 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Mas aí é tranquilo, faz parte do processo para nós aqui, mas dá para a gente construir, é que eu normalmente, às vezes parece que eu estou assim, é porque eu fico pensando em como é que eu vou conseguir montar, entendeu?  Mas normalmente dá para a gente construir sim, às vezes são frentes que a gente tem que atingir, mas agora a priori então a nossa responsabilidade vai se girar em torno do motor até a semana que vem, semana que vem o motor e aí a gente parte para essa parte financeira, aí dá para a gente fazer sim essa integração direto com o ASAS, eu só estou pensando no retorno, o retorno é que eu vou ver como é que eu construo.
+
+1:12:38 - Dr. Thiago Correia
+  Beleza, eu vou pegar o estudo, eu discuti isso aí 10 dias com o GPT, discutindo com ele, eu vou pegar um resumo do que ele diz que tem de opção nessas situações, ele já olhou lá, a referência que dá para usar no ASAS, no Contador S, aí eu faço para vocês porque você joga também com o GPT aí e vê o...  aí é claro que vocês usam mais avançado e pede para ele direcionar também para ajudar do jeito que dá mas até amanhã de noite eu vou arredondar esses arquivos aqui passo para vocês pronto, fechado aí por enquanto a gente vai trabalhando em cima do motor eu vou pegar a transcrição aqui da reunião também com base na transcrição eu consigo fazer alguns ajustes fechou para hoje era isso só assim mas a gente vai se comunicando mais um pouquinho ali tá bom?  para a gente poder pegar direitinho o processo e eu vou te mandando mas se conseguir mesmo mandar a documentação já me ajuda aí eu já vou estudando algumas outras coisas que eu tenho visto também aqui que você me passou agora que agora vai ser muito da documentação o da controladoria que é o das tarefas também é o que já está mais perto de eu ficar 100% o que eu preciso mandar e aí eu acho que eu concluo até amanhã cedinho eu concluo e aí eu te passo que aí você já começa a seguir em comum  começar a operar a parte lá do motor.
+
+1:14:02 - Adavio Tittoni (adaviotittoni@gmail.com)
+  Isso, que é o do motor também, que é a prioridade agora. É porque os dois andam meio... A gente vai unificar os dois e eles vão andar meio que em paralelo agora.
+
+1:14:13 - Dr. Thiago Correia
+  Mas pode esperar até amanhã cedo eu mando da parte da controladoria, porque só falta eu fixar ali a última telinha do motor e uma observação em outra, então é mais tranquilo que eu já te passar.  E aí, do financeiro, vou arredondar aqui algumas ideias e passo para vocês até a sexta-feira. Beleza, fechado então. Fechou então, gente.  Valeu. Obrigadão. Tchau, tchau.

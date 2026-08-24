@@ -87,6 +87,20 @@ function isManualEvent(e: CaseEvent): boolean {
   return MANUAL_ACTIONS.has(e.action) && !!(e.diff as { manual?: boolean } | null)?.manual;
 }
 
+// Nomes dos campos que mudaram no evento de campos canônicos. Reunião
+// 2026-08-19 (Thiago): o feed dizia só "Dados do serviço atualizados", sem
+// revelar O QUÊ mudou. O `diff` do evento já é o patch — só faltava mostrá-lo.
+// Humaniza a chave ("numero_fies" → "Numero fies") e corta em 4 + "+N".
+function describeChangedFields(d: Record<string, unknown> | null): string {
+  const keys = d ? Object.keys(d).filter((k) => k !== "manual") : [];
+  if (keys.length === 0) return "";
+  const nomes = keys.slice(0, 4).map((k) => {
+    const s = k.replace(/_/g, " ").trim();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  });
+  return `: ${nomes.join(", ")}${keys.length > 4 ? ` +${keys.length - 4}` : ""}`;
+}
+
 // Rótulo legível de cada `action` de system_case_events (espelha o do CaseTimeline).
 function renderEventLabel(e: CaseEvent): string {
   const d = (e.diff as Record<string, string> | null) ?? null;
@@ -108,7 +122,7 @@ function renderEventLabel(e: CaseEvent): string {
     case "checklist_inconsistente":
       return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "·"}" da etapa ${d?.stage_slug ?? "·"} foi desmarcado após avanço`;
     case "canonical_fields_updated":
-      return "Dados do serviço atualizados";
+      return `Dados do serviço atualizados${describeChangedFields(d)}`;
     case "vinculado_a_tema":
       return "Caso transferido para outro tema";
     case "duplicado_em_tema":

@@ -44,6 +44,18 @@ function isManualEvent(e: CaseEvent): boolean {
   return MANUAL_ACTIONS.has(e.action) && !!(e.diff as { manual?: boolean } | null)?.manual;
 }
 
+// Nomes dos campos que mudaram no evento de campos canônicos (reunião
+// 2026-08-19): o feed dizia só "Dados do serviço atualizados", sem dizer O QUÊ.
+function describeChangedFields(d: Record<string, unknown> | null): string {
+  const keys = d ? Object.keys(d).filter((k) => k !== "manual") : [];
+  if (keys.length === 0) return "";
+  const nomes = keys.slice(0, 4).map((k) => {
+    const s = k.replace(/_/g, " ").trim();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  });
+  return `: ${nomes.join(", ")}${keys.length > 4 ? ` +${keys.length - 4}` : ""}`;
+}
+
 function renderEventLabel(e: CaseEvent): string {
   const d = (e.diff as Record<string, string> | null) ?? null;
   switch (e.action) {
@@ -72,7 +84,7 @@ function renderEventLabel(e: CaseEvent): string {
     case "checklist_inconsistente":
       return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "·"}" da etapa ${d?.stage_slug ?? "·"} foi desmarcado após avanço`;
     case "canonical_fields_updated":
-      return "Dados do serviço atualizados";
+      return `Dados do serviço atualizados${describeChangedFields(d)}`;
     case "note_added":
       return `Nota adicionada${d?.note_preview ? `: ${d.note_preview}` : ""}`;
     case "vinculado_a_tema":

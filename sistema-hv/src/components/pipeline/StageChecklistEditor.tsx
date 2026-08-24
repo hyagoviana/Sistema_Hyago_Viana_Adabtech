@@ -14,7 +14,7 @@ import {
   useSetChecklistDefAssignees,
   useUpdateChecklistDef,
 } from "@/hooks/useChecklist";
-import { useUsers } from "@/hooks/useUsers";
+import { useAssignableUsers } from "@/hooks/useUsers";
 
 type Def = {
   id: string;
@@ -91,7 +91,7 @@ export function StageChecklistEditor({
   canEdit: boolean;
 }) {
   const { data: defs, isLoading } = useChecklistDefs(serviceTypeId, stageSlug);
-  const { data: users } = useUsers();
+  const { data: users } = useAssignableUsers();
   const createMut = useCreateChecklistDef();
   const updateMut = useUpdateChecklistDef();
   const deleteMut = useDeleteChecklistDef();

@@ -56,6 +56,22 @@ export function useUsers() {
   });
 }
 
+// Usuários ATRIBUÍVEIS — só quem está ativo no sistema (ACTIVE ou INVITED).
+// Reunião 2026-08-19 (Thiago): os seletores de responsável traziam TODOS os
+// usuários, inclusive os ARCHIVED/SUSPENDED herdados do ProJuris, poluindo a
+// lista na hora de criar tarefa. A gestão de usuários (UsersAdmin) continua com
+// `useUsers()` — lá arquivado/suspenso PRECISA aparecer. Mesma queryKey ⇒ o
+// cache é compartilhado; o recorte acontece só neste observador (`select`).
+export function useAssignableUsers() {
+  const fn = useServerFn(listUsersFn);
+  return useQuery({
+    queryKey: ["system-users"],
+    queryFn: () => fn(),
+    staleTime: 5 * 60 * 1000,
+    select: (rows) => rows.filter((u) => u.status === "ACTIVE" || u.status === "INVITED"),
+  });
+}
+
 export function useInviteUser() {
   const fn = useServerFn(inviteUserFn);
   const qc = useQueryClient();

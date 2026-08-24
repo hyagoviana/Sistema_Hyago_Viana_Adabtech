@@ -1,5 +1,5 @@
 import { CalendarDays, Check, Plus, Trash2, User } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/hv/primitives";
@@ -28,7 +28,8 @@ import {
   useSetCaseTaskStatus,
   useDeleteCaseTask,
 } from "@/hooks/useDossie";
-import { useUsers } from "@/hooks/useUsers";
+import { useAssignableUsers } from "@/hooks/useUsers";
+import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
 
 const PRIORITY_TONE: Record<string, "neutral" | "navy" | "warning" | "danger"> = {
   BAIXA: "neutral",
@@ -49,20 +50,16 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 // ---------------------------------------------------------------- Tarefas ----
-const TASK_TYPES = [
-  { value: "GERAL", label: "Geral" },
-  { value: "DOCUMENTO", label: "Documento" },
-  { value: "CONTATO_CLIENTE", label: "Contato com cliente" },
-  { value: "PROTOCOLO", label: "Protocolo" },
-  { value: "AUDIENCIA", label: "Audiência" },
-  { value: "ANALISE", label: "Análise" },
-  { value: "FINANCEIRO", label: "Financeiro" },
-  { value: "JUDICIAL", label: "Judicial" },
-];
+// O "tipo" da tarefa era uma lista fixa no código, que só prefixava o título com
+// [Judicial]. Doc "21.08 _ Controladoria": o tipo passa a vir do CATÁLOGO ÚNICO
+// do sistema (Configurações > Tipos de tarefa), gravado em task_type_id — o que
+// também alimenta o filtro por tipo nos gatilhos de workflow e a pontuação do
+// motor de distribuição.
+const SEM_TIPO = "__sem_tipo__";
 
 function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean }) {
   const { data: tasks, isLoading } = useCaseTasks(caseId);
-  const { data: users } = useUsers();
+  const { data: users } = useAssignableUsers();
   const create = useCreateCaseTask(caseId);
   const setStatus = useSetCaseTaskStatus(caseId);
   const del = useDeleteCaseTask(caseId);
@@ -73,7 +70,8 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
   const [priority, setPriority] = useState("MEDIA");
   const [assigneeId, setAssigneeId] = useState<string>("__none__");
   const [dueDate, setDueDate] = useState("");
-  const [taskType, setTaskType] = useState("GERAL");
+  const [taskTypeId, setTaskTypeId] = useState(SEM_TIPO);
+  const { data: taskTypes } = useTaskTypesCatalog({ estado: "ativos" });
 
   const activeUsers = (users ?? []).filter((u: { status: string }) => u.status === "ACTIVE");
 
@@ -83,7 +81,7 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
     setPriority("MEDIA");
     setAssigneeId("__none__");
     setDueDate("");
-    setTaskType("GERAL");
+    setTaskTypeId(SEM_TIPO);
   }
 
   async function add() {
@@ -91,10 +89,11 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
     try {
       await create.mutateAsync({
         case_id: caseId,
-        title: `[${TASK_TYPES.find((t) => t.value === taskType)?.label ?? taskType}] ${title.trim()}`,
+        title: title.trim(),
         priority,
         assignee_id: assigneeId !== "__none__" ? assigneeId : null,
         due_date: dueDate || null,
+        task_type_id: taskTypeId !== SEM_TIPO ? taskTypeId : null,
       });
       resetForm();
       setDialogOpen(false);
@@ -103,6 +102,12 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
       toast.error(e instanceof Error ? e.message : "Erro ao criar tarefa");
     }
   }
+
+  const nomeDoTipo = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of taskTypes ?? []) m.set(t.id, t.nome);
+    return m;
+  }, [taskTypes]);
 
   function daysUntilDue(d: string | null) {
     if (!d) return null;
@@ -133,14 +138,15 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Tipo</Label>
-                <Select value={taskType} onValueChange={setTaskType}>
+                <Select value={taskTypeId} onValueChange={setTaskTypeId}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TASK_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
+                    <SelectItem value={SEM_TIPO}>Sem tipo</SelectItem>
+                    {(taskTypes ?? []).map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -285,6 +291,9 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                       )}
                     </div>
                   </div>
+                  {t.task_type_id && nomeDoTipo.get(t.task_type_id) && (
+                    <Badge tone="neutral">{nomeDoTipo.get(t.task_type_id)}</Badge>
+                  )}
                   <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
                     {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}
                   </Badge>

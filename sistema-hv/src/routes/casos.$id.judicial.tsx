@@ -9,7 +9,7 @@
 // já barra os RPCs com requireJudicial — a UI é só conforto.
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { Gavel, Link2, Lock, Pencil, RefreshCw, ScrollText } from "lucide-react";
+import { Gavel, Link2, Lock, Pencil, RefreshCw, ScrollText, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -27,9 +27,12 @@ import {
   useSetCaseHonorariosJudicial,
   useSetCaseProjurisLink,
   useSyncCaseJudicial,
+  useAndamentoPins,
+  usePinAndamento,
 } from "@/hooks/useJudicial";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { usePodeEditar } from "@/hooks/usePermissions";
+import { useEnviarInicialParaDistribuicao } from "@/hooks/useDistribuicaoStaging";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 
 export const Route = createFileRoute("/casos/$id/judicial")({
@@ -69,9 +72,14 @@ function CasoJudicial() {
   const { id } = useParams({ from: "/casos/$id/judicial" });
   const { podeVer, isLoading: sigiloLoading } = usePodeVerJudicial(id);
   const podeEditar = usePodeEditar("controladoria"); // M5 — gate de EDIÇÃO do vínculo
+  // "Distribuir inicial" e a marcação de andamento gravam pelo módulo
+  // OPERACIONAL (rpc/distribuicao-staging.ts e rpc/judicial.ts). A UI precisa
+  // usar o MESMO gate do servidor, senão mostra botão que devolve 403.
+  const podeOperacional = usePodeEditar("operacional");
   const { data: caso } = useCase(id);
   const { data: judicial, isLoading } = useCaseJudicial(id, podeVer);
   const sync = useSyncCaseJudicial(id);
+  const enviarInicial = useEnviarInicialParaDistribuicao();
 
   const [linkOpen, setLinkOpen] = useState(false); // M5 — dialog de vincular/editar
 
@@ -136,6 +144,31 @@ function CasoJudicial() {
           </h1>
         </div>
         <div className="flex gap-2">
+          {/* Doc 21.08 (menu Judicial): "botão que leva à página de distribuição de
+              tarefa do tipo [INICIAL]" — o caso entra na fila de análise da
+              controladoria (tela "Andamentos pendentes" do motor). */}
+          {podeOperacional && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={enviarInicial.isPending}
+              onClick={async () => {
+                try {
+                  const r = await enviarInicial.mutateAsync({ caseId: id });
+                  toast.success(
+                    r.jaExistia
+                      ? "Esta inicial já está na fila da controladoria"
+                      : "Inicial enviada para a controladoria (Andamentos pendentes)",
+                  );
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha ao enviar inicial");
+                }
+              }}
+            >
+              <Send size={14} className="mr-1.5" />
+              {enviarInicial.isPending ? "Enviando…" : "Distribuir inicial"}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setAndamentosOpen(true)}>
             <ScrollText size={14} className="mr-1.5" /> Ver andamentos
           </Button>
@@ -255,47 +288,11 @@ function CasoJudicial() {
             provisionados={judicial.honorariosProvisionadosCentavos ?? null}
           />
 
-          {/* Tarefas do processo (G1/G3). */}
-          <div className="card-hero p-6">
-            <Eyebrow>Tarefas do processo</Eyebrow>
-            {tarefas.length === 0 ? (
-              <p className="mt-3 text-[13px] text-muted-foreground">
-                Nenhuma tarefa espelhada. Clique em “Atualizar do ProJuris”.
-              </p>
-            ) : (
-              <ul className="mt-4 divide-y divide-[var(--border)]">
-                {tarefas.map((t) => (
-                  <li key={t.id} className="py-3 flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="text-[14px] font-medium text-[var(--navy)]">
-                        {t.tipo_nome || t.tipo_codigo || "Tarefa"}
-                      </div>
-                      <div className="text-[12px] text-muted-foreground mt-0.5">
-                        {t.responsavel_nome
-                          ? `Responsável: ${t.responsavel_nome}`
-                          : "Sem responsável"}
-                        {(t.prazo_previsto || t.prazo_fatal) && (
-                          <span className="ml-2">
-                            · Prazo previsto: {fmtDate(t.prazo_previsto)} · Fatal:{" "}
-                            {fmtDate(t.prazo_fatal)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Badge
-                      className={
-                        t.concluida
-                          ? "bg-green-600 text-white"
-                          : "bg-[var(--muted)] text-muted-foreground"
-                      }
-                    >
-                      {t.situacao ?? (t.concluida ? "Concluída" : "Em aberto")}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {/* Doc 21.08 (menu Judicial): "Andamentos e tarefas" numa linha
+              cronológica única — no ProJuris são menus separados. Mostra 10 e
+              abre o resto com [Ver mais]; cada andamento pode ser promovido
+              para a linha do tempo da ficha do caso. */}
+          <AndamentosETarefas caseId={id} tarefas={tarefas} podeEditar={podeOperacional} />
         </>
       )}
 
@@ -577,5 +574,161 @@ function ProjurisLinkDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ANDAMENTOS E TAREFAS — linha cronológica única (doc 21.08, menu Judicial).
+// "por padrão limitar a visualização inicial a no máximo 10" + [Ver mais].
+// Por andamento: opção de marcar se também aparece na linha do tempo da ficha.
+// ---------------------------------------------------------------------------
+const PAGINA = 10;
+
+type ItemLinha = {
+  key: string;
+  kind: "andamento" | "tarefa";
+  data: string | null;
+  titulo: string;
+  sub: string | null;
+  badge: string | null;
+};
+
+// O ProJuris devolve data em formatos variados: ISO, dd/mm/aaaa ou epoch em ms.
+function normalizaData(v: unknown): string | null {
+  if (v == null || v === "") return null;
+  const txt = String(v);
+  if (/^\d{4}-\d{2}-\d{2}/.test(txt)) return txt.slice(0, 10);
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(txt)) {
+    const [d, m, a] = txt.split("/");
+    return `${a}-${m}-${d}`;
+  }
+  const n = Number(txt);
+  if (Number.isFinite(n) && n > 1000000000) return new Date(n).toISOString().slice(0, 10);
+  return null;
+}
+
+function AndamentosETarefas({
+  caseId,
+  tarefas,
+  podeEditar,
+}: {
+  caseId: string;
+  tarefas: JudTask[];
+  podeEditar: boolean;
+}) {
+  const [mostrar, setMostrar] = useState(PAGINA);
+  // Antes os andamentos só existiam dentro do modal; agora a página carrega.
+  const { data: andamentos, isFetching } = useCaseJudicialAndamentos(caseId, 50, 0, true);
+  const { data: pins } = useAndamentoPins(caseId);
+  const pinar = usePinAndamento(caseId);
+
+  const marcados = new Set((pins ?? []).map((p) => p.andamento_key));
+
+  const linhas: ItemLinha[] = [
+    ...(andamentos?.items ?? []).map((rec, idx) => {
+      const desc = String(
+        rec.descricao ?? rec.texto ?? rec.movimento ?? JSON.stringify(rec).slice(0, 160),
+      );
+      const data = normalizaData(rec.data ?? rec.dataAndamento ?? rec.dataMovimento);
+      const codigo = rec.codigo ?? rec.codigoAndamento ?? rec.id;
+      return {
+        key: codigo != null ? `and:${String(codigo)}` : `and:${data ?? idx}:${desc.slice(0, 40)}`,
+        kind: "andamento" as const,
+        data,
+        titulo: desc,
+        sub: null,
+        badge: null,
+      };
+    }),
+    ...tarefas.map((t) => ({
+      key: `task:${t.id}`,
+      kind: "tarefa" as const,
+      data: t.prazo_previsto ?? t.prazo_fatal ?? null,
+      titulo: t.tipo_nome || t.tipo_codigo || "Tarefa",
+      sub:
+        (t.responsavel_nome ? `Responsável: ${t.responsavel_nome}` : "Sem responsável") +
+        (t.prazo_previsto || t.prazo_fatal
+          ? ` · Prevista: ${fmtDate(t.prazo_previsto)} · Fatal: ${fmtDate(t.prazo_fatal)}`
+          : ""),
+      badge: t.situacao ?? (t.concluida ? "Concluída" : "Em aberto"),
+    })),
+  ].sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));
+
+  const visiveis = linhas.slice(0, mostrar);
+
+  return (
+    <div className="card-hero p-6">
+      <div className="flex items-center justify-between">
+        <Eyebrow>Andamentos e tarefas</Eyebrow>
+        {isFetching && <span className="text-[12px] text-muted-foreground">Carregando…</span>}
+      </div>
+
+      {linhas.length === 0 ? (
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          Nada espelhado ainda. Clique em “Atualizar do ProJuris”.
+        </p>
+      ) : (
+        <>
+          <ul className="mt-4 divide-y divide-[var(--border)]">
+            {visiveis.map((l) => (
+              <li key={l.key} className="py-3 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {l.kind === "tarefa" ? "Tarefa" : "Andamento"}
+                    {l.data ? ` · ${fmtDate(l.data)}` : ""}
+                  </div>
+                  <div className="text-[14px] text-[var(--navy)] mt-0.5 break-words">
+                    {l.titulo}
+                  </div>
+                  {l.sub && <div className="text-[12px] text-muted-foreground mt-0.5">{l.sub}</div>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {l.badge && (
+                    <Badge className="bg-[var(--muted)] text-muted-foreground">{l.badge}</Badge>
+                  )}
+                  {l.kind === "andamento" && podeEditar && (
+                    <Button
+                      variant={marcados.has(l.key) ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 text-[11px]"
+                      disabled={pinar.isPending}
+                      title="Mostrar também na linha do tempo da ficha do caso"
+                      onClick={async () => {
+                        const marcar = !marcados.has(l.key);
+                        try {
+                          await pinar.mutateAsync({
+                            key: l.key,
+                            marcar,
+                            descricao: l.titulo,
+                            data: l.data,
+                          });
+                          toast.success(
+                            marcar
+                              ? "Andamento também aparece na linha do tempo do caso"
+                              : "Removido da linha do tempo do caso",
+                          );
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Falha ao marcar");
+                        }
+                      }}
+                    >
+                      {marcados.has(l.key) ? "Na linha do tempo" : "Levar p/ o caso"}
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {linhas.length > mostrar && (
+            <div className="flex justify-center pt-3">
+              <Button variant="outline" size="sm" onClick={() => setMostrar((n) => n + PAGINA)}>
+                Ver mais ({linhas.length - mostrar})
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

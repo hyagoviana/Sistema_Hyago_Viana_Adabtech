@@ -260,7 +260,9 @@ export function useDistributionConfig() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_distribution_config")
-        .select("id, organization_id, mode, batch_hour, active, updated_at")
+        .select(
+          "id, organization_id, mode, batch_hour, active, updated_at, pontos_dia_controle, pontos_dia_producao, projuris_writeback_ativo",
+        )
         .eq("organization_id", ORG_ID)
         .single();
       if (error) throw error;
@@ -276,8 +278,13 @@ export function useUpdateDistributionConfig() {
   const qc = useQueryClient();
   const fn = useServerFn(updateDistributionConfigFn);
   return useMutation({
-    mutationFn: (config: { mode?: "HIGH_PRODUCTION" | "HIGH_CONTROL"; batch_hour?: number }) =>
-      fn({ data: config }),
+    mutationFn: (config: {
+      mode?: "HIGH_PRODUCTION" | "HIGH_CONTROL";
+      batch_hour?: number;
+      pontos_dia_controle?: number;
+      pontos_dia_producao?: number;
+      projuris_writeback_ativo?: boolean;
+    }) => fn({ data: config }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["distribution-config"] }),
   });
 }

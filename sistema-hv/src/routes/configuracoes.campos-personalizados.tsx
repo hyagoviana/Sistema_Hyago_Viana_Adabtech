@@ -5,6 +5,9 @@ import { useState } from "react";
 import { ClientFieldsManagerPanel } from "@/components/clients/ClientFieldsManagerDialog";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
+import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
+import { TemaDistribuicaoPanel } from "@/components/pipeline/TemaDistribuicaoPanel";
+import { useTemaServiceType } from "@/hooks/useTemas";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
@@ -138,15 +141,14 @@ function CamposPersonalizados() {
                     {selectedTema.name}
                   </div>
                   <p className="text-[12.5px] text-muted-foreground">
-                    Campos personalizados desta pipeline. Ficam na ficha do caso e no painel de
-                    filtros da lista/Kanban (conforme configurado).
+                    Tudo que é configuração deste tema em um só lugar: campos da ficha, pastas de
+                    modelos no Drive e os parâmetros do motor de distribuição.
                   </p>
                 </div>
-                <TemaFieldDefsEditor
-                  temaId={selectedTema.id}
-                  frenteSlug={null}
-                  title="Campos personalizados"
-                />
+                {/* A key é obrigatória aqui: sem ele, o painel mantém o estado
+                    digitado no tema anterior e "Salvar" gravaria esse valor no
+                    tema recém-selecionado. */}
+                <TemaConfigTabs key={selectedTema.id} tema={selectedTema} />
               </section>
             ) : clientSelected ? (
               <section className="card-editorial !p-5">
@@ -183,6 +185,75 @@ function CamposPersonalizados() {
             )}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Configuração do TEMA em um só lugar (doc 21.08). Cada aba é o painel que já
+// existia — só deixaram de morar em telas diferentes.
+// ---------------------------------------------------------------------------
+type AbaTema = "campos" | "pastas" | "distribuicao";
+
+const ABAS: Array<{ id: AbaTema; label: string; hint: string }> = [
+  {
+    id: "campos",
+    label: "Campos",
+    hint: "Aparecem na ficha do caso e nos filtros da lista/Kanban.",
+  },
+  {
+    id: "pastas",
+    label: "Pastas do Drive",
+    hint: "Onde ficam os modelos de documento deste tema (casos e procurações).",
+  },
+  {
+    id: "distribuicao",
+    label: "Distribuição",
+    hint: "Peso e responsável exclusivo do tema no motor de distribuição.",
+  },
+];
+
+function TemaConfigTabs({ tema }: { tema: { id: string; name: string } }) {
+  const [aba, setAba] = useState<AbaTema>("campos");
+  // As pastas do Drive são vinculadas ao service_type por trás do tema.
+  const { data: serviceType } = useTemaServiceType(aba === "pastas" ? tema.id : null);
+  const atual = ABAS.find((a) => a.id === aba)!;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-1 border-b border-[var(--border)]">
+        {ABAS.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            onClick={() => setAba(a.id)}
+            className={`px-3 py-2 text-[13px] border-b-2 -mb-px transition-colors ${
+              aba === a.id
+                ? "border-[var(--gold)] font-medium text-[var(--navy)]"
+                : "border-transparent text-muted-foreground hover:text-[var(--navy)]"
+            }`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-[12px] text-muted-foreground">{atual.hint}</p>
+
+      {aba === "campos" && (
+        <TemaFieldDefsEditor temaId={tema.id} frenteSlug={null} title="Campos personalizados" />
+      )}
+
+      {aba === "pastas" &&
+        (serviceType?.id ? (
+          <CategoryFoldersEditor serviceTypeId={serviceType.id} />
+        ) : (
+          <p className="text-[13px] text-muted-foreground">Carregando as pastas deste tema…</p>
+        ))}
+
+      {aba === "distribuicao" && (
+        <TemaDistribuicaoPanel key={tema.id} temaId={tema.id} temaNome={tema.name} />
       )}
     </div>
   );

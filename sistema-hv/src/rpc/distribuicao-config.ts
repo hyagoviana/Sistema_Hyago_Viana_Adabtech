@@ -146,6 +146,12 @@ export const saveDistributionCredsFn = createServerFn({ method: "POST" })
 const updateConfigSchema = z.object({
   mode: z.enum(["HIGH_PRODUCTION", "HIGH_CONTROL"]).optional(),
   batch_hour: z.number().int().min(0).max(23).optional(),
+  // Doc 21.08: a média diária de produção deixou de ser inferida dos últimos 90
+  // dias e passou a ser um número informado, por modo de operação.
+  pontos_dia_controle: z.number().min(0).max(200).optional(),
+  pontos_dia_producao: z.number().min(0).max(200).optional(),
+  // Trava do write-back ao ProJuris (arquivar/marcar lido). Nasce desligada.
+  projuris_writeback_ativo: z.boolean().optional(),
 });
 
 export const updateDistributionConfigFn = createServerFn({ method: "POST" })
@@ -156,6 +162,12 @@ export const updateDistributionConfigFn = createServerFn({ method: "POST" })
       const patch: ConfigUpdate = { updated_at: new Date().toISOString() };
       if (data.mode !== undefined) patch.mode = data.mode;
       if (data.batch_hour !== undefined) patch.batch_hour = data.batch_hour;
+      if (data.pontos_dia_controle !== undefined)
+        patch.pontos_dia_controle = data.pontos_dia_controle;
+      if (data.pontos_dia_producao !== undefined)
+        patch.pontos_dia_producao = data.pontos_dia_producao;
+      if (data.projuris_writeback_ativo !== undefined)
+        patch.projuris_writeback_ativo = data.projuris_writeback_ativo;
       const sb = getSupabaseAdmin();
       const { error } = await sb
         .from("system_distribution_config")

@@ -12,6 +12,10 @@ import {
   Tags,
   Layers,
   LayoutGrid,
+  Inbox,
+  ClipboardCheck,
+  ScrollText,
+  ListChecks,
 } from "lucide-react";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 
@@ -29,6 +33,18 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
     group: "Operação",
     tabs: [
       { to: "/controladoria/distribuicao", label: "Painel", icon: BarChart3, exact: true },
+      // Doc 21.08 — as duas etapas humanas, na ordem do fluxo do dia:
+      // 1) o que o ProJuris registrou → decisão; 2) o que foi mandado distribuir → revisão.
+      {
+        to: "/controladoria/distribuicao/andamentos",
+        label: "Andamentos pendentes",
+        icon: Inbox,
+      },
+      {
+        to: "/controladoria/distribuicao/a-distribuir",
+        label: "A distribuir",
+        icon: ClipboardCheck,
+      },
       { to: "/controladoria/distribuicao/lista", label: "Lista", icon: List },
       { to: "/controladoria/distribuicao/excecoes", label: "Exceções", icon: AlertTriangle },
       { to: "/controladoria/distribuicao/calendario", label: "Calendário", icon: Calendar },
@@ -46,7 +62,20 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
   {
     group: "Auditoria",
     tabs: [
-      { to: "/controladoria/distribuicao/historico", label: "Histórico", icon: History },
+      // Doc 21.08, páginas 3 e 4 — dois históricos distintos: o dos ANDAMENTOS
+      // (o que entrou e o que foi decidido) e o das TAREFAS (o que o motor
+      // distribuiu). A aba "Execuções" continua sendo o log dos batches.
+      {
+        to: "/controladoria/distribuicao/historico-andamentos",
+        label: "Hist. andamentos",
+        icon: ScrollText,
+      },
+      {
+        to: "/controladoria/distribuicao/historico-tarefas",
+        label: "Hist. tarefas",
+        icon: ListChecks,
+      },
+      { to: "/controladoria/distribuicao/historico", label: "Execuções", icon: History },
       { to: "/controladoria/distribuicao/indicadores", label: "Indicadores", icon: TrendingUp },
       { to: "/controladoria/distribuicao/simulador", label: "Simulador", icon: FlaskConical },
       { to: "/controladoria/distribuicao/relatorio", label: "Relatório", icon: FileText },

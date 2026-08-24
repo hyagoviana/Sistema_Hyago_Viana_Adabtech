@@ -82,14 +82,15 @@ export const createCaseTaskFn = createServerFn({ method: "POST" })
       assignee?: string | null;
       assignee_id?: string | null;
       due_date?: string | null;
+      task_type_id?: string | null;
     }) => d,
   )
   .handler(async ({ data }) =>
     handleWrite(async (userId) => {
       const task = await createCaseTask(data, userId);
       // #2 Workflows — gatilho task_created (1x por tarefa via event_key).
-      // taskTypeId: forward-compat (a coluna de tipo ainda não existe → null; a
-      // sub-opção por tipo passa a funcionar assim que o campo for criado).
+      // taskTypeId: a coluna existe desde a migration 20260824000001 (catálogo
+      // único de tipos), então a sub-opção "Tipo de tarefa" do gatilho já filtra.
       if (task?.id) {
         const taskTypeId = (task as { task_type_id?: string | null }).task_type_id ?? null;
         await runWorkflowsFor(

@@ -71,6 +71,7 @@ export type Database = {
           raw_data: Json | null;
           created_at: string;
           blocked: boolean;
+          origem: string;
         };
         Insert: {
           id?: string;
@@ -91,6 +92,7 @@ export type Database = {
           raw_data?: Json | null;
           created_at?: string;
           blocked?: boolean;
+          origem?: string;
         };
         Update: Partial<Database["public"]["Tables"]["system_distribution_results"]["Insert"]>;
         Relationships: [];
@@ -177,6 +179,164 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_projuris_executor_mapping"]["Insert"]>;
         Relationships: [];
       };
+      system_task_type_theme_exclusives: {
+        Row: {
+          id: string;
+          organization_id: string;
+          task_type_id: string;
+          tema_id: string;
+          executor_id: string;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          task_type_id: string;
+          tema_id: string;
+          executor_id: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_task_type_theme_exclusives"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      system_distribution_movements: {
+        Row: {
+          id: string;
+          organization_id: string;
+          origem: string;
+          projuris_id: string | null;
+          projuris_processo_codigo: string | null;
+          numero_cnj: string | null;
+          descricao: string | null;
+          cliente_nome: string | null;
+          data_referencia: string | null;
+          raw: Json | null;
+          case_id: string | null;
+          tema_id: string | null;
+          decisao: string;
+          task_type_id: string | null;
+          decidido_por: string | null;
+          decidido_em: string | null;
+          created_at: string;
+          updated_at: string;
+          situacao_projuris: string | null;
+          client_id: string | null;
+          projuris_sync_at: string | null;
+          projuris_sync_error: string | null;
+          criado_por: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          origem: string;
+          projuris_id?: string | null;
+          projuris_processo_codigo?: string | null;
+          numero_cnj?: string | null;
+          descricao?: string | null;
+          cliente_nome?: string | null;
+          data_referencia?: string | null;
+          raw?: Json | null;
+          case_id?: string | null;
+          tema_id?: string | null;
+          decisao?: string;
+          task_type_id?: string | null;
+          decidido_por?: string | null;
+          decidido_em?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          situacao_projuris?: string | null;
+          client_id?: string | null;
+          projuris_sync_at?: string | null;
+          projuris_sync_error?: string | null;
+          criado_por?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_movements"]["Insert"]>;
+        Relationships: [];
+      };
+      system_distribution_staging: {
+        Row: {
+          id: string;
+          organization_id: string;
+          movement_id: string | null;
+          case_id: string | null;
+          tema_id: string | null;
+          task_type_id: string | null;
+          numero_cnj: string | null;
+          cliente_nome: string | null;
+          coletivo: boolean;
+          complexo: boolean;
+          urgente: boolean;
+          exclusive_executor_id: string | null;
+          data_prevista: string | null;
+          data_fatal: string | null;
+          pontos: number | null;
+          overrides: Json;
+          status: string;
+          distribuido_em: string | null;
+          distribuido_por: string | null;
+          created_at: string;
+          updated_at: string;
+          preparado_por: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          movement_id?: string | null;
+          case_id?: string | null;
+          tema_id?: string | null;
+          task_type_id?: string | null;
+          numero_cnj?: string | null;
+          cliente_nome?: string | null;
+          coletivo?: boolean;
+          complexo?: boolean;
+          urgente?: boolean;
+          exclusive_executor_id?: string | null;
+          data_prevista?: string | null;
+          data_fatal?: string | null;
+          pontos?: number | null;
+          overrides?: Json;
+          status?: string;
+          distribuido_em?: string | null;
+          distribuido_por?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          preparado_por?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_distribution_staging"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_judicial_andamento_pins: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          andamento_key: string;
+          event_id: string | null;
+          descricao: string | null;
+          data_andamento: string | null;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          andamento_key: string;
+          event_id?: string | null;
+          descricao?: string | null;
+          data_andamento?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_case_judicial_andamento_pins"]["Insert"]
+        >;
+        Relationships: [];
+      };
       system_task_type_mapping: {
         Row: {
           id: string;
@@ -193,6 +353,11 @@ export type Database = {
           exclusive_executor_id: string | null;
           prazo_previsto_dias: number | null;
           prazo_fatal_dias: number | null;
+          classe: string | null;
+          aparece_no_motor: boolean;
+          archived_at: string | null;
+          sync_projuris: boolean;
+          projuris_classificacao: string | null;
         };
         Insert: {
           id?: string;
@@ -209,6 +374,11 @@ export type Database = {
           exclusive_executor_id?: string | null;
           prazo_previsto_dias?: number | null;
           prazo_fatal_dias?: number | null;
+          classe?: string | null;
+          aparece_no_motor?: boolean;
+          archived_at?: string | null;
+          sync_projuris?: boolean;
+          projuris_classificacao?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_task_type_mapping"]["Insert"]>;
         Relationships: [];
@@ -258,6 +428,9 @@ export type Database = {
           projuris_password: string | null;
           projuris_token: string | null;
           projuris_api_key: string | null;
+          pontos_dia_controle: number;
+          pontos_dia_producao: number;
+          projuris_writeback_ativo: boolean;
         };
         Insert: {
           id?: string;
@@ -273,6 +446,9 @@ export type Database = {
           projuris_password?: string | null;
           projuris_token?: string | null;
           projuris_api_key?: string | null;
+          pontos_dia_controle?: number;
+          pontos_dia_producao?: number;
+          projuris_writeback_ativo?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["system_distribution_config"]["Insert"]>;
         Relationships: [];
@@ -1909,6 +2085,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          task_type_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1926,6 +2103,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
+          task_type_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_case_tasks"]["Insert"]>;
         Relationships: [
@@ -2316,6 +2494,16 @@ export type Database = {
       system_fn_avancar_se_checklist_ok: {
         Args: { p_case_id: string; p_triggered_by?: string | null };
         Returns: undefined;
+      };
+      // Merge ATÔMICO dos campos personalizados (migration 20260824000005) — evita
+      // a perda de dados do read-modify-write em edição simultânea.
+      system_merge_case_canonical_fields: {
+        Args: { p_case_id: string; p_patch: Json };
+        Returns: { canonical_fields: Json; mudou: boolean }[];
+      };
+      system_merge_client_custom_fields: {
+        Args: { p_client_id: string; p_patch: Json };
+        Returns: { custom_fields: Json; mudou: boolean }[];
       };
     };
     Enums: Record<string, never>;

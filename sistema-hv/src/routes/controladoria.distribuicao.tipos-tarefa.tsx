@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus, Pencil, Download, Search, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,7 @@ function TiposTarefaPage() {
       const r = await syncTipos.mutateAsync();
       const pend = r.nearMiss.length + r.collisions.length;
       toast.success(
-        `Sincronizado: ${r.matched.length} casados (${r.numericos}/${r.shvLinhas} com codigo real)` +
+        `Sincronizado: ${r.matched.length} casados · ${r.prazosAplicados} com prazo do ProJuris` +
           (pend ? ` · ${pend} para revisar manualmente` : ""),
       );
     } catch (e) {
@@ -184,6 +184,16 @@ function TiposTarefaPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* doc "21.08 _ Controladoria": o tipo de tarefa deixou de ser "coisa do motor"
+          e virou configuração do sistema. Esta tela continua funcionando (mesma
+          tabela) enquanto o time migra o hábito. */}
+      <div className="rounded-md border border-[var(--gold)] bg-[var(--gold-50,transparent)] px-4 py-3 text-[13px]">
+        Os tipos de tarefa agora são <strong>configuração do sistema</strong> — com classe,
+        arquivamento e exceções de responsável por tema.{" "}
+        <Link to="/configuracoes/tipos-tarefa" className="underline font-medium">
+          Abrir em Configurações › Tipos de tarefa
+        </Link>
+      </div>
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative flex-1 max-w-xs">
           <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />

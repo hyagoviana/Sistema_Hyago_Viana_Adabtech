@@ -62,6 +62,8 @@ import { Route as ControladoriaExcecoesRouteImport } from './routes/controladori
 import { Route as ControladoriaDistribuicaoRouteImport } from './routes/controladoria.distribuicao'
 import { Route as ControladoriaDecisoesRouteImport } from './routes/controladoria.decisoes'
 import { Route as ConfiguracoesWorkflowsRouteImport } from './routes/configuracoes.workflows'
+import { Route as ConfiguracoesTiposTarefaRouteImport } from './routes/configuracoes.tipos-tarefa'
+import { Route as ConfiguracoesIntegracoesRouteImport } from './routes/configuracoes.integracoes'
 import { Route as ConfiguracoesImportacaoRouteImport } from './routes/configuracoes.importacao'
 import { Route as ConfiguracoesCamposPersonalizadosRouteImport } from './routes/configuracoes.campos-personalizados'
 import { Route as ComercialOportunidadesRouteImport } from './routes/comercial.oportunidades'
@@ -85,11 +87,15 @@ import { Route as ControladoriaDistribuicaoRelatorioRouteImport } from './routes
 import { Route as ControladoriaDistribuicaoListaRouteImport } from './routes/controladoria.distribuicao.lista'
 import { Route as ControladoriaDistribuicaoKanbanRouteImport } from './routes/controladoria.distribuicao.kanban'
 import { Route as ControladoriaDistribuicaoIndicadoresRouteImport } from './routes/controladoria.distribuicao.indicadores'
+import { Route as ControladoriaDistribuicaoHistoricoTarefasRouteImport } from './routes/controladoria.distribuicao.historico-tarefas'
+import { Route as ControladoriaDistribuicaoHistoricoAndamentosRouteImport } from './routes/controladoria.distribuicao.historico-andamentos'
 import { Route as ControladoriaDistribuicaoHistoricoRouteImport } from './routes/controladoria.distribuicao.historico'
 import { Route as ControladoriaDistribuicaoExecutoresRouteImport } from './routes/controladoria.distribuicao.executores'
 import { Route as ControladoriaDistribuicaoExcecoesRouteImport } from './routes/controladoria.distribuicao.excecoes'
 import { Route as ControladoriaDistribuicaoConfiguracaoRouteImport } from './routes/controladoria.distribuicao.configuracao'
 import { Route as ControladoriaDistribuicaoCalendarioRouteImport } from './routes/controladoria.distribuicao.calendario'
+import { Route as ControladoriaDistribuicaoAndamentosRouteImport } from './routes/controladoria.distribuicao.andamentos'
+import { Route as ControladoriaDistribuicaoADistribuirRouteImport } from './routes/controladoria.distribuicao.a-distribuir'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
@@ -378,6 +384,18 @@ const ConfiguracoesWorkflowsRoute = ConfiguracoesWorkflowsRouteImport.update({
   path: '/workflows',
   getParentRoute: () => ConfiguracoesRoute,
 } as any)
+const ConfiguracoesTiposTarefaRoute =
+  ConfiguracoesTiposTarefaRouteImport.update({
+    id: '/tipos-tarefa',
+    path: '/tipos-tarefa',
+    getParentRoute: () => ConfiguracoesRoute,
+  } as any)
+const ConfiguracoesIntegracoesRoute =
+  ConfiguracoesIntegracoesRouteImport.update({
+    id: '/integracoes',
+    path: '/integracoes',
+    getParentRoute: () => ConfiguracoesRoute,
+  } as any)
 const ConfiguracoesImportacaoRoute = ConfiguracoesImportacaoRouteImport.update({
   id: '/importacao',
   path: '/importacao',
@@ -502,6 +520,18 @@ const ControladoriaDistribuicaoIndicadoresRoute =
     path: '/indicadores',
     getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
+const ControladoriaDistribuicaoHistoricoTarefasRoute =
+  ControladoriaDistribuicaoHistoricoTarefasRouteImport.update({
+    id: '/historico-tarefas',
+    path: '/historico-tarefas',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
+const ControladoriaDistribuicaoHistoricoAndamentosRoute =
+  ControladoriaDistribuicaoHistoricoAndamentosRouteImport.update({
+    id: '/historico-andamentos',
+    path: '/historico-andamentos',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
 const ControladoriaDistribuicaoHistoricoRoute =
   ControladoriaDistribuicaoHistoricoRouteImport.update({
     id: '/historico',
@@ -530,6 +560,18 @@ const ControladoriaDistribuicaoCalendarioRoute =
   ControladoriaDistribuicaoCalendarioRouteImport.update({
     id: '/calendario',
     path: '/calendario',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
+const ControladoriaDistribuicaoAndamentosRoute =
+  ControladoriaDistribuicaoAndamentosRouteImport.update({
+    id: '/andamentos',
+    path: '/andamentos',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
+const ControladoriaDistribuicaoADistribuirRoute =
+  ControladoriaDistribuicaoADistribuirRouteImport.update({
+    id: '/a-distribuir',
+    path: '/a-distribuir',
     getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
 const CasosFinanceiroInadimplenciaRoute =
@@ -667,6 +709,8 @@ export interface FileRoutesByFullPath {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/integracoes': typeof ConfiguracoesIntegracoesRoute
+  '/configuracoes/tipos-tarefa': typeof ConfiguracoesTiposTarefaRoute
   '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
@@ -719,11 +763,15 @@ export interface FileRoutesByFullPath {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
+  '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
   '/controladoria/distribuicao/configuracao': typeof ControladoriaDistribuicaoConfiguracaoRoute
   '/controladoria/distribuicao/excecoes': typeof ControladoriaDistribuicaoExcecoesRoute
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
+  '/controladoria/distribuicao/historico-andamentos': typeof ControladoriaDistribuicaoHistoricoAndamentosRoute
+  '/controladoria/distribuicao/historico-tarefas': typeof ControladoriaDistribuicaoHistoricoTarefasRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
   '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
@@ -767,6 +815,8 @@ export interface FileRoutesByTo {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/integracoes': typeof ConfiguracoesIntegracoesRoute
+  '/configuracoes/tipos-tarefa': typeof ConfiguracoesTiposTarefaRoute
   '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
@@ -818,11 +868,15 @@ export interface FileRoutesByTo {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
+  '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
   '/controladoria/distribuicao/configuracao': typeof ControladoriaDistribuicaoConfiguracaoRoute
   '/controladoria/distribuicao/excecoes': typeof ControladoriaDistribuicaoExcecoesRoute
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
+  '/controladoria/distribuicao/historico-andamentos': typeof ControladoriaDistribuicaoHistoricoAndamentosRoute
+  '/controladoria/distribuicao/historico-tarefas': typeof ControladoriaDistribuicaoHistoricoTarefasRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
   '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
@@ -870,6 +924,8 @@ export interface FileRoutesById {
   '/comercial/oportunidades': typeof ComercialOportunidadesRoute
   '/configuracoes/campos-personalizados': typeof ConfiguracoesCamposPersonalizadosRoute
   '/configuracoes/importacao': typeof ConfiguracoesImportacaoRoute
+  '/configuracoes/integracoes': typeof ConfiguracoesIntegracoesRoute
+  '/configuracoes/tipos-tarefa': typeof ConfiguracoesTiposTarefaRoute
   '/configuracoes/workflows': typeof ConfiguracoesWorkflowsRoute
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
@@ -922,11 +978,15 @@ export interface FileRoutesById {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
+  '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
   '/controladoria/distribuicao/configuracao': typeof ControladoriaDistribuicaoConfiguracaoRoute
   '/controladoria/distribuicao/excecoes': typeof ControladoriaDistribuicaoExcecoesRoute
   '/controladoria/distribuicao/executores': typeof ControladoriaDistribuicaoExecutoresRoute
   '/controladoria/distribuicao/historico': typeof ControladoriaDistribuicaoHistoricoRoute
+  '/controladoria/distribuicao/historico-andamentos': typeof ControladoriaDistribuicaoHistoricoAndamentosRoute
+  '/controladoria/distribuicao/historico-tarefas': typeof ControladoriaDistribuicaoHistoricoTarefasRoute
   '/controladoria/distribuicao/indicadores': typeof ControladoriaDistribuicaoIndicadoresRoute
   '/controladoria/distribuicao/kanban': typeof ControladoriaDistribuicaoKanbanRoute
   '/controladoria/distribuicao/lista': typeof ControladoriaDistribuicaoListaRoute
@@ -975,6 +1035,8 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/integracoes'
+    | '/configuracoes/tipos-tarefa'
     | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
@@ -1027,11 +1089,15 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/controladoria/distribuicao/a-distribuir'
+    | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
     | '/controladoria/distribuicao/configuracao'
     | '/controladoria/distribuicao/excecoes'
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
+    | '/controladoria/distribuicao/historico-andamentos'
+    | '/controladoria/distribuicao/historico-tarefas'
     | '/controladoria/distribuicao/indicadores'
     | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
@@ -1075,6 +1141,8 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/integracoes'
+    | '/configuracoes/tipos-tarefa'
     | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/excecoes'
@@ -1126,11 +1194,15 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/controladoria/distribuicao/a-distribuir'
+    | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
     | '/controladoria/distribuicao/configuracao'
     | '/controladoria/distribuicao/excecoes'
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
+    | '/controladoria/distribuicao/historico-andamentos'
+    | '/controladoria/distribuicao/historico-tarefas'
     | '/controladoria/distribuicao/indicadores'
     | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
@@ -1177,6 +1249,8 @@ export interface FileRouteTypes {
     | '/comercial/oportunidades'
     | '/configuracoes/campos-personalizados'
     | '/configuracoes/importacao'
+    | '/configuracoes/integracoes'
+    | '/configuracoes/tipos-tarefa'
     | '/configuracoes/workflows'
     | '/controladoria/decisoes'
     | '/controladoria/distribuicao'
@@ -1229,11 +1303,15 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/controladoria/distribuicao/a-distribuir'
+    | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
     | '/controladoria/distribuicao/configuracao'
     | '/controladoria/distribuicao/excecoes'
     | '/controladoria/distribuicao/executores'
     | '/controladoria/distribuicao/historico'
+    | '/controladoria/distribuicao/historico-andamentos'
+    | '/controladoria/distribuicao/historico-tarefas'
     | '/controladoria/distribuicao/indicadores'
     | '/controladoria/distribuicao/kanban'
     | '/controladoria/distribuicao/lista'
@@ -1704,6 +1782,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesWorkflowsRouteImport
       parentRoute: typeof ConfiguracoesRoute
     }
+    '/configuracoes/tipos-tarefa': {
+      id: '/configuracoes/tipos-tarefa'
+      path: '/tipos-tarefa'
+      fullPath: '/configuracoes/tipos-tarefa'
+      preLoaderRoute: typeof ConfiguracoesTiposTarefaRouteImport
+      parentRoute: typeof ConfiguracoesRoute
+    }
+    '/configuracoes/integracoes': {
+      id: '/configuracoes/integracoes'
+      path: '/integracoes'
+      fullPath: '/configuracoes/integracoes'
+      preLoaderRoute: typeof ConfiguracoesIntegracoesRouteImport
+      parentRoute: typeof ConfiguracoesRoute
+    }
     '/configuracoes/importacao': {
       id: '/configuracoes/importacao'
       path: '/importacao'
@@ -1865,6 +1957,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaDistribuicaoIndicadoresRouteImport
       parentRoute: typeof ControladoriaDistribuicaoRoute
     }
+    '/controladoria/distribuicao/historico-tarefas': {
+      id: '/controladoria/distribuicao/historico-tarefas'
+      path: '/historico-tarefas'
+      fullPath: '/controladoria/distribuicao/historico-tarefas'
+      preLoaderRoute: typeof ControladoriaDistribuicaoHistoricoTarefasRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
+    '/controladoria/distribuicao/historico-andamentos': {
+      id: '/controladoria/distribuicao/historico-andamentos'
+      path: '/historico-andamentos'
+      fullPath: '/controladoria/distribuicao/historico-andamentos'
+      preLoaderRoute: typeof ControladoriaDistribuicaoHistoricoAndamentosRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
     '/controladoria/distribuicao/historico': {
       id: '/controladoria/distribuicao/historico'
       path: '/historico'
@@ -1898,6 +2004,20 @@ declare module '@tanstack/react-router' {
       path: '/calendario'
       fullPath: '/controladoria/distribuicao/calendario'
       preLoaderRoute: typeof ControladoriaDistribuicaoCalendarioRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
+    '/controladoria/distribuicao/andamentos': {
+      id: '/controladoria/distribuicao/andamentos'
+      path: '/andamentos'
+      fullPath: '/controladoria/distribuicao/andamentos'
+      preLoaderRoute: typeof ControladoriaDistribuicaoAndamentosRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
+    '/controladoria/distribuicao/a-distribuir': {
+      id: '/controladoria/distribuicao/a-distribuir'
+      path: '/a-distribuir'
+      fullPath: '/controladoria/distribuicao/a-distribuir'
+      preLoaderRoute: typeof ControladoriaDistribuicaoADistribuirRouteImport
       parentRoute: typeof ControladoriaDistribuicaoRoute
     }
     '/casos/financeiro/inadimplencia': {
@@ -2046,6 +2166,8 @@ declare module '@tanstack/react-router' {
 interface ConfiguracoesRouteChildren {
   ConfiguracoesCamposPersonalizadosRoute: typeof ConfiguracoesCamposPersonalizadosRoute
   ConfiguracoesImportacaoRoute: typeof ConfiguracoesImportacaoRoute
+  ConfiguracoesIntegracoesRoute: typeof ConfiguracoesIntegracoesRoute
+  ConfiguracoesTiposTarefaRoute: typeof ConfiguracoesTiposTarefaRoute
   ConfiguracoesWorkflowsRoute: typeof ConfiguracoesWorkflowsRoute
   ConfiguracoesIndexRoute: typeof ConfiguracoesIndexRoute
 }
@@ -2054,6 +2176,8 @@ const ConfiguracoesRouteChildren: ConfiguracoesRouteChildren = {
   ConfiguracoesCamposPersonalizadosRoute:
     ConfiguracoesCamposPersonalizadosRoute,
   ConfiguracoesImportacaoRoute: ConfiguracoesImportacaoRoute,
+  ConfiguracoesIntegracoesRoute: ConfiguracoesIntegracoesRoute,
+  ConfiguracoesTiposTarefaRoute: ConfiguracoesTiposTarefaRoute,
   ConfiguracoesWorkflowsRoute: ConfiguracoesWorkflowsRoute,
   ConfiguracoesIndexRoute: ConfiguracoesIndexRoute,
 }
@@ -2110,11 +2234,15 @@ const CasosFinanceiroRouteWithChildren = CasosFinanceiroRoute._addFileChildren(
 )
 
 interface ControladoriaDistribuicaoRouteChildren {
+  ControladoriaDistribuicaoADistribuirRoute: typeof ControladoriaDistribuicaoADistribuirRoute
+  ControladoriaDistribuicaoAndamentosRoute: typeof ControladoriaDistribuicaoAndamentosRoute
   ControladoriaDistribuicaoCalendarioRoute: typeof ControladoriaDistribuicaoCalendarioRoute
   ControladoriaDistribuicaoConfiguracaoRoute: typeof ControladoriaDistribuicaoConfiguracaoRoute
   ControladoriaDistribuicaoExcecoesRoute: typeof ControladoriaDistribuicaoExcecoesRoute
   ControladoriaDistribuicaoExecutoresRoute: typeof ControladoriaDistribuicaoExecutoresRoute
   ControladoriaDistribuicaoHistoricoRoute: typeof ControladoriaDistribuicaoHistoricoRoute
+  ControladoriaDistribuicaoHistoricoAndamentosRoute: typeof ControladoriaDistribuicaoHistoricoAndamentosRoute
+  ControladoriaDistribuicaoHistoricoTarefasRoute: typeof ControladoriaDistribuicaoHistoricoTarefasRoute
   ControladoriaDistribuicaoIndicadoresRoute: typeof ControladoriaDistribuicaoIndicadoresRoute
   ControladoriaDistribuicaoKanbanRoute: typeof ControladoriaDistribuicaoKanbanRoute
   ControladoriaDistribuicaoListaRoute: typeof ControladoriaDistribuicaoListaRoute
@@ -2127,6 +2255,10 @@ interface ControladoriaDistribuicaoRouteChildren {
 
 const ControladoriaDistribuicaoRouteChildren: ControladoriaDistribuicaoRouteChildren =
   {
+    ControladoriaDistribuicaoADistribuirRoute:
+      ControladoriaDistribuicaoADistribuirRoute,
+    ControladoriaDistribuicaoAndamentosRoute:
+      ControladoriaDistribuicaoAndamentosRoute,
     ControladoriaDistribuicaoCalendarioRoute:
       ControladoriaDistribuicaoCalendarioRoute,
     ControladoriaDistribuicaoConfiguracaoRoute:
@@ -2137,6 +2269,10 @@ const ControladoriaDistribuicaoRouteChildren: ControladoriaDistribuicaoRouteChil
       ControladoriaDistribuicaoExecutoresRoute,
     ControladoriaDistribuicaoHistoricoRoute:
       ControladoriaDistribuicaoHistoricoRoute,
+    ControladoriaDistribuicaoHistoricoAndamentosRoute:
+      ControladoriaDistribuicaoHistoricoAndamentosRoute,
+    ControladoriaDistribuicaoHistoricoTarefasRoute:
+      ControladoriaDistribuicaoHistoricoTarefasRoute,
     ControladoriaDistribuicaoIndicadoresRoute:
       ControladoriaDistribuicaoIndicadoresRoute,
     ControladoriaDistribuicaoKanbanRoute: ControladoriaDistribuicaoKanbanRoute,

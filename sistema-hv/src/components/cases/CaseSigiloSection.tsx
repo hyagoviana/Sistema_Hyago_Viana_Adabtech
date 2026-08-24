@@ -15,13 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCaseSigiloStatus } from "@/hooks/useJudicial";
 import { useSetCaseSigilo } from "@/hooks/useCases";
-import { useUsers } from "@/hooks/useUsers";
+import { useAssignableUsers } from "@/hooks/useUsers";
 import { useAuth } from "@/lib/auth";
 
 export function CaseSigiloSection({ caseId }: { caseId: string }) {
   const { profile } = useAuth();
   const { data: status } = useCaseSigiloStatus(caseId);
-  const { data: users } = useUsers();
+  const { data: users } = useAssignableUsers();
   const save = useSetCaseSigilo(caseId);
 
   const [sigiloso, setSigiloso] = useState(false);

@@ -47,8 +47,9 @@ export const listWorkflowRulesFn = createServerFn({ method: "GET" }).handler(asy
 );
 
 // Pedido A (sub-opção de tipo no gatilho) — lista de "tipos de tarefa" p/ o dropdown
-// do builder. FONTE PROVISÓRIA: catálogo da controladoria (system_task_type_mapping).
-// Se a decisão for por um catálogo próprio (Opção 2/3), basta repontar esta query.
+// do builder. FONTE DEFINITIVA (doc "21.08 _ Controladoria"): o catálogo ÚNICO do
+// sistema, em system_task_type_mapping — a mesma tabela, agora com classe,
+// arquivamento e flag do motor. Arquivados ficam de fora do dropdown.
 export type WorkflowTaskType = { id: string; label: string };
 export const listTaskTypesFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(async (): Promise<WorkflowTaskType[]> => {
@@ -58,6 +59,7 @@ export const listTaskTypesFn = createServerFn({ method: "GET" }).handler(async (
       .from("system_task_type_mapping")
       .select("id, projuris_tipo_descricao, projuris_tipo_codigo")
       .eq("active", true)
+      .is("archived_at", null)
       .order("projuris_tipo_descricao", { ascending: true });
     return (data ?? []).map((t) => ({
       id: t.id,
