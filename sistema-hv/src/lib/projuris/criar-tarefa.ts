@@ -177,7 +177,7 @@ export async function montarPayloadTarefa(
       dataLimite: fatal,
       // Data a partir da qual o ProJuris conta o prazo do tipo.
       dataBase: prevista,
-      // Situação inicial: 1 = em aberto (2 é "Concluída com sucesso"). Sem ela a
+      // Situação inicial: 1 = "Pendente" (2 é "Concluída com sucesso"). Sem ela a
       // API recusa com erro.tarefa.situacao.naoInformada.
       tarefaEventoSituacaoWs: { codigoTarefaEventoSituacao: 1, situacaoConcluida: false },
       tipoTarefa: { chave: codigoTipo, valor: nomeTipo },
@@ -245,9 +245,13 @@ async function postTarefa(corpo: unknown): Promise<unknown> {
 }
 
 /**
- * O ProJuris devolve o objeto criado; o código pode vir em qualquer um dos
- * nomes abaixo, dependendo do endpoint. Procura também um nível abaixo, dentro
- * de `tarefaEventoWs`, que é onde ele costuma aparecer.
+ * Tira o código da resposta da criação.
+ *
+ * O `POST /tarefa` responde `{ "chave": 58344160, "valor": "TAR.0042163" }` —
+ * `chave` é o codigoTarefaEvento (confirmado na sonda de 24/08: esse número
+ * abre a tarefa no `GET /tarefa-compromisso/{cod}`) e `valor` é o identificador
+ * que a pessoa vê. Os outros nomes ficam como rede, porque endpoints vizinhos
+ * respondem o objeto inteiro.
  */
 export function extraiCodigoTarefa(resposta: unknown): string | null {
   if (resposta == null) return null;

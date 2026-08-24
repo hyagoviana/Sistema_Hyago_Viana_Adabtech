@@ -38,3 +38,15 @@ Vale registrar, porque custou caro descobrir (ver `src/lib/projuris/criar-tarefa
 Quando a validação passa, o erro vira `HTTP 412` com o campo nomeado
 (`erro.validacao.tarefa.dataBase.naoInformado`) — um de cada vez. Um `500` genérico
 quase sempre significa erro de **formato**; um `412` significa erro de **conteúdo**.
+
+## Confirmado na prática (24/08)
+
+`POST /tarefa` com o corpo montado por `src/lib/projuris/criar-tarefa.ts` criou a
+tarefa **TAR.0042163** no processo `PRO.0005235`, com tipo, responsável, prazo e
+vínculo corretos — todos conferidos lendo de volta por `GET /tarefa-compromisso/{cod}`.
+
+- A resposta da criação é `{ "chave": <codigoTarefaEvento>, "valor": "TAR.xxxxx" }`.
+- `codigoTarefaEventoSituacao`: **1 = "Pendente"**, **2 = "Concluída com sucesso"**.
+- Não existe DELETE de tarefa. Para desfazer, conclua com
+  `PUT /tarefas-situacao` → `{ "codigoSituacao": 2, "codigosTarefaEvento": [cod] }`
+  (foi assim que a tarefa da sonda saiu da fila de quem a recebeu).
