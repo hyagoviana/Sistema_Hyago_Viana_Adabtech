@@ -24,6 +24,7 @@
 // enxuta) de propósito: mexer no sync-core significaria mexer no que está no ar.
 
 import { AuthError } from "@/lib/supabase/auth-guard";
+import { criarTarefaNoProjuris } from "@/lib/projuris/criar-tarefa";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { distributeBatch } from "@/lib/distribuicao/engine/motor";
 import { buildBatchInput } from "@/lib/distribuicao/engine/transformer";
@@ -901,6 +902,10 @@ export interface DistribuirResumo {
   enviadas: number;
   distribuidas: number;
   bloqueadas: number;
+  /** Quantas viraram tarefa no ProJuris. Menor que `distribuidas` = fila de reenvio. */
+  espelhadas: number;
+  /** Primeiros motivos de não ter espelhado, para a tela mostrar sem virar muro de texto. */
+  falhasEspelho: string[];
   porExecutor: Array<{ executor_id: string; tarefas: number; pontos: number }>;
 }
 
@@ -1087,6 +1092,28 @@ export async function distribuirStaging(
       .in("id", distribuidasIds);
   }
 
+  // ---- espelha no ProJuris ------------------------------------------------
+  //
+  // A decisão da controladoria só serve para quem executa se aparecer na fila
+  // DELE — e quem executa trabalha no ProJuris, não aqui. Por isso, logo depois
+  // de gravar a distribuição, cada linha vira uma tarefa lá.
+  //
+  // BEST-EFFORT de propósito: a distribuição no SHV já está gravada e não é
+  // desfeita se o ProJuris recusar. O que não espelhou fica com
+  // `projuris_codigo_tarefa` nulo — é a fila de reenvio, e o índice
+  // idx_dist_staging_sem_espelho existe justamente para encontrá-la.
+  let espelhadas = 0;
+  const falhasEspelho: string[] = [];
+  for (const id of distribuidasIds) {
+    try {
+      const r = await criarTarefaNoProjuris(id);
+      if (r.codigo) espelhadas += 1;
+      else if (r.motivo && r.enviado) falhasEspelho.push(r.motivo);
+    } catch (err) {
+      falhasEspelho.push(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const agregado = new Map<string, { tarefas: number; pontos: number }>();
   for (const r of distribuidas) {
     const cur = agregado.get(r.executor_id) ?? { tarefas: 0, pontos: 0 };
@@ -1099,6 +1126,8 @@ export async function distribuirStaging(
     enviadas: itens.length,
     distribuidas: distribuidas.length,
     bloqueadas,
+    espelhadas,
+    falhasEspelho: falhasEspelho.slice(0, 5),
     porExecutor: [...agregado].map(([executor_id, v]) => ({ executor_id, ...v })),
   };
 }

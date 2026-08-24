@@ -1,0 +1,2619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema version="1.0" targetNamespace="http://www.softplan.com.br/unj/schema/adv-relatorio"
+  xmlns:ns2="http://www.softplan.com.br/unj/schema/adv-relatorio"
+  
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="ns0.xsd"/>
+
+  <xs:element name="relatorioConsultaFiltroWs">
+<xs:complexType>
+       <xs:sequence>
+              <xs:element name="tipoRelatorio" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoExtensao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="relatorioFiltro" type="ns2:relatorioFiltroType" minOccurs="0">
+              </xs:element>
+              <xs:element name="nomeArquivoRelatorio" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirFiltro" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="relatorioOrdenacaoFiltro" type="ns2:relatorioOrdenacaoFiltroType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="projecaoRelatorioWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="projecaoRelatorio" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}projecaoGrupoRelatorioType" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="projecaoRelatorio" type="ns2:projecaoGrupoRelatorioType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="relatorioFiltroCamposDinamicosWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="codigoCampoDinamico" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="modulo" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="tipoCampo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="valorPesquisaTexto" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="valorPesquisaNumero" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="valorPesquisaData" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="valorPesquisaBoolean" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="valorPesquisaLista" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioSimpleDtoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="valorPesquisaLabel" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioSimpleDtoType" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="codigoCampoDinamico" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="modulo" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoCampo" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorPesquisaTexto" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorPesquisaNumero" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorPesquisaData" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorPesquisaBoolean" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorPesquisaLista" type="ns2:relatorioSimpleDtoType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="valorPesquisaLabel" type="ns2:relatorioSimpleDtoType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="relatorioOrdenacaoWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="relatorioOrdenacao" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioOrdenacaoType" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="relatorioOrdenacao" type="ns2:relatorioOrdenacaoType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="relatorioRetornoStatusWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="statusRelatorio" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioStatusType" minOccurs="0"/>
+         &lt;element name="urlArquivo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="statusRelatorio" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="urlArquivo" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="templateRelatorioGeradoWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}templateRelatorioGeradoType">
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:templateRelatorioGeradoType">
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+  </xs:element>
+  <xs:element name="templateRelatoriosGeradosWs">
+<xs:complexType>
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for anonymous complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType>
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="relatoriosGerados" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}templateRelatorioGeradoType" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="relatoriosGerados" type="ns2:templateRelatorioGeradoType" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+  </xs:element>
+<xs:simpleType name="formaPagamentoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for formaPagamentoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="formaPagamentoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="CHEQUE"/>
+     &lt;enumeration value="BOLETO"/>
+     &lt;enumeration value="DUPLICATA"/>
+     &lt;enumeration value="TRANSFERENCIA"/>
+     &lt;enumeration value="CARTAO"/>
+     &lt;enumeration value="DINHEIRO"/>
+     &lt;enumeration value="OUTROS"/>
+     &lt;enumeration value="DEBITO_EM_CONTA"/>
+     &lt;enumeration value="DEPOSITO_BANCARIO"/>
+     &lt;enumeration value="PIX"/>
+     &lt;enumeration value="CARTAO_DEBITO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="CHEQUE"/>
+ 
+    <xs:enumeration value="BOLETO"/>
+ 
+    <xs:enumeration value="DUPLICATA"/>
+ 
+    <xs:enumeration value="TRANSFERENCIA"/>
+ 
+    <xs:enumeration value="CARTAO"/>
+ 
+    <xs:enumeration value="DINHEIRO"/>
+ 
+    <xs:enumeration value="OUTROS"/>
+ 
+    <xs:enumeration value="DEBITO_EM_CONTA"/>
+ 
+    <xs:enumeration value="DEPOSITO_BANCARIO"/>
+ 
+    <xs:enumeration value="PIX"/>
+ 
+    <xs:enumeration value="CARTAO_DEBITO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="moduloVinculoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for moduloVinculoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="moduloVinculoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="ATENDIMENTO"/>
+     &lt;enumeration value="PROCESSO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="ATENDIMENTO"/>
+ 
+    <xs:enumeration value="PROCESSO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="pessoaFiltroDataType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for pessoaFiltroDataType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="pessoaFiltroDataType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="CADASTRO"/>
+     &lt;enumeration value="NASCIMENTO"/>
+     &lt;enumeration value="ATUALIZACAO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="CADASTRO"/>
+ 
+    <xs:enumeration value="NASCIMENTO"/>
+ 
+    <xs:enumeration value="ATUALIZACAO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="projecaoGrupoRelatorioType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for projecaoGrupoRelatorioType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="projecaoGrupoRelatorioType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="projecao" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}projecaoItemRelatorioType" maxOccurs="unbounded"/>
+         &lt;element name="grupo" type="{http://www.w3.org/2001/XMLSchema}string"/>
+         &lt;element name="fixo" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="projecao" type="ns2:projecaoItemRelatorioType" minOccurs="1" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="grupo" type="xs:string" minOccurs="1">
+              </xs:element>
+              <xs:element name="fixo" type="xs:boolean" minOccurs="1">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="projecaoItemRelatorioType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for projecaoItemRelatorioType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="projecaoItemRelatorioType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="identificadorColuna" type="{http://www.w3.org/2001/XMLSchema}string"/>
+         &lt;element name="labelColuna" type="{http://www.w3.org/2001/XMLSchema}string"/>
+         &lt;element name="tipoCampo" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoProjecaoItemType"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="identificadorColuna" type="xs:string" minOccurs="1">
+              </xs:element>
+              <xs:element name="labelColuna" type="xs:string" minOccurs="1">
+              </xs:element>
+              <xs:element name="tipoCampo" type="xs:string" minOccurs="1">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="receitaDespesaType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for receitaDespesaType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="receitaDespesaType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="RECEITA"/>
+     &lt;enumeration value="DESPESA"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="RECEITA"/>
+ 
+    <xs:enumeration value="DESPESA"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="relatorioAndamentoConsultaFiltroWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioAndamentoConsultaFiltroWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioAndamentoConsultaFiltroWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="chaveModulo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigoAndamentoTipo" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="descricaoAndamento" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPessoaEnvolvido" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="chaveModulo" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoAndamentoTipo" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="descricaoAndamento" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPessoaEnvolvido" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioApontamentoFiltroWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioApontamentoFiltroWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioApontamentoFiltroWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="chaveModulo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigoApontamentoTipo" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificador" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="pessoasEnvolvidos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="chaveModulo" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoApontamentoTipo" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificador" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="pessoasEnvolvidos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:simpleType name="relatorioDataFiltroType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioDataFiltroType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioDataFiltroType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="DATA_PEDIDO"/>
+     &lt;enumeration value="DATA_DECISAO"/>
+     &lt;enumeration value="DATA_VENCIMENTO"/>
+     &lt;enumeration value="DATA_CADASTRO"/>
+     &lt;enumeration value="DATA_CONCLUSAO"/>
+     &lt;enumeration value="DATA_PAGAMENTO"/>
+     &lt;enumeration value="DATA_LIMITE"/>
+     &lt;enumeration value="DATA_BASE"/>
+     &lt;enumeration value="DATA_EMISSAO"/>
+     &lt;enumeration value="DATA_EXERCICIO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="DATA_PEDIDO"/>
+ 
+    <xs:enumeration value="DATA_DECISAO"/>
+ 
+    <xs:enumeration value="DATA_VENCIMENTO"/>
+ 
+    <xs:enumeration value="DATA_CADASTRO"/>
+ 
+    <xs:enumeration value="DATA_CONCLUSAO"/>
+ 
+    <xs:enumeration value="DATA_PAGAMENTO"/>
+ 
+    <xs:enumeration value="DATA_LIMITE"/>
+ 
+    <xs:enumeration value="DATA_BASE"/>
+ 
+    <xs:enumeration value="DATA_EMISSAO"/>
+ 
+    <xs:enumeration value="DATA_EXERCICIO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="relatorioDataInicioFimFiltroType" abstract="true">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioDataInicioFimFiltroType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioDataInicioFimFiltroType">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroType">
+       &lt;sequence>
+         &lt;element name="dataInicio" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="dataFim" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioFiltroType">
+      <xs:sequence>
+              <xs:element name="dataInicio" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataFim" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroAtendimentosPorClienteWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroAtendimentosPorClienteWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroAtendimentosPorClienteWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosPessoaCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoDataAtendimento" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoDataAtendimentoType" minOccurs="0"/>
+         &lt;element name="codigosSituacoesAtendimento" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAssuntos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flSomenteTarefasPendentes" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="nuUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosPessoaCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoDataAtendimento" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosSituacoesAtendimento" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAssuntos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flSomenteTarefasPendentes" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flUltimosAndamentos" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="nuUltimosAndamentos" type="xs:long" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroBensGarantiasPorProcessoWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroBensGarantiasPorProcessoWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroBensGarantiasPorProcessoWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosTipoBensGarantia" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosMarcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificadorProcesso" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosTipoBensGarantia" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosMarcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificadorProcesso" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroContasPagarReceberPorDiaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroContasPagarReceberPorDiaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroContasPagarReceberPorDiaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="tipoReceitaDespesa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}receitaDespesaType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="situacaoParcela" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}situacaoParcelaType" minOccurs="0"/>
+         &lt;element name="flSomenteVencidas" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="tipoDataFiltro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataFiltroType" minOccurs="0"/>
+         &lt;element name="codigosPessoas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPlanosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tiposFormasPagto" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}formaPagamentoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="valorMinimo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="valorMaximo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="flMostrarDescricaoReceitaDespesaItem" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="tipoReceitaDespesa" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="situacaoParcela" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="flSomenteVencidas" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoDataFiltro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosPessoas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPlanosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tiposFormasPagto" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="valorMinimo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorMaximo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="flMostrarDescricaoReceitaDespesaItem" type="xs:boolean" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroFinanceiroDfcWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroFinanceiroDfcWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroFinanceiroDfcWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoData" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoDataDFCType" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoData" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroFinanceiroDreWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroFinanceiroDreWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroFinanceiroDreWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="dataExercicio" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/>
+         &lt;element name="dataEmissao" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="dataExercicio" type="xs:date" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataEmissao" type="xs:date" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroFluxoCaixaPorContaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroFluxoCaixaPorContaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroFluxoCaixaPorContaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="dataExercicio" type="{http://www.w3.org/2001/XMLSchema}date"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="dataExercicio" type="xs:date" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroPedidoWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroPedidoWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroPedidoWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroPedidosPorProcessoWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroPedidosPorProcessoWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroPedidosPorProcessoWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosSituacoesProcesso" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSituacoesPedido" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoDataFiltro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataFiltroType" minOccurs="0"/>
+         &lt;element name="codigosMarcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificadorProcesso" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="pessoasEnvolvidos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosSituacoesProcesso" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSituacoesPedido" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoDataFiltro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosMarcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificadorProcesso" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="pessoasEnvolvidos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroPessoaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroPessoaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroPessoaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroType">
+       &lt;sequence>
+         &lt;element name="nomeOuRazaoSocial" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="cpfOuCnpj" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="email" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="telefone" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigoCidade" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigoCategoria" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosPessoa" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosTipoPessoa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoPessoaType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="dataInicioCadastro" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="dataFimCadastro" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="codigosResponsavel" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="ordenacao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="tipoPessoa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoPessoaType" minOccurs="0"/>
+         &lt;element name="codigosCategoria" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="estados" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="cidades" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="bairro" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="profissao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="carteiras" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="gruposEmpresariais" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="mesesAniversario" type="{http://www.w3.org/2001/XMLSchema}int" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="diaAniversario" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/>
+         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="filtroData" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}pessoaFiltroDataType" minOccurs="0"/>
+         &lt;element name="dataInicio" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="dataFim" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="pessoasRelacionadas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="relacoesPessoasRelacionadas" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="assunto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="envolvidos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="unidadesOrganizacionais" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="gruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificador" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioFiltroType">
+      <xs:sequence>
+              <xs:element name="nomeOuRazaoSocial" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="cpfOuCnpj" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="email" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="telefone" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoCidade" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoCategoria" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosPessoa" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosTipoPessoa" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="dataInicioCadastro" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataFimCadastro" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosResponsavel" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="ordenacao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoPessoa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosCategoria" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="estados" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="cidades" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="bairro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="profissao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="carteiras" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="gruposEmpresariais" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="mesesAniversario" type="xs:int" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="diaAniversario" type="xs:int" minOccurs="0">
+              </xs:element>
+              <xs:element name="status" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="filtroData" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataInicio" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataFim" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="pessoasRelacionadas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="relacoesPessoasRelacionadas" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="assunto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="envolvidos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="unidadesOrganizacionais" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="gruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificador" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroProcessoMovimentacaoWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroProcessoMovimentacaoWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroProcessoMovimentacaoWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="diasSemMovimentacao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="tipoProcessoTypes" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoProcessoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoEstado" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosSituacoesProcesso" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoAssunto" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigoClasse" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="pessoaEnvolvido" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="diasSemMovimentacao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoProcessoTypes" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoEstado" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosSituacoesProcesso" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoAssunto" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoClasse" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="pessoaEnvolvido" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroProcessosEmPlanilhaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroProcessosEmPlanilhaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroProcessosEmPlanilhaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosPessoaEnvolvido" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoEnvolvimento" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoEnvolvidoType" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoProcessoTypes" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoProcessoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSituacoesProcesso" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoEstado" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosEstados" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoAssunto" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAssuntoCnj" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAssuntos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoClasse" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosClasse" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="flHabilitado" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="filtroData" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoFiltroDataProcessoType" minOccurs="0"/>
+         &lt;element name="numeroProcesso" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosOrgaosJulgadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoPessoa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoPessoaType" minOccurs="0"/>
+         &lt;element name="codigosCategoriasPessoa" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="cpfCnpjPessoa" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element ref="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroCamposDinamicosWs" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="codigoTipoAndamento" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigoClassificacaoAndamento" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="quantidadeAndamentos" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="periodoAndamentoInicio" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="periodoAndamentoFim" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="descricaoAndamento" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosPessoaEnvolvido" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoEnvolvimento" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoProcessoTypes" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSituacoesProcesso" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoEstado" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosEstados" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoAssunto" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAssuntoCnj" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAssuntos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoClasse" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosClasse" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="flHabilitado" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="filtroData" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="numeroProcesso" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosOrgaosJulgadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoPessoa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosCategoriasPessoa" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="cpfCnpjPessoa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element ref="ns2:relatorioFiltroCamposDinamicosWs" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirAndamentos" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoTipoAndamento" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoClassificacaoAndamento" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="quantidadeAndamentos" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="periodoAndamentoInicio" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="periodoAndamentoFim" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="descricaoAndamento" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroProcessosPorClienteWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroProcessosPorClienteWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroProcessosPorClienteWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosPessoaCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flSomenteTarefasPendentes" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="nuUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSituacoesProcesso" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoEstado" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosEstados" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoAssunto" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAssuntoCnj" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAssuntos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoClasse" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirTarefas" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flExibirAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoProcessoTypes" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoProcessoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosOrgaosJulgadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flHabilitado" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="numeroProcesso" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="filtroData" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoFiltroDataProcessoType" minOccurs="0"/>
+         &lt;element name="codigosClasse" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosPessoaCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flSomenteTarefasPendentes" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flUltimosAndamentos" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="nuUltimosAndamentos" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSituacoesProcesso" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoEstado" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosEstados" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosProcessoOrgao" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoAssunto" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAssuntoCnj" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAssuntos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoClasse" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirTarefas" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirAndamentos" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoProcessoTypes" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosOrgaosJulgadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flHabilitado" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="numeroProcesso" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="filtroData" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosClasse" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroProcessosRecebidosArquivadosWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroProcessosRecebidosArquivadosWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroProcessosRecebidosArquivadosWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosPessoaCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="dataReferencia" type="{http://www.w3.org/2001/XMLSchema}date"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosPessoaCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="dataReferencia" type="xs:date" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroProcessosWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroProcessosWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroProcessosWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosPessoaCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flSomenteTarefasPendentes" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="nuUltimosAndamentos" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSituacoesProcesso" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosJusticas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoEstado" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosEstados" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosProcessoOrgao" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAreas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosFases" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoAssunto" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigosAssuntoCnj" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosAssuntos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoClasse" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flExibirTarefas" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flExibirAndamentos" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="flExibirDescricaoProcesso" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
+         &lt;element name="codigosParticipacaoTipo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoProcessoTypes" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoProcessoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosOrgaosJulgadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flHabilitado" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="numeroProcesso" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="filtroData" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoFiltroDataProcessoType" minOccurs="0"/>
+         &lt;element name="codigosClasse" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPessoaEnvolvido" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoEnvolvimento" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoEnvolvidoType" minOccurs="0"/>
+         &lt;element name="tipoPessoa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoPessoaType" minOccurs="0"/>
+         &lt;element name="codigosCategoriasPessoa" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="cpfCnpjPessoa" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element ref="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroCamposDinamicosWs" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoTipoAndamento" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="codigoClassificacaoAndamento" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="quantidadeAndamentos" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="periodoAndamentoInicio" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="periodoAndamentoFim" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="descricaoAndamento" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosPessoaCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flSomenteTarefasPendentes" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flUltimosAndamentos" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="nuUltimosAndamentos" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSituacoesProcesso" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosJusticas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoEstado" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosEstados" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoProcessoOrgao" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosProcessoOrgao" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAreas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosFases" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoAssunto" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosAssuntoCnj" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosAssuntos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoClasse" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flExibirTarefas" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirAndamentos" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirDescricaoProcesso" type="xs:boolean" minOccurs="1">
+              </xs:element>
+              <xs:element name="codigosParticipacaoTipo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoProcessoTypes" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosOrgaosJulgadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flHabilitado" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="numeroProcesso" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="filtroData" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosClasse" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPessoaEnvolvido" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoEnvolvimento" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoPessoa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosCategoriasPessoa" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="cpfCnpjPessoa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element ref="ns2:relatorioFiltroCamposDinamicosWs" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoTipoAndamento" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoClassificacaoAndamento" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="quantidadeAndamentos" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="periodoAndamentoInicio" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="periodoAndamentoFim" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="descricaoAndamento" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroReceitaDespesaPorDiaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroReceitaDespesaPorDiaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroReceitaDespesaPorDiaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="tipoReceitaDespesa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}receitaDespesaType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flSomenteVencidas" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="codigosPessoas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPlanosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="valorMinimo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="valorMaximo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="flMostrarDescricaoReceitaDespesaItem" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="tipoReceitaDespesa" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flSomenteVencidas" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosPessoas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPlanosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="valorMinimo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorMaximo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="flMostrarDescricaoReceitaDespesaItem" type="xs:boolean" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroReceitaDespesaPorPessoaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroReceitaDespesaPorPessoaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroReceitaDespesaPorPessoaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="situacaoParcela" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}situacaoParcelaType" minOccurs="0"/>
+         &lt;element name="flSomenteVencidas" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element name="tipoDataFiltro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataFiltroType" minOccurs="0"/>
+         &lt;element name="codigosPessoas" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPlanosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tiposFormasPagto" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}formaPagamentoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="valorMinimo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="valorMaximo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="tipoReceitaDespesa" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}receitaDespesaType" minOccurs="0"/>
+         &lt;element name="codigosPessoaCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificador" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="flMostrarDescricaoReceitaDespesaItem" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="situacaoParcela" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="flSomenteVencidas" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoDataFiltro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosPessoas" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPlanosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tiposFormasPagto" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="valorMinimo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorMaximo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoReceitaDespesa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosPessoaCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificador" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="flMostrarDescricaoReceitaDespesaItem" type="xs:boolean" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroReceitaDespesaWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroReceitaDespesaWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroReceitaDespesaWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="tiposLancamento" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoLancamentoFinanceiroType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="situacaoParcela" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}situacaoParcelaType" minOccurs="0"/>
+         &lt;element name="tipoDataFiltro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataFiltroType" minOccurs="0"/>
+         &lt;element name="moduloVinculo" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}moduloVinculoType" minOccurs="0"/>
+         &lt;element name="codigoVinculo" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="valorMinimo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="valorMaximo" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/>
+         &lt;element name="codigosCliente" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSolicitante" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsavel" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGrupoTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tiposFormasPagto" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}formaPagamentoType" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosPlanosConta" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigoCentroCusto" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosContaEscritorio" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosTipoDocumento" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosTipoArquivo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoDataDocumento" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}tipoDataDocumentoFiltroType" minOccurs="0"/>
+         &lt;element name="dataInicioUltimoDownload" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="dataFimUltimoDownload" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="nmMarcador" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="descricao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="flExibirFiltros" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+         &lt;element ref="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroCamposDinamicosWs" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="tiposLancamento" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="situacaoParcela" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoDataFiltro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="moduloVinculo" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigoVinculo" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorMinimo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="valorMaximo" type="xs:double" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosCliente" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSolicitante" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsavel" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGrupoTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tiposFormasPagto" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosPlanosConta" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigoCentroCusto" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosContaEscritorio" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosTipoDocumento" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosTipoArquivo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoDataDocumento" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataInicioUltimoDownload" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataFimUltimoDownload" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="nmMarcador" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="descricao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="flExibirFiltros" type="xs:boolean" minOccurs="0">
+              </xs:element>
+              <xs:element ref="ns2:relatorioFiltroCamposDinamicosWs" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroSegmentacaoDadosWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroSegmentacaoDadosWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroSegmentacaoDadosWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroType">
+       &lt;sequence>
+         &lt;element name="codigosGrupos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosClientes" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosCarteiras" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioFiltroType">
+      <xs:sequence>
+              <xs:element name="codigosGrupos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosClientes" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosCarteiras" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroTarefasGeraisWs">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroTarefasGeraisWs complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroTarefasGeraisWs">
+   &lt;complexContent>
+     &lt;extension base="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataInicioFimFiltroType">
+       &lt;sequence>
+         &lt;element name="chavesModulo" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosTipoTarefa" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosSituacaoTarefa" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="tipoDataFiltro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioDataFiltroType" minOccurs="0"/>
+         &lt;element name="codigosResponsaveis" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalho" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="marcadores" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="identificador" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosUnidadeOrganizacional" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="pessoasEnvolvidos" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosResponsaveisVinculo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="codigosGruposTrabalhoVinculo" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="nomeTipoTarefa" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosUsuariosConclusao" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="titulo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="codigosQuadrosKanban" type="{http://www.w3.org/2001/XMLSchema}long" maxOccurs="unbounded" minOccurs="0"/>
+         &lt;element name="assuntoVinculo" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/extension>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+   <xs:complexContent>
+    <xs:extension base="ns2:relatorioDataInicioFimFiltroType">
+      <xs:sequence>
+              <xs:element name="chavesModulo" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosTipoTarefa" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosSituacaoTarefa" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="tipoDataFiltro" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosResponsaveis" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalho" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="marcadores" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="identificador" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosUnidadeOrganizacional" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="pessoasEnvolvidos" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosResponsaveisVinculo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="codigosGruposTrabalhoVinculo" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="nomeTipoTarefa" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosUsuariosConclusao" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="titulo" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="codigosQuadrosKanban" type="xs:long" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+              <xs:element name="assuntoVinculo" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="relatorioFiltroType" abstract="true">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioFiltroType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioFiltroType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="identificadoresProjecaoItem" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="identificadoresProjecaoItem" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="relatorioOrdenacaoFiltroType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioOrdenacaoFiltroType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioOrdenacaoFiltroType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="chaveOrdenacao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="tipoOrdenacao" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoOrdenacaoType" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="chaveOrdenacao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoOrdenacao" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="relatorioOrdenacaoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioOrdenacaoType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioOrdenacaoType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="chaveOrdenacao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="nomeOrdenacao" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="chaveOrdenacao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="nomeOrdenacao" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="relatorioSimpleDtoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioSimpleDtoType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="relatorioSimpleDtoType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="chave" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
+         &lt;element name="valor" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="chave" type="xs:long" minOccurs="0">
+              </xs:element>
+              <xs:element name="valor" type="xs:string" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="relatorioStatusType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioStatusType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioStatusType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="PENDENTE"/>
+     &lt;enumeration value="PROCESSADO"/>
+     &lt;enumeration value="PROCESSADO_COM_ERRO"/>
+     &lt;enumeration value="LIMITE_RELATORIO_PDF"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="PENDENTE"/>
+ 
+    <xs:enumeration value="PROCESSADO"/>
+ 
+    <xs:enumeration value="PROCESSADO_COM_ERRO"/>
+ 
+    <xs:enumeration value="LIMITE_RELATORIO_PDF"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="relatorioTipoExtensaoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioTipoExtensaoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioTipoExtensaoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="XLS"/>
+     &lt;enumeration value="XLSX"/>
+     &lt;enumeration value="PDF"/>
+     &lt;enumeration value="DOC"/>
+     &lt;enumeration value="DOCX"/>
+     &lt;enumeration value="HTML"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="XLS"/>
+ 
+    <xs:enumeration value="XLSX"/>
+ 
+    <xs:enumeration value="PDF"/>
+ 
+    <xs:enumeration value="DOC"/>
+ 
+    <xs:enumeration value="DOCX"/>
+ 
+    <xs:enumeration value="HTML"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="relatorioTipoOrdenacaoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioTipoOrdenacaoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioTipoOrdenacaoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="ASC"/>
+     &lt;enumeration value="DESC"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="ASC"/>
+ 
+    <xs:enumeration value="DESC"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="relatorioTipoProcessoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioTipoProcessoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioTipoProcessoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="J"/>
+     &lt;enumeration value="E"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="J"/>
+ 
+    <xs:enumeration value="E"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="relatorioTipoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for relatorioTipoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="relatorioTipoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="processos-sem-movimentacao"/>
+     &lt;enumeration value="processos-sem-movimentacao-sintetico"/>
+     &lt;enumeration value="processos-sem-movimentacao-planilha"/>
+     &lt;enumeration value="processos-sem-movimentacao-planilha-sintetico"/>
+     &lt;enumeration value="financeiro-dre"/>
+     &lt;enumeration value="financeiro-dfc"/>
+     &lt;enumeration value="processos-por-cliente"/>
+     &lt;enumeration value="processos-por-cliente-planilha"/>
+     &lt;enumeration value="processos-em-planilha"/>
+     &lt;enumeration value="processos"/>
+     &lt;enumeration value="andamentos-em-planilha"/>
+     &lt;enumeration value="bens-garantias-por-processo"/>
+     &lt;enumeration value="bens-garantias-por-processo-planilha"/>
+     &lt;enumeration value="atendimentos-por-cliente"/>
+     &lt;enumeration value="atendimentos-por-cliente-planilha"/>
+     &lt;enumeration value="pedidos-por-processo"/>
+     &lt;enumeration value="pedidos-por-processo-planilha"/>
+     &lt;enumeration value="fluxo-caixa-por-conta"/>
+     &lt;enumeration value="receita-despesa-por-pessoa"/>
+     &lt;enumeration value="receita-despesa-por-pessoa-sintetico"/>
+     &lt;enumeration value="contas-pagar-receber-por-dia"/>
+     &lt;enumeration value="contas-pagar-receber-por-dia-planilha"/>
+     &lt;enumeration value="contas-pagar-receber-por-dia-sintetico"/>
+     &lt;enumeration value="tarefas-gerais"/>
+     &lt;enumeration value="tarefas-gerais-planilha"/>
+     &lt;enumeration value="tarefas-audiencias"/>
+     &lt;enumeration value="processos-recebidos-arquivados"/>
+     &lt;enumeration value="pessoas-planilha"/>
+     &lt;enumeration value="apontamento-horas"/>
+     &lt;enumeration value="processos-simplificado-planilha"/>
+     &lt;enumeration value="receita-despesa-por-dia"/>
+     &lt;enumeration value="receita-despesa-por-dia-sintetico"/>
+     &lt;enumeration value="segmentacao-dados"/>
+     &lt;enumeration value="receita-despesa-planilha"/>
+     &lt;enumeration value="pessoas"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="processos-sem-movimentacao"/>
+ 
+    <xs:enumeration value="processos-sem-movimentacao-sintetico"/>
+ 
+    <xs:enumeration value="processos-sem-movimentacao-planilha"/>
+ 
+    <xs:enumeration value="processos-sem-movimentacao-planilha-sintetico"/>
+ 
+    <xs:enumeration value="financeiro-dre"/>
+ 
+    <xs:enumeration value="financeiro-dfc"/>
+ 
+    <xs:enumeration value="processos-por-cliente"/>
+ 
+    <xs:enumeration value="processos-por-cliente-planilha"/>
+ 
+    <xs:enumeration value="processos-em-planilha"/>
+ 
+    <xs:enumeration value="processos"/>
+ 
+    <xs:enumeration value="andamentos-em-planilha"/>
+ 
+    <xs:enumeration value="bens-garantias-por-processo"/>
+ 
+    <xs:enumeration value="bens-garantias-por-processo-planilha"/>
+ 
+    <xs:enumeration value="atendimentos-por-cliente"/>
+ 
+    <xs:enumeration value="atendimentos-por-cliente-planilha"/>
+ 
+    <xs:enumeration value="pedidos-por-processo"/>
+ 
+    <xs:enumeration value="pedidos-por-processo-planilha"/>
+ 
+    <xs:enumeration value="fluxo-caixa-por-conta"/>
+ 
+    <xs:enumeration value="receita-despesa-por-pessoa"/>
+ 
+    <xs:enumeration value="receita-despesa-por-pessoa-sintetico"/>
+ 
+    <xs:enumeration value="contas-pagar-receber-por-dia"/>
+ 
+    <xs:enumeration value="contas-pagar-receber-por-dia-planilha"/>
+ 
+    <xs:enumeration value="contas-pagar-receber-por-dia-sintetico"/>
+ 
+    <xs:enumeration value="tarefas-gerais"/>
+ 
+    <xs:enumeration value="tarefas-gerais-planilha"/>
+ 
+    <xs:enumeration value="tarefas-audiencias"/>
+ 
+    <xs:enumeration value="processos-recebidos-arquivados"/>
+ 
+    <xs:enumeration value="pessoas-planilha"/>
+ 
+    <xs:enumeration value="apontamento-horas"/>
+ 
+    <xs:enumeration value="processos-simplificado-planilha"/>
+ 
+    <xs:enumeration value="receita-despesa-por-dia"/>
+ 
+    <xs:enumeration value="receita-despesa-por-dia-sintetico"/>
+ 
+    <xs:enumeration value="segmentacao-dados"/>
+ 
+    <xs:enumeration value="receita-despesa-planilha"/>
+ 
+    <xs:enumeration value="pessoas"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="situacaoParcelaType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for situacaoParcelaType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="situacaoParcelaType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="ABERTO"/>
+     &lt;enumeration value="PAGO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="ABERTO"/>
+ 
+    <xs:enumeration value="PAGO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="templateRelatorioGeradoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for templateRelatorioGeradoType complex type.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+
+<pre>
+ &lt;complexType name="templateRelatorioGeradoType">
+   &lt;complexContent>
+     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+       &lt;sequence>
+         &lt;element name="filtro" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioFiltroType" minOccurs="0"/>
+         &lt;element name="nome" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="dataAgendamento" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
+         &lt;element name="tipoRelatorio" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+         &lt;element name="extensao" type="{http://www.softplan.com.br/unj/schema/adv-relatorio}relatorioTipoExtensaoType" minOccurs="0"/>
+         &lt;element name="exibirFiltro" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+       &lt;/sequence>
+     &lt;/restriction>
+   &lt;/complexContent>
+ &lt;/complexType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+       <xs:sequence>
+              <xs:element name="filtro" type="ns2:relatorioFiltroType" minOccurs="0">
+              </xs:element>
+              <xs:element name="nome" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="dataAgendamento" type="xs:dateTime" minOccurs="0">
+              </xs:element>
+              <xs:element name="tipoRelatorio" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="extensao" type="xs:string" minOccurs="0">
+              </xs:element>
+              <xs:element name="exibirFiltro" type="xs:boolean" minOccurs="0">
+              </xs:element>
+      </xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="tipoDataAtendimentoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoDataAtendimentoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoDataAtendimentoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="CADASTRO_ATENDIMENTO"/>
+     &lt;enumeration value="ULTIMA_MOVIMENTACAO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="CADASTRO_ATENDIMENTO"/>
+ 
+    <xs:enumeration value="ULTIMA_MOVIMENTACAO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoDataDFCType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoDataDFCType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoDataDFCType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="DATA_BAIXA"/>
+     &lt;enumeration value="DATA_VENCIMENTO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="DATA_BAIXA"/>
+ 
+    <xs:enumeration value="DATA_VENCIMENTO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoDataDocumentoFiltroType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoDataDocumentoFiltroType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoDataDocumentoFiltroType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="DATA_ULTIMO_DOWNLOAD"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="DATA_ULTIMO_DOWNLOAD"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoEnvolvidoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoEnvolvidoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoEnvolvidoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="PARTE_ATIVA"/>
+     &lt;enumeration value="PARTE_PASSIVA"/>
+     &lt;enumeration value="TERCEIRO"/>
+     &lt;enumeration value="ASSISTENTE"/>
+     &lt;enumeration value="FISCAL"/>
+     &lt;enumeration value="TESTEMUNHA"/>
+     &lt;enumeration value="VITIMA"/>
+     &lt;enumeration value="OUTROS"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="PARTE_ATIVA"/>
+ 
+    <xs:enumeration value="PARTE_PASSIVA"/>
+ 
+    <xs:enumeration value="TERCEIRO"/>
+ 
+    <xs:enumeration value="ASSISTENTE"/>
+ 
+    <xs:enumeration value="FISCAL"/>
+ 
+    <xs:enumeration value="TESTEMUNHA"/>
+ 
+    <xs:enumeration value="VITIMA"/>
+ 
+    <xs:enumeration value="OUTROS"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoFiltroDataProcessoType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoFiltroDataProcessoType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoFiltroDataProcessoType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="DATA_CITACAO"/>
+     &lt;enumeration value="DATA_DISTRIBUICAO"/>
+     &lt;enumeration value="DATA_CADASTRO"/>
+     &lt;enumeration value="DATA_ENCERRAMENTO"/>
+     &lt;enumeration value="DATA_JULGAMENTO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="DATA_CITACAO"/>
+ 
+    <xs:enumeration value="DATA_DISTRIBUICAO"/>
+ 
+    <xs:enumeration value="DATA_CADASTRO"/>
+ 
+    <xs:enumeration value="DATA_ENCERRAMENTO"/>
+ 
+    <xs:enumeration value="DATA_JULGAMENTO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoLancamentoFinanceiroType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoLancamentoFinanceiroType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoLancamentoFinanceiroType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="RECEITA"/>
+     &lt;enumeration value="DESPESA"/>
+     &lt;enumeration value="REPASSE"/>
+     &lt;enumeration value="REEMBOLSO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="RECEITA"/>
+ 
+    <xs:enumeration value="DESPESA"/>
+ 
+    <xs:enumeration value="REPASSE"/>
+ 
+    <xs:enumeration value="REEMBOLSO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoPessoaType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoPessoaType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoPessoaType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="FISICA"/>
+     &lt;enumeration value="JURIDICA"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="FISICA"/>
+ 
+    <xs:enumeration value="JURIDICA"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="tipoProjecaoItemType">
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[<p>Java class for tipoProjecaoItemType.
+
+<p>The following schema fragment specifies the expected content contained within this class.
+<p>
+<pre>
+ &lt;simpleType name="tipoProjecaoItemType">
+   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+     &lt;enumeration value="FIXO"/>
+     &lt;enumeration value="DINAMICO"/>
+   &lt;/restriction>
+ &lt;/simpleType>
+ </pre>]]>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:string">
+     
+    <xs:enumeration value="FIXO"/>
+ 
+    <xs:enumeration value="DINAMICO"/>
+  </xs:restriction>
+</xs:simpleType>
+
+</xs:schema>

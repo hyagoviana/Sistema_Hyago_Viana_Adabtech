@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema version="1.0"
+  xmlns:ns2="http://www.softplan.com.br/unj/schema/adv-relatorio"
+  xmlns:ns1="http://www.softplan.com.br/unj/schema/adv"
+  
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import namespace="http://www.softplan.com.br/unj/schema/adv-relatorio" schemaLocation="ns2.xsd"/>
+  <xs:import namespace="http://www.softplan.com.br/unj/schema/adv" schemaLocation="ns1.xsd"/>
+
+</xs:schema>

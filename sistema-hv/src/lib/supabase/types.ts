@@ -281,6 +281,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
           preparado_por: string | null;
+          projuris_codigo_tarefa: string | null;
+          projuris_sync_at: string | null;
+          projuris_sync_error: string | null;
         };
         Insert: {
           id?: string;
@@ -305,6 +308,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           preparado_por?: string | null;
+          projuris_codigo_tarefa?: string | null;
+          projuris_sync_at?: string | null;
+          projuris_sync_error?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_distribution_staging"]["Insert"]>;
         Relationships: [];
