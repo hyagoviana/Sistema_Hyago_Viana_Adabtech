@@ -9,7 +9,19 @@
 // já barra os RPCs com requireJudicial — a UI é só conforto.
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { Gavel, Link2, Lock, Pencil, RefreshCw, ScrollText, Send } from "lucide-react";
+import {
+  Gavel,
+  Link2,
+  Lock,
+  Pencil,
+  Plus,
+  RefreshCw,
+  ScrollText,
+  Search,
+  Send,
+  Star,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -33,6 +45,13 @@ import {
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useEnviarInicialParaDistribuicao } from "@/hooks/useDistribuicaoStaging";
+import {
+  useBuscarProcesso,
+  useDefinirPrincipal,
+  useDesvincularProcesso,
+  useProcessosDoCaso,
+  useVincularProcesso,
+} from "@/hooks/useVinculoProcessos";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 
 export const Route = createFileRoute("/casos/$id/judicial")({
@@ -279,6 +298,13 @@ function CasoJudicial() {
               </div>
             )}
           </div>
+
+          {/* Doc 21.08 (menu Judicial): "Judicial 1 / Judicial 2" — o desenho do
+              Thiago mostra DOIS processos lado a lado, e ele confirmou por áudio
+              em 24/08 que um caso pode ter mais de um: o principal, os
+              relacionados e os incidentais (recursos), cada um com número e
+              andamento próprios. */}
+          <ProcessosDoCaso caseId={id} podeEditar={podeEditar} />
 
           {/* Honorários contratuais MANUAIS (SHV) — não vêm do ProJuris. */}
           <HonorariosBlock
@@ -729,6 +755,183 @@ function AndamentosETarefas({
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Os processos judiciais do caso — "Judicial 1", "Judicial 2"… do desenho.
+ *
+ * Um caso pode ter vários (Thiago, 24/08): o principal, os relacionados e os
+ * incidentais, que são os recursos e correm com número próprio. O marcado com
+ * estrela é o que responde pelo caso no motor de distribuição.
+ *
+ * Vincular aqui é por BUSCA DE NÚMERO, e não pela lista de candidatos da tela da
+ * controladoria: quem está na ficha do caso já sabe qual processo quer, e
+ * carregar os ~6.700 do ProJuris para abrir uma aba seria lento demais.
+ */
+function ProcessosDoCaso({ caseId, podeEditar }: { caseId: string; podeEditar: boolean }) {
+  const { data: processos, isLoading } = useProcessosDoCaso(caseId);
+  const vincular = useVincularProcesso();
+  const desvincular = useDesvincularProcesso();
+  const definirPrincipal = useDefinirPrincipal();
+
+  const [abrirBusca, setAbrirBusca] = useState(false);
+  const [termo, setTermo] = useState("");
+  const { data: achados, isFetching } = useBuscarProcesso(termo);
+
+  const ocupado = vincular.isPending || desvincular.isPending || definirPrincipal.isPending;
+  const lista = processos ?? [];
+
+  return (
+    <div className="card-hero p-6 mb-6">
+      <div className="flex items-start justify-between gap-4">
+        <Eyebrow>Processos judiciais ({lista.length})</Eyebrow>
+        {podeEditar && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 -mt-1 text-[12px]"
+            onClick={() => setAbrirBusca(true)}
+          >
+            <Plus size={13} className="mr-1.5" /> Vincular outro
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <Skeleton className="h-16 w-full mt-4" />
+      ) : lista.length === 0 ? (
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          Nenhum processo vinculado. Um caso administrativo pode nunca ter um.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {lista.map((p, i) => (
+            <li
+              key={p.codigo}
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-[13px]"
+            >
+              <span className="text-muted-foreground">Judicial {i + 1}</span>
+              <span className="font-mono text-[12px]">{p.identificador ?? p.codigo}</span>
+              {p.numeroCnj && <span className="font-mono text-[12px]">{p.numeroCnj}</span>}
+              <span className="text-muted-foreground">{p.assunto ?? "·"}</span>
+              {p.principal ? (
+                <Badge className="gap-1">
+                  <Star size={11} /> principal
+                </Badge>
+              ) : (
+                podeEditar && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[11px]"
+                    disabled={ocupado}
+                    onClick={() =>
+                      definirPrincipal
+                        .mutateAsync({ casoId: caseId, codigoProcesso: p.codigo })
+                        .then(() => toast.success("Principal atualizado"))
+                        .catch((e) =>
+                          toast.error(e instanceof Error ? e.message : "Falha ao definir"),
+                        )
+                    }
+                  >
+                    tornar principal
+                  </Button>
+                )
+              )}
+              {podeEditar && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto h-6 w-6"
+                  title="Desvincular"
+                  disabled={ocupado}
+                  onClick={() =>
+                    desvincular
+                      .mutateAsync({ casoId: caseId, codigoProcesso: p.codigo })
+                      .then(() => toast.success("Processo desvinculado"))
+                      .catch((e) =>
+                        toast.error(e instanceof Error ? e.message : "Falha ao desvincular"),
+                      )
+                  }
+                >
+                  <X size={12} />
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={abrirBusca} onOpenChange={setAbrirBusca}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Vincular processo do ProJuris</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search
+              size={15}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              autoFocus
+              className="pl-8"
+              placeholder="Número do processo, PRO.xxxx ou nome do cliente"
+              value={termo}
+              onChange={(e) => setTermo(e.target.value)}
+            />
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {termo.trim().length < 4 ? (
+              <p className="py-6 text-center text-[13px] text-muted-foreground">
+                Digite ao menos 4 caracteres.
+              </p>
+            ) : isFetching ? (
+              <p className="py-6 text-center text-[13px] text-muted-foreground">procurando…</p>
+            ) : (achados ?? []).length === 0 ? (
+              <p className="py-6 text-center text-[13px] text-muted-foreground">
+                Nenhum processo encontrado.
+              </p>
+            ) : (
+              <ul className="space-y-1.5">
+                {(achados ?? []).map((p) => (
+                  <li
+                    key={p.codigo}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/40 px-3 py-2 text-[13px]"
+                  >
+                    <span className="font-mono text-[12px]">{p.identificador ?? p.codigo}</span>
+                    <span className="text-muted-foreground">{p.nomeCliente.slice(0, 26)}</span>
+                    <span className="text-muted-foreground">{p.assunto ?? "·"}</span>
+                    {p.encerrado && <Badge variant="outline">encerrado</Badge>}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-auto h-7"
+                      disabled={ocupado}
+                      onClick={async () => {
+                        try {
+                          await vincular.mutateAsync({
+                            casoId: caseId,
+                            codigoProcesso: p.codigo,
+                          });
+                          toast.success(`${p.identificador ?? p.codigo} vinculado`);
+                          setTermo("");
+                          setAbrirBusca(false);
+                        } catch (e) {
+                          toast.error(e instanceof Error ? e.message : "Falha ao vincular");
+                        }
+                      }}
+                    >
+                      <Link2 size={13} className="mr-1.5" /> Vincular
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

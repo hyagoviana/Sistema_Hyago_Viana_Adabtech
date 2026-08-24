@@ -8,14 +8,32 @@ import {
   definirPrincipalFn,
   desvincularProcessoFn,
   listCasosComProcessosFn,
+  listProcessosDoCasoFn,
   recarregarProcessosFn,
   vincularProcessoFn,
 } from "@/rpc/vinculo-processos";
-import type { CasoComProcessos, ProcessoCandidato } from "@/lib/distribuicao/vinculo-processos";
+import type {
+  CasoComProcessos,
+  ProcessoCandidato,
+  ProcessoVinculado,
+} from "@/lib/distribuicao/vinculo-processos";
 
-export type { CasoComProcessos, ProcessoCandidato };
+export type { CasoComProcessos, ProcessoCandidato, ProcessoVinculado };
 
 const KEY = ["vinculo-processos"];
+
+/** Chave por caso — a ficha do caso e a tela da controladoria se invalidam juntas. */
+const keyCaso = (casoId: string) => ["processos-do-caso", casoId];
+
+/** Processos de um caso, para a aba Judicial. Só banco: responde na hora. */
+export function useProcessosDoCaso(casoId: string) {
+  const fn = useServerFn(listProcessosDoCasoFn);
+  return useQuery({
+    queryKey: keyCaso(casoId),
+    queryFn: () => fn({ data: { casoId } }),
+    enabled: Boolean(casoId),
+  });
+}
 
 export function useCasosComProcessos(somentePendentes = true) {
   const fn = useServerFn(listCasosComProcessosFn);
@@ -54,7 +72,10 @@ export function useVincularProcesso() {
   return useMutation({
     mutationFn: (vars: { casoId: string; codigoProcesso: number; principal?: boolean }) =>
       fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: keyCaso(vars.casoId) });
+    },
   });
 }
 
@@ -63,7 +84,10 @@ export function useDesvincularProcesso() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { casoId: string; codigoProcesso: number }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: keyCaso(vars.casoId) });
+    },
   });
 }
 
@@ -72,6 +96,9 @@ export function useDefinirPrincipal() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { casoId: string; codigoProcesso: number }) => fn({ data: vars }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: keyCaso(vars.casoId) });
+    },
   });
 }

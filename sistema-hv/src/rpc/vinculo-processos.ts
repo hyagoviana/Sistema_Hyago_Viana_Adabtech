@@ -5,18 +5,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAnyModule, requireModule } from "@/lib/supabase/auth-guard";
 import {
   buscarProcessoPorNumero,
+  listProcessosDoCaso,
   definirPrincipal,
   desvincularProcesso,
   esquecerProcessos,
   listCasosComProcessos,
   vincularProcesso,
 } from "@/lib/distribuicao/vinculo-processos";
-import type { CasoComProcessos, ProcessoCandidato } from "@/lib/distribuicao/vinculo-processos";
+import type {
+  CasoComProcessos,
+  ProcessoCandidato,
+  ProcessoVinculado,
+} from "@/lib/distribuicao/vinculo-processos";
 
-export type { CasoComProcessos, ProcessoCandidato };
+export type { CasoComProcessos, ProcessoCandidato, ProcessoVinculado };
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -30,6 +35,21 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
     throw err instanceof Error ? new Error(err.message) : new Error(String(err));
   }
 }
+
+/**
+ * Processos de um caso — para a aba Judicial da ficha.
+ *
+ * Gate OPERACIONAL, e não controladoria: quem trabalha o caso precisa ver os
+ * processos dele, mesmo sem acesso à tela de conferência.
+ */
+export const listProcessosDoCasoFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ casoId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<ProcessoVinculado[]> => {
+      await requireAnyModule(["operacional", "controladoria"], "view");
+      return listProcessosDoCaso(data.casoId);
+    }),
+  );
 
 export const listCasosComProcessosFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) =>

@@ -278,6 +278,32 @@ export async function listCasosComProcessos(somentePendentes = true): Promise<Ca
 }
 
 /**
+ * Processos de UM caso. Leitura direta do banco, sem tocar no ProJuris.
+ *
+ * A ficha do caso precisa disto a cada abertura, e a listagem completa de lá
+ * leva meio minuto na primeira carga — inaceitável para uma aba que se abre o
+ * tempo todo. Como o vínculo já guarda identificador, número e assunto no
+ * momento em que é criado, não há nada a buscar fora.
+ */
+export async function listProcessosDoCaso(casoId: string): Promise<ProcessoVinculado[]> {
+  const { data } = await getSupabaseAdmin()
+    .from("system_case_projuris_processos")
+    .select("codigo_processo, identificador, numero_cnj, assunto, principal, created_at")
+    .eq("case_id", casoId)
+    .eq("organization_id", ORG_ID)
+    .order("principal", { ascending: false })
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((v) => ({
+    codigo: Number(v.codigo_processo),
+    identificador: v.identificador,
+    numeroCnj: v.numero_cnj,
+    assunto: v.assunto,
+    principal: v.principal === true,
+  }));
+}
+
+/**
  * Procura um processo pelo número (CNJ ou identificador PRO.xxxx) ou pelo nome.
  *
  * É o caminho de quem já sabe qual processo quer — o Thiago pediu explicitamente:
