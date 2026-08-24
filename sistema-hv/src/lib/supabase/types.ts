@@ -257,6 +257,38 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["system_distribution_movements"]["Insert"]>;
         Relationships: [];
       };
+      system_case_projuris_processos: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          codigo_processo: number;
+          identificador: string | null;
+          numero_cnj: string | null;
+          assunto: string | null;
+          principal: boolean;
+          relacao: string | null;
+          vinculado_por: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          codigo_processo: number;
+          identificador?: string | null;
+          numero_cnj?: string | null;
+          assunto?: string | null;
+          principal?: boolean;
+          relacao?: string | null;
+          vinculado_por?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["system_case_projuris_processos"]["Insert"]
+        >;
+        Relationships: [];
+      };
       system_distribution_staging: {
         Row: {
           id: string;

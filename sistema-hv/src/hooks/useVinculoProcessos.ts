@@ -1,42 +1,65 @@
-// Hooks da conferência de vínculo caso ↔ processo do ProJuris.
+// Hooks da conferência de vínculo caso ↔ processos do ProJuris.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
-  desvincularCasoFn,
-  listCasosSemProcessoFn,
+  buscarProcessoFn,
+  definirPrincipalFn,
+  desvincularProcessoFn,
+  listCasosComProcessosFn,
   recarregarProcessosFn,
-  vincularCasoFn,
+  vincularProcessoFn,
 } from "@/rpc/vinculo-processos";
-import type { CasoSemProcesso } from "@/lib/distribuicao/vinculo-processos";
+import type { CasoComProcessos, ProcessoCandidato } from "@/lib/distribuicao/vinculo-processos";
 
-export type { CasoSemProcesso };
+export type { CasoComProcessos, ProcessoCandidato };
 
 const KEY = ["vinculo-processos"];
 
-export function useCasosSemProcesso() {
-  const fn = useServerFn(listCasosSemProcessoFn);
+export function useCasosComProcessos(somentePendentes = true) {
+  const fn = useServerFn(listCasosComProcessosFn);
   return useQuery({
-    queryKey: KEY,
-    queryFn: () => fn(),
-    // A listagem do ProJuris já vem de um cache de 5 min no servidor; refazer a
+    queryKey: [...KEY, somentePendentes],
+    queryFn: () => fn({ data: { somentePendentes } }),
+    // A listagem do ProJuris já vem de um cache de 15 min no servidor; refazer a
     // consulta a cada foco de janela só gastaria viagem.
     staleTime: 60_000,
   });
 }
 
-export function useRecarregarProcessos() {
+export function useRecarregarProcessos(somentePendentes = true) {
   const fn = useServerFn(recarregarProcessosFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => fn(),
-    onSuccess: (dados) => qc.setQueryData(KEY, dados),
+    mutationFn: () => fn({ data: { somentePendentes } }),
+    onSuccess: (dados) => qc.setQueryData([...KEY, somentePendentes], dados),
   });
 }
 
-export function useVincularCaso() {
-  const fn = useServerFn(vincularCasoFn);
+/** Busca sob demanda — só dispara com 4+ caracteres digitados. */
+export function useBuscarProcesso(termo: string) {
+  const fn = useServerFn(buscarProcessoFn);
+  return useQuery({
+    queryKey: ["busca-processo", termo],
+    queryFn: () => fn({ data: { termo } }),
+    enabled: termo.trim().length >= 4,
+    staleTime: 60_000,
+  });
+}
+
+export function useVincularProcesso() {
+  const fn = useServerFn(vincularProcessoFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { casoId: string; codigoProcesso: number; principal?: boolean }) =>
+      fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useDesvincularProcesso() {
+  const fn = useServerFn(desvincularProcessoFn);
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { casoId: string; codigoProcesso: number }) => fn({ data: vars }),
@@ -44,11 +67,11 @@ export function useVincularCaso() {
   });
 }
 
-export function useDesvincularCaso() {
-  const fn = useServerFn(desvincularCasoFn);
+export function useDefinirPrincipal() {
+  const fn = useServerFn(definirPrincipalFn);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (casoId: string) => fn({ data: { casoId } }),
+    mutationFn: (vars: { casoId: string; codigoProcesso: number }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

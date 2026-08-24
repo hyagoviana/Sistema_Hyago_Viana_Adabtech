@@ -70,7 +70,7 @@ export async function montarPayloadTarefa(
     // Uma string literal só: o tipo do retorno é inferido do texto do select, e
     // uma concatenação faz o Supabase perder a inferência.
     .select(
-      "id, case_id, task_type_id, numero_cnj, cliente_nome, data_prevista, data_fatal, urgente, status, projuris_codigo_tarefa",
+      "id, case_id, movement_id, task_type_id, numero_cnj, cliente_nome, data_prevista, data_fatal, urgente, status, projuris_codigo_tarefa",
     )
     .eq("id", stagingId)
     .eq("organization_id", ORG_ID)
@@ -109,15 +109,35 @@ export async function montarPayloadTarefa(
     return { impedimento: "o executor não tem usuário correspondente no ProJuris" };
 
   // ---- em que processo ela entra -----------------------------------------
-  const { data: caso } = linha.case_id
+  //
+  // Um caso pode ter vários processos (o principal e os recursos, cada um com
+  // andamento próprio — Thiago, 24/08). A tarefa tem de nascer NAQUELE que gerou
+  // o andamento, senão o recurso vira tarefa no processo de origem e some da
+  // vista de quem acompanha o recurso.
+  //
+  // O movimento que originou esta linha já sabe de que processo veio. Só quando
+  // não há movimento (inicial mandada pela ficha do caso) caímos no principal.
+  const { data: movimento } = linha.movement_id
     ? await sb
-        .from("system_cases")
-        .select("projuris_codigo_processo")
-        .eq("id", linha.case_id)
+        .from("system_distribution_movements")
+        .select("projuris_processo_codigo")
+        .eq("id", linha.movement_id)
         .maybeSingle()
     : { data: null };
 
-  const codigoProcesso = Number(caso?.projuris_codigo_processo);
+  let codigoProcesso = Number(movimento?.projuris_processo_codigo);
+
+  if (!Number.isFinite(codigoProcesso) || codigoProcesso <= 0) {
+    const { data: caso } = linha.case_id
+      ? await sb
+          .from("system_cases")
+          .select("projuris_codigo_processo")
+          .eq("id", linha.case_id)
+          .maybeSingle()
+      : { data: null };
+    codigoProcesso = Number(caso?.projuris_codigo_processo);
+  }
+
   if (!Number.isFinite(codigoProcesso) || codigoProcesso <= 0)
     return { impedimento: "o caso não está vinculado a um processo do ProJuris" };
 

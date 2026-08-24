@@ -1,4 +1,4 @@
-// RPC (server-only) — vínculo entre o caso do SHV e o processo do ProJuris.
+// RPC (server-only) — vínculo entre o caso do SHV e os processos do ProJuris.
 // Gate: controladoria (view para conferir, edit para vincular/desfazer).
 
 import { createServerFn } from "@tanstack/react-start";
@@ -7,14 +7,16 @@ import { z } from "zod";
 
 import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
 import {
-  desvincularCaso,
+  buscarProcessoPorNumero,
+  definirPrincipal,
+  desvincularProcesso,
   esquecerProcessos,
-  listCasosSemProcesso,
-  vincularCasoAoProcesso,
+  listCasosComProcessos,
+  vincularProcesso,
 } from "@/lib/distribuicao/vinculo-processos";
-import type { CasoSemProcesso } from "@/lib/distribuicao/vinculo-processos";
+import type { CasoComProcessos, ProcessoCandidato } from "@/lib/distribuicao/vinculo-processos";
 
-export type { CasoSemProcesso };
+export type { CasoComProcessos, ProcessoCandidato };
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -29,38 +31,78 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export const listCasosSemProcessoFn = createServerFn({ method: "GET" }).handler(async () =>
-  handle(async (): Promise<CasoSemProcesso[]> => {
-    await requireModule("controladoria", "view");
-    return listCasosSemProcesso();
-  }),
-);
+export const listCasosComProcessosFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) =>
+    z.object({ somentePendentes: z.boolean().optional() }).optional().parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async (): Promise<CasoComProcessos[]> => {
+      await requireModule("controladoria", "view");
+      return listCasosComProcessos(data?.somentePendentes ?? true);
+    }),
+  );
 
 /** Botão "Atualizar do ProJuris": joga fora o cache e recarrega a listagem. */
-export const recarregarProcessosFn = createServerFn({ method: "POST" }).handler(async () =>
-  handle(async (): Promise<CasoSemProcesso[]> => {
-    await requireModule("controladoria", "edit");
-    esquecerProcessos();
-    return listCasosSemProcesso();
-  }),
-);
+export const recarregarProcessosFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ somentePendentes: z.boolean().optional() }).optional().parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async (): Promise<CasoComProcessos[]> => {
+      await requireModule("controladoria", "edit");
+      esquecerProcessos();
+      return listCasosComProcessos(data?.somentePendentes ?? true);
+    }),
+  );
 
-export const vincularCasoFn = createServerFn({ method: "POST" })
+/** Busca por número do processo (CNJ ou PRO.xxxx) — ou pelo nome do cliente. */
+export const buscarProcessoFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ termo: z.string().min(1).max(80) }).parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<ProcessoCandidato[]> => {
+      await requireModule("controladoria", "view");
+      return buscarProcessoPorNumero(data.termo);
+    }),
+  );
+
+export const vincularProcessoFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        casoId: z.string().uuid(),
+        codigoProcesso: z.number().int().positive(),
+        principal: z.boolean().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      const { id: userId } = await requireModule("controladoria", "edit");
+      return vincularProcesso(data.casoId, data.codigoProcesso, {
+        principal: data.principal,
+        userId,
+      });
+    }),
+  );
+
+export const desvincularProcessoFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ casoId: z.string().uuid(), codigoProcesso: z.number().int().positive() }).parse(d),
   )
   .handler(async ({ data }) =>
     handle(async () => {
       await requireModule("controladoria", "edit");
-      return vincularCasoAoProcesso(data.casoId, data.codigoProcesso);
+      await desvincularProcesso(data.casoId, data.codigoProcesso);
     }),
   );
 
-export const desvincularCasoFn = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ casoId: z.string().uuid() }).parse(d))
+export const definirPrincipalFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ casoId: z.string().uuid(), codigoProcesso: z.number().int().positive() }).parse(d),
+  )
   .handler(async ({ data }) =>
     handle(async () => {
       await requireModule("controladoria", "edit");
-      await desvincularCaso(data.casoId);
+      await definirPrincipal(data.casoId, data.codigoProcesso);
     }),
   );
