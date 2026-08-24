@@ -49,3 +49,7 @@ scripts/colaboradores-normalizado.json
 # smoke de UI (screenshots gerados)
 .smoke-ui/
 .smoke-ui-session/
+# Segredos: nenhum .env entra no repositório (o arquivo `env` já vazou uma vez).
+.env*
+# ...menos o modelo sem valores, que serve de referência para quem monta o ambiente.
+!.env.example
