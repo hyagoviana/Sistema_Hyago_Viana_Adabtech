@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   ScrollText,
   ListChecks,
+  Link2,
 } from "lucide-react";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 
@@ -55,6 +56,9 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
     group: "Configuração",
     tabs: [
       { to: "/controladoria/distribuicao/tipos-tarefa", label: "Tipos Tarefa", icon: Tags },
+      // Pré-requisito do espelho de tarefas: sem o caso apontar para um processo
+      // do ProJuris, a distribuição não tem onde ser criada lá.
+      { to: "/controladoria/distribuicao/vinculos", label: "Vínculos", icon: Link2 },
       { to: "/controladoria/distribuicao/temas", label: "Temas", icon: Layers },
       { to: "/controladoria/distribuicao/configuracao", label: "Configuração", icon: Settings },
     ],

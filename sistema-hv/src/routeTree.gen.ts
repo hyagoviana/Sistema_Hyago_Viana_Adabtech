@@ -80,6 +80,7 @@ import { Route as CasosFinanceiroIndexRouteImport } from './routes/casos.finance
 import { Route as CasosIdIndexRouteImport } from './routes/casos.$id.index'
 import { Route as WhatsappConversasIdRouteImport } from './routes/whatsapp.conversas.$id'
 import { Route as PortalCasosIdRouteImport } from './routes/portal.casos.$id'
+import { Route as ControladoriaDistribuicaoVinculosRouteImport } from './routes/controladoria.distribuicao.vinculos'
 import { Route as ControladoriaDistribuicaoTiposTarefaRouteImport } from './routes/controladoria.distribuicao.tipos-tarefa'
 import { Route as ControladoriaDistribuicaoTemasRouteImport } from './routes/controladoria.distribuicao.temas'
 import { Route as ControladoriaDistribuicaoSimuladorRouteImport } from './routes/controladoria.distribuicao.simulador'
@@ -478,6 +479,12 @@ const PortalCasosIdRoute = PortalCasosIdRouteImport.update({
   path: '/portal/casos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ControladoriaDistribuicaoVinculosRoute =
+  ControladoriaDistribuicaoVinculosRouteImport.update({
+    id: '/vinculos',
+    path: '/vinculos',
+    getParentRoute: () => ControladoriaDistribuicaoRoute,
+  } as any)
 const ControladoriaDistribuicaoTiposTarefaRoute =
   ControladoriaDistribuicaoTiposTarefaRouteImport.update({
     id: '/tipos-tarefa',
@@ -779,6 +786,7 @@ export interface FileRoutesByFullPath {
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
   '/controladoria/distribuicao/temas': typeof ControladoriaDistribuicaoTemasRoute
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
+  '/controladoria/distribuicao/vinculos': typeof ControladoriaDistribuicaoVinculosRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id/': typeof CasosIdIndexRoute
@@ -884,6 +892,7 @@ export interface FileRoutesByTo {
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
   '/controladoria/distribuicao/temas': typeof ControladoriaDistribuicaoTemasRoute
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
+  '/controladoria/distribuicao/vinculos': typeof ControladoriaDistribuicaoVinculosRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id': typeof CasosIdIndexRoute
@@ -994,6 +1003,7 @@ export interface FileRoutesById {
   '/controladoria/distribuicao/simulador': typeof ControladoriaDistribuicaoSimuladorRoute
   '/controladoria/distribuicao/temas': typeof ControladoriaDistribuicaoTemasRoute
   '/controladoria/distribuicao/tipos-tarefa': typeof ControladoriaDistribuicaoTiposTarefaRoute
+  '/controladoria/distribuicao/vinculos': typeof ControladoriaDistribuicaoVinculosRoute
   '/portal/casos/$id': typeof PortalCasosIdRoute
   '/whatsapp/conversas/$id': typeof WhatsappConversasIdRoute
   '/casos/$id/': typeof CasosIdIndexRoute
@@ -1105,6 +1115,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/simulador'
     | '/controladoria/distribuicao/temas'
     | '/controladoria/distribuicao/tipos-tarefa'
+    | '/controladoria/distribuicao/vinculos'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id/'
@@ -1210,6 +1221,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/simulador'
     | '/controladoria/distribuicao/temas'
     | '/controladoria/distribuicao/tipos-tarefa'
+    | '/controladoria/distribuicao/vinculos'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id'
@@ -1319,6 +1331,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao/simulador'
     | '/controladoria/distribuicao/temas'
     | '/controladoria/distribuicao/tipos-tarefa'
+    | '/controladoria/distribuicao/vinculos'
     | '/portal/casos/$id'
     | '/whatsapp/conversas/$id'
     | '/casos/$id/'
@@ -1908,6 +1921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalCasosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/controladoria/distribuicao/vinculos': {
+      id: '/controladoria/distribuicao/vinculos'
+      path: '/vinculos'
+      fullPath: '/controladoria/distribuicao/vinculos'
+      preLoaderRoute: typeof ControladoriaDistribuicaoVinculosRouteImport
+      parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
     '/controladoria/distribuicao/tipos-tarefa': {
       id: '/controladoria/distribuicao/tipos-tarefa'
       path: '/tipos-tarefa'
@@ -2250,6 +2270,7 @@ interface ControladoriaDistribuicaoRouteChildren {
   ControladoriaDistribuicaoSimuladorRoute: typeof ControladoriaDistribuicaoSimuladorRoute
   ControladoriaDistribuicaoTemasRoute: typeof ControladoriaDistribuicaoTemasRoute
   ControladoriaDistribuicaoTiposTarefaRoute: typeof ControladoriaDistribuicaoTiposTarefaRoute
+  ControladoriaDistribuicaoVinculosRoute: typeof ControladoriaDistribuicaoVinculosRoute
   ControladoriaDistribuicaoIndexRoute: typeof ControladoriaDistribuicaoIndexRoute
 }
 
@@ -2284,6 +2305,8 @@ const ControladoriaDistribuicaoRouteChildren: ControladoriaDistribuicaoRouteChil
     ControladoriaDistribuicaoTemasRoute: ControladoriaDistribuicaoTemasRoute,
     ControladoriaDistribuicaoTiposTarefaRoute:
       ControladoriaDistribuicaoTiposTarefaRoute,
+    ControladoriaDistribuicaoVinculosRoute:
+      ControladoriaDistribuicaoVinculosRoute,
     ControladoriaDistribuicaoIndexRoute: ControladoriaDistribuicaoIndexRoute,
   }
 
