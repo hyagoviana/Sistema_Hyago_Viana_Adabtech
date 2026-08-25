@@ -23,6 +23,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   useBuscarProcesso,
   useCasosComProcessos,
   useDefinirPrincipal,
@@ -39,6 +46,9 @@ export const Route = createFileRoute("/controladoria/distribuicao/vinculos")({
 
 type Filtro = "pendentes" | "vinculados";
 
+const TODOS_OS_TEMAS = "__todos__";
+const SEM_TEMA = "(sem tema)";
+
 function VinculosPage() {
   const podeEditar = usePodeEditar("controladoria");
   const [filtro, setFiltro] = useState<Filtro>("pendentes");
@@ -48,11 +58,26 @@ function VinculosPage() {
   const recarregar = useRecarregarProcessos(somentePendentes);
 
   const [busca, setBusca] = useState("");
+  const [tema, setTema] = useState(TODOS_OS_TEMAS);
+
+  // O time vai vincular "durante as importações dos temas" (Thiago, 24/08) — ou
+  // seja, tema a tema, e não varrendo a lista inteira. O número ao lado de cada
+  // tema diz quanto falta naquele.
+  const temas = useMemo(() => {
+    const conta = new Map<string, number>();
+    for (const c of casos ?? []) {
+      const t = c.temaNome ?? SEM_TEMA;
+      conta.set(t, (conta.get(t) ?? 0) + 1);
+    }
+    return [...conta].sort((a, b) => b[1] - a[1]);
+  }, [casos]);
 
   const visiveis = useMemo(() => {
-    const lista = (casos ?? []).filter((c) =>
+    let lista = (casos ?? []).filter((c) =>
       filtro === "vinculados" ? c.vinculados.length > 0 : true,
     );
+    if (tema !== TODOS_OS_TEMAS) lista = lista.filter((c) => (c.temaNome ?? SEM_TEMA) === tema);
+
     const termo = busca.trim().toLowerCase();
     if (!termo) return lista;
     return lista.filter(
@@ -61,7 +86,7 @@ function VinculosPage() {
         (c.caseCode ?? "").toLowerCase().includes(termo) ||
         (c.temaNome ?? "").toLowerCase().includes(termo),
     );
-  }, [casos, busca, filtro]);
+  }, [casos, busca, filtro, tema]);
 
   if (isLoading) {
     return (
@@ -124,11 +149,25 @@ function VinculosPage() {
           Já vinculados
         </Button>
 
-        <div className="relative ml-auto w-64">
+        <Select value={tema} onValueChange={setTema}>
+          <SelectTrigger className="ml-auto w-64">
+            <SelectValue placeholder="Tema" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TODOS_OS_TEMAS}>Todos os temas</SelectItem>
+            {temas.map(([t, n]) => (
+              <SelectItem key={t} value={t}>
+                {t} ({n})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="relative w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-8"
-            placeholder="Cliente, código do caso ou tema"
+            placeholder="Cliente ou código do caso"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
@@ -275,7 +314,8 @@ function CasoCard({ caso, podeEditar }: { caso: CasoComProcessos; podeEditar: bo
       {caso.candidatos.length === 0 && caso.vinculados.length === 0 && (
         <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
           <Link2Off className="h-4 w-4" />
-          Nenhum processo com esse nome de cliente no ProJuris. Procure pelo número abaixo.
+          Este cliente ainda não tem processo judicial no ProJuris. Se já tiver, procure pelo número
+          abaixo.
         </p>
       )}
 
