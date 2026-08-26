@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-const s = readFileSync("application.wadl", "utf8");
+const s = readFileSync("material/integracoes/projuris/application.wadl", "utf8");
 const re = /<wadl:resource path="([^"]+)"[^>]*>([\s\S]*?)(?=<wadl:resource path=|<\/wadl:resources>)/g;
 const rows = [];
 let m;

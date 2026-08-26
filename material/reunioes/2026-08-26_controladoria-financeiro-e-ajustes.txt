@@ -1,0 +1,393 @@
+Matheus Torquato [05:57]: Opa, Thiagão, beleza?
+
+Dr. Thiago Correia [05:58]: E aí, galera, como é que vocês estão? Beleza, tranquilo.
+
+Matheus Torquato [06:02]: Já ele vai entrar aí, tá terminando com outro cliente ali.
+
+Dr. Thiago Correia [06:08]: Tranquilo. Para hoje tem as questões aí do financeiro, da controladoria, uns ajustezinhos, mas eu acho que primeiro vamos ver da controladoria como é que ficou aí, questão de motor, para a gente poder analisar.
+
+Matheus Torquato [06:20]: Vou mostrar para você como é que tá. Bora lá. Deixa eu levar uma página inteira. Você tá vendo minha tela aí?
+
+Dr. Thiago Correia [06:35]: Tô.
+
+Matheus Torquato [06:36]: Beleza, cara. Controladoria ficou assim, ó. Aqui é onde tá ali todas as, tudo, todos os processos do ProJuris ali, né? Mas o que interessa para a gente mais é essa distribuição, né? Como que você quer que seja, que seja feito, né? Eu fiz todos os ajustes que tinham comentado com a Davi lá na nossa reunião que a gente fez, mas pode ter ficado um ou outro faltando ali, né? Aqui a gente faz sincronização, o painel onde vai ter tudo, né, as tarefas, tudo mais, mais um compilado. Mas esse aqui é por dia, dá para a gente— não, eu acabei de almoçar. Aí a gente também pode mexer por data aqui e tudo mais. Aqui o andamento das pendências, a gente pode mexer aqui também, que é aquela lista que tinha passado, né, que é o mandado, arquivados e tudo mais, né. Ver todos aqui também, pegar por data. E aqui já traz o andamento, como é que tá, né, na verdade o processo, né, inteiro. Aí eu posso também classificar ele, colocar tarefas também aqui nele, né, umas tarefas. E distribuir a tarefa. Aqui é onde depois distribuir tem que fazer manualmente isso, ele vai cair aqui, certo? E também aqui toda a lista igual tá lá no ProJuris, né, onde tem todas as informações. A gente pode dar OK nas ações. Esse aqui só depois de fazer execução, né, dá certo. E o calendariozinho com os processos por data, né, e tranquilo. Também o Kanban, que nem tava lá, sabe? A gente pode mexer aqui para o lado, não tá dando. Acho que isso só tá dando na seta aqui, ó, mas eu vou colocar também uma barrinha para a gente poder ir para o lado. Mas o Kanbanzinho, tipo de tarefa, que é onde a gente vai colocar todas as tarefas que vão ter ali por processo, né? Mas a gente também, seria legal a gente dar uma configurada nisso também. Os vincos, deixa eu ver como é que tá abrindo essa parte dos vincos. Não tá renderizando ainda. Acho que a gente ia tirar os vincos, não ia?
+
+Dr. Thiago Correia [08:55]: Esse vínculo é o quê isso aí?
+
+Matheus Torquato [08:56]: Só para mim, eu acho que é o vínculo que tava da tarefa com a pessoa que você quer vincular, o advogado ali, sabe? Para tá mostrando para gente. Acho que a gente ia tirar isso aqui, se eu não me engano. Mas tipo assim, o vínculo é: eu tenho, eu tenho um processo e vou vincular alguma pessoa, tá vendo? A gente vincula a essa pessoa, tá tudo no Tiago aqui e tal, mas a gente vai vinculando esses processos, né? Essa que era a ideia. Isso, os temas que tem lá também. Aqui as configurações para a gente mexer no— acho que essas configurações nem faz sentido ter mais também, agora que a gente já mexeu em tudo, dá para tirar. Acho que precisa, porque tem as questões que é o As coisas de integrações, né, que a integração é precisa porque ele tem as variáveis de como o motor faz lá para poder ajustar as variáveis do motor.
+
+Dr. Thiago Correia [10:10]: Isso mesmo, isso mesmo.
+
+Matheus Torquato [10:14]: Aqui o histórico de andamento, ele depois que a gente for mexendo de fato no motor e for colocando as pessoas, pessoas forem agindo, vai começar a aparecer aqui em histórico, tá. Aqui é o histórico de andamento de processo, histórico de andamento de tarefas. Daí vai ficando dividido ali por processo, uma tarefa do outro. Aqui são as execuções, como tá indo. Então eu posso filtrar por— acho que é só os completos aqui, ó, suas execuções completadas. Mas eu vou colocar para ter tudo que você acha, tem o completo, tá em andamento. Oi?
+
+Dr. Thiago Correia [10:49]: O que que é essa execução aí que a gente tá vendo agora? É o quê?
+
+Matheus Torquato [10:52]: É depois que finalizou o processo, ele cair aqui, entendeu? Aí que ele vai estar o tempo, que a data que começou, o início, né, a duração de quanto foi o processo e qual é o status, tá em andamento, concluído.
+
+Dr. Thiago Correia [11:04]: Motor de distribuição, seria isso?
+
+Matheus Torquato [11:06]: Isso, isso. Para a gente ver o status completo total, né, de tudo.
+
+Dr. Thiago Correia [11:11]: Bem, para auditoria isso aí.
+
+Matheus Torquato [11:13]: Isso, auditoria. Aqui alguns indicadores para a gente ver como é que tá uma média de processo. Simulador, eu não me lembro o que que é isso aqui, mas a gente construiu, mas eu não me lembro de fato o que que ele funciona. E aqui para tirar os relatórios, né? Acho que o simulador era para a gente simular para mandar para alguém, não era?
+
+Dr. Thiago Correia [11:32]: Simulador, acho que era para ali, para um meio que tem um ambiente vocês testarem só.
+
+Matheus Torquato [11:39]: Beleza.
+
+Dr. Thiago Correia [11:41]: Não era mais para vocês testarem na criação esses indicadores assim. Depois a gente vai mexer nos indicadores.
+
+Matheus Torquato [11:51]: A ideia é a gente validar se isso aqui tá funcionando. Tipo, ele tá entrando, até onde eu vi, ele tá, se eu sincronizo, ele entra certinho. Eu posso já distribuir entre as pessoas, né, fazer distribuição. Eu posso dar ok na lista. Então, tipo, ele funciona, sabe? Ele tá funcionando com o ProJuris igual.
+
+Dr. Thiago Correia [12:09]: Quando a gente abre aqui, por exemplo, histórico de tarefas que tem aqui, né, do lado histórico de andamentos, essa tarefa que no caso você distribuiu direto pelo sistema hoje, ou não?
+
+Matheus Torquato [12:20]: Isso aqui foi só um teste que eu fiz.
+
+Dr. Thiago Correia [12:22]: Ah, você gerou?
+
+Matheus Torquato [12:23]: É, foi só um teste que o sistema fez, mas a ideia é tipo assim, a gente coloca uma tarefa naquele processo, né? Aí ele depois aqui no histórico vai ter o andamento dessa tarefa de acordo com com o processo aqui, né? Mas o que que eu vou fazer? Vou colocar também isso aqui, vou colocar no histórico de andamento um campo para a gente pesquisar pelo número do processo também, entendeu? Caso queira pesquisar não só por data, né?
+
+Dr. Thiago Correia [12:49]: Para ficar melhor também de ver aqui nessa questão de auditoria. Histórico andamento aqui, os andamentos que foi puxado lá, a decisão. Essas aqui, essa lista que tá aqui, né, de andamentos pendentes e tals, aqui é do que ele puxou de manhã cedo, né? Então provavelmente se eu pesquisar priorizar agora. Isso aqui já mudou o status.
+
+Matheus Torquato [13:36]: Eu acabei de puxar uma sincronização, ele vai mudar provavelmente, mas ele puxa de manhã, né, às 8. Daí vocês chegam com tudo já para fazer durante o dia, né. Ele puxa só, eu acabei de puxar uma sincronização, deve estar rodando, daqui a pouco ele já termina.
+
+Dr. Thiago Correia [13:53]: É porque provavelmente o tribunal, ele, o sistema sai puxando isso de madrugada, e aí ao longo da manhã é onde tem mais, né. Ao longo do dia pode chegar uma outra coisa, mas é muito Difícil.
+
+Matheus Torquato [14:05]: Então se a gente fosse, também não vai ser urgente para fazer no mesmo dia, né?
+
+Dr. Thiago Correia [14:08]: Você acha? Eles sempre veem tudo que chega no sistema no dia, mas é por conta que assim, se eles perderem o controle, está problema, sabe? Mas é mais da rotina deles, isso não tem problema não.
+
+Matheus Torquato [14:24]: Você quer colocar mais de um dia para ele girar? Acho que já tá mais de um dia, né?
+
+Dr. Thiago Correia [14:28]: Não tá? Eu acho que é isso mesmo, é porque muda a rotina, né? Hoje Se a gente colocar assim, ó, amanhã não vai mais olhar lá no ProYuris o que chega de andamento e tal, vocês vão deixar amanhã sem fazer nada. Quando chega depois de amanhã, o sistema vai puxar os que é de amanhã tudo, e aí vocês vão estar sempre um dia ali depois, né, do que chega no ProYuris. É executável dessa forma. Só para eu entender o que ele tá puxando aqui, como é que eu sei, por exemplo, aqui em andamentos pendentes Se isso é uma intimação ou um andamento. Isso aqui é porque tem duas classificações lá no ProIuris, que é o que é intimação e o que é andamento.
+
+Matheus Torquato [15:19]: Deixa eu ver se ele tem alguma coisa aqui. É, talvez seria até interessante a gente mexer melhor nessa, nesse, eu acho que ele separa Aí separa por isso aqui, separa que a intimação vai estar ali.
+
+Dr. Thiago Correia [15:34]: Qual os primeiros?
+
+Matheus Torquato [15:35]: Intimação, acho que ele vai começar com esse INT, né?
+
+Dr. Thiago Correia [15:38]: Intimação, intimação, intimação e andamento, ele começa com outro código ali, porque esse código aqui, ó, AND aqui, tá vendo?
+
+Matheus Torquato [15:45]: AND que desce andamento. Aí intimação é INT, tá vendo o começo do código? Embaixo tem o AND, que é o AND, né?
+
+Dr. Thiago Correia [15:55]: Eu acho que só coloca um botão.
+
+Matheus Torquato [15:59]: Vou fazer o seguinte, eu vou fazer o seguinte: aqui em todos esses, o que for intimação, eu vou colocar tipo aqui uma tagzinha intimação. For andamento, aí você bate o olho, já vê que é intimação, que é andamento. Hoje eu vou colocar também um filtrozinho para você filtrar intimação e andamento aqui.
+
+Dr. Thiago Correia [16:16]: O que que eu tive vendo com o pessoal aqui? O perfeito é puxar o andamento e intimação. Para a gente poder ter tudo. Só que hoje eles não conseguem olhar o que é andamento, eles só olham o que é intimação. Porque quando a intimação, o juiz já abriu o nosso prazo, e aí a gente não faz, morreu. O que é andamento é só que o sistema tá lá, toda vez que tem qualquer coisa no processo ele puxa, não importa se é intimação que seja. E aí hoje ele só olha as intimações por conta de limitação humana, né? Depois que o sistema tiver gerando a tarefa só e tal, aí ajuda. Então dá para, nesse no começo, a gente deixar aqui para só puxar as intimações mesmo.
+
+Matheus Torquato [16:54]: Só as intimações que vão puxar em andamento pendente, é de início.
+
+Dr. Thiago Correia [16:58]: Depois a gente ajusta.
+
+Matheus Torquato [16:59]: Então nem precisa colocar a tagzinha aqui do lado, né, de intimação, que tudo vai ser intimação mesmo.
+
+Dr. Thiago Correia [17:05]: Então talvez, como ele já tá programado para puxar os dois, só deixar um que o padrão é como se fosse aqui, né, um botãozinho aqui em cima, que o padrão é só mostrar aqui as intimações. Mas que ele pode ver também, tipo, uma chavezinha que ele pode ver também os andamentos aqui. Mas só vai estar puxando e não vai dar em nada.
+
+Matheus Torquato [17:24]: É o que eu tô pensando aqui, ó. Depois do, tem aqui, né, distribuição tarefa, que vai marcar lido. Do lado tem uma tagzinha, tipo, escrito intimação em verde. Aí eu sei que isso aqui é intimação. Aí quando for andamento, que foi o R&D, do lado vai ter uma tagzinha, tipo, sei lá, em amarelo escrito andamento. Aí eu sei que vai em andamento. E aqui em cima eu posso escolher se eu quero ver a intimação ou andamento, os dois.
+
+Dr. Thiago Correia [17:49]: Beleza, pode ser. E nisso aqui o sistema já tá fazendo aquela separação que a gente comentou dele identificar o que que é repetido disso?
+
+Matheus Torquato [17:58]: Sim, sim, sim, ele já até eliminou os duplicados que tinha, ele identificou algum, já eliminou, nem tem duplicado mais.
+
+Dr. Thiago Correia [18:05]: Mas esse crosscheck, saber assim, ó, teve esse andamento que o processo puxou, mas isso aqui já veio intimação. Então ele não tá vendo só intimação, intimação junto, os dois, né?
+
+Matheus Torquato [18:14]: Tem uma aba que te fale o que que ele removeu de duplicado ou não? Que ele faz sozinho isso já, já traz o que não é duplicado, ele traz o que é o único, né?
+
+Dr. Thiago Correia [18:27]: Pode ser só do jeito que já tá, não vamos complicar agora não. Depois eu vou passar até para os primeiros dias quando o pessoal for fazendo, eu vou passar para eles irem lá no sistema depois e ver quando a gente É, o interessante a gente ir olhando para validar, obviamente, né? Mas esse botão marca lido, eu acho que isso é uma opção que é exclusiva quando é andamento, que o Prioris ele vai fazer essa separação.
+
+Matheus Torquato [18:53]: Ah, é só quando for andamento? Eu posso deixar quando for andamento daí.
+
+Dr. Thiago Correia [18:56]: É que eu acho que esse movimento aí para o Prioris ele não vai aceitar. Tipo, você quer marcar lido E é uma intimação, ele não tem esse status de intimação, entendeu? Entendi. Deixa eu só abrir aqui. É, ó, deixa eu espelhar minha tela aqui para você.
+
+Matheus Torquato [19:21]: Pode espelhar. Eu até vou mexer também, eu não gostei muito desse, dessa cor que ele tá aqui. Parece que não tá dividido, né, separado.
+
+Dr. Thiago Correia [19:31]: Ficou ruim para o visual, que fica bem visualzinho assim.
+
+Matheus Torquato [19:35]: É, deixar mais assim.
+
+Dr. Thiago Correia [19:37]: Aí aqui, ó, eu tô em intimações, né? Só que o pessoal vê todos os dias, todos os dias eles zeram isso aqui. Então eles vão, só tendo opção desarquivar ou arquivar, é o que vai ter aqui de status. Aí já em movimentos, em andamento, que é esse monitoramento aqui, Isso aqui, aí ele tem a opção de marcar como lido. Aqui não, aqui ele vai puxar tudo, aqui ele vai puxar o que é intimação e o que é movimento. Aí movimento ele dá a opção de marcar como lido.
+
+Matheus Torquato [20:13]: Mas existe mais de uma coisa ali, tem andamento, tem mais uns outros ali, né?
+
+Dr. Thiago Correia [20:17]: Tem movimento, tem intimação, não, aqui é outras coisas, processos é o registro dos processos que existem cadastrados no sistema. Intimações, essa configuração aí que ele tá puxando, chega de intimação no sistema. Puxa é qual essa situação da gente cadastrar o processo ali nesse sistema, que toda vez que tiver qualquer coisa lá ele informa para gente. E andamentos aqui, que é onde vai estar tudo, né, que ele puxa. Então intimação e movimentação. Eu nem sabia, mas pelo visto tem uma forma aqui de andamento processual marcar como lido. Eu não sabia que tinha, mas tem aí, né? Eu não sei para que que serve também exatamente. Beleza, então a gente chega aqui. Aí isso aqui a gente vai mudar a forma visual e tal, né?
+
+Matheus Torquato [21:05]: Fazer um visual, deixar ele igual aos outros, né? Tipo branco no fundo, ele bege no fundo e branco na frente, porque ele ficou tudo igual, na mesma cor.
+
+Dr. Thiago Correia [21:14]: Não dá para ver quando eu vou aqui em classes.
+
+Matheus Torquato [21:21]: Aqui eu consigo colocar para onde que vai, se vai ser judicial, administrativo, comercial, financeiro, qual é a classe desse processo, entendeu? Porque tem isso dentro também do ProJuris.
+
+Dr. Thiago Correia [21:38]: Cara, eu nunca vi isso lá no ProJuris não. Não?
+
+Matheus Torquato [21:43]: Quer ver?
+
+Dr. Thiago Correia [21:49]: Onde é que deve estar?
+
+Matheus Torquato [21:53]: Aí para baixo. Eu acho que só um pouquinho. Flows, AFs, não.
+
+Dr. Thiago Correia [22:05]: São as opções que aparecem do financeiro, financeiro, administrativo, judicial.
+
+Matheus Torquato [22:14]: Eu lembro de ter visto isso no Cloudways.
+
+Dr. Thiago Correia [22:18]: Será que aquelas hierarquias de módulos que eles colocam, se for, vai ser aqui, ó, tipo isso. Pode ser desses módulos aqui? Não, que outra coisa?
+
+Matheus Torquato [22:46]: É outra coisa.
+
+Dr. Thiago Correia [22:49]: Talvez isso aqui seja do arquivo que eu passei para vocês. Quer ver qual foi aquele arquivo que eu mandei para vocês aqui? Acho que a gente fala de tarefas. Tinha feito um negócio assim, uma divisão assim, mas aqui é esse aqui, não nessa classe aqui. Classe de tarefa judicial, administrativo, comercial, financeiro. Isso aí deve ser daqui.
+
+Matheus Torquato [23:33]: Teve outro ponto que acho que é desse daqui, ó, é o tipo de tarefa.
+
+Dr. Thiago Correia [23:40]: Eu acho que tem nessa parte aqui a ideia dessa hierarquia um pouco maior de classe. Eu nem lembrava que já tinha passado isso aqui dessa forma. É porque é para na hora de visualizar. É tipo isso aqui, ó, vou criar uma tarefa aqui, um caso, só para facilitar mesmo na hora de criar. Eu vou vir aqui criar uma tarefa. Quando eu crio, quando eu vou selecionar o tipo de tarefa, ele mostra tudo, né, que existe. E aí a ideia de ter essa classe é que, por exemplo, aqui eu vou ter um submenuzinho, né? Eu vou primeiro selecionar, eu quero ver quais são as tarefas da classe administrativo, da classe comercial. Aí eu clico, aí vai aparecer as tarefas que são dessa classe, a lista, né? É isso, mais limpa. Então seria essa separação aqui entre essas classes, e quando eu clico na classe aparece as tarefas que são vinculadas àquele tipo. Então é uma configuração que a gente registra no tipo de tarefa, que eu acho que vocês já devem até ter feito aqui dessa, se eu não me engano vocês fizeram nesse sentido já também aqui. Seria aqui, ó, tipo isso aqui é um agendamento despacho, ele é da classe judicial. Se a gente vier aqui, volta lá no motor, provavelmente Deve estar puxando. Aí já aparece aqui, é meio que isso, só que aqui não pode ter uma coisa sem outra, né? Eu tenho que primeiro selecionar esse, depois esse, é meio que vir como se fosse que a gente chama de dependente, né? Isso aqui fica bloqueado até isso aqui ser preenchido.
+
+Matheus Torquato [25:42]: Ah, o classe tem que, o tipo de tarefa tem que ficar bloqueado até eu preencher o classe?
+
+Dr. Thiago Correia [25:46]: É porque ele vem daqui, né? Então seleciona qual é o tipo, todas as vezes que a gente falar.
+
+Matheus Torquato [25:51]: Mas ele tem ramificação, tipo judicial só pode aparecer alguns?
+
+Dr. Thiago Correia [25:57]: Não, eu acho que sempre que a gente selecionar a classe aparece tudo que é daquilo. Se eu quiser gerar uma classe, quando eu coloco todas ele aparece todas, ó.
+
+Matheus Torquato [26:07]: Mas quando coloca o tipo administrativo não aparece nenhum.
+
+Dr. Thiago Correia [26:10]: Pode ter essa opção todas, não tem problema. É só um filtro, né, da visualização para cá. É só da visualização para cá, mas só porque fica mais intuitivo. Se tiver fechado, a pessoa sabe que ela tem que vir aqui, que as pessoas vão aqui, as pessoas não olham.
+
+Matheus Torquato [26:27]: Então, tipo assim, ou eu escolho todas e escolho um tipo de tarefa, ou em classe eu coloco judicial, fica como judicial.
+
+Dr. Thiago Correia [26:35]: Sim, só aparece a judicial. Eu acho que você já até construiu dessa forma, é só porque não tava configurado ali nos tipos, né, de a gente fazer vinculação. Você é tranquilo da gente fazer. Aí eu vou lá em distribuir tarefa, aí aparece para cá tarefa enviada para distribuir, não refletido no período. Aí quando eu posso falar, não, pode dizer.
+
+Matheus Torquato [26:59]: É, daí eu consigo colocar tipo a distribuição para quem que vai, né, de fato, e também esses pontos, pontuação que você quer. Aí a data, a data ele puxa do sistema mesmo, né, essa data fatal aqui ele puxa conforme tá lá configurado de entrada.
+
+Dr. Thiago Correia [27:19]: Isso, isso.
+
+Matheus Torquato [27:20]: Aí eu posso colocar também uma tag, né, se ele é coletivo, complexo, urgente também, se quiser.
+
+Dr. Thiago Correia [27:27]: E aí isso aqui ele já tá identificando também pelos registros que a gente tem, né? Se ele identificar que já tem, ele puxa.
+
+Matheus Torquato [27:33]: Senão, aí eu posso colocar mais de uma, posso selecionar mais de uma, ou posso marcar todas, né, e distribuir todas uma vez também.
+
+Dr. Thiago Correia [27:45]: Beleza. Essa questão dos pontos aqui, isso aqui é fechado, a pessoa não pode ter opção de Ah, tem que ser fechado. É, tem que ser fechado porque isso aqui é configuração padrão. Depois, quando a gente for trabalhar nos relatórios, aí muda. Mas isso aqui sempre ser fechado.
+
+Matheus Torquato [28:04]: Qual que é o valor de ponto?
+
+Dr. Thiago Correia [28:07]: Tem que ter, o ponto tem que ser o que é configurado para o tipo, tá puxado do tipo da tarefa.
+
+Matheus Torquato [28:16]: Então não pode editar, mas eu posso deixar mostrando o ponto que é.
+
+Dr. Thiago Correia [28:21]: Não tem problema mostrar o ponto só porque o sistema precisa saber, né? Mas assim, se ele não mostrar aqui, não tem problema, só pode editar, distribuir. Beleza, tem a informação de outra forma, né? Mas assim, pode mostrar, não necessita, tá? Se não mostrar, não tem problema nenhum. Sistema sabendo qual é que é para ele poder fazer a classificação dele lá, tá show. Que ele não tá puxando, tem que ele vai puxar quando tiver o caso. Então, no caso, nesse processo, essa lista aqui eu ainda não— é o que é isso aqui?
+
+Matheus Torquato [28:59]: Aqui é aquele negócio que até você tinha pedido para tirar, lembra? Essa parte aqui, ó. Mas é a lista de tudo que a gente tem, entendeu? Do dia, dá até para colocar uma data aqui.
+
+Dr. Thiago Correia [29:09]: A gente A gente marca aqui, tá certo mesmo, a gente marca aqui, vem para cá, ele vai rodar, e aí ele vem para cá para mim aprovar. E caso eu aprove, aí ele lança na agenda da pessoa no projeto.
+
+Matheus Torquato [29:27]: Eu preciso aprovar aqui, ó, tá vendo? Aprovar ou desaprovar. Ou eu também posso editar a pessoa se eu quiser, né? Tipo, coloquei errado, sei lá, tá vendo?
+
+Dr. Thiago Correia [29:40]: Essas seções aqui, se der erro, tipo isso, é tipo ele não consegue.
+
+Matheus Torquato [29:47]: Essas execuções aqui é quando tem a duplicidade, ele vai cair aqui também, entendeu? É que eu limpei, mas ele vai cair a duplicidade aqui nas execuções.
+
+Dr. Thiago Correia [30:00]: Que ele tá mostrando o calendário, puxando da agenda do pessoal do ProYuris, né? Acho que o pessoal já tem esse Kanban lá na controladoria, né?
+
+Matheus Torquato [30:17]: Sim, eu tenho que colocar só uma barrinha aqui para mexer o Kanban lateralmente, não tá dando.
+
+Dr. Thiago Correia [30:25]: Mas esse aqui é algo mais para depois a gente ajustar junto com painel, as coisas. Agora, dessa parte aqui dessa configuração Ficou um pouco confuso porque aqui a gente tem uma configuração aqui das tarefas e aqui a gente tem outra, aqui a gente tem outra configuração das tarefas. Ele tá só espelhando de uma coisa para outra ou como é que ficou?
+
+Matheus Torquato [30:55]: Não, esse daqui, ó, deixa eu ver. É que são coisas diferentes, eu acho. Esse aqui, deixa eu ver então. Aqui é a configuração do sistema, é tipo aquela parte de classes e tudo mais, tipo essa parte aqui, tá vendo? Para a gente configurar isso daqui, ó, a gente configurar isso daqui, tá vendo? Esse daqui de tarefas. Esse outro aqui que tem aqui da configurações de tipo de tarefa, aqui, ó, é para o motor, para a gente conseguir colocar o que que vai ter dentro do motor, entendeu? Tipo, tanto tem a pontuação, tem tudo mais, mas colocar outras opções, entendeu? Tipo assim, ó, explicar melhor.
+
+Dr. Thiago Correia [31:48]: Não dá para ficar uma coisa só não, mas dá.
+
+Matheus Torquato [31:51]: Eu vou colocar essa parte de tipo de tarefa aqui em configurações fundir com esse tipo de tarefa aqui dentro de distribuição. Aí fica tudo uma coisa só aqui.
+
+Dr. Thiago Correia [32:03]: É porque faz mais sentido até para a gente considerar que assim, ó, que eu tô configurando tipo de tarefa, como que isso é interpretado lá no motor. Ele tem aqui as variáveis e lá ele vai interpretar, acho que evita problema aí. Para vínculos aqui, esses vínculos aqui eu acho que é a mesma coisa. Esses vínculos aqui são registrados lá nos casos, né? No caso, a gente nem tem essa opção lá, até uma coisa que a gente precisa pôr, né? Colocar um registro lá, uma opção de que esse caso ele tem um vínculo com X usuário, e aí o sistema aqui na hora de rodar o motor vai puxar as configurações do tipo, né, para tarefa, o vínculo, então que são esse campo lá dos casos. Para temas, a mesma coisa, né, que a gente entra em temas, é a mesma coisa aqui de que a gente já tem do tipo de tarefa, né. É aqui, ó, a gente tem essa configuração aqui de temas. Cadê? Como é que tá aqui no motor?
+
+Matheus Torquato [33:09]: A gente tem os temas aqui, mas também tem aqui em configurações a parte de temas também, né?
+
+Dr. Thiago Correia [33:16]: Tem aqui em temas, isso aqui é algumas configurações do temas para questão que se refere ao motor. A gente tem outra configuração aqui de temas que é, vocês fizeram um campo, um menu mais detalhado aqui. Eu trouxe até essa sugestão visual também. Vocês trouxeram aqui, ó, quando eu clico em temas, aqui tem outras configurações.
+
+Matheus Torquato [33:44]: Então eu não preciso desse tema que tá em distribuição, posso usar esse tema que tá dentro ali da operação.
+
+Dr. Thiago Correia [33:51]: Entendi.
+
+Matheus Torquato [33:51]: Aí você espelha aqui.
+
+Dr. Thiago Correia [33:54]: É, sempre que a gente for trabalhar um tema, ele é para tudo, né? Ele vai tudo até para o financeiro, por exemplo, que que eu passei no arquivo, mas é essa mesma ideia. Lá vai ter o centro de custo que vocês vão gerar despesa, que a categoria lá do Contador. Então cria um tema aqui, vincula no centro de custo lá, que é o do tema. Então sempre, sempre trabalhar essa ideia. Aí eu até acho que essa, essa tela que vocês fizeram aqui, ó, fica legal. Isso aqui que vocês fizeram assim, eu clico no tema e vou ter, ó, as configurações do campo personalizadas, configurações da pasta, o que é da distribuição, É que vai ter o do financeiro, né? Qual é o centro, a categoria referente a ele lá, conta azul. Eu acho que isso aqui, se a gente puxa para cá, sim, eu acho melhor ficar onde tá no tema.
+
+Matheus Torquato [34:40]: Você quer puxar para configuração essa parte?
+
+Dr. Thiago Correia [34:44]: Dá para deixar lá que já tá lá, tá?
+
+Matheus Torquato [34:48]: Eu só vou tirar essa parte de tema então, dentro de distribuição, que como a gente vai espelhar lá do outro tema, não precisa ter aqui. É aqui mais uma parte de histórico. Então ele até já movimentou uma aqui, ó, que você mexeu, esse Endre aqui. Ele já vai começando a colocar as coisas, né?
+
+Dr. Thiago Correia [35:15]: Aí isso aqui, ó, essa questão aqui de API Eu trouxe uma sugestão, tá lá, Marquinhos, mas eu trouxe uma sugestão de ter aqui um, ele vai estar em integrações também, só que aqui na integrações, se eu não me engano, ele vai mexer só com a API de fato.
+
+Matheus Torquato [35:34]: Aí naquele outro tem a configuração do motor junto, entendeu? Tanto que se você entrar em distribuição e você for em configurações e clicar, ele vai direcionar aqui para configuração, entendeu?
+
+Dr. Thiago Correia [35:51]: Entendi, eu vou para lá. Aqui tá ligado, né, que tudo que eu fizer aqui nas tarefas vai mudar lá já, né? Isso. Aqui é o botãozinho para eu puxar as atualizações que tiverem lá, né? Isso. Então sempre que eles forem, olhei hoje aqui, já distribuí as tarefas, mas decidi que agora eu quero olhar de novo, aí roda o que antes para atualizar tudo.
+
+Matheus Torquato [36:23]: É aquele, vai aquele, tá estipulando o horário que vai ser dos 5, entendeu? Tipo, ele tá puxando todo dia 6 da manhã aqui nesse caso. Se eu mudar para as 8, todo dia às 8 ele puxa. É horário daquele atualização do sistema, entendeu? Do motor.
+
+Dr. Thiago Correia [36:41]: E aqui em agenda também tá puxando de acordo com o pessoal lá, né? Já foi concluído e tal, aqui já dá baixa. Acho que aqui tá aparecendo tudo. Dia 12/08, é isso aqui. Provavelmente tem tarefas que já foram concluídas lá, porque o ProYuris ele tem esses status, né, de tarefas que é pendente, concluído com sucesso, concluído sem sucesso. Não sei se a gente tá fazendo essa identificação, é um filtro importante. Qual é o status da tarefa? Então aqui, se tu abrir, vai ter um monte de tarefa, só que os que tem pendente mesmo são essas. Então não sei se a gente já tá vinculando esse identificador.
+
+Matheus Torquato [37:30]: É interessante, são os 3 pendentes do mês, tá ali.
+
+Dr. Thiago Correia [37:34]: É assim, são as 3 que estão na minha agenda, Thiago, em que corresponde.
+
+Matheus Torquato [37:39]: Esse aqui eu tô vendo geral de todo mundo, né?
+
+Dr. Thiago Correia [37:42]: Isso, isso. Então se eu pegar aqui na agenda do pessoal, tá pendente.
+
+Matheus Torquato [37:47]: Deixa eu ver aqui, tem como ver de todo mundo aí, de todos os advogados?
+
+Dr. Thiago Correia [37:51]: Tem, tem aqui escritório. Então, no dia 12, por exemplo, de agosto, pendente só tem uma tarefa.
+
+Matheus Torquato [38:10]: É que tem 50 e pouco.
+
+Dr. Thiago Correia [38:13]: Essa sua vai ser todas. Ó, se eu colocar o filtro aqui concluído com sucesso, tem esse filtro também. Aí vai ter todas essas 50 e tantas aí que você tá vendo. Sim, só que é isso, é um identificador importante, entendeu? Porque a gente sabe de fato ali o que já foi feito. O Prioris, ele tem essa identificação, você só precisa mesmo puxar, ele tem esse status aí de tarefa.
+
+Matheus Torquato [38:40]: Não sei como é que seria o nome, mas eu vou puxar então para ter aqui no calendário esse status de pendente, em andamento, concluído, que daí você consegue também olhar aqui e também olhar por usuário, né? É assim, o usuário vai ver só o dele, por exemplo, ah, Advogada Ana só vai ver os dela, pendente, concluído e tal. Mas a gente, como administrador, a gente consegue ver tudo e colocar para ele ver também esse filtro de pendente que não tá, e também por nome de advogado, né? Vou colocar aqui em calendário.
+
+Dr. Thiago Correia [39:07]: Eu até tinha deixei uma sugestão nesse sentido, que é os nossos tipos de tarefas aqui do sistema ter esses mesmos status. Porque tem tarefas que a gente vai criar que é só para cá, né?
+
+Matheus Torquato [39:23]: Não é assim, é até aqui, ó, tem um pendente andamento e dá para fazer por colaborador daí, por advogado, né?
+
+Dr. Thiago Correia [39:33]: Deixa eu abrir um aqui que eu fiz. Esse aqui é antigo, ainda não tá atualizado, mas Nas nossas tarefas fica assim, né, sim ou não. E aí podem ter mais de uma situação sobre essa tarefa. Então o status que tá aqui, ok, seria o status aí concluído sem sucesso, concluído com sucesso, concluído, né. Mas ele tem o pendente, não dá para— eu acho que não precisa ter todos os tipos que tá lá no ProYours, os status de tarefa, mas esses aí: pendente, cancelado, concluído com sucesso, concluído com sucesso, são bem interessantes, a gente usa bastante e ajuda de forma geral. Eu acho que do motor então a gente precisaria de fato olhar alguns ajustes ali de campos, né? Na verdade, vamos fixar assim, quando vocês conseguirem concluir essa questão aí do tipo de tarefa que tá uma uma configuração aqui, uma lá, jogar para um só. Eu peço para o pessoal vir aqui revisar ali o que tá.
+
+Matheus Torquato [40:44]: Amanhã mesmo já termino, já te entrego amanhã mesmo.
+
+Dr. Thiago Correia [40:47]: Aí eu vou pedir para eles não distribuírem as tarefas da quinta, na quinta deixarem os temas acumulados.
+
+Matheus Torquato [40:56]: Na sexta-feira começar a usar.
+
+Dr. Thiago Correia [40:58]: Na quinta-feira vim aqui testar, distribuir direto por aqui. Pode ser que eles vão se lascar, mas assim, eu tenho que testar, né? Testar, pedir para eles virem aqui testar. E aí fica só esses ajustezinhos também visuais. Sim, sim, é para eles também conseguirem puxar suas intimações e tal. E seja o que Deus quiser.
+
+Matheus Torquato [41:25]: Não, mas vai dar boa, vai dar boa. A gente tem que testar, porque daí no teste a gente vê o que precisa fazer.
+
+Dr. Thiago Correia [41:31]: Cara, tem uma situação que até por conta da gente ainda tá aguardando outras coisas do mundo, esse negócio aqui era um filtro sobre qual foi a regra que ele gerou, né? Tem uma situação que eu não tinha passado, que é uma coisa mais manual que a gente faz, mas que eu não tinha passado até para a gente primeiro ter uma primeira versão operante aí do motor, que é o seguinte: hoje Não, vamos testar isso aqui primeiro. É porque a gente considera por executor, depois a gente distribui entre o time da pessoa. Mas vamos deixar primeiro, ver se roda legal esses primeiros dias, depois a gente faz esse ajuste, que é uma melhoria, facilitar mais ainda para eles. Do motor seria isso aí. Deixa eu ver que tinha umas questões que eu fiquei olhando.
+
+Matheus Torquato [42:19]: Tem mais algum outro ponto específico aí que vocês já Não, aí os outros são os ajustes básicos que você tinha pedido, mas já foi feito também, também revisei. A ideia mesmo é encaixar esse motor funcionando, né?
+
+Dr. Thiago Correia [42:32]: Foi dos que eu vi, a maioria ou quase todos já foram, pelo menos que eu me lembre. Só tem alguns, esses eu nem anotei, não deu tempo, mas já para colocar depois eu mando por escrito aí. Só não vou mandar tão detalhadinho, eu vou mandar por escrito. Que é as configurações do campo do cliente. A gente tinha conversado do campo do cliente aqui, a gente atualizar as melhorias igual a gente já atualizou aqui em campos dos casos. Então aqui a gente tem uma série de melhorias que a gente fez, opções, né, uma série de acréscimos mesmo que a gente fez, que ficou bem interessante. E aqui ainda não tá refletido, né, bem cru. E aí a gente tinha falado de trazer essas atualizações que a gente já fez em campos, caso você fala aqui em clientes, é, por exemplo, a gente tá aqui nas configurações do campo personalizado dos casos, né?
+
+Matheus Torquato [43:31]: Certo.
+
+Dr. Thiago Correia [43:32]: Aqui a gente já tem, por exemplo, a opção de ter um campo personalizado, caso que é link. Um campo personalizado caso que tem linhas adicionais, né, que podem ter subtítulos, que podem ser dependentes. Então uma série de atualizações que a gente foi vendo aí. E aí aqui quando a gente abre, por exemplo, os campos personalizados do cliente, a gente não tem essas mesmas melhorias que a gente já trouxe para campos personalizados casos, entendeu? A gente não tem a opção de ter um link como campo personalizado para cliente, a gente não tem opção de ter as linhas adicionais, de ter subtítulos.
+
+Matheus Torquato [44:16]: Só deixar igual aqui, né?
+
+Dr. Thiago Correia [44:19]: Só ajustar para ficar tão bom quanto a gente já melhorou aqui, né? Que a gente já mexeu, mexeu e deixou bom. Então a gente só refletir lá também para a gente ter como brincar, se for um caso ser um campo cliente, a gente ter essa possibilidade de melhorias. Dessa parte aqui de campos ainda só tem um ajuste a mais que eu acho que seria interessante, que eu também não tinha conseguido explicar ainda o que que era. Eu tinha ideia, mas eu não consegui explicar, que era o quê? Quando a gente trabalhou aqui essa ideia de campo dependente, Eu já tinha a ideia de ser um campo vinculado, e aí a gente construiu o campo dependente, que é um vinculado, né? Se o maior lá, ele é dependente, né, do maior, que é o campo dependente, seria isso, ele tá dependente daquele outro. Só que eu penso que a gente pode ter, além do dependente, a gente não mexeria nisso aqui, já tá bom dependente, um vinculado. Não é que ele depende daquele outro, é que eles são juntos, como se você tivesse a opção de campos juntos. Um exemplo que fica visual, né? Aqui para o de link, a gente tem uma situação de que a gente tem, queria colocar 2 links para isso aqui, né, para cada cliente. E aí, quando é texto, eu podia fazer ele como 2 linhas, sair adicionando. Só que eu falei, não, a ideia desse campo Pessoal, era ser como link. Aí eles, ó, Thiago, mas aí o link só tem uma linha, então quando eu tô colocando ele tá juntando as duas linhas do que a gente já preencheu. Aí, poxa, então cria outro aí, outro campo link, só ajusta os dois. Agora, se eles são vinculados, na hora que eu marco que esse aqui é vinculado no outro, lá na situação eles aparecem juntinhos. Sim, porque um é vinculado ao outro, não é que ele é dependente, que ele depende, mas eles sempre vão aparecer juntos, seja aqui, seja em outros configuração que tem de visualização.
+
+Matheus Torquato [46:19]: Se você marcar, eles puxam meio que junto, né?
+
+Dr. Thiago Correia [46:22]: Isso, isso. Não necessariamente como dependente, mas sempre junto. E além disso, se a gente pode alterar a ordem de visualização dos campos, acho que nem precisa de alterar para lá no filtro. Eu quero que ele apareça em ordem.
+
+Matheus Torquato [46:40]: Você quer que arraste um quadradinho em cima outro, não consigo alterar essa ordem se eu quiser.
+
+Dr. Thiago Correia [46:46]: Isso seria os dois últimos ajustes que eu teria aí para operacional e campos personalizados ali, né? Isso. Tem umas dúvidas, deixa eu ver. Indicação pré-menu, essa classe já do menu de tarefas a gente falou, né? De ter ali aquela situação de clicar na classe, mas já tava bem andado nesse sentido. Na página de visualização do caso tem um negócio aqui que é do dia a dia mesmo, é usando. Eu tô aqui na página do caso, né? Se eu clico aqui em casos, ele vai me voltar lá para a primeira aba. Agora eu não consigo clicar aqui e cair naquela área do tema.
+
+Matheus Torquato [47:37]: Seria interessante que ele volte para todos os temas, né? O Kanban, né?
+
+Dr. Thiago Correia [47:43]: Então aqui, ó, aqui eu volto para todos, mas eu não queria voltar.
+
+Matheus Torquato [47:47]: Então tem que ter tipo casos, o Kanban, daí entra no tema.
+
+Dr. Thiago Correia [47:50]: É assim, eu queria clicar aqui e poder voltar para aquele Kanban que eu tava, porque aqui eu vou cair na primeira página. Então caí para primeira página. Das pastas quando a gente gera documentos aqui. Quando a gente está gerando um documento, ele cai dentro da pasta aqui do cara no Drive. De forma geral, para quando a gente tá no começo, é muito tranquilo. Mas para os casos que a gente já tá trazendo para cá, por exemplo, a gente tem aqui uma série de registro, um monte de coisa. Eu acho que quando o sistema cria a pasta da pessoa e lança onde que ele lança aqui, ele já tem meio que nativo, tipo documentos automáticos. E aí tudo que é criado pelo sistema que vem para cá cai dentro dessa página, porque fica fácil da gente saber e falar bem assim, ó, é só acessar aquela página que tá lá, não importa qual é o documento que gerou, ele vai estar ali.
+
+Matheus Torquato [48:49]: Mas isso fala dentro do caso, dentro da pasta caso, tenha no caso tal, tá aí, né, teste Thiago tal.
+
+Dr. Thiago Correia [48:57]: Tem uma outra pasta chamada, chamada como é assim, uma coisa assim, sabe, ó, documentos automáticos. E aí, porque o que que é isso aqui, né? O sistema criou a pasta do caso da pessoa, ele sabe que a pasta dele é aquela. Quando a gente gera o documento, ele tá vinculado para jogar aqui dentro da pasta que ele sabe que é, só que ele joga aqui no todo. E aí você tem uma situação de que você tem um cliente que tem 40 documentos aqui.
+
+Matheus Torquato [49:23]: A gente fazer assim, conforme for criando documento, a gente, para você jogar esse documento, eu quero esse documento dentro da pasta de um cliente, ele cria uma pasta com o nome daquilo.
+
+Dr. Thiago Correia [49:34]: Por exemplo, eu acho que precisa, para não ficar muito grande, do sistema ter que criar. Eu pensei assim, é na hora que a gente cria o caso, ele cria a pasta da pessoa aqui, né? Criou o cliente, eu crio o caso, ele cria a pasta do caso da pessoa. Então na hora que ele cria essa pasta desse caso, ele já cria aqui, ó, uma pasta documento automático de uma vez só, na hora que ele faz, sabe? De uma vez só. E aí ele registra que todas as vezes que gerar um documento automático, ele joga nessa pasta aí. Acho que fica mais fácil.
+
+Matheus Torquato [50:03]: Isso é documento automático feito pelo sistema, que vai lá para o ZapSign assinar, esse tipo de coisa.
+
+Dr. Thiago Correia [50:10]: Todos eles que a gente gera aqui pelo sistema, caso de procuração, né? Caso de procuração, todos eles que a gente gera aqui, ele vai, ele tá jogando para pasta, que é a identificação que ele tem, né, do cliente. Então ele vai saber que ele criou uma subpasta aqui dentro onde ele joga esses documentos, ele joga tudo aí. Beleza, esse daqui eu vou mandar escrito, só não vou mandar bem detalhadinho. Configurações, aqui em configuração é mais para questão visual mesmo. Eu abro, eu tenho as configurações do meu usuário, mas eu tenho também as do sistema. Separar como menu assim, né?
+
+Matheus Torquato [50:48]: Sim, sim, vou separar entre usuário e o sistema. Na verdade, essas configurações do sistema só serve para administrador, né? Tanto que os usuários normais não tem essa parte, essa parte só vai ver a configuração dele mesmo, né? Mas eu vou dividir entre configurações do sistema e configurações do meu perfil, né? Seria isso.
+
+Dr. Thiago Correia [51:14]: Aqui em workflow, no workflow aqui, pensei da gente poder fazer um— o pessoal já até começou a configurar algumas coisas. Pensei da gente poder fazer como se fosse um— seria um filtro visual, na verdade, mas é meio que uma caixinha geral. Porque aqui o Pablo tá lá configurando umas coisas, criou esse monte de workflow para uma situação. Só que mostra para todo mundo. Então eu acho que tipo assim, se tivesse como criar como se fosse um grupo que esse workflow tá ali dentro, não é que ele é vinculado, só não sei o quê, não, é só que é um grupo aqui de visualização.
+
+Matheus Torquato [51:50]: Então ele pode setar algumas pessoas que podem usar e ver esse workflow, seria isso?
+
+Dr. Thiago Correia [51:55]: Assim, nem precisa ter essa restrição de a gente pensar em muita coisa. Depois a gente pode projetar nesse sentido, mas de início mais simples, só ter como se fosse assim, ó, Grupo de workflow. Aí a pessoa, todo mundo pode abrir, ver tudo do jeito que tá aqui, só que ao invés de aparecer aqui ele vai aparecer dentro. Então vamos supor que isso aqui seja um grupo, né, grupo workflow 1 Pablo identificação. Ele vai criar e vai jogar dentro desse grupo aqui. Então tudo isso aqui que ele fez vai estar lá dentro. Aí a pessoa quer fazer não sei o quê, outra pessoa cria, e eles podem criar e acessar e mexer livremente do jeito que já tá aqui. Do jeito que já tiver nos temas, só a forma que visualiza. É porque para agora tem isso, mas quando todos os temas forem vindos, isso aqui vai ficar um negócio que ninguém acha mais nada. Sim, sim, entendi.
+
+Matheus Torquato [52:45]: E colocar também uns filtros aí para ficar melhor também de achar.
+
+Dr. Thiago Correia [52:49]: Acho que precisaria ter algum tipo de identificação, é um código, saber Ó, tá, workflow. E aí até pensei que quando tiver uma ação automática de workflow, ele indicar qual foi o identificador, qual foi que gerou aqui. Então, ó, gerou uma tarefa automática de tal coisa por conta do workflow. Então, tarefa gerada, o quê, e códigozinho do workflow. Quando ele criar isso, que a gente sempre vai ter uma identificação mais de auditoria mesmo ali, né. Tem um monte de tarefa aparecendo para todo mundo aqui, então o negócio errado. Qual é o workflow que tá fazendo isso? Fudeu. A gente vem aqui, sabe dizer, né? É, exato. E aí uma opção de editar ou suspender. Então a gente pode— eu não sei se esse desativar seria suspender.
+
+Matheus Torquato [53:40]: É, o desativar desativa ele, ele não funciona. Daí você pode ativar de novo. Excluir, excluir para sempre.
+
+Dr. Thiago Correia [53:45]: Então só depois muda o visual. Isso aqui suspender, porque as pessoas vão ter dúvidas, o de excluir, beleza, e um de editar, porque esse aqui, por exemplo, eu quero mexer nele para editar. Tem uma questão dos workflows, mas vamos deixar essa mais para frente, que seria vinculada a checklist. Vamos deixar mais para frente. Anota tarefa, mesmo status, a gente colocou de mudança de etapa. Esse aqui, esse aqui eu vou, esse aqui é o quê? Quando a gente tem aqui uma mudança de etapa dentro da situação dos casos, ele ainda tá aparecendo uma informação robotizada enorme. E aparece assim, ó, então mudou de etapa no Kanban. Ele aparece com esses códigos, tivesse como isso aqui ser um pouquinho mais humanizado, o título, né, aparecer mudou, então a etapa era tal, entrar em contato, que é o título que tá lá, e para dado judicial. Então mais humanizado, informação que aparece aqui. Aqui a gente tem dados do serviço atualizado, que a gente até foi até uma alteração que a gente fez, né, que é dados atualizados. Ele informa que os dados do serviço foram esse campo aqui personalizado lá em cima que foi alterado, mas acaba que tem bastante. Então a gente já configurou para aparecer só os manuais. Mas mudança de etapa é interessante aparecer. Essa mudança de dado do serviço, campo atualizado, eu acho que não precisa vir para cá, para linha do tempo. Dá para ter, dá para a gente pensar em ter aqui tipo um menu de auditoria onde essa informação aparece, que a gente sabe qual é o campo, quem mexeu e como mexeu. Então dá até para ter assim, ó, alterou o campo dado serviço atualizado. Que, né, é o best tal, então o campo tal faltará. Mudou o registro lá, era A e agora virou B, dá para ter meio que uma auditoria, mas não precisa se for algo que demora muito, for muito difícil, não precisa ter essa especificação. Pelo menos já tirando daqui, colocando como um campo de auditoria, é porque isso seria mais para fins de histórico, saber quem mexeu no quê, mas não tem problema, pode ser algo no segundo momento aí tranquilo. E para esse aqui teria isso, né? De forma geral, o que seria, seria esses. Tem um do financeiro que eu passei ali para vocês.
+
+Matheus Torquato [56:38]: É o financeiro, eu já, eu já vou, eu vou fazer o seguinte, eu vou pegar aquele documento também do Conta Azul e eu vou destrinchar ele. Se eu tiver alguma dúvida, eu te pergunto, mas eu vi que tá bem detalhado.
+
+Dr. Thiago Correia [56:49]: Pode perguntar lá, é porque assim, eu demorei para caramba porque eu fiquei tentando definir definir como que a gente ia passar a registrar para frente. E aí bati cabeça, bati cabeça até fixar a forma. E depois fiquei pensando como que a gente vai fazer para alterar, para ajustar, sei o quê. Eu falei, cara, vamos fazer no mais simples, vamos primeiro.
+
+Matheus Torquato [57:09]: Ele tá bem detalhado, vai ser fácil mexer com ele. Aí se tiver alguma dúvida eu te mando, que eu vou estar conversando no grupo ali, né?
+
+Dr. Thiago Correia [57:16]: Beleza. Aí assim, a gente vai basicamente criar registros novos com categorias novas, sei o quê. As antigas Eles ficam lá e depois a gente volta e resolve como faz. Aí ficou até do Adávio me passar, ele ficou de olhar na documentação da API do Conta Azul se ele consegue alterar os registros antigos direto pela API.
+
+Matheus Torquato [57:33]: A gente monta uma lista do que vai ser alterado, mandar para ele aqui se ele viu.
+
+Dr. Thiago Correia [57:38]: Mas eu vou até mandar escrito no grupo também, porque aí fica mais fácil de vocês verem para acompanhar nosso grupo ali. Ele também tinha ficado de ver a questão do Pro Iuris, que era do de vincular judicial, né?
+
+Matheus Torquato [57:54]: Então aqui, por exemplo, é vincular o quê?
+
+Dr. Thiago Correia [57:57]: Ele ficou de ver de vincular o judicial do Pro Iuris. O sistema tá fazendo isso aqui automático, essa vinculação aqui desse judicial do Pro Iuris, por exemplo, ele fez automático?
+
+Matheus Torquato [58:14]: Sim, sim, sim, de vez ou mais.
+
+Dr. Thiago Correia [58:18]: Achei que a gente ia ter que fazer manual. Será que tá certo?
+
+Matheus Torquato [58:23]: A gente pode bater para ver, né?
+
+Dr. Thiago Correia [58:27]: Porque como é que ele puxou para cá, por exemplo? É pelo CPF?
+
+Matheus Torquato [58:34]: Ele puxa pelo número do processo. Ali, tá vendo? O primeiro, pelo número do processo.
+
+Dr. Thiago Correia [58:47]: Só ver, por exemplo, esse caso aqui, querido. Aí ele puxou sozinho para cá.
+
+Matheus Torquato [59:06]: Ele, o processo é o número mãe ali, né? Aí ele consegue puxar todas as informações.
+
+Dr. Thiago Correia [59:15]: Entendi, entendi. Então se a gente vem aqui, por exemplo, atualizado, aí puxou o resto. Achei que a gente ia ter que primeiro indicar manualmente quais são. E quando ele não identifica, ele faz tudo, né, que o número é único para cada processo lá das tarefas. Ó, eles até já puxando aqui também, tá vendo? Então quando a gente, se ele não conseguir identificar, ele só não traz, só não traz isso. Isso aí, melhor, mais fácil ainda. Então beleza, pois na hora deixa o pessoal fazer. Eu vou passar só para eles confirmarem, puxou o processo certo e tal, mas teoria eles nem precisam trazer para cá.
+
+Matheus Torquato [01:00:07]: Só o que o Davi tá te devendo, aí você manda no grupo lá, aí ele pode cobrar ele.
+
+Dr. Thiago Correia [01:00:14]: É, aqui o que ficou dele passar seria se a gente consegue daqui distribuir um processo judicial novo no Registro Pro Iores. Eu vou passar para ele, que eu acho que essa parte mais do Ah, fazer o contrário, né?
+
+Matheus Torquato [01:00:26]: Ele, em vez dele pegar do Projuro, a gente também espelhar para lá uma coisa nova, criar um caso novo.
+
+Dr. Thiago Correia [01:00:32]: Acontece aqui, criar processo novo. Ele ficou de pé, mas eu vou escrever lá para ele lá, tá?
+
+Matheus Torquato [01:00:37]: Aí eu vou cobrar ele também aqui.
+
+Dr. Thiago Correia [01:00:39]: Ele fugiu da gente hoje, eu vou mandar para ele lá.
+
+Matheus Torquato [01:00:42]: É, ele ficou enrolado com outro cliente nosso lá, e esse cliente também entrou agora na esteira de produção ali. Como é inicial, é muita coisa para perguntar.
+
+Dr. Thiago Correia [01:00:51]: Ele ficou da questão também do Conta Azul para o Asas, a vinculação, que aí seria uma questão diferente do financeiro, ficou de passar, mas vou passar para lá também. Então, da controladoria tá bem encaminhado já, do financeiro eu acho que você consegue ajustar rápido aí. Teoricamente puxa tudo isso para a IAGRA já na sexta, bem encaminhado, e semana que vem eu já consigo apresentar para o time, a gente começar os outros temas. Aí Fora isso, teria as situações das importações, dos outros temas. Eu fiquei de ver um negócio para intermediário, comecei a mexer, mas rapaz, pensa num cara que trabalhou igual condenado com esse negócio de água viajada.
+
+Matheus Torquato [01:01:32]: Se você quiser, se você achar melhor, a gente, eu posso tentar organizar do seu sistema ali, tipo extrair alguma coisa e tocar o barco com isso aí eu mesmo, entendeu? Fazer as vinculações, entendeu?
+
+Dr. Thiago Correia [01:01:45]: Dá para tentar. Eu até tive algumas ideias já, mas para não ocupar você, eu vou fazer assim, eu nem vou me ocupar com essa questão da importação mais automática agora. Mas uma questão importante, quase esqueci, do Trello. Eu queria ver se a gente já testa o Trello, testar a importação do Trello. Eu deixei um tema bem pequenininho 29 casos ali para a gente fazer esse teste, que vai ser esse daqui no sistema que nós tá.
+
+Matheus Torquato [01:02:21]: É, o do Trello eu sei que dá para fazer. A gente vai precisar organizar a questão da API ali e tudo mais. E o que que você quer puxar? E ele puxa de um template, tipo um workflow único, né? Não consigo puxar de todo Trello, ele tem que pegar de um lugar único do Trello, entendeu?
+
+Dr. Thiago Correia [01:02:37]: É o que eu pensei, foi aqui, por exemplo, esse tema aqui a gente tem 29 casos, bem pouquinho, né? E aí eu puxei os cards que são desses casos aí, o que a gente puxaria são esses daqui, tem até alguns que nem tem. Então eu adicionei um negócio aqui no Trello que o pessoal consegue identificar qual que é o ID desse card, porque aqui aparece, eu pesquisei, né, aqui aparece, mas é o curto e tal. Então tem aqui o ID do card. E aí já coloquei em todos os casos que a gente tá trazendo para o sistema, inclusive aquele do indenização, coloquei que o pessoal tem que preencher esse campo aqui, ó, que não é um campo que vai ficar de fato no sistema, mas só para a gente trabalhar na exportação. Então quando você for pegar da API, você já tem no nosso sistema qual é o caso, que é as informações desse caso. Você já sabe que esse caso é desse card aqui. E aí o que que a gente importaria? A gente só importaria a descrição, que vai vir aqui para observações, como comentário de observações, e os comentários aqui, né, que vão vir para, como se fosse um comentário sendo registrado aqui na data e tal. Então eu acho que vai ser bem tranquilo, que a gente não quer puxar tudo que exista. De toda forma, a gente quer fazer essa identificação do que que é e tal, trazer. Aí o que você precisa seria quais acessos que você precisaria.
+
+Matheus Torquato [01:03:59]: Eu vou descrever melhor também depois como é que eu só preciso, eu vou precisar do acesso, eu preciso ver como é que, qual é, como é que tá a API do Trello. Eu vou te falar, ó, eu preciso que você crie uma API assim, assim, assado. Ele vai criar, vai me dar o número e eu faço o resto daqui. Eu só preciso verificar o que que eu preciso, como é que funciona, se é por workflow mesmo ou se eu pego de tudo, que eu não tô achando que é só por workflow. Então eu preciso dar uma lida nessa API aí. Mas eu vou fazer o seguinte, eu vou fazer tudo, as alterações junto com o financeiro e tudo mais. Eu terminando isso, eu entro nesse estudo do treino, a gente passa o que que eu preciso.
+
+Dr. Thiago Correia [01:04:32]: Beleza. Então quando você souber aí, você me passa que a gente já desenvolve. Esse aqui, como é pouquinho, vai ficar tranquilo para a gente validar.
+
+Matheus Torquato [01:04:41]: E uma vez que validou, é só a gente puxa tudo ali, as informações, e vai completando. Aí você não precisa nem me trazer esses casos aí que nem a gente fez com mais médicos, a gente importa tudo do Trello de uma vez, entendeu? Aí meio que fica um espelhado do outro, mas aí você consegue já usar o sistema sem precisar ficar usando Trello a partir dali, né?
+
+Dr. Thiago Correia [01:05:00]: Eu nem queria colocar para espelhar que a gente trouxe, eu queria que não, é só para ter o histórico, deixar o povo botado aqui, porque senão eles não acostumam não. Agora, desse aqui é um problema que eu tô, que eu tô tentando ver se eu soluciono. A gente já finalizou, viu? Assim, eu só vou te ocupar 5 minutinhos. Isso aqui é a situação, queria ver se vocês veem uma solução para mim. Nós temos esse site de consulta do Ministério da Saúde que é uma merda. Ele, o Ministério da Saúde, pensa no negócio mais ruim que você já assistiu na sua vida, o Ministério da Saúde consegue fazer pior, viu?
+
+Matheus Torquato [01:05:35]: Ele é do governo, é assim mesmo, tudo que é do governo é pior.
+
+Dr. Thiago Correia [01:05:39]: O Ministério da Saúde, ele é o governo 10 vezes pior. Tudo que existir de ruim existe no Ministério da Saúde. E aí eu tenho, por exemplo, todos esses do Indenização do Mais Médico, esses 400 casos, todos eles têm um número de processo administrativo que tá no Ministério da Saúde, que é esse chamado número CI, número de protocolo. Para mim saber como é que tá o caso administrativo dessa pessoa, eu tenho que vir aqui. Eita, tá quase no fim aqui, vai fechar. Será que vai desligar aqui então? Reloginho rodando.
+
+Matheus Torquato [01:06:10]: Eu acho que vai, mas eu vou te mandar um novo link. Você vai falar isso aí só para você ver se você consegue me dar

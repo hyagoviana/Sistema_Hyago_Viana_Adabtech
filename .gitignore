@@ -4,5 +4,7 @@ sistema-hv/tmp/
 
 # Credenciais soltas / backups sensiveis (nao commitar)
 /env
+/material/privado/
 fluxo-n8n-LIVE.json
+/material/integracoes/n8n/fluxo-LIVE.json
 .claude/settings.local.json

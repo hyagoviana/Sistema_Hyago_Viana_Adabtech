@@ -62,7 +62,7 @@ except ImportError:
 # --------------------------------------------------------------------------- #
 REPO_ROOT = Path(__file__).resolve().parents[2]  # .../Sistema_Hyago_Viana_Adabtech
 SISTEMA_HV = REPO_ROOT / "sistema-hv"
-XLSX_PATH = REPO_ROOT / "MM_BASE_SISTEMA_BETA_v1.xlsx"
+XLSX_PATH = REPO_ROOT / "material" / "planilhas" / "MM_BASE_SISTEMA_BETA_v1.xlsx"
 ENV_PATH = SISTEMA_HV / ".env.local"
 
 DEFAULT_ORG = "00000000-0000-0000-0000-000000000001"
