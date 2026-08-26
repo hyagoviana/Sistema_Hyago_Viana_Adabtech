@@ -1,6 +1,6 @@
 # Story FN1: Financeiro do caso — receitas e despesas registradas no SHV (sem tocar na API do ContaAzul)
 
-**Épico:** Reunião 2026-08-26 · **ID:** FN1 · **Onda:** 4 (penúltima) · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** FN1 · **Onda:** 4 (penúltima) · **Status:** Ready for Review
 **Fonte:** `material/documentos/2026-08-25_financeiro-shv.docx` (Desenhos 1 a 6)
 **Executor:** @architect (modelo de dados) → @data-engineer (migrations) → @dev (UI/serviço) · Quality gate: @qa
 **Risco:** ALTO — módulo novo, com dinheiro. Mitigação: **nada é enviado para fora** nesta story.
@@ -74,24 +74,24 @@ Motivo: forçar o modelo novo dentro da tabela antiga arriscaria quebrar cobran�
 ## Tasks / Subtasks
 
 ### T0 — Modelo (@architect)
-- [ ] Desenhar as tabelas novas (lançamento, parcela, categoria, tipo, vínculo despesa→receita) — a direção já está travada pelo owner: **não** reusar `system_parcelas`. Registrar como ADR curta em `docs/sprints-p1-p2/_adrs/`, incluindo o ponto de encontro com a cobrança que a FN2 vai usar.
+- [x] Desenhar as tabelas novas (lançamento, parcela, categoria, tipo, vínculo despesa→receita) — a direção já está travada pelo owner: **não** reusar `system_parcelas`. Registrar como ADR curta em `docs/sprints-p1-p2/_adrs/`, incluindo o ponto de encontro com a cobrança que a FN2 vai usar.
 
 ### T1 — Migrations (@data-engineer)
-- [ ] Catálogo de categorias (com código CA) + seed do doc. (AC-1)
-- [ ] Lançamentos + parcelas + vínculo despesa→receita reembolsável. (AC-3..AC-7)
-- [ ] Campos de tema: centro de custo e serviço do ContaAzul. (AC-11)
-- [ ] Rollbacks; aplicar 2×; `db:types`. (AC-15)
+- [x] Catálogo de categorias (com código CA) + seed do doc. (AC-1)
+- [x] Lançamentos + parcelas + vínculo despesa→receita reembolsável. (AC-3..AC-7)
+- [x] Campos de tema: centro de custo e serviço do ContaAzul. (AC-11)
+- [x] Rollbacks; aplicar 2×; `db:types`. (AC-15)
 
 ### T2 — Serviço (@dev)
-- [ ] `src/lib/financeiro-caso-service.ts`: criar/editar/excluir lançamento, gerar parcelas (com revisão), regra do reembolsável, mudança de status, agregações do painel Valores lançados. (AC-3..AC-10)
-- [ ] RPCs com gate `financeiro` (view/edit). (AC-13)
+- [x] `src/lib/financeiro-caso-service.ts`: criar/editar/excluir lançamento, gerar parcelas (com revisão), regra do reembolsável, mudança de status, agregações do painel Valores lançados. (AC-3..AC-10)
+- [x] RPCs com gate `financeiro` (view/edit). (AC-13)
 
 ### T3 — UI do caso (@dev)
-- [ ] Painéis Receitas / Despesas / Valores lançados dentro de `casos.$id.financeiro.tsx`, reusando Rastro e Linha do tempo financeira que **já existem**. (AC-9, AC-10, AC-12)
-- [ ] Formulários dos Desenhos 4 e 5, com "Revisar parcelas"/"Revisar recorrência". (AC-3, AC-4)
+- [x] Painéis Receitas / Despesas / Valores lançados dentro de `casos.$id.financeiro.tsx`, reusando Rastro e Linha do tempo financeira que **já existem**. (AC-9, AC-10, AC-12)
+- [x] Formulários dos Desenhos 4 e 5, com "Revisar parcelas"/"Revisar recorrência". (AC-3, AC-4)
 
 ### T4 — Configuração do tema (@dev)
-- [ ] Aba **Financeiro** no `TemaConfigTabs`. (AC-11)
+- [x] Aba **Financeiro** no `TemaConfigTabs`. (AC-11)
 
 ### T5 — QA (@qa)
 - [ ] Receita parcelada em 12×: parcelas geradas certas; editar a 5ª (valor e vencimento) e salvar. (AC-3)
@@ -141,3 +141,4 @@ Motivo: forçar o modelo novo dentro da tabela antiga arriscaria quebrar cobran�
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial a partir do doc 25.08 Financeiro SHV; fase 1 sem API | @sm (River) |
 | 2026-08-26 | v0.2 | Owner travou o modelo: **tabelas novas**, `system_parcelas` intacta; vínculo com cobrança só na FN2 | @aios-master (Orion) |
+| 2026-08-26 | v0.3 | **Implementada.** Migrations `20260826000005` (3 tabelas + 4 campos no tema) e `20260826000006` (seed com as 30 categorias dos dois mapas do doc), ambas aplicadas 2× — idempotentes. Serviço + RPC (gate `financeiro` view/edit) + hooks + painéis (Receitas, Despesas, Valores lançados com Devido/Vencido/Recebido/A vencer e drill-down por parcela) + formulários dos Desenhos 4 e 5 com **"Revisar parcelas"** + aba **Financeiro** no tema (Desenho 6). A **despesa reembolsável gera a receita Aguardando** automaticamente, e a chave só aparece quando a categoria escolhida é de um balde reembolsável. Decisões da execução: (a) os botões "Fazer/Revisar lançamento" existem mas **dizem no título** que a gravação no ContaAzul é a próxima etapa — ninguém vai achar que já foi ao ERP; (b) os painéis ficam **fora** do gate de bifurcação, porque o sentido do módulo é justamente registrar valor futuro em caso que ainda não entrou na pipeline financeira; (c) reusei `maskCentavos`/`centavosToMask` do projeto em vez de criar formatação nova; (d) o seed manteve a numeração do doc **como está**, inclusive a inconsistência de 4.01.02 ter filhos 4.01.03.0x — corrigir por conta própria criaria divergência silenciosa com o que ele cadastrou no ContaAzul. typecheck OK, eslint OK, build OK. **Falta o T5 (UI).** | @dev (via Orion) |

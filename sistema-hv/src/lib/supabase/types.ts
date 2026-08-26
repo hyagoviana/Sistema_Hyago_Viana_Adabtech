@@ -1285,6 +1285,12 @@ export type Database = {
           drive_folder_url: string | null;
           drive_casos_folder_id: string | null;
           drive_contratacao_folder_id: string | null;
+          // FN1 (2026-08-26) — Desenho 6: centro de custo e serviço do ContaAzul,
+          // 1 por TEMA ("sempre que a gente for trabalhar um tema, ele é para tudo").
+          contaazul_centro_custo_id: string | null;
+          contaazul_centro_custo_nome: string | null;
+          contaazul_servico_id: string | null;
+          contaazul_servico_nome: string | null;
         };
         Insert: {
           id?: string;
@@ -2131,6 +2137,131 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["system_audit_log"]["Insert"]>;
+        Relationships: [];
+      };
+      // FN1 (2026-08-26) — FINANCEIRO DO CASO (doc 25.08 Financeiro SHV).
+      system_fin_categorias: {
+        Row: {
+          id: string;
+          organization_id: string;
+          kind: string;
+          codigo: string;
+          nome: string;
+          parent_id: string | null;
+          reembolsavel: boolean;
+          contaazul_id: string | null;
+          ordem: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          kind: string;
+          codigo: string;
+          nome: string;
+          parent_id?: string | null;
+          reembolsavel?: boolean;
+          contaazul_id?: string | null;
+          ordem?: number;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_fin_categorias"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_fin_entries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          case_id: string;
+          kind: string;
+          tipo: string;
+          categoria_id: string | null;
+          status: string;
+          descricao: string | null;
+          valor_centavos: number;
+          forma_pagamento: string | null;
+          conta_financeira: string | null;
+          data_vencimento: string | null;
+          parcelas: number;
+          periodicidade_meses: number;
+          fornecedor: string | null;
+          recorrente: boolean;
+          reembolsavel: boolean;
+          origem_despesa_id: string | null;
+          contaazul_registro_id: string | null;
+          contaazul_sync_at: string | null;
+          contaazul_sync_error: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          case_id: string;
+          kind: string;
+          tipo: string;
+          categoria_id?: string | null;
+          status?: string;
+          descricao?: string | null;
+          valor_centavos: number;
+          forma_pagamento?: string | null;
+          conta_financeira?: string | null;
+          data_vencimento?: string | null;
+          parcelas?: number;
+          periodicidade_meses?: number;
+          fornecedor?: string | null;
+          recorrente?: boolean;
+          reembolsavel?: boolean;
+          origem_despesa_id?: string | null;
+          contaazul_registro_id?: string | null;
+          contaazul_sync_at?: string | null;
+          contaazul_sync_error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_fin_entries"]["Insert"]>;
+        Relationships: [];
+      };
+      system_case_fin_installments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          entry_id: string;
+          numero: number;
+          data_vencimento: string;
+          valor_centavos: number;
+          status: string;
+          valor_pago_centavos: number | null;
+          data_pagamento: string | null;
+          contaazul_parcela_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          entry_id: string;
+          numero: number;
+          data_vencimento: string;
+          valor_centavos: number;
+          status?: string;
+          valor_pago_centavos?: number | null;
+          data_pagamento?: string | null;
+          contaazul_parcela_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["system_case_fin_installments"]["Insert"]>;
         Relationships: [];
       };
       system_case_tasks: {

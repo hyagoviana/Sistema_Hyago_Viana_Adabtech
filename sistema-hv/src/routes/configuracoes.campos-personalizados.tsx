@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ClientFieldsManagerPanel } from "@/components/clients/ClientFieldsManagerDialog";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
+import { TemaContaAzulPanel } from "@/components/pipeline/TemaContaAzulPanel";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemaDistribuicaoPanel } from "@/components/pipeline/TemaDistribuicaoPanel";
 import { useTemaServiceType } from "@/hooks/useTemas";
@@ -194,7 +195,7 @@ function CamposPersonalizados() {
 // Configuração do TEMA em um só lugar (doc 21.08). Cada aba é o painel que já
 // existia — só deixaram de morar em telas diferentes.
 // ---------------------------------------------------------------------------
-type AbaTema = "campos" | "pastas" | "distribuicao";
+type AbaTema = "campos" | "pastas" | "distribuicao" | "financeiro";
 
 const ABAS: Array<{ id: AbaTema; label: string; hint: string }> = [
   {
@@ -211,6 +212,11 @@ const ABAS: Array<{ id: AbaTema; label: string; hint: string }> = [
     id: "distribuicao",
     label: "Distribuição",
     hint: "Peso e responsável exclusivo do tema no motor de distribuição.",
+  },
+  {
+    id: "financeiro",
+    label: "Financeiro",
+    hint: "Centro de custo e serviço do ContaAzul deste tema (1 de cada por tema).",
   },
 ];
 
@@ -255,6 +261,9 @@ function TemaConfigTabs({ tema }: { tema: { id: string; name: string } }) {
       {aba === "distribuicao" && (
         <TemaDistribuicaoPanel key={tema.id} temaId={tema.id} temaNome={tema.name} />
       )}
+
+      {/* FN1 — Desenho 6: o tema é quem carrega o centro de custo e o serviço. */}
+      {aba === "financeiro" && <TemaContaAzulPanel key={tema.id} temaId={tema.id} />}
     </div>
   );
 }

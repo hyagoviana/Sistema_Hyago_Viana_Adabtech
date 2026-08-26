@@ -1,0 +1,111 @@
+// Hooks do FINANCEIRO DO CASO (FN1). A chave de cache é por caso — mexer num
+// lançamento invalida a lista e o resumo do MESMO caso, não do sistema inteiro.
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+
+import {
+  atualizarFinParcelaFn,
+  criarFinEntryFn,
+  excluirFinEntryFn,
+  listCaseFinEntriesFn,
+  listFinCategoriasFn,
+  resumoFinanceiroCasoFn,
+  setFinEntryStatusFn,
+  setTemaContaAzulFn,
+} from "@/rpc/financeiro-caso";
+
+const KEY_ENTRIES = (caseId: string) => ["fin-entries", caseId];
+const KEY_RESUMO = (caseId: string) => ["fin-resumo", caseId];
+
+export function useFinCategorias(kind?: "RECEITA" | "DESPESA" | null) {
+  const fn = useServerFn(listFinCategoriasFn);
+  return useQuery({
+    queryKey: ["fin-categorias", kind ?? "todas"],
+    queryFn: () => fn({ data: { kind: kind ?? null } }),
+    staleTime: 10 * 60 * 1000, // a árvore muda muito raramente
+  });
+}
+
+export function useCaseFinEntries(caseId: string) {
+  const fn = useServerFn(listCaseFinEntriesFn);
+  return useQuery({
+    queryKey: KEY_ENTRIES(caseId),
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId,
+  });
+}
+
+export function useResumoFinanceiroCaso(caseId: string) {
+  const fn = useServerFn(resumoFinanceiroCasoFn);
+  return useQuery({
+    queryKey: KEY_RESUMO(caseId),
+    queryFn: () => fn({ data: { caseId } }),
+    enabled: !!caseId,
+  });
+}
+
+function useInvalidar(caseId: string) {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: KEY_ENTRIES(caseId) });
+    qc.invalidateQueries({ queryKey: KEY_RESUMO(caseId) });
+  };
+}
+
+export function useCriarFinEntry(caseId: string) {
+  const fn = useServerFn(criarFinEntryFn);
+  const invalidar = useInvalidar(caseId);
+  return useMutation({
+    mutationFn: (input: Record<string, unknown>) => fn({ data: input as never }),
+    onSuccess: invalidar,
+  });
+}
+
+export function useSetFinEntryStatus(caseId: string) {
+  const fn = useServerFn(setFinEntryStatusFn);
+  const invalidar = useInvalidar(caseId);
+  return useMutation({
+    mutationFn: (vars: { entryId: string; status: "AGUARDANDO" | "DISPENSADO" | "LANCADO" }) =>
+      fn({ data: vars }),
+    onSuccess: invalidar,
+  });
+}
+
+export function useExcluirFinEntry(caseId: string) {
+  const fn = useServerFn(excluirFinEntryFn);
+  const invalidar = useInvalidar(caseId);
+  return useMutation({
+    mutationFn: (entryId: string) => fn({ data: { entryId } }),
+    onSuccess: invalidar,
+  });
+}
+
+export function useAtualizarFinParcela(caseId: string) {
+  const fn = useServerFn(atualizarFinParcelaFn);
+  const invalidar = useInvalidar(caseId);
+  return useMutation({
+    mutationFn: (vars: {
+      parcelaId: string;
+      data_vencimento?: string;
+      valor_centavos?: number;
+      status?: "AGUARDANDO" | "VENCIDA" | "PAGA" | "CANCELADA";
+    }) => fn({ data: vars }),
+    onSuccess: invalidar,
+  });
+}
+
+export function useSetTemaContaAzul() {
+  const fn = useServerFn(setTemaContaAzulFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      temaId: string;
+      centroCustoId?: string | null;
+      centroCustoNome?: string | null;
+      servicoId?: string | null;
+      servicoNome?: string | null;
+    }) => fn({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
+  });
+}

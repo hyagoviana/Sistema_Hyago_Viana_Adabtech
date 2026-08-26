@@ -1,6 +1,6 @@
 # Story FN2: ContaAzul — "Fazer lançamento" de verdade, despesas e o contorno das 24 competências
 
-**Épico:** Reunião 2026-08-26 · **ID:** FN2 · **Onda:** 4 (**a última**) · **Status:** Draft (spike primeiro)
+**Épico:** Reunião 2026-08-26 · **ID:** FN2 · **Onda:** 4 (**a última**) · **Status:** BLOQUEADA — spike parcial; falta reautorizar o OAuth do ContaAzul
 **Fonte:** `material/documentos/2026-08-25_registros-contaazul.docx` (passo a passo, Desenhos 1 a 9) + `2026-08-25_financeiro-shv.docx`
 **Executor:** @dev + @architect (spike da API) · Quality gate: @qa
 **Risco:** ALTO — escreve em sistema financeiro externo. Owner decidiu deixar por último **porque é o mais complexo**.
@@ -72,7 +72,7 @@ O que **ainda não temos documentado** e o spike precisa responder:
 ## Tasks / Subtasks
 
 ### T0 — Spike (@architect + @dev)
-- [ ] Responder às 4 perguntas acima com a documentação oficial + testes na conta de teste. Documentar em `sistema-hv/docs/referencia-api-contaazul-v2.md`. (SPIKE)
+- [x] **Parcial.** Documento criado em `sistema-hv/docs/referencia-api-contaazul-v2.md`. Categorias, serviços, contas financeiras e **centro de custo** estão CONFIRMADOS pelo código em produção. A sondagem ao vivo das perguntas 1, 2 e 4 **não rodou**: o refresh token do `.env.local` devolve `invalid_grant` (expirou). Script de sondagem pronto e só-leitura: `scripts/diag-contaazul-fn2.ts`. (SPIKE)
 
 ### T1 — De-para (@dev)
 - [ ] Mapear tipo de receita/despesa do SHV → categoria do ContaAzul (usando o código já cadastrado na FN1) e tema → centro de custo/serviço. (AC-1, AC-2)
@@ -126,3 +126,4 @@ O que **ainda não temos documentado** e o spike precisa responder:
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; spike com 4 perguntas, incluindo importação por IA | @sm (River) |
+| 2026-08-26 | v0.2 | **Spike parcial.** Confirmado: categorias (`GET /v1/categorias`), serviços (`GET/POST /v1/servicos`), contas financeiras e **centro de custo** (aceito no `rateio` da conta a receber) — os três da pergunta 3. **Achado que pode encolher muito esta story:** o `POST .../contas-a-receber` aceita **a lista completa de parcelas de uma vez** (`condicao_pagamento.parcelas[]`), o que sugere que a limitação das 24 competências é da **tela** de venda recorrente, não do caminho que a API oferece — se confirmado, o contorno dos blocos de 24 (a parte mais complexa) **não precisa existir**. Perguntas 1, 2 e 4 seguem abertas porque o refresh token expirou. | @dev (via Orion) |

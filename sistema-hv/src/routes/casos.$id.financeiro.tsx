@@ -30,6 +30,9 @@ import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/useP
 import { useAuth } from "@/lib/auth";
 import { can, podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
+import { CaseFinanceiroPanels } from "@/components/cases/CaseFinanceiroPanels";
+import { useClient } from "@/hooks/useClients";
+import { useTemas } from "@/hooks/useTemas";
 import { MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/casos/$id/financeiro")({
@@ -46,6 +49,12 @@ function CasoFinanceiro() {
   const podeFinanceiro = can(role, "financeiro.manage");
 
   const { data: caso, isLoading } = useCase(id);
+  // FN1 — o nome do tema e do cliente alimentam a descrição padrão da despesa
+  // ("{Tipo}: caso {tema} - {Nome cliente}", do doc).
+  const { data: cliente } = useClient(
+    (caso as { client_id?: string } | undefined)?.client_id ?? "",
+  );
+  const { data: temasFin } = useTemas();
   const entrar = useEntrarFinanceiro();
   const voltar = useVoltarOperacional();
   const sync = useSyncAllPagamentos();
@@ -80,6 +89,11 @@ function CasoFinanceiro() {
   }
 
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
+  const tipoLabelCaso =
+    (temasFin as { id: string; name: string }[] | undefined)?.find(
+      (t) => t.id === (caso as { tema_id?: string | null }).tema_id,
+    )?.name ?? null;
+  const clienteNome = (cliente as { full_name?: string } | undefined)?.full_name ?? null;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
@@ -206,6 +220,20 @@ function CasoFinanceiro() {
           Este caso ainda não está na pipeline financeira.
         </div>
       )}
+
+      <OrnamentalDivider />
+
+      {/* FN1 (2026-08-26) — REGISTROS FINANCEIROS DO CASO (doc 25.08).
+          Vive fora do `if` da bifurcação de propósito: o Thiago quer poder
+          registrar valor a receber/pagar mesmo em caso que ainda não entrou na
+          pipeline financeira ("valores que são questões futuras e que dependem
+          de outra situação"). */}
+      <CaseFinanceiroPanels
+        caseId={caso.id}
+        temaNome={tipoLabelCaso}
+        clienteNome={clienteNome}
+        podeEditar={podeEditarFin}
+      />
 
       <OrnamentalDivider />
 
