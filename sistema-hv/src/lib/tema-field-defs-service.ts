@@ -456,6 +456,71 @@ export async function createTemaFieldDef(input: {
   return data;
 }
 
+/**
+ * VÍNCULO entre dois campos do TEMA (C1) — par 1↔1 e simétrico.
+ *
+ * "Não é que ele depende daquele outro, é que eles são juntos" (Thiago, 26/08).
+ * Marcar A→B grava B→A; pares antigos dos dois lados são desfeitos, para nunca
+ * virar corrente (A→B→C), que não teria como ser agrupada na tela.
+ */
+async function aplicarVinculoTema(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  id: string,
+  alvoId: string | null,
+): Promise<void> {
+  const { data: atual } = await sb
+    .from("system_tema_field_defs")
+    .select("id, linked_field_def_id")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!atual) throw new TemaFieldDefServiceError("Campo não encontrado", 404);
+
+  const parAntigo = (atual as { linked_field_def_id?: string | null }).linked_field_def_id ?? null;
+  if (parAntigo && parAntigo !== alvoId) {
+    await sb
+      .from("system_tema_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", parAntigo);
+  }
+
+  if (!alvoId) {
+    await sb
+      .from("system_tema_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", id);
+    return;
+  }
+  if (alvoId === id) {
+    throw new TemaFieldDefServiceError("Um campo não pode ser vinculado a ele mesmo", 422);
+  }
+
+  const { data: alvo } = await sb
+    .from("system_tema_field_defs")
+    .select("id, tema_id, linked_field_def_id")
+    .eq("id", alvoId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!alvo) throw new TemaFieldDefServiceError("Campo a vincular não encontrado", 404);
+
+  const parDoAlvo = (alvo as { linked_field_def_id?: string | null }).linked_field_def_id ?? null;
+  if (parDoAlvo && parDoAlvo !== id) {
+    await sb
+      .from("system_tema_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", parDoAlvo);
+  }
+
+  await sb
+    .from("system_tema_field_defs")
+    .update({ linked_field_def_id: alvoId } as FieldDefUpdate)
+    .eq("id", id);
+  await sb
+    .from("system_tema_field_defs")
+    .update({ linked_field_def_id: id } as FieldDefUpdate)
+    .eq("id", alvoId);
+}
+
 export async function updateTemaFieldDef(
   id: string,
   patch: Partial<{
@@ -477,6 +542,9 @@ export async function updateTemaFieldDef(
     moveToStageSlug: string | null;
     // A4 (2026-08-05) — reatribui/remove a dependência pai. null = remove.
     parentFieldDefId: string | null;
+    // C1 (2026-08-26) — campo VINCULADO: os dois aparecem juntos na tela. É par
+    // 1↔1 e simétrico; NÃO condiciona edição (isso é o dependente acima).
+    linkedFieldDefId: string | null;
     // A7 (2026-08-05) — mesmo override do create: libera a checagem do balde
     // COMPARTILHADO do cliente. Não persiste no banco; só controla a validação.
     allowSharedClientKey: boolean;
@@ -629,6 +697,11 @@ export async function updateTemaFieldDef(
       });
       clean.parent_field_def_id = patch.parentFieldDefId;
     }
+  }
+
+  // C1 — vínculo simétrico (mesma regra dos campos do cliente).
+  if (patch.linkedFieldDefId !== undefined) {
+    await aplicarVinculoTema(sb, id, patch.linkedFieldDefId);
   }
 
   const { data, error } = await sb

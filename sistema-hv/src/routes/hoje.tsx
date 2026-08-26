@@ -19,6 +19,7 @@ import { useClientsList } from "@/hooks/useClients";
 import { useTemas } from "@/hooks/useTemas";
 import { useAllTasks, useAllDeadlines } from "@/hooks/useDossie";
 import { useAuth } from "@/lib/auth";
+import { isTaskAberta } from "@/lib/task-status-shared";
 
 export const Route = createFileRoute("/hoje")({
   component: HojePage,
@@ -164,7 +165,7 @@ function HojePage() {
   const minhasTarefas = useMemo(
     () =>
       (tasks ?? []).filter(
-        (t) => t.status !== "CONCLUIDA" && (t.assignee_id === userId || !t.assignee_id),
+        (t) => isTaskAberta(t.status) && (t.assignee_id === userId || !t.assignee_id),
       ),
     [tasks, userId],
   );

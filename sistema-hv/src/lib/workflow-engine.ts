@@ -25,6 +25,9 @@ export type WorkflowTrigger =
 
 type Rule = {
   id: string;
+  // W1 — sem estes dois no SELECT o carimbo sai vazio; é o erro mais fácil aqui.
+  code: string | null;
+  name: string | null;
   organization_id: string;
   trigger_config: Record<string, unknown> | null;
   actions: unknown;
@@ -40,17 +43,40 @@ function asStr(v: unknown): string | null {
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 
+/**
+ * Assinatura da automação (W1). Thiago: "gerou uma tarefa automática de tal coisa
+ * por conta do workflow — tarefa gerada, o quê, e codizinho do workflow. Quando
+ * ele criar isso, a gente sempre vai ter uma identificação mais de auditoria."
+ */
+function assinatura(rule: Rule): string {
+  const cod = rule.code ?? "workflow";
+  return rule.name ? `${cod} · ${rule.name}` : cod;
+}
+
 // Executa UMA ação. Best-effort: erros não propagam (o chamador loga).
 async function runAction(
   action: Record<string, unknown>,
   caseId: string,
   actorUserId: string | null,
+  rule: Rule,
 ): Promise<void> {
   const type = asStr(action.type);
+  const marca = assinatura(rule);
+
   if (type === "write_comment") {
     const body = asStr(action.body);
     // createCaseNote exige um autor; sem ator (ex.: cron) não há como atribuir.
-    if (body && actorUserId) await createCaseNote(caseId, body, actorUserId, "geral");
+    if (body && actorUserId) {
+      await createCaseNote(
+        caseId,
+        `${body}
+
+— automático (${marca})`,
+        actorUserId,
+        "geral",
+        rule.code,
+      );
+    }
     return;
   }
   if (type === "create_task") {
@@ -63,15 +89,19 @@ async function runAction(
         title,
         assignee_id: asStr(action.assignee_id),
         due_date: dueDays != null ? addDaysIso(dueDays) : null,
+        description: `Tarefa gerada automaticamente pelo workflow ${marca}.`,
+        // O rastro que permite responder "quais tarefas ESTE workflow criou?".
+        created_by_workflow_id: rule.id,
       },
       actorUserId ?? undefined,
+      rule.code,
     );
     return;
   }
   if (type === "move_stage") {
     const to = asStr(action.to_stage_slug);
     // Chama o SERVIÇO direto (não a server fn) → não re-dispara o motor.
-    if (to) await moveCaseStatus(caseId, to, actorUserId ?? undefined);
+    if (to) await moveCaseStatus(caseId, to, actorUserId ?? undefined, rule.code);
     return;
   }
 }
@@ -118,7 +148,7 @@ export async function runWorkflowsFor(
 
     let q = sb
       .from("system_workflow_rules")
-      .select("id, organization_id, trigger_config, actions")
+      .select("id, code, name, organization_id, trigger_config, actions")
       .eq("organization_id", caso.organization_id)
       .eq("trigger_type", trigger)
       .eq("active", true);
@@ -170,7 +200,7 @@ export async function runWorkflowsFor(
       try {
         for (const a of actions) {
           if (a && typeof a === "object") {
-            await runAction(a as Record<string, unknown>, caseId, actorUserId);
+            await runAction(a as Record<string, unknown>, caseId, actorUserId, rule);
           }
         }
         detail = `${actions.length} ação(ões)`;

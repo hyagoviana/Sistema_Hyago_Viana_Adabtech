@@ -308,6 +308,19 @@ export async function createCase(
         })
         .eq("id", created.id);
       result = { ...created, drive_folder_id: folder.id, drive_folder_url: folder.url };
+
+      // D1 — a subpasta "Documentos automáticos" nasce JUNTO com a pasta do caso
+      // ("já cria aqui uma pasta documento automático de uma vez só"). Best-effort
+      // dentro do best-effort: se falhar, a primeira geração de documento cria.
+      try {
+        const { ensureCaseAutoFolder } = await import("./case-documents-service");
+        await ensureCaseAutoFolder(created.id);
+      } catch (autoErr) {
+        console.error(
+          "cases-service: falha ao criar a subpasta de documentos automáticos:",
+          autoErr instanceof Error ? autoErr.message : String(autoErr),
+        );
+      }
     } catch (err) {
       const msg =
         err instanceof DriveError ? `${err.message} (${err.safeCause ?? "?"})` : String(err);
@@ -1112,7 +1125,14 @@ export async function marcarCasoPerdido(caseId: string, motivo: string, userId: 
 // ----------------------------------------------------------------------------
 // UPDATE
 // ----------------------------------------------------------------------------
-export async function updateCase(id: string, input: CaseUpdateOutput, triggeredBy?: string) {
+export async function updateCase(
+  id: string,
+  input: CaseUpdateOutput,
+  triggeredBy?: string,
+  // W1 — dados extras para o `diff` do evento (ex.: workflow_code, quando quem
+  // moveu a etapa foi uma automação). Não vira coluna: só enriquece o registro.
+  eventExtra?: Record<string, unknown>,
+) {
   const sb = getSupabaseAdmin();
 
   const { data: before } = await sb
@@ -1152,7 +1172,7 @@ export async function updateCase(id: string, input: CaseUpdateOutput, triggeredB
     action: statusChanged ? "status_changed" : "updated",
     from_macrostatus_op: statusChanged ? before.macrostatus_op : null,
     to_macrostatus_op: statusChanged ? data.macrostatus_op : null,
-    diff: input,
+    diff: eventExtra ? { ...input, ...eventExtra } : input,
     triggered_by: triggeredBy ?? null,
   });
 
@@ -1218,11 +1238,22 @@ export async function updateCaseCanonicalFields(
   }
   const data = { id: caseId, canonical_fields: merged as never };
 
+  // AU1 (2026-08-26) — o evento passa a guardar o valor ANTERIOR de cada chave do
+  // patch, além do novo. Thiago: "dá para ter meio que uma auditoria: mudou o
+  // registro lá, era A e agora virou B".
+  //
+  // `current` é o estado lido ANTES do merge — exatamente o "era A". Só as chaves
+  // do patch entram (o objeto inteiro do caso não interessa e incharia o evento).
+  const antes: Record<string, unknown> = {};
+  for (const k of Object.keys(patch)) antes[k] = current[k] ?? null;
+
   await sb.from("system_case_events").insert({
     case_id: caseId,
     organization_id: before.organization_id,
     action: "canonical_fields_updated",
-    diff: patch as never,
+    // Formato novo { from, to }. Eventos ANTIGOS têm só o patch cru — quem lê
+    // (case-event-label, auditoria) aceita os dois.
+    diff: { from: antes, to: patch } as never,
     triggered_by: triggeredBy ?? null,
   });
 
@@ -1575,10 +1606,23 @@ export async function duplicateCaseToTema(
 // ----------------------------------------------------------------------------
 // `to` é o SLUG da etapa op (configurável por categoria) — texto livre desde a
 // migration 0017. O trigger system_fn_sync_stage_ids reaponta stage_op_id.
-export async function moveCaseStatus(id: string, to: string, triggeredBy?: string) {
+export async function moveCaseStatus(
+  id: string,
+  to: string,
+  triggeredBy?: string,
+  // W1 — quando a etapa foi movida por um workflow, o código dele vai para o
+  // evento. Sem isso, a única ação automática que NÃO dizia quem a fez era
+  // justamente a mais visível no kanban.
+  workflowCode?: string | null,
+) {
   // Cast: macrostatus_op é texto livre no banco (etapas por categoria), mas o tipo
   // do patch ainda usa o enum legado MacroOp. O trigger reaponta stage_op_id.
-  return updateCase(id, { macrostatus_op: to as MacroOp }, triggeredBy);
+  return updateCase(
+    id,
+    { macrostatus_op: to as MacroOp },
+    triggeredBy,
+    workflowCode ? { workflow_code: workflowCode } : undefined,
+  );
 }
 
 // ----------------------------------------------------------------------------

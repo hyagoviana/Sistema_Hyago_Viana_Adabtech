@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,15 @@ function HistoricoPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* AU1 — o motor tem histórico próprio (execuções); a AUDITORIA fina de
+          quem-mexeu-no-quê vive no menu Sistema. Atalho para não obrigar a
+          procurar. */}
+      <div className="mb-3">
+        <Link to="/auditoria" className="text-[12px] text-[var(--gold-700)] hover:underline">
+          Ver auditoria completa (quem alterou o quê) →
+        </Link>
+      </div>
+
       {/* Filtros + KPIs */}
       <div className="flex flex-wrap items-center gap-3">
         <input

@@ -32,6 +32,10 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
 const actionSchema = z.record(z.string(), z.unknown());
 const ruleInputSchema = z.object({
   name: z.string().min(1),
+  // W1 — grupo (texto livre). Sem isto no schema, o zod fazia STRIP silencioso e
+  // o grupo nunca chegava ao banco. `code` de propósito NÃO entra: é identidade
+  // gerada pelo servidor.
+  groupName: z.string().max(60).nullish(),
   temaId: z.string().uuid().nullish(),
   triggerType: z.enum(["status_changed", "checklist_completed", "task_created", "task_completed"]),
   triggerConfig: z.record(z.string(), z.unknown()).optional(),

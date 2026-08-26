@@ -72,6 +72,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
+import { AuditTable } from "@/components/cases/AuditTable";
 import {
   Dialog,
   DialogContent,
@@ -80,7 +81,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/usePermissions";
+import {
+  useMyModulePerms,
+  useMyModuleValues,
+  usePodeEditar,
+  usePodeVer,
+} from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { can, podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
@@ -157,6 +163,7 @@ function CasoDetalhe() {
   const { data: perfis } = usePerfis();
   const { data: honorarios } = useCaseHonorarios(id);
   const { data: responsaveis } = useCaseResponsaveis(id);
+  const podeVerAuditoria = usePodeVer("sistema");
   // C3 (2026-08-05) — rastro operacional MULTI-KANBAN (preservado).
   const { data: opTrail } = useCaseOperationalTrail(id);
   // F1 (AC-4) — rastro financeiro RESUMIDO por caso (só carrega p/ financeiro:view).
@@ -322,6 +329,39 @@ function CasoDetalhe() {
               </Link>
             </div>
           )}
+          {/* T2 (2026-08-26) — VÍNCULO do caso com quem responde por ele. Thiago:
+              "colocar um registro lá, uma opção de que esse caso tem um vínculo
+              com X usuário, e aí o sistema na hora de rodar o motor vai puxar".
+              Aqui é leitura; a edição continua no "Editar caso". Quando há UM
+              responsável, o motor usa esse nome ao distribuir (T2). */}
+          <div className="mt-2 flex items-center gap-2 text-[12.5px] flex-wrap">
+            <span className="text-muted-foreground">Responsável:</span>
+            {(responsaveis ?? []).length === 0 ? (
+              <span className="text-muted-foreground italic">
+                sem vínculo — o motor distribui por pontos
+              </span>
+            ) : (
+              <>
+                <span className="font-medium text-[var(--navy)]">
+                  {(responsaveis ?? [])
+                    .map((r) => (r as { full_name?: string | null }).full_name ?? "·")
+                    .join(", ")}
+                </span>
+                <span
+                  className="text-muted-foreground"
+                  title={
+                    (responsaveis ?? []).length === 1
+                      ? "Com um único responsável, o motor de distribuição atribui as tarefas deste caso a ele (quando não há regra exclusiva de tipo/tema)."
+                      : "Com mais de um responsável, o motor não escolhe: distribui por pontos."
+                  }
+                >
+                  {(responsaveis ?? []).length === 1
+                    ? "· o motor distribui para ele"
+                    : "· o motor distribui por pontos"}
+                </span>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex gap-2 self-start flex-wrap justify-end">
           <span
@@ -777,6 +817,22 @@ function CasoDetalhe() {
         <>
           <OrnamentalDivider />
           <CaseSigiloSection caseId={caso.id} />
+
+          {/* AU1 (2026-08-26) — auditoria DESTE caso. O owner pediu a busca também
+              dentro do caso, não só no menu global. Mesma tabela, `caseId` fixo.
+              Some para quem não administra o sistema (o RPC também nega). */}
+          {podeVerAuditoria && (
+            <>
+              <OrnamentalDivider />
+              <section>
+                <Eyebrow>Auditoria deste caso</Eyebrow>
+                <p className="text-[12px] text-muted-foreground mb-3">
+                  Quem mexeu no quê — inclui as alterações de campo, que saíram da linha do tempo.
+                </p>
+                <AuditTable caseId={caso.id} compact />
+              </section>
+            </>
+          )}
         </>
       )}
 

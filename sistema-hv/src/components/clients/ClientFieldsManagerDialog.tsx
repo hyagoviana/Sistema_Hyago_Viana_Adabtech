@@ -1,4 +1,15 @@
-import { ArrowDown, ArrowUp, Eye, EyeOff, Lock, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Lock,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -52,6 +63,15 @@ type Draft = {
   appears_in_cases: boolean;
   help_text: string;
   options: string[];
+  // C1 (2026-08-26) — paridade com os campos do CASO. Mesmos nomes de lá.
+  max_occurrences: number;
+  initial_occurrences: number;
+  subtitle_mode: "" | "auto" | "custom";
+  subtitles: string[];
+  parent_field_def_id: string;
+  linked_field_def_id: string;
+  hidden_in_list: boolean;
+  hidden_in_filters: boolean;
 };
 
 const EMPTY_DRAFT: Draft = {
@@ -61,7 +81,21 @@ const EMPTY_DRAFT: Draft = {
   appears_in_cases: false,
   help_text: "",
   options: [],
+  max_occurrences: 1,
+  initial_occurrences: 1,
+  subtitle_mode: "",
+  subtitles: [],
+  parent_field_def_id: "",
+  linked_field_def_id: "",
+  hidden_in_list: false,
+  hidden_in_filters: false,
 };
+
+const SEM = "__sem__";
+
+// C1 — tipos que aceitam múltiplas linhas. Escolha/Sim-Não não fazem sentido
+// repetidos (é a mesma regra dos campos do caso).
+const TIPOS_MULTI: FieldType[] = ["text", "number", "date", "link", "money"];
 
 // Espelho dos campos FIXOS do cadastro (não editáveis aqui) — só para o usuário
 // ver "como está o formulário" antes de acrescentar informações.
@@ -128,6 +162,21 @@ export function ClientFieldsManagerPanel() {
       options: Array.isArray(d.options)
         ? (d.options.filter((o) => typeof o === "string") as string[])
         : [],
+      max_occurrences: (d as { max_occurrences?: number }).max_occurrences ?? 1,
+      initial_occurrences: (d as { initial_occurrences?: number }).initial_occurrences ?? 1,
+      subtitle_mode: ((d as { subtitle_mode?: string | null }).subtitle_mode ?? "") as
+        | ""
+        | "auto"
+        | "custom",
+      subtitles: Array.isArray((d as { subtitles?: unknown }).subtitles)
+        ? ((d as { subtitles: unknown[] }).subtitles.filter(
+            (x) => typeof x === "string",
+          ) as string[])
+        : [],
+      parent_field_def_id: (d as { parent_field_def_id?: string | null }).parent_field_def_id ?? "",
+      linked_field_def_id: (d as { linked_field_def_id?: string | null }).linked_field_def_id ?? "",
+      hidden_in_list: (d as { hidden_in_list?: boolean }).hidden_in_list ?? false,
+      hidden_in_filters: (d as { hidden_in_filters?: boolean }).hidden_in_filters ?? false,
     });
     setOptionInput("");
   };
@@ -162,6 +211,9 @@ export function ClientFieldsManagerPanel() {
       return;
     }
     try {
+      // C1 — só manda multi-ocorrência para tipo que a suporta; o resto é 1.
+      const aceitaMulti = TIPOS_MULTI.includes(draft.field_type);
+      const maxOcc = aceitaMulti ? Math.max(1, draft.max_occurrences) : 1;
       const payload = {
         label: draft.label.trim(),
         field_type: draft.field_type,
@@ -169,6 +221,14 @@ export function ClientFieldsManagerPanel() {
         appears_in_cases: draft.appears_in_cases,
         help_text: draft.help_text.trim() || null,
         options: needsOptions ? draft.options : null,
+        max_occurrences: maxOcc,
+        initial_occurrences: Math.min(Math.max(1, draft.initial_occurrences), maxOcc),
+        subtitle_mode: maxOcc > 1 && draft.subtitle_mode ? draft.subtitle_mode : null,
+        subtitles: maxOcc > 1 && draft.subtitle_mode === "custom" ? draft.subtitles : [],
+        parent_field_def_id: draft.parent_field_def_id || null,
+        linked_field_def_id: draft.linked_field_def_id || null,
+        hidden_in_list: draft.hidden_in_list,
+        hidden_in_filters: draft.hidden_in_filters,
       };
       if (editingId) {
         await updateMut.mutateAsync({ id: editingId, input: payload });
@@ -235,6 +295,28 @@ export function ClientFieldsManagerPanel() {
     }
   };
 
+  // C1 (2026-08-26) — ARRASTAR para reordenar. Thiago: "se a gente pode alterar a
+  // ordem de visualização dos campos… arrastar um quadradinho em cima do outro".
+  // As setas continuam (teclado/acessibilidade e clique preciso).
+  const [arrastando, setArrastando] = useState<string | null>(null);
+
+  const soltarSobre = async (destinoId: string) => {
+    const origemId = arrastando;
+    setArrastando(null);
+    if (!origemId || origemId === destinoId) return;
+    const list = [...(defs ?? [])];
+    const de = list.findIndex((d) => d.id === origemId);
+    const para = list.findIndex((d) => d.id === destinoId);
+    if (de < 0 || para < 0) return;
+    const [movido] = list.splice(de, 1);
+    list.splice(para, 0, movido);
+    try {
+      await reorderMut.mutateAsync(list.map((d) => d.id));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao reordenar");
+    }
+  };
+
   const move = async (index: number, dir: -1 | 1) => {
     const list = [...(defs ?? [])];
     const target = index + dir;
@@ -284,10 +366,17 @@ export function ClientFieldsManagerPanel() {
             {(defs ?? []).map((d, i) => (
               <li
                 key={d.id}
-                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                draggable={!busy}
+                onDragStart={() => setArrastando(d.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => soltarSobre(d.id)}
+                onDragEnd={() => setArrastando(null)}
+                title="Arraste para reordenar"
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-grab active:cursor-grabbing ${
                   d.active ? "" : "opacity-60"
-                }`}
+                } ${arrastando === d.id ? "opacity-40 border-[var(--gold)]" : ""}`}
               >
+                <GripVertical size={13} className="text-muted-foreground shrink-0" />
                 <div className="flex flex-col">
                   <button
                     type="button"
@@ -378,6 +467,185 @@ export function ClientFieldsManagerPanel() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------------
+            C1 (2026-08-26) — as mesmas opções que os campos do CASO já tinham.
+            Thiago: "só ajustar para ficar tão bom quanto a gente já melhorou
+            aqui". Cada controle abaixo espelha um de TemaFieldDefsEditor.
+        ------------------------------------------------------------------- */}
+        <div className="rounded-md border border-[var(--border)] p-3 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Comportamento do campo
+          </p>
+
+          {/* Múltiplas linhas — só para os tipos que fazem sentido repetidos. */}
+          {TIPOS_MULTI.includes(draft.field_type) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Máximo de linhas</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={draft.max_occurrences}
+                  onChange={(e) =>
+                    setDraft((d) => {
+                      const max = Math.min(Math.max(1, Number(e.target.value) || 1), 20);
+                      return {
+                        ...d,
+                        max_occurrences: max,
+                        // Começar acima do teto não existe.
+                        initial_occurrences: Math.min(d.initial_occurrences, max),
+                      };
+                    })
+                  }
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  1 = campo simples. Acima disso, o usuário adiciona linhas com “+”.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Linhas de largada</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={draft.max_occurrences}
+                  value={draft.initial_occurrences}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      initial_occurrences: Math.min(
+                        Math.max(1, Number(e.target.value) || 1),
+                        d.max_occurrences,
+                      ),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Subtítulo por linha (só faz sentido com múltiplas linhas). */}
+          {draft.max_occurrences > 1 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Rótulo de cada linha</label>
+              <Select
+                value={draft.subtitle_mode || SEM}
+                onValueChange={(v) =>
+                  setDraft((d) => ({
+                    ...d,
+                    subtitle_mode: v === SEM ? "" : (v as "auto" | "custom"),
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM}>Sem rótulo</SelectItem>
+                  <SelectItem value="auto">Numerado (Rótulo 1, 2, 3…)</SelectItem>
+                  <SelectItem value="custom">Texto próprio por linha</SelectItem>
+                </SelectContent>
+              </Select>
+              {draft.subtitle_mode === "custom" && (
+                <div className="space-y-1.5 pt-1">
+                  {Array.from({ length: draft.max_occurrences }).map((_, i) => (
+                    <Input
+                      key={i}
+                      placeholder={`Rótulo da linha ${i + 1}`}
+                      value={draft.subtitles[i] ?? ""}
+                      onChange={(e) =>
+                        setDraft((d) => {
+                          const subs = [...d.subtitles];
+                          subs[i] = e.target.value;
+                          return { ...d, subtitles: subs };
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* DEPENDENTE — condiciona a edição (já existia nos campos do caso). */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Depende de</label>
+              <Select
+                value={draft.parent_field_def_id || SEM}
+                onValueChange={(v) =>
+                  setDraft((d) => ({ ...d, parent_field_def_id: v === SEM ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM}>Nada (campo independente)</SelectItem>
+                  {(defs ?? [])
+                    .filter((d) => d.id !== editingId)
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Só fica editável depois que o campo escolhido estiver preenchido.
+              </p>
+            </div>
+
+            {/* VINCULADO — apenas aparece junto. É o pedido novo de 26/08. */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Vinculado a</label>
+              <Select
+                value={draft.linked_field_def_id || SEM}
+                onValueChange={(v) =>
+                  setDraft((d) => ({ ...d, linked_field_def_id: v === SEM ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM}>Nada</SelectItem>
+                  {(defs ?? [])
+                    .filter((d) => d.id !== editingId)
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Os dois aparecem sempre juntos. Não condiciona nada — é só apresentação (ex.: dois
+                links lado a lado).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={draft.hidden_in_list ? "default" : "outline"}
+              onClick={() => setDraft((d) => ({ ...d, hidden_in_list: !d.hidden_in_list }))}
+            >
+              {draft.hidden_in_list ? "Escondido na lista" : "Aparece na lista"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={draft.hidden_in_filters ? "default" : "outline"}
+              onClick={() => setDraft((d) => ({ ...d, hidden_in_filters: !d.hidden_in_filters }))}
+            >
+              {draft.hidden_in_filters ? "Escondido nos filtros" : "Aparece nos filtros"}
+            </Button>
           </div>
         </div>
 

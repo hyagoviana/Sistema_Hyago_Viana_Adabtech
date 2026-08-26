@@ -1,6 +1,6 @@
 # Story T1: Tipo de tarefa — uma configuração só + escolher pela CLASSE em todo seletor
 
-**Épico:** Reunião 2026-08-26 · **ID:** T1 (itens 2 e 13-a do owner) · **Onda:** 1 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** T1 (itens 2 e 13-a do owner) · **Onda:** 1 · **Status:** Ready for Review
 **Executor:** @dev · Quality gate: @qa
 **Risco:** MÉDIO — some uma tela que o time já usa. Sem migration.
 
@@ -58,22 +58,22 @@ Thiago: "eu vou primeiro selecionar, eu quero ver quais são as tarefas da class
 ## Tasks / Subtasks
 
 ### T1 — Componente compartilhado (@dev)
-- [ ] `src/components/hv/TaskTypePicker.tsx`: props `value`, `onChange`, `somenteMotor?: boolean`, `disabled?`. Importa **só** de `task-types-shared.ts` e do hook de catálogo. Estado interno da classe; "Todas" como padrão. (AC-3, AC-4, AC-5, AC-6)
+- [x] `src/components/hv/TaskTypePicker.tsx`: props `value`, `onChange`, `somenteMotor?: boolean`, `disabled?`. Importa **só** de `task-types-shared.ts` e do hook de catálogo. Estado interno da classe; "Todas" como padrão. (AC-3, AC-4, AC-5, AC-6)
 
 ### T2 — Trocar os 5 seletores (@dev)
-- [ ] `CaseDossie.tsx` (criar tarefa do caso). (AC-3)
-- [ ] `configuracoes.workflows.tsx:175` (sub-opção do gatilho). (AC-3)
-- [ ] `controladoria.distribuicao.andamentos.tsx` (distribuir). (AC-3, AC-6)
-- [ ] `controladoria.distribuicao.a-distribuir.tsx` (editar antes de rodar). (AC-3, AC-6)
-- [ ] `controladoria.distribuicao.lista.tsx` (filtro). (AC-3, AC-6)
+- [x] `CaseDossie.tsx` (criar tarefa do caso). (AC-3)
+- [x] `configuracoes.workflows.tsx:175` (sub-opção do gatilho). (AC-3)
+- [x] `controladoria.distribuicao.andamentos.tsx` (distribuir). (AC-3, AC-6)
+- [x] `controladoria.distribuicao.a-distribuir.tsx` — **não se aplica:** ali o tipo é só EXIBIDO (`nomeTipo.get(...)`, linha ~156); o único Select da tela é o de responsável. Nada a trocar.
+- [x] `controladoria.distribuicao.lista.tsx` — **não se aplica:** a tela não consome tipos de tarefa (grep sem nenhuma ocorrência). A story previa 5 seletores; existem **3**.
 
 ### T3 — Aposentar a tela duplicada (@dev)
-- [ ] Antes de apagar, **conferir campo a campo** a tela antiga contra a nova e anotar no PR o que foi verificado. (AC-2)
-- [ ] `controladoria.distribuicao.tipos-tarefa.tsx` vira redirect para `/configuracoes/tipos-tarefa`. (AC-1)
-- [ ] `controladoria.distribuicao.tsx:58` — a aba "Tipos Tarefa" passa a levar para a tela de configurações (mantendo o item visível no grupo Configuração, que é onde o time procura). (AC-1)
+- [x] Antes de apagar, **conferir campo a campo** a tela antiga contra a nova e anotar no PR o que foi verificado. (AC-2)
+- [x] `controladoria.distribuicao.tipos-tarefa.tsx` vira redirect para `/configuracoes/tipos-tarefa`. (AC-1)
+- [x] `controladoria.distribuicao.tsx:58` — a aba "Tipos Tarefa" passa a levar para a tela de configurações (mantendo o item visível no grupo Configuração, que é onde o time procura). (AC-1)
 
 ### T4 — Agrupamento na configuração (@dev)
-- [ ] `configuracoes.tipos-tarefa.tsx`: lista agrupada por classe com contador. (AC-7)
+- [x] `configuracoes.tipos-tarefa.tsx`: lista agrupada por classe com contador. (AC-7)
 
 ### T5 — QA (@qa)
 - [ ] Abrir a URL antiga: cai na nova. (AC-1)
@@ -108,6 +108,9 @@ Thiago: "eu vou primeiro selecionar, eu quero ver quais são as tarefas da class
 **Novos**
 - `sistema-hv/src/components/hv/TaskTypePicker.tsx`
 
+**Não alterados (a story previa, mas não se aplicava)**
+- `controladoria.distribuicao.a-distribuir.tsx` · `controladoria.distribuicao.lista.tsx`
+
 **Alterados**
 - `sistema-hv/src/routes/controladoria.distribuicao.tipos-tarefa.tsx` (vira redirect)
 - `sistema-hv/src/routes/controladoria.distribuicao.tsx` (destino da aba)
@@ -123,3 +126,13 @@ Thiago: "eu vou primeiro selecionar, eu quero ver quais são as tarefas da class
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; owner confirmou a tela de Configurações como sobrevivente | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** A conferência campo a campo (exigida pelo AC-2) achou **dois campos que só existiam na tela do motor**: COMPLEXIDADE e TEMPORALIDADE — os multiplicadores de pontuação (+20%/+30% e +10%/+30%) da planilha de dificuldade operacional. O serviço e o RPC já os aceitavam; só a UI de Configurações não os expunha. Foram levados para lá **antes** do redirect, senão aposentar a tela perderia configuração real do motor. Também descoberto: os pontos de seleção são **3**, não 5 (`lista.tsx` não usa tipos; em `a-distribuir` o tipo é só exibido). Criado `TaskTypePicker` (classe → tipo, com "Todas" e "Sem classe") usado em andamentos, dossiê do caso e gatilho de workflow; a rota antiga virou `redirect` e a aba do motor aponta para Configurações; lista agrupada por classe com contador. typecheck OK, eslint OK, `vite build` OK. **Falta o T5 (QA na UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-1.md`
+
+**CONCERNS → PASS após correção.** O `TaskTypePicker` prometia limpar o tipo ao trocar de classe, mas comparava contra a lista da classe anterior — nunca limpava, e o formulário podia distribuir com um tipo invisível. Corrigido comparando a classe do tipo escolhido. Confirmado que complexidade e temporalidade foram levadas para a tela sobrevivente ANTES do redirect (sem isso o AC-2 estaria violado).
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

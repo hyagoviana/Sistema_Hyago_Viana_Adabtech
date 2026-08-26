@@ -152,3 +152,12 @@ Thiago: "o ProJuris tem esses status de tarefa: pendente, concluído com sucesso
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; domínio de status definido pelo owner (sem PENDENTE) | @sm (River) |
 | 2026-08-26 | v0.2 | **Implementada** (T1-T6). Migration `20260826000001` aplicada **2×** (idempotente) com prova antes/depois: 39 PENDENTE → EM_ANDAMENTO e 11 CONCLUIDA → CONCLUIDA_SUCESSO, `completed_at` preservado nas 11, total de 50 inalterado. Teste funcional no banco (transacional, devolve o dado ao original): o CHECK **recusa** o status antigo, aceita os 4 novos e o DEFAULT é EM_ANDAMENTO. `db:types` **não** precisou ser regenerado — a migration não mexeu em coluna (`status` já era `string`). Decisões da execução: (a) a leitura do ProJuris **não** é traduzida (é espelho do sistema deles) — o de-para vale para a escrita, em `projuris/task-situacao.ts`; (b) o código de "concluída SEM sucesso" no ProJuris **não foi confirmado** contra a API, então cai em concluída (código 2) e virou pendência do spike da FN2; (c) o filtro de situação no calendário lê o **snapshot do quadro** (`system_distribution_kanban_tasks`), porque o calendário lista o que o motor distribuiu e quem sabe se foi feita é o ProJuris. typecheck OK, eslint OK, `vite build` OK. **Falta o T7 na UI.** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-1.md`
+
+**FAIL na 1ª rodada → PASS após correção.** A varredura achou 3 pontos de leitura fora da lista da story (`controladoria.index.tsx:791` gravava um status que o CHECK recusa — P0; `users-service.ts:574` e `hoje.tsx:167` contavam concluída como pendente). Corrigidos com o helper `isTaskAberta` e revalidados: nenhuma ocorrência do domínio antigo sobrou no repositório. Banco conferido direto no Postgres (CHECK, backfill 39+11, total 50, idempotência, nenhuma view/função dependente).
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

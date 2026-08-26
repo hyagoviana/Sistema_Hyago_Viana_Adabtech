@@ -127,7 +127,12 @@ function ControladoriaPage() {
         </TabsContent>
 
         <TabsContent value="responsaveis">
-          <ResponsaveisTab responsaveis={responsaveis} casos={casos} tarefas={tarefas} loading={loading} />
+          <ResponsaveisTab
+            responsaveis={responsaveis}
+            casos={casos}
+            tarefas={tarefas}
+            loading={loading}
+          />
         </TabsContent>
 
         <TabsContent value="tarefas">
@@ -169,10 +174,7 @@ function KpiCard({
         <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-500)]">
           {label}
         </span>
-        <Icon
-          size={15}
-          style={{ color: alert ? "var(--danger)" : "var(--ink-400)" }}
-        />
+        <Icon size={15} style={{ color: alert ? "var(--danger)" : "var(--ink-400)" }} />
       </div>
       <div
         className="kpi-number"
@@ -183,9 +185,7 @@ function KpiCard({
       >
         {value}
       </div>
-      {sub && (
-        <div className="text-[11px] mt-1 text-[var(--danger)] font-medium">{sub}</div>
-      )}
+      {sub && <div className="text-[11px] mt-1 text-[var(--danger)] font-medium">{sub}</div>}
     </div>
   );
 }
@@ -313,13 +313,21 @@ function CasosTab({
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[var(--gold-pale)]/40 border-b border-[var(--border)]">
-                {["Código", "Cliente", "Tipo", "Status Op.", "Responsável", "Tarefas", "Prazos", "Parado", "Valor"].map(
-                  (h) => (
-                    <th key={h} className="text-left px-4 py-3.5">
-                      <Eyebrow>{h}</Eyebrow>
-                    </th>
-                  ),
-                )}
+                {[
+                  "Código",
+                  "Cliente",
+                  "Tipo",
+                  "Status Op.",
+                  "Responsável",
+                  "Tarefas",
+                  "Prazos",
+                  "Parado",
+                  "Valor",
+                ].map((h) => (
+                  <th key={h} className="text-left px-4 py-3.5">
+                    <Eyebrow>{h}</Eyebrow>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -505,12 +513,8 @@ function ResponsaveisTab({
       ) : (
         responsaveis.map((r) => {
           const isOpen = expanded === r.name;
-          const respCasos = casos.filter(
-            (c) => (c.responsavel || "Sem responsável") === r.name,
-          );
-          const respTarefas = tarefas.filter(
-            (t) => (t.assignee || "Sem responsável") === r.name,
-          );
+          const respCasos = casos.filter((c) => (c.responsavel || "Sem responsável") === r.name);
+          const respTarefas = tarefas.filter((t) => (t.assignee || "Sem responsável") === r.name);
           const hasIssues = r.tarefasVencidas > 0 || r.prazosVencidos > 0;
 
           return (
@@ -533,18 +537,22 @@ function ResponsaveisTab({
                         : "linear-gradient(135deg, #fbf3dd, #d4a832)",
                   }}
                 >
-                  {r.name === "Sem responsável" ? "?" : r.name[0]?.toUpperCase() ?? "?"}
+                  {r.name === "Sem responsável" ? "?" : (r.name[0]?.toUpperCase() ?? "?")}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-semibold text-[var(--navy)]">
-                    {r.name}
-                  </div>
+                  <div className="text-[14px] font-semibold text-[var(--navy)]">{r.name}</div>
                   <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground mt-0.5">
-                    <span>{r.casosCount} caso{r.casosCount !== 1 ? "s" : ""}</span>
+                    <span>
+                      {r.casosCount} caso{r.casosCount !== 1 ? "s" : ""}
+                    </span>
                     <span>·</span>
-                    <span>{r.tarefasAbertas} tarefa{r.tarefasAbertas !== 1 ? "s" : ""}</span>
+                    <span>
+                      {r.tarefasAbertas} tarefa{r.tarefasAbertas !== 1 ? "s" : ""}
+                    </span>
                     <span>·</span>
-                    <span>{r.prazosAbertos} prazo{r.prazosAbertos !== 1 ? "s" : ""}</span>
+                    <span>
+                      {r.prazosAbertos} prazo{r.prazosAbertos !== 1 ? "s" : ""}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -555,7 +563,8 @@ function ResponsaveisTab({
                   )}
                   {r.prazosVencidos > 0 && (
                     <span className="badge-soft badge-soft--danger text-[10.5px]">
-                      {r.prazosVencidos} prazo{r.prazosVencidos !== 1 ? "s" : ""} vencido{r.prazosVencidos !== 1 ? "s" : ""}
+                      {r.prazosVencidos} prazo{r.prazosVencidos !== 1 ? "s" : ""} vencido
+                      {r.prazosVencidos !== 1 ? "s" : ""}
                     </span>
                   )}
                   <ChevronRight
@@ -609,17 +618,14 @@ function ResponsaveisTab({
                       </div>
                       <div className="space-y-1">
                         {respTarefas.map((t) => (
-                          <div
-                            key={t.id}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                          >
+                          <div key={t.id} className="flex items-center gap-3 px-3 py-2 rounded-lg">
                             <span
                               className="w-2 h-2 rounded-full shrink-0"
                               style={{
                                 background:
                                   t.diasAtraso > 0
                                     ? "var(--danger)"
-                                    : PRIO_TONE[t.priority] ?? "var(--ink-400)",
+                                    : (PRIO_TONE[t.priority] ?? "var(--ink-400)"),
                               }}
                             />
                             <Link
@@ -680,7 +686,7 @@ function TarefasTab({
   const filtered = useMemo(() => {
     let result = [...tarefas].sort(
       (a, b) =>
-        (b.diasAtraso - a.diasAtraso) ||
+        b.diasAtraso - a.diasAtraso ||
         (PRIO_ORDER[a.priority] ?? 9) - (PRIO_ORDER[b.priority] ?? 9),
     );
     if (search.trim()) {
@@ -788,7 +794,8 @@ function TarefaRow({
 
   function handleComplete() {
     if (markDone.isPending) return;
-    markDone.mutate({ id: t.id, status: "CONCLUIDA" });
+    // TK1 — clique rápido = concluída COM sucesso (mesma decisão do dossiê).
+    markDone.mutate({ id: t.id, status: "CONCLUIDA_SUCESSO" });
   }
 
   return (

@@ -6,7 +6,13 @@
 import { createHash } from "node:crypto";
 
 import { sugerirChecklistPorUpload } from "./checklist-service";
-import { createFolder, deleteFile as trashDriveFile, uploadFile, DriveError } from "./google/drive";
+import {
+  createFolder,
+  deleteFile as trashDriveFile,
+  listFoldersInFolder,
+  uploadFile,
+  DriveError,
+} from "./google/drive";
 import { validateUpload } from "./validators/file";
 import {
   copyTemplate,
@@ -90,6 +96,77 @@ export async function listCaseDocumentsByClient(clientId: string) {
   if (error) throw new CaseDocumentServiceError(error.message, 500);
 
   return (data ?? []).map((d) => ({ ...d, case_code: codeById.get(d.case_id) ?? null }));
+}
+
+/**
+ * D1 (reunião 2026-08-26) — nome da subpasta que recebe TUDO que o SHV gera.
+ * Uma constante só: o AC de "adoção" depende de bater o nome exato.
+ */
+export const PASTA_DOCS_AUTOMATICOS = "Documentos automáticos";
+
+/**
+ * Subpasta "Documentos automáticos" DENTRO da pasta do caso (idempotente).
+ *
+ * Thiago: "o sistema criou a pasta do caso da pessoa… quando a gente gera o
+ * documento, ele joga aqui no todo. E aí você tem um cliente com 40 documentos
+ * aqui. Na hora que ele cria essa pasta desse caso, ele já cria uma pasta
+ * documento automático de uma vez só."
+ *
+ * Regra do owner: só o que o SISTEMA gera vai para cá. Anexo manual continua na
+ * raiz da pasta do caso.
+ *
+ * Ordem de resolução: (1) id já gravado; (2) pasta existente com esse nome —
+ * ADOTA em vez de criar uma segunda; (3) cria.
+ */
+export async function ensureCaseAutoFolder(caseId: string): Promise<{
+  folderId: string;
+  folderUrl: string | null;
+}> {
+  const sb = getSupabaseAdmin();
+  const { data: caso } = await sb
+    .from("system_cases")
+    .select("id, drive_auto_folder_id, drive_auto_folder_url")
+    .eq("id", caseId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  const jaGravada = (caso as { drive_auto_folder_id?: string | null } | null)?.drive_auto_folder_id;
+  if (jaGravada) {
+    return {
+      folderId: jaGravada,
+      folderUrl:
+        (caso as { drive_auto_folder_url?: string | null } | null)?.drive_auto_folder_url ?? null,
+    };
+  }
+
+  // Garante a pasta do caso antes (é o pai da subpasta).
+  const { folderId: caseFolderId } = await ensureCaseFolder(caseId);
+
+  // Adoção: se a pasta já existe no Drive (criada à mão ou por execução anterior
+  // que não gravou o id), reusa — nunca cria uma segunda com o mesmo nome.
+  let alvo: { id: string; url: string | null } | null = null;
+  try {
+    const existentes = await listFoldersInFolder(caseFolderId);
+    const achada = existentes.find(
+      (f) => f.name.trim().toLowerCase() === PASTA_DOCS_AUTOMATICOS.toLowerCase(),
+    );
+    if (achada) alvo = { id: achada.id, url: achada.url || null };
+  } catch (err) {
+    // Listar é só otimização; se falhar, segue para a criação.
+    console.error("ensureCaseAutoFolder: falha ao listar subpastas:", err);
+  }
+
+  if (!alvo) {
+    const criada = await createFolder(PASTA_DOCS_AUTOMATICOS, caseFolderId);
+    alvo = { id: criada.id, url: criada.url || null };
+  }
+
+  await sb
+    .from("system_cases")
+    .update({ drive_auto_folder_id: alvo.id, drive_auto_folder_url: alvo.url } as never)
+    .eq("id", caseId);
+
+  return { folderId: alvo.id, folderUrl: alvo.url };
 }
 
 // ----------------------------------------------------------------------------
@@ -368,9 +445,10 @@ export async function generateCaseDocumentFromTemplate(opts: {
 
   const title = opts.title?.trim() || tpl.name;
 
-  // Garante pasta do caso ANTES de copiar — senão o Google Drive cria a cópia
-  // dentro da pasta do modelo original (07-Modelos), não na pasta do caso.
-  const { folderId: caseFolderId } = await ensureCaseFolder(opts.caseId);
+  // Garante a pasta ANTES de copiar — senão o Google Drive cria a cópia dentro
+  // da pasta do modelo original (07-Modelos). D1: o destino do que o SISTEMA gera
+  // é a subpasta "Documentos automáticos" (anexo manual continua na raiz).
+  const { folderId: caseFolderId } = await ensureCaseAutoFolder(opts.caseId);
 
   let docId: string;
   try {

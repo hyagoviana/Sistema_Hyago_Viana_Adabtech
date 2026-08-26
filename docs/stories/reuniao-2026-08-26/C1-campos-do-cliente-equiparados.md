@@ -1,6 +1,6 @@
 # Story C1: Campos do CLIENTE no mesmo nível dos campos do CASO + campo "vinculado" + reordenar arrastando
 
-**Épico:** Reunião 2026-08-26 · **ID:** C1 (item 1 + item 10 das respostas do owner) · **Onda:** 3 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** C1 (item 1 + item 10 das respostas do owner) · **Onda:** 3 · **Status:** Ready for Review
 **Executor:** @data-engineer (colunas) + @dev (editor, formulário, render) · Quality gate: @qa
 **Risco:** ALTO — é a maior da leva. Mexe no cadastro do cliente (tela que todo mundo usa), no espelhamento cliente→tema (B1) e na importação. **Não** dá para fazer no susto.
 
@@ -83,31 +83,31 @@ E: "se a gente pode alterar a ordem de visualização dos campos… arrastar um 
 ## Tasks / Subtasks
 
 ### T1 — Migration (@data-engineer)
-- [ ] `20260826XXXX_client_field_defs_paridade.sql`: colunas novas em `system_client_field_defs` com defaults seguros; recriar o CHECK de `field_type` incluindo `link` e `money` (dropar por nome dinâmico — molde `20260817000003_tema_field_defs_link.sql`). (AC-1, AC-3..AC-6, AC-13)
-- [ ] `ADD COLUMN IF NOT EXISTS linked_field_def_id UUID` nas **duas** tabelas, com FK para a própria tabela + índice. (AC-7)
-- [ ] Rollback simétrico; aplicar 2×; regenerar `db:types`. (AC-14)
+- [x] `20260826XXXX_client_field_defs_paridade.sql`: colunas novas em `system_client_field_defs` com defaults seguros; recriar o CHECK de `field_type` incluindo `link` e `money` (dropar por nome dinâmico — molde `20260817000003_tema_field_defs_link.sql`). (AC-1, AC-3..AC-6, AC-13)
+- [x] `ADD COLUMN IF NOT EXISTS linked_field_def_id UUID` nas **duas** tabelas, com FK para a própria tabela + índice. (AC-7)
+- [x] Rollback simétrico; aplicar 2×; regenerar `db:types`. (AC-14)
 
 ### T2 — Validação e serviço do cliente (@dev)
-- [ ] `validators/clientFields.ts`: `FIELD_TYPES` ganha `link` e `money`; rótulos; schemas aceitam os campos novos. (AC-1)
-- [ ] `client-fields-service.ts`: create/update tratam os campos novos; validar vínculo (sem auto-vínculo, sem cadeia, 1↔1 simétrico). (AC-7, AC-9)
-- [ ] Revisar `mirrorTemaType` e `ensureMirrorDef` para propagar tipo, ocorrências e subtítulos. (AC-11)
+- [x] `validators/clientFields.ts`: `FIELD_TYPES` ganha `link` e `money`; rótulos; schemas aceitam os campos novos. (AC-1)
+- [x] `client-fields-service.ts`: create/update tratam os campos novos; validar vínculo (sem auto-vínculo, sem cadeia, 1↔1 simétrico). (AC-7, AC-9)
+- [x] Revisar `mirrorTemaType` e `ensureMirrorDef` para propagar tipo, ocorrências e subtítulos. (AC-11)
 
 ### T3 — Serviço do tema (@dev)
-- [ ] `tema-field-defs-service.ts`: aceitar e validar `linked_field_def_id` com as mesmas regras. (AC-7, AC-9)
+- [x] `tema-field-defs-service.ts`: aceitar e validar `linked_field_def_id` com as mesmas regras. (AC-7, AC-9)
 
 ### T4 — Editor do cliente (@dev)
-- [ ] `ClientFieldsManagerDialog.tsx`: trazer para o cliente os controles que o `TemaFieldDefsEditor` já tem (tipo link/money, ocorrências, subtítulos, dependente, ocultar), **reaproveitando componentes** em vez de duplicar. (AC-1..AC-6)
-- [ ] Controle de "vinculado a" + drag-and-drop de ordem. (AC-7, AC-10)
+- [x] `ClientFieldsManagerDialog.tsx`: trazer para o cliente os controles que o `TemaFieldDefsEditor` já tem (tipo link/money, ocorrências, subtítulos, dependente, ocultar), **reaproveitando componentes** em vez de duplicar. (AC-1..AC-6)
+- [x] Controle de "vinculado a" + drag-and-drop de ordem. (AC-7, AC-10)
 
 ### T5 — Editor do tema (@dev)
-- [ ] `TemaFieldDefsEditor.tsx`: controle de "vinculado a" + drag-and-drop. (AC-7, AC-10)
+- [x] `TemaFieldDefsEditor.tsx`: controle de "vinculado a" + drag-and-drop. (AC-7, AC-10)
 
 ### T6 — Render do cliente (@dev)
-- [ ] `CustomFieldsSection.tsx`: novos `case` no switch para `link` e `money`; multi-ocorrência com adicionar/remover; subtítulo por linha; dependente desabilitado até o pai; agrupamento de vinculados. (AC-2..AC-5, AC-8)
-- [ ] Ficha do caso (`CaseCanonicalFields.tsx`): agrupamento de vinculados. (AC-8)
+- [x] `CustomFieldsSection.tsx`: novos `case` no switch para `link` e `money`; multi-ocorrência com adicionar/remover; subtítulo por linha; dependente desabilitado até o pai; agrupamento de vinculados. (AC-2..AC-5, AC-8)
+- [x] Ficha do caso (`CaseCanonicalFields.tsx`): agrupamento de vinculados. (AC-8)
 
 ### T7 — Importação (@dev)
-- [ ] Revisar `ColumnMapper` / `DownloadTemplate` / `ImportStepper` para os tipos novos; documentar o que é ignorado. (AC-12)
+- [x] Revisar `ColumnMapper` / `DownloadTemplate` / `ImportStepper` para os tipos novos; documentar o que é ignorado. (AC-12)
 
 ### T8 — QA (@qa)
 - [ ] Criar um campo de cada tipo novo no cliente e preencher em um cliente real. (AC-1, AC-2)
@@ -163,3 +163,13 @@ E: "se a gente pode alterar a ordem de visualização dos campos… arrastar um 
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; owner pediu vinculado + reordenar na mesma entrega | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** Migration `20260826000004` aplicada 2×: 8 colunas novas no campo do cliente + `linked_field_def_id` nas DUAS tabelas + CHECKs (inclusive barrando auto-vínculo no banco) + `field_type` com `link`/`money` + **view `_active` recriada** (ela lista coluna por coluna e não enxergaria as novas — passo fácil de esquecer). O VÍNCULO é simétrico e 1↔1: marcar A→B grava B→A e desfaz pares antigos dos dois lados, para nunca virar corrente A→B→C, que não teria como ser agrupada na tela. No formulário do cliente entraram link (com "abrir link"), valor, múltiplas linhas com subtítulo, dependente (apagado até o pai ter valor) e o agrupamento do par; na ficha do caso, o agrupamento. Reordenar **arrastando** nos dois editores — no do tema não existia reordenação alguma (a `ordem` só era definida na criação). O `linked_field_def_id` também precisou entrar no schema zod do RPC do tema, pelo mesmo motivo do `groupName` da W1: strip silencioso. typecheck OK, eslint OK, build OK. **Falta o T8 (UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-3.md`
+
+**FAIL → PASS após correção.** Dois achados: (1) **a multi-ocorrência do cliente usava convenção diferente da do caso** — sufixo `campo__2` em vez de array na mesma chave. Como o espelho B1 casa pela key, um campo de 3 linhas espelhado num tema mostraria só a primeira e as outras ficariam órfãs no balde: falha silenciosa, que apareceria semanas depois como "sumiu o dado". Corrigido para array, igual ao caso. (2) o espelho não copiava a FORMA do campo (ocorrências/subtítulos), violando o AC-11 — corrigido. Confirmado que a view `_active` foi recriada (ela lista coluna por coluna; sem isso nada do que foi criado apareceria) e que os CHECKs barram auto-vínculo no próprio banco.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

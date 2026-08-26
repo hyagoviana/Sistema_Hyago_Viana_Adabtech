@@ -103,6 +103,9 @@ export async function createCaseNote(
   body: string,
   userId: string,
   scope: CaseNoteScope = "geral",
+  // W1 — quando a nota nasce de um workflow, o código vai junto para a linha do
+  // tempo poder dizer QUEM automatizou aquilo.
+  workflowCode?: string | null,
 ) {
   requireUser(userId);
   const cleanBody = requireBody(body);
@@ -141,7 +144,11 @@ export async function createCaseNote(
         case_id: caseId,
         organization_id: caso.organization_id ?? DEFAULT_ORG_ID,
         action: "note_added",
-        diff: { note_id: data.id, note_preview: cleanBody.slice(0, 140) },
+        diff: {
+          note_id: data.id,
+          note_preview: cleanBody.slice(0, 140),
+          ...(workflowCode ? { workflow_code: workflowCode } : {}),
+        },
         triggered_by: userId,
       })
       .then(

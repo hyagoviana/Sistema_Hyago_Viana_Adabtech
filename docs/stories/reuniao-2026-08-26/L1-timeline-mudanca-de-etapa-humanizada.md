@@ -1,6 +1,6 @@
 # Story L1: Linha do tempo — mudança de etapa escrita em português
 
-**Épico:** Reunião 2026-08-26 · **ID:** L1 (item 10 do owner) · **Onda:** 2 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** L1 (item 10 do owner) · **Onda:** 2 · **Status:** Ready for Review
 **Executor:** @dev · Quality gate: @qa
 **Risco:** BAIXO — camada de apresentação. Nenhum evento novo, nenhum dado alterado.
 
@@ -53,14 +53,14 @@ Thiago: "quando a gente tem uma mudança de etapa dentro da situação dos casos
 ## Tasks / Subtasks
 
 ### T1 — Resolvedor (@dev)
-- [ ] `src/lib/cases/stage-label.ts` (módulo puro): `formatStageSlug(slug)` (fallback) e `makeStageLabelResolver(stages, macroLabels)` devolvendo `(slug) => string`. (AC-1, AC-2)
+- [x] `src/lib/cases/stage-label.ts` (módulo puro): `formatStageSlug(slug)` (fallback) e `makeStageLabelResolver(stages, macroLabels)` devolvendo `(slug) => string`. (AC-1, AC-2)
 
 ### T2 — Texto único (@dev)
-- [ ] Extrair `renderEventLabel` para um módulo compartilhado usado por `CaseTimeline` e `CaseFeed`, recebendo o resolvedor por parâmetro. (AC-3)
-- [ ] Reescrever as frases dos 6 eventos de etapa. (AC-1, AC-4)
+- [x] Extrair `renderEventLabel` para um módulo compartilhado usado por `CaseTimeline` e `CaseFeed`, recebendo o resolvedor por parâmetro. (AC-3)
+- [x] Reescrever as frases dos 6 eventos de etapa. (AC-1, AC-4)
 
 ### T3 — Ligar os dados (@dev)
-- [ ] Nos dois componentes, carregar as etapas do caso (`useStages` pelo `service_type_id` + kind, e `useBoardStages` quando o evento traz `board_key`) e montar o resolvedor. Enquanto carrega, usar o fallback (nunca renderizar vazio). (AC-1, AC-2)
+- [x] Nos dois componentes, carregar as etapas do caso (`useStages` pelo `service_type_id` + kind, e `useBoardStages` quando o evento traz `board_key`) e montar o resolvedor. Enquanto carrega, usar o fallback (nunca renderizar vazio). (AC-1, AC-2)
 
 ### T4 — QA (@qa)
 - [ ] Mover um caso de etapa e conferir a frase na ficha e no feed. (AC-1, AC-3)
@@ -102,3 +102,13 @@ Thiago: "quando a gente tem uma mudança de etapa dentro da situação dos casos
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** `lib/cases/stage-label.ts` (resolvedor + fallback) e `components/cases/case-event-label.ts` (texto ÚNICO dos eventos — antes duplicado e já divergente entre Timeline e Feed). Os dois componentes montam o resolvedor com `useStages(op)` + `useStages(fin)` + os macrostatus legados. Frases reescritas: "Mudou de etapa: Entrar em contato → Dado judicial". O módulo também já acomoda o sufixo do workflow (W1) e o `status_label` da TK1 — os três se encontram no mesmo lugar, de propósito. typecheck OK, eslint OK, build OK. **Falta o T4 (UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-2.md`
+
+**PASS.** A extração preservou os filtros locais de cada componente (o Feed continua escondendo `fin_*` e `note_added`; a Timeline, `fin_*`). Como o texto unificado é o superset do Timeline, o Feed até ganhou frases para eventos que antes mostrava como `action` crua.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

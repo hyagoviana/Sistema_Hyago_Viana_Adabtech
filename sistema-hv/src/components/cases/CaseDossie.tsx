@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useDossie";
 import { useAssignableUsers } from "@/hooks/useUsers";
 import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
+import { TaskTypePicker } from "@/components/hv/TaskTypePicker";
 import { isTaskConcluida, TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/task-status-shared";
 
 const PRIORITY_TONE: Record<string, "neutral" | "navy" | "warning" | "danger"> = {
@@ -137,21 +138,15 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Tipo</Label>
-                <Select value={taskTypeId} onValueChange={setTaskTypeId}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SEM_TIPO}>Sem tipo</SelectItem>
-                    {(taskTypes ?? []).map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* T1 — escolhe pela CLASSE primeiro; a lista de tipos vem limpa.
+                  Mesmo componente usado no motor e no gatilho de workflow. */}
+              <div className="col-span-2 flex flex-wrap items-end gap-3">
+                <TaskTypePicker
+                  value={taskTypeId === SEM_TIPO ? null : taskTypeId}
+                  onChange={(v) => setTaskTypeId(v ?? SEM_TIPO)}
+                  emptyLabel="Sem tipo"
+                  tipoWidth="w-[240px]"
+                />
               </div>
               <div>
                 <Label>Prioridade</Label>

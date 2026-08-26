@@ -119,3 +119,12 @@ Mais três incômodos de rotina da mesma tela: **marcar como lido** aparecendo o
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial a partir da reunião 26/08 | @sm (River) |
 | 2026-08-26 | v0.2 | **Implementada** (T1-T4). Achado durante a execução: existem **3** origens, não 2 — `INICIAL_SHV` é a inicial mandada da ficha Judicial e **não** vem do ProJuris. Decisão tomada: o filtro nunca a esconde (some da fila = perder trabalho que o próprio escritório mandou distribuir); ela ganhou tag própria "Inicial (SHV)". A busca do histórico também aceita nome do cliente e o CSV passou a exportar o que está filtrado. `card-editorial` no lugar da borda chapada; nova classe `.kanban-board-scroll` (a barra existia mas ficava em overlay no Windows — invisível). typecheck OK, eslint OK, `vite build` OK. **Falta o teste manual do T5.** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-1.md`
+
+**PASS.** Nenhum efeito colateral: o filtro é de apresentação e o sync/writeback não foram tocados. A decisão de nunca esconder `INICIAL_SHV` foi conferida e é a correta — o contrário perderia trabalho da própria casa.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

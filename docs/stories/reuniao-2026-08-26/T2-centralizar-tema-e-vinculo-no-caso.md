@@ -1,6 +1,6 @@
 # Story T2: Tema configurado num lugar só + vínculo de usuário no CASO alimentando o motor
 
-**Épico:** Reunião 2026-08-26 · **ID:** T2 (item 13-b do owner) · **Onda:** 3 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** T2 (item 13-b do owner) · **Onda:** 3 · **Status:** Ready for Review
 **Executor:** @dev · Quality gate: @qa
 **Risco:** MÉDIO — mexe na precedência de quem recebe a tarefa. A parte de nav é trivial; a do motor exige cuidado.
 
@@ -62,15 +62,15 @@ Thiago: "eu só vou tirar essa parte de tema então, dentro de distribuição, q
 ## Tasks / Subtasks
 
 ### T1 — Nav (@dev)
-- [ ] Conferir campo a campo `controladoria.distribuicao.temas.tsx` contra `TemaDistribuicaoPanel`; anotar no PR. (AC-1)
-- [ ] Transformar a rota em redirect e ajustar `controladoria.distribuicao.tsx:62`. (AC-1, AC-2)
+- [x] Conferir campo a campo `controladoria.distribuicao.temas.tsx` contra `TemaDistribuicaoPanel`; anotar no PR. (AC-1)
+- [x] Transformar a rota em redirect e ajustar `controladoria.distribuicao.tsx:62`. (AC-1, AC-2)
 
 ### T2 — Caso (@dev)
-- [ ] Expor o vínculo na ficha (reusar o seletor de responsáveis que já existe), com texto explicando o uso pelo motor. (AC-3, AC-6)
+- [x] Expor o vínculo na ficha (reusar o seletor de responsáveis que já existe), com texto explicando o uso pelo motor. (AC-3, AC-6)
 
 ### T3 — Motor (@dev)
-- [ ] `flow-selector.ts`: novo degrau de precedência lendo `system_case_responsaveis` do caso da tarefa (só quando houver exatamente 1). Comentar a regra completa. (AC-4, AC-5)
-- [ ] Registrar o motivo da escolha no mesmo campo/registro usado pelos exclusivos. (AC-7)
+- [x] `flow-selector.ts`: novo degrau de precedência lendo `system_case_responsaveis` do caso da tarefa (só quando houver exatamente 1). Comentar a regra completa. (AC-4, AC-5)
+- [x] Registrar o motivo da escolha no mesmo campo/registro usado pelos exclusivos. (AC-7)
 
 ### T4 — QA (@qa)
 - [ ] URL antiga da aba Temas: cai na configuração do tema, com os mesmos campos. (AC-1)
@@ -112,4 +112,14 @@ Thiago: "eu só vou tirar essa parte de tema então, dentro de distribuição, q
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial com 2 pontos de decisão para o owner (aba Vínculos e precedência) | @sm (River) |
+| 2026-08-26 | v0.3 | **Implementada.** A aba Temas do motor virou redirect (o `TemaDistribuicaoPanel`, dentro do tema em Configurações, já editava os mesmos campos). O degrau novo da precedência NÃO foi para o `flow-selector` (motor puro, com testes): entrou em `staging-core.ts`, onde a linha da tela 2 é montada — assim o responsável do caso vira o `exclusive_executor_id` da linha, que fica **visível e editável** antes de rodar o motor ("processo automatizado, não automático"). A regra das três precedências, que estava DUPLICADA em dois pontos do arquivo, virou uma função só (`resolverExclusivo`). A ficha do caso passou a mostrar o vínculo com a frase que explica o efeito no motor. typecheck OK, eslint OK, build OK. **Falta o T4 (UI).** | @dev (via Orion) |
 | 2026-08-26 | v0.2 | Decisões travadas pelo owner: aba Vínculos **fica** (story não a toca); precedência = responsável do caso só com **1** responsável, depois dos exclusivos. Story pronta para o @dev. | @aios-master (Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-3.md`
+
+**PASS.** A decisão de resolver o degrau novo em `staging-core` (e não no motor puro) melhora o resultado: o responsável vira o exclusivo da linha da tela 2, que fica visível e editável antes de rodar. A view `system_case_responsaveis_active` tem a coluna lida. De quebra, a regra de precedência que estava duplicada no arquivo virou função única.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

@@ -18,7 +18,11 @@ export class WorkflowRuleError extends Error {
 
 export interface WorkflowRule {
   id: string;
+  /** W1 — identificador curto e imutável (WF-0007). Nunca reciclado. */
+  code: string | null;
   name: string;
+  /** W1 — agrupamento visual da lista (texto livre). */
+  group_name: string | null;
   active: boolean;
   tema_id: string | null;
   trigger_type: string;
@@ -29,11 +33,34 @@ export interface WorkflowRule {
 
 export interface WorkflowRuleInput {
   name: string;
+  /** Grupo (texto livre). Vazio = "Sem grupo". O `code` NUNCA vem de fora. */
+  groupName?: string | null;
   temaId?: string | null;
   triggerType: string;
   triggerConfig?: Record<string, unknown>;
   actions?: Array<Record<string, unknown>>;
   active?: boolean;
+}
+
+/**
+ * Próximo código livre da organização (WF-0001, WF-0002, …).
+ *
+ * Lê o maior número já usado em vez de contar as regras: se alguém excluir a
+ * WF-0003, o próximo continua depois do maior — código não se recicla, porque a
+ * tarefa que ele gerou pode continuar por aí apontando para ele.
+ */
+async function proximoCodigo(sb: ReturnType<typeof getSupabaseAdmin>): Promise<string> {
+  const { data } = await sb
+    .from("system_workflow_rules")
+    .select("code")
+    .eq("organization_id", DEFAULT_ORG)
+    .not("code", "is", null)
+    .order("code", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const ultimo = Number(String((data as { code?: string } | null)?.code ?? "").replace(/\D+/g, ""));
+  const proximo = Number.isFinite(ultimo) && ultimo > 0 ? ultimo + 1 : 1;
+  return `WF-${String(proximo).padStart(4, "0")}`;
 }
 
 const TRIGGERS = ["status_changed", "checklist_completed", "task_created", "task_completed"];
@@ -47,7 +74,9 @@ export async function listWorkflowRules(): Promise<WorkflowRule[]> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_workflow_rules")
-    .select("id, name, active, tema_id, trigger_type, trigger_config, actions, created_at")
+    .select(
+      "id, code, name, group_name, active, tema_id, trigger_type, trigger_config, actions, created_at",
+    )
     .eq("organization_id", DEFAULT_ORG)
     .order("created_at", { ascending: false });
   if (error) throw new WorkflowRuleError(error.message, 500);
@@ -60,8 +89,11 @@ export async function createWorkflowRule(
 ): Promise<{ ok: true }> {
   validate(input);
   const sb = getSupabaseAdmin();
+  const code = await proximoCodigo(sb);
   const { error } = await sb.from("system_workflow_rules").insert({
     organization_id: DEFAULT_ORG,
+    code,
+    group_name: input.groupName?.trim() || null,
     name: input.name.trim(),
     active: input.active ?? true,
     tema_id: input.temaId ?? null,
@@ -81,6 +113,8 @@ export async function updateWorkflowRule(
   const sb = getSupabaseAdmin();
   const clean: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.name !== undefined) clean.name = patch.name.trim();
+  // `code` é identidade: não entra no patch nem por acidente.
+  if (patch.groupName !== undefined) clean.group_name = patch.groupName?.trim() || null;
   if (patch.active !== undefined) clean.active = patch.active;
   if (patch.temaId !== undefined) clean.tema_id = patch.temaId;
   if (patch.triggerType !== undefined) {

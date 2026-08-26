@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
+import { Breadcrumb, Eyebrow, PageHeader } from "@/components/hv/primitives";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { ChangePasswordSection } from "@/components/settings/ChangePasswordSection";
 import { MyProfileSection } from "@/components/settings/MyProfileSection";
@@ -37,6 +37,14 @@ function Configuracoes() {
         title="Configurações"
         subtitle="Seu perfil, usuários e permissões de acesso."
       />
+
+      {/* N1 — Thiago: "eu tenho as configurações do meu usuário, mas eu tenho
+          também as do sistema — separar como menu". São duas seções rotuladas;
+          as rotas filhas continuam nas MESMAS URLs. */}
+      <Eyebrow>Meu perfil</Eyebrow>
+      <p className="text-[12px] text-muted-foreground mb-3">
+        Seus dados, sua senha e a aparência do sistema para você.
+      </p>
 
       {/* Perfil do usuário logado */}
       <section className="card-editorial !p-5 mb-5">
@@ -75,6 +83,17 @@ function Configuracoes() {
 
       {/* Aparência — cores e fonte */}
       <AppearanceSettings />
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Configurações DO SISTEMA — só para quem administra (gate inalterado). */}
+      {podeGerirCampos && (
+        <div className="mt-8 mb-3">
+          <Eyebrow>Sistema</Eyebrow>
+          <p className="text-[12px] text-muted-foreground">
+            Configurações que valem para todo o escritório — visíveis apenas para quem administra.
+          </p>
+        </div>
+      )}
 
       {/* I1 — atalho para a tela dedicada de Campos personalizados (só quem edita
           o módulo sistema). Reúne os campos das pipelines/temas + cadastro do cliente. */}

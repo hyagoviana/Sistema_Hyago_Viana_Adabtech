@@ -20,11 +20,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { taskStatusLabel } from "@/lib/task-status-shared";
-import { useCaseEvents } from "@/hooks/useCases";
+import { useCase, useCaseEvents } from "@/hooks/useCases";
+import { useStages } from "@/hooks/usePipeline";
+import { MACRO_FIN_LABELS, MACRO_OP_LABELS } from "@/lib/cases/constants";
+import { makeStageLabelResolver } from "@/lib/cases/stage-label";
+import { isManualEvent, renderEventLabel } from "./case-event-label";
 import { useDeleteManualCaseEvent, useUpdateManualCaseEvent } from "@/hooks/useTimeline";
-
-const MANUAL_ACTIONS = new Set(["nota_manual", "marco"]);
 
 function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -40,130 +41,19 @@ type CaseEvent = {
   triggered_by_name?: string | null;
 };
 
-// É manual (editável) somente se a action for de entrada manual E diff.manual = true.
-function isManualEvent(e: CaseEvent): boolean {
-  return MANUAL_ACTIONS.has(e.action) && !!(e.diff as { manual?: boolean } | null)?.manual;
-}
-
-// Nomes dos campos que mudaram no evento de campos canônicos (reunião
-// 2026-08-19): o feed dizia só "Dados do serviço atualizados", sem dizer O QUÊ.
-function describeChangedFields(d: Record<string, unknown> | null): string {
-  const keys = d ? Object.keys(d).filter((k) => k !== "manual") : [];
-  if (keys.length === 0) return "";
-  const nomes = keys.slice(0, 4).map((k) => {
-    const s = k.replace(/_/g, " ").trim();
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  });
-  return `: ${nomes.join(", ")}${keys.length > 4 ? ` +${keys.length - 4}` : ""}`;
-}
-
-function renderEventLabel(e: CaseEvent): string {
-  const d = (e.diff as Record<string, string> | null) ?? null;
-  switch (e.action) {
-    case "created":
-      return "Caso criado";
-    case "created_comercial":
-      return "Caso criado (comercial · aguardando assinatura da procuração)";
-    case "status_changed":
-      return `Status mudou: ${e.from_macrostatus_op ?? "·"} → ${e.to_macrostatus_op ?? "·"}`;
-    case "fin_status_changed":
-      return `Status financeiro mudou: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "fin_stage_auto_advanced":
-      return `Avanço automático (financeiro) por checklist: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "fin_enviado_conferencia":
-      return `Enviado para conferência (financeiro): ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "fin_conferencia_aprovada":
-      return "Conferência financeira aprovada (segunda pessoa)";
-    case "updated":
-      return "Caso editado";
-    case "soft_deleted":
-      return "Caso excluído";
-    case "stage_auto_advanced":
-      return `Avanço automático por checklist: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "stage_moved_by_checkbox":
-      return `Avanço por checkbox do caso: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "checklist_inconsistente":
-      return `Checklist inconsistente: item obrigatório "${d?.def_key ?? "·"}" da etapa ${d?.stage_slug ?? "·"} foi desmarcado após avanço`;
-    case "canonical_fields_updated":
-      return `Dados do serviço atualizados${describeChangedFields(d)}`;
-    case "note_added":
-      return `Nota adicionada${d?.note_preview ? `: ${d.note_preview}` : ""}`;
-    case "vinculado_a_tema":
-      return "Caso transferido para outro tema";
-    case "duplicado_em_tema":
-      return "Caso duplicado em outro tema";
-    case "board_added":
-      return `Adicionado ao kanban${d?.board_label ? `: ${d.board_label}` : ""} (duplicado)`;
-    case "board_moved_exclusive":
-      return `Movido para o kanban${d?.board_label ? `: ${d.board_label}` : ""} (saiu do principal)`;
-    case "board_removed":
-      return `Removido do kanban${d?.board_label ? `: ${d.board_label}` : ""}`;
-    case "board_returned_to_principal":
-      return "Voltou ao kanban principal";
-    case "board_stage_changed":
-      return `Mudou de etapa no kanban: ${d?.from ?? "·"} → ${d?.to ?? "·"}`;
-    case "duplicado_de_caso":
-      return "Caso criado por duplicação de outro caso";
-    case "andamento_importado":
-      return `Andamento (importado): ${d?.descricao ?? "·"}${
-        d?.autor_texto ? ` · ${d.autor_texto}` : ""
-      }`;
-    case "task_created":
-      return `Tarefa criada: ${d?.task_title ?? "·"}`;
-    case "task_started":
-      return `Tarefa iniciada: ${d?.task_title ?? "·"}`;
-    case "task_completed":
-      // TK1 — "concluída" agora tem dois desfechos. Sem dizer QUAL, a linha do
-      // tempo esconde justamente a informação que o Thiago quis registrar.
-      return `${d?.status_label ?? "Tarefa concluída"}: ${d?.task_title ?? "·"}`;
-    case "task_status_changed":
-      return `Tarefa "${d?.task_title ?? "·"}" → ${taskStatusLabel(d?.status)}`;
-    case "task_deleted":
-      return `Tarefa excluída: ${d?.task_title ?? "·"}`;
-    case "doc_generated":
-      return `Documento gerado: ${d?.doc_title ?? "·"}`;
-    case "doc_finalized":
-      return `Documento finalizado: ${d?.doc_title ?? "·"}`;
-    case "doc_reopened":
-      return `Documento reaberto: ${d?.doc_title ?? "·"}`;
-    case "doc_sent_zapsign":
-      return `Documento enviado para assinatura: ${d?.doc_title ?? "·"}`;
-    case "doc_deleted":
-      return `Documento excluído: ${d?.doc_title ?? "·"}`;
-    case "procuracao_preparada":
-      return "Procuração preparada";
-    case "liberado_comercial":
-      return d?.via === "manual"
-        ? "Promovido para cliente (manual)"
-        : `Procuração assinada · caso liberado para operação${d?.via ? ` (${d.via})` : ""}`;
-    case "perdido":
-      return `Caso marcado como perdido${d?.motivo ? ` · ${d.motivo}` : ""}`;
-    case "deadline_created":
-      return `Prazo criado: ${d?.deadline_title ?? "·"} (${d?.fatal_date ?? "·"})`;
-    case "deadline_completed":
-      return `Prazo cumprido: ${d?.deadline_title ?? "·"}`;
-    case "deadline_missed":
-      return `Prazo perdido: ${d?.deadline_title ?? "·"}`;
-    case "deadline_status_changed":
-      return `Prazo "${d?.deadline_title ?? "·"}" → ${d?.status ?? "·"}`;
-    case "deadline_deleted":
-      return `Prazo excluído: ${d?.deadline_title ?? "·"}`;
-    case "communication_logged":
-      return `Comunicação registrada (${d?.channel ?? "·"}): ${d?.summary ?? "·"}`;
-    case "communication_deleted":
-      return `Comunicação excluída: ${d?.summary ?? "·"}`;
-    // Manuais (S4-04)
-    case "marco":
-      return d?.body ?? "Marco";
-    case "nota_manual":
-      return d?.body ?? "Nota";
-    default:
-      return e.action;
-  }
-}
-
 export function CaseTimeline({ caseId }: { caseId: string }) {
   const { data: events } = useCaseEvents(caseId);
+  // L1 — as etapas do caso viram o de-para slug → rótulo. Enquanto carregam, o
+  // resolvedor cai no formatador de slug (nunca renderiza vazio).
+  const { data: caso } = useCase(caseId);
+  const serviceTypeId = (caso as { service_type_id?: string } | undefined)?.service_type_id ?? "";
+  const { data: stagesOp } = useStages(serviceTypeId, "op");
+  const { data: stagesFin } = useStages(serviceTypeId, "fin");
+  const resolveEtapa = makeStageLabelResolver(
+    [stagesOp, stagesFin],
+    MACRO_OP_LABELS,
+    MACRO_FIN_LABELS,
+  );
   const update = useUpdateManualCaseEvent(caseId);
   const remove = useDeleteManualCaseEvent(caseId);
 
@@ -176,7 +66,13 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
   // fin_stage_auto_advanced, fin_enviado_conferencia, fin_conferencia_aprovada e
   // variações futuras). Os eventos continuam gravados no banco; só não são
   // MOSTRADOS aqui (aparecem no submenu financeiro, para quem tem acesso).
-  const list = ((events ?? []) as CaseEvent[]).filter((e) => !e.action.startsWith("fin_"));
+  // AU1 (2026-08-26) — alteração de CAMPO do caso sai da linha do tempo e passa a
+  // viver no menu Auditoria. Thiago: "essa mudança de dado do serviço, campo
+  // atualizado, eu acho que não precisa vir para cá". O evento continua GRAVADO
+  // (é a trilha de auditoria) — só não é mostrado aqui.
+  const list = ((events ?? []) as CaseEvent[]).filter(
+    (e) => !e.action.startsWith("fin_") && e.action !== "canonical_fields_updated",
+  );
 
   async function handleUpdate(eventId: string) {
     const body = editBody.trim();
@@ -272,7 +168,7 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
                                 {e.action === "marco" ? "Marco" : "Nota"}
                               </span>
                             )}
-                            {renderEventLabel(e)}
+                            {renderEventLabel(e, resolveEtapa)}
                           </div>
                           <div className="text-[11px] text-muted-foreground">
                             {fmtDateTime(e.created_at)}

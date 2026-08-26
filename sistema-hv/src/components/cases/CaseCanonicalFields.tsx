@@ -47,6 +47,32 @@ function isValueFilled(value: unknown): boolean {
   return true; // number/boolean já preenchidos (inclui false e 0)
 }
 
+/**
+ * C1 (2026-08-26) — deixa cada PAR VINCULADO junto na tela.
+ *
+ * "na hora que eu marco que esse aqui é vinculado no outro, lá na situação eles
+ * aparecem juntinhos" (Thiago, 26/08). O vínculo é simétrico no banco; aqui basta
+ * puxar o par para logo depois do primeiro dos dois que aparecer na ordem normal.
+ */
+function ordenarComVinculados<T extends { id: string; linked_field_def_id?: string | null }>(
+  lista: T[],
+): T[] {
+  const porId = new Map(lista.map((d) => [d.id, d]));
+  const usados = new Set<string>();
+  const saida: T[] = [];
+  for (const d of lista) {
+    if (usados.has(d.id)) continue;
+    saida.push(d);
+    usados.add(d.id);
+    const par = d.linked_field_def_id ? porId.get(d.linked_field_def_id) : undefined;
+    if (par && !usados.has(par.id)) {
+      saida.push(par);
+      usados.add(par.id);
+    }
+  }
+  return saida;
+}
+
 export function CaseCanonicalFields({
   caseId,
   canonicalFields,
@@ -172,7 +198,7 @@ export function CaseCanonicalFields({
           certa (caso × cliente). */}
       {defs.length > 0 && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {defs.map((def) => {
+          {ordenarComVinculados(defs).map((def) => {
             // A4 — campo dependente: só edita quando o PAI está preenchido. Resolve
             // o pai na lista de defs; se o pai não existe mais (soft-delete/ausente),
             // trata como SEM dependência (filho livre). Lê o valor do pai da fonte

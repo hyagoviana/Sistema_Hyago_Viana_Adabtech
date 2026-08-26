@@ -80,6 +80,10 @@ export async function createFieldDef(input: FieldDefCreateOutput, createdBy?: st
 
   const withOptions = input.field_type === "select" || input.field_type === "multiselect";
 
+  // C1 — teto e linhas iniciais andam juntos: começar acima do teto não existe.
+  const maxOcc = input.max_occurrences ?? 1;
+  const iniOcc = Math.min(input.initial_occurrences ?? 1, maxOcc);
+
   const { data, error } = await sb
     .from("system_client_field_defs")
     .insert({
@@ -93,6 +97,15 @@ export async function createFieldDef(input: FieldDefCreateOutput, createdBy?: st
       help_text: input.help_text ?? null,
       ordem,
       created_by: createdBy ?? null,
+      // C1 — paridade com os campos do caso.
+      max_occurrences: maxOcc,
+      initial_occurrences: iniOcc,
+      subtitle_mode: input.subtitle_mode ?? null,
+      subtitles: (input.subtitles ?? []) as never,
+      parent_field_def_id: input.parent_field_def_id ?? null,
+      linked_field_def_id: input.linked_field_def_id ?? null,
+      hidden_in_list: input.hidden_in_list ?? false,
+      hidden_in_filters: input.hidden_in_filters ?? false,
     })
     .select()
     .single();
@@ -110,6 +123,81 @@ export async function createFieldDef(input: FieldDefCreateOutput, createdBy?: st
   return data;
 }
 
+/**
+ * Aplica o VÍNCULO entre dois campos do cliente (C1).
+ *
+ * Thiago: "não é que ele depende daquele outro, é que eles são juntos (…) na hora
+ * que eu marco que esse aqui é vinculado no outro, lá na situação eles aparecem
+ * juntinhos".
+ *
+ * Regras (as três protegem o mesmo conceito — vínculo é PAR, não corrente):
+ *   • simétrico  — marcar A→B grava também B→A;
+ *   • 1↔1        — se A ou B já tinham par, o par antigo é desfeito;
+ *   • sem cadeia — o alvo não pode ser um campo que já é "meio" de outro par
+ *                  diferente (isso viraria A→B→C e ninguém saberia o que agrupa).
+ */
+async function aplicarVinculo(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  id: string,
+  alvoId: string | null,
+): Promise<void> {
+  const { data: atual } = await sb
+    .from("system_client_field_defs")
+    .select("id, linked_field_def_id")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!atual) throw new FieldDefServiceError("Campo não encontrado", "NOT_FOUND", 404);
+
+  const parAntigo = (atual as { linked_field_def_id?: string | null }).linked_field_def_id ?? null;
+
+  // Desfaz o par anterior dos dois lados (se havia).
+  if (parAntigo && parAntigo !== alvoId) {
+    await sb
+      .from("system_client_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", parAntigo);
+  }
+
+  if (!alvoId) {
+    await sb
+      .from("system_client_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", id);
+    return;
+  }
+
+  if (alvoId === id) {
+    throw new FieldDefServiceError("Um campo não pode ser vinculado a ele mesmo", "DB_ERROR", 422);
+  }
+
+  const { data: alvo } = await sb
+    .from("system_client_field_defs")
+    .select("id, linked_field_def_id")
+    .eq("id", alvoId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!alvo) throw new FieldDefServiceError("Campo a vincular não encontrado", "NOT_FOUND", 404);
+
+  const parDoAlvo = (alvo as { linked_field_def_id?: string | null }).linked_field_def_id ?? null;
+  if (parDoAlvo && parDoAlvo !== id) {
+    // Desfaz o par antigo do alvo — 1↔1, sem cadeia.
+    await sb
+      .from("system_client_field_defs")
+      .update({ linked_field_def_id: null } as FieldDefUpdate)
+      .eq("id", parDoAlvo);
+  }
+
+  await sb
+    .from("system_client_field_defs")
+    .update({ linked_field_def_id: alvoId } as FieldDefUpdate)
+    .eq("id", id);
+  await sb
+    .from("system_client_field_defs")
+    .update({ linked_field_def_id: id } as FieldDefUpdate)
+    .eq("id", alvoId);
+}
+
 // ----------------------------------------------------------------------------
 // UPDATE
 // ----------------------------------------------------------------------------
@@ -124,6 +212,16 @@ export async function updateFieldDef(id: string, input: FieldDefUpdateOutput) {
   if (input.help_text !== undefined) patch.help_text = input.help_text;
   if (input.ordem !== undefined) patch.ordem = input.ordem;
   if (input.active !== undefined) patch.active = input.active;
+  // C1 — paridade com os campos do caso.
+  if (input.max_occurrences !== undefined) patch.max_occurrences = input.max_occurrences;
+  if (input.initial_occurrences !== undefined)
+    patch.initial_occurrences = input.initial_occurrences;
+  if (input.subtitle_mode !== undefined) patch.subtitle_mode = input.subtitle_mode ?? null;
+  if (input.subtitles !== undefined) patch.subtitles = input.subtitles ?? [];
+  if (input.parent_field_def_id !== undefined)
+    patch.parent_field_def_id = input.parent_field_def_id ?? null;
+  if (input.hidden_in_list !== undefined) patch.hidden_in_list = input.hidden_in_list;
+  if (input.hidden_in_filters !== undefined) patch.hidden_in_filters = input.hidden_in_filters;
   // options só faz sentido para select/multiselect; limpa caso contrário.
   if (input.options !== undefined) patch.options = input.options;
   if (
@@ -132,6 +230,12 @@ export async function updateFieldDef(id: string, input: FieldDefUpdateOutput) {
     input.field_type !== "multiselect"
   ) {
     patch.options = null;
+  }
+
+  // C1 — VÍNCULO: 1↔1 e simétrico. Marcar A→B implica B→A, senão o par "aparece
+  // junto" só de um lado. Cadeia (A→B→C) é recusada: o conceito é PAR.
+  if (input.linked_field_def_id !== undefined) {
+    await aplicarVinculo(sb, id, input.linked_field_def_id ?? null);
   }
 
   const { data, error } = await sb
@@ -248,7 +352,18 @@ export async function listClientFieldTemaLinks(clientFieldDefId: string): Promis
 async function ensureMirrorDef(
   sb: ReturnType<typeof getSupabaseAdmin>,
   tema_id: string,
-  clientDef: { key: string; label: string; field_type: string; options: unknown },
+  clientDef: {
+    key: string;
+    label: string;
+    field_type: string;
+    options: unknown;
+    // C1 (QA-14) — sem estes, um campo do cliente com 3 linhas e subtítulo virava
+    // um campo simples no tema: o mesmo dado apareceria diferente nos dois lugares.
+    max_occurrences?: number;
+    initial_occurrences?: number;
+    subtitle_mode?: string | null;
+    subtitles?: unknown;
+  },
 ): Promise<void> {
   // Já existe uma def de tema com essa key nesse tema/painel padrão?
   const { data: existing } = await sb
@@ -280,6 +395,13 @@ async function ensureMirrorDef(
     type: mirrorTemaType(clientDef.field_type),
     options: clientDef.options,
     scope: "cliente",
+    // C1 (QA-14) — o espelho reproduz a FORMA do campo, não só o tipo.
+    maxOccurrences: clientDef.max_occurrences ?? 1,
+    initialOccurrences: clientDef.initial_occurrences ?? 1,
+    subtitleMode: (clientDef.subtitle_mode ?? null) as "auto" | "custom" | null,
+    subtitles: Array.isArray(clientDef.subtitles)
+      ? (clientDef.subtitles.filter((x) => typeof x === "string") as string[])
+      : [],
   });
 }
 
@@ -317,7 +439,9 @@ export async function reconcileClientFieldTemaLinks(
   // Carrega o campo do cliente (key/label/type/options — fonte da def-espelho).
   const { data: clientDef } = await sb
     .from("system_client_field_defs")
-    .select("id, key, label, field_type, options, organization_id")
+    .select(
+      "id, key, label, field_type, options, organization_id, max_occurrences, initial_occurrences, subtitle_mode, subtitles",
+    )
     .eq("id", clientFieldDefId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -334,6 +458,10 @@ export async function reconcileClientFieldTemaLinks(
     label: clientDef.label as string,
     field_type: clientDef.field_type as string,
     options: clientDef.options,
+    max_occurrences: (clientDef as { max_occurrences?: number }).max_occurrences ?? 1,
+    initial_occurrences: (clientDef as { initial_occurrences?: number }).initial_occurrences ?? 1,
+    subtitle_mode: (clientDef as { subtitle_mode?: string | null }).subtitle_mode ?? null,
+    subtitles: (clientDef as { subtitles?: unknown }).subtitles,
   };
 
   // ADD: (a) upsert do vínculo (reativa se havia soft-delete); (b) def-espelho.

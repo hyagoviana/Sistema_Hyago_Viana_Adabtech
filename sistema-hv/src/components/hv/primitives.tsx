@@ -45,13 +45,23 @@ export function PageHeader({
   );
 }
 
-export function Breadcrumb({ items }: { items: { label: string; to?: string }[] }) {
+export function Breadcrumb({
+  items,
+}: {
+  // `search` existe porque nem todo destino é uma rota "seca": o kanban de um
+  // tema é /pipeline com search params (cat/catName/temaId) — N1.
+  items: { label: string; to?: string; search?: Record<string, unknown> }[];
+}) {
   return (
     <nav className="flex items-center gap-1.5 text-[12px] text-[var(--ink-400)] mb-4">
       {items.map((it, i) => (
         <React.Fragment key={i}>
           {it.to ? (
-            <Link to={it.to} className="hover:text-[#1a1a1f] transition-colors">
+            <Link
+              to={it.to}
+              search={it.search as never}
+              className="hover:text-[#1a1a1f] transition-colors"
+            >
               {it.label}
             </Link>
           ) : (
@@ -112,14 +122,22 @@ export function StatCard({
       </div>
       {d && (
         <div className={`mt-2 trend-pill ${d.up ? "trend-pill--up" : "trend-pill--down"}`}>
-          {d.up ? <TrendingUp size={12} strokeWidth={1.75} /> : <TrendingDown size={12} strokeWidth={1.75} />}
+          {d.up ? (
+            <TrendingUp size={12} strokeWidth={1.75} />
+          ) : (
+            <TrendingDown size={12} strokeWidth={1.75} />
+          )}
           {d.value}
           {context && <span className="ml-1 text-[var(--ink-400)]">· {context}</span>}
         </div>
       )}
       {spark && (
         <div className="mt-3 -mx-1">
-          <Sparkline data={spark} height={40} color={accent === "gold" ? "var(--gold)" : "var(--navy)"} />
+          <Sparkline
+            data={spark}
+            height={40}
+            color={accent === "gold" ? "var(--gold)" : "var(--navy)"}
+          />
         </div>
       )}
     </div>
@@ -134,10 +152,15 @@ export function StatusDot({
   tone?: "danger" | "warning" | "success" | "neutral" | "navy";
 }) {
   const c =
-    tone === "danger" ? "var(--danger)" :
-    tone === "warning" ? "var(--warning)" :
-    tone === "success" ? "var(--success)" :
-    tone === "navy" ? "var(--navy)" : "var(--ink-400)";
+    tone === "danger"
+      ? "var(--danger)"
+      : tone === "warning"
+        ? "var(--warning)"
+        : tone === "success"
+          ? "var(--success)"
+          : tone === "navy"
+            ? "var(--navy)"
+            : "var(--ink-400)";
   return <span className="status-dot" style={{ background: c }} />;
 }
 
@@ -227,15 +250,16 @@ export function Btn({
     primary: "bg-[#1e2044] text-white hover:bg-[var(--navy-700)]",
     gold: "text-white hover:opacity-95",
     ghost: "text-[#1a1a1f] hover:bg-[var(--ink-50)]",
-    outline: "border border-[rgba(120,96,30,0.18)] text-[#1a1a1f] bg-[var(--card)] hover:bg-[var(--ink-50)] hover:border-[rgba(152,120,20,0.3)]",
-    danger: "border border-[rgba(180,36,50,0.25)] text-[var(--danger)] bg-[var(--card)] hover:bg-[rgba(180,36,50,0.05)]",
+    outline:
+      "border border-[rgba(120,96,30,0.18)] text-[#1a1a1f] bg-[var(--card)] hover:bg-[var(--ink-50)] hover:border-[rgba(152,120,20,0.3)]",
+    danger:
+      "border border-[rgba(180,36,50,0.25)] text-[var(--danger)] bg-[var(--card)] hover:bg-[rgba(180,36,50,0.05)]",
   };
   const goldStyle =
     variant === "gold"
       ? {
           background: "linear-gradient(180deg, #a98a22 0%, #987814 60%, #856611 100%)",
-          boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px -8px rgba(152,120,20,0.5)",
         }
       : undefined;
   return (

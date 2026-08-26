@@ -26,15 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMovements, useSyncMovements, useDecideMovement } from "@/hooks/useDistribuicaoStaging";
-import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
 import { usePodeEditar } from "@/hooks/usePermissions";
-import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-shared";
+import { TaskTypePicker } from "@/components/hv/TaskTypePicker";
 
 export const Route = createFileRoute("/controladoria/distribuicao/andamentos")({
   component: AndamentosPendentesPage,
 });
-
-const TODAS = "__todas__";
 
 // MO1 (reunião 2026-08-26) — INTIMAÇÃO × ANDAMENTO.
 //
@@ -233,13 +230,7 @@ function LinhaMovimento({
   podeEditar: boolean;
 }) {
   const decidir = useDecideMovement();
-  const [classe, setClasse] = useState<string>(TODAS);
   const [tipoId, setTipoId] = useState<string>("");
-  const { data: tipos } = useTaskTypesCatalog({
-    estado: "ativos",
-    classe: classe === TODAS ? null : classe,
-    soMotor: true,
-  });
 
   async function decide(decisao: "ARQUIVADO" | "LIDO" | "DISTRIBUIR") {
     if (decisao === "DISTRIBUIR" && !tipoId) return toast.error("Escolha o tipo de tarefa");
@@ -311,37 +302,8 @@ function LinhaMovimento({
 
       {podeEditar && mov.decisao === "PENDENTE" && (
         <div className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Classe</Label>
-            <Select value={classe} onValueChange={setClasse}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={TODAS}>Todas</SelectItem>
-                {TASK_TYPE_CLASSES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {TASK_TYPE_CLASSE_LABEL[c]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Tipo de tarefa</Label>
-            <Select value={tipoId} onValueChange={setTipoId}>
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Escolha o tipo…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(tipos ?? []).map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* T1 — mesmo seletor (classe → tipo) usado no caso e no workflow. */}
+          <TaskTypePicker value={tipoId} onChange={(v) => setTipoId(v ?? "")} somenteMotor />
 
           <Button size="sm" onClick={() => decide("DISTRIBUIR")} disabled={decidir.isPending}>
             <Send size={13} className="mr-1" /> Distribuir tarefa

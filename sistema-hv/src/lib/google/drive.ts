@@ -241,6 +241,31 @@ export async function deleteFile(fileId: string): Promise<void> {
   }
 }
 
+/**
+ * MOVE um arquivo para outra pasta (D1). No Drive mover é trocar o `parents` —
+ * o fileId NÃO muda, então `drive_file_id` e `drive_url` já gravados continuam
+ * válidos. Se algum dia um link quebrar depois de um move, é sinal de que a
+ * implementação copiou em vez de mover.
+ */
+export async function moveFile(
+  fileId: string,
+  addParentId: string,
+  removeParentId?: string,
+): Promise<void> {
+  const drive = getDriveClient();
+  try {
+    await drive.files.update({
+      fileId,
+      addParents: addParentId,
+      ...(removeParentId ? { removeParents: removeParentId } : {}),
+      requestBody: {},
+      ...writeParams(),
+    });
+  } catch (err) {
+    throw new DriveError(`Falha ao mover o arquivo ${fileId} para a pasta ${addParentId}.`, err);
+  }
+}
+
 export async function getFileMeta(fileId: string) {
   const drive = getDriveClient();
   try {

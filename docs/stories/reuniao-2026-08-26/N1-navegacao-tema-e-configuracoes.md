@@ -1,6 +1,6 @@
 # Story N1: Voltar ao Kanban do tema pelo caminho da ficha + Configurações separadas (sistema × meu perfil)
 
-**Épico:** Reunião 2026-08-26 · **ID:** N1 (item 8 do owner + pedido da reunião) · **Onda:** 2 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** N1 (item 8 do owner + pedido da reunião) · **Onda:** 2 · **Status:** Ready for Review
 **Executor:** @dev · Quality gate: @qa
 **Risco:** BAIXO — navegação e layout. Sem banco, sem RPC.
 
@@ -58,12 +58,12 @@ E, na mesma tela de configurações: "eu tenho as configurações do meu usuári
 ## Tasks / Subtasks
 
 ### T1 — Breadcrumb (@dev)
-- [ ] Em `casos.$id.tsx`, montar o item do meio a partir de `caso.service_type_id` / `caso.tema_id` / nome do tema (o nome já vem no detalhe do caso; se não vier, buscar do catálogo de temas já carregado). (AC-1, AC-2)
-- [ ] Guard: sem `service_type_id`, renderizar só os 2 itens. (AC-3)
-- [ ] Conferir que as sub-abas herdam o mesmo breadcrumb (ele fica no layout `casos.$id.tsx`, então herdam — validar no navegador). (AC-1)
+- [x] Em `casos.$id.tsx`, montar o item do meio a partir de `caso.service_type_id` / `caso.tema_id` / nome do tema (o nome já vem no detalhe do caso; se não vier, buscar do catálogo de temas já carregado). (AC-1, AC-2)
+- [x] Guard: sem `service_type_id`, renderizar só os 2 itens. (AC-3)
+- [x] Conferir que as sub-abas herdam o mesmo breadcrumb (ele fica no layout `casos.$id.tsx`, então herdam — validar no navegador). (AC-1)
 
 ### T2 — Configurações (@dev)
-- [ ] `configuracoes.index.tsx`: agrupar em duas seções com títulos ("Meu perfil" / "Sistema"), mantendo os mesmos componentes e links; a de Sistema condicionada à permissão. (AC-4, AC-5, AC-6)
+- [x] `configuracoes.index.tsx`: agrupar em duas seções com títulos ("Meu perfil" / "Sistema"), mantendo os mesmos componentes e links; a de Sistema condicionada à permissão. (AC-4, AC-5, AC-6)
 
 ### T3 — QA (@qa)
 - [ ] Abrir caso a partir do Kanban de um tema, clicar no tema no caminho: volta ao Kanban daquele tema, com a categoria certa selecionada. (AC-2)
@@ -100,3 +100,13 @@ E, na mesma tela de configurações: "eu tenho as configurações do meu usuári
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** O `Breadcrumb` ganhou `search` opcional — sem isso não dava para apontar para o kanban do tema, que é `/pipeline` + search params (cat/catName/temaId), não uma rota seca. O item do meio sai de `useTemas()` casado com o `tema_id` do caso; sem tema, o caminho volta a ter 2 níveis. Configurações reorganizadas em **Meu perfil** e **Sistema** (gate `usePodeEditar("sistema")` inalterado, URLs das filhas inalteradas). typecheck OK, eslint OK, build OK. **Falta o T3 (UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-2.md`
+
+**PASS.** O `Breadcrumb` é usado em 36 telas; nenhuma passa `search`, e em JSX prop ausente equivale a `undefined` — as outras 35 não mudam de comportamento.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

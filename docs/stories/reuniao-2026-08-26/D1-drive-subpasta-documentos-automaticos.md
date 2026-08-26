@@ -1,6 +1,6 @@
 # Story D1: Subpasta "Documentos automáticos" no Drive — criada com o caso, e o que já existe é movido
 
-**Épico:** Reunião 2026-08-26 · **ID:** D1 (item 9 do owner) · **Onda:** 2 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** D1 (item 9 do owner) · **Onda:** 2 · **Status:** Ready for Review
 **Executor:** @dev (serviço + Drive) + @data-engineer (coluna + script de backfill) · Quality gate: @qa
 **Risco:** MÉDIO — mexe em **arquivo de cliente no Drive**. Mover é operação visível e o backfill roda em cima de dados reais. Exige dry-run.
 
@@ -64,20 +64,20 @@ Thiago: "o sistema criou a pasta do caso da pessoa… quando a gente gera o docu
 ## Tasks / Subtasks
 
 ### T1 — Banco (@data-engineer)
-- [ ] `20260826XXXX_case_drive_auto_folder.sql`: `ADD COLUMN IF NOT EXISTS drive_auto_folder_id TEXT`, `drive_auto_folder_url TEXT` em `system_cases` (+ rollback). Aplicar 2×; regenerar `db:types`. (AC-2, AC-10)
+- [x] `20260826XXXX_case_drive_auto_folder.sql`: `ADD COLUMN IF NOT EXISTS drive_auto_folder_id TEXT`, `drive_auto_folder_url TEXT` em `system_cases` (+ rollback). Aplicar 2×; regenerar `db:types`. (AC-2, AC-10)
 
 ### T2 — Drive (@dev)
-- [ ] `src/lib/google/drive.ts`: `moveFile(fileId, addParentId, removeParentId?)` usando `files.update` com `addParents`/`removeParents` e `supportsAllDrives`, no mesmo padrão de erro (`DriveError`) das funções vizinhas. (AC-7, AC-8)
+- [x] `src/lib/google/drive.ts`: `moveFile(fileId, addParentId, removeParentId?)` usando `files.update` com `addParents`/`removeParents` e `supportsAllDrives`, no mesmo padrão de erro (`DriveError`) das funções vizinhas. (AC-7, AC-8)
 
 ### T3 — Serviço (@dev)
-- [ ] `case-documents-service.ts`: `ensureCaseAutoFolder(caseId)` — usa `ensureCaseFolder` primeiro; se `drive_auto_folder_id` vazio, procura por nome com `listFoldersInFolder` antes de criar; grava o id. (AC-1, AC-3)
-- [ ] Trocar o destino da **geração** (linha ~373) de `caseFolderId` para o id da subpasta. (AC-4)
-- [ ] Caminho do ZapSign: mesmo destino. (AC-6)
-- [ ] **Não tocar** em `uploadCaseDocument`. (AC-5)
-- [ ] `cases-service.ts:280-320`: após criar a pasta do caso, criar a subpasta no mesmo `try` best-effort. (AC-2)
+- [x] `case-documents-service.ts`: `ensureCaseAutoFolder(caseId)` — usa `ensureCaseFolder` primeiro; se `drive_auto_folder_id` vazio, procura por nome com `listFoldersInFolder` antes de criar; grava o id. (AC-1, AC-3)
+- [x] Trocar o destino da **geração** (linha ~373) de `caseFolderId` para o id da subpasta. (AC-4)
+- [x] Caminho do ZapSign: mesmo destino. (AC-6)
+- [x] **Não tocar** em `uploadCaseDocument`. (AC-5)
+- [x] `cases-service.ts:280-320`: após criar a pasta do caso, criar a subpasta no mesmo `try` best-effort. (AC-2)
 
 ### T4 — Backfill (@dev)
-- [ ] `sistema-hv/scripts/backfill-drive-auto-folder.ts` com `--dry-run` (padrão) e `--commit`; relatório por caso (criada/adotada/pulada, N arquivos movidos); tolerante a falha individual (loga e segue). (AC-7, AC-9)
+- [x] `sistema-hv/scripts/backfill-drive-auto-folder.ts` com `--dry-run` (padrão) e `--commit`; relatório por caso (criada/adotada/pulada, N arquivos movidos); tolerante a falha individual (loga e segue). (AC-7, AC-9)
 
 ### T5 — QA (@qa)
 - [ ] Criar caso novo: pasta do caso + subpasta criadas; gerar documento: cai na subpasta; anexar manual: cai na raiz. (AC-2, AC-4, AC-5)
@@ -124,3 +124,13 @@ Thiago: "o sistema criou a pasta do caso da pessoa… quando a gente gera o docu
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; owner autorizou mover o que já existe e confirmou que anexo manual fica fora | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada e backfill EXECUTADO.** Migration `20260826000003` aplicada 2×. `moveFile` no cliente do Drive (troca `parents`, preserva o fileId). `ensureCaseAutoFolder` resolve em 3 passos: id gravado → **adota** pasta homônima existente → cria. Geração de documento e retorno assinado do ZapSign passaram a gravar na subpasta; `uploadCaseDocument` (anexo manual) **não foi tocado**. Descoberta que mudou o plano do backfill: dos **409** casos com pasta, só **3** têm documento gerado (o resto veio da importação Mais Médicos) — criar 400+ subpastas VAZIAS dentro das pastas dos clientes seria poluição visível e inútil, já que a subpasta nasce sozinha na criação do caso e na 1ª geração. Então o script pula quem não tem nada a mover, com `--todos` para forçar. Executado: 3 subpastas criadas, 3 arquivos movidos, 0 falhas; reexecução não duplicou nada; os `drive_file_id` continuam os mesmos (foi move, não cópia). typecheck OK, eslint OK, build OK. **Falta o T5 (UI + abrir um link antigo).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-2.md`
+
+**CONCERNS → PASS após correção.** O relatório do backfill contava como "movido" o que já estava na subpasta, contrariando o AC-9 (o dado estava certo; o relatório é que mentia — e é por ele que se decide se algo deu errado numa operação sobre arquivo de cliente). Corrigido e **reexecutado**: 0 movidos, 3 já estavam, 0 falhas. Confirmado também que os `drive_file_id` seguem idênticos (foi move, não cópia) e que o anexo manual continua na raiz.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

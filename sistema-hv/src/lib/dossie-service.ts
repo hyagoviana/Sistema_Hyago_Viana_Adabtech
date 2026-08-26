@@ -61,8 +61,13 @@ export async function createCaseTask(
     description?: string | null;
     // Tipo vindo do catálogo único do sistema (doc 21.08). Opcional.
     task_type_id?: string | null;
+    // W1 — qual regra de workflow criou esta tarefa (NULL = criada por gente).
+    created_by_workflow_id?: string | null;
   },
   triggeredBy?: string,
+  // W1 — código do workflow, só para carimbar o evento da linha do tempo. Fica
+  // fora do `input` de propósito: não é coluna da tarefa, é rastro de exibição.
+  workflowCode?: string | null,
 ) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
@@ -78,7 +83,11 @@ export async function createCaseTask(
       case_id: input.case_id,
       organization_id: DEFAULT_ORG_ID,
       action: "task_created",
-      diff: { task_title: input.title, assignee_id: input.assignee_id ?? null },
+      diff: {
+        task_title: input.title,
+        assignee_id: input.assignee_id ?? null,
+        ...(workflowCode ? { workflow_code: workflowCode } : {}),
+      },
       triggered_by: triggeredBy ?? null,
     });
   }

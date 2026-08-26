@@ -7,8 +7,8 @@
 // Gate: sistema (view p/ ver; edit p/ criar/editar/excluir) — herda dos RPCs.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Plus, Trash2, Zap } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { Breadcrumb, PageHeader, Eyebrow } from "@/components/hv/primitives";
@@ -30,12 +30,12 @@ import {
   useCreateWorkflowRule,
   useUpdateWorkflowRule,
   useDeleteWorkflowRule,
-  useTaskTypes,
 } from "@/hooks/useWorkflows";
 import { useTemas } from "@/hooks/useTemas";
 import { useStages } from "@/hooks/usePipeline";
 import { useBoards, useBoardStages } from "@/hooks/useBoards";
 import { usePodeEditar } from "@/hooks/usePermissions";
+import { TaskTypePicker } from "@/components/hv/TaskTypePicker";
 
 export const Route = createFileRoute("/configuracoes/workflows")({
   component: WorkflowsPage,
@@ -116,7 +116,15 @@ function WorkflowsPage() {
   const del = useDeleteWorkflowRule();
 
   const [open, setOpen] = useState(false);
+  // W1 — mesmo formulário serve para criar e EDITAR (o serviço já tinha update;
+  // faltava a tela). `editandoId` null = criando.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [grupo, setGrupo] = useState("");
+  // Filtros da lista (quando todos os temas entrarem, sem isto não se acha nada).
+  const [busca, setBusca] = useState("");
+  const [filtroTema, setFiltroTema] = useState("__all__");
+  const [filtroEstado, setFiltroEstado] = useState<"todos" | "ativos" | "suspensos">("todos");
   const [temaId, setTemaId] = useState<string>("__all__");
   const [trigger, setTrigger] = useState<TriggerType>("status_changed");
   // Kanban de onde as etapas do gatilho são puxadas: "op" | "fin" | boardId (custom).
@@ -132,6 +140,27 @@ function WorkflowsPage() {
       [],
     [temas],
   );
+
+  // W1 — filtra e ORDENA por grupo (o cabeçalho de grupo é desenhado quando o
+  // valor muda, então a ordenação é o que faz o agrupamento existir).
+  const listaFiltrada = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    const base = (rules ?? []).filter((r) => {
+      const okTexto =
+        !termo ||
+        r.name.toLowerCase().includes(termo) ||
+        (r.code ?? "").toLowerCase().includes(termo);
+      const okTema = filtroTema === "__all__" || r.tema_id === filtroTema;
+      const okEstado =
+        filtroEstado === "todos" || (filtroEstado === "ativos" ? r.active : !r.active);
+      return okTexto && okTema && okEstado;
+    });
+    return [...base].sort(
+      (a, b) =>
+        (a.group_name ?? "￿").localeCompare(b.group_name ?? "￿", "pt-BR") ||
+        (a.code ?? "").localeCompare(b.code ?? "", "pt-BR"),
+    );
+  }, [rules, busca, filtroTema, filtroEstado]);
 
   // Etapas do tema selecionado (op + fin) para os dropdowns. Em "Todos os temas"
   // não há service_type → os campos de etapa caem para texto livre.
@@ -171,11 +200,11 @@ function WorkflowsPage() {
   const opStageOptions = useMemo(() => dedupeStages(opStages as never), [opStages]);
 
   // Pedido A — tipos de tarefa (sub-opção dos gatilhos de tarefa).
-  const { data: taskTypes } = useTaskTypes();
-  const taskTypeList = (taskTypes as Array<{ id: string; label: string }> | undefined) ?? [];
 
   function reset() {
+    setEditandoId(null);
     setName("");
+    setGrupo("");
     setTemaId("__all__");
     setTrigger("status_changed");
     setTriggerKanban("op");
@@ -183,6 +212,34 @@ function WorkflowsPage() {
     setStageSlug("");
     setActions([{ type: "write_comment", body: "" }]);
     setOpen(false);
+  }
+
+  // Carrega uma regra existente no formulário (W1 — "e aí uma opção de editar ou
+  // suspender… esse aqui, por exemplo, eu quero mexer nele para editar").
+  function editar(r: {
+    id: string;
+    name: string;
+    group_name: string | null;
+    tema_id: string | null;
+    trigger_type: string;
+    trigger_config: unknown;
+    actions: unknown;
+  }) {
+    const cfg = (r.trigger_config ?? {}) as Record<string, string>;
+    setEditandoId(r.id);
+    setName(r.name);
+    setGrupo(r.group_name ?? "");
+    setTemaId(r.tema_id ?? "__all__");
+    setTrigger(r.trigger_type as TriggerType);
+    setTriggerKanban(cfg.board_key ?? "op");
+    setTaskTypeId(cfg.task_type_id ?? "");
+    setStageSlug(cfg.to_stage_slug ?? cfg.stage_slug ?? "");
+    setActions(
+      Array.isArray(r.actions) && r.actions.length
+        ? (r.actions as Action[])
+        : [{ type: "write_comment", body: "" }],
+    );
+    setOpen(true);
   }
 
   async function save() {
@@ -204,29 +261,37 @@ function WorkflowsPage() {
       toast.error("Adicione ao menos uma ação preenchida");
       return;
     }
+    const payload = {
+      name: name.trim(),
+      groupName: grupo.trim() || null,
+      temaId: temaId === "__all__" ? null : temaId,
+      triggerType: trigger,
+      triggerConfig:
+        trigger === "status_changed"
+          ? {
+              ...(stageSlug.trim() ? { to_stage_slug: stageSlug.trim() } : {}),
+              // board_key só quando não é o principal (mantém regras antigas iguais).
+              ...(triggerKanban !== "op" ? { board_key: triggerKanban } : {}),
+            }
+          : trigger === "checklist_completed" && stageSlug.trim()
+            ? { stage_slug: stageSlug.trim() }
+            : (trigger === "task_created" || trigger === "task_completed") && taskTypeId
+              ? { task_type_id: taskTypeId }
+              : {},
+      actions: cleanActions,
+    };
+
     try {
-      await create.mutateAsync({
-        name: name.trim(),
-        temaId: temaId === "__all__" ? null : temaId,
-        triggerType: trigger,
-        triggerConfig:
-          trigger === "status_changed"
-            ? {
-                ...(stageSlug.trim() ? { to_stage_slug: stageSlug.trim() } : {}),
-                // board_key só quando não é o principal (mantém regras antigas iguais).
-                ...(triggerKanban !== "op" ? { board_key: triggerKanban } : {}),
-              }
-            : trigger === "checklist_completed" && stageSlug.trim()
-              ? { stage_slug: stageSlug.trim() }
-              : (trigger === "task_created" || trigger === "task_completed") && taskTypeId
-                ? { task_type_id: taskTypeId }
-                : {},
-        actions: cleanActions,
-      });
-      toast.success("Workflow criado");
+      if (editandoId) {
+        await update.mutateAsync({ id: editandoId, patch: payload });
+        toast.success("Workflow atualizado");
+      } else {
+        await create.mutateAsync(payload);
+        toast.success("Workflow criado");
+      }
       reset();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar");
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar");
     }
   }
 
@@ -250,7 +315,7 @@ function WorkflowsPage() {
 
       {open && (
         <div className="card-hero p-6 mb-6 space-y-4">
-          <Eyebrow>Criar workflow</Eyebrow>
+          <Eyebrow>{editandoId ? "Editar workflow" : "Criar workflow"}</Eyebrow>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Nome</Label>
@@ -259,6 +324,21 @@ function WorkflowsPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex.: Ao entrar em Judicial…"
               />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Grupo — só organiza a lista</Label>
+              <Input
+                value={grupo}
+                onChange={(e) => setGrupo(e.target.value)}
+                placeholder="Ex.: Follow-up, Onboarding…"
+                list="workflow-grupos"
+              />
+              {/* Sugere os grupos já usados, sem impedir um nome novo. */}
+              <datalist id="workflow-grupos">
+                {[...new Set((rules ?? []).map((r) => r.group_name).filter(Boolean))].map((g) => (
+                  <option key={g as string} value={g as string} />
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Tema</Label>
@@ -336,26 +416,16 @@ function WorkflowsPage() {
                   {/* Pedido A (Thiago) — sub-opção de TIPO da tarefa. Fonte provisória:
                       catálogo da controladoria. Vazio/"Qualquer tipo" = dispara p/ toda
                       tarefa (só filtra de fato quando a tarefa passar a carregar tipo). */}
+                  {/* T1 — classe → tipo (o gatilho enxerga TODOS os tipos, não só
+                      os do motor: um workflow pode reagir a tarefa comercial). */}
                   {(trigger === "task_created" || trigger === "task_completed") && (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tipo de tarefa — vazio = qualquer</Label>
-                      <Select
-                        value={taskTypeId || "__any__"}
-                        onValueChange={(v) => setTaskTypeId(v === "__any__" ? "" : v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Qualquer tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__any__">Qualquer tipo</SelectItem>
-                          {taskTypeList.map((t) => (
-                            <SelectItem key={t.id} value={t.id}>
-                              {t.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <TaskTypePicker
+                      value={taskTypeId || null}
+                      onChange={(v) => setTaskTypeId(v ?? "")}
+                      emptyLabel="Qualquer tipo"
+                      tipoWidth="w-full"
+                      classeWidth="w-full"
+                    />
                   )}
                 </div>
                 {isStageTrigger && (
@@ -493,6 +563,57 @@ function WorkflowsPage() {
         </div>
       )}
 
+      {/* W1 - filtros. Thiago: "quando todos os temas forem vindos, isso aqui vai
+          ficar um negocio que ninguem acha mais nada." */}
+      {!isLoading && (rules ?? []).length > 0 && (
+        <div className="flex flex-wrap items-end gap-3 mb-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Buscar</Label>
+            <Input
+              className="w-[220px]"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Nome ou código (WF-0007)"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tema</Label>
+            <Select value={filtroTema} onValueChange={setFiltroTema}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todos os temas</SelectItem>
+                {temaList.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Estado</Label>
+            <Select
+              value={filtroEstado}
+              onValueChange={(v) => setFiltroEstado(v as typeof filtroEstado)}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="ativos">Ativos</SelectItem>
+                <SelectItem value="suspensos">Suspensos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <span className="text-xs text-muted-foreground pb-2">
+            {listaFiltrada.length} de {(rules ?? []).length}
+          </span>
+        </div>
+      )}
+
       {isLoading ? (
         <Skeleton className="h-40 w-full" />
       ) : (rules ?? []).length === 0 ? (
@@ -500,51 +621,85 @@ function WorkflowsPage() {
           <Zap size={20} className="mx-auto mb-2 text-[var(--gold-700)]" />
           Nenhum workflow ainda. Crie o primeiro para automatizar ações do caso.
         </div>
+      ) : listaFiltrada.length === 0 ? (
+        <div className="card-editorial p-8 text-center text-muted-foreground text-sm">
+          Nenhum workflow neste filtro.
+        </div>
       ) : (
         <div className="space-y-2">
-          {(rules ?? []).map((r) => (
-            <div key={r.id} className="card-editorial p-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[var(--navy)]">{r.name}</span>
-                  <Badge variant={r.active ? "default" : "secondary"} className="text-[10px]">
-                    {r.active ? "Ativo" : "Inativo"}
-                  </Badge>
-                </div>
-                <div className="text-[12px] text-muted-foreground">
-                  {TRIGGER_LABELS[r.trigger_type as TriggerType] ?? r.trigger_type}
-                  {" · "}
-                  {Array.isArray(r.actions) ? r.actions.length : 0} ação(ões)
-                  {r.tema_id ? "" : " · todos os temas"}
-                </div>
-              </div>
-              {podeEditar && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      update.mutate(
-                        { id: r.id, patch: { active: !r.active } },
-                        { onError: (e) => toast.error(e instanceof Error ? e.message : "Erro") },
-                      )
+          {listaFiltrada.map((r, i) => (
+            <Fragment key={r.id}>
+              {/* Cabecalho do GRUPO - so visual, como o Thiago pediu. */}
+              {(i === 0 || (listaFiltrada[i - 1].group_name ?? "") !== (r.group_name ?? "")) && (
+                <div className="flex items-baseline gap-2 pt-3 first:pt-0">
+                  <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--navy)]">
+                    {r.group_name || "Sem grupo"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {
+                      listaFiltrada.filter((x) => (x.group_name ?? "") === (r.group_name ?? ""))
+                        .length
                     }
-                  >
-                    {r.active ? "Desativar" : "Ativar"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive"
-                    onClick={() => {
-                      if (confirm(`Excluir o workflow "${r.name}"?`)) del.mutate(r.id);
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
+                  </span>
                 </div>
               )}
-            </div>
+              <div className="card-editorial p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {r.code && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-mono"
+                        title="Identificador do workflow - aparece nas acoes que ele gera"
+                      >
+                        {r.code}
+                      </Badge>
+                    )}
+                    <span className="font-medium text-[var(--navy)]">{r.name}</span>
+                    <Badge variant={r.active ? "default" : "secondary"} className="text-[10px]">
+                      {r.active ? "Ativo" : "Suspenso"}
+                    </Badge>
+                  </div>
+                  <div className="text-[12px] text-muted-foreground">
+                    {TRIGGER_LABELS[r.trigger_type as TriggerType] ?? r.trigger_type}
+                    {" · "}
+                    {Array.isArray(r.actions) ? r.actions.length : 0} ação(ões)
+                    {r.tema_id ? "" : " · todos os temas"}
+                  </div>
+                </div>
+                {podeEditar && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button variant="outline" size="sm" onClick={() => editar(r)}>
+                      <Pencil size={14} className="mr-1" /> Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        update.mutate(
+                          { id: r.id, patch: { active: !r.active } },
+                          { onError: (e) => toast.error(e instanceof Error ? e.message : "Erro") },
+                        )
+                      }
+                    >
+                      {/* "Desativar" virou "Suspender" (Thiago: "porque as pessoas
+                          vao ter duvidas") - suspender deixa claro que da para voltar. */}
+                      {r.active ? "Suspender" : "Reativar"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => {
+                        if (confirm(`Excluir o workflow "${r.name}"?`)) del.mutate(r.id);
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Fragment>
           ))}
         </div>
       )}

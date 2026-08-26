@@ -23,6 +23,7 @@ import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as AuditoriaRouteImport } from './routes/auditoria'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhatsappIndexRouteImport } from './routes/whatsapp.index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
@@ -186,6 +187,11 @@ const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditoriaRoute = AuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -691,6 +697,7 @@ const ApiClientsIdDocumentsDocIdDownloadRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/configuracoes': typeof ConfiguracoesRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
@@ -801,6 +808,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
   '/entrar': typeof EntrarRoute
@@ -908,6 +916,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/configuracoes': typeof ConfiguracoesRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
   '/design-system': typeof DesignSystemRoute
@@ -1020,6 +1029,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auditoria'
     | '/configuracoes'
     | '/definir-senha'
     | '/design-system'
@@ -1130,6 +1140,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auditoria'
     | '/definir-senha'
     | '/design-system'
     | '/entrar'
@@ -1236,6 +1247,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auditoria'
     | '/configuracoes'
     | '/definir-senha'
     | '/design-system'
@@ -1347,6 +1359,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditoriaRoute: typeof AuditoriaRoute
   ConfiguracoesRoute: typeof ConfiguracoesRouteWithChildren
   DefinirSenhaRoute: typeof DefinirSenhaRoute
   DesignSystemRoute: typeof DesignSystemRoute
@@ -1520,6 +1533,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auditoria': {
+      id: '/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuditoriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -2332,6 +2352,7 @@ const ApiClientsIdDocumentsDocIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditoriaRoute: AuditoriaRoute,
   ConfiguracoesRoute: ConfiguracoesRouteWithChildren,
   DefinirSenhaRoute: DefinirSenhaRoute,
   DesignSystemRoute: DesignSystemRoute,

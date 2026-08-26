@@ -1,6 +1,6 @@
 # Story TR1: Importar do Trello — descrição vira Observações, comentários viram linha do tempo
 
-**Épico:** Reunião 2026-08-26 · **ID:** TR1 · **Onda:** 4 · **Status:** Draft (BLOQUEADA — falta credencial)
+**Épico:** Reunião 2026-08-26 · **ID:** TR1 · **Onda:** 4 · **Status:** ADIADA pelo owner (2026-08-26) — "sobre o Trello não iremos fazer agora, essa parte ficará para um outro momento". A story fica pronta para quando voltar; o bloqueio de credenciais também continua valendo.
 **Executor:** @dev · Quality gate: @qa
 **Risco:** MÉDIO — importação em dados reais. Mitigado pelo piloto de 29 casos e pelo dry-run.
 

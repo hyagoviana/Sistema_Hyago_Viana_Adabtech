@@ -17,6 +17,7 @@ import { useMyModulePerms, useMyModuleValues } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { podeVerValores } from "@/lib/rbac";
 import { useCase } from "@/hooks/useCases";
+import { useTemas } from "@/hooks/useTemas";
 import { useClient } from "@/hooks/useClients";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { resolveEntityLabel } from "@/lib/use-document-title";
@@ -37,6 +38,28 @@ function CasoLayout() {
   const { podeVer: podeVerJudicial } = usePodeVerJudicial(id);
 
   const matchRoute = useMatchRoute();
+
+  // N1 — o caminho ganha o TEMA no meio, clicável, levando de volta ao kanban de
+  // onde a pessoa veio. Thiago: "eu queria clicar aqui e poder voltar para aquele
+  // Kanban que eu tava, porque aqui eu caio na primeira página."
+  //
+  // O kanban do tema NÃO é rota própria: é /pipeline com os search params que os
+  // cards já usam (cat = service_type_id, catName, temaId).
+  const { data: temas } = useTemas();
+  const temaDoCaso = (temas ?? []).find(
+    (t) => t.id === (caso as { tema_id?: string | null } | undefined)?.tema_id,
+  );
+  const serviceTypeId = (caso as { service_type_id?: string | null } | undefined)?.service_type_id;
+  const itemTema =
+    serviceTypeId && temaDoCaso
+      ? [
+          {
+            label: temaDoCaso.name,
+            to: "/pipeline",
+            search: { cat: serviceTypeId, catName: temaDoCaso.name, temaId: temaDoCaso.id },
+          },
+        ]
+      : [];
 
   // fix breadcrumb Topbar — publica o NOME DO CLIENTE p/ o breadcrumb do Topbar.
   usePublishRouteTitle(
@@ -67,7 +90,9 @@ function CasoLayout() {
   return (
     <div>
       <div className="page-container !pb-0">
-        <Breadcrumb items={[{ label: "Casos", to: "/casos" }, { label: caso?.case_code ?? "…" }]} />
+        <Breadcrumb
+          items={[{ label: "Casos", to: "/casos" }, ...itemTema, { label: caso?.case_code ?? "…" }]}
+        />
         <nav className="mt-2 flex items-center gap-1 border-b border-[var(--border)]">
           <Link to="/casos/$id" params={{ id }} className={tabCls(isIndex)}>
             <Layers size={14} /> Ficha

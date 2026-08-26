@@ -54,6 +54,9 @@ export type TemaFieldDef = {
   // enumerado; 'custom' = textos em `subtitles`; NULL = sem subtítulo.
   subtitle_mode: string | null;
   subtitles: string[];
+  // C1 (2026-08-26): campo VINCULADO — os dois aparecem juntos na tela. É par
+  // 1↔1 e simétrico; NÃO condiciona edição (isso é `parent_field_def_id`).
+  linked_field_def_id: string | null;
 };
 
 // FICHA do caso — defs do tema (frente NULL) + as da frente do caso, ordenadas.
@@ -148,6 +151,7 @@ export function useUpdateTemaFieldDef(temaId: string) {
         initialOccurrences?: number;
         // #8 (2026-08-17) — subtítulo por linha (multi-ocorrência).
         subtitleMode?: string | null;
+        linkedFieldDefId?: string | null;
         subtitles?: string[];
         moveToStageSlug?: string | null;
         // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).

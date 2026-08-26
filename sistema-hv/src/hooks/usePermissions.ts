@@ -49,6 +49,17 @@ export function usePodeEditar(module: Module): boolean {
   return permissaoEfetiva(role, perms ?? {}, module, "edit");
 }
 
+/**
+ * Gate de LEITURA no front (AU1) — espelha `requireModule(module, "view")`. Use
+ * para esconder painéis inteiros (ex.: auditoria dentro do caso); o servidor
+ * continua sendo a proteção real.
+ */
+export function usePodeVer(module: Module): boolean {
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  return permissaoEfetiva(role, perms ?? {}, module, "view");
+}
+
 /** Igual a `usePodeEditar`, mas true se puder editar QUALQUER um dos módulos
  * (entidades compartilhadas: cliente/caso valem para comercial OU operacional). */
 export function usePodeEditarAlgum(modules: Module[]): boolean {

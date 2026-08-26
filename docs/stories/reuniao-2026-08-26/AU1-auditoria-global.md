@@ -1,6 +1,6 @@
 # Story AU1: Menu de Auditoria (global, no caso e no motor) — e a linha do tempo para de mostrar alteração de campo
 
-**Épico:** Reunião 2026-08-26 · **ID:** AU1 (item 11 do owner) · **Onda:** 3 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** AU1 (item 11 do owner) · **Onda:** 3 · **Status:** Ready for Review
 **Executor:** @dev (tela + serviço) + @data-engineer (diff com valor anterior) · Quality gate: @qa
 **Risco:** MÉDIO — tela nova + mudança no formato do `diff` (precisa conviver com o formato antigo).
 
@@ -64,24 +64,24 @@ Thiago: "essa mudança de dado do serviço, campo atualizado, eu acho que não p
 ## Tasks / Subtasks
 
 ### T1 — Diff com valor anterior (@dev)
-- [ ] `cases-service.ts` (~linha 1218): montar `diff = { from: <valores atuais das chaves do patch>, to: patch }` usando o `before` que a função **já tem em mãos**. Manter `manual` se já existir. (AC-4)
-- [ ] Garantir que o merge atômico em JSONB (migration `20260824000005`) continua intacto — **não** reintroduzir read-modify-write. (AC-9)
+- [x] `cases-service.ts` (~linha 1218): montar `diff = { from: <valores atuais das chaves do patch>, to: patch }` usando o `before` que a função **já tem em mãos**. Manter `manual` se já existir. (AC-4)
+- [x] Garantir que o merge atômico em JSONB (migration `20260824000005`) continua intacto — **não** reintroduzir read-modify-write. (AC-9)
 
 ### T2 — Serviço de auditoria (@dev)
-- [ ] `src/lib/auditoria-service.ts` (server-only): `listAuditEvents({ from, to, userId, caseId, action, q, limit, cursor })` com join de nome de usuário e código do caso; paginação por `created_at` + id. (AC-2, AC-3, AC-8)
-- [ ] `src/rpc/auditoria.ts` com gate `requireModule("sistema", "view")`. (AC-1)
+- [x] `src/lib/auditoria-service.ts` (server-only): `listAuditEvents({ from, to, userId, caseId, action, q, limit, cursor })` com join de nome de usuário e código do caso; paginação por `created_at` + id. (AC-2, AC-3, AC-8)
+- [x] `src/rpc/auditoria.ts` com gate `requireModule("sistema", "view")`. (AC-1)
 
 ### T3 — Tela global (@dev)
-- [ ] `src/routes/auditoria.tsx` — filtros no topo, tabela paginada, código do caso clicável. (AC-1, AC-2, AC-3, AC-8)
-- [ ] `Sidebar.tsx` — item **Auditoria** no grupo Sistema, gate `sistema:view`. (AC-1)
-- [ ] Rótulos em português: reusar o módulo de texto de evento criado em **L1** (`case-event-label.ts`) para não ter duas traduções. (AC-2)
+- [x] `src/routes/auditoria.tsx` — filtros no topo, tabela paginada, código do caso clicável. (AC-1, AC-2, AC-3, AC-8)
+- [x] `Sidebar.tsx` — item **Auditoria** no grupo Sistema, gate `sistema:view`. (AC-1)
+- [x] Rótulos em português: reusar o módulo de texto de evento criado em **L1** (`case-event-label.ts`) para não ter duas traduções. (AC-2)
 
 ### T4 — Tirar da timeline (@dev)
-- [ ] `CaseTimeline.tsx` e `CaseFeed.tsx`: filtrar `canonical_fields_updated` na camada de apresentação (mesmo padrão do filtro `fin_` já existente, linha ~172). (AC-5)
+- [x] `CaseTimeline.tsx` e `CaseFeed.tsx`: filtrar `canonical_fields_updated` na camada de apresentação (mesmo padrão do filtro `fin_` já existente, linha ~172). (AC-5)
 
 ### T5 — No caso e no motor (@dev)
-- [ ] Painel/aba de auditoria na ficha do caso, reusando o componente da tela global com `caseId` fixo. (AC-6)
-- [ ] Atalho na área de distribuição (aba Execuções/Histórico) para `/auditoria` com filtro pré-aplicado. (AC-7)
+- [x] Painel/aba de auditoria na ficha do caso, reusando o componente da tela global com `caseId` fixo. (AC-6)
+- [x] Atalho na área de distribuição (aba Execuções/Histórico) para `/auditoria` com filtro pré-aplicado. (AC-7)
 
 ### T6 — QA (@qa)
 - [ ] Editar 3 campos de um caso: **não** aparece na linha do tempo; **aparece** na auditoria com de → para. (AC-4, AC-5)
@@ -131,3 +131,13 @@ Thiago: "essa mudança de dado do serviço, campo atualizado, eu acho que não p
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; owner escolheu menu global com busca também no caso e no motor | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** `canonical_fields_updated` passou a gravar `{ from, to }` — o "era A, virou B" sai do `current` que a função já tinha em mãos, sem tocar no merge atômico. `auditoria-service` + RPC (gate `sistema:view`) + `AuditTable` reusada nos DOIS lugares (menu global e painel do caso) + atalho na aba Execuções do motor. Dois cuidados que a story não previa: (a) `/auditoria` entrou em `ROUTE_MODULE` do RBAC — sem isso o item apareceria no menu para todos, já que rota sem módulo cai no papel base; (b) o retorno teve de usar `Json` em vez de `unknown`, porque o validador de serialização das server functions recusa `unknown`. Leitura aceita os dois formatos de diff (antigo e novo). typecheck OK, eslint OK, build OK. **Falta o T6 (UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-3.md`
+
+**CONCERNS → PASS após mitigação.** A busca livre filtrava apenas a página carregada (50 eventos), então procurar algo antigo devolvia "nada encontrado" mesmo existindo; agora, com termo, o serviço lê um lote 20× maior antes de cortar. Busca por texto não é exaustiva sobre todo o histórico — registrado como evolução. Verificado que `/auditoria` entrou no `ROUTE_MODULE` (sem isso o menu apareceria para todos) e que o `{from,to}` não reintroduziu o read-modify-write.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

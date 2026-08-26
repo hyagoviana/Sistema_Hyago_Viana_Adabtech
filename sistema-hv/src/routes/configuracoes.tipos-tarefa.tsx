@@ -9,7 +9,7 @@
 // Gate: sistema (view p/ ver, edit p/ mexer) — herda dos RPCs.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Archive, ArchiveRestore, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +42,21 @@ import { useSyncTaskTypes } from "@/hooks/useDistribuicao";
 import { useCriarTipoNoProjuris } from "@/hooks/useTaskTypes";
 import { TASK_TYPE_CLASSE_LABEL, TASK_TYPE_CLASSES } from "@/lib/task-types-shared";
 
+// T1 — Complexidade e Temporalidade vieram da tela do motor, que foi aposentada.
+// São os multiplicadores de pontuação que o Thiago definiu na planilha de
+// dificuldade operacional: sem eles aqui, aposentar a outra tela perderia
+// configuração real do motor.
+const COMPLEXITY_LABELS: Record<number, string> = {
+  0: "Regular",
+  1: "Nível 1 (+20%)",
+  2: "Nível 2 (+30%)",
+};
+const TEMPORAL_LABELS: Record<number, string> = {
+  0: "Normal",
+  1: "Prioritário (+10%)",
+  2: "Urgente (+30%)",
+};
+
 export const Route = createFileRoute("/configuracoes/tipos-tarefa")({
   component: TiposTarefaPage,
 });
@@ -73,11 +88,32 @@ function TiposTarefaPage() {
   const [novoNome, setNovoNome] = useState("");
   const [novaClasse, setNovaClasse] = useState<string>(NENHUM);
 
+  // T1 — a lista sai AGRUPADA por classe (Thiago: "seria essa separação entre
+  // essas classes, e quando eu clico na classe aparece as tarefas daquele tipo").
+  // Ordena por classe (na ordem do domínio) e, dentro dela, por nome; o cabeçalho
+  // de grupo é desenhado quando a classe muda.
   const lista = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    if (!termo) return tipos ?? [];
-    return (tipos ?? []).filter((t) => t.nome.toLowerCase().includes(termo));
+    const base = termo
+      ? (tipos ?? []).filter((t) => t.nome.toLowerCase().includes(termo))
+      : (tipos ?? []);
+    const ordemClasse = (c: string | null) =>
+      c ? TASK_TYPE_CLASSES.indexOf(c as (typeof TASK_TYPE_CLASSES)[number]) : 99;
+    return [...base].sort(
+      (a, b) =>
+        ordemClasse(a.classe) - ordemClasse(b.classe) || a.nome.localeCompare(b.nome, "pt-BR"),
+    );
   }, [tipos, busca]);
+
+  // Quantos tipos há em cada classe — o contador do cabeçalho do grupo.
+  const totalPorClasse = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of lista) {
+      const k = t.classe ?? "SEM_CLASSE";
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  }, [lista]);
 
   const nomePorUsuario = useMemo(() => {
     const m = new Map<string, string>();
@@ -270,109 +306,121 @@ function TiposTarefaPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {lista.map((t) =>
-            editandoId === t.id ? (
-              <EditorTipo
-                key={t.id}
-                tipo={t}
-                temas={temas ?? []}
-                users={users ?? []}
-                onClose={() => setEditandoId(null)}
-              />
-            ) : (
-              <div
-                key={t.id}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] px-4 py-3"
-              >
-                <div className="min-w-[200px] flex-1">
-                  <div className="text-[14px] font-medium">{t.nome}</div>
-                  <div className="text-[12px] text-muted-foreground">
+          {lista.map((t, i) => (
+            <Fragment key={t.id}>
+              {(i === 0 || lista[i - 1].classe !== t.classe) && (
+                <div className="flex items-baseline gap-2 pt-3 first:pt-0">
+                  <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--navy)]">
                     {t.classe ? TASK_TYPE_CLASSE_LABEL[t.classe] : "Sem classe"}
-                    {t.projuris_classificacao ? ` · ${t.projuris_classificacao}` : ""}
-                  </div>
-                </div>
-
-                <div className="text-[12px] text-muted-foreground w-[110px]">
-                  <span className="font-medium text-foreground">{t.points}</span> pts
-                </div>
-
-                <div className="text-[12px] text-muted-foreground w-[140px]">
-                  Prev/Fatal:{" "}
-                  <span className="font-medium text-foreground">
-                    {t.prazo_previsto_dias ?? "·"}/{t.prazo_fatal_dias ?? "·"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {totalPorClasse.get(t.classe ?? "SEM_CLASSE") ?? 0}
                   </span>
                 </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {t.aparece_no_motor ? (
-                    <Badge variant="secondary">Motor</Badge>
-                  ) : (
-                    <Badge variant="outline">Fora do motor</Badge>
-                  )}
-                  {t.sync_projuris &&
-                    (/^d+$/.test(t.projuris_tipo_codigo) ? (
-                      <Badge variant="outline">ProJuris</Badge>
-                    ) : (
-                      <Badge variant="outline" title="Existe só aqui — ainda não foi criado lá">
-                        Só no SHV
-                      </Badge>
-                    ))}
-                  {t.exclusive_executor_id && (
-                    <Badge variant="outline">
-                      Exclusivo: {nomePorUsuario.get(t.exclusive_executor_id) ?? "—"}
-                    </Badge>
-                  )}
-                  {t.excecoes.length > 0 && (
-                    <Badge variant="outline">{t.excecoes.length} exceção(ões)</Badge>
-                  )}
-                  {t.archived_at && <Badge variant="destructive">Arquivado</Badge>}
-                </div>
-
-                {podeEditar && (
-                  <div className="flex gap-1 ml-auto">
-                    {/* Só aparece para tipo que ainda não existe no ProJuris e que
-                        está marcado para espelhar lá (A7 do doc 21.08). */}
-                    {t.sync_projuris && !/^d+$/.test(t.projuris_tipo_codigo) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-[11px] h-7"
-                        disabled={criarNoProjuris.isPending}
-                        title="Cria este tipo no ProJuris com os prazos daqui"
-                        onClick={async () => {
-                          try {
-                            const r = await criarNoProjuris.mutateAsync({ id: t.id });
-                            if (r.criado)
-                              toast.success(
-                                r.codigo
-                                  ? `Criado no ProJuris (código ${r.codigo})`
-                                  : (r.motivo ?? "Criado no ProJuris"),
-                              );
-                            else toast.error(r.motivo ?? "Não foi criado");
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Falha ao criar");
-                          }
-                        }}
-                      >
-                        Criar no ProJuris
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => setEditandoId(t.id)}>
-                      <Pencil size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={arquivar.isPending}
-                      onClick={() => handleArquivar(t)}
-                    >
-                      {t.archived_at ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-                    </Button>
+              )}
+              {editandoId === t.id ? (
+                <EditorTipo
+                  key={t.id}
+                  tipo={t}
+                  temas={temas ?? []}
+                  users={users ?? []}
+                  onClose={() => setEditandoId(null)}
+                />
+              ) : (
+                <div
+                  key={t.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] px-4 py-3"
+                >
+                  <div className="min-w-[200px] flex-1">
+                    <div className="text-[14px] font-medium">{t.nome}</div>
+                    <div className="text-[12px] text-muted-foreground">
+                      {t.classe ? TASK_TYPE_CLASSE_LABEL[t.classe] : "Sem classe"}
+                      {t.projuris_classificacao ? ` · ${t.projuris_classificacao}` : ""}
+                    </div>
                   </div>
-                )}
-              </div>
-            ),
-          )}
+
+                  <div className="text-[12px] text-muted-foreground w-[110px]">
+                    <span className="font-medium text-foreground">{t.points}</span> pts
+                  </div>
+
+                  <div className="text-[12px] text-muted-foreground w-[140px]">
+                    Prev/Fatal:{" "}
+                    <span className="font-medium text-foreground">
+                      {t.prazo_previsto_dias ?? "·"}/{t.prazo_fatal_dias ?? "·"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {t.aparece_no_motor ? (
+                      <Badge variant="secondary">Motor</Badge>
+                    ) : (
+                      <Badge variant="outline">Fora do motor</Badge>
+                    )}
+                    {t.sync_projuris &&
+                      (/^d+$/.test(t.projuris_tipo_codigo) ? (
+                        <Badge variant="outline">ProJuris</Badge>
+                      ) : (
+                        <Badge variant="outline" title="Existe só aqui — ainda não foi criado lá">
+                          Só no SHV
+                        </Badge>
+                      ))}
+                    {t.exclusive_executor_id && (
+                      <Badge variant="outline">
+                        Exclusivo: {nomePorUsuario.get(t.exclusive_executor_id) ?? "—"}
+                      </Badge>
+                    )}
+                    {t.excecoes.length > 0 && (
+                      <Badge variant="outline">{t.excecoes.length} exceção(ões)</Badge>
+                    )}
+                    {t.archived_at && <Badge variant="destructive">Arquivado</Badge>}
+                  </div>
+
+                  {podeEditar && (
+                    <div className="flex gap-1 ml-auto">
+                      {/* Só aparece para tipo que ainda não existe no ProJuris e que
+                        está marcado para espelhar lá (A7 do doc 21.08). */}
+                      {t.sync_projuris && !/^d+$/.test(t.projuris_tipo_codigo) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[11px] h-7"
+                          disabled={criarNoProjuris.isPending}
+                          title="Cria este tipo no ProJuris com os prazos daqui"
+                          onClick={async () => {
+                            try {
+                              const r = await criarNoProjuris.mutateAsync({ id: t.id });
+                              if (r.criado)
+                                toast.success(
+                                  r.codigo
+                                    ? `Criado no ProJuris (código ${r.codigo})`
+                                    : (r.motivo ?? "Criado no ProJuris"),
+                                );
+                              else toast.error(r.motivo ?? "Não foi criado");
+                            } catch (e) {
+                              toast.error(e instanceof Error ? e.message : "Falha ao criar");
+                            }
+                          }}
+                        >
+                          Criar no ProJuris
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => setEditandoId(t.id)}>
+                        <Pencil size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={arquivar.isPending}
+                        onClick={() => handleArquivar(t)}
+                      >
+                        {t.archived_at ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Fragment>
+          ))}
         </div>
       )}
     </div>
@@ -406,6 +454,8 @@ function EditorTipo({
   const [noMotor, setNoMotor] = useState(tipo.aparece_no_motor);
   const [noProjuris, setNoProjuris] = useState(tipo.sync_projuris);
   const [exclusivo, setExclusivo] = useState(tipo.exclusive_executor_id ?? NENHUM);
+  const [complexidade, setComplexidade] = useState(String(tipo.complexity_level ?? 0));
+  const [temporal, setTemporal] = useState(String(tipo.temporal_level ?? 0));
 
   const [excTema, setExcTema] = useState("");
   const [excUser, setExcUser] = useState("");
@@ -437,6 +487,8 @@ function EditorTipo({
           aparece_no_motor: noMotor,
           sync_projuris: noProjuris,
           exclusive_executor_id: exclusivo === NENHUM ? null : exclusivo,
+          complexity_level: Number(complexidade) || 0,
+          temporal_level: Number(temporal) || 0,
         },
       });
       toast.success("Tipo de tarefa salvo");
@@ -491,6 +543,36 @@ function EditorTipo({
         <div className="space-y-1">
           <Label className="text-xs">Pontuação</Label>
           <Input value={points} onChange={(e) => setPoints(e.target.value)} inputMode="decimal" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Complexidade</Label>
+          <Select value={complexidade} onValueChange={setComplexidade}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(COMPLEXITY_LABELS).map(([k, label]) => (
+                <SelectItem key={k} value={k}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Temporalidade</Label>
+          <Select value={temporal} onValueChange={setTemporal}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TEMPORAL_LABELS).map(([k, label]) => (
+                <SelectItem key={k} value={k}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Prazo previsto (dias)</Label>

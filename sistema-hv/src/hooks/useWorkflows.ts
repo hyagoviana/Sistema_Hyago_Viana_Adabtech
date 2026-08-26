@@ -28,6 +28,7 @@ export function useTaskTypes() {
 
 type RuleInput = {
   name: string;
+  groupName?: string | null;
   temaId?: string | null;
   triggerType: "status_changed" | "checklist_completed" | "task_created" | "task_completed";
   triggerConfig?: Record<string, unknown>;

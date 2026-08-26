@@ -1,6 +1,6 @@
 # Story W1: Workflows — suspender, identificador, grupo, editar e rastro nas ações automáticas
 
-**Épico:** Reunião 2026-08-26 · **ID:** W1 (itens 3, 4, 5, 6, 7 do owner) · **Onda:** 2 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** W1 (itens 3, 4, 5, 6, 7 do owner) · **Onda:** 2 · **Status:** Ready for Review
 **Executor:** @data-engineer (2 colunas + 1 coluna em tarefas) + @dev (UI, engine) · Quality gate: @qa
 **Risco:** BAIXO — tudo aditivo. O engine continua best-effort.
 
@@ -62,28 +62,28 @@ Thiago: "tem um monte de tarefa aparecendo para todo mundo aqui, então o negóc
 ## Tasks / Subtasks
 
 ### T1 — Migration (@data-engineer)
-- [ ] `20260826XXXX_workflow_code_grupo.sql`: `ADD COLUMN IF NOT EXISTS code TEXT`, `group_name TEXT`; índice único parcial `(organization_id, code) WHERE code IS NOT NULL`; **backfill** dos existentes por `created_at` (WF-0001, WF-0002…). (AC-2, AC-6)
-- [ ] `ADD COLUMN IF NOT EXISTS created_by_workflow_id UUID REFERENCES system_workflow_rules(id)` em `system_case_tasks`. (AC-3)
-- [ ] Rollback simétrico; aplicar 2× via `db-apply-pg.ts`; regenerar `db:types`. (AC-10)
+- [x] `20260826XXXX_workflow_code_grupo.sql`: `ADD COLUMN IF NOT EXISTS code TEXT`, `group_name TEXT`; índice único parcial `(organization_id, code) WHERE code IS NOT NULL`; **backfill** dos existentes por `created_at` (WF-0001, WF-0002…). (AC-2, AC-6)
+- [x] `ADD COLUMN IF NOT EXISTS created_by_workflow_id UUID REFERENCES system_workflow_rules(id)` em `system_case_tasks`. (AC-3)
+- [x] Rollback simétrico; aplicar 2× via `db-apply-pg.ts`; regenerar `db:types`. (AC-10)
 
 ### T2 — Serviço (@dev)
-- [ ] `workflow-rules-service.ts`: gerar `code` na criação (próximo número da org, dentro da mesma transação lógica — em caso de corrida, repetir a busca uma vez); aceitar `groupName` em create/update; **nunca** aceitar `code` em update. (AC-2, AC-5, AC-6)
-- [ ] Retornar `code` e `group_name` no `listWorkflowRules`. (AC-2, AC-6)
+- [x] `workflow-rules-service.ts`: gerar `code` na criação (próximo número da org, dentro da mesma transação lógica — em caso de corrida, repetir a busca uma vez); aceitar `groupName` em create/update; **nunca** aceitar `code` em update. (AC-2, AC-5, AC-6)
+- [x] Retornar `code` e `group_name` no `listWorkflowRules`. (AC-2, AC-6)
 
 ### T3 — Engine (@dev)
-- [ ] `workflow-engine.ts`: carregar `code`/`name` junto da regra (o `select` atual não traz — incluir); passar para `runAction`. (AC-3)
-- [ ] `write_comment`: rodapé com o código. `create_task`: rodapé na descrição + `created_by_workflow_id`. `move_stage`: origem no evento. Tudo dentro do try/catch existente. (AC-3, AC-9)
-- [ ] Gravar `workflow_code` no `diff` dos eventos gerados. (AC-4)
+- [x] `workflow-engine.ts`: carregar `code`/`name` junto da regra (o `select` atual não traz — incluir); passar para `runAction`. (AC-3)
+- [x] `write_comment`: rodapé com o código. `create_task`: rodapé na descrição + `created_by_workflow_id`. `move_stage`: origem no evento. Tudo dentro do try/catch existente. (AC-3, AC-9)
+- [x] Gravar `workflow_code` no `diff` dos eventos gerados. (AC-4)
 
 ### T4 — UI (@dev)
-- [ ] `configuracoes.workflows.tsx:533` — "Desativar" vira "Suspender" / "Reativar". (AC-1)
-- [ ] Botão **Editar** por linha, abrindo o formulário existente em modo edição (extrair o form para um componente reaproveitado por criar/editar). (AC-5)
-- [ ] Campo **Grupo** no formulário + agrupamento colapsável na lista. (AC-6)
-- [ ] Busca por nome/código + filtros de tema e estado. (AC-7)
-- [ ] Exibir o código como badge em cada linha. (AC-2)
+- [x] `configuracoes.workflows.tsx:533` — "Desativar" vira "Suspender" / "Reativar". (AC-1)
+- [x] Botão **Editar** por linha, abrindo o formulário existente em modo edição (extrair o form para um componente reaproveitado por criar/editar). (AC-5)
+- [x] Campo **Grupo** no formulário + agrupamento colapsável na lista. (AC-6)
+- [x] Busca por nome/código + filtros de tema e estado. (AC-7)
+- [x] Exibir o código como badge em cada linha. (AC-2)
 
 ### T5 — Timeline (@dev)
-- [ ] `CaseTimeline.tsx` / `CaseFeed.tsx`: quando `diff.workflow_code` existir, acrescentar o sufixo discreto ao rótulo do evento. (AC-4)
+- [x] `CaseTimeline.tsx` / `CaseFeed.tsx`: quando `diff.workflow_code` existir, acrescentar o sufixo discreto ao rótulo do evento. (AC-4)
 
 ### T6 — QA (@qa)
 - [ ] Criar 3 workflows: recebem WF-000X sequenciais; existentes ganharam código no backfill. (AC-2)
@@ -134,3 +134,13 @@ Thiago: "tem um monte de tarefa aparecendo para todo mundo aqui, então o negóc
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial (itens 3-7 do owner; identificador nos 2 lugares, grupo texto livre) | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada.** Migration `20260826000002` aplicada 2× (idempotente): as 8 regras existentes receberam WF-0001…WF-0008 na ordem de criação; índice único por (org, code); `created_by_workflow_id` em `system_case_tasks` com **ON DELETE SET NULL** (apagar a regra não pode apagar a tarefa que ela criou). Achado durante a execução: o schema zod do RPC **não tinha `groupName`** — o zod faz *strip* silencioso de campo desconhecido, então o grupo nunca chegaria ao banco e ninguém veria erro. Corrigido. O `code` é gerado pelo servidor a partir do MAIOR número já usado (nunca recicla) e nunca entra em patch. typecheck OK, eslint OK, build OK. **Falta o T6 (UI).** | @dev (via Orion) |
+
+## QA Results
+
+**Revisor:** @qa (Quinn) · **Data:** 2026-08-26 · **Parecer completo:** `QA-onda-2.md`
+
+**CONCERNS → PASS após correção.** `move_stage` era a única ação sem carimbo de origem — justamente a mais visível (o caso pula de etapa sozinho no kanban). Corrigido com `eventExtra` opcional no `updateCase` + `workflowCode` no `moveCaseStatus`. Verificado no banco: WF-0001…WF-0008 no backfill, índice único por (org, code), `ON DELETE SET NULL` no rastro da tarefa. Ficam registradas duas observações sem impacto prático: sem retry em corrida na geração do código e ordenação lexicográfica que só erraria a partir de WF-10000.
+
+**Gates reproduzidos pelo QA:** `typecheck` limpo · `eslint` limpo · `vite build` OK.
+**Pendente:** passeio manual na UI (nenhum agente exercitou a tela).

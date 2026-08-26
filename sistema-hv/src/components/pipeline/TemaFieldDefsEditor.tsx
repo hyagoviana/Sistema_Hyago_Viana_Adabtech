@@ -8,7 +8,17 @@
 //   • null  → campos do PAINEL PADRÃO do tema (valem para todas as frentes);
 //   • string → campos CONDICIONAIS de uma frente específica.
 
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -103,6 +113,9 @@ export function TemaFieldDefsEditor({
   // A4 (2026-08-05) — campo dependente: checkbox + campo pai escolhido. "" = sem pai.
   const [isDependent, setIsDependent] = useState(false);
   const [parentId, setParentId] = useState("");
+  // C1 (2026-08-26) — campo VINCULADO: aparece SEMPRE junto do outro. Não é o
+  // dependente (que condiciona a edição) — aqui é só apresentação.
+  const [linkedId, setLinkedId] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Múltiplas ocorrências só para campos de valor livre (texto/número/data).
@@ -160,6 +173,36 @@ export function TemaFieldDefsEditor({
   // Mapa id→label p/ o badge "(depende de X)" na lista.
   const labelById = new Map(allDefs.map((d) => [d.id, d.label]));
 
+  // C1 (2026-08-26) — ARRASTAR para reordenar os campos. Antes disto a ordem só
+  // era definida na criação (`ordem: defs.length`) e não havia como mudar.
+  // Thiago: "se a gente pode alterar a ordem de visualização dos campos… arrastar
+  // um quadradinho em cima do outro".
+  const [arrastando, setArrastando] = useState<string | null>(null);
+
+  const soltarSobre = async (destinoId: string) => {
+    const origemId = arrastando;
+    setArrastando(null);
+    if (!origemId || origemId === destinoId) return;
+    const lista = [...((defs as TemaFieldDef[] | undefined) ?? [])];
+    const de = lista.findIndex((d) => d.id === origemId);
+    const para = lista.findIndex((d) => d.id === destinoId);
+    if (de < 0 || para < 0) return;
+    const [movido] = lista.splice(de, 1);
+    lista.splice(para, 0, movido);
+    try {
+      // Persiste só quem realmente mudou de posição (menos escrita, menos ruído).
+      await Promise.all(
+        lista.map((d, i) =>
+          d.ordem === i
+            ? Promise.resolve(null)
+            : updateDef.mutateAsync({ id: d.id, patch: { ordem: i } }),
+        ),
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível reordenar");
+    }
+  };
+
   function resetForm() {
     setLabel("");
     setType("text");
@@ -175,6 +218,7 @@ export function TemaFieldDefsEditor({
     setMoveToStageSlug("");
     setIsDependent(false);
     setParentId("");
+    setLinkedId("");
     setEditingId(null);
   }
 
@@ -265,6 +309,7 @@ export function TemaFieldDefsEditor({
             subtitles: subList,
             moveToStageSlug: moveTo,
             parentFieldDefId: parentDefId,
+            linkedFieldDefId: linkedId || null,
             allowSharedClientKey: shareOverride,
           },
         });
@@ -322,6 +367,7 @@ export function TemaFieldDefsEditor({
     // A4 — recarrega a dependência do campo em edição.
     setIsDependent(!!d.parent_field_def_id);
     setParentId(d.parent_field_def_id ?? "");
+    setLinkedId(d.linked_field_def_id ?? "");
   }
 
   async function excluir(d: TemaFieldDef) {
@@ -653,6 +699,37 @@ export function TemaFieldDefsEditor({
             )}
           </div>
         )}
+
+        {/* C1 (2026-08-26) — VINCULADO. Thiago: "não é que ele depende daquele
+            outro, é que eles são juntos… eles sempre vão aparecer juntinhos".
+            Só na EDIÇÃO: o par precisa dos dois campos já criados. */}
+        {editingId && (
+          <div className="space-y-1 pt-2">
+            <Label className="text-xs">Vinculado a (aparecem juntos)</Label>
+            <Select
+              value={linkedId || "__none__"}
+              onValueChange={(v) => setLinkedId(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Nenhum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Nenhum</SelectItem>
+                {allDefs
+                  .filter((d) => d.id !== editingId)
+                  .map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.label}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10.5px] text-muted-foreground">
+              O par aparece sempre lado a lado na ficha. Não condiciona nem bloqueia nada — é o caso
+              dos “dois links” que precisam andar juntos.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* #11 (2026-08-17) — Obrigatório / Ocultar na lista / Ocultar do filtro
@@ -722,10 +799,17 @@ export function TemaFieldDefsEditor({
           (defs as TemaFieldDef[]).map((d) => (
             <div key={d.id}>
               <div
-                className={`flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 ${
+                draggable
+                onDragStart={() => setArrastando(d.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => soltarSobre(d.id)}
+                onDragEnd={() => setArrastando(null)}
+                title="Arraste para reordenar"
+                className={`flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 cursor-grab active:cursor-grabbing ${
                   d.active ? "" : "opacity-55"
-                }`}
+                } ${arrastando === d.id ? "opacity-40 border-[var(--gold)]" : ""}`}
               >
+                <GripVertical size={13} className="shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--navy)]">
                     <span className="truncate">{d.label}</span>
@@ -749,6 +833,12 @@ export function TemaFieldDefsEditor({
                     {d.type === "boolean" && d.move_to_stage_slug && (
                       <span className="text-[10px] text-[var(--gold-700)]">
                         → move p/ {d.move_to_stage_slug}
+                      </span>
+                    )}
+                    {/* C1 — vínculo (aparecem juntos). Diferente de "depende de". */}
+                    {d.linked_field_def_id && labelById.has(d.linked_field_def_id) && (
+                      <span className="text-[10px] text-[var(--gold-700)]">
+                        junto de {labelById.get(d.linked_field_def_id)}
                       </span>
                     )}
                     {/* A4 — dependência: mostra o pai (se ainda existe/ativo). */}

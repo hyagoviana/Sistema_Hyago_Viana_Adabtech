@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { listCaseResponsaveis, setCaseResponsaveis } from "./case-responsaveis-service";
 import { ROLES, type Role } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
+import { isTaskAberta } from "./task-status-shared";
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -571,7 +572,7 @@ export async function getUserReport(userId: string): Promise<UserReport> {
     checklist,
     resumo: {
       total_casos: casos.length,
-      tarefas_pendentes: tarefas.filter((t) => t.status !== "CONCLUIDA").length,
+      tarefas_pendentes: tarefas.filter((t) => isTaskAberta(t.status)).length,
       checklist_pendentes: checklist.filter((c) => !c.done).length,
     },
   };

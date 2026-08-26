@@ -284,9 +284,7 @@ export type Database = {
           vinculado_por?: string | null;
           created_at?: string;
         };
-        Update: Partial<
-          Database["public"]["Tables"]["system_case_projuris_processos"]["Insert"]
-        >;
+        Update: Partial<Database["public"]["Tables"]["system_case_projuris_processos"]["Insert"]>;
         Relationships: [];
       };
       system_distribution_staging: {
@@ -768,6 +766,15 @@ export type Database = {
           active: boolean;
           // B1 (2026-08-05) — o campo do cliente "aparece nos casos" (espelhado).
           appears_in_cases: boolean;
+          // C1 (2026-08-26) — paridade com os campos do CASO.
+          max_occurrences: number;
+          initial_occurrences: number;
+          subtitle_mode: string | null;
+          subtitles: Json;
+          parent_field_def_id: string | null;
+          linked_field_def_id: string | null;
+          hidden_in_list: boolean;
+          hidden_in_filters: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -785,6 +792,14 @@ export type Database = {
           ordem?: number;
           active?: boolean;
           appears_in_cases?: boolean;
+          max_occurrences?: number;
+          initial_occurrences?: number;
+          subtitle_mode?: string | null;
+          subtitles?: Json;
+          parent_field_def_id?: string | null;
+          linked_field_def_id?: string | null;
+          hidden_in_list?: boolean;
+          hidden_in_filters?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1347,6 +1362,8 @@ export type Database = {
           initial_occurrences: number;
           move_to_stage_slug: string | null;
           parent_field_def_id: string | null;
+          // C1 (2026-08-26) — campo VINCULADO (aparecem juntos na tela).
+          linked_field_def_id: string | null;
           subtitle_mode: string | null;
           subtitles: Json;
           created_by: string | null;
@@ -1654,6 +1671,9 @@ export type Database = {
           status_fin_changed_at: string;
           drive_folder_id: string | null;
           drive_folder_url: string | null;
+          // D1 (2026-08-26) — subpasta "Documentos automáticos" (só o que o SHV gera).
+          drive_auto_folder_id: string | null;
+          drive_auto_folder_url: string | null;
           drive_sync_failed: boolean;
           drive_sync_error: string | null;
           service_type_id: string | null;
@@ -1707,6 +1727,8 @@ export type Database = {
           status_fin_changed_at?: string;
           drive_folder_id?: string | null;
           drive_folder_url?: string | null;
+          drive_auto_folder_id?: string | null;
+          drive_auto_folder_url?: string | null;
           drive_sync_failed?: boolean;
           drive_sync_error?: string | null;
           service_type_id?: string | null;
@@ -1763,6 +1785,9 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
+          // W1 (2026-08-26) — identificador curto e imutável (WF-0007) + grupo visual.
+          code: string | null;
+          group_name: string | null;
           name: string;
           active: boolean;
           tema_id: string | null;
@@ -1776,6 +1801,8 @@ export type Database = {
         Insert: {
           id?: string;
           organization_id: string;
+          code?: string | null;
+          group_name?: string | null;
           name: string;
           active?: boolean;
           tema_id?: string | null;
@@ -2124,6 +2151,8 @@ export type Database = {
           updated_at: string;
           deleted_at: string | null;
           task_type_id: string | null;
+          // W1 (2026-08-26) — qual workflow criou a tarefa (NULL = criada por gente).
+          created_by_workflow_id: string | null;
         };
         Insert: {
           id?: string;
@@ -2142,6 +2171,7 @@ export type Database = {
           updated_at?: string;
           deleted_at?: string | null;
           task_type_id?: string | null;
+          created_by_workflow_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["system_case_tasks"]["Insert"]>;
         Relationships: [
@@ -2548,3 +2578,4 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
+

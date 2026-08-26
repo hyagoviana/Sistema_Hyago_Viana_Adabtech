@@ -55,7 +55,7 @@ funcionalidade nova de fundação — exceto o financeiro, que é um módulo nov
 ### Onda 4 — integrações e financeiro (POR ÚLTIMO)
 | Story | Título | Risco |
 |---|---|---|
-| **TR1** | Importação do Trello (descrição → Observações, comentários → linha do tempo) | MÉDIO |
+| ~~TR1~~ | ~~Importação do Trello~~ — **ADIADA pelo owner (2026-08-26): "essa parte ficará para um outro momento"**. Story pronta em `TR1-importacao-trello.md`, esperando decisão. | — |
 | **FN1** | Financeiro do caso: receitas/despesas internas, tipos, status, reembolsável (SEM API) | ALTO |
 | **FN2** | ContaAzul: fazer/revisar lançamento, contrato recorrente e as 24 competências | ALTO |
 
@@ -100,7 +100,7 @@ funcionalidade nova de fundação — exceto o financeiro, que é um módulo nov
 | AU1 | `AU1-auditoria-global.md` | 11 |
 | C1 | `C1-campos-do-cliente-equiparados.md` | 1 + campo vinculado + reordenar |
 | T2 | `T2-centralizar-tema-e-vinculo-no-caso.md` | 13 (tema e vínculo) |
-| TR1 | `TR1-importacao-trello.md` | extra (Trello) |
+| ~~TR1~~ | `TR1-importacao-trello.md` | extra (Trello) — **ADIADA** |
 | FN1 | `FN1-financeiro-do-caso-registros-internos.md` | financeiro (doc 25.08) |
 | FN2 | `FN2-contaazul-lancamento-e-recorrencia.md` | ContaAzul (doc 25.08) |
 

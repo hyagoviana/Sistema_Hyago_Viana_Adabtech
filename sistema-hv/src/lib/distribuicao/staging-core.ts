@@ -580,17 +580,20 @@ async function atualizarTipoDoStaging(
     .maybeSingle();
   if (!tipo) throw new AuthError("Tipo de tarefa não encontrado", 404);
 
-  // Mesma precedência do caminho de criação: exceção por tema > exclusivo geral.
-  let exclusivo = tipo.exclusive_executor_id ?? null;
-  if (temaId) {
-    const { data: exc } = await supabase
-      .from("system_task_type_theme_exclusives")
-      .select("executor_id")
-      .eq("task_type_id", taskTypeId)
-      .eq("tema_id", temaId)
-      .maybeSingle();
-    if (exc?.executor_id) exclusivo = exc.executor_id;
-  }
+  // Mesma precedência do caminho de criação (regra única em resolverExclusivo):
+  // exceção por tema > exclusivo geral > responsável do caso.
+  const { data: linhaAtual } = await supabase
+    .from("system_distribution_staging")
+    .select("case_id")
+    .eq("id", stagingId)
+    .maybeSingle();
+  const exclusivo = await resolverExclusivo(
+    supabase,
+    taskTypeId,
+    temaId,
+    tipo.exclusive_executor_id ?? null,
+    (linhaAtual as { case_id?: string | null } | null)?.case_id ?? null,
+  );
 
   const hoje = ymd(new Date());
   const { error } = await supabase
@@ -608,6 +611,58 @@ async function atualizarTipoDoStaging(
     .eq("id", stagingId)
     .eq("organization_id", ORG_ID);
   if (error) throw new AuthError(`Falha ao trocar o tipo: ${error.message}`, 500);
+}
+
+/**
+ * Quem é o dono desta tarefa, por ordem de precedência (T2 — reunião 2026-08-26):
+ *
+ *   1. exceção do tipo NESTE tema  (system_task_type_theme_exclusives)
+ *   2. exclusivo geral do tipo     (system_task_type_mapping.exclusive_executor_id)
+ *   3. RESPONSÁVEL DO CASO         (system_case_responsaveis) — novidade
+ *   4. nada → o motor distribui por pontos
+ *
+ * O degrau 3 é o pedido do Thiago: "colocar um registro lá [no caso], uma opção
+ * de que esse caso tem um vínculo com X usuário, e aí o sistema na hora de rodar
+ * o motor vai puxar (…) esse campo lá dos casos".
+ *
+ * Decisão do owner: vale SÓ quando o caso tem exatamente UM responsável. Com dois
+ * ou mais, o sistema não escolhe no chute — cai na distribuição normal.
+ *
+ * O resultado vira o `exclusive_executor_id` da linha da tela 2, que fica VISÍVEL
+ * e EDITÁVEL antes de rodar o motor ("processo automatizado, não automático").
+ */
+async function resolverExclusivo(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  taskTypeId: string,
+  temaId: string | null,
+  exclusivoDoTipo: string | null,
+  caseId: string | null,
+): Promise<string | null> {
+  // 1) Exceção por tema tem precedência sobre o exclusivo geral (doc 21.08).
+  if (temaId) {
+    const { data: exc } = await supabase
+      .from("system_task_type_theme_exclusives")
+      .select("executor_id")
+      .eq("task_type_id", taskTypeId)
+      .eq("tema_id", temaId)
+      .maybeSingle();
+    if (exc?.executor_id) return exc.executor_id as string;
+  }
+
+  // 2) Exclusivo geral do tipo.
+  if (exclusivoDoTipo) return exclusivoDoTipo;
+
+  // 3) Responsável do caso — só quando é UM só.
+  if (caseId) {
+    const { data: resps } = await supabase
+      .from("system_case_responsaveis_active")
+      .select("user_id")
+      .eq("case_id", caseId);
+    const ids = [...new Set((resps ?? []).map((r) => (r as { user_id: string }).user_id))];
+    if (ids.length === 1) return ids[0];
+  }
+
+  return null;
 }
 
 /** Monta a linha da tela 2 com tudo que o sistema já sabe (editável depois). */
@@ -633,17 +688,13 @@ async function criarStagingDoMovimento(
     .maybeSingle();
   if (!tipo) throw new AuthError("Tipo de tarefa não encontrado", 404);
 
-  // Exceção por tema tem precedência sobre o exclusivo geral do tipo (doc 21.08).
-  let exclusivo = tipo.exclusive_executor_id ?? null;
-  if (mov.tema_id) {
-    const { data: exc } = await supabase
-      .from("system_task_type_theme_exclusives")
-      .select("executor_id")
-      .eq("task_type_id", taskTypeId)
-      .eq("tema_id", mov.tema_id)
-      .maybeSingle();
-    if (exc?.executor_id) exclusivo = exc.executor_id;
-  }
+  const exclusivo = await resolverExclusivo(
+    supabase,
+    taskTypeId,
+    mov.tema_id,
+    tipo.exclusive_executor_id ?? null,
+    mov.case_id,
+  );
 
   const hoje = ymd(new Date());
   const { data, error } = await supabase

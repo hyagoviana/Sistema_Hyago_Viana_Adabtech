@@ -22,6 +22,7 @@ import {
   UserPlus,
   Receipt,
   ShieldCheck,
+  History,
   GitBranch,
   SlidersHorizontal,
 } from "lucide-react";
@@ -124,6 +125,8 @@ const groups: { label: string; items: Item[] }[] = [
     items: [
       { to: "/referencias", label: "Referências", icon: Library },
       { to: "/permissoes", label: "Permissões", icon: ShieldCheck },
+      // AU1 — trilha de quem mexeu no quê (o owner pediu menu global).
+      { to: "/auditoria", label: "Auditoria", icon: History },
       { to: "/configuracoes", label: "Configurações", icon: Settings },
     ],
   },

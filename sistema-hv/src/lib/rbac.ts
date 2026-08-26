@@ -399,6 +399,10 @@ export const ROUTE_MODULE: Partial<Record<string, Module>> = {
   "/configuracoes": "sistema",
   // I1 (2026-08-05) — tela dedicada de campos personalizados (config do sistema).
   "/configuracoes/campos-personalizados": "sistema",
+  // AU1 (2026-08-26) — auditoria é administração: mesma régua de /permissoes.
+  // Sem esta linha o item apareceria no menu para todo mundo (a rota sem módulo
+  // cai no papel base), embora o RPC já negasse — o gate tem de ser nos dois.
+  "/auditoria": "sistema",
 };
 
 /**

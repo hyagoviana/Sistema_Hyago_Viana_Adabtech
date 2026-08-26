@@ -139,6 +139,9 @@ export const updateTemaFieldDefFn = createServerFn({ method: "POST" })
           moveToStageSlug: z.string().nullish(),
           // A4 (2026-08-05) — reatribui/remove a dependência pai (null = remove).
           parentFieldDefId: z.string().uuid().nullish(),
+          // C1 (2026-08-26) — campo VINCULADO (par 1↔1, simétrico). Sem isto no
+          // schema o zod faria strip silencioso e o vínculo nunca salvaria.
+          linkedFieldDefId: z.string().uuid().nullish(),
           // A7 (2026-08-05) — libera a checagem do balde compartilhado do cliente.
           allowSharedClientKey: z.boolean().optional(),
         }),
