@@ -138,6 +138,12 @@ export type CalendarTask = {
   final_date: string | null;
   executor_id: string | null;
   executor_nome: string | null;
+  // TK1 — situação REAL da tarefa, lida do snapshot do ProJuris. Thiago: "o
+  // ProJuris tem esses status de tarefa... é um filtro importante, porque a
+  // gente sabe de fato ali o que já foi feito". `null` = tarefa distribuída que
+  // ainda não apareceu em nenhuma sincronização do quadro.
+  situacao_projuris: string | null;
+  concluida: boolean;
 };
 
 export const listDistributionTasksByDayFn = createServerFn({ method: "GET" })
@@ -164,6 +170,27 @@ export const listDistributionTasksByDayFn = createServerFn({ method: "GET" })
 
       const { data: rows, error } = await q;
       if (error) throw new AuthError(error.message, 500);
+
+      // TK1 — situação de cada tarefa, do snapshot do quadro do ProJuris.
+      // O calendário lista o que o motor DISTRIBUIU; quem sabe se já foi feita é
+      // o ProJuris. Uma query só, pelos task_id do dia.
+      const taskIds = [
+        ...new Set((rows ?? []).map((r) => r.task_id).filter((v): v is string => !!v)),
+      ];
+      const situacaoById = new Map<string, { situacao: string | null; concluida: boolean }>();
+      if (taskIds.length) {
+        const { data: snap } = await sb
+          .from("system_distribution_kanban_tasks")
+          .select("task_id, situacao, situacao_col, concluida")
+          .eq("organization_id", ORG_ID)
+          .in("task_id", taskIds);
+        for (const k of snap ?? []) {
+          situacaoById.set(k.task_id, {
+            situacao: k.situacao ?? k.situacao_col ?? null,
+            concluida: k.concluida === true,
+          });
+        }
+      }
 
       // De-para executor_id → nome (system_users). Uma query só.
       const execIds = [
@@ -194,6 +221,8 @@ export const listDistributionTasksByDayFn = createServerFn({ method: "GET" })
           final_date: r.final_date,
           executor_id: r.executor_id,
           executor_nome: r.executor_id ? (nameById.get(r.executor_id) ?? null) : null,
+          situacao_projuris: situacaoById.get(r.task_id)?.situacao ?? null,
+          concluida: situacaoById.get(r.task_id)?.concluida ?? false,
         };
       });
     } catch (err: unknown) {

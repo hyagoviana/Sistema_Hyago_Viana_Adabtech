@@ -2,6 +2,12 @@
 // NUNCA importe este arquivo em código que roda no browser.
 import { seesOnlyOwnCases, type Role } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
+import {
+  isTaskAberta,
+  isTaskConcluida,
+  TASK_STATUSES,
+  taskStatusLabel,
+} from "./task-status-shared";
 import { getUserRole } from "./users-service";
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -82,9 +88,11 @@ export async function createCaseTask(
 
 export async function setCaseTaskStatus(id: string, status: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
+  // TK1 — CONCLUIDA_SUCESSO e CONCLUIDA_SEM_SUCESSO fecham a tarefa (as duas
+  // carimbam completed_at). CANCELADA não é conclusão: fica sem carimbo.
   const { data, error } = await sb
     .from("system_case_tasks")
-    .update({ status, completed_at: status === "CONCLUIDA" ? now() : null })
+    .update({ status, completed_at: isTaskConcluida(status) ? now() : null })
     .eq("id", id)
     .select()
     .single();
@@ -92,17 +100,19 @@ export async function setCaseTaskStatus(id: string, status: string, triggeredBy?
 
   // Registra evento na timeline do caso para qualquer mudança de status
   if (data) {
-    const action =
-      status === "CONCLUIDA"
-        ? "task_completed"
-        : status === "EM_ANDAMENTO"
-          ? "task_started"
-          : "task_status_changed";
+    const action = isTaskConcluida(status)
+      ? "task_completed"
+      : status === "EM_ANDAMENTO"
+        ? "task_started"
+        : "task_status_changed";
     await sb.from("system_case_events").insert({
       case_id: data.case_id,
       organization_id: DEFAULT_ORG_ID,
       action,
-      diff: { task_title: data.title, task_id: id, status },
+      // `status` cru vai no diff (a tela traduz com taskStatusLabel); `status_label`
+      // guarda a leitura humana do momento — o "sem sucesso" precisa aparecer na
+      // linha do tempo, senão vira só "tarefa concluída" e perde a informação.
+      diff: { task_title: data.title, task_id: id, status, status_label: taskStatusLabel(status) },
       triggered_by: triggeredBy ?? null,
     });
   }
@@ -375,12 +385,14 @@ export async function listWorkItems(
   const canSeeAll = !seesOnlyOwnCases((role ?? "") as Role);
   const scopeAssignee = canSeeAll ? filters?.assigneeId || null : viewerId;
 
-  // Tarefas (não concluídas).
+  // Tarefas ABERTAS. TK1: aberta = nem concluída (com/sem sucesso) nem cancelada.
+  // A lista sai do domínio compartilhado, então um status novo no futuro não
+  // exige caçar comparação de string espalhada pelo código.
   let tq = sb
     .from("system_case_tasks")
     .select("id, case_id, title, status, priority, assignee_id, due_date")
     .is("deleted_at", null)
-    .neq("status", "CONCLUIDA");
+    .in("status", TASK_STATUSES.filter(isTaskAberta));
   if (scopeAssignee) tq = tq.eq("assignee_id", scopeAssignee);
   if (filters?.caseId) tq = tq.eq("case_id", filters.caseId);
   const { data: tasks } = await tq;
@@ -465,7 +477,8 @@ export async function listWorkItems(
       case_code: map.get(row.case_id)?.case_code ?? "·",
       client_name: map.get(row.case_id)?.client_name ?? "·",
       title: row.def?.label ?? row.label ?? "Item de checklist",
-      status: "PENDENTE",
+      // Item de checklist não tem ciclo próprio: enquanto aparece aqui, está aberto.
+      status: "EM_ANDAMENTO",
       priority: null,
       assignee_id: row.assigned_to,
       assignee_name: row.assigned_to ? (userMap.get(row.assigned_to) ?? null) : null,

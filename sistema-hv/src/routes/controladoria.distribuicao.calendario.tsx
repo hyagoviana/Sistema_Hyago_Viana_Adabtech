@@ -52,6 +52,26 @@ function CalendarioPage() {
   // Dia selecionado → abre o painel de tarefas do dia (RBAC no servidor).
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const { data: dayTasks, isLoading: dayLoading } = useDistributionTasksByDay(selectedDay);
+  // TK1 — a agenda do dia ganha os dois filtros que o Thiago pediu ao ver a
+  // tela: por SITUAÇÃO (o que já foi feito) e por ADVOGADO. O RBAC continua
+  // valendo por baixo: quem não é admin só recebe as próprias tarefas do RPC.
+  const [diaSituacao, setDiaSituacao] = useState<"TODAS" | "PENDENTE" | "CONCLUIDA">("TODAS");
+  const [diaExecutor, setDiaExecutor] = useState<string>("TODOS");
+
+  const dayTasksFiltradas = (dayTasks ?? []).filter((t) => {
+    const okSituacao =
+      diaSituacao === "TODAS" || (diaSituacao === "CONCLUIDA" ? t.concluida : !t.concluida);
+    const okExecutor = diaExecutor === "TODOS" || t.executor_id === diaExecutor;
+    return okSituacao && okExecutor;
+  });
+  // Só os executores que de fato têm tarefa no dia — lista curta e útil.
+  const executoresDoDia = [
+    ...new Map(
+      (dayTasks ?? [])
+        .filter((t) => t.executor_id)
+        .map((t) => [t.executor_id as string, t.executor_nome ?? t.executor_id]),
+    ).entries(),
+  ];
   // Contagem de tarefas por dia do mês → selo nos dias que têm tarefa.
   const { data: monthCounts } = useDistributionMonthCounts(year, month);
 
@@ -406,34 +426,85 @@ function CalendarioPage() {
               Nenhuma tarefa distribuída para este dia.
             </p>
           ) : (
-            <div className="max-h-[60vh] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="py-2">Processo</th>
-                    <th className="py-2">Número do processo</th>
-                    <th className="py-2">Tipo</th>
-                    <th className="py-2">Executor</th>
-                    <th className="py-2 text-center">Fluxo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(dayTasks ?? []).map((t) => (
-                    <tr key={t.id} className="border-b hover:bg-accent/50">
-                      <td className="py-2 pr-2">{t.nome_processo || t.numero_processo || "·"}</td>
-                      <td className="py-2 pr-2 font-mono text-[11px]">
-                        {t.numero_processo || "·"}
-                      </td>
-                      <td className="py-2 pr-2 text-xs">{t.tipo_nome || "·"}</td>
-                      <td className="py-2 pr-2 text-xs">{t.executor_nome || "·"}</td>
-                      <td className="py-2 text-center">
-                        <Badge className={`text-xs ${FLOW_COLORS[t.flow] ?? ""}`}>{t.flow}</Badge>
-                      </td>
+            <>
+              <div className="flex flex-wrap items-center gap-2 pb-3">
+                <Select
+                  value={diaSituacao}
+                  onValueChange={(v) => setDiaSituacao(v as typeof diaSituacao)}
+                >
+                  <SelectTrigger className="h-8 w-[170px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TODAS">Todas as situações</SelectItem>
+                    <SelectItem value="PENDENTE">Pendentes</SelectItem>
+                    <SelectItem value="CONCLUIDA">Concluídas</SelectItem>
+                  </SelectContent>
+                </Select>
+                {executoresDoDia.length > 1 && (
+                  <Select value={diaExecutor} onValueChange={setDiaExecutor}>
+                    <SelectTrigger className="h-8 w-[200px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TODOS">Todos os responsáveis</SelectItem>
+                      {executoresDoDia.map(([id, nome]) => (
+                        <SelectItem key={id} value={id}>
+                          {nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {dayTasksFiltradas.length} de {(dayTasks ?? []).length}
+                </span>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-muted-foreground">
+                      <th className="py-2">Processo</th>
+                      <th className="py-2">Número do processo</th>
+                      <th className="py-2">Tipo</th>
+                      <th className="py-2">Executor</th>
+                      <th className="py-2">Situação</th>
+                      <th className="py-2 text-center">Fluxo</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {dayTasksFiltradas.map((t) => (
+                      <tr key={t.id} className="border-b hover:bg-accent/50">
+                        <td className="py-2 pr-2">{t.nome_processo || t.numero_processo || "·"}</td>
+                        <td className="py-2 pr-2 font-mono text-[11px]">
+                          {t.numero_processo || "·"}
+                        </td>
+                        <td className="py-2 pr-2 text-xs">{t.tipo_nome || "·"}</td>
+                        <td className="py-2 pr-2 text-xs">{t.executor_nome || "·"}</td>
+                        <td className="py-2 pr-2 text-xs">
+                          {t.situacao_projuris ? (
+                            <Badge
+                              className={`text-xs ${
+                                t.concluida
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              {t.situacao_projuris}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">·</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-center">
+                          <Badge className={`text-xs ${FLOW_COLORS[t.flow] ?? ""}`}>{t.flow}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

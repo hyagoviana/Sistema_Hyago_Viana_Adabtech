@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { isTaskConcluida } from "@/lib/task-status-shared";
+
 import {
   DossieServiceError,
   listCaseTasks,
@@ -110,7 +112,9 @@ export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
     handleWrite(async (userId) => {
       const task = await setCaseTaskStatus(data.id, data.status, userId);
       // #2 Workflows — gatilho task_completed só na conclusão (1x por tarefa).
-      if (task?.id && data.status === "CONCLUIDA") {
+      // TK1: conclusão são as DUAS (com e sem sucesso). CANCELADA não dispara —
+      // cancelar não é terminar, e automação em cima de tarefa cancelada é bug.
+      if (task?.id && isTaskConcluida(data.status)) {
         const taskTypeId = (task as { task_type_id?: string | null }).task_type_id ?? null;
         await runWorkflowsFor(
           task.case_id,

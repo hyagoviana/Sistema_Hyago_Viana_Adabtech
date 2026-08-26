@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUserReport } from "@/hooks/useUsers";
 import { CASE_TYPE_LABELS, type CaseType } from "@/lib/cases/constants";
 import { ROLE_LABELS, type Role } from "@/lib/rbac";
+import { isTaskAberta } from "@/lib/task-status-shared";
 
 function Kpi({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
@@ -84,7 +85,7 @@ export function UserReportDialog({
                 </h4>
                 <ul className="space-y-1">
                   {data.tarefas
-                    .filter((t) => t.status !== "CONCLUIDA")
+                    .filter((t) => isTaskAberta(t.status))
                     .map((t) => (
                       <li
                         key={t.id}

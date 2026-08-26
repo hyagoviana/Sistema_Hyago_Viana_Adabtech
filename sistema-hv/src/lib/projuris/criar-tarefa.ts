@@ -26,6 +26,7 @@
 // trava de banco, best-effort e registro do erro na própria linha.
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { projurisSituacaoDoStatus } from "./task-situacao";
 import { buildProjurisClientFromConfig, ORG_ID } from "@/lib/distribuicao/sync-core";
 import { isWritebackAtivo } from "@/lib/projuris/writeback-acoes";
 
@@ -197,9 +198,12 @@ export async function montarPayloadTarefa(
       dataLimite: fatal,
       // Data a partir da qual o ProJuris conta o prazo do tipo.
       dataBase: prevista,
-      // Situação inicial: 1 = "Pendente" (2 é "Concluída com sucesso"). Sem ela a
-      // API recusa com erro.tarefa.situacao.naoInformada.
-      tarefaEventoSituacaoWs: { codigoTarefaEventoSituacao: 1, situacaoConcluida: false },
+      // Situação: obrigatória (sem ela a API recusa com
+      // erro.tarefa.situacao.naoInformada). O de-para com o vocabulário do SHV
+      // vive em `task-situacao.ts`. A linha chega aqui recém-distribuída, então
+      // na prática sai sempre como pendente — mas o mapeamento é explícito para
+      // não virar número mágico quando a escrita de volta evoluir.
+      tarefaEventoSituacaoWs: projurisSituacaoDoStatus(null),
       tipoTarefa: { chave: codigoTipo, valor: nomeTipo },
       usuariosResponsaveis: [{ chave: codigoResponsavel }],
     },

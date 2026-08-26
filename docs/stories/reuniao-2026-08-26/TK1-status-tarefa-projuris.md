@@ -1,7 +1,8 @@
 # Story TK1: Status de tarefa igual ao ProJuris (sem "Pendente") + filtro por status e por advogado na agenda
 
-**Épico:** Reunião 2026-08-26 · **ID:** TK1 (item 12 do owner) · **Onda:** 1 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** TK1 (item 12 do owner) · **Onda:** 1
 **Executor:** @data-engineer (migration + backfill) + @dev (serviço, UI) · Quality gate: @qa
+**Status:** Ready for Review — implementada em 2026-08-26 (T1-T6). Falta o passeio manual na UI (T7).
 **Risco:** MÉDIO — mexe no CHECK e nos dados de `system_case_tasks`, que **9 arquivos** leem. O risco não é conceitual, é de **esquecer um ponto de leitura**. A lista completa está aqui.
 
 ---
@@ -72,29 +73,29 @@ Thiago: "o ProJuris tem esses status de tarefa: pendente, concluído com sucesso
 ## Tasks / Subtasks
 
 ### T1 — Migration + backfill (@data-engineer)
-- [ ] `supabase/migrations/20260826XXXX_case_tasks_status_projuris.sql`: dropar o CHECK antigo por nome dinâmico (molde: `20260722000001_tema_field_defs_boolean.sql`), **UPDATE de backfill**, criar o CHECK novo, trocar o DEFAULT. Ordem obrigatória: backfill **antes** do CHECK novo. (AC-1, AC-2)
-- [ ] Rollback simétrico em `supabase/rollbacks/`. Aplicar 2× via `npx tsx scripts/db-apply-pg.ts`. Regenerar `db:types`. (AC-10)
+- [x] `supabase/migrations/20260826XXXX_case_tasks_status_projuris.sql`: dropar o CHECK antigo por nome dinâmico (molde: `20260722000001_tema_field_defs_boolean.sql`), **UPDATE de backfill**, criar o CHECK novo, trocar o DEFAULT. Ordem obrigatória: backfill **antes** do CHECK novo. (AC-1, AC-2)
+- [x] Rollback simétrico em `supabase/rollbacks/`. Aplicar 2× via `npx tsx scripts/db-apply-pg.ts`. Regenerar `db:types`. (AC-10)
 
 ### T2 — Constante compartilhada (@dev)
-- [ ] `src/lib/task-status-shared.ts` (módulo **puro**, sem imports de servidor — mesma razão documentada em `task-types-shared.ts`): lista, tipo e `TASK_STATUS_LABEL`. Exportar helper `isConcluida(status)`. (AC-5, AC-6)
+- [x] `src/lib/task-status-shared.ts` (módulo **puro**, sem imports de servidor — mesma razão documentada em `task-types-shared.ts`): lista, tipo e `TASK_STATUS_LABEL`. Exportar helper `isConcluida(status)`. (AC-5, AC-6)
 
 ### T3 — Serviço + RPC (@dev)
-- [ ] `dossie-service.ts` — `setCaseTaskStatus`: `completed_at` para as duas conclusões, limpo em `EM_ANDAMENTO`, nulo em `CANCELADA`; evento da timeline com o rótulo novo. (AC-3)
-- [ ] `dossie-service.ts` — `listWorkItems`: trocar `.neq("status","CONCLUIDA")` por "não concluída e não cancelada"; item de checklist deixa de nascer `PENDENTE` (usar `EM_ANDAMENTO`). (AC-4)
-- [ ] `rpc/dossie.ts:113` — disparar `task_completed` para as duas conclusões, nunca para cancelada. (AC-7)
+- [x] `dossie-service.ts` — `setCaseTaskStatus`: `completed_at` para as duas conclusões, limpo em `EM_ANDAMENTO`, nulo em `CANCELADA`; evento da timeline com o rótulo novo. (AC-3)
+- [x] `dossie-service.ts` — `listWorkItems`: trocar `.neq("status","CONCLUIDA")` por "não concluída e não cancelada"; item de checklist deixa de nascer `PENDENTE` (usar `EM_ANDAMENTO`). (AC-4)
+- [x] `rpc/dossie.ts:113` — disparar `task_completed` para as duas conclusões, nunca para cancelada. (AC-7)
 
 ### T4 — UI (@dev)
-- [ ] `CaseDossie.tsx` — seletor de status. (AC-5)
-- [ ] `tarefas.tsx` — select com os 4 status. (AC-6)
-- [ ] `Sidebar.tsx:220`, `useControladoria.ts:91`, `useExceptions.ts:45`, `UserReportDialog.tsx:87` — usar o helper `isConcluida` + cancelada. (AC-4)
-- [ ] `CaseTimeline.tsx` / `CaseFeed.tsx` — texto do evento com o rótulo em português. (AC-5)
+- [x] `CaseDossie.tsx` — seletor de status. (AC-5)
+- [x] `tarefas.tsx` — select com os 4 status. (AC-6)
+- [x] `Sidebar.tsx:220`, `useControladoria.ts:91`, `useExceptions.ts:45`, `UserReportDialog.tsx:87` — usar o helper `isConcluida` + cancelada. (AC-4)
+- [x] `CaseTimeline.tsx` / `CaseFeed.tsx` — texto do evento com o rótulo em português. (AC-5)
 
 ### T5 — ProJuris (@dev)
-- [ ] `criar-tarefa.ts` — mapear status do SHV para `codigoTarefaEventoSituacao` + `situacaoConcluida`. (AC-8)
-- [ ] `judicial-sync.ts` / `processo-detalhe.ts` — traduzir a situação lida para o vocabulário novo. (AC-8)
+- [x] `criar-tarefa.ts` — mapear status do SHV para `codigoTarefaEventoSituacao` + `situacaoConcluida`. (AC-8)
+- [x] `judicial-sync.ts` / `processo-detalhe.ts` — **decisão na execução: NÃO traduzir.** Esses dois gravam/exibem a situação da tarefa **do ProJuris** (`system_case_judicial_tasks.situacao` é espelho do sistema deles). Reescrever "Pendente" como "Em andamento" ali seria distorcer o dado da fonte. O de-para vale para a **escrita** (`task-situacao.ts`). (AC-8)
 
 ### T6 — Agenda (@dev)
-- [ ] `controladoria.distribuicao.calendario.tsx` — filtro de status + filtro de advogado (reusar `useExecutorMappings`, já montado ali). (AC-9)
+- [x] `controladoria.distribuicao.calendario.tsx` — filtro de status + filtro de advogado (reusar `useExecutorMappings`, já montado ali). (AC-9)
 
 ### T7 — QA (@qa)
 - [ ] Contagem de tarefas antes/depois do backfill idêntica; nenhum valor fora do CHECK. (AC-1, AC-2)
@@ -128,8 +129,9 @@ Thiago: "o ProJuris tem esses status de tarefa: pendente, concluído com sucesso
 ## File List
 
 **Novos**
-- `sistema-hv/supabase/migrations/20260826XXXX_case_tasks_status_projuris.sql` (+ rollback)
+- `sistema-hv/supabase/migrations/20260826000001_case_tasks_status_projuris.sql` (+ rollback)
 - `sistema-hv/src/lib/task-status-shared.ts`
+- `sistema-hv/src/lib/projuris/task-situacao.ts` (de-para do status para a situação do ProJuris)
 
 **Alterados**
 - `sistema-hv/src/lib/dossie-service.ts`
@@ -142,10 +144,11 @@ Thiago: "o ProJuris tem esses status de tarefa: pendente, concluído com sucesso
 - `sistema-hv/src/components/settings/UserReportDialog.tsx`
 - `sistema-hv/src/lib/projuris/criar-tarefa.ts` · `judicial-sync.ts` · `processo-detalhe.ts`
 - `sistema-hv/src/routes/controladoria.distribuicao.calendario.tsx`
-- `sistema-hv/src/lib/supabase/types.ts`
+- `sistema-hv/src/rpc/distribuicao.ts` (situação real na agenda do dia)
 
 ## Change Log
 
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial; domínio de status definido pelo owner (sem PENDENTE) | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada** (T1-T6). Migration `20260826000001` aplicada **2×** (idempotente) com prova antes/depois: 39 PENDENTE → EM_ANDAMENTO e 11 CONCLUIDA → CONCLUIDA_SUCESSO, `completed_at` preservado nas 11, total de 50 inalterado. Teste funcional no banco (transacional, devolve o dado ao original): o CHECK **recusa** o status antigo, aceita os 4 novos e o DEFAULT é EM_ANDAMENTO. `db:types` **não** precisou ser regenerado — a migration não mexeu em coluna (`status` já era `string`). Decisões da execução: (a) a leitura do ProJuris **não** é traduzida (é espelho do sistema deles) — o de-para vale para a escrita, em `projuris/task-situacao.ts`; (b) o código de "concluída SEM sucesso" no ProJuris **não foi confirmado** contra a API, então cai em concluída (código 2) e virou pendência do spike da FN2; (c) o filtro de situação no calendário lê o **snapshot do quadro** (`system_distribution_kanban_tasks`), porque o calendário lista o que o motor distribuiu e quem sabe se foi feita é o ProJuris. typecheck OK, eslint OK, `vite build` OK. **Falta o T7 na UI.** | @dev (via Orion) |

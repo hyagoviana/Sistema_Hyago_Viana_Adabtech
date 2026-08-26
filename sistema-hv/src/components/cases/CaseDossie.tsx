@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useDossie";
 import { useAssignableUsers } from "@/hooks/useUsers";
 import { useTaskTypesCatalog } from "@/hooks/useTaskTypes";
+import { isTaskConcluida, TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/task-status-shared";
 
 const PRIORITY_TONE: Record<string, "neutral" | "navy" | "warning" | "danger"> = {
   BAIXA: "neutral",
@@ -243,7 +244,7 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {tasks.map((t) => {
-              const done = t.status === "CONCLUIDA";
+              const done = isTaskConcluida(t.status);
               const daysLeft = daysUntilDue(t.due_date);
               const overdue = daysLeft !== null && daysLeft < 0 && !done;
               const soon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3 && !done;
@@ -252,7 +253,12 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                   <button
                     title={done ? "Reabrir" : "Concluir"}
                     onClick={() =>
-                      setStatus.mutate({ id: t.id, status: done ? "PENDENTE" : "CONCLUIDA" })
+                      setStatus.mutate({
+                        id: t.id,
+                        // Clique rápido = o caminho de 90%: concluir com sucesso.
+                        // Os outros desfechos ficam no seletor ao lado.
+                        status: done ? "EM_ANDAMENTO" : "CONCLUIDA_SUCESSO",
+                      })
                     }
                     className="shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-colors"
                     style={{
@@ -297,6 +303,24 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                   <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
                     {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}
                   </Badge>
+                  {/* TK1 — os 4 desfechos do ProJuris. O checkbox continua para o
+                      caso comum; aqui é onde se registra "sem sucesso"/"cancelada". */}
+                  <Select
+                    value={(TASK_STATUSES as readonly string[]).includes(t.status) ? t.status : ""}
+                    onValueChange={(v) => setStatus.mutate({ id: t.id, status: v })}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger className="h-7 w-[190px] text-[12px] shrink-0">
+                      <SelectValue placeholder={t.status} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TASK_STATUSES.map((st) => (
+                        <SelectItem key={st} value={st} className="text-[12px]">
+                          {TASK_STATUS_LABEL[st]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <button
                     onClick={() => del.mutate(t.id)}
                     title="Excluir"

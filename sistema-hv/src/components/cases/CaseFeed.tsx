@@ -35,6 +35,7 @@ import {
   useSoftDeleteNote,
   useUpdateNote,
 } from "@/hooks/useNotes";
+import { taskStatusLabel } from "@/lib/task-status-shared";
 import { useCaseEvents } from "@/hooks/useCases";
 import { useDeleteManualCaseEvent, useUpdateManualCaseEvent } from "@/hooks/useTimeline";
 import { useAuth } from "@/lib/auth";
@@ -148,9 +149,11 @@ function renderEventLabel(e: CaseEvent): string {
     case "task_started":
       return `Tarefa iniciada: ${d?.task_title ?? "·"}`;
     case "task_completed":
-      return `Tarefa concluída: ${d?.task_title ?? "·"}`;
+      // TK1 — "concluída" agora tem dois desfechos. Sem dizer QUAL, a linha do
+      // tempo esconde justamente a informação que o Thiago quis registrar.
+      return `${d?.status_label ?? "Tarefa concluída"}: ${d?.task_title ?? "·"}`;
     case "task_status_changed":
-      return `Tarefa "${d?.task_title ?? "·"}" → ${d?.status ?? "·"}`;
+      return `Tarefa "${d?.task_title ?? "·"}" → ${taskStatusLabel(d?.status)}`;
     case "task_deleted":
       return `Tarefa excluída: ${d?.task_title ?? "·"}`;
     case "doc_generated":

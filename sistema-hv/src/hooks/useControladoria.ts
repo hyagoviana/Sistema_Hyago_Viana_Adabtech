@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useCasesList } from "./useCases";
 import { useAllTasks, useAllDeadlines } from "./useDossie";
 import { useUsers } from "./useUsers";
+import { isTaskAberta } from "@/lib/task-status-shared";
 
 // ---- Tipos ----------------------------------------------------------------
 export type ResponsavelSummary = {
@@ -79,8 +80,7 @@ export function useControladoria() {
   const deadlinesQ = useAllDeadlines();
   const usersQ = useUsers();
 
-  const loading =
-    casosQ.isLoading || tasksQ.isLoading || deadlinesQ.isLoading || usersQ.isLoading;
+  const loading = casosQ.isLoading || tasksQ.isLoading || deadlinesQ.isLoading || usersQ.isLoading;
 
   const result = useMemo(() => {
     const cases = casosQ.data ?? [];
@@ -88,7 +88,7 @@ export function useControladoria() {
     const allDeadlines = deadlinesQ.data ?? [];
     const users = usersQ.data ?? [];
 
-    const openTasks = allTasks.filter((t) => t.status !== "CONCLUIDA");
+    const openTasks = allTasks.filter((t) => isTaskAberta(t.status));
     const openDeadlines = allDeadlines.filter((d) => d.status === "ABERTO");
 
     // Mapa de tarefas/prazos por case_id

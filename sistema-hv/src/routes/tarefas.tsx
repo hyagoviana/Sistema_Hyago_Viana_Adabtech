@@ -7,6 +7,7 @@ import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkItems, useAllDeadlines } from "@/hooks/useDossie";
 import { useUsers } from "@/hooks/useUsers";
+import { TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/task-status-shared";
 
 export const Route = createFileRoute("/tarefas")({
   component: TarefasPage,
@@ -120,8 +121,11 @@ function TarefasPage() {
         )}
         <select value={status} onChange={(e) => setStatus(e.target.value)} className={selCls}>
           <option value="">Todos os status</option>
-          <option value="PENDENTE">Pendente</option>
-          <option value="EM_ANDAMENTO">Em andamento</option>
+          {TASK_STATUSES.map((st) => (
+            <option key={st} value={st}>
+              {TASK_STATUS_LABEL[st]}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -215,7 +219,9 @@ function Kpi({
       style={featured ? { borderColor: "rgba(152,120,20,0.28)" } : undefined}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-500)]">{label}</span>
+        <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-500)]">
+          {label}
+        </span>
         <Icon size={15} style={{ color: featured ? "#987814" : "var(--ink-400)" }} />
       </div>
       {loading ? (

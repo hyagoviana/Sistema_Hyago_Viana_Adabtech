@@ -34,6 +34,7 @@ import { useCasesList, useComercialCases } from "@/hooks/useCases";
 import { useAllTasks } from "@/hooks/useDossie";
 import { useExceptions } from "@/hooks/useExceptions";
 import { canSeeRouteEfetiva, ROLE_LABELS } from "@/lib/rbac";
+import { isTaskAberta } from "@/lib/task-status-shared";
 import { useMyModulePerms } from "@/hooks/usePermissions";
 
 // Monograma H·V oficial (SVG) — copiado da referência de design v3 (hvmark).
@@ -217,7 +218,7 @@ export function Sidebar() {
     realCounts["/comercial/assinaturas"] = comercialCases.length;
   }
   if (tasks) {
-    realCounts["/tarefas"] = tasks.filter((t) => t.status !== "CONCLUIDA").length;
+    realCounts["/tarefas"] = tasks.filter((t) => isTaskAberta(t.status)).length;
   }
   if (excTotal > 0) {
     realCounts["/controladoria"] = excTotal;

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { useCasesList } from "./useCases";
 import { useAllTasks, useAllDeadlines } from "./useDossie";
+import { isTaskAberta } from "@/lib/task-status-shared";
 
 export type ExcItem = {
   id: string;
@@ -42,7 +43,7 @@ export function useExceptions(): { loading: boolean; total: number; groups: ExcG
 
   const groups = useMemo<ExcGroup[]>(() => {
     const cases = casosQ.data ?? [];
-    const tasks = (tasksQ.data ?? []).filter((t) => t.status !== "CONCLUIDA");
+    const tasks = (tasksQ.data ?? []).filter((t) => isTaskAberta(t.status));
     const deadlines = (deadlinesQ.data ?? []).filter((d) => d.status === "ABERTO");
 
     const dl = (d: (typeof deadlines)[number], meta: string, tone: ExcItem["tone"]): ExcItem => ({
@@ -89,7 +90,9 @@ export function useExceptions(): { loading: boolean; total: number; groups: ExcG
         label: "Prazos sem responsável",
         hint: "Prazos em aberto sem responsável atribuído.",
         tone: "warning",
-        items: deadlines.filter((d) => empty(d.responsible)).map((d) => dl(d, "sem responsável", "warning")),
+        items: deadlines
+          .filter((d) => empty(d.responsible))
+          .map((d) => dl(d, "sem responsável", "warning")),
       },
       {
         key: "tarefas_vencidas",
@@ -105,7 +108,9 @@ export function useExceptions(): { loading: boolean; total: number; groups: ExcG
         label: "Tarefas sem responsável",
         hint: "Tarefas em aberto sem responsável.",
         tone: "neutral",
-        items: tasks.filter((t) => empty(t.assignee)).map((t) => tk(t, "sem responsável", "neutral")),
+        items: tasks
+          .filter((t) => empty(t.assignee))
+          .map((t) => tk(t, "sem responsável", "neutral")),
       },
       {
         key: "casos_parados",
