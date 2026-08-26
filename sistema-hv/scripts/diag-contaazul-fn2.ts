@@ -16,28 +16,13 @@ loadDotenv({ path: ".env.local" });
 
 const BASE = "https://api-v2.contaazul.com";
 
-async function token(): Promise<string> {
-  const clientId = process.env.CONTAAZUL_CLIENT_ID;
-  const clientSecret = process.env.CONTAAZUL_CLIENT_SECRET;
-  const refresh = process.env.CONTAAZUL_REFRESH_TOKEN;
-  if (!clientId || !clientSecret || !refresh) {
-    throw new Error("Faltam CONTAAZUL_CLIENT_ID / _SECRET / _REFRESH_TOKEN no .env.local");
-  }
-  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-  const res = await fetch("https://auth.contaazul.com/oauth2/token", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }),
-  });
-  const txt = await res.text();
-  if (!res.ok) throw new Error(`Falha no refresh (${res.status}): ${txt.slice(0, 300)}`);
-  const json = JSON.parse(txt) as { access_token?: string };
-  if (!json.access_token) throw new Error("Refresh sem access_token");
-  return json.access_token;
-}
+// IMPORTANTE: o token vem do BANCO (system_integrations), pelo mesmo caminho que
+// o sistema usa em produção — `getAccessToken()` do client. A cópia do refresh
+// token no .env.local é só um FALLBACK antigo e está desatualizada: o ContaAzul
+// ROTACIONA o refresh a cada renovação, e quem guarda o valor novo é o banco.
+// Usar o .env aqui dava `invalid_grant` e parecia (falsamente) que o acesso
+// tinha expirado.
+import { getAccessToken } from "../src/lib/contaazul/client";
 
 /** GET simples que NUNCA lança: devolve status + amostra, para o relatório. */
 async function sonda(
@@ -56,7 +41,7 @@ async function sonda(
 }
 
 async function main() {
-  const access = await token();
+  const access = await getAccessToken();
   console.log("Autenticado.\n");
 
   // Endpoints já usados pelo sistema (controle: têm de responder 200).

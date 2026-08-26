@@ -56,7 +56,10 @@ function sanitize(msg: string): string {
  * Troca o authorization_code (obtido via redirect do Conta Azul) por
  * access_token + refresh_token. Salva ambos em system_integrations.
  */
-export async function exchangeCodeForTokens(code: string, redirectUri: string): Promise<{
+export async function exchangeCodeForTokens(
+  code: string,
+  redirectUri: string,
+): Promise<{
   accessToken: string;
   refreshToken: string;
 }> {
@@ -131,16 +134,17 @@ export async function getAccessToken(): Promise<string> {
     .eq("provider", "conta_azul")
     .maybeSingle();
 
-  let refreshToken = (integration?.refresh_token as string | null) ?? null;
-
-  // Fallback: env
-  if (!refreshToken) {
-    refreshToken = process.env.CONTAAZUL_REFRESH_TOKEN ?? null;
-  }
+  // O refresh token vem SÓ do banco — não existe fallback para o `.env`, e isso
+  // é de propósito. O Conta Azul ROTACIONA o refresh a cada renovação e trata o
+  // reuso de um valor antigo como vazamento, revogando a família inteira de
+  // tokens (inclusive o que estava bom). Uma cópia velha no `.env` não salva a
+  // conexão: ela derruba a que estava funcionando. Foi o que aconteceu em
+  // 2026-08-26. Ver `docs/contaazul-reautorizar.md`.
+  const refreshToken = (integration?.refresh_token as string | null) ?? null;
 
   if (!refreshToken) {
     throw new ContaAzulError(
-      "Conta Azul: refresh_token ausente. Faça o fluxo OAuth para autorizar.",
+      "Conta Azul: refresh_token ausente. Refaça a autorização (docs/contaazul-reautorizar.md).",
     );
   }
 
@@ -163,10 +167,15 @@ export async function getAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const body = await res.text();
-    throw new ContaAzulError(`Falha ao renovar token (${res.status}).`, {
-      status: res.status,
-      body,
-    });
+    // 400/401 aqui significa refresh recusado — a autorização caiu e ninguém
+    // consegue reerguer por código: precisa de humano logado na conta.
+    const precisaReautorizar = res.status === 400 || res.status === 401;
+    throw new ContaAzulError(
+      precisaReautorizar
+        ? `Conta Azul: a autorização caiu (${res.status}). Alguém com acesso à conta precisa autorizar o app de novo — ver docs/contaazul-reautorizar.md.`
+        : `Falha ao renovar token (${res.status}).`,
+      { status: res.status, body },
+    );
   }
 
   const data = (await res.json()) as ContaAzulTokenResponse;
@@ -418,11 +427,7 @@ export async function criarBaixa(
   parcelaId: string,
   input: CABaixaInput,
 ): Promise<{ id: string; versao: number }> {
-  return request(
-    "POST",
-    `v1/financeiro/eventos-financeiros/parcelas/${parcelaId}/baixa`,
-    input,
-  );
+  return request("POST", `v1/financeiro/eventos-financeiros/parcelas/${parcelaId}/baixa`, input);
 }
 
 // ─── Conta a receber (cobrança) ──────────────────────────────────────────────
@@ -577,9 +582,7 @@ export type CACobrancaResponse = {
 };
 
 /** Gera boleto/pix/link a partir de uma parcela existente. */
-export async function gerarCobranca(
-  input: CAGerarCobrancaInput,
-): Promise<CACobrancaResponse> {
+export async function gerarCobranca(input: CAGerarCobrancaInput): Promise<CACobrancaResponse> {
   return request(
     "POST",
     "v1/financeiro/eventos-financeiros/contas-a-receber/gerar-cobranca",
@@ -607,10 +610,7 @@ export async function deleteCobranca(idCobranca: string): Promise<void> {
 export async function listarParcelasDoEvento(
   idEvento: string,
 ): Promise<{ parcelas: CAContaAReceberItem[] }> {
-  return request(
-    "GET",
-    `v1/financeiro/eventos-financeiros/${idEvento}/parcelas`,
-  );
+  return request("GET", `v1/financeiro/eventos-financeiros/${idEvento}/parcelas`);
 }
 
 // ─── Health check ────────────────────────────────────────────────────────────
