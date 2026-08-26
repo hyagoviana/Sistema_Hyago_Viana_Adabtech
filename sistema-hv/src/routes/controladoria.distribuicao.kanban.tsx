@@ -67,7 +67,7 @@ function KanbanPage() {
           <span>{total} tarefas · você vê apenas as vinculadas ao seu nome (admin vê todas).</span>
         )}
       </div>
-      <div className="flex-1 overflow-x-auto px-6 pb-6">
+      <div className="flex-1 overflow-x-auto kanban-board-scroll px-6 pb-6">
         <div className="flex gap-3 min-w-max h-full">
           {COLUMNS.map((col) => {
             const items = byColumn.get(col) ?? [];

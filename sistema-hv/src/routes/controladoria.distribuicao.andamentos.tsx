@@ -36,6 +36,33 @@ export const Route = createFileRoute("/controladoria/distribuicao/andamentos")({
 
 const TODAS = "__todas__";
 
+// MO1 (reunião 2026-08-26) — INTIMAÇÃO × ANDAMENTO.
+//
+// Thiago: "quando é intimação, o juiz já abriu o nosso prazo, e aí a gente não
+// faz, morreu. O que é andamento é só monitoramento." Por isso a tela abre
+// mostrando SÓ as intimações — e o sync continua trazendo as duas coisas.
+//
+// A terceira origem (INICIAL_SHV) não vem do ProJuris: é a inicial mandada da
+// ficha Judicial do caso. Ela NUNCA é escondida pelo filtro — some da fila
+// significaria perder trabalho que o próprio escritório mandou distribuir.
+const ORIGEM_META: Record<string, { label: string; cls: string; title: string }> = {
+  INTIMACAO: {
+    label: "Intimação",
+    cls: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    title: "Intimação: o prazo já foi aberto pelo juiz",
+  },
+  ANDAMENTO: {
+    label: "Andamento",
+    cls: "bg-amber-100 text-amber-800 border-amber-200",
+    title: "Movimentação do processo (monitoramento)",
+  },
+  INICIAL_SHV: {
+    label: "Inicial (SHV)",
+    cls: "bg-[var(--muted)] text-[var(--navy)] border-[var(--border)]",
+    title: "Inicial mandada da ficha Judicial do caso — sempre visível",
+  },
+};
+
 // O banco guarda o estado em maiúsculas; a tela fala português.
 const DECISAO_LABEL: Record<string, string> = {
   PENDENTE: "Pendente",
@@ -62,6 +89,8 @@ function AndamentosPendentesPage() {
   // varredura — o padrão passa a ser ESCONDER as arquivadas: o que sobra é
   // exatamente o trabalho ainda não visto. O toggle continua, para conferência.
   const [ocultarArquivadas, setOcultarArquivadas] = useState(true);
+  // MO1 — abre em "Intimações" (o que de fato tem prazo correndo).
+  const [visao, setVisao] = useState<"INTIMACAO" | "ANDAMENTO" | "TODAS">("INTIMACAO");
 
   const {
     data: movs,
@@ -70,6 +99,12 @@ function AndamentosPendentesPage() {
     error,
   } = useMovements(filtro, data || null, ocultarArquivadas);
   const sync = useSyncMovements();
+
+  // Filtro de VISUALIZAÇÃO (o sync segue trazendo intimação e andamento).
+  // INICIAL_SHV passa sempre — ver a nota em ORIGEM_META.
+  const listaVisivel = (movs ?? []).filter(
+    (m) => visao === "TODAS" || m.origem === visao || m.origem === "INICIAL_SHV",
+  );
 
   async function handleSync() {
     try {
@@ -85,6 +120,19 @@ function AndamentosPendentesPage() {
   return (
     <div className="space-y-5 p-6">
       <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Registro</Label>
+          <Select value={visao} onValueChange={(v) => setVisao(v as typeof visao)}>
+            <SelectTrigger className="w-[170px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="INTIMACAO">Intimações</SelectItem>
+              <SelectItem value="ANDAMENTO">Andamentos</SelectItem>
+              <SelectItem value="TODAS">Intimações e andamentos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1">
           <Label className="text-xs">Situação</Label>
           <Select value={filtro} onValueChange={(v) => setFiltro(v as typeof filtro)}>
@@ -143,13 +191,20 @@ function AndamentosPendentesPage() {
           Não foi possível carregar a fila.{" "}
           {error instanceof Error ? error.message : "Tente recarregar a página."}
         </div>
-      ) : (movs ?? []).length === 0 ? (
+      ) : listaVisivel.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--border)] p-6 text-[13px] text-muted-foreground">
-          Nada aqui. Use "Buscar no ProJuris" para trazer as intimações do período.
+          {(movs ?? []).length > 0 ? (
+            <>
+              Nenhum registro do tipo escolhido nesta data. Há {(movs ?? []).length} registro(s) em
+              outra origem — troque o filtro <strong>Registro</strong> para ver.
+            </>
+          ) : (
+            <>Nada aqui. Use "Buscar no ProJuris" para trazer as intimações do período.</>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
-          {(movs ?? []).map((m) => (
+          {listaVisivel.map((m) => (
             <LinhaMovimento key={m.id} mov={m} podeEditar={podeEditar} />
           ))}
         </div>
@@ -164,6 +219,7 @@ function LinhaMovimento({
 }: {
   mov: {
     id: string;
+    origem: string;
     numero_cnj: string | null;
     descricao: string | null;
     cliente_nome: string | null;
@@ -213,8 +269,10 @@ function LinhaMovimento({
     }
   }
 
+  const origem = ORIGEM_META[mov.origem];
+
   return (
-    <div className="rounded-md border border-[var(--border)] p-4 space-y-3">
+    <div className="card-editorial p-4 space-y-3">
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1 min-w-[240px]">
           <div className="text-[14px] font-medium whitespace-pre-line">{mov.descricao ?? "—"}</div>
@@ -224,6 +282,12 @@ function LinhaMovimento({
             {mov.data_referencia ? ` · ${mov.data_referencia}` : ""}
           </div>
         </div>
+        {/* MO1 — bate o olho e sabe: intimação (prazo correndo) ou andamento. */}
+        {origem && (
+          <Badge variant="outline" className={origem.cls} title={origem.title}>
+            {origem.label}
+          </Badge>
+        )}
         {!mov.case_id && (
           <Badge variant="outline">
             {mov.cliente_nome ? "Cliente sem caso vinculado" : "Sem caso vinculado"}
@@ -290,14 +354,19 @@ function LinhaMovimento({
           >
             <Archive size={13} className="mr-1" /> Arquivar
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => decide("LIDO")}
-            disabled={decidir.isPending}
-          >
-            <CheckCheck size={13} className="mr-1" /> Marcar lido
-          </Button>
+          {/* MO1 — "marcar lido" só existe para ANDAMENTO. O Thiago conferiu no
+              ProJuris ao vivo: intimação lá só arquiva/desarquiva; quem tem o
+              status de lido é a movimentação. Mandar o verbo errado dá erro na API. */}
+          {mov.origem === "ANDAMENTO" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => decide("LIDO")}
+              disabled={decidir.isPending}
+            >
+              <CheckCheck size={13} className="mr-1" /> Marcar lido
+            </Button>
+          )}
         </div>
       )}
     </div>

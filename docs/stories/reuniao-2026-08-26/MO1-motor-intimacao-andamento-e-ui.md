@@ -1,6 +1,6 @@
 # Story MO1: Motor — separar intimação × andamento, busca por processo, scroll do Kanban e acerto visual
 
-**Épico:** Reunião 2026-08-26 · **ID:** MO1 · **Onda:** 1 · **Status:** Draft
+**Épico:** Reunião 2026-08-26 · **ID:** MO1 · **Onda:** 1 · **Status:** Ready for Review
 **Executor:** @dev (UI) · Quality gate: @qa
 **Risco:** BAIXO — tudo é apresentação/filtro sobre dado que **já é gravado**. Nenhuma migration.
 
@@ -61,18 +61,18 @@ Mais três incômodos de rotina da mesma tela: **marcar como lido** aparecendo o
 ## Tasks / Subtasks
 
 ### T1 — Tag + filtro (@dev)
-- [ ] Em `controladoria.distribuicao.andamentos.tsx`: derivar a tag de `origem`; badge verde/âmbar com o primitivo `Badge`. (AC-1)
-- [ ] Estado local da visão iniciando em Intimações; filtrar em memória (o RPC já traz os dois). (AC-2)
+- [x] Em `controladoria.distribuicao.andamentos.tsx`: derivar a tag de `origem`; badge verde/âmbar com o primitivo `Badge`. (AC-1)
+- [x] Estado local da visão iniciando em Intimações; filtrar em memória (o RPC já traz os dois). (AC-2)
 
 ### T2 — Ação condicional (@dev)
-- [ ] Renderizar marcar como lido apenas para `origem = ANDAMENTO`. Não alterar `staging-core.ts` nem `writeback-acoes.ts`. (AC-3)
+- [x] Renderizar marcar como lido apenas para `origem = ANDAMENTO`. Não alterar `staging-core.ts` nem `writeback-acoes.ts`. (AC-3)
 
 ### T3 — Busca no histórico (@dev)
-- [ ] Em `controladoria.distribuicao.historico-andamentos.tsx`: input de busca por CNJ, normalizando para só dígitos (mesma ideia do `soDigitos` do sync), combinando com o filtro de data. (AC-4)
+- [x] Em `controladoria.distribuicao.historico-andamentos.tsx`: input de busca por CNJ, normalizando para só dígitos (mesma ideia do `soDigitos` do sync), combinando com o filtro de data. (AC-4)
 
 ### T4 — Kanban + visual (@dev)
-- [ ] `controladoria.distribuicao.kanban.tsx`: container com `overflow-x-auto` e barra visível, copiando o padrão dos Kanbans operacional/financeiro. (AC-5)
-- [ ] Ajustar as classes da lista de andamentos para o padrão bege/branco. (AC-6)
+- [x] `controladoria.distribuicao.kanban.tsx`: container com `overflow-x-auto` e barra visível, copiando o padrão dos Kanbans operacional/financeiro. (AC-5)
+- [x] Ajustar as classes da lista de andamentos para o padrão bege/branco. (AC-6)
 
 ### T5 — QA (@qa)
 - [ ] Abrir a tela: vem em Intimações; trocar para Todos: aparecem os dois com as tags certas. (AC-1, AC-2)
@@ -92,6 +92,7 @@ Mais três incômodos de rotina da mesma tela: **marcar como lido** aparecendo o
 
 ## Testing
 
+- **Nota de ambiente:** `npm run build` estoura o heap do Node com a configuração padrão neste projeto. Rodar com `NODE_OPTIONS=--max-old-space-size=8192 npm run build` (assim passou em 45s).
 - **UI:** os 6 comportamentos acima com os dados do último sync.
 - **Não-regressão:** distribuir uma tarefa de teste depois dos ajustes e confirmar o caminho completo até o ProJuris.
 
@@ -106,6 +107,7 @@ Mais três incômodos de rotina da mesma tela: **marcar como lido** aparecendo o
 - `sistema-hv/src/routes/controladoria.distribuicao.andamentos.tsx`
 - `sistema-hv/src/routes/controladoria.distribuicao.historico-andamentos.tsx`
 - `sistema-hv/src/routes/controladoria.distribuicao.kanban.tsx`
+- `sistema-hv/src/styles.css` (classe `.kanban-board-scroll`)
 
 **Consultados (não alterar)**
 - `sistema-hv/src/lib/distribuicao/staging-core.ts`
@@ -116,3 +118,4 @@ Mais três incômodos de rotina da mesma tela: **marcar como lido** aparecendo o
 | Data | Versão | Descrição | Autor |
 |---|---|---|---|
 | 2026-08-26 | v0.1 | Draft inicial a partir da reunião 26/08 | @sm (River) |
+| 2026-08-26 | v0.2 | **Implementada** (T1-T4). Achado durante a execução: existem **3** origens, não 2 — `INICIAL_SHV` é a inicial mandada da ficha Judicial e **não** vem do ProJuris. Decisão tomada: o filtro nunca a esconde (some da fila = perder trabalho que o próprio escritório mandou distribuir); ela ganhou tag própria "Inicial (SHV)". A busca do histórico também aceita nome do cliente e o CSV passou a exportar o que está filtrado. `card-editorial` no lugar da borda chapada; nova classe `.kanban-board-scroll` (a barra existia mas ficava em overlay no Windows — invisível). typecheck OK, eslint OK, `vite build` OK. **Falta o teste manual do T5.** | @dev (via Orion) |

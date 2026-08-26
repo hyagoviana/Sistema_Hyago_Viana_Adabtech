@@ -45,10 +45,16 @@ function fmt(d: string | null): string {
   return dia ? `${dia}/${m}/${a}` : iso;
 }
 
+// MO1 — o CNJ é digitado com pontuação, e no banco também vem mascarado.
+// Comparar só os dígitos evita o "não encontrado" por causa de ponto e traço
+// (mesma normalização que o sync usa para casar processo com caso).
+const soDigitos = (s: string) => s.replace(/\D+/g, "");
+
 function HistoricoAndamentosPage() {
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
   const [decisao, setDecisao] = useState(TODAS);
+  const [busca, setBusca] = useState("");
 
   const {
     data: linhas,
@@ -56,6 +62,21 @@ function HistoricoAndamentosPage() {
     isError,
   } = useHistoricoAndamentos(de || null, ate || null, decisao === TODAS ? null : decisao);
   const { data: tipos } = useTaskTypesCatalog({ estado: "todos" });
+
+  // MO1 — busca por número do processo, combinando com os filtros de data e
+  // decisão que já existem. Também aceita nome do cliente, porque quem procura
+  // um processo às vezes só lembra de quem é.
+  const filtradas = useMemo(() => {
+    const termo = busca.trim();
+    if (!termo) return linhas ?? [];
+    const digitos = soDigitos(termo);
+    const texto = termo.toLowerCase();
+    return (linhas ?? []).filter((l) => {
+      const cnjOk = digitos.length > 0 && soDigitos(l.numero_cnj ?? "").includes(digitos);
+      const clienteOk = (l.cliente_nome ?? "").toLowerCase().includes(texto);
+      return cnjOk || clienteOk;
+    });
+  }, [linhas, busca]);
 
   const nomeTipo = useMemo(() => {
     const m = new Map<string, string>();
@@ -69,7 +90,7 @@ function HistoricoAndamentosPage() {
       const t = String(v ?? "");
       return /[;"\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
     };
-    const corpo = (linhas ?? []).map((l) =>
+    const corpo = filtradas.map((l) =>
       [
         esc(l.numero_cnj),
         esc(l.data_referencia),
@@ -127,7 +148,16 @@ function HistoricoAndamentosPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" onClick={exportarCSV} disabled={!linhas?.length}>
+        <div className="space-y-1">
+          <Label className="text-xs">Processo ou cliente</Label>
+          <Input
+            className="w-[240px]"
+            placeholder="Nº do processo (CNJ) ou cliente"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" onClick={exportarCSV} disabled={!filtradas.length}>
           <Download size={14} className="mr-1" /> CSV
         </Button>
       </div>
@@ -147,9 +177,11 @@ function HistoricoAndamentosPage() {
         <div className="rounded-md border border-[var(--danger)] p-6 text-[13px]">
           Não foi possível carregar o histórico. Tente recarregar a página.
         </div>
-      ) : (linhas ?? []).length === 0 ? (
+      ) : filtradas.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--border)] p-6 text-[13px] text-muted-foreground">
-          Nada analisado neste período.
+          {busca.trim()
+            ? `Nenhum registro para "${busca.trim()}" neste período.`
+            : "Nada analisado neste período."}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -166,7 +198,7 @@ function HistoricoAndamentosPage() {
               </tr>
             </thead>
             <tbody>
-              {(linhas ?? []).map((l) => (
+              {filtradas.map((l) => (
                 <tr key={l.id} className="border-b border-[var(--border)] align-top">
                   <td className="py-2.5 pr-3">
                     <div className="font-medium">{l.numero_cnj ?? "—"}</div>

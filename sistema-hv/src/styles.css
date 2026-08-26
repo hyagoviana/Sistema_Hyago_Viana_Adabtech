@@ -566,3 +566,28 @@
   background: rgba(15, 17, 35, 0.18);
   border: 0;
 }
+
+/* MO1 (reunião 2026-08-26) — barra HORIZONTAL do quadro do motor.
+   Thiago: "a gente pode mexer aqui para o lado, não tá dando; só tá dando na
+   seta". O container já tinha overflow-x, mas no Windows a barra fica em
+   overlay e some — sem pista visual, ninguém descobre que rola. Aqui ela é
+   sempre visível e grossa o bastante para arrastar com o mouse. */
+.kanban-board-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(15, 17, 35, 0.28) transparent;
+  padding-bottom: 10px;
+}
+.kanban-board-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+.kanban-board-scroll::-webkit-scrollbar-thumb {
+  background: rgba(15, 17, 35, 0.28);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.kanban-board-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 17, 35, 0.42);
+  background-clip: content-box;
+  border: 3px solid transparent;
+}
