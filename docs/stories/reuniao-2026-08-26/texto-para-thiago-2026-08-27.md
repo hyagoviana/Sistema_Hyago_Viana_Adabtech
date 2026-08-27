@@ -50,3 +50,26 @@ do kanban adicional e escolher o kanban na ação do workflow), então se você 
 agora eu emendo tudo numa subida só.
 
 Abraço!
+
+---
+
+## Terceira mensagem (retorno dos usuários)
+
+Perfeito, agora entendi. Já arrumei tudo aqui:
+
+A Nicole tá ligada com o usuário da Controladoria (o ativo). O antigo dela ficou
+solto, só como histórico no ProJuris, do jeito que você falou.
+
+E o cadastro do financeiro@ tava com o nome errado — era o do estagiário. Arrumei
+pra **Matheus Moreira Rodrigues** e tirei o vínculo com o ProJuris, já que ele é do
+administrativo e não pega tarefa judicial.
+
+Só uma coisa do item 3: **o Matheus Rocha da Silva não existe como cadastro aqui no
+SHV** — o que tinha era o nome dele no cadastro do financeiro, que era justamente a
+confusão. Você quer que eu crie um cadastro pra ele suspenso só pra guardar o
+vínculo? Eu não criaria: ele já saiu, não dá pra passar tarefa pra ele de qualquer
+jeito, e o histórico já fica guardado no próprio ProJuris. Mas se você preferir ter
+ele aparecendo aí, eu crio numa boa, é rapidinho.
+
+E valeu por avisar do ajuste — os 3 do arquivo já tão prontos, então tá tudo em dia
+por aqui 👊

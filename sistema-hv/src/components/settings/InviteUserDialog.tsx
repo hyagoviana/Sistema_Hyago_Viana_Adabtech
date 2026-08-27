@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useInviteUser, useSetUserDistribution } from "@/hooks/useUsers";
+import { useInviteUser, useProjurisUsuarios, useSetUserDistribution } from "@/hooks/useUsers";
 import { useSetUserModulePerms } from "@/hooks/usePermissions";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
 import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
@@ -54,6 +54,8 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
   const [participaGeral, setParticipaGeral] = useState(false);
   // Distribuição (ProJuris) — H5.
   const [projurisId, setProjurisId] = useState("");
+  // Lista do ProJuris só quando o diálogo está aberto (chamada externa + auth).
+  const projurisUsuarios = useProjurisUsuarios(open);
   const [participaDist, setParticipaDist] = useState(false);
   const [eligibleComplex, setEligibleComplex] = useState(true);
   // M9 — peso em base 100 (100 = distribui igual).
@@ -291,14 +293,37 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
           <div className="border-t border-[var(--border)] pt-3 space-y-3">
             <p className="text-[12px] font-semibold text-[var(--navy)]">Distribuição (ProJuris)</p>
             <div>
-              <Label>ID ProJuris (executor)</Label>
-              <Input
-                value={projurisId}
-                onChange={(e) => setProjurisId(e.target.value)}
-                placeholder="ex.: PES.0000030"
-              />
+              <Label>Usuário no ProJuris</Label>
+              {/* 2026-08-27 — mesma troca feita no UsersAdmin: o campo era texto
+                  livre com placeholder no formato antigo (PES.…), que o motor não
+                  lê. Escolher da lista real elimina a digitação errada. */}
+              {projurisUsuarios.data && projurisUsuarios.data.length > 0 ? (
+                <Select
+                  value={projurisId || "__none__"}
+                  onValueChange={(v) => setProjurisId(v === "__none__" ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sem usuário no ProJuris" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem usuário no ProJuris</SelectItem>
+                    {projurisUsuarios.data.map((u) => (
+                      <SelectItem key={u.codigo} value={u.codigo}>
+                        {u.nome} · {u.login}
+                        {u.ativo ? "" : " (inativo lá)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={projurisId}
+                  onChange={(e) => setProjurisId(e.target.value)}
+                  placeholder="ex.: 131019"
+                />
+              )}
               <p className="text-[11px] text-muted-foreground mt-1">
-                Código do usuário no ProJuris. Vazio = sem código (não distribui).
+                Quem não tem usuário no ProJuris trabalha só pelo SHV.
               </p>
             </div>
             <div className="flex items-center justify-between">

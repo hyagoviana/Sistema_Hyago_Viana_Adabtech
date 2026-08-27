@@ -295,6 +295,23 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                   {t.task_type_id && nomeDoTipo.get(t.task_type_id) && (
                     <Badge tone="neutral">{nomeDoTipo.get(t.task_type_id)}</Badge>
                   )}
+                  {/* Espelho no ProJuris (2026-08-27) — responde à pergunta do
+                      Thiago: "como a gente sabe qual é a tarefa que existe aqui e
+                      também existe lá?". Quem tem selo existe nos dois lados;
+                      quem não tem só existe no SHV, e isso é o normal. */}
+                  {t.projuris_codigo_tarefa && (
+                    <span
+                      title={
+                        t.projuris_sync_error
+                          ? `Não refletiu no ProJuris: ${t.projuris_sync_error}`
+                          : "Esta tarefa também existe no ProJuris — concluir aqui reflete lá."
+                      }
+                    >
+                      <Badge tone={t.projuris_sync_error ? "warning" : "success"}>
+                        {t.projuris_sync_error ? "ProJuris ⚠" : "ProJuris"}
+                      </Badge>
+                    </span>
+                  )}
                   <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
                     {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}
                   </Badge>

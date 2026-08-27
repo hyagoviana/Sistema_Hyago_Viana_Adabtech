@@ -9,6 +9,7 @@ import {
   taskStatusLabel,
 } from "./task-status-shared";
 import { getUserRole } from "./users-service";
+import { espelharSituacaoDaTarefa, type EspelhoResultado } from "./projuris/espelhar-situacao";
 
 const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -126,7 +127,19 @@ export async function setCaseTaskStatus(id: string, status: string, triggeredBy?
     });
   }
 
-  return data;
+  // Espelho no ProJuris (2026-08-27) — "concluir aqui reflete lá".
+  // Vem DEPOIS do update local de propósito: a conclusão no SHV é o que vale e
+  // não pode falhar porque o ProJuris está fora do ar. Best-effort, e devolve o
+  // motivo quando não vai — inclusive o mais comum, que nem é erro:
+  // "tarefa só existe no SHV".
+  if (!data) return data;
+
+  const espelho: EspelhoResultado = await espelharSituacaoDaTarefa(id).catch((err) => ({
+    espelhado: false as const,
+    motivo: err instanceof Error ? err.message : String(err),
+  }));
+
+  return { ...data, espelho };
 }
 
 export async function deleteCaseTask(id: string, triggeredBy?: string) {

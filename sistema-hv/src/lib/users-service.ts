@@ -774,7 +774,13 @@ export async function reassignAndDeleteUser(userId: string, map: ReassignMapping
   const { error: delErr } = await sb.from("system_users").delete().eq("id", userId);
   check(delErr);
   const { error: authErr } = await sb.auth.admin.deleteUser(userId);
-  if (authErr) {
+  // Nem todo cadastro tem conta de login: os criados por importação (e os de quem
+  // nunca acessou) existem só em `system_users`. "Não encontrado" no Auth aqui é o
+  // estado ESPERADO desses casos, não falha — e o perfil já foi removido acima, de
+  // modo que lançar erro diria que algo deu errado quando a exclusão funcionou.
+  const semContaNoAuth =
+    !!authErr && /not.?found|does not exist|user_not_found/i.test(authErr.message);
+  if (authErr && !semContaNoAuth) {
     throw new UsersServiceError(
       `Perfil removido, mas falhou remover do login (Auth): ${authErr.message}`,
       500,
@@ -858,7 +864,17 @@ export async function adminSetUserPassword(
   }
   const sb = getSupabaseAdmin();
   const { error } = await sb.auth.admin.updateUserById(userId, { password: newPassword });
-  if (error) throw new UsersServiceError(error.message, 400);
+  if (error) {
+    // Cadastro sem conta de login (importado, ou de quem nunca acessou): a
+    // mensagem crua do Supabase ("User not found") não diz o que fazer.
+    const semConta = /not.?found|does not exist|user_not_found/i.test(error.message);
+    throw new UsersServiceError(
+      semConta
+        ? "Este cadastro ainda não tem login no sistema. Envie um convite antes de definir a senha."
+        : error.message,
+      400,
+    );
+  }
   const { error: flagErr } = await sb
     .from("system_users")
     .update({ must_change_password: !!opts?.requireChange } as never)

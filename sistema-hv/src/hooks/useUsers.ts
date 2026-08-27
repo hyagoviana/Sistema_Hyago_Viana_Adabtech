@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   listUsersFn,
+  listProjurisUsuariosFn,
   getMyProfileFn,
   getUserReportFn,
   getUserWorkloadFn,
@@ -62,6 +63,19 @@ export function useUsers() {
 // lista na hora de criar tarefa. A gestão de usuários (UsersAdmin) continua com
 // `useUsers()` — lá arquivado/suspenso PRECISA aparecer. Mesma queryKey ⇒ o
 // cache é compartilhado; o recorte acontece só neste observador (`select`).
+// Lista de usuários do ProJuris para o seletor de vínculo (2026-08-27).
+// staleTime alto: a lista quase não muda e a chamada passa por auth + API externa.
+export function useProjurisUsuarios(habilitado = true) {
+  const fn = useServerFn(listProjurisUsuariosFn);
+  return useQuery({
+    queryKey: ["projuris-usuarios"],
+    queryFn: () => fn(),
+    enabled: habilitado,
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  });
+}
+
 export function useAssignableUsers() {
   const fn = useServerFn(listUsersFn);
   return useQuery({

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
@@ -90,10 +91,22 @@ export function useSetCaseTaskStatus(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; status: string }) => fn({ data: vars }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["case-tasks", caseId] });
       qc.invalidateQueries({ queryKey: ["all-tasks"] });
       qc.invalidateQueries({ queryKey: ["cases", "events", caseId] });
+
+      // Espelho no ProJuris (2026-08-27). Só fala quando há o que dizer: a
+      // esmagadora maioria das tarefas só existe no SHV, e avisar "não foi para
+      // o ProJuris" nesses casos seria ruído — não é falha, é o normal.
+      const esp = (res as { espelho?: { espelhado: boolean; motivo?: string } } | null)?.espelho;
+      if (!esp) return;
+      if (esp.espelhado) {
+        toast.success("Concluída aqui e no ProJuris");
+      } else if (esp.motivo && esp.motivo !== "tarefa só existe no SHV") {
+        // Aviso, não erro: a conclusão no SHV foi gravada de qualquer forma.
+        toast.warning(`Concluída aqui, mas não refletiu no ProJuris: ${esp.motivo}`);
+      }
     },
   });
 }

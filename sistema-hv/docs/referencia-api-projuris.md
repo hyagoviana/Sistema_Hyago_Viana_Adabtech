@@ -489,3 +489,63 @@ usávamos eram os "errados" (mais pobres).
 - `GET /usuario/obter-dados-avatar/{codigo-usuario}` — Metódo responsável por obter os dados para o avatar do usuário.
 - `GET /usuario/ordenacao` — Retorna as chaves de ordenação de pesquisa para a entidade de usuário.
 - `GET /usuario/usuario-criador/{codigoArrendatario}` — Obter UsuarioResumoType criador por Arrendatario
+
+---
+
+## Situação de tarefa — como ler e como escrever (descoberto em 2026-08-27)
+
+Nada disto está no WADL: o tipo `tarefaSituacaoWs` é declarado sem schema. Foi
+tudo obtido por experimento contra a base real, e a única forma de confirmar é
+**escrever e ler de volta** — ver o aviso do 204 mais abaixo.
+
+### Os códigos de situação
+
+| Código | Situação | Conclui? |
+|---|---|---|
+| 1 | Pendente | não |
+| 2 | Concluída com sucesso | sim |
+| 3 | Concluída sem sucesso | sim |
+| 5 | Cancelado | sim |
+
+Os outros três do menu (Em execução, A confirmar, Revisão) devem ocupar 4, 6 e 7 se
+o enum seguir a ordem da tela — **não confirmado**, nenhuma tarefa do escritório
+estava nesses estados.
+
+### Uma tarefa tem DOIS códigos
+
+`GET /tarefa-compromisso/{codigoTarefaEvento}` devolve os dois:
+
+- `codigoTarefa` — ex. 57057685
+- `tarefaEventoWs.codigoTarefaEvento` — ex. 58497726 ← **é este que o SHV guarda**
+
+Trocar um pelo outro faz a chamada responder 204 e não fazer nada.
+
+### LER a situação
+
+```
+GET /tarefa-compromisso/{codigoTarefaEvento}
+    → tarefaEventoWs.tarefaEventoSituacaoWs.codigoTarefaEventoSituacao
+```
+
+É a **única** rota que localiza UMA tarefa pelo código. `tarefa/consulta-com-paginacao`
+ignora filtros (`codigoTarefaEvento` etc.) e devolve a página inteira; `GET /tarefa/{cod}`
+não existe (404).
+
+### ESCREVER a situação
+
+```
+PUT /tarefas-situacao
+{ "codigosTarefaEvento": [58497726], "codigoSituacao": 3 }
+```
+
+Confirmado alterando uma tarefa real e lendo de volta.
+
+### ⚠️ O 204 deste endpoint NÃO significa sucesso
+
+`PUT /tarefas-situacao` responde **204 para praticamente qualquer corpo** — inclusive
+`{}`, campos com nome errado e enum inválido — sem alterar nada. Alguns formatos
+devolvem 500 com HTML genérico, sem detalhe. Ou seja: **não há retorno confiável**.
+
+Consequência para o código: depois de escrever, **leia de volta** e compare. Tratar
+204 como sucesso é aceitar falha silenciosa — exatamente o defeito que o de-para
+`PES.*` causou por meses.

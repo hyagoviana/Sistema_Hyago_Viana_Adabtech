@@ -25,7 +25,7 @@ import {
   listConsents,
   revokeConsent,
 } from "@/lib/users-service";
-import { AuthError, requireAuth } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -103,6 +103,44 @@ export const adminSetUserPasswordFn = createServerFn({ method: "POST" })
 // -------------------------------------------------------------- Usuários ----
 export const listUsersFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(() => listUsers()),
+);
+
+// Usuários do ProJuris, para o seletor de vínculo (2026-08-27).
+//
+// POR QUE ISTO EXISTE. O campo do código do ProJuris era texto livre, com um
+// placeholder que ensinava o formato ERRADO ("ex.: PES.0000030"). O motor faz
+// `Number(...)` nesse campo, então "PES.0000040" vira NaN e a tarefa nunca é
+// espelhada — em silêncio. Foi assim que 12 vínculos nasceram quebrados. Com uma
+// lista real não há o que digitar errado, e quem não aparece na lista simplesmente
+// não tem usuário lá.
+export type ProjurisUsuario = { codigo: string; nome: string; login: string; ativo: boolean };
+
+export const listProjurisUsuariosFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(async (): Promise<ProjurisUsuario[]> => {
+    await requireModule("sistema", "view");
+    const { createProjurisClientFromEnv } = await import("@/lib/projuris/client");
+    const client = createProjurisClientFromEnv();
+    await client.authenticateTryingVariants();
+    const r = (await client.projurisPostConsulta("usuario/consulta", {
+      quantidadeRegistros: 500,
+      registroInicial: 0,
+    })) as { usuarioConsultaResultadoWs?: Array<Record<string, unknown>> };
+
+    return (
+      (r.usuarioConsultaResultadoWs ?? [])
+        .map((u) => ({
+          codigo: String(u.codigoUsuario ?? ""),
+          nome: String(u.nomeUsuario ?? "").trim(),
+          login: String(u.login ?? ""),
+          ativo: Boolean(u.habilitado),
+        }))
+        .filter((u) => u.codigo)
+        // Habilitados primeiro: são os que interessam para quem está vinculando
+        // alguém agora. Os desabilitados ficam no fim, mas continuam escolhíveis —
+        // ex-funcionário precisa manter o vínculo histórico.
+        .sort((a, b) => Number(b.ativo) - Number(a.ativo) || a.nome.localeCompare(b.nome))
+    );
+  }),
 );
 
 // Perfil do próprio usuário autenticado (para editar nome/telefone).

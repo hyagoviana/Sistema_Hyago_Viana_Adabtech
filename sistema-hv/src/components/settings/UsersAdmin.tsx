@@ -29,6 +29,7 @@ import {
   useSetUserStatus,
   useUpdateUserProfile,
   useSetUserDistribution,
+  useProjurisUsuarios,
 } from "@/hooks/useUsers";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
 import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
@@ -60,6 +61,8 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const updateProfile = useUpdateUserProfile();
   const setDistribution = useSetUserDistribution();
   const [inviteOpen, setInviteOpen] = useState(false);
+  // Só busca quando o diálogo de edição está aberto: a chamada passa por
+  // autenticação + API externa, não vale pagar isso ao abrir a lista.
   const [report, setReport] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [editing, setEditing] = useState<{
@@ -84,12 +87,19 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     weight: string;
   } | null>(null);
 
+  // Lista do ProJuris para o seletor de vínculo. Só carrega com o diálogo aberto:
+  // a chamada passa por autenticação + API externa, e não vale pagar isso só para
+  // exibir a lista de colaboradores.
+  const projurisUsuarios = useProjurisUsuarios(editing !== null);
+
   async function salvarPerfil() {
     if (!editing) return;
     // Orienta o admin: "participa" sem ID ProJuris não faz sentido (o motor
     // casa a tarefa pelo código). Bloqueia no cliente antes do save.
     if (editing.participa && !editing.projurisId.trim()) {
-      toast.error("Informe o ID ProJuris antes de marcar como participante da distribuição.");
+      toast.error(
+        "Escolha o usuário no ProJuris antes de marcar como participante da distribuição.",
+      );
       return;
     }
     try {
@@ -494,14 +504,53 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   Distribuição (ProJuris)
                 </p>
                 <div>
-                  <Label>ID ProJuris (executor)</Label>
-                  <Input
-                    value={editing.projurisId}
-                    onChange={(e) => setEditing({ ...editing, projurisId: e.target.value })}
-                    placeholder="ex.: PES.0000030"
-                  />
+                  <Label>Usuário no ProJuris</Label>
+                  {/* 2026-08-27 — era campo de texto com placeholder "ex.: PES.0000030",
+                      que ensinava o formato ERRADO: o motor faz Number() nesse campo e
+                      "PES.0000040" vira NaN, então a tarefa nunca espelha, em silêncio.
+                      Foi assim que 12 vínculos nasceram quebrados. Com a lista real não
+                      há o que digitar errado. Se a API não responder, cai no campo de
+                      texto para ninguém ficar travado. */}
+                  {projurisUsuarios.isLoading ? (
+                    <p className="text-[12px] text-muted-foreground py-2">
+                      Carregando usuários do ProJuris…
+                    </p>
+                  ) : projurisUsuarios.data && projurisUsuarios.data.length > 0 ? (
+                    <Select
+                      value={editing.projurisId || "__none__"}
+                      onValueChange={(v) =>
+                        setEditing({ ...editing, projurisId: v === "__none__" ? "" : v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sem usuário no ProJuris" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Sem usuário no ProJuris</SelectItem>
+                        {projurisUsuarios.data.map((u) => (
+                          <SelectItem key={u.codigo} value={u.codigo}>
+                            {u.nome} · {u.login}
+                            {u.ativo ? "" : " (inativo lá)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <>
+                      <Input
+                        value={editing.projurisId}
+                        onChange={(e) => setEditing({ ...editing, projurisId: e.target.value })}
+                        placeholder="ex.: 131019"
+                      />
+                      <p className="text-[11px] text-[var(--warning,#a16207)] mt-1">
+                        Não consegui ler a lista do ProJuris agora. Digite o código numérico — o
+                        formato antigo (PES.…) não funciona.
+                      </p>
+                    </>
+                  )}
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Código do usuário no ProJuris. Vazio = sem código (não distribui).
+                    Quem não tem usuário no ProJuris trabalha só pelo SHV — e está tudo certo: a
+                    tarefa dele simplesmente não é espelhada lá.
                   </p>
                 </div>
                 <div className="flex items-center justify-between">

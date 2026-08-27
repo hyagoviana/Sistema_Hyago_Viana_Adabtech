@@ -61,9 +61,21 @@ function comoData(v: string | null | undefined): number | null {
  * Separado do envio de propósito: assim dá para conferir exatamente o que seria
  * mandado — em produção de terceiro, olhar antes de escrever vale muito.
  */
+/** O que o SHV precisa para criar a MESMA tarefa aqui dentro (2026-08-27). */
+export type EspelhoLocal = {
+  caseId: string | null;
+  titulo: string;
+  descricao: string;
+  assigneeId: string;
+  dueDate: string | null;
+  taskTypeId: string | null;
+};
+
 export async function montarPayloadTarefa(
   stagingId: string,
-): Promise<{ corpo: Record<string, unknown> } | { impedimento: string }> {
+): Promise<
+  { corpo: Record<string, unknown>; espelhoLocal: EspelhoLocal } | { impedimento: string }
+> {
   const sb = getSupabaseAdmin();
 
   const { data: linha } = await sb
@@ -209,7 +221,19 @@ export async function montarPayloadTarefa(
     },
   };
 
-  return { corpo };
+  return {
+    corpo,
+    // Mesma tarefa, do lado de cá: é ela que a pessoa vai concluir no SHV para
+    // que a conclusão reflita no ProJuris.
+    espelhoLocal: {
+      caseId: linha.case_id,
+      titulo: nomeTipo,
+      descricao,
+      assigneeId: resultado.executor_id,
+      dueDate: linha.data_prevista ?? null,
+      taskTypeId: linha.task_type_id ?? null,
+    },
+  };
 }
 
 /**
@@ -255,6 +279,34 @@ export async function criarTarefaNoProjuris(stagingId: string): Promise<Resultad
       codigo: codigo ?? undefined,
       motivo: "criada no ProJuris, mas o código não foi salvo aqui: " + error.message,
     };
+
+  // A MESMA tarefa, agora no SHV (2026-08-27).
+  //
+  // Sem isto a pessoa continuaria concluindo no ProJuris, que é justamente o que
+  // o Thiago quer inverter: "a ideia é concluir a tarefa no sistema ao invés do
+  // ProJuris". É o `projuris_codigo_tarefa` gravado aqui que depois permite ao
+  // `espelhar-situacao.ts` levar a conclusão de volta.
+  //
+  // Best-effort: se falhar, a tarefa existe no ProJuris do mesmo jeito e a pessoa
+  // não fica sem trabalho — só não vê pelo SHV. O motivo volta no resultado.
+  let avisoLocal: string | null = null;
+  if (codigo && montado.espelhoLocal.caseId) {
+    const e = montado.espelhoLocal;
+    const { error: locErr } = await sb.from("system_case_tasks").insert({
+      case_id: e.caseId,
+      organization_id: ORG_ID,
+      title: e.titulo,
+      description: e.descricao,
+      status: "EM_ANDAMENTO",
+      assignee_id: e.assigneeId,
+      due_date: e.dueDate,
+      task_type_id: e.taskTypeId,
+      projuris_codigo_tarefa: codigo,
+      projuris_sync_at: new Date().toISOString(),
+    } as never);
+    if (locErr) avisoLocal = "criada no ProJuris, mas não apareceu no SHV: " + locErr.message;
+  }
+  if (avisoLocal) return { enviado: true, codigo: codigo ?? undefined, motivo: avisoLocal };
 
   return codigo
     ? { enviado: true, codigo }
