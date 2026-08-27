@@ -834,6 +834,10 @@ export async function moveCaseInBoard(
   boardId: string,
   stageId: string,
   triggeredBy?: string,
+  // W1 — quando quem moveu foi um workflow, o código dele entra no evento. Sem
+  // isto, mover em kanban custom voltaria a ser ação automática ANÔNIMA, que é
+  // exatamente o que o identificador de workflow veio resolver.
+  workflowCode?: string | null,
 ) {
   const sb = getSupabaseAdmin();
 
@@ -881,7 +885,12 @@ export async function moveCaseInBoard(
       case_id: caseId,
       organization_id: pos.organization_id,
       action: "board_stage_changed",
-      diff: { board_id: boardId, from, to: stage.slug },
+      diff: {
+        board_id: boardId,
+        from,
+        to: stage.slug,
+        ...(workflowCode ? { workflow_code: workflowCode } : {}),
+      },
       triggered_by: triggeredBy ?? null,
     })
     .then(
@@ -893,6 +902,49 @@ export async function moveCaseInBoard(
   await instanciarChecklist(caseId, stage.slug).catch(() => {});
 
   return { ok: true as const, noop: false, id: data.id, stage_slug: stage.slug };
+}
+
+// AJ3 (Thiago, 27/08) — mover num kanban CUSTOM pelo SLUG da etapa.
+// A ação `move_stage` do workflow guarda o slug (é o que a pessoa escolhe na
+// tela e o que sobrevive a recriação de etapa); `moveCaseInBoard` trabalha com
+// o ID. Esta função faz a ponte, resolvendo slug → id DENTRO do board.
+//
+// Duas ausências MUITO diferentes, e a distinção importa (QA P1-2):
+//   · o caso não está neste kanban  → SITUAÇÃO NORMAL. Uma regra "ao entrar em X,
+//     mova no SISGIMM" vai topar com casos que nunca entraram no SISGIMM. Devolve
+//     no-op; lançar aqui marcaria o run como "error" a cada disparo e — como o
+//     try/catch do engine envolve o loop inteiro — abortaria as ações seguintes.
+//   · a etapa não existe naquele kanban → REGRA MAL CONFIGURADA. Aí sim lança,
+//     para aparecer no histórico de execuções e alguém corrigir.
+export async function moveCaseInBoardBySlug(
+  caseId: string,
+  boardId: string,
+  stageSlug: string,
+  triggeredBy?: string,
+  workflowCode?: string | null,
+) {
+  const sb = getSupabaseAdmin();
+  const { data: stage } = await sb
+    .from("system_pipeline_stages")
+    .select("id")
+    .eq("board_id", boardId)
+    .eq("slug", stageSlug)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!stage) {
+    throw new BoardServiceError(`Etapa "${stageSlug}" não existe neste kanban.`, 422);
+  }
+
+  const { data: pos } = await sb
+    .from("system_case_board_positions")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("board_id", boardId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!pos) return { ok: true as const, noop: true, foraDoKanban: true };
+
+  return moveCaseInBoard(caseId, boardId, stage.id as string, triggeredBy, workflowCode);
 }
 
 // TAREFA B (2026-08-04) — só os IDS dos casos com posição ATIVA num board custom.

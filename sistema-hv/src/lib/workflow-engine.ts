@@ -15,7 +15,9 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { createCaseNote } from "@/lib/notes-service";
 import { createCaseTask } from "@/lib/dossie-service";
-import { moveCaseStatus } from "@/lib/cases-service";
+import { moveCaseStatus, moveCaseStatusFin } from "@/lib/cases-service";
+import type { MacroFin } from "@/lib/cases/constants";
+import { moveCaseInBoardBySlug } from "@/lib/board-service";
 
 export type WorkflowTrigger =
   | "status_changed"
@@ -100,8 +102,22 @@ async function runAction(
   }
   if (type === "move_stage") {
     const to = asStr(action.to_stage_slug);
+    if (!to) return;
+    // AJ3 (Thiago, 27/08) — a ação escolhe EM QUAL kanban mover. Antes movia
+    // sempre no principal; um tema com vários kanbans não tinha como automatizar
+    // os outros. Mesmo vocabulário do gatilho: "op" | "fin" | boardId (custom).
+    // Sem board_key = "op": regras antigas continuam se comportando igual.
+    const board = asStr(action.board_key) || "op";
     // Chama o SERVIÇO direto (não a server fn) → não re-dispara o motor.
-    if (to) await moveCaseStatus(caseId, to, actorUserId ?? undefined, rule.code);
+    // O `rule.code` vai nas TRÊS rotas: é ele que responde "qual workflow moveu
+    // este caso?" na timeline e na auditoria.
+    if (board === "op") {
+      await moveCaseStatus(caseId, to, actorUserId ?? undefined, rule.code);
+    } else if (board === "fin") {
+      await moveCaseStatusFin(caseId, to as MacroFin, actorUserId ?? undefined, rule.code);
+    } else {
+      await moveCaseInBoardBySlug(caseId, board, to, actorUserId ?? undefined, rule.code);
+    }
     return;
   }
 }

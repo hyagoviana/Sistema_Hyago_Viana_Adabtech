@@ -28,6 +28,7 @@ import {
   SlidersHorizontal,
   Trash2,
   UserCheck,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -113,7 +114,7 @@ import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
 import { useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { useCaseJudicial } from "@/hooks/useJudicial";
-import { useCaseOperationalTrail } from "@/hooks/useBoards";
+import { useCaseOperationalTrail, useRemoveCaseFromBoard } from "@/hooks/useBoards";
 import {
   CASE_TYPE_LABELS,
   MACRO_FIN_LABELS,
@@ -184,6 +185,12 @@ function CasoDetalhe() {
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // AJ2 (Thiago, 27/08): tirar o caso de um kanban ADICIONAL. O principal nunca
+  // sai — o board-service ja recusa com 409, e a UI nem oferece o botao.
+  const removeFromBoard = useRemoveCaseFromBoard();
+  const [boardParaRemover, setBoardParaRemover] = useState<{ id: string; label: string } | null>(
+    null,
+  );
   const [entrarOpen, setEntrarOpen] = useState(false);
   const [linkTemaOpen, setLinkTemaOpen] = useState(false);
   const [addBoardOpen, setAddBoardOpen] = useState(false);
@@ -523,44 +530,65 @@ function CasoDetalhe() {
                   key={t.board_id ?? "__principal__"}
                   className="rounded-lg border border-[rgba(30,32,68,0.10)] overflow-hidden"
                 >
-                  <Link
-                    to="/pipeline"
-                    search={{
-                      cat: caso.service_type_id ?? undefined,
-                      catName: tipoLabel,
-                      ...(t.board_id ? { board: t.board_id } : {}),
-                    }}
-                    className="block px-4 py-3 hover:bg-[rgba(180,155,80,0.03)] transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                        style={{
-                          background: t.is_principal
-                            ? "var(--gold-100, rgba(180,155,80,0.15))"
-                            : "rgba(30,32,68,0.08)",
-                          color: t.is_principal
-                            ? "var(--gold-700, #8a6d1b)"
-                            : "var(--navy, #1e2044)",
-                        }}
+                  <div className="relative">
+                    {/* AJ2 — sair do kanban ADICIONAL. Fica FORA do <Link> (por
+                        cima dele): dentro, o clique navegaria para o pipeline. */}
+                    {!t.is_principal && t.board_id && podeGerirCaso && (
+                      <button
+                        type="button"
+                        title={`Tirar o caso de "${t.board_label}"`}
+                        aria-label={`Tirar o caso do kanban ${t.board_label}`}
+                        onClick={() =>
+                          setBoardParaRemover({ id: t.board_id as string, label: t.board_label })
+                        }
+                        className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-muted-foreground opacity-60 hover:opacity-100 hover:bg-[rgba(30,32,68,0.06)] transition"
                       >
-                        {t.is_principal
-                          ? "Kanban Principal"
-                          : `Kanban ${idx + 1} · ${t.board_label}`}
-                      </span>
-                      {t.entered_at && (
-                        <span className="text-[11px] text-muted-foreground">
-                          há {daysSince(t.entered_at)} dia(s)
+                        <X size={14} />
+                      </button>
+                    )}
+                    <Link
+                      to="/pipeline"
+                      search={{
+                        cat: caso.service_type_id ?? undefined,
+                        catName: tipoLabel,
+                        ...(t.board_id ? { board: t.board_id } : {}),
+                      }}
+                      // pr-10 quando há o botão de sair: sem isso, um rótulo de
+                      // kanban longo passa por baixo do "×".
+                      className={`block py-3 pl-4 hover:bg-[rgba(180,155,80,0.03)] transition-colors cursor-pointer ${
+                        !t.is_principal && t.board_id && podeGerirCaso ? "pr-10" : "pr-4"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                          style={{
+                            background: t.is_principal
+                              ? "var(--gold-100, rgba(180,155,80,0.15))"
+                              : "rgba(30,32,68,0.08)",
+                            color: t.is_principal
+                              ? "var(--gold-700, #8a6d1b)"
+                              : "var(--navy, #1e2044)",
+                          }}
+                        >
+                          {t.is_principal
+                            ? "Kanban Principal"
+                            : `Kanban ${idx + 1} · ${t.board_label}`}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[16px] font-semibold text-[var(--navy)]">
-                        {t.stage_label}
-                      </span>
-                      <ExternalLink size={13} className="text-muted-foreground opacity-50" />
-                    </div>
-                  </Link>
+                        {t.entered_at && (
+                          <span className="text-[11px] text-muted-foreground">
+                            há {daysSince(t.entered_at)} dia(s)
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[16px] font-semibold text-[var(--navy)]">
+                          {t.stage_label}
+                        </span>
+                        <ExternalLink size={13} className="text-muted-foreground opacity-50" />
+                      </div>
+                    </Link>
+                  </div>
                   {/* #3 — checklist DESTA etapa, embaixo do card correspondente. */}
                   {t.stage_slug && (
                     <div className="px-4 pb-3 pt-3 border-t border-[rgba(30,32,68,0.06)] bg-[rgba(30,32,68,0.015)]">
@@ -966,6 +994,44 @@ function CasoDetalhe() {
           (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
         }
       />
+
+      {/* AJ2 — confirmacao de saida do kanban adicional. */}
+      <AlertDialog
+        open={boardParaRemover !== null}
+        onOpenChange={(o) => !o && setBoardParaRemover(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Tirar o caso de &ldquo;{boardParaRemover?.label}&rdquo;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              O caso sai deste kanban e continua normalmente no kanban principal. Nada do caso é
+              excluído, e dá para colocá-lo de volta depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!boardParaRemover) return;
+                try {
+                  await removeFromBoard.mutateAsync({
+                    caseId: caso.id,
+                    boardId: boardParaRemover.id,
+                  });
+                  toast.success(`Caso removido de "${boardParaRemover.label}"`);
+                  setBoardParaRemover(null);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Falha ao remover do kanban");
+                }
+              }}
+            >
+              Tirar do kanban
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

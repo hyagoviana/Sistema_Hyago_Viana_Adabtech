@@ -49,6 +49,9 @@ type Action = {
   title?: string;
   due_days?: number;
   to_stage_slug?: string;
+  // AJ3 (27/08) — em qual kanban a ação move: "op" (padrão) | "fin" | boardId.
+  // Ausente = "op", para que toda regra criada antes disto continue igual.
+  board_key?: string;
 };
 
 const TRIGGER_LABELS: Record<TriggerType, string> = {
@@ -104,6 +107,69 @@ function StageField({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+// AJ3 — campos da ação "Mudar etapa": PRIMEIRO o kanban, depois a etapa dele.
+// Componente proprio porque cada ação pode apontar para um kanban diferente, e
+// as etapas de um kanban custom exigem uma query por board (useBoardStages).
+// Fica fora de WorkflowsPage para que o hook rode por ação, não por formulário.
+function MoveStageActionFields({
+  boardKey,
+  stageSlug,
+  onChange,
+  kanbanOptions,
+  opStages,
+  finStages,
+}: {
+  boardKey: string;
+  stageSlug: string;
+  onChange: (patch: { board_key?: string; to_stage_slug?: string }) => void;
+  kanbanOptions: Array<{ key: string; label: string }>;
+  opStages: Array<{ slug: string; label: string }> | undefined;
+  finStages: Array<{ slug: string; label: string }> | undefined;
+}) {
+  const customBoardId = boardKey === "op" || boardKey === "fin" ? null : boardKey;
+  const { data: boardStages } = useBoardStages(customBoardId);
+
+  const options = useMemo(() => {
+    if (boardKey === "op") return dedupeStages(opStages);
+    if (boardKey === "fin") return dedupeStages(finStages);
+    return dedupeStages(boardStages as never);
+  }, [boardKey, opStages, finStages, boardStages]);
+
+  const nomeKanban = kanbanOptions.find((k) => k.key === boardKey)?.label ?? "Kanban Principal";
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      <Select
+        value={boardKey}
+        onValueChange={(v) => {
+          // Trocar de kanban invalida a etapa escolhida: os slugs são por kanban.
+          onChange({ board_key: v, to_stage_slug: "" });
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Kanban" />
+        </SelectTrigger>
+        <SelectContent>
+          {kanbanOptions.map((k) => (
+            <SelectItem key={k.key} value={k.key}>
+              {k.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className="space-y-1">
+        <StageField
+          value={stageSlug}
+          onChange={(v) => onChange({ to_stage_slug: v })}
+          options={options}
+          placeholder={`Etapa destino (${nomeKanban})`}
+        />
+        <p className="text-[11px] text-muted-foreground">Move em {nomeKanban}.</p>
+      </div>
+    </div>
   );
 }
 
@@ -196,9 +262,6 @@ function WorkflowsPage() {
     return dedupeStages(boardStages as never);
   }, [triggerKanban, opStages, finStages, boardStages]);
 
-  // Ação "mudar etapa": só o kanban PRINCIPAL (o motor move macrostatus_op).
-  const opStageOptions = useMemo(() => dedupeStages(opStages as never), [opStages]);
-
   // Pedido A — tipos de tarefa (sub-opção dos gatilhos de tarefa).
 
   function reset() {
@@ -252,7 +315,13 @@ function WorkflowsPage() {
         if (a.type === "write_comment") return { type: a.type, body: (a.body ?? "").trim() };
         if (a.type === "create_task")
           return { type: a.type, title: (a.title ?? "").trim(), due_days: a.due_days ?? null };
-        return { type: a.type, to_stage_slug: (a.to_stage_slug ?? "").trim() };
+        return {
+          type: a.type,
+          to_stage_slug: (a.to_stage_slug ?? "").trim(),
+          // AJ3 — só grava board_key quando NÃO é o principal: regra antiga
+          // (sem a chave) e regra nova apontando para o principal ficam idênticas.
+          ...(a.board_key && a.board_key !== "op" ? { board_key: a.board_key } : {}),
+        };
       })
       .filter((a) =>
         a.type === "write_comment" ? a.body : a.type === "create_task" ? a.title : a.to_stage_slug,
@@ -525,21 +594,18 @@ function WorkflowsPage() {
                   </div>
                 )}
                 {a.type === "move_stage" && (
-                  <div className="space-y-1">
-                    <StageField
-                      value={a.to_stage_slug ?? ""}
-                      onChange={(v) =>
-                        setActions((prev) =>
-                          prev.map((x, idx) => (idx === i ? { ...x, to_stage_slug: v } : x)),
-                        )
-                      }
-                      options={opStageOptions}
-                      placeholder="Etapa destino (kanban principal)"
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Move no kanban principal (etapa operacional).
-                    </p>
-                  </div>
+                  <MoveStageActionFields
+                    boardKey={a.board_key ?? "op"}
+                    stageSlug={a.to_stage_slug ?? ""}
+                    onChange={(patch) =>
+                      setActions((prev) =>
+                        prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)),
+                      )
+                    }
+                    kanbanOptions={kanbanOptions}
+                    opStages={opStages as never}
+                    finStages={finStages as never}
+                  />
                 )}
               </div>
             ))}

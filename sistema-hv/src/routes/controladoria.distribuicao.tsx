@@ -7,16 +7,12 @@ import {
   AlertTriangle,
   History,
   TrendingUp,
-  FlaskConical,
   FileText,
-  Tags,
-  Layers,
   LayoutGrid,
   Inbox,
   ClipboardCheck,
   ScrollText,
   ListChecks,
-  Link2,
 } from "lucide-react";
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
 
@@ -54,15 +50,15 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
   },
   {
     group: "Configuração",
+    // AJ1 (Thiago, 27/08): o menu do motor não repete o que já é configuração do
+    // SISTEMA. Saíram daqui, nesta ordem de raciocínio:
+    //   · "Tipos Tarefa" e "Temas" eram só ATALHOS para /configuracoes (T1 e T2) —
+    //     o cadastro nunca esteve aqui, então nada se perde;
+    //   · "Vínculos" (caso ↔ processo do ProJuris) passa a ser feito na aba
+    //     Judicial da ficha do caso, que é onde a informação vive;
+    //   · "Simulador" saiu de Auditoria — é ferramenta de teste, não de operação.
+    // As ROTAS continuam existindo e acessíveis por URL; só não figuram no menu.
     tabs: [
-      // T1 — o cadastro de tipo de tarefa é UM só, em Configurações. O item fica
-      // aqui (é onde a controladoria procura), mas leva para lá.
-      { to: "/configuracoes/tipos-tarefa", label: "Tipos Tarefa", icon: Tags },
-      // Pré-requisito do espelho de tarefas: sem o caso apontar para um processo
-      // do ProJuris, a distribuição não tem onde ser criada lá.
-      { to: "/controladoria/distribuicao/vinculos", label: "Vínculos", icon: Link2 },
-      // T2 — a configuração do tema é UMA só (Configurações → tema → Distribuição).
-      { to: "/configuracoes/campos-personalizados", label: "Temas", icon: Layers },
       { to: "/controladoria/distribuicao/configuracao", label: "Configuração", icon: Settings },
     ],
   },
@@ -84,7 +80,6 @@ const tabGroups: Array<{ group: string; tabs: Tab[] }> = [
       },
       { to: "/controladoria/distribuicao/historico", label: "Execuções", icon: History },
       { to: "/controladoria/distribuicao/indicadores", label: "Indicadores", icon: TrendingUp },
-      { to: "/controladoria/distribuicao/simulador", label: "Simulador", icon: FlaskConical },
       { to: "/controladoria/distribuicao/relatorio", label: "Relatório", icon: FileText },
     ],
   },

@@ -1630,7 +1630,14 @@ export async function moveCaseStatus(
 // ----------------------------------------------------------------------------
 // Regra de negócio: voltar pra NAO_APLICAVEL é bloqueado — depois que o caso
 // bifurcou, o rastro financeiro vive sua vida. Cancelar fin se necessário.
-export async function moveCaseStatusFin(id: string, to: MacroFin, triggeredBy?: string) {
+export async function moveCaseStatusFin(
+  id: string,
+  to: MacroFin,
+  triggeredBy?: string,
+  // W1 (AJ3) — código do workflow que moveu, quando foi um. Mesmo motivo do
+  // `moveCaseStatus`: ação automática sem assinatura é ação anônima.
+  workflowCode?: string | null,
+) {
   const sb = getSupabaseAdmin();
   const { data: before } = await sb
     .from("system_cases")
@@ -1663,7 +1670,11 @@ export async function moveCaseStatusFin(id: string, to: MacroFin, triggeredBy?: 
       case_id: id,
       organization_id: data.organization_id,
       action: "fin_status_changed",
-      diff: { from: before.macrostatus_fin, to },
+      diff: {
+        from: before.macrostatus_fin,
+        to,
+        ...(workflowCode ? { workflow_code: workflowCode } : {}),
+      },
       triggered_by: triggeredBy ?? null,
     });
     // S3-02 — instancia o checklist da etapa fin de destino (idempotente,
