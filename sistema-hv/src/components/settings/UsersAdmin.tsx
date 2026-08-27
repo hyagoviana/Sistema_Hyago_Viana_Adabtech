@@ -368,36 +368,51 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   placeholder="(00) 00000-0000"
                 />
               </div>
-              <div>
-                <Label>Cargo</Label>
-                <Select
-                  value={editing.role}
-                  onValueChange={(v) => setEditing({ ...editing, role: v })}
-                  disabled={editing.isSelf || editing.originalRole === "admin"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {ROLE_LABELS[r as Role]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {(editing.isSelf || editing.originalRole === "admin") && (
+              {/* 2026-08-27 (Thiago: "ficou um pouco confuso (…) questões muito
+                  redundantes") — este campo é o `role` do RBAC: é ELE que decide o
+                  que a pessoa enxerga no sistema inteiro. Chamava-se "Cargo", igual
+                  ao campo informativo lá embaixo, e o leitor naturalmente lia o de
+                  baixo como o cargo real. Agora cada um se chama pelo que faz. */}
+              <div className="border-t border-[var(--border)] pt-3 space-y-3">
+                <p className="text-[12px] font-semibold text-[var(--navy)]">Acesso ao sistema</p>
+                <div>
+                  <Label>Nível de acesso</Label>
+                  <Select
+                    value={editing.role}
+                    onValueChange={(v) => setEditing({ ...editing, role: v })}
+                    disabled={editing.isSelf || editing.originalRole === "admin"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {ROLE_LABELS[r as Role]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    O cargo do administrador e o seu próprio não podem ser alterados aqui.
+                    Define quais telas a pessoa enxerga. É o único campo desta janela que muda
+                    permissão.
                   </p>
-                )}
+                  {(editing.isSelf || editing.originalRole === "admin") && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      O acesso do administrador e o seu próprio não podem ser alterados aqui.
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Cadastro do colaborador (M8) — Perfil / Cargo-nível / Unidade /
-                  Status ProJuris + as DUAS flags do motor. */}
+              {/* Bloco INFORMATIVO. Perfil, Cargo e Unidade não são lidos por
+                  nenhuma regra do sistema — são anotação de RH. Ficavam colados nos
+                  campos que decidem acesso e distribuição, e era isso que fazia a
+                  janela parecer redundante. O aviso abaixo diz isso à pessoa. */}
               <div className="border-t border-[var(--border)] pt-3 space-y-3">
-                <p className="text-[12px] font-semibold text-[var(--navy)]">
-                  Cadastro do colaborador
+                <p className="text-[12px] font-semibold text-[var(--navy)]">Dados do colaborador</p>
+                <p className="text-[11px] text-muted-foreground -mt-2">
+                  Informação de cadastro. Nada aqui muda permissão nem afeta o motor.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -420,7 +435,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                     </Select>
                   </div>
                   <div>
-                    <Label>Cargo / nível</Label>
+                    <Label>Cargo</Label>
                     <Select
                       value={editing.cargo || NONE}
                       onValueChange={(v) => setEditing({ ...editing, cargo: v === NONE ? "" : v })}
@@ -470,30 +485,6 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                     </Select>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <Label className="mb-0">Peticionante</Label>
-                    <p className="text-[11px] text-muted-foreground">
-                      Se desligado, o colaborador não entra no motor de distribuição.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={editing.peticionante}
-                    onCheckedChange={(v) => setEditing({ ...editing, peticionante: v })}
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <Label className="mb-0">Participa da distribuição geral</Label>
-                    <p className="text-[11px] text-muted-foreground">
-                      Só quem participa entra na fila ordinária; os demais recebem só por exceção.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={editing.participaGeral}
-                    onCheckedChange={(v) => setEditing({ ...editing, participaGeral: v })}
-                  />
-                </div>
               </div>
 
               {/* Distribuição (ProJuris) — H5. Fonte da verdade do executor do
@@ -501,7 +492,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   Grava em system_projuris_executor_mapping por executor_id. */}
               <div className="border-t border-[var(--border)] pt-3 space-y-3">
                 <p className="text-[12px] font-semibold text-[var(--navy)]">
-                  Distribuição (ProJuris)
+                  Motor de distribuição
                 </p>
                 <div>
                   <Label>Usuário no ProJuris</Label>
@@ -553,15 +544,54 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                     tarefa dele simplesmente não é espelhada lá.
                   </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label className="mb-0">Participa da distribuição</Label>
+                {/* Os três interruptores do motor, JUNTOS e com nome distinto.
+                    Antes, "Participa da distribuição geral" ficava lá em cima no
+                    cadastro e "Participa da distribuição" aqui embaixo — dois nomes
+                    quase iguais, em blocos diferentes, significando coisas
+                    diferentes. Era a segunda redundância que o Thiago apontou. */}
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Peticionante</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Se desligado, não entra no motor de jeito nenhum.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.peticionante}
+                    onCheckedChange={(v) => setEditing({ ...editing, peticionante: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Entra na fila ordinária</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Desligado, a pessoa só recebe tarefa por exceção (executor exclusivo).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.participaGeral}
+                    onCheckedChange={(v) => setEditing({ ...editing, participaGeral: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Vínculo com o ProJuris ativo</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Desligado, a tarefa dela não é criada nem atualizada no ProJuris.
+                    </p>
+                  </div>
                   <Switch
                     checked={editing.participa}
                     onCheckedChange={(v) => setEditing({ ...editing, participa: v })}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label className="mb-0">Elegível a tarefas complexas</Label>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="mb-0">Elegível a tarefas complexas</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Desligado, o motor não manda para ela o que está marcado como complexo.
+                    </p>
+                  </div>
                   <Switch
                     checked={editing.eligibleComplex}
                     onCheckedChange={(v) => setEditing({ ...editing, eligibleComplex: v })}

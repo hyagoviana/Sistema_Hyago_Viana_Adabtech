@@ -246,6 +246,18 @@ async function main() {
       );
       const combo = dlg.locator('[role="combobox"]');
       check("há seletor no diálogo", (await combo.count()) > 0);
+
+      // Reorganização das permissões (2026-08-27) — os 3 blocos e o fim dos
+      // nomes ambíguos. Sem isto o teste não distinguiria a tela nova da velha.
+      check("bloco 'Acesso ao sistema' existe", txtDlg.includes("Acesso ao sistema"), txtDlg.slice(0, 400));
+      check("campo virou 'Nível de acesso'", txtDlg.includes("Nível de acesso"));
+      check("aviso de que os dados não mudam permissão", txtDlg.includes("Nada aqui muda permissão"));
+      check("bloco 'Motor de distribuição' existe", txtDlg.includes("Motor de distribuição"));
+      check(
+        "sumiu o 'Participa da distribuição geral' ambíguo",
+        !txtDlg.includes("Participa da distribuição geral"),
+      );
+      check("toggles renomeados", txtDlg.includes("Entra na fila ordinária") && txtDlg.includes("Vínculo com o ProJuris ativo"));
       await page.screenshot({ path: `${SHOTS}/sel-dialogo.png` });
       await page.keyboard.press("Escape");
     } else {

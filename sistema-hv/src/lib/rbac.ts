@@ -389,6 +389,16 @@ export const ROUTE_MODULE: Partial<Record<string, Module>> = {
   "/comercial": "comercial",
   "/comercial/leads": "comercial",
   "/controladoria": "controladoria",
+  // 2026-08-27 (Thiago) — "o motor de distribuição aparece só para
+  // administradores? se puder liberar para quem tem o perfil da Nicole".
+  //
+  // A causa não era permissão de negócio: o papel `controladoria` sempre teve
+  // `edit` no módulo. O que faltava era ESTA linha. `canSeeRoute` compara a rota
+  // por igualdade exata contra a lista do papel, e lá consta só "/controladoria";
+  // sem entrada no mapa, a sub-rota caía nessa comparação e dava false. O admin
+  // passava porque o NAV dele é "all". Mapeando aqui, a sub-rota passa a ser
+  // decidida pelo MÓDULO — que é onde a regra de negócio realmente mora.
+  "/controladoria/distribuicao": "controladoria",
   "/peticionamento": "inteligencia",
   "/whatsapp": "comercial",
   "/dashboards": "inteligencia",

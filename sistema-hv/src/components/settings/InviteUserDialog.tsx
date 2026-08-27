@@ -202,7 +202,10 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
 
           {/* Cadastro do colaborador (M8) — mesmos campos da tela de editar. */}
           <div className="border-t border-[var(--border)] pt-3 space-y-3">
-            <p className="text-[12px] font-semibold text-[var(--navy)]">Cadastro do colaborador</p>
+            <p className="text-[12px] font-semibold text-[var(--navy)]">Dados do colaborador</p>
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Informação de cadastro. Nada aqui muda permissão nem afeta o motor.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Perfil</Label>
@@ -224,7 +227,7 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
                 </Select>
               </div>
               <div>
-                <Label>Cargo / nível</Label>
+                <Label>Cargo</Label>
                 <Select value={cargo || NONE} onValueChange={(v) => setCargo(v === NONE ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="—" />
@@ -269,29 +272,11 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
                 </Select>
               </div>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Label className="mb-0">Peticionante</Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Se desligado, não entra no motor de distribuição.
-                </p>
-              </div>
-              <Switch checked={peticionante} onCheckedChange={setPeticionante} />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Label className="mb-0">Participa da distribuição geral</Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Só quem participa entra na fila ordinária; os demais só por exceção.
-                </p>
-              </div>
-              <Switch checked={participaGeral} onCheckedChange={setParticipaGeral} />
-            </div>
           </div>
 
           {/* Distribuição (ProJuris) — H5. */}
           <div className="border-t border-[var(--border)] pt-3 space-y-3">
-            <p className="text-[12px] font-semibold text-[var(--navy)]">Distribuição (ProJuris)</p>
+            <p className="text-[12px] font-semibold text-[var(--navy)]">Motor de distribuição</p>
             <div>
               <Label>Usuário no ProJuris</Label>
               {/* 2026-08-27 — mesma troca feita no UsersAdmin: o campo era texto
@@ -326,12 +311,43 @@ export function InviteUserDialog({ open, onOpenChange }: Props) {
                 Quem não tem usuário no ProJuris trabalha só pelo SHV.
               </p>
             </div>
-            <div className="flex items-center justify-between">
-              <Label className="mb-0">Participa da distribuição</Label>
+            {/* Mesma reorganização do UsersAdmin (2026-08-27): os interruptores do
+                motor ficam juntos, e "geral" × "do ProJuris" ganham nomes que os
+                distinguem de fato. As duas telas têm de contar a mesma história. */}
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Peticionante</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Se desligado, não entra no motor de jeito nenhum.
+                </p>
+              </div>
+              <Switch checked={peticionante} onCheckedChange={setPeticionante} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Entra na fila ordinária</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Desligado, só recebe tarefa por exceção (executor exclusivo).
+                </p>
+              </div>
+              <Switch checked={participaGeral} onCheckedChange={setParticipaGeral} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Vínculo com o ProJuris ativo</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Desligado, a tarefa dela não é criada nem atualizada no ProJuris.
+                </p>
+              </div>
               <Switch checked={participaDist} onCheckedChange={setParticipaDist} />
             </div>
-            <div className="flex items-center justify-between">
-              <Label className="mb-0">Elegível a tarefas complexas</Label>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0">Elegível a tarefas complexas</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Desligado, o motor não manda o que está marcado como complexo.
+                </p>
+              </div>
               <Switch checked={eligibleComplex} onCheckedChange={setEligibleComplex} />
             </div>
             <div>
