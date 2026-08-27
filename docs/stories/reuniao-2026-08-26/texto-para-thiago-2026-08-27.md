@@ -73,3 +73,39 @@ ele aparecendo aí, eu crio numa boa, é rapidinho.
 
 E valeu por avisar do ajuste — os 3 do arquivo já tão prontos, então tá tudo em dia
 por aqui 👊
+
+---
+
+## Quarta mensagem — limpeza (2 perguntas antes de apagar)
+
+Boa, Thiago! Que bom que passou por tudo 🙌
+
+Vou fazer as duas limpezas, só que como é coisa que não tem volta eu queria
+confirmar 2 pontos com você antes:
+
+**1) O tema "Transferência de Residência Médica"** — ele tá marcado no print, mas
+foi criado ontem (26/08) e o nome não parece de teste. É pra apagar mesmo ou foi
+marcado sem querer? Os outros 5 (frente 3, Tema 10, tema teste, TESTE6, teste7) eu
+já entendi que são teste e podem ir.
+
+Só pra você saber o que vai junto: o "tema teste" tem 2 casos (do Matheus) e 8
+workflows, e o "TESTE6" tem 1 caso (do cliente "teste - thiago 1"). Todos de teste
+mesmo, some tudo junto com o tema.
+
+**2) A lista do motor** — tem 501 distribuições acumuladas desde 05/08, sendo 35 de
+hoje. Quanto você quer que eu limpe?
+  a) só as de hoje — a lista filtra por data, então amanhã já abre limpa
+  b) de 25/08 pra cá (98) — tira a fase final de testes, que é a que pode confundir
+  c) tudo (501) — zera o histórico do motor pra controladoria começar do zero
+
+Eu faria a (c) se você quer a controladoria começando amanhã sem nenhum ruído, mas
+aí some também o histórico e os indicadores desses dias. Me fala qual prefere.
+
+**Ah, e sobre o "mesmo quando clico em rejeitar, não some":** fui olhar e não é
+defeito não — rejeitar marca a linha como "Rejeitada" mas mantém ela na lista, que
+é o comportamento que você pediu pra manter. Conferi aqui e as 32 que você rejeitou
+foram gravadas certinho (eram as do dia 21). As 35 de hoje aparecem como pendentes
+porque essas ainda não foram rejeitadas.
+
+Assim que você responder eu limpo tudo hoje ainda, pra amanhã de manhã o pessoal
+pegar o sistema limpo 👊
