@@ -5,6 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  fazerLancamentoContaAzulFn,
+  listarCatalogoContaAzulFn,
+  sincronizarCategoriasContaAzulFn,
   atualizarFinParcelaFn,
   criarFinEntryFn,
   excluirFinEntryFn,
@@ -107,5 +110,49 @@ export function useSetTemaContaAzul() {
       servicoNome?: string | null;
     }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
+  });
+}
+
+// ─── ContaAzul (FN2, 2026-08-28) ─────────────────────────────────────────────
+
+/** Contas de recebimento e centros de custo, para os seletores do lançamento. */
+export function useCatalogoContaAzul(habilitado = true) {
+  const fn = useServerFn(listarCatalogoContaAzulFn);
+  return useQuery({
+    queryKey: ["contaazul-catalogo"],
+    queryFn: () => fn(),
+    enabled: habilitado,
+    // Muda raramente e a chamada vai à API externa: não vale rebuscar a cada foco.
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  });
+}
+
+/**
+ * Envia o lançamento ao ContaAzul.
+ *
+ * Sem `onSuccess` automático de toast: quem chama decide a mensagem, porque
+ * "não foi" nem sempre é erro (ex.: categoria ainda não cadastrada lá é uma
+ * pendência do escritório, não uma falha do sistema).
+ */
+export function useFazerLancamentoContaAzul(caseId: string) {
+  const fn = useServerFn(fazerLancamentoContaAzulFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (entryId: string) => fn({ data: { entryId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY_ENTRIES(caseId) });
+      qc.invalidateQueries({ queryKey: KEY_RESUMO(caseId) });
+    },
+  });
+}
+
+/** Amarra as categorias do SHV às do ContaAzul pelo código. */
+export function useSincronizarCategoriasContaAzul() {
+  const fn = useServerFn(sincronizarCategoriasContaAzulFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fn(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fin-categorias"] }),
   });
 }

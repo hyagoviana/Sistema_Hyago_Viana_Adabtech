@@ -136,3 +136,40 @@ export const setTemaContaAzulFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => handle(() => setTemaContaAzul(data.temaId, data), "edit"));
+
+// ─── ContaAzul (FN2, 2026-08-28) ─────────────────────────────────────────────
+//
+// `fazerLancamento` ESCREVE num sistema de terceiro e não tem como desfazer: a
+// API do ContaAzul não expõe exclusão de conta a receber (testado com id real em
+// 28/08 — devolve 404 nas duas rotas). Por isso o gate é `edit` e a tela pede
+// confirmação explícita antes de chamar.
+
+export const fazerLancamentoContaAzulFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { entryId: string }) => z.object({ entryId: z.string().uuid() }).parse(d))
+  .handler(({ data }) =>
+    handle(async () => {
+      const { fazerLancamento } = await import("@/lib/contaazul/lancamento-service");
+      return fazerLancamento(data.entryId);
+    }, "edit"),
+  );
+
+/** Opções para os seletores do lançamento: conta que recebe e centro de custo. */
+export const listarCatalogoContaAzulFn = createServerFn({ method: "GET" }).handler(() =>
+  handle(async () => {
+    const { listarContasParaSelecao, listarCentrosDeCustoParaSelecao } =
+      await import("@/lib/contaazul/catalogo-service");
+    const [contas, centros] = await Promise.all([
+      listarContasParaSelecao().catch(() => []),
+      listarCentrosDeCustoParaSelecao().catch(() => []),
+    ]);
+    return { contas, centros };
+  }, "view"),
+);
+
+/** Amarra as categorias do SHV às do ContaAzul pelo código. Idempotente. */
+export const sincronizarCategoriasContaAzulFn = createServerFn({ method: "POST" }).handler(() =>
+  handle(async () => {
+    const { sincronizarCategorias } = await import("@/lib/contaazul/catalogo-service");
+    return sincronizarCategorias();
+  }, "edit"),
+);

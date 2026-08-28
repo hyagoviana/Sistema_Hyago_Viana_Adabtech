@@ -18,12 +18,42 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSetTemaContaAzul } from "@/hooks/useFinanceiroCaso";
+import {
+  useCatalogoContaAzul,
+  useSetTemaContaAzul,
+  useSincronizarCategoriasContaAzul,
+} from "@/hooks/useFinanceiroCaso";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTemas } from "@/hooks/useTemas";
 
 export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
   const { data: temas } = useTemas();
   const salvar = useSetTemaContaAzul();
+  const catalogo = useCatalogoContaAzul();
+  const sinc = useSincronizarCategoriasContaAzul();
+
+  async function handleSincronizar() {
+    try {
+      const r = (await sinc.mutateAsync()) as {
+        vinculadas: number;
+        jaVinculadas: number;
+        semParNoContaAzul: Array<{ codigo: string }>;
+      };
+      const faltam = r.semParNoContaAzul.length;
+      toast.success(
+        `${r.vinculadas + r.jaVinculadas} categoria(s) ligada(s) ao ContaAzul` +
+          (faltam ? ` · ${faltam} ainda não existe(m) lá` : ""),
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao sincronizar");
+    }
+  }
 
   const tema = (
     temas as
@@ -76,19 +106,52 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
         preenchidos, toda receita e despesa registrada num caso deste tema já sai classificada.
       </p>
 
+      {/* FN2 (2026-08-28) — o cabeçalho deste arquivo prometia: "se a API permitir
+          listar centro de custo e serviço, troca por um seletor". Permite (são 6
+          centros de custo na conta do escritório), então cumprido: acabou a
+          colagem de ID à mão, que era onde nascia erro silencioso. */}
+      {catalogo.isLoading ? (
+        <p className="text-[12px] text-muted-foreground">Carregando dados do ContaAzul…</p>
+      ) : catalogo.data && catalogo.data.centros.length > 0 ? (
+        <div className="space-y-1 max-w-md">
+          <Label className="text-xs">Centro de custo no ContaAzul</Label>
+          <Select
+            value={ccId || "__sem__"}
+            onValueChange={(v) => {
+              const alvo = catalogo.data?.centros.find((c) => c.id === v);
+              setCcId(v === "__sem__" ? "" : v);
+              setCcNome(alvo?.nome ?? "");
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Escolha o centro de custo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__sem__">— sem centro de custo</SelectItem>
+              {catalogo.data.centros.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Centro de custo — ID no ContaAzul</Label>
+            <Input value={ccId} onChange={(e) => setCcId(e.target.value)} placeholder="cole o ID" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Centro de custo — nome</Label>
+            <Input value={ccNome} onChange={(e) => setCcNome(e.target.value)} />
+          </div>
+        </div>
+      )}
+
+      {/* Serviço segue como texto: a listagem da API devolve os itens sem um nome
+          legível, então um seletor aqui mostraria códigos e seria pior que colar. */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Centro de custo — ID no ContaAzul</Label>
-          <Input value={ccId} onChange={(e) => setCcId(e.target.value)} placeholder="cole o ID" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Centro de custo — nome</Label>
-          <Input
-            value={ccNome}
-            onChange={(e) => setCcNome(e.target.value)}
-            placeholder="ex.: 1% ESF"
-          />
-        </div>
         <div className="space-y-1">
           <Label className="text-xs">Serviço — ID no ContaAzul</Label>
           <Input value={svId} onChange={(e) => setSvId(e.target.value)} placeholder="cole o ID" />
@@ -103,9 +166,17 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
         </div>
       </div>
 
-      <Button size="sm" onClick={handleSalvar} disabled={salvar.isPending}>
-        {salvar.isPending ? "Salvando…" : "Salvar vínculo"}
-      </Button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button size="sm" onClick={handleSalvar} disabled={salvar.isPending}>
+          {salvar.isPending ? "Salvando…" : "Salvar vínculo"}
+        </Button>
+        {/* Amarra as categorias do SHV às do ContaAzul pelo código. É global (não
+            por tema), mas fica aqui porque é onde se configura o ContaAzul — e
+            precisa ser rodado toda vez que o escritório cadastrar categoria nova lá. */}
+        <Button size="sm" variant="outline" onClick={handleSincronizar} disabled={sinc.isPending}>
+          {sinc.isPending ? "Conferindo…" : "Sincronizar categorias"}
+        </Button>
+      </div>
     </div>
   );
 }

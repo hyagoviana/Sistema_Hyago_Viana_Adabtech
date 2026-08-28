@@ -13,6 +13,16 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +33,7 @@ import {
   useExcluirFinEntry,
   useResumoFinanceiroCaso,
   useSetFinEntryStatus,
+  useFazerLancamentoContaAzul,
 } from "@/hooks/useFinanceiroCaso";
 import {
   FIN_STATUS_LABEL,
@@ -67,6 +78,32 @@ export function CaseFinanceiroPanels({
   const { data: entries, isLoading } = useCaseFinEntries(caseId);
   const { data: resumo } = useResumoFinanceiroCaso(caseId);
   const setStatus = useSetFinEntryStatus(caseId);
+  // FN2 — envio ao ContaAzul + a confirmação que ele exige.
+  const lancar = useFazerLancamentoContaAzul(caseId);
+  const [confirmarLancamento, setConfirmarLancamento] = useState<(typeof lista)[number] | null>(
+    null,
+  );
+
+  async function enviarAoContaAzul(entryId: string) {
+    try {
+      const r = (await lancar.mutateAsync(entryId)) as
+        | { lancado: true; registroId: string; jaEstava?: boolean }
+        | { lancado: false; motivo: string };
+      if (r.lancado) {
+        toast.success(
+          r.jaEstava ? "Este lançamento já estava no ContaAzul" : "Lançado no ContaAzul",
+        );
+      } else {
+        // Não é erro do sistema: quase sempre é pendência de cadastro (categoria
+        // que ainda não existe lá, conta não escolhida). A mensagem já vem pronta.
+        toast.warning(r.motivo);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao lançar");
+    } finally {
+      setConfirmarLancamento(null);
+    }
+  }
   const excluir = useExcluirFinEntry(caseId);
 
   const [dialogKind, setDialogKind] = useState<FinKind | null>(null);
@@ -158,18 +195,30 @@ export function CaseFinanceiroPanels({
                   <>
                     {/* Fase 1: a ação registra a intenção. A integração é a FN2 —
                         e o texto do botão precisa deixar isso claro. */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-[11px] h-7"
-                      disabled={setStatus.isPending}
-                      title="Nesta versão, marca como lançado no SHV. A gravação no ContaAzul entra na próxima etapa."
-                      onClick={() =>
-                        mudarStatus(e.id, e.status === "LANCADO" ? "AGUARDANDO" : "LANCADO")
-                      }
-                    >
-                      {e.status === "LANCADO" ? "Revisar lançamento" : "Fazer lançamento"}
-                    </Button>
+                    {/* FN2 (2026-08-28) — agora o botão ESCREVE no ContaAzul.
+                        Já lançado: não oferece de novo (a API do ContaAzul não
+                        tem exclusão — comprovado com id real em 28/08 — então
+                        cada envio é definitivo e um segundo clique só poderia
+                        confundir). Para conferir, o registro está lá. */}
+                    {e.contaazul_registro_id ? (
+                      <span
+                        className="text-[11px] text-muted-foreground px-2"
+                        title={`Registro ${e.contaazul_registro_id} no ContaAzul`}
+                      >
+                        No ContaAzul ✓
+                      </span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-[11px] h-7"
+                        disabled={lancar.isPending || e.status === "DISPENSADO"}
+                        title="Cria o registro no ContaAzul. Só pode ser desfeito por lá."
+                        onClick={() => setConfirmarLancamento(e)}
+                      >
+                        {lancar.isPending ? "Enviando…" : "Fazer lançamento"}
+                      </Button>
+                    )}
                     {e.status !== "DISPENSADO" ? (
                       <Button
                         size="sm"
@@ -347,6 +396,43 @@ export function CaseFinanceiroPanels({
           Espaço reservado. O Thiago ficou de trazer o detalhamento deste item.
         </div>
       </section>
+
+      {/* FN2 — confirmação OBRIGATÓRIA antes de escrever no ContaAzul.
+          Não é zelo excessivo: descobri em 28/08, testando com um registro real,
+          que a API do ContaAzul NÃO tem exclusão de conta a receber. O que sai
+          daqui só é desfeito na mão, lá dentro. Então a pessoa precisa ver o que
+          vai acontecer antes de acontecer. */}
+      <AlertDialog
+        open={confirmarLancamento !== null}
+        onOpenChange={(o) => !o && setConfirmarLancamento(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Lançar no ContaAzul?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Vai criar lá um registro de{" "}
+                  <strong>R$ {centavosToMask(confirmarLancamento?.valor_centavos ?? 0)}</strong>
+                  {confirmarLancamento?.descricao ? ` — "${confirmarLancamento.descricao}"` : ""}.
+                </p>
+                <p className="text-[var(--warning,#a16207)]">
+                  O ContaAzul não permite excluir esse tipo de registro pelo sistema. Se precisar
+                  desfazer, só pela tela do próprio ContaAzul.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmarLancamento && enviarAoContaAzul(confirmarLancamento.id)}
+            >
+              Lançar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {dialogKind && (
         <CaseFinanceiroEntryDialog

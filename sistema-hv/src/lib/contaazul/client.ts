@@ -376,6 +376,27 @@ export async function listCategorias(): Promise<{ itens: CACategoria[] }> {
   return request("GET", "v1/categorias");
 }
 
+export type CACentroCusto = {
+  id: string;
+  nome?: string;
+  codigo?: string;
+  ativo?: boolean;
+  [k: string]: unknown;
+};
+
+/**
+ * Lista os centros de custo (2026-08-28).
+ *
+ * O caminho é `centro-de-custo`, no SINGULAR: `centros-de-custo` e `centros-custo`
+ * devolvem 404. Confirmado contra a base real do escritório, que tem 6.
+ */
+export async function listCentrosDeCusto(): Promise<{
+  itens: CACentroCusto[];
+  itens_totais: number;
+}> {
+  return request("GET", "v1/centro-de-custo");
+}
+
 // ─── Financeiro: contas financeiras + eventos financeiros (contas a receber) ──
 
 export type CAContaFinanceira = {

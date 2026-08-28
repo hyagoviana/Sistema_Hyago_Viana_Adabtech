@@ -29,7 +29,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useCriarFinEntry, useFinCategorias } from "@/hooks/useFinanceiroCaso";
+import {
+  useCatalogoContaAzul,
+  useCriarFinEntry,
+  useFinCategorias,
+} from "@/hooks/useFinanceiroCaso";
 import {
   descricaoPadraoDespesa,
   dividirEmParcelas,
@@ -42,6 +46,18 @@ import {
 import { centavosFromMask, centavosToMask, maskCentavos } from "@/lib/format";
 
 const SEM = "__sem__";
+
+// Lista fixa: a forma é combinada com o cliente ("negociado um a um", Thiago
+// 28/08) e serve de informação no registro, não de configuração do sistema.
+const FORMAS_PAGAMENTO = [
+  "Pix",
+  "Boleto",
+  "Cartão de crédito",
+  "Cartão de débito",
+  "Transferência",
+  "Dinheiro",
+  "Outro",
+] as const;
 
 type Parcela = { numero: number; data_vencimento: string; valor_centavos: number };
 
@@ -63,6 +79,8 @@ export function CaseFinanceiroEntryDialog({
   const criar = useCriarFinEntry(caseId);
   const { data: categorias } = useFinCategorias(kind);
 
+  // Contas reais do ContaAzul (só busca com o diálogo aberto).
+  const catalogo = useCatalogoContaAzul(open);
   const [tipo, setTipo] = useState<string>(tiposDoKind(kind)[0] ?? "");
   const [categoriaId, setCategoriaId] = useState<string>(SEM);
   const [valorTexto, setValorTexto] = useState("");
@@ -230,20 +248,59 @@ export function CaseFinanceiroEntryDialog({
             />
           </div>
 
+          {/* FN2 (2026-08-28) — os dois eram texto livre, e isso quebraria o
+              lançamento: o ContaAzul identifica a conta por um código, não pelo
+              nome. Quem digitasse "Bradesco" veria o envio falhar sem entender.
+              Agora a conta vem da lista real da conta do escritório.
+              A forma de pagamento é lista fixa porque, como o Thiago explicou,
+              "depende do que o cliente tenha optado, é negociado um a um" — ela
+              viaja como observação no registro, para o financeiro ler. */}
           <div className="space-y-1">
             <Label className="text-xs">Forma de pagamento</Label>
-            <Input
-              value={forma}
-              onChange={(e) => setForma(e.target.value)}
-              placeholder="Pix, boleto…"
-            />
+            <Select value={forma || SEM} onValueChange={(v) => setForma(v === SEM ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Como o cliente combinou pagar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM}>—</SelectItem>
+                {FORMAS_PAGAMENTO.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {f}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1">
             <Label className="text-xs">
               {kind === "RECEITA" ? "Conta de recebimento" : "Conta de pagamento"}
             </Label>
-            <Input value={conta} onChange={(e) => setConta(e.target.value)} />
+            {catalogo.isLoading ? (
+              <p className="text-[12px] text-muted-foreground py-2">Carregando contas…</p>
+            ) : catalogo.data && catalogo.data.contas.length > 0 ? (
+              <Select value={conta || SEM} onValueChange={(v) => setConta(v === SEM ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM}>—</SelectItem>
+                  {catalogo.data.contas.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <>
+                <Input value={conta} onChange={(e) => setConta(e.target.value)} />
+                <p className="text-[11px] text-[var(--warning,#a16207)]">
+                  Não consegui ler as contas do ContaAzul agora. Sem escolher da lista, o lançamento
+                  não vai conseguir subir.
+                </p>
+              </>
+            )}
           </div>
 
           {kind === "RECEITA" && (
