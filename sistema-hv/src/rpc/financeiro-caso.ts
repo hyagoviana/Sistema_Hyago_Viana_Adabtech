@@ -173,3 +173,23 @@ export const sincronizarCategoriasContaAzulFn = createServerFn({ method: "POST" 
     return sincronizarCategorias();
   }, "edit"),
 );
+
+/** Categorias do ContaAzul para o seletor de vínculo manual. */
+export const listarCategoriasContaAzulFn = createServerFn({ method: "GET" }).handler(() =>
+  handle(async () => {
+    const { listarCategoriasContaAzul } = await import("@/lib/contaazul/catalogo-service");
+    return listarCategoriasContaAzul().catch(() => []);
+  }, "view"),
+);
+
+/** Amarra à mão categoria do SHV ↔ categoria do ContaAzul (Thiago, 28/08). */
+export const vincularCategoriaContaAzulFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { categoriaId: string; contaazulId: string | null }) =>
+    z.object({ categoriaId: z.string().uuid(), contaazulId: z.string().nullable() }).parse(d),
+  )
+  .handler(({ data }) =>
+    handle(async () => {
+      const { vincularCategoriaManual } = await import("@/lib/contaazul/catalogo-service");
+      return vincularCategoriaManual(data.categoriaId, data.contaazulId);
+    }, "edit"),
+  );

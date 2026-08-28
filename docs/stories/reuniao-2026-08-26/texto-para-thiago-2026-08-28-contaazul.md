@@ -92,3 +92,20 @@ Ah, e aquele grupo gerencial (4.02...) sumiu na sua limpeza, né? Se foi de vez,
 me confirma que eu tiro daqui também.
 
 Abraço!
+
+---
+
+## Resposta sobre o identificador interno (28/08, 14h)
+
+Tem sim, e você matou a charada: cada categoria do Conta Azul tem um
+identificador próprio, e é justamente ele que o sistema usa pra registrar. O
+número no nome só servia pra eu descobrir qual é qual na primeira vez.
+
+Já deixei melhor: agora dá pra amarrar cada categoria na mão, escolhendo da
+lista. Feito isso, vocês podem renomear e mudar os números à vontade lá que a
+ligação continua de pé.
+
+Então **esquece o que falei do número nas despesas** — pode cadastrar com o nome
+que fizer mais sentido pra vocês. Depois eu amarro aqui.
+
+E o 4.02 eu tiro daqui, valeu por confirmar 👍

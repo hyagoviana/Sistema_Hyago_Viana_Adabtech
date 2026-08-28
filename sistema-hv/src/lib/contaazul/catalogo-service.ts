@@ -192,3 +192,72 @@ export async function listarServicosParaSelecao(): Promise<OpcaoCatalogo[]> {
     nome: String(s.nome ?? s.descricao ?? s.name ?? "(sem nome)"),
   }));
 }
+
+// ─── Vínculo MANUAL (2026-08-28) ─────────────────────────────────────────────
+//
+// Pedido do Thiago: "essas categorias financeiras possuem algum identificador
+// interno que a gente pode usar para referenciar por dentro? pq aí ficaria mais
+// certeiro que dependermos dos números / título das categorias".
+//
+// Ele está certo. Cada categoria do ContaAzul tem um `id` próprio e é ELE que o
+// lançamento usa — o número no nome nunca foi a referência, só a forma de
+// DESCOBRIR o par na primeira vez. Com o vínculo manual, o escritório aponta uma
+// vez qual é qual e o nome/número deixa de importar: podem renomear à vontade lá
+// que a ligação continua de pé.
+//
+// O casamento automático por código continua existindo, como atalho para quem
+// segue a numeração. Os dois convivem: o manual tem a palavra final.
+
+/** Lista as categorias do ContaAzul para o seletor de vínculo, já organizadas. */
+export async function listarCategoriasContaAzul(): Promise<
+  Array<{ id: string; nome: string; tipo: string }>
+> {
+  const { itens } = await listCategorias();
+  return (itens ?? [])
+    .map((c) => ({
+      id: c.id,
+      nome: String(c.nome ?? "(sem nome)"),
+      tipo: String((c as { tipo?: string }).tipo ?? ""),
+    }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+/**
+ * Amarra à mão uma categoria do SHV a uma do ContaAzul.
+ *
+ * `contaazulId = null` desfaz o vínculo. Recusa um id que já pertence a OUTRA
+ * categoria: dois lançamentos diferentes caindo na mesma categoria de lá seria
+ * erro contábil silencioso, e é exatamente o tipo de coisa que ninguém percebe
+ * até fechar o mês.
+ */
+export async function vincularCategoriaManual(
+  categoriaId: string,
+  contaazulId: string | null,
+): Promise<{ ok: true } | { ok: false; motivo: string }> {
+  const sb = getSupabaseAdmin();
+
+  if (contaazulId) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: emUso } = await (sb as any)
+      .from("system_fin_categorias")
+      .select("codigo, nome")
+      .eq("contaazul_id", contaazulId)
+      .neq("id", categoriaId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (emUso) {
+      return {
+        ok: false,
+        motivo: `essa categoria do ContaAzul já está ligada a "${emUso.codigo} ${emUso.nome}"`,
+      };
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (sb as any)
+    .from("system_fin_categorias")
+    .update({ contaazul_id: contaazulId, updated_at: new Date().toISOString() })
+    .eq("id", categoriaId);
+
+  return error ? { ok: false, motivo: error.message } : { ok: true };
+}
