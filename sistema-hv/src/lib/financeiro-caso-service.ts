@@ -36,13 +36,15 @@ export interface FinCategoria {
   caminho: string;
   /** Só as folhas são selecionáveis — é nelas que o ContaAzul lança. */
   folha: boolean;
+  /** FN2 — id da categoria correspondente no ContaAzul (null = ainda não amarrada). */
+  contaazul_id: string | null;
 }
 
 export async function listCategorias(kind?: FinKind | null): Promise<FinCategoria[]> {
   const sb = getSupabaseAdmin();
   let q = sb
     .from("system_fin_categorias")
-    .select("id, kind, codigo, nome, parent_id, reembolsavel")
+    .select("id, kind, codigo, nome, parent_id, reembolsavel, contaazul_id")
     .eq("organization_id", DEFAULT_ORG)
     .eq("active", true)
     .is("deleted_at", null)
@@ -75,6 +77,9 @@ export async function listCategorias(kind?: FinKind | null): Promise<FinCategori
       reembolsavel: c.reembolsavel === true,
       caminho: partes.join(" › "),
       folha: !temFilho.has(c.id as string),
+      // Sem este campo a tela de Integrações mostrava "0 de 13" mesmo com os
+      // vínculos gravados: ela não tinha como saber que existiam.
+      contaazul_id: ((c as { contaazul_id?: string | null }).contaazul_id ?? null) as string | null,
     };
   });
 }

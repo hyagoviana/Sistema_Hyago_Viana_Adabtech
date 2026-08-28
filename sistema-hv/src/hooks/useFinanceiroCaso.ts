@@ -6,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   fazerLancamentoContaAzulFn,
+  listarCategoriasContaAzulFn,
+  vincularCategoriaContaAzulFn,
   listarCatalogoContaAzulFn,
   sincronizarCategoriasContaAzulFn,
   atualizarFinParcelaFn,
@@ -153,6 +155,27 @@ export function useSincronizarCategoriasContaAzul() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => fn(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fin-categorias"] }),
+  });
+}
+
+/** Categorias do ContaAzul para o seletor de vínculo (tela de Integrações). */
+export function useCategoriasContaAzul() {
+  const fn = useServerFn(listarCategoriasContaAzulFn);
+  return useQuery({
+    queryKey: ["contaazul-categorias"],
+    queryFn: () => fn(),
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  });
+}
+
+/** Amarra à mão uma categoria do SHV a uma do ContaAzul. */
+export function useVincularCategoriaContaAzul() {
+  const fn = useServerFn(vincularCategoriaContaAzulFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { categoriaId: string; contaazulId: string | null }) => fn({ data: vars }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["fin-categorias"] }),
   });
 }

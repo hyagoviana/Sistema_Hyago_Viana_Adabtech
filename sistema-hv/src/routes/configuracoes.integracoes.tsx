@@ -11,6 +11,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plug } from "lucide-react";
 
 import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
+import { ContaAzulCategoriasCard } from "@/components/settings/ContaAzulCategoriasCard";
 import { ProjurisCredsCard } from "@/components/settings/ProjurisCredsCard";
 import { usePodeEditar } from "@/hooks/usePermissions";
 
@@ -46,6 +47,10 @@ function IntegracoesPage() {
             As senhas e tokens são gravados de forma que a tela nunca os lê de volta — ela só sabe
             se já existe um valor guardado. Deixar o campo em branco mantém o que está salvo.
           </p>
+
+          {/* De-para das categorias com o ContaAzul (Thiago, 28/08). Aqui e não na
+              tela do tema: o vínculo é do SISTEMA inteiro, não de um tema. */}
+          <ContaAzulCategoriasCard podeEditar={podeEditar} />
         </div>
       )}
     </div>
