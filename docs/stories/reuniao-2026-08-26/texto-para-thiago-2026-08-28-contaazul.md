@@ -66,3 +66,29 @@ por lá vocês vão ver as duas coisas misturadas. Se um dia quiserem dar uma
 limpada, é só por aí mesmo.
 
 Abraço!
+
+---
+
+## Resposta — despesas precisam de código (28/08, tarde)
+
+Boa, Thiago! Já peguei aqui as de sucumbência que você cadastrou, entraram
+certinho. E o sistema agora acompanha sozinho quando você renomeia alguma.
+
+Só uma coisa importante antes do pessoal cadastrar as despesas hoje: **elas
+precisam ter o número na frente do nome**, igual às receitas. Assim:
+
+- 10.01.01 - Custas processuais, taxas e emolumentos (reembolsáveis)
+- 10.01.02 - Custas processuais, taxas e emolumentos (não reembolsáveis)
+- 10.02.01 - Diligências (reembolsáveis)
+- 10.02.02 - Diligências (não reembolsáveis)
+
+É por esse número que o sistema encontra a categoria certa lá — sem ele, as
+despesas não conseguem ser lançadas. (Os números podem ser outros, se preferir,
+só preciso saber quais são.)
+
+O agrupador "Categoria teste despesas" pode ficar sem número, sem problema.
+
+Ah, e aquele grupo gerencial (4.02...) sumiu na sua limpeza, né? Se foi de vez,
+me confirma que eu tiro daqui também.
+
+Abraço!

@@ -43,12 +43,14 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
       const r = (await sinc.mutateAsync()) as {
         vinculadas: number;
         jaVinculadas: number;
+        desvinculadas: number;
         semParNoContaAzul: Array<{ codigo: string }>;
       };
       const faltam = r.semParNoContaAzul.length;
       toast.success(
         `${r.vinculadas + r.jaVinculadas} categoria(s) ligada(s) ao ContaAzul` +
-          (faltam ? ` · ${faltam} ainda não existe(m) lá` : ""),
+          (faltam ? ` · ${faltam} ainda não existe(m) lá` : "") +
+          (r.desvinculadas ? ` · ${r.desvinculadas} vínculo(s) solto(s) (sumiram de lá)` : ""),
       );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao sincronizar");

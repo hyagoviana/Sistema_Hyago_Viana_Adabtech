@@ -33,6 +33,8 @@ export function codigoDoNome(nome: string): string | null {
 export type ResultadoDePara = {
   vinculadas: number;
   jaVinculadas: number;
+  desvinculadas: number;
+  renomeadas: number;
   semParNoContaAzul: Array<{ codigo: string; nome: string }>;
   soNoContaAzul: Array<{ codigo: string; nome: string }>;
 };
@@ -65,8 +67,16 @@ export async function sincronizarCategorias(): Promise<ResultadoDePara> {
 
   let vinculadas = 0;
   let jaVinculadas = 0;
+  let desvinculadas = 0;
+  let renomeadas = 0;
   const semPar: Array<{ codigo: string; nome: string }> = [];
   const usados = new Set<string>();
+
+  // Todo id que existe HOJE do outro lado. Serve para detectar vínculo órfão:
+  // categoria apagada ou renomeada no ContaAzul deixa o SHV apontando para o
+  // nada, e o lançamento falharia na hora de usar. Aconteceu em 28/08, quando o
+  // Thiago reorganizou o plano de contas e as 4 despesas 10.x sumiram de lá.
+  const idsExistentes = new Set((itens ?? []).map((c) => c.id));
 
   for (const loc of (locais ?? []) as Array<{
     id: string;
@@ -77,19 +87,51 @@ export async function sincronizarCategorias(): Promise<ResultadoDePara> {
     const alvo = porCodigo.get(loc.codigo);
     if (!alvo) {
       semPar.push({ codigo: loc.codigo, nome: loc.nome });
+      // Perdeu o par: solta o vínculo velho em vez de deixar apontando para o
+      // que não existe mais. Melhor um "falta cadastrar" claro do que um erro
+      // obscuro no meio de um lançamento.
+      if (loc.contaazul_id && !idsExistentes.has(loc.contaazul_id)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (sb as any)
+          .from("system_fin_categorias")
+          .update({ contaazul_id: null, updated_at: new Date().toISOString() })
+          .eq("id", loc.id);
+        desvinculadas++;
+      }
       continue;
     }
     usados.add(loc.codigo);
-    if (loc.contaazul_id === alvo.id) {
+
+    // O ContaAzul é a fonte da verdade do NOME: é lá que o escritório mantém o
+    // plano de contas, e quem confere relatório lê o nome de lá. Quando o Thiago
+    // renomeia (em 28/08, "Recuperados / Acordo / Renegociação" virou
+    // "Renegociação / acordo"), o SHV acompanha em vez de mostrar o nome velho.
+    // O código continua sendo a amarra — só a etiqueta segue o outro lado.
+    const nomeLa = alvo.nome.replace(/^[\d.]+\s*[-–]\s*/, "").trim();
+    const precisaRenomear = nomeLa && nomeLa !== loc.nome;
+
+    if (loc.contaazul_id === alvo.id && !precisaRenomear) {
       jaVinculadas++;
       continue;
     }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (sb as any)
       .from("system_fin_categorias")
-      .update({ contaazul_id: alvo.id, updated_at: new Date().toISOString() })
+      .update({
+        contaazul_id: alvo.id,
+        ...(precisaRenomear ? { nome: nomeLa } : {}),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", loc.id);
-    vinculadas++;
+
+    if (loc.contaazul_id === alvo.id) {
+      jaVinculadas++;
+      renomeadas++;
+    } else {
+      vinculadas++;
+      if (precisaRenomear) renomeadas++;
+    }
   }
 
   // O outro lado da conferência: código que existe lá e não existe aqui. Não é
@@ -99,7 +141,14 @@ export async function sincronizarCategorias(): Promise<ResultadoDePara> {
     .filter(([cod]) => !usados.has(cod))
     .map(([codigo, v]) => ({ codigo, nome: v.nome }));
 
-  return { vinculadas, jaVinculadas, semParNoContaAzul: semPar, soNoContaAzul: soNoCA };
+  return {
+    vinculadas,
+    jaVinculadas,
+    desvinculadas,
+    renomeadas,
+    semParNoContaAzul: semPar,
+    soNoContaAzul: soNoCA,
+  };
 }
 
 // ─── Listas para os seletores da tela ────────────────────────────────────────
