@@ -190,7 +190,7 @@ export function Sidebar() {
     .filter((it) => path === it.to || path.startsWith(it.to + "/"))
     .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
-  const { session, role } = useAuth();
+  const { session, role, profile } = useAuth();
   const { data: perms } = useMyModulePerms();
   const { data: casos } = useCasesList();
   // ITEM 1 (2026-07-07) — o badge de "Assinaturas" deve refletir EXATAMENTE a
@@ -221,7 +221,15 @@ export function Sidebar() {
     realCounts["/comercial/assinaturas"] = comercialCases.length;
   }
   if (tasks) {
-    realCounts["/tarefas"] = tasks.filter((t) => isTaskAberta(t.status)).length;
+    // Doc 31.08 — a tela de Tarefas passou a abrir só com as tarefas do próprio
+    // usuário ("cada colaborador deve estar visualmente vinculado a algo que
+    // deveria fazer"). O contador tem que contar a MESMA coisa: com o total do
+    // escritório aqui, o menu dizia 51 e a tela abria em 0 — e quem visse isso
+    // ia procurar tarefa que não é dele.
+    const minhas = profile?.id
+      ? tasks.filter((t) => (t as { assignee_id?: string | null }).assignee_id === profile.id)
+      : tasks;
+    realCounts["/tarefas"] = minhas.filter((t) => isTaskAberta(t.status)).length;
   }
   if (excTotal > 0) {
     realCounts["/controladoria"] = excTotal;
