@@ -25,6 +25,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { CriarProcessoProjurisDialog } from "@/components/cases/CriarProcessoProjurisDialog";
 import { Eyebrow } from "@/components/hv/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,8 @@ function CasoJudicial() {
   const enviarInicial = useEnviarInicialParaDistribuicao();
 
   const [linkOpen, setLinkOpen] = useState(false); // M5 — dialog de vincular/editar
+  // 31/08 — cadastrar o processo LÁ a partir daqui (primeira escrita de processo).
+  const [criarOpen, setCriarOpen] = useState(false);
 
   const [andamentosOpen, setAndamentosOpen] = useState(false);
   const [andamentosLimit, setAndamentosLimit] = useState(30);
@@ -219,12 +222,21 @@ function CasoJudicial() {
             Nenhum processo ProJuris vinculado a este caso.
           </p>
           <p className="text-[12px] text-muted-foreground mt-1">
-            O vínculo (código do processo) é preenchido pela controladoria/importação.
+            Se o processo já existe lá, vincule pelo código. Se ainda não existe, dá para
+            cadastrá-lo no ProJuris a partir deste caso.
           </p>
           {podeEditar && (
-            <Button size="sm" className="mt-4" onClick={() => setLinkOpen(true)}>
-              <Link2 size={14} className="mr-1.5" /> Vincular ao ProJuris
-            </Button>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setLinkOpen(true)}>
+                <Link2 size={14} className="mr-1.5" /> Vincular a um existente
+              </Button>
+              {/* 31/08 (Thiago): "é possível cadastrarmos novo processo judicial no
+                  ProJuris, direto pela API através do SHV?" — é este botão. O diálogo
+                  mostra o que será enviado antes de gravar. */}
+              <Button size="sm" onClick={() => setCriarOpen(true)}>
+                <Plus size={14} className="mr-1.5" /> Cadastrar no ProJuris
+              </Button>
+            </div>
           )}
         </div>
       ) : (
@@ -322,15 +334,24 @@ function CasoJudicial() {
         </>
       )}
 
-      {/* M5 — vincular/editar o identificador do processo no ProJuris. */}
+      {/* M5 — vincular/editar o identificador do processo no ProJuris.
+          31/08 — e cadastrar um NOVO processo lá a partir deste caso. */}
       {podeEditar && (
-        <ProjurisLinkDialog
-          caseId={id}
-          open={linkOpen}
-          onOpenChange={setLinkOpen}
-          codigoAtual={judicial?.codigoProcesso ?? null}
-          numeroAtual={judicial?.numeroProcesso ?? null}
-        />
+        <>
+          <CriarProcessoProjurisDialog
+            open={criarOpen}
+            onOpenChange={setCriarOpen}
+            caseId={id}
+            caseCode={caso?.case_code ?? ""}
+          />
+          <ProjurisLinkDialog
+            caseId={id}
+            open={linkOpen}
+            onOpenChange={setLinkOpen}
+            codigoAtual={judicial?.codigoProcesso ?? null}
+            numeroAtual={judicial?.numeroProcesso ?? null}
+          />
+        </>
       )}
 
       {/* Andamentos com scroll + limite (G5). */}
