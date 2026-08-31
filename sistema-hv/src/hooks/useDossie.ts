@@ -24,9 +24,15 @@ export type WorkItemFilters = {
   caseId?: string | null;
   status?: string | null;
   search?: string | null;
+  // Doc 31.08 — filtros da tela de Tarefas.
+  temaId?: string | null;
+  taskTypeId?: string | null;
+  priority?: string | null;
+  /** Padrão false: checklist ficou só na página do caso (doc 31.08). */
+  incluirChecklist?: boolean;
 };
 
-// Agregação "Tarefas": tarefas + itens de checklist do colaborador (com RBAC).
+// Agregação "Tarefas": por padrão SÓ tarefas (com RBAC); checklist só se pedido.
 export function useWorkItems(filters: WorkItemFilters) {
   const fn = useServerFn(listWorkItemsFn);
   return useQuery({

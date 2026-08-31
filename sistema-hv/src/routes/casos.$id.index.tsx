@@ -852,13 +852,11 @@ function CasoDetalhe() {
           {podeVerAuditoria && (
             <>
               <OrnamentalDivider />
-              <section>
-                <Eyebrow>Auditoria deste caso</Eyebrow>
-                <p className="text-[12px] text-muted-foreground mb-3">
-                  Quem mexeu no quê — inclui as alterações de campo, que saíram da linha do tempo.
-                </p>
-                <AuditTable caseId={caso.id} compact />
-              </section>
+              {/* 31.08 (Thiago) — "o painel de auditoria do caso, ser uma opção
+                  sim/não. Assim ele aparece fechado, e caso tenhamos interesse
+                  vamos abrir para ver o detalhamento." Nasce FECHADO; a tabela só
+                  monta (e só consulta) quando alguém abre. */}
+              <CaseAuditSection caseId={caso.id} />
             </>
           )}
         </>
@@ -1060,5 +1058,37 @@ function CasoDetalhe() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+// 31.08 — auditoria do caso em painel recolhível (nasce fechado).
+function CaseAuditSection({ caseId }: { caseId: string }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        className="flex w-full items-center gap-2 text-left group"
+        aria-expanded={aberto}
+      >
+        <ChevronDown
+          size={15}
+          className={`text-[var(--ink-400)] transition-transform ${aberto ? "" : "-rotate-90"}`}
+        />
+        <Eyebrow>Auditoria deste caso</Eyebrow>
+        {!aberto && (
+          <span className="text-[11.5px] text-muted-foreground">— clique para abrir</span>
+        )}
+      </button>
+      {aberto && (
+        <div className="mt-3">
+          <p className="text-[12px] text-muted-foreground mb-3">
+            Quem mexeu no quê — inclui as alterações de campo, que saíram da linha do tempo.
+          </p>
+          <AuditTable caseId={caseId} compact />
+        </div>
+      )}
+    </section>
   );
 }

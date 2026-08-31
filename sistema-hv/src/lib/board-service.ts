@@ -16,6 +16,7 @@
 
 import { MACRO_OP_LABELS, type MacroOp } from "./cases/constants";
 import { instanciarChecklist } from "./checklist-service";
+import { attachOpenTaskDueDate } from "./dossie-service";
 import { getSupabaseAdmin } from "./supabase/server";
 import { getVisibleCaseIds } from "./visibility";
 
@@ -1011,9 +1012,12 @@ export async function listCasesByBoard(boardId: string, viewerUserId?: string) {
     .order("created_at", { ascending: false });
   if (cErr) throw new BoardServiceError(cErr.message, 500);
 
-  return (cases ?? []).map((c) => ({
-    ...c,
-    board_stage_slug: slugByCase.get(c.id) ?? null,
-    board_entered_at: enteredByCase.get(c.id) ?? null,
-  }));
+  // Doc 31.08 — mesmo selo de prazo dos cards do kanban principal (vem das tarefas).
+  return attachOpenTaskDueDate(
+    (cases ?? []).map((c) => ({
+      ...c,
+      board_stage_slug: slugByCase.get(c.id) ?? null,
+      board_entered_at: enteredByCase.get(c.id) ?? null,
+    })),
+  );
 }

@@ -63,12 +63,21 @@ const workItemsSchema = z
     caseId: z.string().uuid().nullish(),
     status: z.string().nullish(),
     search: z.string().nullish(),
+    // Doc 31.08 — filtros novos da tela de Tarefas (tema / tipo / prioridade).
+    temaId: z.string().uuid().nullish(),
+    taskTypeId: z.string().uuid().nullish(),
+    priority: z.string().nullish(),
+    incluirChecklist: z.boolean().nullish(),
   })
   .default({});
 
 export const listWorkItemsFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => workItemsSchema.parse(d ?? {}))
-  .handler(async ({ data }) => handle((userId) => listWorkItems(userId, data)));
+  .handler(async ({ data }) =>
+    handle((userId) =>
+      listWorkItems(userId, { ...data, incluirChecklist: data.incluirChecklist ?? false }),
+    ),
+  );
 
 // ---------------------------------------------------------------- Tarefas ----
 export const listCaseTasksFn = createServerFn({ method: "GET" })
@@ -115,11 +124,22 @@ export const setCaseTaskStatusFn = createServerFn({ method: "POST" })
       // TK1: conclusão são as DUAS (com e sem sucesso). CANCELADA não dispara —
       // cancelar não é terminar, e automação em cima de tarefa cancelada é bug.
       if (task?.id && isTaskConcluida(data.status)) {
-        const taskTypeId = (task as { task_type_id?: string | null }).task_type_id ?? null;
+        const t = task as {
+          task_type_id?: string | null;
+          created_by_workflow_id?: string | null;
+          created_by_workflow_action?: number | null;
+        };
         await runWorkflowsFor(
           task.case_id,
           "task_completed",
-          { taskId: task.id, taskTypeId },
+          {
+            taskId: task.id,
+            taskTypeId: t.task_type_id ?? null,
+            // Doc 31.08 — encadeamento: se esta tarefa nasceu de uma acao de
+            // workflow, concluir dispara as acoes `on_complete` daquela acao.
+            taskCreatedByWorkflowId: t.created_by_workflow_id ?? null,
+            taskCreatedByWorkflowAction: t.created_by_workflow_action ?? null,
+          },
           userId,
         );
       }

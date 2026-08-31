@@ -2284,6 +2284,8 @@ export type Database = {
           task_type_id: string | null;
           // W1 (2026-08-26) — qual workflow criou a tarefa (NULL = criada por gente).
           created_by_workflow_id: string | null;
+          // 31.08 — índice da AÇÃO da regra que criou (caminho de volta do encadeamento).
+          created_by_workflow_action: number | null;
           // 2026-08-27 — espelho no ProJuris. `projuris_codigo_tarefa` é o
           // codigoTarefaEvento; NULL = tarefa que só existe no SHV.
           projuris_codigo_tarefa: string | null;
@@ -2308,6 +2310,7 @@ export type Database = {
           deleted_at?: string | null;
           task_type_id?: string | null;
           created_by_workflow_id?: string | null;
+          created_by_workflow_action?: number | null;
           projuris_codigo_tarefa?: string | null;
           projuris_sync_at?: string | null;
           projuris_sync_error?: string | null;

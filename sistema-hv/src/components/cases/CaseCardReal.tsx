@@ -21,6 +21,12 @@ type Props = {
     inadimplente: boolean;
     proximo_passo: string | null;
     client_name: string;
+    /**
+     * Doc 31.08 — prazo da tarefa ABERTA mais urgente do caso (menor due_date).
+     * NULL = nenhuma tarefa aberta com prazo → o card não mostra contagem, que é
+     * o estado normal de um caso em dia. Vem de attachOpenTaskDueDate.
+     */
+    task_due_date?: string | null;
   };
   compact?: boolean;
   // ITEM 5 (2026-07-07) — o board por onde o card é visto. O botão "mover" abre o
@@ -28,18 +34,41 @@ type Props = {
   kind?: "op" | "fin";
 };
 
-function daysSince(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+/**
+ * Dias entre hoje e uma data ISO (YYYY-MM-DD), pelo CALENDÁRIO — não por 24h
+ * corridas. Positivo = faltam N dias; 0 = vence hoje; negativo = N dias de atraso.
+ * Comparar meia-noite local dos dois lados evita o clássico "vence hoje mas já
+ * mostra 1 dia de atraso" às 00h30.
+ */
+function daysUntilDue(ymd: string): number {
+  const [a, m, d] = ymd.slice(0, 10).split("-").map(Number);
+  const alvo = new Date(a, (m ?? 1) - 1, d ?? 1);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return Math.round((alvo.getTime() - hoje.getTime()) / 86400000);
 }
 
 export function CaseCardReal({ caso, compact = true, kind = "op" }: Props) {
   const [moveOpen, setMoveOpen] = useState(false);
   const isFin = kind === "fin";
-  const dias = daysSince(caso.status_changed_at);
-  const tipoLabel = caso.caso_pasta_nome
-    ?? CASE_TYPE_LABELS[caso.case_type as CaseType]
-    ?? caso.case_type;
-  const tone = dias > 30 ? "danger" : dias > 15 ? "warning" : "success";
+  const tipoLabel =
+    caso.caso_pasta_nome ?? CASE_TYPE_LABELS[caso.case_type as CaseType] ?? caso.case_type;
+
+  // Doc 31.08 (Thiago) — a contagem do card é a da TAREFA, não a de tempo parado
+  // na etapa: "se não existir tarefa = sem prazo = sem contagem visual aqui".
+  // Em prazo → quantos dias faltam. Em atraso → há quantos dias venceu (vermelho).
+  const dias = caso.task_due_date ? daysUntilDue(caso.task_due_date) : null;
+  const atrasada = dias !== null && dias < 0;
+  const prazoTone =
+    dias === null ? "success" : atrasada ? "danger" : dias <= 3 ? "warning" : "success";
+  const prazoLabel =
+    dias === null
+      ? null
+      : atrasada
+        ? `${Math.abs(dias)}d atraso`
+        : dias === 0
+          ? "hoje"
+          : `${dias}d`;
 
   function stopAll(e: React.MouseEvent | React.PointerEvent) {
     e.preventDefault();
@@ -64,10 +93,23 @@ export function CaseCardReal({ caso, compact = true, kind = "op" }: Props) {
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
           <Badge tone="gold">{tipoLabel}</Badge>
-          <span className="text-[11px] text-[var(--ink-500)] inline-flex items-center gap-1 shrink-0 tabular">
-            <StatusDot tone={tone} />
-            {dias}d
-          </span>
+          {prazoLabel && (
+            <span
+              className="text-[11px] inline-flex items-center gap-1 shrink-0 tabular"
+              style={{
+                color: atrasada ? "var(--danger)" : "var(--ink-500)",
+                fontWeight: atrasada ? 600 : undefined,
+              }}
+              title={
+                atrasada
+                  ? "Tarefa vencida — dias de atraso"
+                  : "Dias até o vencimento da próxima tarefa"
+              }
+            >
+              <StatusDot tone={prazoTone} />
+              {prazoLabel}
+            </span>
+          )}
         </div>
         {!compact && caso.proximo_passo && (
           <div className="mt-3 pt-3 border-t border-[var(--border)] text-[11px] text-muted-foreground line-clamp-2">

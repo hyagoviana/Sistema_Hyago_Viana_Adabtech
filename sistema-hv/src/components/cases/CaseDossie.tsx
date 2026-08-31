@@ -244,7 +244,7 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
               const overdue = daysLeft !== null && daysLeft < 0 && !done;
               const soon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3 && !done;
               return (
-                <li key={t.id} className="flex items-center gap-3 py-3">
+                <li key={t.id} className="flex items-start gap-3 py-3 flex-wrap">
                   <button
                     title={done ? "Reabrir" : "Concluir"}
                     onClick={() =>
@@ -263,7 +263,7 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                   >
                     {done && <Check size={13} className="text-white" />}
                   </button>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[200px]">
                     <div
                       className={`text-[14px] text-[var(--navy)] ${done ? "line-through opacity-50" : ""}`}
                     >
@@ -271,7 +271,7 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                     </div>
                     <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground mt-0.5 flex-wrap">
                       {t.assignee_name && (
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
                           <User size={10} /> {t.assignee_name}
                         </span>
                       )}
@@ -292,54 +292,62 @@ function TasksSection({ caseId, canEdit }: { caseId: string; canEdit: boolean })
                       )}
                     </div>
                   </div>
-                  {t.task_type_id && nomeDoTipo.get(t.task_type_id) && (
-                    <Badge tone="neutral">{nomeDoTipo.get(t.task_type_id)}</Badge>
-                  )}
-                  {/* Espelho no ProJuris (2026-08-27) — responde à pergunta do
-                      Thiago: "como a gente sabe qual é a tarefa que existe aqui e
-                      também existe lá?". Quem tem selo existe nos dois lados;
-                      quem não tem só existe no SHV, e isso é o normal. */}
-                  {t.projuris_codigo_tarefa && (
-                    <span
-                      title={
-                        t.projuris_sync_error
-                          ? `Não refletiu no ProJuris: ${t.projuris_sync_error}`
-                          : "Esta tarefa também existe no ProJuris — concluir aqui reflete lá."
+                  {/* 31.08 (Thiago: "as vezes esse da sobreposicao") — os selos e o
+                      seletor de situacao vivem num bloco proprio, que QUEBRA para a
+                      linha de baixo em vez de escorregar por cima do nome/responsavel
+                      quando a largura aperta. */}
+                  <div className="flex items-center gap-2 flex-wrap shrink-0 ml-auto">
+                    {t.task_type_id && nomeDoTipo.get(t.task_type_id) && (
+                      <Badge tone="neutral">{nomeDoTipo.get(t.task_type_id)}</Badge>
+                    )}
+                    {/* Espelho no ProJuris (2026-08-27) — responde à pergunta do
+                        Thiago: "como a gente sabe qual é a tarefa que existe aqui e
+                        também existe lá?". Quem tem selo existe nos dois lados;
+                        quem não tem só existe no SHV, e isso é o normal. */}
+                    {t.projuris_codigo_tarefa && (
+                      <span
+                        title={
+                          t.projuris_sync_error
+                            ? `Não refletiu no ProJuris: ${t.projuris_sync_error}`
+                            : "Esta tarefa também existe no ProJuris — concluir aqui reflete lá."
+                        }
+                      >
+                        <Badge tone={t.projuris_sync_error ? "warning" : "success"}>
+                          {t.projuris_sync_error ? "ProJuris ⚠" : "ProJuris"}
+                        </Badge>
+                      </span>
+                    )}
+                    <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
+                      {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}
+                    </Badge>
+                    {/* TK1 — os 4 desfechos do ProJuris. O checkbox continua para o
+                        caso comum; aqui é onde se registra "sem sucesso"/"cancelada". */}
+                    <Select
+                      value={
+                        (TASK_STATUSES as readonly string[]).includes(t.status) ? t.status : ""
                       }
+                      onValueChange={(v) => setStatus.mutate({ id: t.id, status: v })}
+                      disabled={!canEdit}
                     >
-                      <Badge tone={t.projuris_sync_error ? "warning" : "success"}>
-                        {t.projuris_sync_error ? "ProJuris ⚠" : "ProJuris"}
-                      </Badge>
-                    </span>
-                  )}
-                  <Badge tone={PRIORITY_TONE[t.priority] ?? "neutral"}>
-                    {t.priority.charAt(0) + t.priority.slice(1).toLowerCase()}
-                  </Badge>
-                  {/* TK1 — os 4 desfechos do ProJuris. O checkbox continua para o
-                      caso comum; aqui é onde se registra "sem sucesso"/"cancelada". */}
-                  <Select
-                    value={(TASK_STATUSES as readonly string[]).includes(t.status) ? t.status : ""}
-                    onValueChange={(v) => setStatus.mutate({ id: t.id, status: v })}
-                    disabled={!canEdit}
-                  >
-                    <SelectTrigger className="h-7 w-[190px] text-[12px] shrink-0">
-                      <SelectValue placeholder={t.status} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TASK_STATUSES.map((st) => (
-                        <SelectItem key={st} value={st} className="text-[12px]">
-                          {TASK_STATUS_LABEL[st]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={() => del.mutate(t.id)}
-                    title="Excluir"
-                    className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                      <SelectTrigger className="h-7 w-[190px] text-[12px] shrink-0">
+                        <SelectValue placeholder={t.status} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TASK_STATUSES.map((st) => (
+                          <SelectItem key={st} value={st} className="text-[12px]">
+                            {TASK_STATUS_LABEL[st]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <button
+                      onClick={() => del.mutate(t.id)}
+                      title="Excluir"
+                      className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </li>
               );
             })}

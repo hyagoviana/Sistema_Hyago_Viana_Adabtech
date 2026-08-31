@@ -4,6 +4,7 @@
 // a bifurcação atual intacta (ADR-007).
 
 import { countChecklistItemsForStage, instanciarChecklist } from "./checklist-service";
+import { attachOpenTaskDueDate } from "./dossie-service";
 import { GLOBAL_FUNNEL_SERVICE_TYPE_ID } from "./cases/constants";
 import { deleteFile } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";

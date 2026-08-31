@@ -36,6 +36,7 @@ import { useStages } from "@/hooks/usePipeline";
 import { useBoards, useBoardStages } from "@/hooks/useBoards";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { TaskTypePicker } from "@/components/hv/TaskTypePicker";
+import { useAssignableUsers } from "@/hooks/useUsers";
 
 export const Route = createFileRoute("/configuracoes/workflows")({
   component: WorkflowsPage,
@@ -52,6 +53,13 @@ type Action = {
   // AJ3 (27/08) — em qual kanban a ação move: "op" (padrão) | "fin" | boardId.
   // Ausente = "op", para que toda regra criada antes disto continue igual.
   board_key?: string;
+  // Doc 31.08 — "criar tarefa" vinculada a um TIPO do catálogo e atribuída a
+  // alguém. Ambos opcionais: sem eles a tarefa nasce como antes (sem tipo, sem dono).
+  task_type_id?: string | null;
+  assignee_id?: string | null;
+  // Doc 31.08 — WORKFLOW SUCESSIVO: ações que rodam quando a tarefa criada por
+  // ESTA ação for concluída. Um nível só (a sub-ação não encadeia de novo).
+  on_complete?: Action[];
 };
 
 const TRIGGER_LABELS: Record<TriggerType, string> = {
@@ -169,6 +177,199 @@ function MoveStageActionFields({
         />
         <p className="text-[11px] text-muted-foreground">Move em {nomeKanban}.</p>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Doc 31.08 (Thiago) — a ação "Criar tarefa" deixou de ser só título + prazo.
+// Agora ela também escolhe o TIPO (catálogo do sistema) e o RESPONSÁVEL, e pode
+// carregar um WORKFLOW SUCESSIVO: "quando a tarefa criada por esta ação for
+// concluída, faça X". As ações sucessivas ficam DENTRO da ação (`on_complete`),
+// não como uma regra separada — é o que amarra a cadeia àquela tarefa concreta.
+// ---------------------------------------------------------------------------
+
+const SEM_RESPONSAVEL = "__ninguem__";
+
+type ActionFieldsCommon = {
+  kanbanOptions: Array<{ key: string; label: string }>;
+  opStages: Array<{ slug: string; label: string }> | undefined;
+  finStages: Array<{ slug: string; label: string }> | undefined;
+};
+
+/** Campos de UMA ação, escolhidos pelo tipo. Reusado no nível 1 e no encadeado. */
+function ActionBody({
+  action,
+  onChange,
+  allowChain,
+  ...common
+}: ActionFieldsCommon & {
+  action: Action;
+  onChange: (patch: Partial<Action>) => void;
+  /** Só o nível 1 oferece encadeamento (evita cadeia infinita). */
+  allowChain: boolean;
+}) {
+  if (action.type === "write_comment") {
+    return (
+      <Textarea
+        value={action.body ?? ""}
+        onChange={(e) => onChange({ body: e.target.value })}
+        placeholder="Texto do comentário automático…"
+        rows={2}
+      />
+    );
+  }
+  if (action.type === "create_task") {
+    return (
+      <CreateTaskActionFields
+        action={action}
+        onChange={onChange}
+        allowChain={allowChain}
+        {...common}
+      />
+    );
+  }
+  return (
+    <MoveStageActionFields
+      boardKey={action.board_key ?? "op"}
+      stageSlug={action.to_stage_slug ?? ""}
+      onChange={onChange}
+      kanbanOptions={common.kanbanOptions}
+      opStages={common.opStages}
+      finStages={common.finStages}
+    />
+  );
+}
+
+function CreateTaskActionFields({
+  action,
+  onChange,
+  allowChain,
+  ...common
+}: ActionFieldsCommon & {
+  action: Action;
+  onChange: (patch: Partial<Action>) => void;
+  allowChain: boolean;
+}) {
+  const { data: users } = useAssignableUsers();
+  const chain = action.on_complete ?? [];
+
+  function patchChain(i: number, patch: Partial<Action>) {
+    onChange({ on_complete: chain.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) });
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input
+          value={action.title ?? ""}
+          onChange={(e) => onChange({ title: e.target.value })}
+          placeholder="Título da tarefa"
+        />
+        <Input
+          type="number"
+          value={action.due_days ?? ""}
+          onChange={(e) =>
+            onChange({ due_days: e.target.value ? Number(e.target.value) : undefined })
+          }
+          placeholder="Prazo (dias a partir de hoje)"
+        />
+      </div>
+
+      {/* Tipo do catálogo do sistema (classe → tipo). "Sem tipo" mantém o
+          comportamento antigo. É esse tipo que faz a tarefa criada aqui poder
+          ser ouvida por um gatilho "Tarefa concluída > tipo X". */}
+      <div className="flex flex-wrap items-end gap-2">
+        <TaskTypePicker
+          value={action.task_type_id ?? null}
+          onChange={(id) => onChange({ task_type_id: id })}
+          emptyLabel="Sem tipo"
+          showLabels={false}
+          classeWidth="w-[140px]"
+          tipoWidth="w-[200px]"
+        />
+        <Select
+          value={action.assignee_id ?? SEM_RESPONSAVEL}
+          onValueChange={(v) => onChange({ assignee_id: v === SEM_RESPONSAVEL ? null : v })}
+        >
+          <SelectTrigger className="w-[210px]">
+            <SelectValue placeholder="Responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={SEM_RESPONSAVEL}>Sem responsável</SelectItem>
+            {(users ?? []).map((u) => (
+              <SelectItem key={u.id} value={u.id}>
+                {u.full_name || u.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {allowChain && (
+        <div className="rounded-md border border-dashed border-[var(--border)] p-2 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-[var(--ink-500)]">
+              Quando esta tarefa for concluída
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ on_complete: [...chain, { type: "create_task", title: "" }] })
+              }
+              className="text-[12px] text-[var(--gold-700)] hover:underline inline-flex items-center gap-1"
+            >
+              <Plus size={13} /> Adicionar ação
+            </button>
+          </div>
+          {chain.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">
+              Opcional. Sem nada aqui, a cadeia termina nesta tarefa.
+            </p>
+          ) : (
+            chain.map((c, i) => (
+              <div key={i} className="rounded-md border border-[var(--border)] p-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={c.type}
+                    onValueChange={(v) =>
+                      onChange({
+                        on_complete: chain.map((x, idx) =>
+                          idx === i ? { type: v as ActionType } : x,
+                        ),
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-56">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(ACTION_LABELS) as ActionType[]).map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {ACTION_LABELS[t]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ on_complete: chain.filter((_, idx) => idx !== i) })}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <ActionBody
+                  action={c}
+                  onChange={(patch) => patchChain(i, patch)}
+                  allowChain={false}
+                  {...common}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -310,22 +511,41 @@ function WorkflowsPage() {
       toast.error("Dê um nome ao workflow");
       return;
     }
-    const cleanActions = actions
-      .map((a) => {
-        if (a.type === "write_comment") return { type: a.type, body: (a.body ?? "").trim() };
-        if (a.type === "create_task")
-          return { type: a.type, title: (a.title ?? "").trim(), due_days: a.due_days ?? null };
+    // Normaliza UMA ação para o formato gravado. `chain` = false nas ações
+    // encadeadas (elas não carregam on_complete: um nível só).
+    function limpar(a: Action, chain: boolean): Record<string, unknown> | null {
+      if (a.type === "write_comment") {
+        const body = (a.body ?? "").trim();
+        return body ? { type: a.type, body } : null;
+      }
+      if (a.type === "create_task") {
+        const title = (a.title ?? "").trim();
+        if (!title) return null;
+        // Doc 31.08 — as ações encadeadas só são gravadas se sobrar alguma
+        // preenchida; lista vazia não vai para o banco (fica ausente, não []).
+        const sub = chain ? (a.on_complete ?? []).map((c) => limpar(c, false)).filter(Boolean) : [];
         return {
           type: a.type,
-          to_stage_slug: (a.to_stage_slug ?? "").trim(),
-          // AJ3 — só grava board_key quando NÃO é o principal: regra antiga
-          // (sem a chave) e regra nova apontando para o principal ficam idênticas.
-          ...(a.board_key && a.board_key !== "op" ? { board_key: a.board_key } : {}),
+          title,
+          due_days: a.due_days ?? null,
+          ...(a.task_type_id ? { task_type_id: a.task_type_id } : {}),
+          ...(a.assignee_id ? { assignee_id: a.assignee_id } : {}),
+          ...(sub.length ? { on_complete: sub } : {}),
         };
-      })
-      .filter((a) =>
-        a.type === "write_comment" ? a.body : a.type === "create_task" ? a.title : a.to_stage_slug,
-      );
+      }
+      const to = (a.to_stage_slug ?? "").trim();
+      if (!to) return null;
+      return {
+        type: a.type,
+        to_stage_slug: to,
+        // AJ3 — só grava board_key quando NÃO é o principal: regra antiga
+        // (sem a chave) e regra nova apontando para o principal ficam idênticas.
+        ...(a.board_key && a.board_key !== "op" ? { board_key: a.board_key } : {}),
+      };
+    }
+    const cleanActions = actions
+      .map((a) => limpar(a, true))
+      .filter((a): a is Record<string, unknown> => a !== null);
     if (cleanActions.length === 0) {
       toast.error("Adicione ao menos uma ação preenchida");
       return;
@@ -551,62 +771,16 @@ function WorkflowsPage() {
                     </button>
                   )}
                 </div>
-                {a.type === "write_comment" && (
-                  <Textarea
-                    value={a.body ?? ""}
-                    onChange={(e) =>
-                      setActions((prev) =>
-                        prev.map((x, idx) => (idx === i ? { ...x, body: e.target.value } : x)),
-                      )
-                    }
-                    placeholder="Texto do comentário automático…"
-                    rows={2}
-                  />
-                )}
-                {a.type === "create_task" && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      value={a.title ?? ""}
-                      onChange={(e) =>
-                        setActions((prev) =>
-                          prev.map((x, idx) => (idx === i ? { ...x, title: e.target.value } : x)),
-                        )
-                      }
-                      placeholder="Título da tarefa"
-                    />
-                    <Input
-                      type="number"
-                      value={a.due_days ?? ""}
-                      onChange={(e) =>
-                        setActions((prev) =>
-                          prev.map((x, idx) =>
-                            idx === i
-                              ? {
-                                  ...x,
-                                  due_days: e.target.value ? Number(e.target.value) : undefined,
-                                }
-                              : x,
-                          ),
-                        )
-                      }
-                      placeholder="Prazo (dias a partir de hoje)"
-                    />
-                  </div>
-                )}
-                {a.type === "move_stage" && (
-                  <MoveStageActionFields
-                    boardKey={a.board_key ?? "op"}
-                    stageSlug={a.to_stage_slug ?? ""}
-                    onChange={(patch) =>
-                      setActions((prev) =>
-                        prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)),
-                      )
-                    }
-                    kanbanOptions={kanbanOptions}
-                    opStages={opStages as never}
-                    finStages={finStages as never}
-                  />
-                )}
+                <ActionBody
+                  action={a}
+                  onChange={(patch) =>
+                    setActions((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
+                  }
+                  allowChain
+                  kanbanOptions={kanbanOptions}
+                  opStages={opStages as never}
+                  finStages={finStages as never}
+                />
               </div>
             ))}
             <button

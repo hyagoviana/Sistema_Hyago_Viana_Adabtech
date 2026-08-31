@@ -26,6 +26,7 @@ import {
 } from "@/components/cases/CaseFiltersPanel";
 import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
+import { ordenarPorEntradaNaEtapa } from "@/lib/cases/kanban-order";
 import { StageEditor } from "@/components/cases/StageEditor";
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -433,7 +434,7 @@ function PrincipalKanban({
   );
   // Ajuste A4 — busca rápida por nome do cliente ou código do caso.
   const q = search.trim().toLowerCase();
-  const cases = q
+  const casesFiltrados = q
     ? afterPanel.filter((c) => {
         const nome = (c as { client_name?: string | null }).client_name ?? "";
         const code = (c as { case_code?: string | null }).case_code ?? "";
@@ -450,6 +451,9 @@ function PrincipalKanban({
         );
       })
     : afterPanel;
+  // Doc 31.08 — ordem ESTÁVEL por ingresso na etapa (era `created_at`, que empata
+  // em massa nos importados e por isso embaralhava a cada refresh).
+  const cases = ordenarPorEntradaNaEtapa(casesFiltrados, kind);
 
   // R2-05 — colunas: oculta etapas CONDICIONAIS vazias de outra frente. Regra:
   // uma etapa com `frente_slug` (condicional) só aparece se (a) pertence à frente
@@ -795,13 +799,15 @@ function CustomBoardKanban({
   // Aplica os filtros do TEMA (mesma função do principal), depois a busca rápida.
   const afterPanel = applyCaseFilters(boardCases, panelFilters, temaFilterDefs);
   const q = search.trim().toLowerCase();
-  const filtered = q
+  const filtradosSemOrdem = q
     ? afterPanel.filter((c) => {
         const nome = (c as { client_name?: string | null }).client_name ?? "";
         const code = (c as { case_code?: string | null }).case_code ?? "";
         return nome.toLowerCase().includes(q) || code.toLowerCase().includes(q);
       })
     : afterPanel;
+  // Doc 31.08 — no kanban custom o carimbo de ingresso é `board_entered_at`.
+  const filtered = ordenarPorEntradaNaEtapa(filtradosSemOrdem, "board");
 
   const columns: KanbanColumn<string>[] = (stages ?? []).map((s) => ({
     id: s.slug,
