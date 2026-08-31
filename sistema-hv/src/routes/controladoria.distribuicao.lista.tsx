@@ -152,6 +152,10 @@ function ListaDistribuicoesPage() {
   const [executor, setExecutor] = useState("");
   const [flowFilter, setFlowFilter] = useState<string[]>([]);
   const [hasAlerts, setHasAlerts] = useState(false);
+  // REUNIÃO 31/08 — rejeitar tirava a tarefa da fila, mas ela continuava na tela.
+  // A rejeitada nunca chegou a existir no ProJuris (só vai para lá na aprovação),
+  // então não há o que acompanhar: some por padrão e fica atrás deste filtro.
+  const [verRejeitadas, setVerRejeitadas] = useState(false);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ResultRow | null>(null);
   // R2 — detalhe completo do processo (ProJuris ao vivo) quando o drawer abre.
@@ -187,7 +191,7 @@ function ListaDistribuicoesPage() {
   const editarExecutor = useEditarExecutor();
   const aprovarBatch = useAprovarBatch();
 
-  const results = (resultsData?.data ?? []) as ResultRow[];
+  const todosResults = (resultsData?.data ?? []) as ResultRow[];
   const totalCount = resultsData?.count ?? 0;
 
   function approvalOf(r: ResultRow): DistributionApprovalRow | undefined {
@@ -196,6 +200,13 @@ function ListaDistribuicoesPage() {
   function statusOf(r: ResultRow): ApprovalStatus {
     return approvalOf(r)?.status ?? "pending";
   }
+
+  // Esconde as rejeitadas (padrão). O contador do rodapé continua vindo do
+  // servidor, então a diferença aparece como "n ocultas" ao lado do filtro.
+  const results = verRejeitadas
+    ? todosResults
+    : todosResults.filter((r) => statusOf(r) !== "rejected");
+  const ocultasPorRejeicao = todosResults.length - results.length;
 
   const mutating =
     aprovar.isPending || rejeitar.isPending || editarExecutor.isPending || aprovarBatch.isPending;
@@ -393,6 +404,19 @@ function ListaDistribuicoesPage() {
               }}
             />
             Com alertas
+          </label>
+          <label className="flex items-center gap-1 text-sm cursor-pointer">
+            <Checkbox
+              checked={verRejeitadas}
+              onCheckedChange={() => {
+                setVerRejeitadas(!verRejeitadas);
+                setPage(0);
+              }}
+            />
+            Ver rejeitadas
+            {!verRejeitadas && ocultasPorRejeicao > 0 && (
+              <span className="text-muted-foreground text-xs">({ocultasPorRejeicao} ocultas)</span>
+            )}
           </label>
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> CSV

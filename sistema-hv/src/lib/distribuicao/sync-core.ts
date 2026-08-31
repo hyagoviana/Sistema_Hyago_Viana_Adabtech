@@ -253,7 +253,10 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   }
 
   // ---- 3) Por processo: assunto (tema) + tarefas abertas (multi-modulo) ----
-  const rawTasks: Array<{
+  // NOME: são as tarefas que JÁ EXISTEM no ProJuris. Desde 31/08 elas NÃO viram
+  // fila de distribuição (ver o comentário no push abaixo) — servem para o
+  // snapshot, para o de-para de tipo e para as exceções de duplicidade.
+  const tarefasExistentes: Array<{
     task_id: string;
     process_id: string;
     tipo_codigo: string;
@@ -318,11 +321,23 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
           prazo_fatal: msToIso(t.dataLimite),
           respNames: parseRespNames(t),
         });
-        // So tarefas ABERTAS (nao concluidas) entram na DISTRIBUIÇÃO.
+        // ⚠️ REUNIÃO 31/08 — as tarefas que JÁ EXISTEM no ProJuris não são fila de
+        // distribuição. Toda tarefa lá já tem responsável (é campo obrigatório),
+        // então redistribuí-las jogava para outra pessoa um trabalho que já tinha
+        // dono — foi o que a controladoria viu: "aparece um monte de tarefa que
+        // não fui eu que coloquei".
+        //
+        // Thiago: "se essas tarefas já existem, elas só devem ser consideradas
+        // para fim de volume de agenda e de cálculo do motor, e não como tarefa
+        // que eu também vou distribuir."
+        //
+        // Elas continuam sendo lidas — ficam no `snapshotRaw` (aba Kanban e
+        // leitura de carga). O que deixou de existir é a entrada delas em
+        // `rawTasks`, que era o que alimentava a distribuição automática.
         if (t.flagSituacaoConcluida === true) continue;
         const tipoCodigo = String(t.codigoTarefaTipo ?? "");
         if (!tipoCodigo) continue;
-        rawTasks.push({
+        tarefasExistentes.push({
           task_id: String(t.codigoTarefa ?? `${pid}-${tipoCodigo}`),
           process_id: pid,
           tipo_codigo: tipoCodigo,
@@ -542,7 +557,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
     tipo_codigo: string;
     tipo_nome: string | null;
   }> = [];
-  for (const rt of rawTasks) {
+  for (const rt of tarefasExistentes) {
     if (seenTaskIds.has(rt.task_id)) {
       duplicateTasks.push({
         task_id: rt.task_id,
@@ -673,6 +688,9 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
   // 🔴 origem='batch': NÃO tocar nas linhas que a controladoria distribuiu à mão
   // pela tela "A distribuir" (origem='staging'). Antes deste filtro, o cron das
   // 8h apagava o trabalho humano do dia — sem erro e sem aviso.
+  // O delete continua: ele LIMPA o que as rodadas antigas deixaram na fila
+  // (origem='batch'). Com a distribuição automática desligada, nada é reinserido
+  // — é este delete que faz a Lista se limpar sozinha na primeira sincronização.
   const delRes = await supabase
     .from("system_distribution_results")
     .delete()
@@ -689,7 +707,7 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
 
   // H1: de-para de TIPO por task_id (código + nome ProJuris da tarefa escolhida).
   const tipoByTaskId = new Map<string, { codigo: string; nome: string | null }>();
-  for (const rt of rawTasks) {
+  for (const rt of tarefasExistentes) {
     if (!tipoByTaskId.has(rt.task_id)) {
       tipoByTaskId.set(rt.task_id, { codigo: rt.tipo_codigo, nome: rt.tipo_nome });
     }
@@ -735,10 +753,27 @@ export async function runSync(distributionDate: string, windowDays: number): Pro
       };
     });
 
-  for (let i = 0; i < rows.length; i += 100) {
-    const chunk = rows.slice(i, i + 100);
-    const { error } = await supabase.from("system_distribution_results").insert(chunk);
-    if (error) throw new AuthError(`insert de resultados falhou: ${error.message}`, 500);
+  // ⚠️ REUNIÃO 31/08 — O CRON NÃO DISTRIBUI MAIS.
+  //
+  // Até aqui, tudo que o motor calculou era gravado em system_distribution_results
+  // — a tela "Lista". Como a entrada eram TODAS as tarefas abertas do ProJuris, a
+  // Lista enchia de trabalho que já tinha dono, e o motor propunha um dono novo
+  // para o que já estava distribuído.
+  //
+  // A regra passa a ser a que a reunião fechou: quem distribui é a controladoria,
+  // pela tela "A distribuir" (distribuirStaging, origem='staging'). O cron segue
+  // fazendo o resto — trazer intimações/andamentos, o snapshot do Kanban, o
+  // de-para de tipos e as exceções de duplicidade.
+  //
+  // O cálculo acima continua rodando de propósito: é ele que alimenta os alertas,
+  // as exceções e o relatório. O que deixou de existir é a GRAVAÇÃO na fila.
+  const DISTRIBUICAO_AUTOMATICA_LIGADA = false;
+  if (DISTRIBUICAO_AUTOMATICA_LIGADA) {
+    for (let i = 0; i < rows.length; i += 100) {
+      const chunk = rows.slice(i, i + 100);
+      const { error } = await supabase.from("system_distribution_results").insert(chunk);
+      if (error) throw new AuthError(`insert de resultados falhou: ${error.message}`, 500);
+    }
   }
 
   // batch_log (is_simulation=true — sob demanda, sem writeback). Insere direto

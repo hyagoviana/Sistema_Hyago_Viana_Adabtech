@@ -37,6 +37,10 @@ import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadas
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { PasswordAdminSection } from "./PasswordAdminSection";
+import {
+  diagnosticarElegibilidade,
+  textoElegibilidade,
+} from "@/lib/distribuicao/elegibilidade-shared";
 import { UserModulePermsEditor } from "./UserModulePermsEditor";
 import { UserReportDialog } from "./UserReportDialog";
 
@@ -73,6 +77,8 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     role: string;
     originalRole: string;
     isSelf: boolean;
+    /** Só leitura: o resumo do motor precisa saber se o acesso está ativo. */
+    status: string;
     // Cadastro do colaborador (M8).
     perfil: string;
     cargo: string;
@@ -229,21 +235,49 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   </div>
                 </button>
 
-                {/* Distribuição (ProJuris) — H5: mostra rapidamente quem é
-                    executor e o código ProJuris. */}
-                {u.participa_distribuicao ? (
-                  <span
-                    className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0"
-                    style={{
-                      color: "var(--gold-700)",
-                      background: "rgba(212,168,50,0.08)",
-                      border: "1px solid var(--border)",
-                    }}
-                    title="Participa da distribuição (motor ProJuris)"
-                  >
-                    Distribuição {u.projuris_responsavel_id ? `· ${u.projuris_responsavel_id}` : ""}
-                  </span>
-                ) : null}
+                {/* REUNIÃO 31/08 — antes este selo só dizia "Distribuição" quando a
+                    flag do mapeamento estava ligada, o que escondia o caso perigoso:
+                    a pessoa com o vínculo ligado e a fila desligada aparecia igual a
+                    quem recebe normal. Foi o que aconteceu com o Hudson. Agora o selo
+                    mostra o RESULTADO das mesmas cinco condições, com o motivo no
+                    tooltip — dá para varrer a lista e achar quem está fora. */}
+                {(() => {
+                  const diag = diagnosticarElegibilidade({
+                    status: u.status,
+                    peticionante: u.peticionante,
+                    participaGeral: u.participa_distribuicao_padrao,
+                    vinculoAtivo: u.participa_distribuicao,
+                    peso: u.weight,
+                  });
+                  // Quem nunca foi cadastrado no motor não ganha selo: seria ruído
+                  // em quem não trabalha com distribuição (financeiro, marketing…).
+                  const noMotor =
+                    u.participa_distribuicao || u.peticionante || u.participa_distribuicao_padrao;
+                  if (!noMotor) return null;
+                  const cor = diag.recebeNaFila
+                    ? "var(--success)"
+                    : diag.soPorExcecao
+                      ? "var(--warning)"
+                      : "var(--danger)";
+                  return (
+                    <span
+                      className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 inline-flex items-center gap-1.5"
+                      style={{
+                        color: cor,
+                        background: `color-mix(in srgb, ${cor} 9%, transparent)`,
+                        border: "1px solid var(--border)",
+                      }}
+                      title={textoElegibilidade(diag)}
+                    >
+                      <span
+                        className="inline-block w-1.5 h-1.5 rounded-full"
+                        style={{ background: cor }}
+                      />
+                      {diag.rotulo}
+                      {u.projuris_responsavel_id ? ` · ${u.projuris_responsavel_id}` : ""}
+                    </span>
+                  );
+                })()}
 
                 <span
                   className="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0"
@@ -279,6 +313,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   onClick={() =>
                     setEditing({
                       id: u.id,
+                      status: u.status ?? "",
                       full_name: u.full_name ?? "",
                       phone: (u as { phone?: string | null }).phone ?? "",
                       email: u.email,
@@ -494,6 +529,47 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 <p className="text-[12px] font-semibold text-[var(--navy)]">
                   Motor de distribuição
                 </p>
+                {/* REUNIÃO 31/08 — a RESPOSTA, antes das caixinhas. Eram cinco
+                    condições em dois lugares para saber se a pessoa recebe tarefa,
+                    e foi exatamente isso que deixou o Hudson de fora sem ninguém
+                    notar. O resumo abaixo é calculado das MESMAS flags (nada de
+                    regra nova) e diz o que falta, em português. */}
+                {(() => {
+                  const diag = diagnosticarElegibilidade({
+                    status: editing.status,
+                    peticionante: editing.peticionante,
+                    participaGeral: editing.participaGeral,
+                    vinculoAtivo: editing.participa,
+                    peso: Number(editing.weight) || 0,
+                  });
+                  const cor = diag.recebeNaFila
+                    ? "var(--success)"
+                    : diag.soPorExcecao
+                      ? "var(--warning)"
+                      : "var(--danger)";
+                  return (
+                    <div
+                      className="rounded-md px-3 py-2.5"
+                      style={{
+                        background: `color-mix(in srgb, ${cor} 8%, transparent)`,
+                        border: `1px solid color-mix(in srgb, ${cor} 30%, transparent)`,
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full shrink-0"
+                          style={{ background: cor }}
+                        />
+                        <span className="text-[12.5px] font-semibold" style={{ color: cor }}>
+                          {diag.rotulo}
+                        </span>
+                      </div>
+                      <p className="text-[11.5px] text-muted-foreground mt-1">
+                        {textoElegibilidade(diag)}
+                      </p>
+                    </div>
+                  );
+                })()}
                 <div>
                   <Label>Usuário no ProJuris</Label>
                   {/* 2026-08-27 — era campo de texto com placeholder "ex.: PES.0000030",
