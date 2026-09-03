@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   History,
   GitBranch,
+  Star,
   SlidersHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -107,6 +108,9 @@ const groups: { label: string; items: Item[] }[] = [
     label: "Inteligência",
     items: [
       { to: "/controladoria", label: "Controladoria", icon: Scale },
+      // S6-01 (reunião 02/09) — casos marcados como prioritário/urgente, do mais parado
+      // para o mais recente. Espelha o que já existe no caso; não cria marcação nova.
+      { to: "/controladoria/prioritarios", label: "Casos prioritários", icon: Star },
       { to: "/controladoria/distribuicao", label: "Distribuição", icon: GitBranch },
       { to: "/peticionamento", label: "Peticionamento", icon: FileText },
       { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
