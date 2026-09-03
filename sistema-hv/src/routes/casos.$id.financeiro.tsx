@@ -15,17 +15,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
-import { AsaasCobrancasPanel } from "@/components/cases/AsaasCobrancasPanel";
 import { CaseConferenciaFinPanel } from "@/components/cases/CaseConferenciaFinPanel";
 import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import { TermoPanel } from "@/components/cases/TermoPanel";
+import { CaseStageChecklist } from "@/components/cases/CaseChecklistPanel";
 import { FinNotesBlock } from "@/components/notes/FinNotesBlock";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCase } from "@/hooks/useCases";
 import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
-import { useSyncAllPagamentos } from "@/hooks/useFinanceiro";
+import { useSyncAllPagamentos, useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
 import { useMyModulePerms, useMyModuleValues, usePodeEditar } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/auth";
 import { can, podeVerValores } from "@/lib/rbac";
@@ -38,6 +38,17 @@ import { MACRO_FIN_LABELS, type MacroFin } from "@/lib/cases/constants";
 export const Route = createFileRoute("/casos/$id/financeiro")({
   component: CasoFinanceiro,
 });
+
+// S4-02 — helpers que vieram junto com o rastro financeiro (mesma implementação
+// que a ficha do caso usava, para os números não mudarem de formato no caminho).
+function brlCentavos(c: number | null | undefined) {
+  return "R$ " + ((c ?? 0) / 100).toFixed(2).replace(".", ",");
+}
+
+function daysSince(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+}
 
 function CasoFinanceiro() {
   const { id } = useParams({ from: "/casos/$id/financeiro" });
@@ -58,6 +69,8 @@ function CasoFinanceiro() {
   const entrar = useEntrarFinanceiro();
   const voltar = useVoltarOperacional();
   const sync = useSyncAllPagamentos();
+  // S4-02 — totais do rastro financeiro (vieram da ficha do caso).
+  const { data: rastroFin } = useRastroFinanceiroCaso(id, podeVerFinanceiro);
 
   const [moveFinOpen, setMoveFinOpen] = useState(false);
 
@@ -95,6 +108,9 @@ function CasoFinanceiro() {
     )?.name ?? null;
   const clienteNome = (cliente as { full_name?: string } | undefined)?.full_name ?? null;
   const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
+  const diasFin = daysSince(
+    (caso as { status_fin_changed_at?: string | null }).status_fin_changed_at,
+  );
   const removidoDoOp = !!(caso as { removido_do_operacional_at?: string | null })
     .removido_do_operacional_at;
 
@@ -192,6 +208,57 @@ function CasoFinanceiro() {
 
       {finBifurcated ? (
         <div className="space-y-6">
+          {/* S4-02 (reunião 02/09) — RASTRO FINANCEIRO, vindo da ficha do caso.
+              Thiago: "Esse painel rastro financeiro vai para a aba 'financeiro'".
+              Traz o que o card tinha: etapa + tempo no estado, checklist da etapa
+              financeira e os totais. Mover etapa e entrar/voltar já existem no
+              cabeçalho desta página. */}
+          <div className="card-hero p-6">
+            <Eyebrow>Rastro financeiro</Eyebrow>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="text-[17px] font-semibold text-[var(--navy)]">{finLabel}</span>
+              <span className="text-[12px] text-muted-foreground">
+                há {diasFin} dia(s) neste estado
+              </span>
+            </div>
+
+            {caso.macrostatus_fin && caso.macrostatus_fin !== "NAO_APLICAVEL" && (
+              <CaseStageChecklist
+                caseId={caso.id}
+                stageSlug={caso.macrostatus_fin}
+                canEdit={podeEditarFin}
+                className="mt-4 pt-4 border-t border-[rgba(30,32,68,0.08)]"
+              />
+            )}
+
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  A pagar
+                </div>
+                <div className="text-[15px] font-semibold text-[var(--navy)]">
+                  {brlCentavos(rastroFin?.a_pagar_centavos)}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Vencido
+                </div>
+                <div className="text-[15px] font-semibold text-[var(--danger)]">
+                  {brlCentavos(rastroFin?.vencido_centavos)}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Pago
+                </div>
+                <div className="text-[15px] font-semibold text-green-700">
+                  {brlCentavos(rastroFin?.pago_centavos)}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Detalhamento de parcelas / honorários. */}
           <TermoPanel caseId={caso.id} />
 
@@ -206,14 +273,16 @@ function CasoFinanceiro() {
             </div>
           )}
 
-          {/* Cobranças / faturas. */}
-          <div className="card-hero p-6">
-            <AsaasCobrancasPanel
-              caseId={caso.id}
-              clientId={caso.client_id}
-              podeEditarFin={podeEditarFin}
-            />
-          </div>
+          {/* S4-03 (reunião 02/09) — o painel COBRANÇAS ("Sync Conta Azul / Sync
+              Asaas / Nova cobrança") foi REMOVIDO daqui. Thiago: "Esse painel era
+              de uma ideia anterior sobre gerar cobrança no CA/ASAAS. Substituímos
+              pelos paineis logo abaixo, vamos remover esse painel e reutilizar o
+              espaço."
+              As parcelas continuam visíveis no TermoPanel (acima) e os registros
+              em "Valores do caso" (abaixo) — nada de informação se perdeu.
+              O componente `AsaasCobrancasPanel` e todo o backend de Conta
+              Azul/Asaas seguem no repositório, intactos, para quando a integração
+              de cobrança for retomada (fora desta leva por decisão do owner). */}
         </div>
       ) : (
         <div className="card-hero p-8 text-center text-sm text-muted-foreground">
