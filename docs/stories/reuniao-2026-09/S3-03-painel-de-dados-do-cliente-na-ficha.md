@@ -132,7 +132,10 @@ corrigido com os números.
 Consequência prática: o backfill da S1-05, que estava retido como "cosmético", na verdade **destrava
 dado de centenas de clientes**. Vale prioridade na resposta.
 
-### Observação de limpeza
+### Observação de limpeza — CORRIGIDA (03/09, mesma sessão)
 
-Há ~11 definições de campo de teste no banco (`SMOKEB1 …`, `REPROB1 Foo`), todas inativas — não aparecem
-na ficha, mas sujam a tela de gestão de campos. Vale uma limpeza num momento oportuno.
+Registrei aqui que ~11 definições de teste (`SMOKEB1 …`, `REPROB1 Foo`) estariam sujando a tela de gestão
+de campos. **Estava errado.** Eu as vi numa consulta bruta que não filtrava `deleted_at`; conferindo
+depois, as 11 estão com `deleted_at` preenchido (0 vivas) e a tela lê a view
+`system_client_field_defs_active`, que filtra `deleted_at IS NULL`. Ou seja: já foram excluídas e **não
+aparecem em lugar nenhum**. Não há limpeza a fazer.
