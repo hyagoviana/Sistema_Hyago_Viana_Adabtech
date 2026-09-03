@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import {
   getRoleModuleDefaults,
+  listRoleModulePerms,
+  setRoleModulePerms,
   getUserModulePerms,
   getUserModuleValues,
   setUserModulePerms,
@@ -90,7 +92,9 @@ export const getUserModulePermsFn = createServerFn({ method: "POST" })
 // só admin.
 const setPermsSchema = z.object({
   userId: z.string().uuid(),
-  access: z.record(z.enum(MODULES), z.enum(["none", "view", "edit"]).nullable()).optional(),
+  access: z
+    .record(z.enum(MODULES), z.enum(["none", "view", "edit", "configure"]).nullable())
+    .optional(),
   values: z.record(z.enum(MODULES), z.boolean().nullable()).optional(),
 });
 
@@ -103,6 +107,89 @@ export const setUserModulePermsFn = createServerFn({ method: "POST" })
         access: data.access as Partial<Record<Module, ModuleAccess | null>> | undefined,
         values: data.values as Partial<Record<Module, boolean | null>> | undefined,
       });
+      return { ok: true };
+    }),
+  );
+
+// ---------------------------------------------------------------------------
+// S5-02 — PADRÃO POR PAPEL (a matriz do Thiago).
+//
+// Thiago: "eu acho que a gente precisava de um menu de permissão do perfil, onde
+// a gente pode configurar o que que o perfil em si vai ver". Adavio: "ele quer
+// para todo o perfil, que hoje ele consegue editar para um usuário. Não para todo
+// o papel."
+// ---------------------------------------------------------------------------
+export type RolePermsMatriz = {
+  linhas: Array<{ role: string; module: Module; access: ModuleAccess }>;
+  /** Quantos usuários ATIVOS têm cada papel — a tela mostra o alcance da mudança. */
+  usuariosPorPapel: Record<string, number>;
+};
+
+export const getRolePermsMatrizFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(async (): Promise<RolePermsMatriz> => {
+    await requireRole(["admin"]);
+    const sb = getSupabaseAdmin();
+    const [linhas, { data: usuarios }] = await Promise.all([
+      listRoleModulePerms(),
+      sb.from("system_users").select("role, status").is("deleted_at", null),
+    ]);
+    const usuariosPorPapel: Record<string, number> = {};
+    for (const u of (usuarios ?? []) as Array<{ role: string; status: string }>) {
+      if (u.status === "SUSPENDED" || u.status === "ARCHIVED") continue;
+      usuariosPorPapel[u.role] = (usuariosPorPapel[u.role] ?? 0) + 1;
+    }
+    return { linhas, usuariosPorPapel };
+  }),
+);
+
+const setRolePermsSchema = z.object({
+  role: z.string().min(1),
+  access: z.record(z.enum(MODULES), z.enum(["none", "view", "edit", "configure"]).nullable()),
+});
+
+export const setRolePermsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => setRolePermsSchema.parse(d))
+  .handler(async ({ data }) =>
+    handle(async (): Promise<{ ok: true }> => {
+      const admin = await requireRole(["admin"]);
+
+      // Guarda contra auto-bloqueio: um admin não pode tirar do próprio papel o
+      // acesso ao módulo `sistema` — ficaria sem como voltar atrás pela tela.
+      const sb = getSupabaseAdmin();
+      const { data: eu } = await sb
+        .from("system_users")
+        .select("role")
+        .eq("id", admin.id)
+        .maybeSingle();
+      const meuPapel = (eu as { role?: string } | null)?.role;
+      const novoSistema = (data.access as Record<string, string | null>).sistema;
+      if (
+        meuPapel &&
+        meuPapel === data.role &&
+        novoSistema !== undefined &&
+        novoSistema !== null &&
+        novoSistema !== "configure"
+      ) {
+        setResponseStatus(422);
+        throw new Error(
+          "Você não pode reduzir o acesso ao módulo Sistema do seu próprio papel — ficaria sem como desfazer.",
+        );
+      }
+
+      await setRoleModulePerms(
+        data.role,
+        data.access as Partial<Record<Module, ModuleAccess | null>>,
+      );
+
+      await sb.from("system_audit_log").insert({
+        organization_id: "00000000-0000-0000-0000-000000000001",
+        action: "role_perms.updated",
+        entity_type: "role",
+        // A "entidade" aqui é o papel, que não tem UUID — o id vai no diff.
+        entity_id: "00000000-0000-0000-0000-000000000000",
+        diff: { role: data.role, access: data.access, by: admin.id },
+      });
+
       return { ok: true };
     }),
   );

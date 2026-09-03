@@ -23,6 +23,8 @@
     "test:case-documents": "tsx src/lib/case-documents-mime.test.ts",
     "test:rbac": "tsx src/lib/rbac.test.ts",
     "qa:permissoes": "tsx scripts/qa-permissoes-matriz.ts",
+    "qa:role-perms": "tsx scripts/qa-role-perms-matriz.ts",
+    "qa:usuarios": "tsx scripts/qa-usuarios-s503.ts",
     "qa:prioritarios": "tsx scripts/qa-prioritarios.ts",
     "qa:dia-operacional": "tsx scripts/qa-dia-operacional.ts",
     "test:motor": "tsx src/lib/distribuicao/engine/scoring.test.ts && tsx src/lib/distribuicao/marcadores.test.ts && tsx src/lib/distribuicao/engine/dia-operacional.test.ts",

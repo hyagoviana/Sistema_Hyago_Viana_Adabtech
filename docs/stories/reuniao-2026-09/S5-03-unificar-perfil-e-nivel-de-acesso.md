@@ -2,7 +2,7 @@
 
 - **Sprint:** S5 — Permissões
 - **ID:** S5-03 · **Item do Thiago:** 15
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M
 - **Executor sugerido:** @dev · Quality gate: @qa
 
@@ -53,10 +53,10 @@ Hoje o diálogo tem: **Nível de acesso** (que é o papel do RBAC) e, em "Dados 
 
 ## Tasks / Subtasks
 
-- [ ] Remover o campo Perfil do formulário e ajustar textos (AC 1-3). (`src/routes/permissoes.tsx` +
+- [x] Remover o campo Perfil do formulário e ajustar textos (AC 1-3). (`src/routes/permissoes.tsx` +
       componentes de usuários, `src/lib/users-service.ts`)
-- [ ] Filtro de suspensos na lista (AC 4).
-- [ ] Verificar usos de `system_perfis` e marcar como legado (AC 2).
+- [x] Filtro de suspensos na lista (AC 4).
+- [x] Verificar usos de `system_perfis` e marcar como legado (AC 2).
 
 ---
 
@@ -71,3 +71,45 @@ Hoje o diálogo tem: **Nível de acesso** (que é o papel do RBAC) e, em "Dados 
 
 - [ ] Um só campo define acesso; cargo continua para o motor
 - [ ] Lista sem o ruído dos suspensos
+
+---
+
+## Dev Agent Record (03/09/2026)
+
+**Parte da story já estava feita** (27/08): o campo que decide acesso deixou de se chamar "Cargo" e virou
+**"Nível de acesso"**, e os dados de RH foram separados num bloco próprio. O que faltava:
+
+- **Campo "Perfil" removido do formulário.** A **coluna continua no banco** e o valor segue sendo enviado
+  no salvar (o formulário mantém o que já estava lá) — nada é apagado.
+- **Filtro "Ocultar suspensos"** no cabeçalho da lista, **ligado por padrão**, com contador ao lado e o
+  total de ocultos no subtítulo. Impacto real: **13 dos 41** usuários estão suspensos.
+- **Texto do bloco de RH corrigido.** Dizia "Nada aqui muda permissão nem afeta o motor". A primeira
+  metade está certa; a segunda enganava sobre o futuro — o Thiago disse que o cargo "é usado pelo motor
+  e outras configurações que faremos no futuro". Hoje o motor **não** lê `cargo` (confirmado por busca em
+  `src/lib/distribuicao` e `src/lib/projuris`), e é o cálculo de sucumbência que vai usar. O texto agora
+  diz exatamente isso.
+
+**`system_perfis` é outra coisa** e não foi tocada: é a tabela de REFERÊNCIAS (perfis usados no autofill
+de documento), sem relação com `system_users.perfil`.
+
+---
+
+## QA Results — 03/09/2026 (Quinn)
+
+**Gate: PASS**
+
+`scripts/qa-usuarios-s503.ts`, contra o banco:
+
+- a coluna `perfil` continua preenchida em **15 de 41** usuários — nada se perdeu ao tirar o campo da tela;
+- **a redundância que o Thiago apontou é real**: 14 dos 15 perfis apenas repetem o papel
+  (`administrador`→admin, `financeiro`→financeiro, `usuario_padrao`→operacional).
+
+### Achado que a S5-04 vai querer
+
+**Um único usuário tem no `perfil` uma informação que o papel não tem:**
+
+> **Wesley Ramos — perfil `coordenador`, papel `operacional`.**
+
+É o primeiro candidato natural ao papel **Coordenador** da matriz. Guardar isso agora evita descobrir na
+planilha do de-para que a informação existia e foi ignorada — mais um motivo para a coluna `perfil` não
+ser dropada antes da S5-04.

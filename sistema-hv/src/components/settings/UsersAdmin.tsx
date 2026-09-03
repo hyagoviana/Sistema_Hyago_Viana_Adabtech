@@ -32,7 +32,7 @@ import {
   useProjurisUsuarios,
 } from "@/hooks/useUsers";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/rbac";
-import { CARGO_OPTS, NONE, PERFIL_OPTS, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
+import { CARGO_OPTS, NONE, STATUS_PROJURIS_OPTS } from "@/lib/cadastro-colaborador";
 
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
@@ -65,6 +65,14 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const updateProfile = useUpdateUserProfile();
   const setDistribution = useSetUserDistribution();
   const [inviteOpen, setInviteOpen] = useState(false);
+  // S5-03 — ocultar suspensos (ligado por padrão).
+  const [ocultarSuspensos, setOcultarSuspensos] = useState(true);
+
+  // Derivados do filtro. `data` é a lista completa; a tela mostra `listaVisivel`.
+  const qtdSuspensos = (data ?? []).filter((u) => u.status === "SUSPENDED").length;
+  const listaVisivel = ocultarSuspensos
+    ? (data ?? []).filter((u) => u.status !== "SUSPENDED")
+    : (data ?? []);
   // Só busca quando o diálogo de edição está aberto: a chamada passa por
   // autenticação + API externa, não vale pagar isso ao abrir a lista.
   const [report, setReport] = useState<string | null>(null);
@@ -171,14 +179,34 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
           <div>
             <h2 className="text-[15px] font-semibold text-[var(--navy)]">Usuários e permissões</h2>
             <p className="text-[11.5px] text-muted-foreground">
-              {isLoading ? "Carregando…" : `${data?.length ?? 0} usuário(s)`}
+              {isLoading
+                ? "Carregando…"
+                : `${listaVisivel.length} usuário(s)` +
+                  (ocultarSuspensos && qtdSuspensos > 0
+                    ? ` · ${qtdSuspensos} suspenso(s) oculto(s)`
+                    : "")}
             </p>
           </div>
         </div>
-        <Btn variant="gold" onClick={() => setInviteOpen(true)}>
-          <Plus size={14} />
-          Convidar
-        </Btn>
+        <div className="flex items-center gap-3">
+          {/* S5-03 (reunião 02/09) — Thiago: "Adicionar uma opção de filtro para
+              ocultar os perfis suspensos da visualização." Ligado por padrão: a
+              lista existe para gerir quem TRABALHA aqui. */}
+          <label className="flex items-center gap-2 text-[12px] text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={ocultarSuspensos}
+              onChange={(e) => setOcultarSuspensos(e.target.checked)}
+              className="h-3.5 w-3.5 accent-[var(--gold)]"
+            />
+            Ocultar suspensos
+            {qtdSuspensos > 0 && <span className="text-[11px]">({qtdSuspensos})</span>}
+          </label>
+          <Btn variant="gold" onClick={() => setInviteOpen(true)}>
+            <Plus size={14} />
+            Convidar
+          </Btn>
+        </div>
       </header>
 
       {isError && (
@@ -197,7 +225,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         </div>
       ) : (
         <ul className="divide-y divide-[var(--border)]">
-          {(data ?? []).map((u) => {
+          {listaVisivel.map((u) => {
             const isSelf = u.id === currentUserId;
             const suspended = u.status === "SUSPENDED";
             return (
@@ -447,28 +475,19 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
               <div className="border-t border-[var(--border)] pt-3 space-y-3">
                 <p className="text-[12px] font-semibold text-[var(--navy)]">Dados do colaborador</p>
                 <p className="text-[11px] text-muted-foreground -mt-2">
-                  Informação de cadastro. Nada aqui muda permissão nem afeta o motor.
+                  Informação de cadastro — não muda permissão. O <strong>cargo</strong> é a
+                  informação que o cálculo de sucumbência vai usar; hoje o motor de distribuição não
+                  o lê.
                 </p>
+                {/* S5-03 (reunião 02/09) — o campo PERFIL saiu daqui. Thiago:
+                    "a gente tem perfil, a gente tem nível de acesso e a gente tem
+                    cargo. Tá bem redundante. (…) esse nível de acesso e esse perfil
+                    acho que dá para virar uma coisa só."
+                    Quem define acesso é o "Nível de acesso" (o `role` do RBAC), acima.
+                    A COLUNA `perfil` continua no banco, com os dados intactos — ela
+                    guarda a única informação que o papel ainda não tem (quem é
+                    coordenador) e alimenta o de-para da S5-04. */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Perfil</Label>
-                    <Select
-                      value={editing.perfil || NONE}
-                      onValueChange={(v) => setEditing({ ...editing, perfil: v === NONE ? "" : v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="—" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>—</SelectItem>
-                        {PERFIL_OPTS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                   <div>
                     <Label>Cargo</Label>
                     <Select

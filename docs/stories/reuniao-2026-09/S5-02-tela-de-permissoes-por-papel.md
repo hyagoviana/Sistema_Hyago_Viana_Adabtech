@@ -2,7 +2,7 @@
 
 - **Sprint:** S5 — Permissões
 - **ID:** S5-02 · **Item do Thiago:** 15
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** G
 - **Executor sugerido:** @dev · Quality gate: @qa
 - **Depende de:** S5-01
@@ -53,11 +53,11 @@ Editar" por aba.
 
 ## Tasks / Subtasks
 
-- [ ] Tela da matriz + RPC de leitura/gravação com gate (AC 1, 2, 6).
-- [ ] Contagem de usuários por papel e aviso de impacto (AC 3, 4).
+- [x] Tela da matriz + RPC de leitura/gravação com gate (AC 1, 2, 6).
+- [x] Contagem de usuários por papel e aviso de impacto (AC 3, 4).
 - [ ] Ajustar o painel por usuário para mostrar herdado × override (AC 5).
-- [ ] Auditoria (AC 7).
-- [ ] Testes: salvar papel muda o efetivo de todos; override do usuário sobrevive; guarda de auto-bloqueio.
+- [x] Auditoria (AC 7).
+- [x] Testes: salvar papel muda o efetivo de todos; override do usuário sobrevive; guarda de auto-bloqueio.
 
 ---
 
@@ -72,3 +72,53 @@ Editar" por aba.
 
 - [ ] Dá para mudar a régua de um papel inteiro sem tocar em usuário
 - [ ] Overrides individuais continuam funcionando e ficam identificáveis
+
+---
+
+## Dev Agent Record (03/09/2026)
+
+**Implementado.** A aba **Permissões** ganhou duas abas: **Pessoas** (a gestão que já existia) e
+**Padrão por papel** (nova).
+
+`RolePermsMatrix.tsx` — grade papéis × módulos, um seletor por célula com quatro níveis mais
+**"Padrão do sistema"** (que remove a linha e devolve o papel à régua embutida no código). Edição é por
+LINHA: mexe no papel, aparece o botão Salvar daquela linha.
+
+- **Alcance visível** (AC 3): cada papel mostra quantas pessoas o têm (só ativos — suspenso e arquivado
+  não contam, senão o número assusta sem motivo).
+- **Aviso de impacto** (AC 4): reduzir um nível pede confirmação dizendo quantas pessoas perdem acesso.
+- **Guarda de auto-bloqueio** (AC 6, server-side): um admin não consegue reduzir o acesso do próprio
+  papel ao módulo Sistema — ficaria sem como desfazer pela tela. Devolve 422 com a explicação.
+- **Auditoria** (AC 7): `role_perms.updated` em `system_audit_log`, com papel, mudança e autor.
+- Papéis **legados** aparecem no fim da tabela, esmaecidos e marcados — some com o de-para (S5-04).
+- Salvar invalida a matriz **e** as permissões do usuário logado; sem isso o menu continuaria mostrando a
+  régua antiga até recarregar a página.
+
+**Bônus da S5-01 que faltava:** o schema de escrita de override por usuário só aceitava
+`none|view|edit` — agora aceita `configure` (era o AC 7 daquela story, que tinha ficado pela metade).
+
+**Não feito (AC 5):** o painel por usuário ainda não distingue visualmente "herdado" de "override" nem
+tem o botão "voltar ao padrão do papel". A régua já funciona (override vence, e `null` volta ao padrão);
+falta a etiqueta na tela. Registrado como pendência da story.
+
+---
+
+## QA Results — 03/09/2026 (Quinn)
+
+**Gate: CONCERNS** — o que foi implementado está correto e provado; o AC 5 ficou de fora.
+
+`scripts/qa-role-perms-matriz.ts` (`npm run qa:role-perms`) exercita o serviço contra o **banco real**,
+usando um papel de teste que não existe no sistema — nenhum papel em uso é tocado. 9/9:
+
+- a matriz lê os 4 papéis semeados (atendimento, coordenador, estagiario, suporte);
+- grava, regrava e **o cache é invalidado** (a segunda gravação aparece na hora — sem isso a tela salvaria
+  e a régua só mudaria um minuto depois);
+- a régua vale de fato: com padrão `view` o papel vê e **não** edita;
+- **override do usuário continua vencendo** o padrão do papel;
+- `null` remove a linha e devolve ao padrão do sistema;
+- **as 32 linhas dos papéis reais seguem intactas** antes e depois do teste;
+- o papel de teste foi limpo no `finally` — zero rastro.
+
+`npm run test:rbac` e `npm run build` verdes.
+
+**Pendência para fechar:** AC 5 (herdado × override visível no painel de cada pessoa).

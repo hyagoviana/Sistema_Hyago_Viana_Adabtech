@@ -76,6 +76,71 @@ export async function getRoleModuleDefaults(
 }
 
 /**
+ * S5-02 — MATRIZ completa (todos os papéis × módulos) para a tela de padrão por
+ * papel. Papel ausente do resultado é papel que ainda cai no mapa derivado.
+ */
+export async function listRoleModulePerms(): Promise<
+  Array<{ role: string; module: Module; access: ModuleAccess }>
+> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await (
+    sb.from("system_role_module_perms" as never) as unknown as {
+      select: (cols: string) => Promise<{
+        data: Array<{ role: string; module: string; access: string }> | null;
+        error: unknown;
+      }>;
+    }
+  ).select("role, module, access");
+  if (error) return [];
+  return (data ?? [])
+    .filter((r) => MODULE_SET.has(r.module) && ACCESS_SET.has(r.access as ModuleAccess))
+    .map((r) => ({ role: r.role, module: r.module as Module, access: r.access as ModuleAccess }));
+}
+
+/**
+ * S5-02 — grava o padrão de um PAPEL. `null` numa célula REMOVE a linha, fazendo
+ * aquele papel/módulo voltar ao mapa derivado do rbac.ts.
+ *
+ * Invalida o cache de padrões: sem isso a tela salvaria e a régua só mudaria de
+ * verdade um minuto depois.
+ */
+export async function setRoleModulePerms(
+  role: string,
+  access: Partial<Record<Module, ModuleAccess | null>>,
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const tabela = () =>
+    sb.from("system_role_module_perms" as never) as unknown as {
+      upsert: (v: unknown, o: unknown) => Promise<{ error: unknown }>;
+      delete: () => {
+        eq: (c: string, v: string) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+      };
+    };
+
+  for (const [modulo, valor] of Object.entries(access)) {
+    if (!MODULE_SET.has(modulo)) continue;
+    if (valor === null || valor === undefined) {
+      await tabela().delete().eq("role", role).eq("module", modulo);
+      continue;
+    }
+    if (!ACCESS_SET.has(valor)) continue;
+    const { error } = await tabela().upsert(
+      { role, module: modulo, access: valor, updated_at: new Date().toISOString() },
+      { onConflict: "role,module" },
+    );
+    if (error) {
+      throw new Error(
+        `Falha ao gravar o padrão de ${role}/${modulo}: ${
+          error instanceof Error ? error.message : JSON.stringify(error)
+        }`,
+      );
+    }
+  }
+
+  roleDefaultsCache.delete(role);
+}
+
+/**
  * Overrides de módulo do usuário `userId` como `{ [module]: access }`.
  * Retorna `{}` quando não há nenhum override (front/back cai no papel).
  * Tolerante à ausência da tabela (migration ainda não aplicada) — devolve `{}`.

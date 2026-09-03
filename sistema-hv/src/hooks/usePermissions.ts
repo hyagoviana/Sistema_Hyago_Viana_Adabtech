@@ -6,7 +6,9 @@ import { permissaoEfetiva, type Module, type ModuleAccess } from "@/lib/rbac";
 import {
   getMyModulePermsFn,
   getMyModuleValuesFn,
+  getRolePermsMatrizFn,
   getUserModulePermsFn,
+  setRolePermsFn,
   setUserModulePermsFn,
 } from "@/rpc/permissions";
 
@@ -94,6 +96,33 @@ export function useSetUserModulePerms() {
     }) => fn({ data: vars }),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ["user-module-perms", vars.userId] });
+      qc.invalidateQueries({ queryKey: ["my-module-perms"] });
+      qc.invalidateQueries({ queryKey: ["my-module-values"] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// S5-02 — matriz de padrão por PAPEL (tela de permissões por papel, admin-only).
+// ---------------------------------------------------------------------------
+export function useRolePermsMatriz() {
+  const fn = useServerFn(getRolePermsMatrizFn);
+  return useQuery({
+    queryKey: ["role-perms-matriz"],
+    queryFn: () => fn(),
+  });
+}
+
+export function useSetRolePerms() {
+  const fn = useServerFn(setRolePermsFn);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { role: string; access: Record<string, string | null> }) =>
+      fn({ data: vars }),
+    onSuccess: () => {
+      // A régua mudou para TODO MUNDO do papel: invalida a matriz e também as
+      // permissões do usuário logado (o menu e os botões dependem delas).
+      qc.invalidateQueries({ queryKey: ["role-perms-matriz"] });
       qc.invalidateQueries({ queryKey: ["my-module-perms"] });
       qc.invalidateQueries({ queryKey: ["my-module-values"] });
     },

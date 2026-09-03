@@ -30,8 +30,8 @@ Levantamento: [`docs/reunioes/levantamento-2026-09-02-ajustes-gerais.md`](../../
 | [S4-04](S4-04-status-da-etapa-vira-workflow.md) | 16 | Status da etapa vira workflow (risco alto) | G | Draft |
 | **S5 — Permissões** ||||
 | [S5-01](S5-01-modelo-de-permissoes-papeis-modulo-cliente-nivel-configurar.md) | 15 | Papéis da matriz, módulo Cliente, nível Configurar | G | **Ready for Review** |
-| [S5-02](S5-02-tela-de-permissoes-por-papel.md) | 15 | Tela de permissões por papel | G | Draft |
-| [S5-03](S5-03-unificar-perfil-e-nivel-de-acesso.md) | 15 | Unificar Perfil + Nível de acesso; ocultar suspensos | M | Draft |
+| [S5-02](S5-02-tela-de-permissoes-por-papel.md) | 15 | Tela de permissões por papel | G | **Ready for Review** |
+| [S5-03](S5-03-unificar-perfil-e-nivel-de-acesso.md) | 15 | Unificar Perfil + Nível de acesso; ocultar suspensos | M | **Ready for Review** |
 | [S5-04](S5-04-de-para-dos-usuarios-e-gate-configurar.md) | 15 | De-para dos usuários + aplicar Configurar | M | Draft |
 | **S6 — Controladoria** ||||
 | [S6-01](S6-01-pagina-casos-prioritarios.md) | 14 | Página de casos prioritários | G | **Ready for Review** |
