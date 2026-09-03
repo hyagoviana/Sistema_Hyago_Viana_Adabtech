@@ -3,12 +3,14 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import {
+  getRoleModuleDefaults,
   getUserModulePerms,
   getUserModuleValues,
   setUserModulePerms,
 } from "@/lib/rbac-perms-service";
 import { MODULES, type Module, type ModuleAccess } from "@/lib/rbac";
 import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -31,7 +33,27 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
 export const getMyModulePermsFn = createServerFn({ method: "GET" }).handler(async () =>
   handle(async (): Promise<Partial<Record<Module, ModuleAccess>>> => {
     const { id } = await requireAuth();
-    return getUserModulePerms(id);
+
+    // S5-01 — o front precisa enxergar a MESMA régua do servidor. Devolvemos o
+    // padrão do PAPEL (matriz, quando existe) já mesclado com os overrides do
+    // usuário, nesta ordem de precedência:
+    //     override do usuário  >  padrão do papel  >  mapa derivado do rbac.ts
+    // Papel sem linhas na tabela ⇒ nada é mesclado ⇒ o front cai no derivado,
+    // exatamente como antes. Sem isto, a UI e o servidor divergiriam para os
+    // papéis novos (botão aparece e a ação dá 403, ou o contrário).
+    const sb = getSupabaseAdmin();
+    const { data: usuario } = await sb
+      .from("system_users")
+      .select("role")
+      .eq("id", id)
+      .maybeSingle();
+
+    const [padraoDoPapel, overrides] = await Promise.all([
+      getRoleModuleDefaults((usuario as { role?: string } | null)?.role),
+      getUserModulePerms(id),
+    ]);
+
+    return { ...padraoDoPapel, ...overrides };
   }),
 );
 

@@ -9,7 +9,7 @@ import { MODULES, type Module, type ModuleAccess } from "./rbac";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const MODULE_SET = new Set<string>(MODULES);
-const ACCESS_SET = new Set<ModuleAccess>(["none", "view", "edit"]);
+const ACCESS_SET = new Set<ModuleAccess>(["none", "view", "edit", "configure"]);
 
 // Cache por request/batch — mesma postura do tokenCache do auth-guard. Evita N
 // leituras da tabela dentro do mesmo lote de server functions.
@@ -23,6 +23,57 @@ const valuesCache = new Map<
   { values: Partial<Record<Module, boolean>>; expiresAt: number }
 >();
 const PERMS_CACHE_TTL = 60 * 1000; // 1 min
+
+// ---------------------------------------------------------------------------
+// S5-01 — padrão por PAPEL (matriz do Thiago, tabela system_role_module_perms).
+//
+// Papel SEM linhas na tabela devolve `{}` e o consumidor cai no mapa derivado do
+// rbac.ts — é o que garante que ninguém muda de acesso enquanto o de-para da
+// S5-04 não roda (hoje só os 4 papéis NOVOS estão semeados).
+// ---------------------------------------------------------------------------
+const roleDefaultsCache = new Map<
+  string,
+  { perms: Partial<Record<Module, ModuleAccess>>; expiresAt: number }
+>();
+
+export async function getRoleModuleDefaults(
+  role: string | null | undefined,
+): Promise<Partial<Record<Module, ModuleAccess>>> {
+  if (!role) return {};
+  const cached = roleDefaultsCache.get(role);
+  if (cached && cached.expiresAt > Date.now()) return cached.perms;
+
+  const sb = getSupabaseAdmin();
+  // Cast: `src/lib/supabase/types.ts` é gerado pelo CLI do Supabase, que não roda
+  // nesta máquina (Windows/OneDrive). A tabela existe no banco desde a migration
+  // 20260903000001; regerar os tipos remove este cast.
+  const { data, error } = await (
+    sb.from("system_role_module_perms" as never) as unknown as {
+      select: (cols: string) => {
+        eq: (
+          col: string,
+          val: string,
+        ) => Promise<{ data: Array<{ module: string; access: string }> | null; error: unknown }>;
+      };
+    }
+  )
+    .select("module, access")
+    .eq("role", role);
+
+  // Mesma postura defensiva do resto do arquivo: qualquer falha (inclusive
+  // tabela ainda não criada) ⇒ sem padrão, cai no papel derivado.
+  if (error) return {};
+
+  const perms: Partial<Record<Module, ModuleAccess>> = {};
+  for (const row of data ?? []) {
+    if (MODULE_SET.has(row.module) && ACCESS_SET.has(row.access as ModuleAccess)) {
+      perms[row.module as Module] = row.access as ModuleAccess;
+    }
+  }
+
+  roleDefaultsCache.set(role, { perms, expiresAt: Date.now() + PERMS_CACHE_TTL });
+  return perms;
+}
 
 /**
  * Overrides de módulo do usuário `userId` como `{ [module]: access }`.

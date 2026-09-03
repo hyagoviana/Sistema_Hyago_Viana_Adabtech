@@ -5,7 +5,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { getCookies, getRequestHeader } from "@tanstack/react-start/server";
 
-import { getUserModulePerms } from "../rbac-perms-service";
+import { getUserModulePerms, getRoleModuleDefaults } from "../rbac-perms-service";
 import { permissaoEfetiva, type Module, type ModuleAction, type Role } from "../rbac";
 import { getSupabaseAdmin } from "./server";
 
@@ -208,8 +208,13 @@ export async function requireModule(
   if (!data || data.status?.toUpperCase() !== "ACTIVE")
     throw new AuthError("Usuário inativo ou sem perfil", 403);
 
-  const overrides = await getUserModulePerms(user.id);
-  if (!permissaoEfetiva(data.role as Role, overrides, module, action)) {
+  // S5-01 — o padrão do PAPEL agora pode vir da matriz (system_role_module_perms).
+  // Papel sem linhas lá ⇒ `{}` ⇒ cai no mapa derivado de sempre.
+  const [overrides, roleDefaults] = await Promise.all([
+    getUserModulePerms(user.id),
+    getRoleModuleDefaults(data.role as string),
+  ]);
+  if (!permissaoEfetiva(data.role as Role, overrides, module, action, roleDefaults)) {
     throw new AuthError("Você não tem permissão para esta ação", 403);
   }
   return { id: user.id, email: user.email, role: data.role };
@@ -241,8 +246,13 @@ export async function requireAnyModule(
   if (!data || data.status?.toUpperCase() !== "ACTIVE")
     throw new AuthError("Usuário inativo ou sem perfil", 403);
 
-  const overrides = await getUserModulePerms(user.id);
-  const ok = modules.some((m) => permissaoEfetiva(data.role as Role, overrides, m, action));
+  const [overrides, roleDefaults] = await Promise.all([
+    getUserModulePerms(user.id),
+    getRoleModuleDefaults(data.role as string),
+  ]);
+  const ok = modules.some((m) =>
+    permissaoEfetiva(data.role as Role, overrides, m, action, roleDefaults),
+  );
   if (!ok) throw new AuthError("Você não tem permissão para esta ação", 403);
   return { id: user.id, email: user.email, role: data.role };
 }
