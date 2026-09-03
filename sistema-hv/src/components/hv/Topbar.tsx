@@ -1,10 +1,9 @@
-import { useRouterState, Link } from "@tanstack/react-router";
+import { useRouterState, Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Bell } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
 import { getRouteTitle, useRouteTitle } from "@/lib/route-title";
-import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { GlobalSearch } from "@/components/hv/GlobalSearch";
 
 const labelMap: Record<string, string> = {
@@ -35,6 +34,7 @@ const isId = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || /^\d+$/.test(s);
 
 export function Topbar() {
+  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   // Assina o store de rótulos: re-renderiza quando a página publica/atualiza o
   // nome resolvido do pathname atual (ex.: "Carregando…" → "teste 123").
@@ -54,7 +54,6 @@ export function Topbar() {
     }),
   ];
   const [notifOpen, setNotifOpen] = useState(false);
-  const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const { session } = useAuth();
   const email = session?.user?.email ?? "";
   const initial = (email[0] ?? "?").toUpperCase();
@@ -89,7 +88,7 @@ export function Topbar() {
       <div className="flex items-center gap-1.5">
         {/* + Novo — cria um cadastro de CLIENTE (única opção, owner 2026-07-19). */}
         <button
-          onClick={() => setClientDialogOpen(true)}
+          onClick={() => navigate({ to: "/clientes/novo" })}
           className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-[12.5px] font-semibold transition-all hover:-translate-y-px active:scale-[.98]"
           style={{
             background: "var(--hv-gold-grad)",
@@ -140,8 +139,6 @@ export function Topbar() {
           {initial}
         </Link>
       </div>
-
-      <ClientFormDialog open={clientDialogOpen} onOpenChange={setClientDialogOpen} mode="create" />
     </header>
   );
 }

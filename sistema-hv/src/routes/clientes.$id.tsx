@@ -5,9 +5,9 @@ import { toast } from "sonner";
 
 import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
 import { ClientCpfFillDialog } from "@/components/clients/ClientCpfFillDialog";
+import { ClientDataPanel } from "@/components/clients/ClientDataPanel";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
 import { ClientFinanceiroSection } from "@/components/clients/ClientFinanceiroSection";
-import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import {
@@ -32,7 +32,6 @@ import { useAuth } from "@/lib/auth";
 import { podeVerValores } from "@/lib/rbac";
 import { resolveEntityLabel, useDocumentTitle } from "@/lib/use-document-title";
 import { usePublishRouteTitle } from "@/lib/route-title";
-import { PROGRAMA_LABELS } from "@/lib/validators/client";
 
 // ITEM 6 (2026-07-07) — quando o cadastro é aberto a partir de "Cadastro"
 // (Inteligência › Cadastro / aba Leads), guardamos a origem em ?from=cadastro
@@ -52,14 +51,6 @@ function maskCpfCnpj(d: string): string {
   return d;
 }
 
-function maskPhone(phone: string | null): string {
-  if (!phone) return "·";
-  const d = phone.replace(/\D/g, "");
-  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return phone;
-}
-
 function ClienteDetalhe() {
   const { id } = Route.useParams();
   const { from } = Route.useSearch();
@@ -69,7 +60,6 @@ function ClienteDetalhe() {
   const resyncMutation = useResyncDrive();
   const deleteMutation = useDeleteClient();
   const tornarClienteMutation = useTornarCliente();
-  const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   // J2 — preencher CPF real (troca o marcador CL-XXXX dos importados Mais Médicos).
   const [cpfFillOpen, setCpfFillOpen] = useState(false);
@@ -197,9 +187,25 @@ function ClienteDetalhe() {
                 Tornar esse lead um cliente
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            {/* S3-01 — o cadastro virou PÁGINA; o botão navega em vez de abrir pop-up. */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate({ to: "/clientes/editar/$id", params: { id: cliente.id } })}
+            >
               <Pencil size={14} className="mr-1.5" /> Editar
             </Button>
+            {/* S3-03 — a pasta do Drive virou BOTÃO. Thiago: "Vamos alterar do
+                visual de um painel/menu que ocupa tanto espaço e manter como um
+                botão (de fácil visualização, mas menor e mais proporcional do que
+                o formato atual)". */}
+            {cliente.drive_folder_url && (
+              <Button asChild variant="outline" size="sm">
+                <a href={cliente.drive_folder_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={14} className="mr-1.5" /> Abrir no Drive
+                </a>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -271,50 +277,11 @@ function ClienteDetalhe() {
 
       <OrnamentalDivider />
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <Eyebrow>Contato</Eyebrow>
-          <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">E-mail</dt>
-              <dd className="text-[var(--navy)] font-medium">{cliente.email ?? "·"}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Telefone</dt>
-              <dd className="text-[var(--navy)] font-medium">{maskPhone(cliente.phone)}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Cadastrado em</dt>
-              <dd className="text-[var(--navy)] font-medium">
-                {new Date(cliente.created_at).toLocaleDateString("pt-BR")}
-              </dd>
-            </div>
-          </dl>
-        </Card>
-
-        <Card>
-          <Eyebrow>Pasta no Drive</Eyebrow>
-          {cliente.drive_folder_url ? (
-            <div className="mt-3">
-              <p className="text-xs text-muted-foreground mb-3">
-                Arquivos do cliente ficam aqui · você pode subir/baixar pelo Drive direto.
-              </p>
-              <Button asChild variant="outline" size="sm">
-                <a href={cliente.drive_folder_url} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink size={14} className="mr-1.5" /> Abrir no Drive
-                </a>
-              </Button>
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Pasta ainda não criada.{" "}
-              {cliente.drive_sync_failed && "Use o botão acima pra tentar de novo."}
-            </p>
-          )}
-        </Card>
-      </div>
-
-      <ProfessionalCard data={cliente.professional_data} personType={cliente.person_type} />
+      {/* S3-03 (reunião 02/09) — painel único DADOS DO CLIENTE, no lugar dos cards
+          "Contato" + "Pasta no Drive" (que virou botão no cabeçalho) e do
+          "Dados profissionais" (absorvido). Só campos da entidade CLIENTE —
+          campos de caso não entram, como o Thiago pediu. */}
+      <ClientDataPanel cliente={cliente as unknown as Record<string, unknown>} />
 
       <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
         Documentos do cliente
@@ -356,8 +323,6 @@ function ClienteDetalhe() {
 
       {/* S4-03 — bloco de notas do cliente (auth-only, soft-delete). */}
       <NotesBlock target="client" entityId={cliente.id} />
-
-      <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} mode="edit" client={cliente} />
 
       {/* J2 — preencher/trocar o CPF real (marcador CL-XXXX → CPF válido). */}
       <ClientCpfFillDialog
@@ -428,56 +393,5 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <Eyebrow>{label}</Eyebrow>
       <div className="kpi-number text-[36px] mt-3">{value}</div>
     </Card>
-  );
-}
-
-function ProfessionalCard({ data, personType }: { data: unknown; personType: string | null }) {
-  const p =
-    data && typeof data === "object" && !Array.isArray(data)
-      ? (data as Record<string, unknown>)
-      : {};
-  const s = (k: string) => (typeof p[k] === "string" && p[k] ? (p[k] as string) : null);
-  const crm = s("crm_numero") ? `${s("crm_numero")}${s("crm_uf") ? `/${s("crm_uf")}` : ""}` : null;
-  const programas = Array.isArray(p.programas) ? (p.programas as string[]) : [];
-
-  const rows: Array<[string, string]> = [];
-  if (personType) rows.push(["Pessoa", personType === "PJ" ? "Pessoa jurídica" : "Pessoa física"]);
-  if (crm) rows.push(["CRM", crm]);
-  if (s("rg_orgao")) rows.push(["Órgão emissor (RG)", s("rg_orgao")!]);
-  if (s("vinculo_institucional")) rows.push(["Vínculo institucional", s("vinculo_institucional")!]);
-  if (s("especialidade")) rows.push(["Especialidade", s("especialidade")!]);
-
-  return (
-    <div className="mb-8">
-      <Card>
-        <Eyebrow>Dados profissionais</Eyebrow>
-        {rows.length === 0 && programas.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Nenhum dado profissional cadastrado. Use “Editar” para preencher.
-          </p>
-        ) : (
-          <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-            {rows.map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">{k}</dt>
-                <dd className="text-[var(--navy)] font-medium">{v}</dd>
-              </div>
-            ))}
-            {programas.length > 0 && (
-              <div className="sm:col-span-2 flex flex-wrap gap-2 mt-1">
-                {programas.map((pr) => (
-                  <span
-                    key={pr}
-                    className="px-2.5 py-0.5 rounded-full bg-[var(--navy)]/5 text-xs font-medium text-[var(--navy)]"
-                  >
-                    {PROGRAMA_LABELS[pr as keyof typeof PROGRAMA_LABELS] ?? pr}
-                  </span>
-                ))}
-              </div>
-            )}
-          </dl>
-        )}
-      </Card>
-    </div>
   );
 }

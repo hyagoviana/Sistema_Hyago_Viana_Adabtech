@@ -31,6 +31,7 @@ function assert(label: string, cond: boolean) {
 // override) bater com este oráculo p/ os 9 papéis, provamos regressão zero.
 // ---------------------------------------------------------------------------
 const MODULE_VIEW_ROUTE: Record<Module, string> = {
+  cliente: "/clientes",
   comercial: "/comercial",
   operacional: "/casos",
   financeiro: "/casos/financeiro",
@@ -41,6 +42,7 @@ const MODULE_VIEW_ROUTE: Record<Module, string> = {
 };
 
 const MODULE_EDIT_CAP = {
+  cliente: "clientes.manage",
   comercial: "clientes.manage",
   operacional: "casos.manage",
   financeiro: "financeiro.manage",
@@ -86,7 +88,14 @@ for (const role of ROLES) {
   }
 }
 assert(`todas as ${regressionCount} combinações batem com can/canSeeRoute`, failed === 0);
-assert("cobriu exatamente 108 combinações (9×6×2, financeiro excluído)", regressionCount === 108);
+// S5-01 — a contagem é DERIVADA (papéis × módulos-exceto-financeiro × ações), não
+// um número fixo: acrescentar papel ou módulo não deve "quebrar" um teste que só
+// contava linhas. O que importa é que TODAS as combinações batam com o oráculo.
+const esperado = ROLES.length * (MODULES.length - 1) * 2;
+assert(
+  `cobriu todas as ${esperado} combinações (${ROLES.length}×${MODULES.length - 1}×2, financeiro excluído)`,
+  regressionCount === esperado,
+);
 
 // ---------------------------------------------------------------------------
 // Régua BASE do módulo `financeiro` — decisão do dono (2026-07-18, R4).

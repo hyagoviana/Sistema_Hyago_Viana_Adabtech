@@ -22,7 +22,10 @@
     "test:validators": "tsx src/lib/validators/client.test.ts && tsx src/lib/validators/file.test.ts",
     "test:case-documents": "tsx src/lib/case-documents-mime.test.ts",
     "test:rbac": "tsx src/lib/rbac.test.ts",
-    "test:motor": "tsx src/lib/distribuicao/engine/scoring.test.ts && tsx src/lib/distribuicao/marcadores.test.ts",
+    "qa:permissoes": "tsx scripts/qa-permissoes-matriz.ts",
+    "qa:prioritarios": "tsx scripts/qa-prioritarios.ts",
+    "qa:dia-operacional": "tsx scripts/qa-dia-operacional.ts",
+    "test:motor": "tsx src/lib/distribuicao/engine/scoring.test.ts && tsx src/lib/distribuicao/marcadores.test.ts && tsx src/lib/distribuicao/engine/dia-operacional.test.ts",
     "test:webhook-replay": "tsx scripts/zapsign-webhook-replay.ts"
   },
   "dependencies": {

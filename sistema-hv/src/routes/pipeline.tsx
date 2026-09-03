@@ -7,11 +7,9 @@ import {
   FolderKanban,
   Layers,
   List,
-  Pencil,
   Plus,
   Search,
   Settings2,
-  Tag,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -24,7 +22,7 @@ import {
   applyCaseFilters,
   type CaseFilterValues,
 } from "@/components/cases/CaseFiltersPanel";
-import { TemasManagerDialog } from "@/components/pipeline/TemasManagerDialog";
+import { NovoTemaDialog } from "@/components/pipeline/NovoTemaDialog";
 import { KanbanBoard, type KanbanColumn } from "@/components/cases/KanbanBoard";
 import { ordenarPorEntradaNaEtapa } from "@/lib/cases/kanban-order";
 import { StageEditor } from "@/components/cases/StageEditor";
@@ -136,15 +134,11 @@ function ServiceTypeSelection() {
   const { role } = useAuth();
   const canManage = can(role, "config.manage");
   const navigate = useNavigate();
-  // R2-06 — gestão de TEMAS/FRENTES (admin-only). `editTemaId` abre o editor direto
-  // no tema clicado (lápis no card); null = abre no modo criar ("Novo tema").
-  const [temasOpen, setTemasOpen] = useState(false);
-  const [editTemaId, setEditTemaId] = useState<string | null>(null);
-
-  function openTemas(temaId: string | null) {
-    setEditTemaId(temaId);
-    setTemasOpen(true);
-  }
+  // S2-01 (reunião 02/09) — a Área de Trabalho é OPERAÇÃO. Toda a CONFIGURAÇÃO do
+  // tema (renomear, pastas/modelos, campos, motor, integrações) mora agora só em
+  // Configurações › Configuração de temas. Aqui ficou só o que é do dia a dia:
+  // abrir o tema, criar tema e ver a lista.
+  const [novoTemaOpen, setNovoTemaOpen] = useState(false);
 
   return (
     <div className="page-container !pb-10">
@@ -156,7 +150,7 @@ function ServiceTypeSelection() {
         aside={
           <div className="flex items-center gap-2">
             {canManage && (
-              <Btn variant="gold" onClick={() => openTemas(null)}>
+              <Btn variant="gold" onClick={() => setNovoTemaOpen(true)}>
                 <Plus size={14} />
                 Novo tema
               </Btn>
@@ -167,33 +161,25 @@ function ServiceTypeSelection() {
                 onClick={() => navigate({ to: "/configuracoes/campos-personalizados" })}
               >
                 <Settings2 size={14} />
-                Campos personalizados
+                Configurar temas
               </Btn>
             )}
             <Btn variant="ghost" onClick={() => navigate({ to: "/casos/lista", search: {} })}>
               <List size={14} />
               Ver todos em lista
             </Btn>
-            {canManage && (
-              <Btn variant="ghost" onClick={() => openTemas(null)}>
-                <Tag size={14} />
-                Temas
-              </Btn>
-            )}
           </div>
         }
       />
 
-      {/* R2-06 — gestão de temas/frentes (admin-only, gate acima). `openTemaId`
-          abre direto no editor do tema (lápis no card). */}
+      {/* S2-01 — só CRIAR o tema aqui; configurar é na tela dedicada. Depois de
+          criar, leva a pessoa direto para a configuração (era o fluxo do Thiago:
+          cria o tema e já configura). */}
       {canManage && (
-        <TemasManagerDialog
-          open={temasOpen}
-          onOpenChange={(o) => {
-            setTemasOpen(o);
-            if (!o) setEditTemaId(null);
-          }}
-          openTemaId={editTemaId}
+        <NovoTemaDialog
+          open={novoTemaOpen}
+          onOpenChange={setNovoTemaOpen}
+          onCreated={() => navigate({ to: "/configuracoes/campos-personalizados" })}
         />
       )}
 
@@ -203,7 +189,7 @@ function ServiceTypeSelection() {
         <Alert>
           <AlertDescription className="flex items-center gap-2">
             <Layers size={15} /> Nenhum tema cadastrado ainda.{" "}
-            {canManage ? 'Crie o primeiro em "Temas".' : "Peça a um administrador para criar."}
+            {canManage ? 'Crie o primeiro em "Novo tema".' : "Peça a um administrador para criar."}
           </AlertDescription>
         </Alert>
       ) : (
@@ -243,11 +229,11 @@ function ServiceTypeSelection() {
                 {canManage && (
                   <button
                     type="button"
-                    title="Editar tema (nome, frentes, pastas)"
-                    onClick={() => openTemas(t.id)}
+                    title="Configurar tema (campos, modelos, motor)"
+                    onClick={() => navigate({ to: "/configuracoes/campos-personalizados" })}
                     className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[var(--muted)] hover:text-[var(--navy)] transition-opacity"
                   >
-                    <Pencil size={14} />
+                    <Settings2 size={14} />
                   </button>
                 )}
               </div>

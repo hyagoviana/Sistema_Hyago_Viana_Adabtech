@@ -180,13 +180,62 @@ export const professionalDataSchema = z
   .optional()
   .nullable();
 
+/**
+ * S1-05 (reunião 02/09) — chaves que JÁ SÃO campo padrão do cadastro do cliente.
+ *
+ * Um campo personalizado com uma destas keys apareceria DUAS vezes na ficha (o
+ * padrão e o personalizado), com dois valores que podem divergir. Ex. real: o
+ * Thiago criou "FIES" e "Nº contrato FIES" como campo de tema com escopo cliente,
+ * sem saber que os dois já existem no bloco "Formação, FIES e residência".
+ *
+ * Manutenção: ao acrescentar campo padrão ao cadastro (coluna de system_clients
+ * ou chave de professional_data), acrescente a key aqui também.
+ */
+export const CLIENT_RESERVED_FIELD_KEYS: ReadonlySet<string> = new Set([
+  // Colunas de system_clients.
+  "full_name",
+  "cpf_cnpj",
+  "email",
+  "phone",
+  "address",
+  "tipo",
+  "person_type",
+  "rg",
+  "birth_date",
+  // Chaves de professional_data (professionalDataSchema, acima).
+  "crm_numero",
+  "crm_uf",
+  "rg_orgao",
+  "estado_civil",
+  "oab_numero",
+  "oab_uf",
+  "vinculo_institucional",
+  "especialidade",
+  "instituicao_graduacao",
+  "ano_formatura",
+  "fies",
+  "fies_contrato_numero",
+  "fies_contrato_obs",
+  "residencia_hospital",
+  "residencia_inicio",
+  "residencia_termino",
+  "residencia_especialidade",
+  "tags",
+  "programas",
+  "observacoes",
+]);
+
 export const clientCreateSchema = z
   .object({
     full_name: z.string().trim().min(3, "Nome muito curto").max(200),
     cpf_cnpj: cpfCnpjSchema,
     // RG — obrigatório apenas para pessoa física (validado no superRefine).
     rg: textOptional(20),
-    birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)").optional().or(z.literal("")),
+    birth_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)")
+      .optional()
+      .or(z.literal("")),
     tipo: z.string().trim().max(50).optional().nullable(),
     professional_data: professionalDataSchema,
     email: z.string().trim().email("E-mail inválido").max(200),
@@ -217,7 +266,12 @@ export const clientUpdateSchema = z.object({
   full_name: z.string().trim().min(3, "Nome muito curto").max(200).optional(),
   cpf_cnpj: cpfCnpjSchema.optional(),
   rg: textOptional(20),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)").optional().nullable().or(z.literal("")),
+  birth_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida (AAAA-MM-DD)")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   tipo: z.string().trim().max(50).optional().nullable(),
   professional_data: professionalDataSchema,
   email: z.string().trim().email("E-mail inválido").max(200).optional(),

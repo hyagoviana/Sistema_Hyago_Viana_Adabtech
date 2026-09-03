@@ -47,7 +47,6 @@ import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumen
 import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
 import { CaseNameEditDialog } from "@/components/cases/CaseNameEditDialog";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
-import { MoveCaseFinDialog } from "@/components/cases/MoveCaseFinDialog";
 import { AddCaseToBoardDialog } from "@/components/cases/AddCaseToBoardDialog";
 import { LinkCaseToTemaDialog } from "@/components/cases/LinkCaseToTemaDialog";
 import {
@@ -110,17 +109,14 @@ import {
   useSetCaseUrgency,
   useSetCaseFieldsLocked,
 } from "@/hooks/useCases";
-import { useEntrarFinanceiro, useVoltarOperacional } from "@/hooks/usePipeline";
-import { useRastroFinanceiroCaso } from "@/hooks/useFinanceiro";
+import { useEntrarFinanceiro } from "@/hooks/usePipeline";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { useCaseJudicial } from "@/hooks/useJudicial";
 import { useCaseOperationalTrail, useRemoveCaseFromBoard } from "@/hooks/useBoards";
 import {
   CASE_TYPE_LABELS,
-  MACRO_FIN_LABELS,
   MACRO_OP_LABELS,
   type CaseType,
-  type MacroFin,
   type MacroOp,
 } from "@/lib/cases/constants";
 
@@ -151,7 +147,6 @@ function CasoDetalhe() {
   const { data: events } = useCaseEvents(id);
   const remove = useDeleteCase();
   const entrar = useEntrarFinanceiro();
-  const voltar = useVoltarOperacional();
   const promover = usePromoverCasoManual();
   const { role } = useAuth();
   const isAdmin = role === "admin";
@@ -168,7 +163,6 @@ function CasoDetalhe() {
   // C3 (2026-08-05) — rastro operacional MULTI-KANBAN (preservado).
   const { data: opTrail } = useCaseOperationalTrail(id);
   // F1 (AC-4) — rastro financeiro RESUMIDO por caso (só carrega p/ financeiro:view).
-  const { data: rastroFin } = useRastroFinanceiroCaso(id, podeVerFinanceiro);
   // G4 — visibilidade do submenu Judicial (regra de sigilo). G1 usa o mesmo hook.
   const { podeVer: podeVerJudicial } = usePodeVerJudicial(id);
   // G1 — resumo judicial do caso (só carrega quando pode ver o judicial).
@@ -183,7 +177,6 @@ function CasoDetalhe() {
   );
 
   const [moveOpen, setMoveOpen] = useState(false);
-  const [moveFinOpen, setMoveFinOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   // AJ2 (Thiago, 27/08): tirar o caso de um kanban ADICIONAL. O principal nunca
   // sai — o board-service ja recusa com 409, e a UI nem oferece o botao.
@@ -246,13 +239,11 @@ function CasoDetalhe() {
   const casoObservacoes = (caso as { observacoes?: string | null }).observacoes ?? "";
 
   const dias = daysSince(caso.status_changed_at);
-  const diasFin = daysSince(caso.status_fin_changed_at);
   const tipoLabel =
     (caso as { caso_pasta_nome?: string | null }).caso_pasta_nome ??
     CASE_TYPE_LABELS[caso.case_type as CaseType] ??
     caso.case_type;
   const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
-  const finLabel = MACRO_FIN_LABELS[caso.macrostatus_fin as MacroFin] ?? caso.macrostatus_fin;
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
   const lifecycle =
     (caso as { lifecycle?: "LEAD" | "CLIENTE" | "PERDIDO" | null }).lifecycle ?? "LEAD";
@@ -377,6 +368,18 @@ function CasoDetalhe() {
           >
             {lcMeta.label}
           </span>
+          {/* QA S4-02 (03/09) — "Fora do operacional" é informação OPERACIONAL e
+              vinha no card do rastro financeiro, que saiu da ficha. Sem este selo,
+              quem não tem acesso ao financeiro não teria como saber que o caso foi
+              removido do operacional. */}
+          {removidoDoOp && (
+            <span
+              className="inline-flex items-center rounded-full bg-[var(--muted)] px-2.5 py-1 text-[11px] font-semibold text-muted-foreground self-center"
+              title="Caso removido da pipeline operacional (vive só no financeiro)"
+            >
+              Fora do operacional
+            </span>
+          )}
           {/* #3 (2026-08-17) — EDITAR CASO: mudar tema/tipo (pipeline), preencher
               campos e urgência (agrupa o antigo <select> + "Vincular" + "Preencher"). */}
           {podeGerirCaso && (
@@ -622,131 +625,23 @@ function CasoDetalhe() {
           )}
         </div>
 
-        {/* F1 (AC-3/AC-4) — Rastro Financeiro RESUMIDO. O bloco integral
-            (TermoPanel + AsaasCobrancasPanel) foi movido para o submenu
-            /casos/$id/financeiro. Aqui só: etapa + a pagar/vencido/pago +
-            "Abrir financeiro". Só para quem tem financeiro:view. */}
-        {podeVerFinanceiro && (
-          <div className="card-hero p-7">
-            <div className="flex items-start justify-between">
-              <Eyebrow>Rastro Financeiro</Eyebrow>
-              {finBifurcated && (
-                <button
-                  type="button"
-                  onClick={() => setMoveFinOpen(true)}
-                  className="text-[var(--gold-700)] hover:underline text-[11px] inline-flex items-center gap-1 normal-case tracking-normal"
-                >
-                  <ArrowRightLeft size={11} /> mover
-                </button>
-              )}
-            </div>
-            <div className="mt-4 flex items-center gap-3">
-              <span className="text-[17px] font-semibold text-[var(--navy)]">
-                {finBifurcated ? finLabel : "Não bifurcado"}
-              </span>
-              {finBifurcated && (
-                <span className="text-[12px] text-muted-foreground">
-                  há {diasFin} dia(s) neste estado
-                </span>
-              )}
-            </div>
-
-            {/* #3 (2026-08-17) — checklist da etapa FINANCEIRA sob o próprio card. */}
-            {finBifurcated && caso.macrostatus_fin && caso.macrostatus_fin !== "NAO_APLICAVEL" && (
-              <CaseStageChecklist
-                caseId={caso.id}
-                stageSlug={caso.macrostatus_fin}
-                canEdit={podeGerirCaso}
-                className="mt-4 pt-4 border-t border-[rgba(30,32,68,0.08)]"
-              />
-            )}
-
-            {finBifurcated && (
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                <div>
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    A pagar
-                  </div>
-                  <div className="text-[15px] font-semibold text-[var(--navy)]">
-                    {brl(rastroFin?.a_pagar_centavos)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Vencido
-                  </div>
-                  <div className="text-[15px] font-semibold text-[var(--danger)]">
-                    {brl(rastroFin?.vencido_centavos)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Pago
-                  </div>
-                  <div className="text-[15px] font-semibold text-green-700">
-                    {brl(rastroFin?.pago_centavos)}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-5 pt-5 border-t border-[rgba(30,32,68,0.08)] space-y-4">
-              {removidoDoOp && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-[var(--muted)] text-muted-foreground">
-                    Fora do operacional
-                  </Badge>
-                  {podeFinanceiro && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={voltar.isPending}
-                      onClick={async () => {
-                        try {
-                          await voltar.mutateAsync(caso.id);
-                          toast.success("Caso devolvido ao operacional");
-                        } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Falha");
-                        }
-                      }}
-                    >
-                      Trazer de volta ao operacional
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              {!finBifurcated && podeFinanceiro && (
-                <Button size="sm" onClick={() => setEntrarOpen(true)}>
-                  Enviar para o financeiro
-                </Button>
-              )}
-
-              {/* F1 (AC-1/AC-3) — abre o submenu financeiro (detalhamento, cobranças, sync). */}
-              <div>
-                <Link to="/casos/$id/financeiro" params={{ id: caso.id }}>
-                  <Button size="sm" variant="outline">
-                    <DollarSign size={13} className="mr-1.5" /> Abrir financeiro
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* #13 + #6 (2026-08-17) — no lugar do antigo painel de Checklist (movido
-          para dentro do Rastro Operacional), 2 painéis lado a lado: Casos
-          vinculados + Observações gerais (estilo Trello). */}
-      <OrnamentalDivider />
-
-      <div className="grid lg:grid-cols-2 gap-6">
+        {/* S4-02 (reunião 02/09) — o RASTRO FINANCEIRO saiu daqui e foi para a aba
+            Financeiro do caso. Thiago: "Esse painel rastro financeiro vai para a
+            aba 'financeiro'" e, apontando o espaço que sobrou, "Vamos levar esse
+            painel para o espaço que vagou". Quem sobe é Casos vinculados; as
+            Observações ficam logo abaixo, em largura inteira (é o painel que mais
+            cresce). A ficha vira operacional; dinheiro é na aba Financeiro. */}
         <div className="card-hero p-7">
           <CaseLinkedCases caseId={caso.id} canEdit={podeGerirCaso} />
         </div>
-        <div className="card-hero p-7">
-          <CaseObservacoes caseId={caso.id} legacyText={casoObservacoes} canEdit={podeGerirCaso} />
-        </div>
+      </div>
+
+      {/* Observações gerais (estilo Trello) — largura inteira desde a S4-02, já que
+          Casos vinculados subiu para a dobra de cima. */}
+      <OrnamentalDivider />
+
+      <div className="card-hero p-7">
+        <CaseObservacoes caseId={caso.id} legacyText={casoObservacoes} canEdit={podeGerirCaso} />
       </div>
 
       {/* G1/G4 — Rastro JUDICIAL resumido (tribunal + nº + etapa) + "Abrir
@@ -877,15 +772,6 @@ function CasoDetalhe() {
         caseCode={caso.case_code}
         caseType={caso.case_type}
         currentStatus={caso.macrostatus_op ?? ""}
-      />
-
-      <MoveCaseFinDialog
-        open={moveFinOpen}
-        onOpenChange={setMoveFinOpen}
-        caseId={caso.id}
-        caseCode={caso.case_code}
-        currentFinSlug={caso.macrostatus_fin}
-        serviceTypeId={caso.service_type_id}
       />
 
       <AddCaseToBoardDialog

@@ -27,6 +27,7 @@ import {
   normalizeTemaKey,
 } from "@/lib/projuris/normalizer";
 import { deriveFromMarcadores } from "@/lib/distribuicao/marcadores";
+import { isWeekday } from "@/lib/distribuicao/engine/date-utils";
 import { distributeBatch } from "@/lib/distribuicao/engine/motor";
 import { buildBatchInput } from "@/lib/distribuicao/engine/transformer";
 import type {
@@ -217,8 +218,63 @@ export async function isDistributionActive(): Promise<boolean> {
   return data?.active === true;
 }
 
-export async function runSync(distributionDate: string, windowDays: number): Promise<SyncSummary> {
+/**
+ * S1-02 (reunião 02/09) — a data é DIA OPERACIONAL?
+ *
+ * Thiago: "Ele tá distribuindo sábado, tá? Sábado e domingo ele tá distribuindo
+ * tarefa, está considerando como dia útil. (...) Se a gente conseguisse que ele
+ * já sabia que final de semana ele não joga tarefa."
+ *
+ * Dia operacional = seg-sex E sem bloqueio `general` no calendário. Mesma régua
+ * que a engine usa para a data-ALVO (`engine/date-utils.isOperationalDay`) —
+ * aqui ela passa a valer também para a data de DISTRIBUIÇÃO. O calendário segue
+ * sendo só para feriado/recesso; fim de semana é regra de código (cadastrar todo
+ * sábado do ano na mão foi recusado pelo owner: "mas é muito sábado").
+ */
+export async function isOperationalDate(iso: string): Promise<boolean> {
+  if (!isWeekday(iso)) return false;
   const supabase = getSupabaseAdmin();
+  // QA (03/09): NÃO usar `.maybeSingle()` aqui. A UNIQUE do calendário é
+  // (date, block_type, executor_id, organization_id) e `executor_id` é NULL nos
+  // bloqueios gerais — como NULL não conflita com NULL no Postgres, a MESMA data
+  // pode ter duas linhas 'general' (existe: 2026-12-31 tem duas). Com
+  // `.maybeSingle()` isso vira erro PGRST116, `data` volta null e a função diria
+  // "dia operacional" — o feriado seria ignorado e o motor distribuiria.
+  const { data, error } = await supabase
+    .from("system_distribution_calendar")
+    .select("date")
+    .eq("organization_id", ORG_ID)
+    .eq("block_type", "general")
+    .eq("date", iso)
+    .limit(1);
+  if (error) {
+    // Falha ao ler o calendário: mantemos a decisão que já temos (é dia útil) e
+    // registramos. Perder um feriado é ruim; parar o motor por erro transitório
+    // de leitura seria pior.
+    console.error("isOperationalDate: falha ao consultar o calendário:", error);
+    return true;
+  }
+  return (data ?? []).length === 0;
+}
+
+/** Resumo vazio — usado quando o lote é pulado por não ser dia operacional. */
+function emptySummary(batchDate: string): SyncSummary {
+  return { batchDate, totalTasks: 0, distributed: 0, blocked: 0, byExecutor: [], alerts: [] };
+}
+
+export async function runSync(
+  distributionDate: string,
+  windowDays: number,
+  opts?: { force?: boolean },
+): Promise<SyncSummary> {
+  const supabase = getSupabaseAdmin();
+
+  // S1-02 — defesa em profundidade: além do gate no cron, o próprio núcleo se
+  // recusa a distribuir em dia não operacional. `force` é do caminho MANUAL
+  // (a pessoa clicou sabendo o que está fazendo).
+  if (!opts?.force && !(await isOperationalDate(distributionDate))) {
+    return emptySummary(distributionDate);
+  }
 
   const client = await buildProjurisClientFromConfig(supabase);
 

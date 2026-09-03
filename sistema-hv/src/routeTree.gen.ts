@@ -58,6 +58,7 @@ import { Route as DashboardsFinanceiroRouteImport } from './routes/dashboards.fi
 import { Route as DashboardsComercialRouteImport } from './routes/dashboards.comercial'
 import { Route as DashboardsAdminRouteImport } from './routes/dashboards.admin'
 import { Route as ControladoriaTesesRouteImport } from './routes/controladoria.teses'
+import { Route as ControladoriaPrioritariosRouteImport } from './routes/controladoria.prioritarios'
 import { Route as ControladoriaPrazosRouteImport } from './routes/controladoria.prazos'
 import { Route as ControladoriaExcecoesRouteImport } from './routes/controladoria.excecoes'
 import { Route as ControladoriaDistribuicaoRouteImport } from './routes/controladoria.distribuicao'
@@ -72,6 +73,7 @@ import { Route as ComercialLeadsRouteImport } from './routes/comercial.leads'
 import { Route as ComercialFunilRouteImport } from './routes/comercial.funil'
 import { Route as ComercialEmailMarketingRouteImport } from './routes/comercial.email-marketing'
 import { Route as ComercialAssinaturasRouteImport } from './routes/comercial.assinaturas'
+import { Route as ClientesNovoRouteImport } from './routes/clientes.novo'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as CasosListaRouteImport } from './routes/casos.lista'
 import { Route as CasosFinanceiroRouteImport } from './routes/casos.financeiro'
@@ -98,6 +100,7 @@ import { Route as ControladoriaDistribuicaoConfiguracaoRouteImport } from './rou
 import { Route as ControladoriaDistribuicaoCalendarioRouteImport } from './routes/controladoria.distribuicao.calendario'
 import { Route as ControladoriaDistribuicaoAndamentosRouteImport } from './routes/controladoria.distribuicao.andamentos'
 import { Route as ControladoriaDistribuicaoADistribuirRouteImport } from './routes/controladoria.distribuicao.a-distribuir'
+import { Route as ClientesEditarIdRouteImport } from './routes/clientes.editar.$id'
 import { Route as CasosFinanceiroInadimplenciaRouteImport } from './routes/casos.financeiro.inadimplencia'
 import { Route as CasosFinanceiroCobrancasRouteImport } from './routes/casos.financeiro.cobrancas'
 import { Route as CasosIdTermoRouteImport } from './routes/casos.$id.termo'
@@ -365,6 +368,12 @@ const ControladoriaTesesRoute = ControladoriaTesesRouteImport.update({
   path: '/controladoria/teses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ControladoriaPrioritariosRoute =
+  ControladoriaPrioritariosRouteImport.update({
+    id: '/controladoria/prioritarios',
+    path: '/controladoria/prioritarios',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ControladoriaPrazosRoute = ControladoriaPrazosRouteImport.update({
   id: '/controladoria/prazos',
   path: '/controladoria/prazos',
@@ -437,6 +446,11 @@ const ComercialEmailMarketingRoute = ComercialEmailMarketingRouteImport.update({
 const ComercialAssinaturasRoute = ComercialAssinaturasRouteImport.update({
   id: '/comercial/assinaturas',
   path: '/comercial/assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientesNovoRoute = ClientesNovoRouteImport.update({
+  id: '/clientes/novo',
+  path: '/clientes/novo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientesIdRoute = ClientesIdRouteImport.update({
@@ -587,6 +601,11 @@ const ControladoriaDistribuicaoADistribuirRoute =
     path: '/a-distribuir',
     getParentRoute: () => ControladoriaDistribuicaoRoute,
   } as any)
+const ClientesEditarIdRoute = ClientesEditarIdRouteImport.update({
+  id: '/clientes/editar/$id',
+  path: '/clientes/editar/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosFinanceiroInadimplenciaRoute =
   CasosFinanceiroInadimplenciaRouteImport.update({
     id: '/inadimplencia',
@@ -716,6 +735,7 @@ export interface FileRoutesByFullPath {
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/clientes/novo': typeof ClientesNovoRoute
   '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
@@ -730,6 +750,7 @@ export interface FileRoutesByFullPath {
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
+  '/controladoria/prioritarios': typeof ControladoriaPrioritariosRoute
   '/controladoria/teses': typeof ControladoriaTesesRoute
   '/dashboards/admin': typeof DashboardsAdminRoute
   '/dashboards/comercial': typeof DashboardsComercialRoute
@@ -777,6 +798,7 @@ export interface FileRoutesByFullPath {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/clientes/editar/$id': typeof ClientesEditarIdRoute
   '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
   '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
@@ -824,6 +846,7 @@ export interface FileRoutesByTo {
   '/tarefas': typeof TarefasRoute
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/clientes/novo': typeof ClientesNovoRoute
   '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
@@ -837,6 +860,7 @@ export interface FileRoutesByTo {
   '/controladoria/decisoes': typeof ControladoriaDecisoesRoute
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
+  '/controladoria/prioritarios': typeof ControladoriaPrioritariosRoute
   '/controladoria/teses': typeof ControladoriaTesesRoute
   '/dashboards/admin': typeof DashboardsAdminRoute
   '/dashboards/comercial': typeof DashboardsComercialRoute
@@ -884,6 +908,7 @@ export interface FileRoutesByTo {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/clientes/editar/$id': typeof ClientesEditarIdRoute
   '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
   '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
@@ -935,6 +960,7 @@ export interface FileRoutesById {
   '/casos/financeiro': typeof CasosFinanceiroRouteWithChildren
   '/casos/lista': typeof CasosListaRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/clientes/novo': typeof ClientesNovoRoute
   '/comercial/assinaturas': typeof ComercialAssinaturasRoute
   '/comercial/email-marketing': typeof ComercialEmailMarketingRoute
   '/comercial/funil': typeof ComercialFunilRoute
@@ -949,6 +975,7 @@ export interface FileRoutesById {
   '/controladoria/distribuicao': typeof ControladoriaDistribuicaoRouteWithChildren
   '/controladoria/excecoes': typeof ControladoriaExcecoesRoute
   '/controladoria/prazos': typeof ControladoriaPrazosRoute
+  '/controladoria/prioritarios': typeof ControladoriaPrioritariosRoute
   '/controladoria/teses': typeof ControladoriaTesesRoute
   '/dashboards/admin': typeof DashboardsAdminRoute
   '/dashboards/comercial': typeof DashboardsComercialRoute
@@ -996,6 +1023,7 @@ export interface FileRoutesById {
   '/casos/$id/termo': typeof CasosIdTermoRouteWithChildren
   '/casos/financeiro/cobrancas': typeof CasosFinanceiroCobrancasRoute
   '/casos/financeiro/inadimplencia': typeof CasosFinanceiroInadimplenciaRoute
+  '/clientes/editar/$id': typeof ClientesEditarIdRoute
   '/controladoria/distribuicao/a-distribuir': typeof ControladoriaDistribuicaoADistribuirRoute
   '/controladoria/distribuicao/andamentos': typeof ControladoriaDistribuicaoAndamentosRoute
   '/controladoria/distribuicao/calendario': typeof ControladoriaDistribuicaoCalendarioRoute
@@ -1048,6 +1076,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/clientes/novo'
     | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
@@ -1062,6 +1091,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
+    | '/controladoria/prioritarios'
     | '/controladoria/teses'
     | '/dashboards/admin'
     | '/dashboards/comercial'
@@ -1109,6 +1139,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/clientes/editar/$id'
     | '/controladoria/distribuicao/a-distribuir'
     | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
@@ -1156,6 +1187,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/clientes/novo'
     | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
@@ -1169,6 +1201,7 @@ export interface FileRouteTypes {
     | '/controladoria/decisoes'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
+    | '/controladoria/prioritarios'
     | '/controladoria/teses'
     | '/dashboards/admin'
     | '/dashboards/comercial'
@@ -1216,6 +1249,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/clientes/editar/$id'
     | '/controladoria/distribuicao/a-distribuir'
     | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
@@ -1266,6 +1300,7 @@ export interface FileRouteTypes {
     | '/casos/financeiro'
     | '/casos/lista'
     | '/clientes/$id'
+    | '/clientes/novo'
     | '/comercial/assinaturas'
     | '/comercial/email-marketing'
     | '/comercial/funil'
@@ -1280,6 +1315,7 @@ export interface FileRouteTypes {
     | '/controladoria/distribuicao'
     | '/controladoria/excecoes'
     | '/controladoria/prazos'
+    | '/controladoria/prioritarios'
     | '/controladoria/teses'
     | '/dashboards/admin'
     | '/dashboards/comercial'
@@ -1327,6 +1363,7 @@ export interface FileRouteTypes {
     | '/casos/$id/termo'
     | '/casos/financeiro/cobrancas'
     | '/casos/financeiro/inadimplencia'
+    | '/clientes/editar/$id'
     | '/controladoria/distribuicao/a-distribuir'
     | '/controladoria/distribuicao/andamentos'
     | '/controladoria/distribuicao/calendario'
@@ -1378,6 +1415,7 @@ export interface RootRouteChildren {
   CasosFinanceiroRoute: typeof CasosFinanceiroRouteWithChildren
   CasosListaRoute: typeof CasosListaRoute
   ClientesIdRoute: typeof ClientesIdRoute
+  ClientesNovoRoute: typeof ClientesNovoRoute
   ComercialAssinaturasRoute: typeof ComercialAssinaturasRoute
   ComercialEmailMarketingRoute: typeof ComercialEmailMarketingRoute
   ComercialFunilRoute: typeof ComercialFunilRoute
@@ -1387,6 +1425,7 @@ export interface RootRouteChildren {
   ControladoriaDistribuicaoRoute: typeof ControladoriaDistribuicaoRouteWithChildren
   ControladoriaExcecoesRoute: typeof ControladoriaExcecoesRoute
   ControladoriaPrazosRoute: typeof ControladoriaPrazosRoute
+  ControladoriaPrioritariosRoute: typeof ControladoriaPrioritariosRoute
   ControladoriaTesesRoute: typeof ControladoriaTesesRoute
   DashboardsAdminRoute: typeof DashboardsAdminRoute
   DashboardsComercialRoute: typeof DashboardsComercialRoute
@@ -1427,6 +1466,7 @@ export interface RootRouteChildren {
   ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
   ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
   ApiWebhooksZapsignRoute: typeof ApiWebhooksZapsignRoute
+  ClientesEditarIdRoute: typeof ClientesEditarIdRoute
   PortalCasosIdRoute: typeof PortalCasosIdRoute
   WhatsappConversasIdRoute: typeof WhatsappConversasIdRoute
   ApiCasesIdDocumentsUploadRoute: typeof ApiCasesIdDocumentsUploadRoute
@@ -1780,6 +1820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControladoriaTesesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/controladoria/prioritarios': {
+      id: '/controladoria/prioritarios'
+      path: '/controladoria/prioritarios'
+      fullPath: '/controladoria/prioritarios'
+      preLoaderRoute: typeof ControladoriaPrioritariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/controladoria/prazos': {
       id: '/controladoria/prazos'
       path: '/controladoria/prazos'
@@ -1876,6 +1923,13 @@ declare module '@tanstack/react-router' {
       path: '/comercial/assinaturas'
       fullPath: '/comercial/assinaturas'
       preLoaderRoute: typeof ComercialAssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clientes/novo': {
+      id: '/clientes/novo'
+      path: '/clientes/novo'
+      fullPath: '/clientes/novo'
+      preLoaderRoute: typeof ClientesNovoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clientes/$id': {
@@ -2059,6 +2113,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/controladoria/distribuicao/a-distribuir'
       preLoaderRoute: typeof ControladoriaDistribuicaoADistribuirRouteImport
       parentRoute: typeof ControladoriaDistribuicaoRoute
+    }
+    '/clientes/editar/$id': {
+      id: '/clientes/editar/$id'
+      path: '/clientes/editar/$id'
+      fullPath: '/clientes/editar/$id'
+      preLoaderRoute: typeof ClientesEditarIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/casos/financeiro/inadimplencia': {
       id: '/casos/financeiro/inadimplencia'
@@ -2371,6 +2432,7 @@ const rootRouteChildren: RootRouteChildren = {
   CasosFinanceiroRoute: CasosFinanceiroRouteWithChildren,
   CasosListaRoute: CasosListaRoute,
   ClientesIdRoute: ClientesIdRoute,
+  ClientesNovoRoute: ClientesNovoRoute,
   ComercialAssinaturasRoute: ComercialAssinaturasRoute,
   ComercialEmailMarketingRoute: ComercialEmailMarketingRoute,
   ComercialFunilRoute: ComercialFunilRoute,
@@ -2380,6 +2442,7 @@ const rootRouteChildren: RootRouteChildren = {
   ControladoriaDistribuicaoRoute: ControladoriaDistribuicaoRouteWithChildren,
   ControladoriaExcecoesRoute: ControladoriaExcecoesRoute,
   ControladoriaPrazosRoute: ControladoriaPrazosRoute,
+  ControladoriaPrioritariosRoute: ControladoriaPrioritariosRoute,
   ControladoriaTesesRoute: ControladoriaTesesRoute,
   DashboardsAdminRoute: DashboardsAdminRoute,
   DashboardsComercialRoute: DashboardsComercialRoute,
@@ -2420,6 +2483,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
   ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
   ApiWebhooksZapsignRoute: ApiWebhooksZapsignRoute,
+  ClientesEditarIdRoute: ClientesEditarIdRoute,
   PortalCasosIdRoute: PortalCasosIdRoute,
   WhatsappConversasIdRoute: WhatsappConversasIdRoute,
   ApiCasesIdDocumentsUploadRoute: ApiCasesIdDocumentsUploadRoute,

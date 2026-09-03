@@ -1,10 +1,9 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Phone, Plus, Search, Settings2, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ClientCardMenu } from "@/components/clients/ClientCardMenu";
 import { ClientFieldsManagerDialog } from "@/components/clients/ClientFieldsManagerDialog";
-import { ClientFormDialog } from "@/components/clients/ClientFormDialog";
 import { Badge, Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -124,13 +123,12 @@ export function ClientRoster({
   /** 2026-07-19 — pode criar/editar/excluir cadastro? (permissão do módulo da aba). */
   canEdit?: boolean;
 }) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState("Todos os tipos");
   const [searchFields, setSearchFields] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [fieldsOpen, setFieldsOpen] = useState(false);
-  const [editClient, setEditClient] = useState<Client | null>(null);
   const [lifecycleTab, setLifecycleTab] = useState<LifecycleView>(
     showLifecycleTabs ? "lead" : (fixedLifecycle ?? "cliente"),
   );
@@ -210,7 +208,7 @@ export function ClientRoster({
               </Btn>
             )}
             {canEdit && (
-              <Btn variant="gold" onClick={() => setCreateOpen(true)}>
+              <Btn variant="gold" onClick={() => navigate({ to: "/clientes/novo" })}>
                 <Plus size={14} />
                 Novo cadastro
               </Btn>
@@ -433,7 +431,7 @@ export function ClientRoster({
                   <ClientCardMenu
                     clientId={c.id}
                     clientName={c.full_name}
-                    onEdit={() => setEditClient(c)}
+                    onEdit={() => navigate({ to: "/clientes/editar/$id", params: { id: c.id } })}
                   />
                 </div>
               )}
@@ -445,13 +443,6 @@ export function ClientRoster({
       {canManageFields && (
         <ClientFieldsManagerDialog open={fieldsOpen} onOpenChange={setFieldsOpen} />
       )}
-      <ClientFormDialog open={createOpen} onOpenChange={setCreateOpen} mode="create" />
-      <ClientFormDialog
-        open={!!editClient}
-        onOpenChange={(o) => !o && setEditClient(null)}
-        mode="edit"
-        client={editClient}
-      />
     </div>
   );
 }

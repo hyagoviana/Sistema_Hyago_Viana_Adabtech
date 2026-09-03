@@ -5,41 +5,58 @@
 // ============================================================================
 
 export const ROLES = [
+  // ---- Papéis da MATRIZ do Thiago (reunião 02/09, decisão D2) ----------------
   "admin",
+  "coordenador",
+  "financeiro",
+  "controladoria",
+  "suporte",
+  "atendimento",
+  "operacional",
+  "estagiario",
+  "marketing",
+  // ---- LEGADOS: continuam válidos até o de-para da S5-04 ---------------------
+  // Ninguém fica sem papel no meio do caminho. Some daqui quando a planilha
+  // revisada pelo owner for aplicada.
   "advogado_titular",
   "advogado_associado",
   "prestador_externo",
-  "controladoria",
   "comercial",
-  "financeiro",
-  "operacional",
-  "marketing",
 ] as const;
 
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: "Administrador",
-  advogado_titular: "Advogado Titular",
-  advogado_associado: "Advogado Associado",
-  prestador_externo: "Prestador Externo",
-  controladoria: "Controladoria",
-  comercial: "Comercial",
+  coordenador: "Coordenador",
   financeiro: "Financeiro",
+  controladoria: "Controladoria",
+  suporte: "Suporte",
+  atendimento: "Atendimento",
   operacional: "Operacional",
+  estagiario: "Estagiário",
   marketing: "Marketing",
+  // Legados (some com a S5-04).
+  advogado_titular: "Advogado Titular (legado)",
+  advogado_associado: "Advogado Associado (legado)",
+  prestador_externo: "Prestador Externo (legado)",
+  comercial: "Comercial (legado)",
 };
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "Acesso total ao sistema, incluindo gestão de usuários e configurações.",
-  advogado_titular: "Visão completa de casos, clientes, financeiro e inteligência.",
-  advogado_associado: "Casos, clientes, prazos e peticionamento. Sem gestão de usuários.",
-  prestador_externo: "Acesso restrito aos casos e tarefas atribuídos.",
-  controladoria: "Casos, prazos e controladoria. Foco em conformidade processual.",
-  comercial: "Clientes, funil comercial e atendimento (WhatsApp).",
-  financeiro: "Pipeline financeira, cobranças e inadimplência.",
-  operacional: "Casos operacionais, clientes e tarefas do dia a dia.",
-  marketing: "Marketing e dashboards de performance.",
+  coordenador: "Configura cliente, operacional e comercial; edita financeiro e controladoria.",
+  financeiro: "Configura o financeiro; edita cliente, operacional, comercial e controladoria.",
+  controladoria: "Configura a controladoria; edita cliente, operacional e comercial.",
+  suporte: "Edita o dia a dia (cliente, operacional, comercial, controladoria) e vê o financeiro.",
+  atendimento: "Cliente, operacional e comercial. Era o antigo papel Comercial.",
+  operacional: "Edita cliente e operacional; vê o comercial.",
+  estagiario: "Mesma régua do Operacional: edita cliente e operacional, vê o comercial.",
+  marketing: "Vê cliente, operacional e comercial; atua no marketing.",
+  advogado_titular: "Legado — será convertido pelo de-para (S5-04).",
+  advogado_associado: "Legado — será convertido pelo de-para (S5-04).",
+  prestador_externo: "Legado — acesso restrito aos casos vinculados.",
+  comercial: "Legado — equivale ao novo papel Atendimento.",
 };
 
 // ---------------------------------------------------------------------------
@@ -66,6 +83,18 @@ const ALL_CAPS: Capability[] = [
 
 const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
   admin: ALL_CAPS,
+  // Papéis novos — usados só como FALLBACK; a régua real deles é a matriz
+  // (system_role_module_perms).
+  coordenador: [
+    "clientes.manage",
+    "casos.manage",
+    "financeiro.manage",
+    "documentos.upload",
+    "dossie.manage",
+  ],
+  suporte: ["clientes.manage", "casos.manage", "documentos.upload", "dossie.manage"],
+  atendimento: ["clientes.manage", "casos.manage", "documentos.upload", "dossie.manage"],
+  estagiario: ["clientes.manage", "casos.manage", "documentos.upload", "dossie.manage"],
   advogado_titular: [
     "clientes.manage",
     "casos.manage",
@@ -117,6 +146,33 @@ export function isAdvogado(role: Role | null | undefined): boolean {
 // ---------------------------------------------------------------------------
 const ROLE_NAV: Record<Role, "all" | string[]> = {
   admin: "all",
+  // Papéis novos — o NAV é o fallback; a régua real vem da matriz.
+  coordenador: "all",
+  suporte: [
+    "/hoje",
+    "/casos",
+    "/pipeline",
+    "/clientes",
+    "/comercial",
+    "/comercial/leads",
+    "/controladoria",
+    "/tarefas",
+    "/dashboards",
+    "/configuracoes",
+  ],
+  atendimento: [
+    "/hoje",
+    "/clientes",
+    "/inteligencia/leads",
+    "/comercial",
+    "/comercial/leads",
+    "/comercial/assinaturas",
+    "/casos",
+    "/pipeline",
+    "/tarefas",
+    "/configuracoes",
+  ],
+  estagiario: ["/hoje", "/casos", "/pipeline", "/clientes", "/tarefas", "/configuracoes"],
   advogado_titular: "all",
   advogado_associado: [
     "/hoje",
@@ -181,6 +237,9 @@ export function canSeeRoute(role: Role | null | undefined, to: string): boolean 
 
 /** Módulos canônicos do sistema (doc-mestre §4.3). */
 export const MODULES = [
+  // S5-01 — `cliente` entra pela matriz do Thiago (o cadastro é uma área com
+  // régua própria, não um apêndice do operacional).
+  "cliente",
   "comercial",
   "operacional",
   "financeiro",
@@ -193,12 +252,22 @@ export const MODULES = [
 export type Module = (typeof MODULES)[number];
 
 /** Nível de acesso a um módulo. Ordem crescente: none < view < edit. */
-export type ModuleAccess = "none" | "view" | "edit";
+export type ModuleAccess = "none" | "view" | "edit" | "configure";
 
-/** Ação verificada num módulo. `edit` implica `view`. */
-export type ModuleAction = "view" | "edit";
+/**
+ * Ação verificada num módulo. A escada é `view` < `edit` < `configure`:
+ * quem configura também edita, quem edita também vê.
+ *
+ * `configure` veio da reunião 02/09. Thiago: "adiciona uma outra opção que é uma
+ * opção de configurar, que aí já não é mais ele preencher, por exemplo, a
+ * informação do campo personalizado ou mudar de Kanban. Ele mudar um Kanban,
+ * mudar o tema." Matheus resumiu e ele confirmou: "além de editar, que seria o
+ * operacional, você quer um configurar, que seria estratégico".
+ */
+export type ModuleAction = "view" | "edit" | "configure";
 
 export const MODULE_LABELS: Record<Module, string> = {
+  cliente: "Cliente",
   comercial: "Comercial",
   operacional: "Operacional",
   financeiro: "Financeiro",
@@ -241,6 +310,8 @@ export const MODULE_LABELS: Record<Module, string> = {
 // Rota REPRESENTATIVA de cada módulo (a primeira que aparece em ROLE_NAV). Serve
 // para derivar `view` via canSeeRoute e para o teste de regressão.
 const MODULE_VIEW_ROUTE: Record<Module, string> = {
+  // S5-01 — o módulo `cliente` é representado pela lista de clientes.
+  cliente: "/clientes",
   comercial: "/comercial",
   operacional: "/casos",
   financeiro: "/casos/financeiro",
@@ -252,6 +323,9 @@ const MODULE_VIEW_ROUTE: Record<Module, string> = {
 
 // Capability de EDIÇÃO de cada módulo (null ⇒ sem cap dedicada; edit = view).
 const MODULE_EDIT_CAP: Record<Module, Capability | null> = {
+  // Editar cadastro de cliente é a mesma capacidade do comercial — é o que os
+  // gates de hoje já usam (usePodeEditarAlgum(["comercial","operacional"])).
+  cliente: "clientes.manage",
   comercial: "clientes.manage",
   operacional: "casos.manage",
   financeiro: "financeiro.manage",
@@ -301,8 +375,17 @@ for (const role of ROLES) {
   ROLE_MODULE_ACCESS[role].financeiro = role === "admin" || role === "financeiro" ? "edit" : "none";
 }
 
-/** `true` se o nível de acesso `access` cobre a ação `action` (edit ⊇ view). */
+/** Escada de acesso: none < view < edit < configure. */
+const NIVEL: Record<ModuleAccess, number> = { none: 0, view: 1, edit: 2, configure: 3 };
+const NIVEL_EXIGIDO: Record<ModuleAction, number> = { view: 1, edit: 2, configure: 3 };
+
+/** `true` se o nível `access` cobre a ação `action` (configure ⊇ edit ⊇ view). */
 function accessAllows(access: ModuleAccess, action: ModuleAction): boolean {
+  return NIVEL[access] >= NIVEL_EXIGIDO[action];
+}
+
+/** Versão antiga, mantida só como referência do que a escada substituiu. */
+function accessAllowsLegado(access: ModuleAccess, action: ModuleAction): boolean {
   if (access === "none") return false;
   if (action === "view") return true; // view e edit permitem ver
   return access === "edit"; // só edit permite editar
@@ -329,6 +412,15 @@ export function permissaoEfetiva(
   overrides: Partial<Record<Module, ModuleAccess>> | null | undefined,
   module: Module,
   action: ModuleAction,
+  /**
+   * S5-01 — padrão do PAPEL vindo da tabela `system_role_module_perms` (a matriz
+   * do Thiago). Opcional: quando não vem, ou quando não há linha para o módulo,
+   * cai no mapa derivado de sempre — é isso que mantém a regressão zero enquanto
+   * o de-para da S5-04 não roda.
+   *
+   * Precedência: override do USUÁRIO > padrão do PAPEL (tabela) > mapa derivado.
+   */
+  roleDefaults?: Partial<Record<Module, ModuleAccess>> | null,
 ): boolean {
   if (!role) return false;
   const override = overrides?.[module];
@@ -336,7 +428,11 @@ export function permissaoEfetiva(
     // Override tem precedência total — ignora o papel (aditivo p/ ambos lados).
     return accessAllows(override, action);
   }
-  // Sem override: cai no papel (comportamento atual, AC-4).
+  const padraoDoPapel = roleDefaults?.[module];
+  if (padraoDoPapel !== undefined) {
+    return accessAllows(padraoDoPapel, action);
+  }
+  // Sem override e sem linha na tabela: cai no papel (comportamento atual, AC-4).
   return accessAllows(ROLE_MODULE_ACCESS[role][module], action);
 }
 
@@ -399,6 +495,10 @@ export const ROUTE_MODULE: Partial<Record<string, Module>> = {
   // passava porque o NAV dele é "all". Mapeando aqui, a sub-rota passa a ser
   // decidida pelo MÓDULO — que é onde a regra de negócio realmente mora.
   "/controladoria/distribuicao": "controladoria",
+  // S6-01 — mesma razão da linha acima: sem esta entrada, "Casos prioritários"
+  // sumiria do menu para todo mundo que não é admin (inclusive o papel
+  // controladoria, que é justamente o dono da tela).
+  "/controladoria/prioritarios": "controladoria",
   "/peticionamento": "inteligencia",
   "/whatsapp": "comercial",
   "/dashboards": "inteligencia",
