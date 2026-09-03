@@ -7,14 +7,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormField,
@@ -51,8 +43,10 @@ import {
 type Client = Database["public"]["Tables"]["system_clients"]["Row"];
 
 type Props = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** Chamado depois de salvar. Recebe o id do cliente (criado ou editado). */
+  onDone: (clientId?: string) => void;
+  /** Chamado quando a pessoa desiste. */
+  onCancel: () => void;
   mode: "create" | "edit";
   client?: Client | null;
 };
@@ -228,7 +222,7 @@ function UfSelect({
   );
 }
 
-export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
+export function ClientForm({ mode, client, onDone, onCancel }: Props) {
   const createMutation = useFindOrCreateClient();
   const updateMutation = useUpdateClient();
   const { data: fieldDefs } = useClientFieldDefs();
@@ -301,8 +295,9 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
     }
   };
 
+  // S3-01 — como agora é PÁGINA (e não pop-up), o preenchimento inicial roda na
+  // montagem e sempre que o cliente em edição mudar. Antes dependia de `open`.
   useEffect(() => {
-    if (!open) return;
     setEmailWarn(null);
     setEmailSuggestion(null);
     if (mode === "edit" && client) {
@@ -310,7 +305,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         full_name: client.full_name,
         cpf_cnpj: formatCpfCnpj(client.cpf_cnpj ?? ""),
         rg: client.rg ? formatRg(client.rg) : "",
-        birth_date: (client as any).birth_date ?? "",
+        birth_date: (client as { birth_date?: string | null }).birth_date ?? "",
         tipo: client.tipo ?? "",
         email: client.email ?? "",
         phone: client.phone ? formatPhone(client.phone) : "",
@@ -321,7 +316,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
     } else {
       form.reset(emptyDefaults());
     }
-  }, [open, mode, client, form]);
+  }, [mode, client, form]);
 
   // Busca endereço pelo CEP (ViaCEP) e preenche rua, bairro, UF e município.
   const handleCepLookup = async () => {
@@ -363,6 +358,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
       return;
     }
 
+    let idCriado: string | undefined;
     try {
       if (mode === "edit" && client) {
         await updateMutation.mutateAsync({ id: client.id, input: data });
@@ -372,6 +368,7 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         // em vez de estourar erro de unicidade; nunca sobrescreve dados existentes.
         const res = await createMutation.mutateAsync(data);
         const created = res.client;
+        idCriado = created?.id;
         if (!res.created) {
           toast.info("CPF já cadastrado · reutilizando o cadastro existente.");
         } else if (created.drive_sync_failed) {
@@ -389,11 +386,23 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
           );
         }
       }
-      onOpenChange(false);
+      onDone(mode === "edit" ? client?.id : idCriado);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
       toast.error(msg);
     }
+  };
+
+  // S3-01 (AC 6) — sair da página com alterações não salvas pede confirmação. No
+  // pop-up antigo, clicar fora fechava e perdia o que estava digitado.
+  const cancelarComGuarda = () => {
+    if (
+      form.formState.isDirty &&
+      !window.confirm("Você tem alterações não salvas. Sair mesmo assim?")
+    ) {
+      return;
+    }
+    onCancel();
   };
 
   // Município: garante que o valor atual apareça mesmo antes da lista carregar.
@@ -408,204 +417,484 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
         : [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] max-h-[88vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{mode === "edit" ? "Editar cliente" : "Novo cliente"}</DialogTitle>
-          <DialogDescription>
-            {mode === "edit"
-              ? "Nome, CPF/CNPJ e RG não podem ser alterados. Os demais campos são editáveis."
-              : "Cadastro do cliente · uma pasta no Google Drive é criada automaticamente."}
-          </DialogDescription>
-        </DialogHeader>
+    <div className="card-editorial !p-6">
+      <p className="mb-5 text-[12.5px] text-muted-foreground">
+        {mode === "edit"
+          ? "Nome, CPF/CNPJ e RG não podem ser alterados. Os demais campos são editáveis."
+          : "Cadastro do cliente · uma pasta no Google Drive é criada automaticamente."}
+      </p>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Chave "É um cliente" (2026-07-19) — só na criação. Ligada: nasce em
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Chave "É um cliente" (2026-07-19) — só na criação. Ligada: nasce em
                 Clientes; desligada (padrão): fica em Leads. */}
-            {mode === "create" && (
-              <label className="flex items-center gap-2.5 rounded-md border border-[var(--border)] p-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!form.watch("is_cliente")}
-                  onChange={(e) => form.setValue("is_cliente", e.target.checked)}
-                  className="h-4 w-4 accent-[var(--gold)]"
-                />
-                <span className="text-[13px] text-[var(--navy)]">
-                  É um cliente{" "}
-                  <span className="text-muted-foreground">
-                    (ligado cria direto em Clientes; desligado fica em Leads)
-                  </span>
+          {mode === "create" && (
+            <label className="flex items-center gap-2.5 rounded-md border border-[var(--border)] p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!form.watch("is_cliente")}
+                onChange={(e) => form.setValue("is_cliente", e.target.checked)}
+                className="h-4 w-4 accent-[var(--gold)]"
+              />
+              <span className="text-[13px] text-[var(--navy)]">
+                É um cliente{" "}
+                <span className="text-muted-foreground">
+                  (ligado cria direto em Clientes; desligado fica em Leads)
                 </span>
-              </label>
-            )}
+              </span>
+            </label>
+          )}
 
-            {/* Identificação — campos imutáveis após o cadastro */}
+          {/* Identificação — campos imutáveis após o cadastro */}
+          <FormField
+            control={form.control}
+            name="full_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome completo *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Maria da Silva" disabled={mode === "edit"} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
-              name="full_name"
+              name="cpf_cnpj"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome completo *</FormLabel>
+                  <FormLabel>CPF / CNPJ *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Maria da Silva" disabled={mode === "edit"} {...field} />
+                    <Input
+                      placeholder="000.000.000-00"
+                      inputMode="numeric"
+                      disabled={mode === "edit"}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(formatCpfCnpj(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {isPF && (
+              <FormField
+                control={form.control}
+                name="rg"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RG *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="12.345.678-9"
+                        maxLength={15}
+                        disabled={mode === "edit" && !!client?.rg}
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(sanitizeRgTyping(e.target.value))}
+                        onBlur={(e) => {
+                          field.onChange(formatRg(e.target.value));
+                          field.onBlur();
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+
+          {isPF && (
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="birth_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de nascimento *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="professional_data.rg_orgao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Órgão emissor do RG</FormLabel>
+                    <FormControl>
+                      <Input placeholder="SSP/BA" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="professional_data.estado_civil"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado civil</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="solteira / casado / ..."
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {/* Contato — editável futuramente */}
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="maria@exemplo.com"
+                      {...field}
+                      value={field.value ?? ""}
+                      onBlur={() => {
+                        field.onBlur();
+                        void handleEmailCheck();
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {emailChecking && (
+                    <p className="text-[11px] text-muted-foreground">Verificando e-mail…</p>
+                  )}
+                  {emailWarn && <p className="text-[11px] text-amber-600">{emailWarn}</p>}
+                  {emailSuggestion && (
+                    <button
+                      type="button"
+                      className="text-[11px] text-[var(--gold-700)] hover:underline"
+                      onClick={() => {
+                        form.setValue("email", emailSuggestion, { shouldValidate: true });
+                        setEmailSuggestion(null);
+                        setEmailWarn(null);
+                      }}
+                    >
+                      Usar {emailSuggestion}
+                    </button>
+                  )}
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefone *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="(82) 99999-9999"
+                      inputMode="numeric"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Endereço — CEP busca rua/bairro/UF/município automaticamente */}
+          <div className="border-t pt-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Endereço
+            </p>
+
+            <FormField
+              control={form.control}
+              name="address.zipcode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CEP *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="57000-000"
+                      inputMode="numeric"
+                      maxLength={9}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(formatCep(e.target.value))}
+                      onBlur={() => {
+                        field.onBlur();
+                        void handleCepLookup();
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {cepLoading && (
+                    <p className="text-[11px] text-muted-foreground">Buscando endereço…</p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address.street"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rua *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Rua das Flores" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[120px_1fr] gap-3">
               <FormField
                 control={form.control}
-                name="cpf_cnpj"
+                name="address.number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CPF / CNPJ *</FormLabel>
+                    <FormLabel>Número *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="123 / S/N" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address.complement"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Complemento</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="000.000.000-00"
-                        inputMode="numeric"
-                        disabled={mode === "edit"}
+                        placeholder="Apto 101, Bloco B…"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(formatCpfCnpj(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {isPF && (
-                <FormField
-                  control={form.control}
-                  name="rg"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>RG *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="12.345.678-9"
-                          maxLength={15}
-                          disabled={mode === "edit" && !!client?.rg}
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) => field.onChange(sanitizeRgTyping(e.target.value))}
-                          onBlur={(e) => {
-                            field.onChange(formatRg(e.target.value));
-                            field.onBlur();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
 
-            {isPF && (
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de nascimento *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.rg_orgao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Órgão emissor do RG</FormLabel>
-                      <FormControl>
-                        <Input placeholder="SSP/BA" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.estado_civil"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado civil</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="solteira / casado / ..."
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <div className="grid grid-cols-[160px_1fr] gap-3">
+              <FormField
+                control={form.control}
+                name="address.state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>UF *</FormLabel>
+                    <UfSelect
+                      value={field.value ?? ""}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        // Trocou de UF → limpa município (não pertence mais).
+                        form.setValue("address.city", "", { shouldValidate: true });
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address.city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Município *</FormLabel>
+                    <Combobox
+                      options={municipioOptions}
+                      value={field.value ?? ""}
+                      onChange={(v) => field.onChange(v)}
+                      placeholder={selectedUf ? "Selecione o município" : "Escolha a UF primeiro"}
+                      searchPlaceholder="Buscar município…"
+                      emptyText="Município não encontrado."
+                      disabled={!selectedUf}
+                      loading={loadingMunicipios}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Classificação */}
+          <FormField
+            control={form.control}
+            name="tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="·" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {TIPOS.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            {/* Contato — editável futuramente */}
+          {/* Dados profissionais — atributos estruturados (P1 item 1) */}
+          <div className="border-t pt-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Dados profissionais
+            </p>
+
+            <div className="grid grid-cols-[1fr_140px] gap-3">
+              <FormField
+                control={form.control}
+                name="professional_data.crm_numero"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CRM</FormLabel>
+                    <FormControl>
+                      <Input placeholder="123456" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="professional_data.crm_uf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>UF do CRM</FormLabel>
+                    <UfSelect value={field.value ?? ""} onChange={field.onChange} includeEmpty />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="email"
+                name="professional_data.vinculo_institucional"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail *</FormLabel>
+                    <FormLabel>Vínculo institucional</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="maria@exemplo.com"
-                        {...field}
-                        value={field.value ?? ""}
-                        onBlur={() => {
-                          field.onBlur();
-                          void handleEmailCheck();
-                        }}
-                      />
+                      <Input placeholder="ANMR, AMPB…" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
-                    {emailChecking && (
-                      <p className="text-[11px] text-muted-foreground">Verificando e-mail…</p>
-                    )}
-                    {emailWarn && <p className="text-[11px] text-amber-600">{emailWarn}</p>}
-                    {emailSuggestion && (
-                      <button
-                        type="button"
-                        className="text-[11px] text-[var(--gold-700)] hover:underline"
-                        onClick={() => {
-                          form.setValue("email", emailSuggestion, { shouldValidate: true });
-                          setEmailSuggestion(null);
-                          setEmailWarn(null);
-                        }}
-                      >
-                        Usar {emailSuggestion}
-                      </button>
-                    )}
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="phone"
+                name="professional_data.especialidade"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone *</FormLabel>
+                    <FormLabel>Especialidade</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="·" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[300px]">
+                        <SelectItem value="__none__">·</SelectItem>
+                        {ESPECIALIDADES.map((e) => (
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Formação, FIES e Residência (Hyago 2) — persistido em professional_data */}
+          <div className="border-t pt-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Formação, FIES e Residência
+            </p>
+
+            <datalist id="instituicoes-graduacao">
+              {INSTITUICOES_GRADUACAO.map((i) => (
+                <option key={i} value={i} />
+              ))}
+            </datalist>
+            <datalist id="hospitais-residencia">
+              {HOSPITAIS_RESIDENCIA.map((h) => (
+                <option key={h} value={h} />
+              ))}
+            </datalist>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="professional_data.instituicao_graduacao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instituição de graduação</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="(82) 99999-9999"
-                        inputMode="numeric"
+                        list="instituicoes-graduacao"
+                        placeholder="Ex.: UFBA"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="professional_data.ano_formatura"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ano de formatura</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="2018"
+                        {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -614,340 +903,87 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
               />
             </div>
 
-            {/* Endereço — CEP busca rua/bairro/UF/município automaticamente */}
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Endereço
-              </p>
-
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="address.zipcode"
+                name="professional_data.fies"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CEP *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="57000-000"
-                        inputMode="numeric"
-                        maxLength={9}
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(formatCep(e.target.value))}
-                        onBlur={() => {
-                          field.onBlur();
-                          void handleCepLookup();
-                        }}
-                      />
-                    </FormControl>
+                    <FormLabel>FIES</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="·" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">·</SelectItem>
+                        <SelectItem value="Sim">Sim</SelectItem>
+                        <SelectItem value="Não">Não</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
-                    {cepLoading && (
-                      <p className="text-[11px] text-muted-foreground">Buscando endereço…</p>
-                    )}
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="address.street"
+                name="professional_data.fies_contrato_numero"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rua *</FormLabel>
+                    <FormLabel>Nº do contrato FIES</FormLabel>
                     <FormControl>
-                      <Input placeholder="Rua das Flores" {...field} value={field.value ?? ""} />
+                      <Input placeholder="Contrato FIES" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-[120px_1fr] gap-3">
-                <FormField
-                  control={form.control}
-                  name="address.number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 / S/N" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address.complement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Complemento</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Apto 101, Bloco B…"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-[160px_1fr] gap-3">
-                <FormField
-                  control={form.control}
-                  name="address.state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UF *</FormLabel>
-                      <UfSelect
-                        value={field.value ?? ""}
-                        onChange={(v) => {
-                          field.onChange(v);
-                          // Trocou de UF → limpa município (não pertence mais).
-                          form.setValue("address.city", "", { shouldValidate: true });
-                        }}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address.city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Município *</FormLabel>
-                      <Combobox
-                        options={municipioOptions}
-                        value={field.value ?? ""}
-                        onChange={(v) => field.onChange(v)}
-                        placeholder={selectedUf ? "Selecione o município" : "Escolha a UF primeiro"}
-                        searchPlaceholder="Buscar município…"
-                        emptyText="Município não encontrado."
-                        disabled={!selectedUf}
-                        loading={loadingMunicipios}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </div>
 
-            {/* Classificação */}
             <FormField
               control={form.control}
-              name="tipo"
+              name="professional_data.fies_contrato_obs"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="·" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {TIPOS.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Dados do contrato FIES (observações)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Instituição financeira, valor, situação…"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Dados profissionais — atributos estruturados (P1 item 1) */}
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Dados profissionais
-              </p>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-input accent-primary"
+                checked={semResidencia}
+                onChange={(e) => setSemResidencia(e.target.checked)}
+              />
+              Não possui residência médica
+            </label>
 
-              <div className="grid grid-cols-[1fr_140px] gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.crm_numero"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CRM</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123456" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.crm_uf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UF do CRM</FormLabel>
-                      <UfSelect value={field.value ?? ""} onChange={field.onChange} includeEmpty />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.vinculo_institucional"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vínculo institucional</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ANMR, AMPB…" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.especialidade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Especialidade</FormLabel>
-                      <Select
-                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
-                        value={field.value || "__none__"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="·" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          <SelectItem value="__none__">·</SelectItem>
-                          {ESPECIALIDADES.map((e) => (
-                            <SelectItem key={e} value={e}>
-                              {e}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Formação, FIES e Residência (Hyago 2) — persistido em professional_data */}
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Formação, FIES e Residência
-              </p>
-
-              <datalist id="instituicoes-graduacao">
-                {INSTITUICOES_GRADUACAO.map((i) => (
-                  <option key={i} value={i} />
-                ))}
-              </datalist>
-              <datalist id="hospitais-residencia">
-                {HOSPITAIS_RESIDENCIA.map((h) => (
-                  <option key={h} value={h} />
-                ))}
-              </datalist>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.instituicao_graduacao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instituição de graduação</FormLabel>
-                      <FormControl>
-                        <Input
-                          list="instituicoes-graduacao"
-                          placeholder="Ex.: UFBA"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.ano_formatura"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ano de formatura</FormLabel>
-                      <FormControl>
-                        <Input
-                          inputMode="numeric"
-                          maxLength={4}
-                          placeholder="2018"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.fies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>FIES</FormLabel>
-                      <Select
-                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
-                        value={field.value || "__none__"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="·" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">·</SelectItem>
-                          <SelectItem value="Sim">Sim</SelectItem>
-                          <SelectItem value="Não">Não</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.fies_contrato_numero"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nº do contrato FIES</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Contrato FIES" {...field} value={field.value ?? ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="professional_data.fies_contrato_obs"
+                name="professional_data.residencia_hospital"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dados do contrato FIES (observações)</FormLabel>
+                    <FormLabel>Residência · hospital</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Instituição financeira, valor, situação…"
+                        list="hospitais-residencia"
+                        placeholder="Hospital de residência"
+                        disabled={semResidencia}
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -956,129 +992,97 @@ export function ClientFormDialog({ open, onOpenChange, mode, client }: Props) {
                   </FormItem>
                 )}
               />
-
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-input accent-primary"
-                  checked={semResidencia}
-                  onChange={(e) => setSemResidencia(e.target.checked)}
-                />
-                Não possui residência médica
-              </label>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.residencia_hospital"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residência · hospital</FormLabel>
+              <FormField
+                control={form.control}
+                name="professional_data.residencia_especialidade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Residência · especialidade</FormLabel>
+                    <Select
+                      disabled={semResidencia}
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      value={field.value || "__none__"}
+                    >
                       <FormControl>
-                        <Input
-                          list="hospitais-residencia"
-                          placeholder="Hospital de residência"
-                          disabled={semResidencia}
-                          {...field}
-                          value={field.value ?? ""}
-                        />
+                        <SelectTrigger>
+                          <SelectValue placeholder="·" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.residencia_especialidade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residência · especialidade</FormLabel>
-                      <Select
-                        disabled={semResidencia}
-                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
-                        value={field.value || "__none__"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="·" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          <SelectItem value="__none__">·</SelectItem>
-                          <SelectItem value={RESIDENCIA_NAO_POSSUI}>Não possui</SelectItem>
-                          {ESPECIALIDADES.map((e) => (
-                            <SelectItem key={e} value={e}>
-                              {e}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="professional_data.residencia_inicio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residência · início</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          disabled={semResidencia}
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="professional_data.residencia_termino"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residência · término</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          disabled={semResidencia}
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent className="max-h-[300px]">
+                        <SelectItem value="__none__">·</SelectItem>
+                        <SelectItem value={RESIDENCIA_NAO_POSSUI}>Não possui</SelectItem>
+                        {ESPECIALIDADES.map((e) => (
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {/* Campos customizados (Melhoria 1) — definidos pelo admin */}
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <CustomFieldsSection defs={activeFieldDefs} control={form.control as any} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="professional_data.residencia_inicio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Residência · início</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        disabled={semResidencia}
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="professional_data.residencia_termino"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Residência · término</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        disabled={semResidencia}
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Salvando…" : mode === "edit" ? "Salvar" : "Criar cliente"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          {/* Campos customizados (Melhoria 1) — definidos pelo admin */}
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <CustomFieldsSection defs={activeFieldDefs} control={form.control as any} />
+
+          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={cancelarComGuarda}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Salvando…" : mode === "edit" ? "Salvar" : "Criar cliente"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 }
