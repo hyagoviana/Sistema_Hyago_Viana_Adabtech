@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from "./supabase/server";
 import type { Database } from "./supabase/types";
 import { createTemaFieldDef, updateTemaFieldDef } from "./tema-field-defs-service";
 import type { FieldDefCreateOutput, FieldDefUpdateOutput } from "./validators/clientFields";
+import { CLIENT_RESERVED_FIELD_KEYS } from "./validators/client";
 
 type FieldDefUpdate = Database["public"]["Tables"]["system_client_field_defs"]["Update"];
 
@@ -423,6 +424,99 @@ async function hideMirrorDef(
     .maybeSingle();
   if (existing) {
     await updateTemaFieldDef(existing.id as string, { active: false });
+  }
+}
+
+// ----------------------------------------------------------------------------
+// S1-05 (reunião 02/09) — BIFURCAÇÃO NO SENTIDO INVERSO: tema → cliente.
+// ----------------------------------------------------------------------------
+// Thiago: "mesmo estando no tema como 'do cliente', não aparece na página de
+// campos do cliente e nem aparece junto aos campos adicionais da página cliente."
+//
+// A bifurcação existia só de um lado: campo criado em system_client_field_defs
+// ganhava def-espelho no tema (`ensureMirrorDef`, acima). O contrário não: uma def
+// criada direto no tema com scope='cliente' ficava invisível para as telas do
+// cliente, que leem de system_client_field_defs.
+//
+// O VALOR já era compartilhado (os dois lados usam o balde único
+// system_clients.custom_fields[key]); o que faltava era a DEFINIÇÃO existir dos
+// dois lados. Esta função fecha o ciclo.
+//
+// Idempotência é o que impede o laço com `ensureMirrorDef`: se já existe campo de
+// cliente com essa key, não faz nada — e é sempre esse o caso quando quem começou
+// foi o lado do cliente.
+export async function ensureClientDefFromTemaDef(
+  temaDef: {
+    key: string;
+    label: string;
+    type: string;
+    options?: unknown;
+    required?: boolean | null;
+    max_occurrences?: number | null;
+    initial_occurrences?: number | null;
+    subtitle_mode?: string | null;
+    subtitles?: unknown;
+  },
+  createdBy?: string,
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+
+  // Colisão com campo PADRÃO do cadastro (ex.: `fies`, `fies_contrato_numero`):
+  // criar aqui produziria DOIS campos "FIES" na ficha, com valores que podem
+  // divergir. Melhor não ter o campo espelhado do que ter o dado em dois lugares.
+  // O relatório do backfill lista esses casos para o owner decidir.
+  if (CLIENT_RESERVED_FIELD_KEYS.has(temaDef.key)) return;
+
+  // Já existe (ativo OU oculto)? Não mexe. Ocultar do lado do cliente é decisão
+  // de quem administra o cadastro do cliente — o tema não a desfaz.
+  const { data: existente } = await sb
+    .from("system_client_field_defs")
+    .select("id")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .eq("key", temaDef.key)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (existente) return;
+
+  // ordem = fim da lista (mesma regra do createFieldDef).
+  const { data: last } = await sb
+    .from("system_client_field_defs_active")
+    .select("ordem")
+    .eq("organization_id", DEFAULT_ORG_ID)
+    .order("ordem", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Os tipos do TEMA (text/select/multiselect/money/number/date/boolean/link) são
+  // um subconjunto dos tipos do CLIENTE — não há conversão a fazer.
+  const comOpcoes = temaDef.type === "select" || temaDef.type === "multiselect";
+  const maxOcc = temaDef.max_occurrences ?? 1;
+  const iniOcc = Math.min(temaDef.initial_occurrences ?? 1, maxOcc);
+
+  const { error } = await sb.from("system_client_field_defs").insert({
+    organization_id: DEFAULT_ORG_ID,
+    // key VERBATIM: é o casamento de key que faz o dado ser o MESMO nos dois
+    // lados. Re-slugar aqui criaria um campo novo, vazio, ao lado do que já tem
+    // dado gravado.
+    key: temaDef.key,
+    label: temaDef.label,
+    field_type: temaDef.type,
+    options: comOpcoes ? ((temaDef.options ?? []) as never) : null,
+    required: temaDef.required ?? false,
+    // Nasceu num tema ⇒ é campo que aparece nos casos.
+    appears_in_cases: true,
+    ordem: (last?.ordem ?? -1) + 1,
+    created_by: createdBy ?? null,
+    max_occurrences: maxOcc,
+    initial_occurrences: iniOcc,
+    subtitle_mode: (temaDef.subtitle_mode ?? null) as never,
+    subtitles: (Array.isArray(temaDef.subtitles) ? temaDef.subtitles : []) as never,
+  });
+
+  // Corrida (duas criações simultâneas com a mesma key): a UNIQUE resolve e o
+  // resultado é o desejado — o campo existe. Não é erro para quem chamou.
+  if (error && error.code !== "23505") {
+    throw new FieldDefServiceError(error.message, "DB_ERROR", 500);
   }
 }
 

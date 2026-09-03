@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { runSync, ymd, isDistributionActive } from "@/lib/distribuicao/sync-core";
+import {
+  runSync,
+  ymd,
+  isDistributionActive,
+  isOperationalDate,
+} from "@/lib/distribuicao/sync-core";
 import { syncMovements } from "@/lib/distribuicao/staging-core";
 import { syncContaAzulPagamentos } from "@/lib/contaazul/service";
 import { syncAsaasPagamentos } from "@/lib/asaas/service";
@@ -33,9 +38,18 @@ export const Route = createFileRoute("/api/cron/daily")({
         const result: Record<string, unknown> = { ok: true };
 
         // 1) Motor de Distribuição (só se ligado). LEITURA no ProJuris.
+        //
+        // S1-02 (reunião 02/09) — não distribui em dia NÃO operacional (sábado,
+        // domingo ou bloqueio geral no calendário). Não é erro: é pulo. A fila da
+        // controladoria (1b) continua sendo montada todo dia — ver a intimação que
+        // chegou no sábado é útil; o que não pode é jogar tarefa com prazo contado
+        // a partir de um dia em que o escritório não trabalha.
         try {
-          if (await isDistributionActive()) {
-            result.distribuicao = await runSync(ymd(new Date()), 3);
+          const hoje = ymd(new Date());
+          if (!(await isOperationalDate(hoje))) {
+            result.distribuicao = { skipped: "dia nao operacional", date: hoje };
+          } else if (await isDistributionActive()) {
+            result.distribuicao = await runSync(hoje, 3);
           } else {
             result.distribuicao = { skipped: "motor desligado" };
           }

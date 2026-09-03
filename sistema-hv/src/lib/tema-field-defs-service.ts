@@ -453,6 +453,23 @@ export async function createTemaFieldDef(input: {
     .single();
   if (error || !data)
     throw new TemaFieldDefServiceError(error?.message ?? "Falha ao criar campo", 500);
+
+  // S1-05 — campo marcado como "do cliente" tem que existir também no cadastro do
+  // CLIENTE (é lá que a pessoa vai procurá-lo). Idempotente por key: quando quem
+  // começou foi o lado do cliente (`ensureMirrorDef`), esta chamada é no-op — é o
+  // que impede o laço entre as duas reconciliações.
+  // Import dinâmico: client-fields-service já importa este módulo (ciclo estático).
+  if (scope === "cliente") {
+    try {
+      const { ensureClientDefFromTemaDef } = await import("./client-fields-service");
+      await ensureClientDefFromTemaDef(data as never);
+    } catch (err) {
+      // Best-effort: a def do tema já está criada e funcional. Falhar aqui não
+      // pode desfazer o trabalho de quem cadastrou o campo.
+      console.error("createTemaFieldDef: falha ao espelhar def no cadastro do cliente:", err);
+    }
+  }
+
   return data;
 }
 
@@ -713,6 +730,24 @@ export async function updateTemaFieldDef(
     .single();
   if (error || !data)
     throw new TemaFieldDefServiceError(error?.message ?? "Falha ao atualizar campo", 500);
+
+  // S1-05 — mesma regra da criação: um campo que PASSOU a ser "do cliente"
+  // (ou que já era e foi editado) precisa existir no cadastro do cliente.
+  //
+  // QA (03/09): só espelha quando a def continua ATIVA. Sem esta guarda, OCULTAR
+  // a def no tema (`active:false`, que é o que `hideMirrorDef` faz ao desvincular)
+  // recriaria no cadastro do cliente um campo que já tinha sido excluído — o
+  // campo ressuscitaria pelo caminho oposto.
+  const defAtiva = (data as { active?: boolean | null }).active !== false;
+  if ((data as { scope?: string }).scope === "cliente" && defAtiva) {
+    try {
+      const { ensureClientDefFromTemaDef } = await import("./client-fields-service");
+      await ensureClientDefFromTemaDef(data as never);
+    } catch (err) {
+      console.error("updateTemaFieldDef: falha ao espelhar def no cadastro do cliente:", err);
+    }
+  }
+
   return data;
 }
 

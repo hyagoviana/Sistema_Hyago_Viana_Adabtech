@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { runSync, ymd, isDistributionActive } from "@/lib/distribuicao/sync-core";
+import {
+  runSync,
+  ymd,
+  isDistributionActive,
+  isOperationalDate,
+} from "@/lib/distribuicao/sync-core";
 
 // Cron DIÁRIO do Motor de Distribuicao (08:00 BRT = 11:00 UTC — ver `vercel.json`
 // → crons "0 11 * * *"). A Vercel invoca esta rota via GET com o header
@@ -39,7 +44,15 @@ export const Route = createFileRoute("/api/cron/distribuicao")({
           }
           // Data = hoje (a Vercel roda em UTC; as 11:00 UTC ainda e o mesmo dia
           // civil no BRT). Janela de 3 dias cobre intimacoes recentes.
-          const summary = await runSync(ymd(new Date()), 3);
+          const hoje = ymd(new Date());
+          // S1-02 — nao distribui sabado/domingo nem dia bloqueado no calendario.
+          if (!(await isOperationalDate(hoje))) {
+            return new Response(
+              JSON.stringify({ ok: true, skipped: "dia nao operacional", date: hoje }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            );
+          }
+          const summary = await runSync(hoje, 3);
           return new Response(JSON.stringify({ ok: true, ...summary }), {
             status: 200,
             headers: { "Content-Type": "application/json" },

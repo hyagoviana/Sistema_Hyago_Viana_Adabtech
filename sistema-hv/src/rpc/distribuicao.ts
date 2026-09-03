@@ -40,7 +40,10 @@ export const sincronizarDistribuicaoFn = createServerFn({ method: "POST" })
       await requireModule("controladoria", "edit");
       const distributionDate = data.distributionDate ?? ymd(new Date());
       const windowDays = data.windowDays ?? 3;
-      return await runSync(distributionDate, windowDays);
+      // S1-02 — disparo MANUAL roda em qualquer dia (`force`): a trava de fim de
+      // semana é do automático. Quem clicou está decidindo conscientemente; a tela
+      // avisa quando a data escolhida não é dia operacional.
+      return await runSync(distributionDate, windowDays, { force: true });
     } catch (err: unknown) {
       if (err instanceof AuthError) {
         setResponseStatus(err.status);

@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useDistribuicaoDashboard";
 import { useExecutorMappings } from "@/hooks/useDistribuicao";
 import { usePodeEditar } from "@/hooks/usePermissions";
+import { isWeekday } from "@/lib/distribuicao/engine/date-utils";
 
 export const Route = createFileRoute("/controladoria/distribuicao/")({
   component: DistribuicaoPainelPage,
@@ -37,6 +38,11 @@ function DistribuicaoPainelPage() {
   const sync = useSincronizarDistribuicao();
 
   function handleSync() {
+    // S1-02 — o automático não roda em fim de semana/dia bloqueado; o manual roda,
+    // mas avisa. Quem clicou decide.
+    if (!isWeekday(date)) {
+      toast.info("Atenção: esta data cai em fim de semana. A distribuição vai rodar mesmo assim.");
+    }
     sync.mutate(
       { distributionDate: date, windowDays: 3 },
       {

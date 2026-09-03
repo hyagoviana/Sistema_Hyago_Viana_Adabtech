@@ -635,7 +635,7 @@ async function persistManualFieldsToCase(
 }
 
 // ----------------------------------------------------------------------------
-// FINALIZE — exporta PDF → trava o doc → sobe na pasta do caso
+// FINALIZE — exporta PDF → trava o doc → sobe na pasta "Documentos automáticos"
 // ----------------------------------------------------------------------------
 export async function finalizeCaseDocument(docId: string, triggeredBy?: string) {
   const sb = getSupabaseAdmin();
@@ -644,7 +644,23 @@ export async function finalizeCaseDocument(docId: string, triggeredBy?: string) 
     throw new CaseDocumentServiceError("Documento sem Google Doc para finalizar", 409);
   }
 
-  const { folderId } = await ensureCaseFolder(doc.case_id);
+  // S1-01 (reunião 02/09) — o PDF é documento GERADO pelo sistema: vai para a
+  // subpasta "Documentos automáticos", junto do Word que o originou e do PDF
+  // assinado (o webhook do ZapSign já grava lá). Antes caía na RAIZ da pasta do
+  // caso, e o Thiago via o PDF solto ao lado da subpasta.
+  //
+  // Degradação suave: se a subpasta falhar, salva na raiz — nunca perder o
+  // documento por causa de uma pasta.
+  let folderId: string;
+  try {
+    ({ folderId } = await ensureCaseAutoFolder(doc.case_id));
+  } catch (err) {
+    console.error(
+      "finalizeCaseDocument: falha ao garantir 'Documentos automáticos'; salvando na raiz do caso:",
+      err,
+    );
+    ({ folderId } = await ensureCaseFolder(doc.case_id));
+  }
 
   let pdf: Buffer;
   try {
