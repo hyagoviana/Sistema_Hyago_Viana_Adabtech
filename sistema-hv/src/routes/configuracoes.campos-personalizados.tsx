@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, IdCard, Layers, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, IdCard, Layers, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { ClientFieldsManagerPanel } from "@/components/clients/ClientFieldsManagerDialog";
-import { Breadcrumb, PageHeader } from "@/components/hv/primitives";
+import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
 import { TemaContaAzulPanel } from "@/components/pipeline/TemaContaAzulPanel";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemaDistribuicaoPanel } from "@/components/pipeline/TemaDistribuicaoPanel";
-import { useTemaServiceType } from "@/hooks/useTemas";
+import { NovoTemaDialog } from "@/components/pipeline/NovoTemaDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useTemaServiceType, useUpdateTema, useDeleteTema } from "@/hooks/useTemas";
 import { usePodeEditar } from "@/hooks/usePermissions";
 import { useTemas } from "@/hooks/useTemas";
 import { useAuth } from "@/lib/auth";
@@ -36,6 +41,7 @@ function CamposPersonalizados() {
   // CLIENTE. Selecionar um minimiza o outro (abre ao lado, sem drawer).
   type View = { kind: "tema"; id: string } | { kind: "client" } | null;
   const [view, setView] = useState<View>(null);
+  const [novoTemaOpen, setNovoTemaOpen] = useState(false);
 
   const temasList = temas ?? [];
   const selectedTema =
@@ -48,14 +54,32 @@ function CamposPersonalizados() {
         items={[
           { label: "Sistema", to: "/hoje" },
           { label: "Configurações", to: "/configuracoes" },
-          { label: "Campos personalizados" },
+          { label: "Configuração de temas" },
         ]}
       />
       <PageHeader
         eyebrow="Sistema"
-        title="Campos personalizados"
-        subtitle="Crie e organize os campos de cada pipeline (tema) e do cadastro do cliente. O campo continua abaixo da sua pipeline · aqui você só edita tudo em um lugar."
+        title="Configuração de temas"
+        subtitle="Tudo que se configura num tema em um só lugar: nome, campos da ficha, modelos no Drive, motor de distribuição e financeiro. Aqui também ficam os campos do cadastro do cliente."
+        aside={
+          podeGerir ? (
+            <Btn variant="gold" onClick={() => setNovoTemaOpen(true)}>
+              <Plus size={14} />
+              Novo tema
+            </Btn>
+          ) : undefined
+        }
       />
+
+      {/* S2-01 — criar tema também daqui (a Área de Trabalho continua tendo o
+          atalho, mas quem está configurando não precisa sair da tela). */}
+      {podeGerir && (
+        <NovoTemaDialog
+          open={novoTemaOpen}
+          onOpenChange={setNovoTemaOpen}
+          onCreated={(t) => setView({ kind: "tema", id: t.id })}
+        />
+      )}
 
       {loading ? null : !podeGerir ? (
         <div className="card-editorial !p-6 text-center text-[13px] text-muted-foreground">
@@ -142,10 +166,19 @@ function CamposPersonalizados() {
                     {selectedTema.name}
                   </div>
                   <p className="text-[12.5px] text-muted-foreground">
-                    Tudo que é configuração deste tema em um só lugar: campos da ficha, pastas de
-                    modelos no Drive e os parâmetros do motor de distribuição.
+                    Tudo que é configuração deste tema em um só lugar: nome, campos da ficha, pastas
+                    de modelos no Drive e os parâmetros do motor de distribuição.
                   </p>
                 </div>
+
+                {/* S2-01 — nome e exclusão vieram do antigo diálogo "Editar tema"
+                    da Área de Trabalho, que deixou de existir. */}
+                <TemaIdentidade
+                  key={`ident-${selectedTema.id}`}
+                  tema={selectedTema}
+                  onDeleted={() => setView(null)}
+                />
+
                 {/* A key é obrigatória aqui: sem ele, o painel mantém o estado
                     digitado no tema anterior e "Salvar" gravaria esse valor no
                     tema recém-selecionado. */}
@@ -187,6 +220,81 @@ function CamposPersonalizados() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// S2-01 (reunião 02/09) — IDENTIDADE do tema: renomear e excluir.
+//
+// Era o topo do diálogo "Editar tema" que abria pelo lápis na Área de Trabalho.
+// Thiago: "Essas são questões de configurações, vamos remover daqui e manter
+// apenas no painel de configuração."
+// ---------------------------------------------------------------------------
+function TemaIdentidade({
+  tema,
+  onDeleted,
+}: {
+  tema: { id: string; name: string };
+  onDeleted: () => void;
+}) {
+  const [nome, setNome] = useState(tema.name);
+  const updateTema = useUpdateTema();
+  const deleteTema = useDeleteTema();
+
+  async function salvarNome() {
+    const novo = nome.trim();
+    if (!novo || novo === tema.name) return;
+    try {
+      await updateTema.mutateAsync({ id: tema.id, patch: { name: novo } });
+      toast.success("Nome do tema atualizado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao renomear o tema");
+    }
+  }
+
+  async function excluir() {
+    if (
+      !window.confirm(
+        `Excluir o tema "${tema.name}"?\n\nIsto envia a PASTA do tema no Drive para a lixeira (com as subpastas Casos/Procurações). Só é possível se não houver casos vinculados a este tema. Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
+    try {
+      await deleteTema.mutateAsync(tema.id);
+      toast.success("Tema excluído");
+      onDeleted();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao excluir tema");
+    }
+  }
+
+  return (
+    <div className="mb-5 flex flex-wrap items-end gap-2 rounded-lg border border-[var(--border)] p-3">
+      <div className="min-w-[220px] flex-1">
+        <Label>Nome do tema</Label>
+        <Input
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && salvarNome()}
+        />
+      </div>
+      <Button
+        variant="outline"
+        onClick={salvarNome}
+        disabled={updateTema.isPending || !nome.trim() || nome.trim() === tema.name}
+      >
+        {updateTema.isPending ? "Salvando…" : "Salvar"}
+      </Button>
+      <Button
+        variant="ghost"
+        className="text-destructive hover:text-destructive"
+        onClick={excluir}
+        disabled={deleteTema.isPending}
+      >
+        <Trash2 size={14} />
+        {deleteTema.isPending ? "Excluindo…" : "Excluir tema"}
+      </Button>
     </div>
   );
 }

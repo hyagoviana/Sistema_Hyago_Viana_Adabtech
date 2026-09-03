@@ -95,8 +95,9 @@ function Configuracoes() {
         </div>
       )}
 
-      {/* I1 — atalho para a tela dedicada de Campos personalizados (só quem edita
-          o módulo sistema). Reúne os campos das pipelines/temas + cadastro do cliente. */}
+      {/* S2-01 (reunião 02/09) — atalho para a tela ÚNICA de configuração de tema.
+          Antes havia dois caminhos (aqui e o "Editar tema" da Área de Trabalho);
+          o segundo deixou de existir. */}
       {podeGerirCampos && (
         <Link
           to="/configuracoes/campos-personalizados"
@@ -105,10 +106,11 @@ function Configuracoes() {
           <SlidersHorizontal size={18} className="text-[var(--gold-700)]" />
           <div className="flex-1">
             <div className="text-[14px] font-semibold text-[var(--navy)]">
-              Campos personalizados
+              Configuração de temas
             </div>
             <div className="text-[12px] text-muted-foreground">
-              Crie e organize os campos de cada pipeline/tema e do cadastro do cliente.
+              Nome, campos, modelos no Drive, motor e financeiro de cada tema — e os campos do
+              cadastro do cliente.
             </div>
           </div>
           <span className="text-[var(--gold-700)] text-sm">Abrir →</span>
