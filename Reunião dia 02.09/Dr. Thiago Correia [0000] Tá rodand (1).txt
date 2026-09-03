@@ -1,0 +1,425 @@
+Dr. Thiago Correia [00:00]: Tá rodando aqui na manivela, mas de forma geral assim, o que a gente tem que ver de fato aí para o Conta Azul é da questão Conta Azul Asas. E seria do Conta Azul e do Asa só?
+
+Adavio Tittoni [00:32]: Primeiro do Conta Azul. Eu preciso entender hoje como é que a gente vai fazer, porque antes a gente tinha o seguinte: antes vocês faziam pela venda, não é isso?
+
+Dr. Thiago Correia [00:44]: Sim, sim.
+
+Adavio Tittoni [00:45]: Lembra que a gente ficou de conversar sobre essa parte para eu conseguir entender como é que funciona aí dentro? Porque vamos lá, hoje a gente consegue criar o usuário Certo, então nós criamos o usuário. A partir do momento que eu crio usuário, eu tava gerando uma cobrança dentro daquele usuário. Deve ter uma Dávil teste lá na nossa conta azul para a gente rastrear.
+
+Dr. Thiago Correia [01:08]: Eu vi, eu vi, eu vi. Deixa eu só ver, vai ajudar a gente.
+
+Adavio Tittoni [01:22]: Acho que ele, da outra vez a gente tinha achado ele em cadastros, eu acho, né?
+
+Dr. Thiago Correia [01:34]: Só aqui geralmente costuma aparecer. Beleza, é que você criou, existe o cadastro que o Conta Azul chama de cliente ou fornecedor, né? É o cadastro de pessoas, basicamente. Coloca desse status, é fornecedor, cliente, mas é um cadastro de uma pessoa jurídica ou física. É o que quando você fala em usuário, não é usuário, né?
+
+Adavio Tittoni [01:59]: É um cliente. Usuário, quero dizer assim, é um cliente dentro desse campo. Então até aí tá certo, correto? Nós precisamos cadastrar o cliente como um cliente na conta Azul.
+
+Dr. Thiago Correia [02:10]: Sim, sim. Boa.
+
+Adavio Tittoni [02:14]: Beleza. Então, a partir deste momento agora que a gente cadastrou ele, como é que a gente vai gerar as cobranças para ele?
+
+Dr. Thiago Correia [02:24]: Você conseguiu dar uma olhada nesse outro que eu tinha mandado?
+
+Adavio Tittoni [02:27]: Não, não, esse eu não peguei. Ah, tá.
+
+Dr. Thiago Correia [02:30]: É porque aqui, ó, eu vou detalhar justamente todo o passo a passo de onde gerar isso direto. Também, entendeu? Tá. Aí eu nem considerei para esse arquivo aqui como era feito, da forma assim bagunçada, né?
+
+Adavio Tittoni [02:45]: Antes, tá.
+
+Dr. Thiago Correia [02:46]: Beleza.
+
+Adavio Tittoni [02:47]: Como vai ser feito agora?
+
+Dr. Thiago Correia [02:50]: Isso, como vai ser feito agora? Aí assim, aqui tá bem detalhado, que depois você consegue ver esse aqui ficar mais, mais até mais fácil para você também. Mas assim, de forma geral, né, a gente vai registrar uma venda, que era aquela dúvida que a gente tinha sobre é venda, né?
+
+Adavio Tittoni [03:11]: Contas a receber e tudo mais que a gente tinha a identificar, né?
+
+Dr. Thiago Correia [03:16]: Eu até achava que a gente tava gerando muito como receita e despesa. Eu vi que não, de fato o pessoal já tava registrando bastante mesmo. E quando eu abro em venda, isso, então criei uma pessoa, então criei aqui um cliente para vincular na venda, tá? Aí eu vou ter opção de venda avulsa, uma parcela só, ou venda recorrente, que é o parcelado, tá? E aí ele vai ter todas as funcionalidades de escrever, de gerar essa situação. Então, qual é o serviço, tudo isso. E aí isso aqui eu deixei, por exemplo, nesse mapeamento aqui É uma desses dois, né?
+
+Adavio Tittoni [04:05]: Quais são os serviços que a gente vai usar?
+
+Dr. Thiago Correia [04:07]: É, eu deixei nesse mapeamento aqui, aqui que eu tava antes, agora eu deixei nesse mapeamento aqui o que vai ser o registro que vai ser feito, né? Então aqui, por exemplo, o centro de custo vai ser um centro de custo que vai ser gerado para cada tema. Quando a gente clicar lá no nosso sistema em gerar uma receita de um caso, tem 1% de ISF, ele vai ser selecionado aqui o centro de custo que tá vinculado àquele tema no SHV. E lá vocês já deixaram pronto na parte dos temas o menu integração com Conta Azul, onde eu criei novos temas. Qual é o centro de custo que vai vir para cá? Isso já tá projetado lá. Aí basicamente vai escolher a categoria financeira. Categoria financeira tá dentro desse mapeamento também, é qual a categoria que é escolhida. Então ele vai selecionar aqui, ó, se é uma entrada, um êxito ou uma consulta, né? Então ele vai escolher a categoria que é vinculada a isso aqui, né? Aqui vai selecionar a conta, forma de pagamento, vencimento.
+
+Adavio Tittoni [05:29]: Tá, aí em relação, por exemplo, a conta já tá lá, né? Você já botou lá naquele documento para mim, aí não muda, não vai se alterar. Já tem na opção também as opções da gente escolher lá, que a gente tem que passar obrigatoriamente o cliente, a data da venda, que aí vai ser a data do momento, né? O ID da categoria, o ID do centro de custo, que é aqueles dois processos que você mostrou agora. O ID do vendedor, a gente vai ter um vendedor, é esse aqui.
+
+Dr. Thiago Correia [06:02]: Esse aqui, para essas primeiras situações, ainda não. Depois a gente pode só adicionar que ele manda essa informação, né? Sim, não é obrigatório para gerar.
+
+Adavio Tittoni [06:18]: É, ele não é obrigatório aqui não.
+
+Dr. Thiago Correia [06:20]: Isso aqui já seria uma situação que, por exemplo, para todo o enquadramento geral não faz diferença, para as primeiras partes. Faz diferença só para fins de, por exemplo, é a comissão do comercial sobre tais contratos. Aí é interessante saber quem gerou esse contrato, só que aí já tem que ser uma outra questão que nós temos, ainda não tem, que é a parte do comercial. Então deixa para depois, né? Eu acho que todos os parâmetros que o sistema tem que trazer para cá de forma geral para gerar isso aqui eu deixei detalhado nesse arquivo. Então a gente vai criar uma nova venda para identificar e preencher o fornecedor/cliente, né, descrição, categoria.
+
+Adavio Tittoni [07:04]: Então aqui a gente, eu tenho aqui mais ou menos dentro da API também que eu consigo visualizar o que que eu preciso trazer. Então a Azul, a gente vai fazer esse processo, e dentro da Azul a gente gera boletos, não é isso? Cartão de crédito a gente usa o Asas.
+
+Dr. Thiago Correia [07:25]: As duas coisas, tá? Para cá, quer dizer, eu vou escolher qual é a conta que eu quero receber. Então eu por acaso colocar lá que é cartão de crédito, eu escolhi aqui a conta Azul, vai vir para cá na opção de cartão de crédito, né? Na forma de pagamento cartão de crédito daqui, porque eu escolhi lá que eu vou gerar na conta azul. Só que todas as vezes que for cartão de crédito vai para o Asas. Assim, isso é norma interna, né? Só que não obrigatoriamente as pessoas vão selecionar, mas elas sabem que elas têm que selecionar, se for o cartão de crédito, conta Asas, tá? E aí é que vem a parte da integração que a gente tem que definir que é o quê.
+
+Adavio Tittoni [08:09]: Então é isso que eu quero entender também, porque eu quero saber se você abre hoje no Asaas essa conta ou se você só abre na conta Azul, mas você não tem o recebimento do Asaas na conta Azul. Eu abro nas duas, eu abro porque não abre automaticamente da conta Azul no Asaas, né? Isso, essa conta ela é meio que fake.
+
+Dr. Thiago Correia [08:32]: Esse é o problema. Não é que ela é fake, ela, o sistema, ele, deixa eu abrir para você a parte das contas que vai ficar mais claro. Vocês podem acessar minha conta, viu, gente? Eu passo acesso para vocês, vocês quiserem acessar.
+
+Adavio Tittoni [08:45]: Eu já consegui manipular algumas coisas, é só porque eu preciso saber os caminhos certinhos, sabe?
+
+Dr. Thiago Correia [08:51]: Senão fica porque o Conta Azul, ele tem, eu acho que é isso que gera confusão, o Conta Azul ele é duas coisas ao mesmo tempo. Ele é um ERP financeiro e ele é uma fintech ao mesmo tempo. Quando é fintech, a gente tá falando sobre ele receber e pagar através dele, ok?
+
+Adavio Tittoni [09:09]: Uma conta bancária, né, deles mesmo.
+
+Dr. Thiago Correia [09:13]: É tipo isso, eu não sei o que que é, mas eu imagino que seja, é como se fosse aqui uma, é uma conta, tá vendo? Extrato da conta PJ, que é o extrato da nossa conta vinculada à fintech Banco Conta Azul. Aí eles até utilizavam terceira pouco tempo, que foi aquela situação que a gente comentava, que eu contei para vocês, que tinha um negócio que era um YouGo, não sei o quê, não sei o quê, era a função deles. Depois eles foram e transformaram na própria Conta Azul. Então isso é o que ele é. E ao mesmo tempo ele também é um ERP financeiro, ele é um sistema de gestão financeira, apagar e a receber, né, como toda ERP financeira, é um apagar e um a receber. Aí ele tem essas duas camadas, então ele acaba, como um ERP, ele tem todas as funcionalidades de um a pagar e a receber. E com o banco ele também já se vincula aqui. As contas a pagar e a receber que sejam registradas para serem feitas na própria fintech dele, ele tem uma série de facilidades. Então, por exemplo, quando você gera uma uma conta para receber aqui nele, ele já tem a possibilidade. Você vê como é que é sacanagem? Eles têm a possibilidade de eu só gerar a nota fiscal na hora que aquela parcela entra.
+
+Adavio Tittoni [10:32]: Então, pessoa pagou, o sistema gera para você não ter que pagar imposto sem o cara te pagar, digamos.
+
+Dr. Thiago Correia [10:38]: Exato, exato. Que é o que a gente faz, que é o regime de caixa, né, aqui na nossa tributação, que é só paga quando recebe. Se for para mim receber no contábil, eu posso marcar isso. Agora, se eu quiser receber em qualquer outro banco, porque aí quando eu tô falando que eu vou receber é o registro a pagar e a receber. Se eu marcar que é na fintech deles, eles fazem isso. Mas se eu marcar que em qualquer outro banco ou qualquer outra fintech, ele já não me deixa fazer isso. Eu gero na hora que eu gero a cobrança, ou eu gero manualmente depois, já para sacanear, para você ter dificuldade para usar deles. E a taxa é um absurdo. Então aqui eu tenho a Conta Azul RP e a Conta Azul PJ. Aqui eu tenho todas as outras contas bancárias RP, e isso que são, que aí é uma funcionalidade mais de RP mesmo, né, de vincular todas as minhas contas e fazer as automações. E aí alguns bancos existem automações, integrações nativas dentro do próprio Conta Azul. Então, por exemplo, o Banco do Bradesco É porque a gente não conseguiu, que deu erro, e o Bradesco é merda. Mas o Bradesco eu tenho opção de fazer uma automação direto pelos sistemas, e aí eles têm tudo interligado. Se eu tiver um valor para entrar que tá marcado lá para o Banco do Brasil, ele na hora que cair esse valor lá, ele sabe que é dessa conta aqui, ele já registra o débito aqui na hora, tá? Ele faz a vinculação automática, essa integração de conciliação, só isso. Né, tem um a pagar a receber em tal conta, tal situação aconteceu, ele sabe qual é a venda, trouxe.
+
+Adavio Tittoni [12:13]: Isso tudo já funciona dentro da Conta Azul hoje, só o Asas que a gente tem aquele problema que tá fora.
+
+Dr. Thiago Correia [12:20]: A gente tem outros que tem problemas também, mas assim, o volume é irrelevante. O Asas é que é o problema, porque 30, 40% da minha movimentação no Asas.
+
+Adavio Tittoni [12:30]: Então agora Quando você cria aí, por exemplo, a gente está lá dentro do nosso painel, tudo vai para conta azul porque a conta azul é o nosso ERP. Eu vou considerar ele só como ERP, tá? Não vou considerar ele como um banco digital. Então tudo vai para o nosso ERP porque a gente precisa controlar essa conciliação bancária. Quando eu crio no Bradesco, eu consigo criar por dentro da conta azul o boleto vinculado ao Bradesco.
+
+Dr. Thiago Correia [12:58]: Certo?
+
+Adavio Tittoni [12:58]: Dentro do RP normal. Quando eu vou no Asas, eu não consigo fazer isso. Então, no Asas, a gente vai ter que criar uma ação que somente quando eu escolher a conta Asas, eu crio dentro da conta Azul, vou até o Asas e gera uma cobrança baseado naquela questão: qual é o tipo de boleto, quantas vezes e tudo mais, dentro do processo normal. E isso tem que refletir na conta Azul. É isso?
+
+Dr. Thiago Correia [13:26]: Sim, sim, quase exato isso. É como que é o manual hoje assim na mão, como é que faz? A gente vai lá, vai gerar a venda, isso vai gerar o registro da venda, o a receber, por exemplo, aqui. Aí eu vou marcar que está para ser recebido lá no Asas, eu vou no Asas e gera uma cobrança, que é a venda do Asas. Gera uma cobrança. Aí tá, que está registrado lá. Quando eu recebo esse valor lá, tipo, chega dia 31, mês, na verdade essa semana agora, puxam o extrato. Como não tem automática, tenho que puxar o extrato do Asas lá de movimentações, lanço aqui para importação. Deixa eu ver, cadê? Eu lanço aqui, né, para importar. Então o pessoal já até fez a conciliação de agosto. E aí eu venho e vai ter aqui todas as conciliações pendentes. E aí ele vai identificar basicamente assim, olha, eu tinha registrado R$500 para receber no dia 10, e aí tem uma movimentação no Asas de R$500 no dia 10.
+
+Adavio Tittoni [14:45]: Tenta encontrar de qual é a minha venda registrada aqui, vai meio que fazer uma comparação. E os que ele não consegue comparar, ele vai mandar você vincular, né?
+
+Dr. Thiago Correia [14:53]: É, exato. Aí ele vai tentar usar alguns parâmetros para identificar, mas infelizmente não dá para ser automático. Toda vez que automático dá problema, porque ele só puxa a data e o valor, e a gente tem um monte de recebimento do mesmo valor, consequentemente vai ter um monte de mesmo valor e mesma data. Aí ele bagunça tudo. Então tem que vir para cá e ficar caçando na mão qual que é, né, lógico. Você sabe que pela descrição foi o cliente tal, você vai caçar a conta do cliente tal e lançar, só que manual. Se eu tiver 200 recebimentos no Asas no mês, eu tenho que fazer 200 considerações aqui para ficar aqui e sempre desatualizado.
+
+Adavio Tittoni [15:31]: Então aqui eu tenho hoje, é porque como vocês só conseguem fazer mês a mês, vocês acabam tendo que só consegui fazer o conciliamento de balanço de caixa realmente naquela data específica que subiu aquilo.
+
+Dr. Thiago Correia [15:44]: Depois, até atrasagem ser menor, delay ser menor, a gente faz a cada 15, sabe? Primeira quinzena, segunda quinzena. E aí, além disso, eu também tenho que identificar quais notas eu tenho que gerar, notas fiscais, a partir dos recebimentos lá. Então a gente pega a primeira quinzena, faz a conciliação, vê quais valores estão para gerar nota gera.
+
+Adavio Tittoni [16:06]: Você trabalha bastante então manualmente assim?
+
+Dr. Thiago Correia [16:09]: Manual, isso aqui consome um tempo enorme e uma margem de erro muito grande, né? Aí assim, o pessoal faz isso aqui, é um trabalho do caramba.
+
+Adavio Tittoni [16:16]: Chega agora, eu tenho que pegar todas as movimentações e bater, né, para poder ver se tem algum, alguma coisa que entrou no ASAS, não entrou aí, senão tu não consegue bater teu caixa.
+
+Dr. Thiago Correia [16:29]: Enquanto o ASAS não entra aqui, concilia assim. Então eu, olha, dia 2 de setembro, eu não sei quanto entrou em agosto. Sim, enquanto eu não fizer auditoria, eu não sei de qual tema também, não sei, vai passar na auditoria, né? Então aí depois que eu vou ver. Agora dá para a gente vincular essa ideia dessa situação lá justamente dessa forma: quando o sistema gerar, quando o sistema gerar um recebimento que é para receber no Asas, aí eu deixei até aqui quais são as opções, tá? Já tá nisso aqui, já tá nomeado do jeito que é lá. Lá é um recebimento parcelado, aí ele manda gerar cobrança. Quando é um recebimento recorrente igual o nosso aqui, ele vai gerar assinatura. Então já tem a nomenclatura de cada sistema, viu?
+
+Adavio Tittoni [17:16]: Então, mas aí normalmente vocês, aí a gente vai deixar essas duas opções porque é vocês que vão interpretar e escolher Qual das duas opções vocês querem neste momento? Se é gerar uma cobrança ou gerar uma assinatura?
+
+Dr. Thiago Correia [17:30]: Pode, pode já gerar do jeito que tiver aqui. Por exemplo, se eu marquei lá que é um recebimento parcelado, então ele vai gerar uma cobrança.
+
+Adavio Tittoni [17:37]: Aí eu vou deixar isso, quem vai selecionar é o usuário que tá criando a conta, não é isso? Que tá criando a cobrança, desculpa, ou assinatura.
+
+Dr. Thiago Correia [17:45]: Dá para ser na hora que tiver gerando ali, né?
+
+Adavio Tittoni [17:48]: É porque assim, eu imagino muito assim, Eu tô aqui no painel financeiro, né? Então vou escolher aqui gerar cobrança para esse determinado caso, que vai ser para cada caso, né? A cobrança vinculada ao caso e não ao cliente, não é isso? Que o cliente pode ter um caso que tem uma cobrança, pode ter um caso que não tem uma cobrança. Então quando a gente vincula esse processo, você vai lá e vai escolher, ah, eu quero gerar. E aí não vai ter mais isso gerar da conta azul ou não, porque tudo vai para conta azul, então é do mesmo processo. Vai ser gerar uma cobrança, abriu, eu vou dizer qual conta você quer, a pessoa seleciona. Se selecionar uma conta da Azul ou do Bradesco, por exemplo, vai ter as opções ali disponíveis da Azul, gerar boleto, gerar cartão, eu não sei como é que deve ter ali, a gente depois tem que dar uma olhada ponto a ponto, né? Mas aí quando eu clicar em Asas vai aparecer igual, o mesmo processo, vai ser cartão de crédito, vai ser boleto. Se for cartão de crédito vai aparecer receber parcelado, ou receber via assinatura. Aí você vai selecionar qual você quer. Eu gero no Asaas e já gero na conta Azul, entendeu? Só nesse caso.
+
+Dr. Thiago Correia [18:52]: É isso aí, exatamente isso aí. E aí, como que dá para amarrar essa situação que eu pensei para poder ter a consideração? Porque a consideração nada mais é: tem uma movimentação bancária, o sistema sabe que este pagamento aqui está, é desta, é desta venda aqui. Né, então seria basicamente assim: gerou lá o recebimento do conta, gerou um registro no ERP Conta Azul, recebimento conta financeira Asas, gera um contrato no Conta Azul, como vou gerar para qualquer valor para receber, gera uma venda no Conta Azul. Quando eu gero o contrato, já gera a venda das parcelas, tá, isso é automático. O Conta Azul, ele tem uma arquitetura de que ele sempre é vinculado a uma venda, tá. Ele trabalha com vendas, venda de serviço, Venda de produto, é um contrato, é um contrato maior aqui, mas ele gera vendas dentro desse contrato. Posso até abrir, mostrar para vocês. E aí ele vai gerar o parcelamento, igual você falou, o parcelamento ou assinatura lá no Asaas, conforme a gente optou, né? E aí basicamente isso aqui é, se é R$10.000 em 10 parcelas ou R$1.000 ou 10 parcelas de R$1.000 igual Netflix. Consome o crédito do cartão do mês ou não. E aí no Asas, quando gera o valor a receber, ele não tem igual no Conta Azul, que eu gero um contrato e dentro desse contrato a estrutura é só uma conta, né? É uma, vai gerar o que o Asas chama de cobrança, a hierarquia, a entidade lá, ele chama de cobrança. E aí dentro dessa cobrança ele tem as parcelas, que é o que o Conta Azul Conta Azul gera como venda. E aí eu tenho recebimento dessa cobrança no Asa, recebimento venda Conta Azul. Então a vinculação tem que ser uma identificação entre essas duas coisas aqui, ó, entre cobrança, contrato.
+
+Adavio Tittoni [20:43]: Porque quando a gente gera uma venda na Conta Azul, ele vai gerar uma numeração para mim, que é a numeração daquela venda. Quando eu gero a cobrança no Asas, ele vai gerar a numeração da cobrança. Então a gente vai ter uma tabela onde diga essa cobrança aqui é do Conta Azul, essa cobrança é do e essa é a cobrança. Aí eu tenho um webhook de recebimento de pagamento, que quando alguém paga no Asaas, eu sei qual é a cobrança que foi paga no Asaas. Eu vou no nosso sistema, bato a cobrança do Asaas, vejo qual é a cobrança da Conta Azul e faço o cheque, entendeu?
+
+Dr. Thiago Correia [21:16]: Exatamente. Só isso, só isso que o sistema precisa fazer, né? Porque é como a conciliação ainda não é automática, o sistema não importa o extrato sozinho, a gente vai precisar continuar pegando esse extrato e jogando ele no Conta Azul para ele ter conciliação de fato, né, que saiu.
+
+Adavio Tittoni [21:36]: Que aqui a gente está considerando somente o cara que pagou, né, mas também tem a saída, a parte de conciliação bancária mesmo, que assim, dentro dessa roda que a gente tá fazendo não vai existir. Aqui é só se pagou ou não pagou, né.
+
+Dr. Thiago Correia [21:50]: Importa é quando a gente lançar essa, esse extrato, o Conta Azul já vai ter atualizado certinho que X venda é de X coisa, e ele já sabe que foi naquela data com tal valor, não sei o quê. Todas aquelas movimentações que vão estar ali para conciliar não vão existir para conciliar, que já vai estar conciliado por dentro. Ele só aparece o que está pendente de conciliação. O que já está conciliado ele não puxa. Ele vai puxar o extrato e vincular. Aí a gente só sai clicando.
+
+Adavio Tittoni [22:19]: Normalmente vai ser mais saídas, né? Porque provavelmente as entradas a gente já vai ter alocado todas de uma vez só dentro desse processo de cobrança. Só algo que foi gerado por dentro do próprio Asas né? Porque aí talvez não vai estar na nossa programação. Aí também existe um webhook que eu já olhei aqui na conta do Aziz, que é de quando uma conta é criada. Vocês acham que isso também precisa entrar diretamente na conta azul, por exemplo? É que seria esse conta criada, no caso, desculpa, uma cobrança, né, que eu chamei de conta. Porque, por exemplo, eu tenho dois tipos de webhook. Webhook é um mensageiro que a gente fala, Ele tá aguardando uma ação. Então eu tenho a ação, o evento de quando uma cobrança é criada, eu posso receber o dado desta cobrança pelo Asaas. E eu tenho quando uma cobrança é paga. Então a paga já vai entrar aqui no nosso processo, certo? Só que o criar a cobrança, eu tô criando via API. Então é uma ação nossa do sistema. Só que se alguém for no Asaas fora do nosso sistema e criar uma cobrança lá dentro, eu não tenho nossa operação aqui. Por quê? Porque eu não tenho um webhook de cobrança criada, apenas de cobrança paga. Entende mais ou menos o que eu tô querendo dizer?
+
+Dr. Thiago Correia [23:37]: Entendi. E acho que não vamos trabalhar nessa ideia de quando a pessoa faz lá manual, porque aí a pessoa pode acostumar a não fazer aqui, porque lá a tela já sai de uma forma que tá acostumada, e força, né, a pessoa aprender o daqui, tá bom? E também porque acaba que o sistema vai ficar perdido, né? Tá toda uma vinculação feita por aqui, por ali. Se a pessoa não gera por aqui, perdeu. O que eu acho que dá para fazer, que aí fica um meio termo, um cenário interessante, é ter ali, quando a gente vai registrar despesa, registrar receita, ter uma opçãozinha da gente vincular uma que já existe lá. A pessoa foi lá e fez a cagada de gerar por lá. Então, ao invés de trabalhar para o sistema ter que ficar caçando isso de alguma forma, pela qual é, a gente introduz para atuar aqui, o identificável lá, que agora você sabe que tem uma piada de tal caso, por exemplo, se a estrutura a nível do caso aqui, né? E isso também ajuda para parte do todos esses outros que estão para trás, a gente conseguir também identificar né, sem esperar só os novos. Poxa, tem um cliente aqui que tá com 20 parcelas e o caso dele já tá aqui de indenização, sei lá. Aí a gente vai lá no caso dele e registra que X cobrança é dessa, e agora o negócio tá ativo, mas sempre do que já está registrado no SHV. Então se tem um lá que tá lá e não foi gerado, não ativa o webhook porque não tem a identificação aqui. Seria mais ou menos isso, tá?
+
+Adavio Tittoni [25:09]: Beleza.
+
+Dr. Thiago Correia [25:11]: Aí uma outra coisa é que isso aí só funcionaria para as situações que tem nessa lista de identificadores, né? Tudo que não tem fica fora. Então, sei lá, o cliente acabou de mandar errado aqui, um troço caiu aqui, caiu lá, né? E o sistema não sabe qual é o identificador, ele não cria uma.
+
+Adavio Tittoni [25:36]: Até porque, como você vai ter que continuar fazendo a conciliação bancária, você vai encontrar esse erro neste momento, né?
+
+Dr. Thiago Correia [25:44]: De 200 para 10, tá show.
+
+Adavio Tittoni [25:46]: Entendi, exato. Então a gente tem ainda um lugar onde a gente consegue ter essa margem de erro, por exemplo, né?
+
+Dr. Thiago Correia [25:53]: E até uma observação que eu não sei se nos dados da API ele consta, mas o Conta Azul não permite registrar diretamente essas informações. Sempre que ele puxa assim de um recebimento de fora ele vai lançar como uma conciliação pendente, tá? Não sei exatamente o que que significa, mas pesquisando eu vi isso aí. Então meio que eu não posso ter, por exemplo, uma situação de que caiu um dinheiro em tal conta e aí eu quero forçar o Conta Azul registrar isso aqui. Ele não me deixa, ele vai aparecer aqui como pendente, só que de alguma forma que eu acho que é vindo para cá também, entendeu? Não sei exatamente o que isso significa, mas ele tinha alguma coisa assim de que ele não me permitia registrar de fato direto, direto, mas que ele já vinha para cá vinculado. Porque não tem problema ter aqui para a gente conciliar, é uma limitação, faz parte, né, algo comercial nosso, por conta que o custo lá é muito bom. Mas entre já aparecer aqui, deixa eu ver se tem uma conta aqui que eles não conciliaram.
+
+Adavio Tittoni [27:06]: Aparecer e nunca aparecer e ter que ir lá no Asaas e puxar, né, já fica mais fácil.
+
+Dr. Thiago Correia [27:11]: É porque a parte trabalhosa, cara, é porque você tem que ficar aqui vários lançamentos, você tem que sair caçando um por um. Mas se ele já aparece direcionado de qual é, ó, ele não é de tal cliente, é só o cara abrir e conferir, tá tudo certo. Ele não consegue, sei lá, ele não consegue diretamente vir aqui e lançar aquilo como pago. Só que todo dia ele vai puxar para cá o que caiu lá ontem e vai mostrar aqui, olha, esse valor caiu lá e pelo identificador eu tô dizendo que é dessa venda. Então já tá certinho, né, para o cara. Só é um botãozinho, fica aqui assim, eu quero, eu quero, eu quero, eu quero, bem tranquilo assim. A conciliação teria que ser isso aí, né? E além disso, não precisar o trabalho manual de ter no Conta Azul, gerar tudo isso aqui no Asos, gerar tudo aquilo que é a própria criação, né, edição. Pô, quero que— ah, eu quero criar aqui agora, cara, um negócio aqui, eu quero editar uma cobrança que tá lá no Asos. Pô, tem que ir no Asos editar e no Conta Azul editar.
+
+Adavio Tittoni [28:17]: Então beleza, bem tranquilo, dá para a gente—
+
+Dr. Thiago Correia [28:23]: aí eu deixo o próprio arquivo, algumas observações sobre como isso é gerado, né, de Se for parcela única, gera assim e tal, as parcelas você considera de tal forma. Vocês conseguiram ver, mas eu fiz um negócio aqui, eu acho que vocês viram, só que não aprofundou. Você chegou a comentar, né, que eu falei que tinha uma limitação de uma janela de 24 parcelas para frente. Vocês até falaram que isso era mais o que visual aqui, né, mas não tinha. A gente tem que ver como é que as questões por dentro, mas ele Manualmente eu acho uma forma de forçar o sistema a me mostrar tudo. E isso aqui era mais para uma situação, tipo assim, se eu puxo ali um relatório de a receber do escritório, ele só vai me mostrar os últimos 24 meses. Forçando desse jeito, ele me mostra tudo. Aí eu sei de fato que ele mente o número para mim. Mas aqui tá bem detalhado. Eu acho que era mais esse detalhe assim sobre a questão de da conciliação em si, né?
+
+Adavio Tittoni [29:22]: É. E dessa parte da venda também, como é que a gente ia fazer em relação?
+
+Dr. Thiago Correia [29:26]: Pode puxar do jeito que tá aí, venda de serviço.
+
+Adavio Tittoni [29:30]: E aí a gente gera dentro daquela determinada conta, que a vinculação ela já existe. O que não tá configurado é isso, entendeu? A forma da venda.
+
+Dr. Thiago Correia [29:38]: É. Aí aqui no Conta Azul ele vai registrar assim, como a gente tá registrando quando é parcelado como venda de serviço contrato, E é nessa opção tipo de venda contrato, ele vai ficar vinculado aqui, né, quantidade maior contrato, tá aqui, né. E aí todas as vendas que são os lançamentos financeiros, que são as parcelas, ele vai estar lá em vendas daquele contrato. Então o número do contrato, aí para você ver, ele não gera ainda essa venda aqui, tá vendo, ela ainda não tem um número próprio dedicador. Porque ela só gera essa venda na data que está configurada, que essa data aqui, nesse caso aí a gente tem que ter um tipo de disparo.
+
+Adavio Tittoni [30:28]: Ele vai quando, porque por exemplo, no Asas, quando você escolhe Asas aí vinculado a isso, eu vou ter que disparar cada vez que ele faz esse mês, né? Porque na realidade o que ele faz aí é tipo assim: eu vou segurar o seu boleto e só vou registrar o próximo no próximo mês. É tipo isso, né?
+
+Dr. Thiago Correia [30:52]: É porque essa opção aqui recorrente ela não é a exata opção que deveria. Porque o que que é essa diferença entre venda, a busca e venda recorrente no Conta Azul? O Conta Azul, ele permite gerar uma venda parcelada, tipo R$10.000 em 10 vezes. Ele vai me gerar uma só venda de R$10.000 com 10 parcelas de R$1.000. Aí eu não preciso, eu não tenho essa limitação que tem aqui. Só que o problema é, se chega daqui 3 meses, meu cliente falou, vamos antecipar essas parcelas e eu quero pagar à vista, o Conta Azul, por limitação, sabe, sei lá Deus, porque não me permite alterar essa venda, porque para ele é uma venda só de R$10.000. Ele não me permite alterar, eu tenho que apagar a venda, registrar outra, reconciliar todas as parcelas que já tenham sido conciliadas antes com as novas condições para frente. Ok, limitação dele. Quando eu gero como venda de contrato recorrente, venda de serviço contrato recorrente, ele também vai me falar que eu tenho R$10.000 para receber em 10 parcelas, só que aí cada mês é uma nova venda. Ao invés de uma venda só. Então eu posso editar para frente do jeito que eu quiser, porque não é uma venda única amarrada no sistema. E aí a única limitação que tem dessa opção é justamente isso da janela de visualização 25 meses para frente, tá? Que aí a gente— então esse aqui, ó, tem 71 meses, mas todas as parcelas têm, estão com a venda gerada aqui, porque já tem a numeração dessa data.
+
+Adavio Tittoni [32:28]: Isso aí facilita para a gente na hora de trabalhar, editar concluir, né?
+
+Dr. Thiago Correia [32:32]: É isso. Ele só vai gerar um número exclusivo dessa venda quando chegar na data de gerar essa venda, mês a mês, que é no dia 24, tá? Então o vencimento dela é um dia, mas tem a data de gerar a venda. Ele só vai me gerar um número de venda específico quando chegar nessa data. Só que aí eu consigo amarrar que isso aqui é a venda 2 de 72 do contrato 13. Entendeu? Então esse identificador aqui acima. Então nessa estrutura aqui, por exemplo, olha, é isso aqui, ó, tá aqui essas amarrações, tá aqui o contrato, tá aqui em cima, tá?
+
+Adavio Tittoni [33:11]: Esse contrato é o mesmo que a cobrança do Asas, e cada venda é cada parcela da cobrança do Asas, ela dá cobrança do Asas.
+
+Dr. Thiago Correia [33:21]: Exatamente.
+
+Adavio Tittoni [33:22]: Então aí é isso que eu tô pensando, quando que, quando a gente gerar essa venda de contrato na conta azul, a gente, eu vou ter que ver se existe um gatilho de disparo. Que assim, como tá até 2030 gerado, e normalmente boleto só dura 3 meses, né, a média assim que a gente tem aí de acordo com os RPs. Então eles regeram, né, eles geram de 3 meses, depois ele gera de novo, depois ele vai gerando. Só que normalmente aí que eu tô vendo é por um mês, né, cada mês ele gera uma nova. A gente vai ter que ter um gatilho na conta azul, sabe, É que eu tô pensando um informe para a gente fazer, que quando der essa data, e ele não vai ter que abrir a cobrança, porque é ali que ele abre a cobrança para o cara, naquela data 24.
+
+Dr. Thiago Correia [34:02]: Não, ele vai abrir a cobrança de uma vez só. Tipo assim, ó, eu gerei a venda ali no Ponto Azul, né? Tá lá em parcelas de R$500. O Asaas já não tem aquela mesma limitação de cobrança que ele fala lá. Então vou vir aqui e colocar, eu tenho R$10.000, R$10.000 em 10 parcelas. Ele vai as opções, não sei o quê, não sei o quê, não sei o quê, o cliente e tal e tal, até que ele chega e me gera isso aqui, ó. Vou pegar uma já criada porque eu não sei como é que dá para mudar, mas vou pegar uma qualquer aqui, tá?
+
+Adavio Tittoni [34:42]: Ele te gera um todos, né?
+
+Dr. Thiago Correia [34:44]: É que eu acabei não botando no material as partes de como gera no Asa. Então aqui, ó, tô aqui nessa cobrança aqui do Lucas. Essa aqui é uma cobrança, que é o contrato É assim, o identificador disso aqui é o mesmo de contrato do Conta Azul, tá? Então aqui eu tenho o número da fatura, por exemplo, é o da cobrança como um todo. E aqui estão todas as parcelas dessa cobrança, é um identificador próprio.
+
+Adavio Tittoni [35:26]: Cada uma vai ter um identificador próprio.
+
+Dr. Thiago Correia [35:29]: Exato.
+
+Adavio Tittoni [35:30]: Só que aí, por exemplo, normalmente, que é o nível venda, eu não sei aí no Asaas, né, mas normalmente no banco, por exemplo, né, quando você gera Boletos, ele só gera até 6 meses, né, o boleto ali, por exemplo, dentro desse processo. Aí a gente tem aí um 10/06/2027, por exemplo. O cara pode ir aí no Asas e pagar esse 10/06/2027?
+
+Dr. Thiago Correia [35:54]: É aqui no Asas, é porque assim, ele só gera, ele gera aqui as situações, mas ele não gera boleto.
+
+Adavio Tittoni [36:02]: É isso que eu tô dizendo, entendeu? Eu acho que ele só gera no mês.
+
+Dr. Thiago Correia [36:06]: Ele nem gera só. Quando tem a opção boleto ativado, fica um botãozinho aqui bem assim, ó, gerar boleto, tipo isso. Porque a pessoa escolhe gerar, entendeu, para aquela parcela.
+
+Adavio Tittoni [36:16]: É porque eles pagam, né? Porque o boleto é pago, né? O boleto é pago por cada geração.
+
+Dr. Thiago Correia [36:21]: Eles não, né? A gente paga essa bosta.
+
+Adavio Tittoni [36:23]: É nós assim, né?
+
+Dr. Thiago Correia [36:26]: A pessoa vai na parcela que ela quer e aí ela escolhe se ela quer vir antecipar via Pix, se tiver marcado a opção desse BB Pix, cartão, entendeu? Então ele não gera esses boletos antes. E no Asaas ou no Conta Azul, a mesma coisa, ele não gera nenhum boleto antes, ele só gera a venda de fato da pessoa quando chega na data programada.
+
+Adavio Tittoni [36:48]: Então essa data aqui, esse contrato tá programado para todo dia 24 gerar a venda, todo dia 24 ele gera, no caso ele envia uma venda, porque a venda é um agrupamento do contrato, que o contrato aí é a nossa operação geral. Já no Asas a gente tem a cobrança, que é a nossa operação geral, e nós temos as parcelas, né, que são geradas lá dentro, que é cobrança e parcelas. E aqui é contrato e vendas.
+
+Dr. Thiago Correia [37:20]: Exato. Aí quando eu tava discutindo com GPT como é que eu poderia fazer pelo Pluga, ele me falou que tem um identificador dentro dentro do ASAS. Eu posso até caçar qual é. Ele tem um identificador dentro do ASAS que é melhor do que esses numerozinhos que aparece para gente, uma coisa mais específica mesmo para—
+
+Adavio Tittoni [37:34]: tem lá na documentação.
+
+Dr. Thiago Correia [37:36]: É, ele me passou.
+
+Adavio Tittoni [37:37]: A gente não vai ter muita dificuldade nesse processo não, porque o ASAS é muito, muito bom de documentação, assim, é um dos melhores bancos de dados.
+
+Dr. Thiago Correia [37:45]: É muito bom de tudo, cara. O problema deles é que eles, sei lá por que, se recusa a fazer um ERP.
+
+Adavio Tittoni [37:52]: É porque para eles, assim, né, pelo que a gente imagina, assim, eles já têm um esforço muito grande para parte bancária deles rodar bem, entendeu? Eu acho que seria um custo muito alto para eles para algo que não é. Eles querem se tornar o maior banco de integrações, né?
+
+Dr. Thiago Correia [38:09]: Ele é um meio de cobrança, né? Então ele é muito bom na parte de cobrança. E aí eu acho que ele cresceu muito com a parte do pessoal de venda de produto. Então eles têm um ERP que é esse base, só que assim, se você abre aí, tem nada para prestador de serviço, só tem para produto, produto, produto. Eu já falei com suporte deles, eu falei, bicho, pelo amor de Deus, eu tô passando para receber tudo em outro banco porque não tem como, é impossível, né, de fazer o processo, né, pagamento por aqui não funciona, você só consegue transferir. Tem vários problemas, né, assim, que aqui eles já superaram. Perfeito mesmo é se a gente fizesse um RP e encontrar um banco novo.
+
+Adavio Tittoni [38:54]: É, aí estaria um pouquinho difícil, tá uma concorrência danada dos bancos brasileiros aí.
+
+Dr. Thiago Correia [38:59]: Não, isso aí é difícil. Então a amarração teria que ser feita mais nesse nível aí de conhecimento e cobrança, venda. Eu acho que dessa parte é isso.
+
+Adavio Tittoni [39:13]: Que aí dá para agora a gente, eu consigo entender um pouco mais assim, eu consegui entender bem o processo. Agora fica mais tranquilo da gente montar. Eu vou montar essas agregações. Então a gente já sabe que agora é uma coisa que eu também fiquei com uma certa dúvida: quando a gente gera no Asas, precisamos criar o cliente também? Precisamos, né?
+
+Dr. Thiago Correia [39:36]: Precisa, precisa. É um cadastro aqui de pessoas também.
+
+Adavio Tittoni [39:40]: Então a gente tanto cadastra a pessoa na Azul quanto cadastra no Asas.
+
+Dr. Thiago Correia [39:45]: Isso, mas boa parte já tem, tá?
+
+Adavio Tittoni [39:50]: A gente consegue só buscando, né? Beleza.
+
+Dr. Thiago Correia [40:02]: Fechou.
+
+Adavio Tittoni [40:03]: Acho que nessa parte aí da conta azul tá tranquilo assim, dá para a gente já montar, montar com essa necessidade.
+
+Dr. Thiago Correia [40:11]: Já precisa então, né, do sei lá que eu tava falando, assim, de forma muito tranquila. A dificuldade, eu acho que toda dificuldade maior, conversei com o Matheus outro dia, é que tem um corte aqui, mas Qual que é o problema em si? Ó, rapaz, a gente vai substituir esse troço todo aqui, bagunçar todo o sistema. Olha que maravilha! Então eu tenho que, para cada um desses processos administrativos, vir aqui e fazer isso aqui.
+
+Adavio Tittoni [40:46]: Manda para a gente depois lá no grupo o site.
+
+Dr. Thiago Correia [40:50]: Vou mandar. Eu tenho que aqui e abrir. Só que ele só me permite consulta pública. Ministério da Saúde, tudo que existir de órgão público no Brasil, vocês pioram 10 vezes que é o Ministério da Saúde, viu? Um absurdo. Tá lá assim na lei, o advogado tem que ter acesso público a todos os processos que existem. Só tem isso aqui, né? Aí eu tenho que vir olhar aqui esse caso do Pedro, quais foram os últimos andamentos. O último andamento que teve foi no dia 6, ou foi no dia 18 aqui, né? No último andamento, a última movimentação que existiu nesse processo foi nesse dia 18. O meu último acesso externo, que é quando a gente pede via email uma cópia, eles mandam para gente, é do dia 31. Então, 31/08, né? Aqui foi porque o pessoal achou que demorou muito, mas tava aqui no dia 09/08. Então eu sei que o meu acesso já tinha tudo o que eu precisava ver daquele processo. Quer dizer, não teve nenhuma movimentação nesse processo administrativo, eu não preciso olhar esse processo administrativo, entendeu? Só que eu só fiz depois de pegar lá na lista, vir no site, abrir, colocar e ver isso. E aí eu vou ter que fazer isso para todos, só nesse tema aqui, todos os 89 processos administrativos ativos.
+
+Adavio Tittoni [42:13]: Todo dia tem que fazer isso?
+
+Dr. Thiago Correia [42:16]: Quase, pouquinho assim, infelizmente, porque não é possível, né? Mas era o cenário perfeito, né? Assim que eu deveria. Aí eu tenho que fazer a mesma coisa do Ministério da Saúde também para outro tema meu, que eu tenho 200 processos administrativos ativos. No outro que eu tenho 40. Então, ao final, eu tenho que estar conferindo ali por mês esse negocinho de abrir aqui uns 300, 400 processos administrativos, de abrir para ver se teve alguma coisa, né? Então o que que eu tinha imaginado? Se eu tiver um— eu queria, se não fosse o CAPTCHA, parece que seria mais fácil. Se eu tivesse uma API, alguma coisa interna que conseguisse me mostrar isso aqui, beleza. Mas se eu conseguisse um robô que acessa essa página Digita e cola o número aqui daqueles processos que a gente marcou que tá em monitoramento. Não precisa nem ser todo dia, cara, às vezes a cada 3 dias, uma vez por semana, né? Preenche o card, abre essa página, e aí ele dá até para ser Mais uma informação. Última vez que eu falei que veria esse processo manualmente, eu vi aqui esse processo no dia 20/06. Aí tem lá essa informação. Aí eu sei que, opa, não teve nada novo nesse processo, não preciso nem abrir. E o robô me mostra isso aqui assim: processo administrativo número tal, né, data da última movimentação 18/06. Data de última visualização, 26. Eu sei que eu nem preciso fazer nada agora. Aí, qual informação de validação, por exemplo, seria o último dia que o robô conseguiu de fato, sem erro, abrir isso aqui? Só para ver se, né, olha, abriu ontem. Ah, então tá certo. E aí uma lista com isso.
+
+Adavio Tittoni [44:17]: O que é verdade, acho que é, mas a única coisa que talvez a gente precise É manter a lista de casos, porque aí vai ter que ser um agente por fora, sabe? Então a gente que vai na lista de casos, pega todas as listas de casos, busca as informações, ou a gente vai ter que montar alguma parte no sistema que seja relacionado a isso, sabe? Que aí eu busco as informações e retorno as informações.
+
+Dr. Thiago Correia [44:43]: Eu acho que assim, se tiver no sistema a identificação deste número aqui ele consegue, né? Tudo que ele precisa de fora, o robô precisaria de fora, esse número aqui, né? Então a gente pode manter como uma planilha, pode manter como sistema fora, qualquer forma assim, né?
+
+Adavio Tittoni [45:02]: É só para que eu peguei esse número de processo personalizado, dá para ser um campo dentro. Esse processo é administrativo ou não?
+
+Dr. Thiago Correia [45:12]: E a gente marca e coloca Onde a gente armazenar isso aqui é muito amplo. Eu acho que a dificuldade toda é isso aqui, né, é quebrar o CAPTCHA. Aí o CAPTCHA aqui, eu tinha, eu também, quando eu tava discutindo com GPT essa ideia, ele falou, não, isso aí você monta um, já existe hoje, como é o CAPTCHA mais básico, né, aquele mais avançado, né, você monta uma inteligência que analisa, tira foto e faz e tal. É, eu penso assim, né, mas aí você não tá colocando que é muito fácil não, porque o GPT é assim de fato, você vai ter que desenvolver, treinar, ver se ela aprende certo, não sei o quê. Aí eu falei, não, isso aí não existe, eu não tenho tempo para fazer e desenvolver, quero um negócio que funciona. Aí ele me mandou algum site, eu cheguei a abrir um dia, não tô com o nome aqui, mas posso ver que já é uma API de um IA que faz isso aí, e era um custo bem baixo, tipo assim era, eu acho que dava R$50, R$80 por mês, pelo volume de solicitações que eu tava projetando, sabe? E você paga por uso a API, ela vem aqui, você não sei como é que ela faz, mas assim, é uma API que a partir da foto ela vai quebrar o código para você e te dar. É uma API que só faz isso, de um site, um sistema que só faz isso. E aí alguém já parou para desenvolver um negócio que consegue quebrar isso aqui, tem API que você consegue comprar o acesso, né? Então eu até ia trabalhar justamente nessa parte, pegar com essa situação de fora e jogar e tudo, uma situação externa, né? Porque se a gente for parar agora no nosso status para poder criar algo que quebre isso aqui, querendo ou não, vocês vão gastar muito tempo, né? Assim, não é tempo que leva, é porque leva tempo mesmo, né? Então eu acho que a gente não precisa se preocupar tanto criar essa solução já para agora. Mas usa externo, Tiago. Então custa R$80 por mês com essa API aqui. A gente projeta o que faz todo o resto, né, que é pegar isso aqui e tal, jogar, não sei o quê. Mas essa parte aqui vai usar o externo, porque realmente eu vou levar 15 dias para chegar. Sou muito bom, vou levar 15 dias para chegar nisso aí. Os seus 15 dias hoje vale mais que os R$80 nossos que a gente vai gastar lá, né? Quando tiver já lá na frente, Mas a gente vai, paga, usa a cisterna, até que valida tudo.
+
+Adavio Tittoni [47:29]: E manda o site, eu vou tentar via Playwright. Só que assim, eu tenho que visualizar como é que a gente vai montar, porque o Playwright normalmente ele precisa de uma máquina operando. Como a gente tem um N8n, talvez eu consiga fazer essa operação. Eu tô pensando, mas manda para mim primeiro que eu dou uma visualizada.
+
+Dr. Thiago Correia [47:49]: Eu mandei aqui no grupo. Vou mandar esse número aqui só para você ter também de referência o número. Aí vou ver se eu acho essa API que o GPT tinha sugerido lá, porque assim, já era um nome que eu tinha encontrado, né? Mas às vezes até a partir dessa você descobre qual é o modelo que o pessoal usa, o que que é, e descobre outros que são mais interessantes. Mas a ideia seria essa, né? Seria a gente conseguir construir essa situação que roda isso e usar provavelmente algo externo, se a gente conseguir de outra forma. Se for mais barato, melhor ainda. E aí isso aqui eu pensei em ter um campo personalizado, e aí vamos supor que tem os campos personalizados dos temas que tem essa informação. Número do processo SEI aqui para acompanhamento. Aí a gente vai ter como se fosse uma paginazinha aqui, como tem para uma situação específica igual a da distribuição, tem lá, né, consulta automatizada SEI. E aí na configuração dessa paginazinha a gente vai ter uma opção que indica em quais campos personalizados de quais temas tem esse número, para o sistema saber onde que ele encontra esse número, né. Quem disse que vai rodar essa pesquisa?
+
+Adavio Tittoni [49:10]: É isso, na verdade, é que ele vai ser um campo meio por fora, né? Ele vai ter tipo assim uma rotina, todo dia vai aqui, pega esses casos, bata o caso, veja qual tá com a data diferente desse processo e a gente passa.
+
+Dr. Thiago Correia [49:23]: E nem precisa ser todo dia, viu? Assim, é, cara, a cada 5 dias, uma vez por semana, já é mais do que a gente faz hoje. Hoje a gente não tem condições humanas de fazer isso mais do que uma vez por mês. E o problema é, se eu olhei ontem, teve um negócio novo hoje, eu só vou ver de novo daqui um mês. Então é muito ineficiente, né? Então uma vez por semana, até para a gente validar, já tava show, cara, tava show.
+
+Adavio Tittoni [49:51]: Tá, mas dá para fazer assim, é porque para nós não vai mudar assim a gente buscar um dia ou buscar 7 dias, porque a gente só é realmente só um O negócio, eu diria assim, vai um dia ou vai todos, entendeu? Não muda muito para nós.
+
+Dr. Thiago Correia [50:08]: Então, todo dia é melhor ainda, mas assim, é porque às vezes, pô, se for usar essa lá API, por exemplo, externa, é um pouco—
+
+Adavio Tittoni [50:14]: todo dia a gente vai ter um custo um pouco maior, né? É, se a gente usar o Playwright, a gente não tem custo nenhum, na realidade, que Playwright ele só mapeia. O único problema do Playwright é que, por exemplo, trocou o CAPTCHA de lugar O Playwright, ele é um sistema, é uma programação no browser, no navegador, né? Eu determino para ele assim, vai com mouse até a metade e tal. Aí se mudar aí alguma coisa, tipo tirar o captcha daí de cima e jogar para baixo, aí é um problema para nós de consertar depois, entende? Mas assim, tirando isso, nós não temos nenhum problema em relação à movimentação.
+
+Dr. Thiago Correia [50:51]: Assim, essa página aqui geralmente nunca muda. De quando eu mexo com governo é sempre a mesma bosta, só que às vezes ele não carrega um elemento, alguma outra coisa, aí pode dar uma situação assim. Aí, pô, Thiago, tem essa opção que o custo é zero e tem essa outra que o custo é R$80 por mês, é R$50 por mês, é R$100 por mês, mas que essa aqui é mais segura, que vai rodar 6 meses sem problema. Bota essa outra que é R$50 por mês, que é boa.
+
+Adavio Tittoni [51:17]: Beleza.
+
+Dr. Thiago Correia [51:19]: Que até maior que esse, entendeu? O custo humano e o custo de oportunidade, custo de tempo, é muito maior que esse custo.
+
+Adavio Tittoni [51:27]: E também às vezes é justamente isso, tipo assim, essas empresas são focadas nisso, entendeu? Elas estão sempre preparadas para os novos erros. A gente não é, não vai ser tão focado em fazer o especialista em quebrar cap do CI, por exemplo, né, dentro desse projeto.
+
+Dr. Thiago Correia [51:43]: Falar para você, falar para você, Essa ferramenta que a gente tá conversando aqui agora, de forma muito sincera, se vocês conseguem desenvolver esse troço aqui, vocês podem vender como um produto à parte muito fácil. Porque aquilo lá que você falou, tem API, não sei o quê, não sei o quê, só que aquilo é por órgão. Se o órgão quiser, ele coloca. E a maioria não tem, cara, não tem. Quer ver? Ó, Ministério da Saúde não tem, a Jesus tem mais de 40 mil CLT no Brasil, não tem. INCRA, o INCRA, advogado de fazendeiro, não tem. A quantidade, cada órgão público que existe no Brasil tem um sistema desse. E eu digo, por baixo, 70% deles não tem acesso externo. Advogado tem que fazer isso aqui, a galera pagaria fácil.
+
+Adavio Tittoni [52:30]: É para não ter que fazer isso tudo na mão, né? Porque você normalmente você tem que contratar alguém para ficar fazendo isso para você, porque não tem como Não tem como, não tem como assim, não tem como.
+
+Dr. Thiago Correia [52:40]: Se eu fosse contratar uma pessoa para olhar isso todo dia, passar o dia só olhando isso aqui, seriam 2 estagiários só para conseguir. Porque 400 casos, você abrir isso aqui todo dia e registrar lá qual foi a última vez que viu, não sei o quê, não sei o quê, é no mínimo um estagiário se ele for bom. Se ele for mais ou menos, é 2 estagiários. Você botar para fazer isso aqui todo dia, entendeu? Então é foda quando a gente para para fazer isso Isso aqui, você bota um advogado, podia estar fazendo uma coisa desse tamanho, vai ficar fazendo esse negócio.
+
+Adavio Tittoni [53:09]: Mas a gente vai automatizar o processo, vai dar certo.
+
+Dr. Thiago Correia [53:12]: É por isso que eu até falei com minha água, eu falei, ó, eu vou interromper um pouco o tempo dos meninos com outras coisas que não são gerais para o sistema, que isso aqui é bem específico, mas que realmente é um dor muito grande que a gente vai resolver aí. Então desses dois Seria isso. Acho que seria só isso, né, da parte do Conta Azul e desse sistema. É o link que vai cair. Teria só umas questõezinhas aqui muito rápidas. Acho que gera outro já para não cortar no meio.
+
+Adavio Tittoni [53:42]: Sim, vamos gerar outro. Aí tu bota aí também, Matheus, que é bom que fica até dividido mais ou menos no que a gente tá fazendo aqui, né, de estruturaização. Eu vou gerar e mandar para vocês lá e colocar. Eu vou sair aqui, já vou gerar. Beleza, beleza. Beleza, a gente se vê daqui a 2 segundos já.
+
+Dr. Thiago Correia [00:00]: Tava olhando aqui na verdade ontem para passar para o pessoal, né? O que que é esse negócio de referência? Tem aqui opções aqui, referência.
+
+Adavio Tittoni [00:09]: É o que esse negócio, esse de referências, é porque é o seguinte: quando a gente vai selecionar municípios, tem lá os municípios de referências, né, que são tipo assim Maceió, Campina Grande, tal, tal, tal, tal, tal, tal, tal, tal. É só para ficar lá naquele dropdown, para isso que serve.
+
+Dr. Thiago Correia [00:33]: Perfil seria o quê?
+
+Adavio Tittoni [00:34]: Tipo, esse perfil é porque não tem nenhum perfil cadastrado ainda, mas é o tipo de perfil daquele cliente.
+
+Dr. Thiago Correia [00:47]: Isso aqui é tipo assim, vamos supor que eu tenho um documento em que eu Escrevo uma informação, sei lá, vou colocar lá um negócio que chama aqui de tipo 1, e aí o sistema sabe que o tipo 1 significa X texto. E aí na hora, em vez de colocar o tipo 1, ele vai trazer o texto que tá para isso aqui. É isso, né?
+
+Adavio Tittoni [01:10]: Isso é tipo assim, quando a gente vai selecionar o município do cliente, certo, a gente não tem uma lista de municípios Que você pode digitar e vai aparecer aquela determinada lista de municípios. Isso daí é uma referência, é só o que a gente cria ali dentro daquele processo, tá vendo?
+
+Dr. Thiago Correia [01:30]: É um tipo de referência do município que vem de quando o Iago tava tocando.
+
+Adavio Tittoni [01:36]: Então, é, ele veio no legado dele. A maioria, a maioria das partes de menu veio de uma documentação que o Iago nos enviou no início.
+
+Dr. Thiago Correia [01:45]: Então, então, então, se eu tiver, por exemplo, uma referência aqui que é edital, quer ver uma referência? Se eu tiver uma referência que isso aqui fala X informação e eu conseguir ter um identificador disso nos documentos, todas as vezes que nos documentos tiver aquela informação, ele vai puxar daqui as informações. Então, se eu tenho lá no do 1%, provavelmente o do IAG deve ter usado esse município para isso. Se eu tenho lá no do 1% o modelo de declaração do gestor de saúde e seleciono que é o município tal, todos os campos daquele, as variáveis que deveriam ser isso daí, é muito, eu acho muito parecido com aquilo que a gente criou mais ou menos de filtros personalizados, entendeu?
+
+Adavio Tittoni [02:34]: Seria mais ou menos a mesma coisa, só que ele iria preencher automaticamente. Então, quando você selecionasse padrão que existe aqui, isso selecionou o município Maceió, qual é o CEP? Aí, mesma coisa, sabe quando a gente faz API de CEP, que a gente coloca 57035480, já preenche tudo, preenche a rua, preenche, só falta o número, por exemplo, que é o que normalmente pede? É o mesmo processo, entendeu? Seria lá no município, quando você selecionasse Maceió, e aí se dentro daquele caso tivesse lá IBGE, ele já ia preencher automaticamente o número do IBGE.
+
+Dr. Thiago Correia [03:08]: Então, se eu tiver, por exemplo, É porque eu gostei desse negócio aqui, eu já tô com uns estando aqui. Se eu tiver, por exemplo, uma referência aqui que é feminino masculino, e aí ele me dá o nome ali que o resultado aqui seria a referência seria requerente, por exemplo, ou autor. Vamos colocar autor. Tenho lá referência masculina, autor. Aí eu tenho um documento meu padrão que se for homem eu vou colocar o autor, e eu tenho, ou se for mulher vou colocar autora. Em teoria eu teria que ter dois modelos para o sistema poder puxar feminino, masculino. Mas se no meu documento padrão gerado eu tiver lá não a informação autor barra autora, mas tiver, seria a referência daqui, ele sabe que ele tem que puxar daqui, levar isso para lá já com referência personalizada, seria mais ou menos isso.
+
+Adavio Tittoni [04:08]: Mas aí seria normalmente dentro do caso ou do cliente, em alguma parte que a gente cadastra, né? Não no documento em si, porque como é que funciona o nosso documento? A gente usa o modelo que vocês colocam no Word. Então não é daqui para lá, entendeu?
+
+Dr. Thiago Correia [04:26]: Não, tô falando assim, no documento tem essa identificação, só que ao invés de ter— eu até já testei com os campos personalizados, viu?
+
+Matheus Torquato [04:32]: Funciona.
+
+Dr. Thiago Correia [04:33]: Gerar lá o modelo de documento com campo personalizado. E aí eu coloco a chavezinha do campo, e aí ele traz.
+
+Adavio Tittoni [04:40]: É o que a gente criou lá daquele processo, tá funcionando isso aí já.
+
+Dr. Thiago Correia [04:45]: Quando a gente mudou para campus, nem precisou, vocês fizeram, já tava programado dessa forma. Aí testei uns modelos dessa forma, só que ao invés de preencher na chavezinha o identificador do campo daquele tema, daquele caso, eu vou trazer o identificador daqui e ele vai puxar a informação da referência daqui.
+
+Adavio Tittoni [05:01]: Pode ser. Aí dá, tipo assim, a gente pode fazer assim, né? Vai gerar documento. Na hora de gerar documento tem o caso e tem as referências. É isso que você quer fazer, né? Aí, por exemplo, tem lá no gerar documento município. Ao invés do cara escrever, o cara clica e seleciona um município com todos os dados. Aí já é preenchido diretamente no documento. Seria tipo isso, tipo assim, a gente tá falando da mesma.
+
+Dr. Thiago Correia [05:29]: Sim, sim, o do município é até mais difícil de visualizar porque aqui na verdade essa referência ela traz várias informações, né? Mas quando for algo que é uma coisa só, tipo um ou outro, então eu acho que sim, seria exatamente isso aí. Só teria que ter uma forma de identificar, né, qual informação.
+
+Adavio Tittoni [05:49]: Então, pô, se eu marquei, porque hoje lá no documento Quando a gente gera o documento, a gente puxa já do dado do cliente. É isso que eu tô pensando aqui, entendeu? Dentro do que hoje, quando a gente vai lá em gerar documento, ele vai já pré-preencher de acordo com o que a gente meio que construiu. Por exemplo, nome é o nome completo, CPF é o CPF. Ele já pega de acordo com aquelas chaves que a gente criou roxinha, né, que abre e fecha ali de maior ou menor. Para poder a gente ter essa condição. Agora, como é que a gente puxaria do perfil? É isso que eu fiquei meio desse, dessa referência, que essa referência ela tava relacionada ao cliente, tá? Como se fosse aquele campo personalizado que a gente criou no cliente, que veio do anexo 1, né? Por exemplo, vai lá num cliente só para a gente testar, para eu te mostrar onde testa, para você entender o que eu tô falando. Então quando a gente vai dentro de um caso e aí você bota para gerar um novo, uma nova documentação, e a gente seleciona um documento do caso, por exemplo, né, ele vai mostrar aqui as opções identificadas no documento que estão ali. Só que aí ele já puxa do cliente, sabe? Já puxa automaticamente o dado do cliente, que o Iago tinha falado, tipo assim, se já tem no cliente, puxe automaticamente. Então é nome, email, telefone, né, tudo que a gente já tem como um cadastro do cliente. Se ele tiver ali o CRM, o CRM e tudo mais. Quando é que a gente puxaria dessa referência? Isso que eu tô com um pouquinho de dúvida.
+
+Dr. Thiago Correia [07:37]: É porque eu não sei se vocês já estavam sabendo, mas Ele tá até mais avançado que isso já. Acho que vocês programaram ele já mais amplo. Ele não tá puxando só do cliente, ele tá puxando até dos campos casos, tá? Então, por exemplo, isso aqui, ó, isso aqui, ó, é tudo informação que tá em campos casos. Eu deixei lá chaveado já com o nome do campo no modelo.
+
+Adavio Tittoni [08:05]: Então, mas no caso também vai Porque tá relacionado ao cliente, né? Tudo que tá relacionado ao cliente ou ao caso vai porque tá dentro do Kanban. Agora, a referência ela não vai estar vinculada ao cliente, entendeu? É isso que eu tô dizendo. Onde é que a gente vai vincular? Por exemplo, aí no município escolher referência, é isso que eu tô—
+
+Dr. Thiago Correia [08:26]: eu acho que só um minuto, deixa eu abrir a porta, minha esposa aqui.
+
+Matheus Torquato [08:35]: É porque nesse formato, Thiago, como tá, ele já identifica sozinho ali, né, a referência.
+
+Dr. Thiago Correia [08:42]: Se tiver uma condição da gente colocar nas variáveis do chaveamento lá do documento, e é isso, tipo, que aqui eu vou colocar no chaveamento, né, valor desconto, só coloca escrito aqui, ele sabe que é um campo daqui. Se eu colocar, sei lá, um identificador de valor desconto traço e aí um código que signifique que é de lá, entendeu?
+
+Matheus Torquato [09:08]: Então, como é que ele fez hoje, né? Quando você coloca um documento com chaveamento, ele vai pegar, ele vai fazer meio que um depara para tentar entender, pois essa informação é referente a essa informação do cadastro, daí ele preenche sozinho, mas Pode ser, ele não tiver a certeza absoluta, ele já não preenche, aí coloca esse campo, vai ficar em branco para ser preenchido, digitar manualmente dentro do contrato.
+
+Dr. Thiago Correia [09:34]: É porque eu tô pensando que eu quero ver um exemplo aqui, vamos abrir até aqui, ó, até aqui, esse próprio tema aqui que eu testei lá. Eu tenho Eu tenho aqui uma situação que é o— cara, isso serve para muita coisa mesmo. Nesse caso aqui eu tenho um campo que é o tema do processo 1% SF, né? 1% SF, esse é o nome interno nosso, 1% SF. Só todas as vezes que eu for digitar isso no documento como uma referência, eu tenho que digitar abatimento do saldo devedor da dívida do FIES. Tá, então eu vou ter aqui a referência, 1% SF, e o que ele significa de fato, que é abatimento. Então quando eu digitar lá no meu documento chaveado 1% SF, a chave, ele na verdade não, ele vai identificar o que que tá para cá. Aí pode ter algum tipo de identificador específico para saber que ele quer aqui buscar isso, um código Tipo assim, essa parte de como ficou lá, a gente nem entrou ainda nessa parte ali de mexer com a forma que faz nos documentos, mas eu acho que dá para trabalhar alguma coisa assim. Não precisa ser para agora não, inclusive, mas só para a gente começar a pensar essa ideia.
+
+Adavio Tittoni [11:07]: Gostei dessa referência aqui, seria tipo uma nomenclatura interna e como tem que estar realmente, né?
+
+Dr. Thiago Correia [11:13]: E aí é meio que lá no documento eu trago essa referência daqui, ele sabe que ele tem que encontrar esse dado daqui.
+
+Adavio Tittoni [11:19]: Até outros dados, por exemplo, né, se for uma coisa um pouco maior, né, eu tal tal tal declaro, lá lá lá lá, isso já vai estar na referência, né, mas a gente pode utilizar também.
+
+Dr. Thiago Correia [11:30]: Aqui a referência município, aí tem lá no documento, é que aqui a gente usou para fins ali do sistema na hora de gerar o município e pegar isso aqui, né. Mas se eu tenho lá na referência do documento município e eu tenho chaveado mostrando que é daqui isso aqui, e eu tenho chaveado as informações, ele vai vir e puxar daqui. Algo assim, tá bem pensada a ideia, não, mas é só, eu não sabia, na hora que eu tava começando a ver ontem para mostrar o pessoal o que que tem aqui já, eu cliquei nesse negócio, nunca cliquei aqui, deixa eu clicar e ver o que que é. Então seria essa parte, mas depois a gente trabalha melhor isso aqui.
+
+Matheus Torquato [12:09]: A gente pode dar uma repaginada nesse menu também, que tem muita coisa que veio da documentação do Iago que provavelmente a gente nem vai usar. Então a gente pode também dar uma repaginada, organizar melhor esse menu.
+
+Dr. Thiago Correia [12:22]: Essa parte do design sistema, eu sempre fiquei com medo de clicar porque eu não sei se eu clicar que muda para todo mundo.
+
+Matheus Torquato [12:29]: Algumas coisas funcionam, outras não, tá? Alguns são mocks, mas algumas coisas já funcionam.
+
+Dr. Thiago Correia [12:36]: Mas não tá mostrando pro pessoal também, tá tranquilo, pro usuário deles mostra. De forma geral, isso daí tá bem detalhado. Eu queria ver, eu vou mandar para vocês várias observações, e ficou bastante observação, mas assim, é um monte de observação pequenininha na maioria dos casos, tipo, ah, isso aqui que esse nome tá repetido, deixar algumas coisas assim. Mas eu queria ver das permissões, eu até já vou deixar no arquivo também algumas questões sobre Permissões. Isso aqui ficou um pouco mais fácil, mais visual. Só que eu acho que a gente precisava de um menu de permissão do perfil, onde a gente pode configurar o que que o perfil em si vai ver, né?
+
+Adavio Tittoni [13:18]: É só a pessoa, né?
+
+Matheus Torquato [13:20]: Mas isso tem, ó, que ver aí embaixo. Desce um pouco aí mesmo onde você tava. Clica no lápis mesmo ali, qualquer usuário. Se você descer um pouquinho, pode descer. Ué, é que você apertou administrativo, eu acho. Não, não, ele é administrador. Pega um que não é administrador.
+
+Adavio Tittoni [13:44]: Não pode ser administrador, operacional.
+
+Matheus Torquato [13:47]: Aí pode descer. Tá vendo que ele tem essa do comercial, operacional, financeiro, controladoria?
+
+Dr. Thiago Correia [13:54]: Mas é só no dele, eu não mudo no perfil dele como um todo completo. É, não muda para todos, todo mundo desse perfil e mudar, entendeu? Eu não tenho como mudar o do perfil porque aqui, ó, aqui ele vai mostrar assim, ó.
+
+Matheus Torquato [14:08]: Não, isso vai mudar nesse perfil que tu abriu, por exemplo, nesse usuário. Aí é o fulano de tal. Se você descer ali, tem as abas, tem do lado lá, tem o subtítulo de cada subaba, né? Aí, por exemplo, comercial, esse cara, ele, você colocar ali, ó, é padrão do papel, a gente já tem pré-setado que esse cara que é operacional tem um padrão de papel, beleza. Mas de conta que ele não pode ver o comercial, mas se você clicar ali padrão do papel, clica ali, ó, tá vendo? Ver, não ver, visualizar, editar. Aí você pode setar para esse cara ele não ver, visualizar ou editar.
+
+Adavio Tittoni [14:46]: Mas eu acho que ele quer para todo o perfil, que hoje ele consegue editar para um usuário. Não para todo o papel, ele não consegue editar o papel, ah, tipo operacional.
+
+Dr. Thiago Correia [14:56]: Isso não tem mesmo nível geral daquele papel.
+
+Matheus Torquato [14:59]: A gente pode deixar em configurações ali o nível do papel, que nem tem as outras configurações que a gente pode fazer.
+
+Dr. Thiago Correia [15:06]: Eu deixei lá no arquivo, mas só para explicar melhor a ideia, é porque a gente tem perfil, a gente tem nível de acesso e a gente tem cargo. Tá bem redundante. Cargo, eu acho que é interessante manter como algo à parte, os do motor, de visualizar e tal, mas como nomenclatura mesmo, porque lá no motor usa, lá no— depois a gente vai ver algumas outras coisas sobre sucumbência, quando entra o motor faz um cálculo de divisão por cargo, muda, então para outras coisas. Então é interessante manter, mas esse nível de acesso e esse perfil acho que dá para virar uma coisa só. E aí mais detalhado, né? Então administrador, usuário padrão. Usuário padrão a gente dividiria aí entre, ao invés de usuário padrão, seria controladoria, comercial, financeiro, isso aqui, né? E aí manteria o administrador e coordenador, entendeu? Esse usuário padrão vai ser dividido por área, aí sim dividido por área como tá aqui. E aí a gente quer observar, até outra entidade, né, porque aqui é perfil, nível de acesso, e aqui ele já fala em papel. Então são entidades diferentes, unir isso tudo em uma coisa só, e aí a gente tem a opção de mudar esse papel padrão daquele nível de acesso como algo geral, né, uma configuração própria, e Aqui eu acho que detalhar melhor de não ver, visualizar, quer dizer que ele não vê essa aba inteira, ele não aparece no perfil dele, entendeu?
+
+Matheus Torquato [16:50]: Aí visualizar ele só vê, não edita, não consegue acrescentar nada. E editar ele tem acesso a tudo, né? Ver, editar, visualizar tudo, como se fosse um administrador no caso, é para aquela aba, né? Para aquela aba.
+
+Dr. Thiago Correia [17:03]: É, eu acho que dá para continuar dessa forma que tá, só tem um geral para poder você modificar, né?
+
+Adavio Tittoni [17:11]: O que te é, porque às vezes é mais fácil pelo perfil, mas algumas vezes você quer que aquele cara em específico seja tipo um supervisorzinho. É isso que a gente pensa, entendeu? Então assim, o cara tem do perfil comercial, mas você quer que na parte de financeiro ele consiga editar, porque ele é, sei lá, auxiliado financeiro, por exemplo.
+
+Dr. Thiago Correia [17:30]: E editar aqui é mudar os dados, mudar os campos, igual um administrador, tá?
+
+Matheus Torquato [17:38]: Informação, anexar coisas, alterar título, as coisas que ele é um administrador, entendeu? Por exemplo, se ele tá lá na pipeline ali, é uma pipeline comercial, por exemplo, se ele tá como visualizar, ele só vê, ele não consegue mexer um card de um Kanban para o outro, que é isso, é um editar. Se ele tá como editar, ele consegue movimentar o card de um Kanban para o outro, entendeu?
+
+Dr. Thiago Correia [18:01]: Pronto. Mas vamos acertar isso aqui, continua dessa mesma forma, só adiciona uma outra opção que é uma opção de configurar, que aí já não é mais ele preencher, por exemplo, a informação do campo personalizado ou mudar de Kanban. Ele mudar um Kanban, mudar o tema. Isso, isso.
+
+Matheus Torquato [18:21]: Então, além de editar, que seria o operacional, você quer um configurar, que seria estratégico.
+
+Dr. Thiago Correia [18:29]: Isso, tá. Aí, por exemplo, no perfil coordenador, o perfil do papel coordenador, eu vou colocar que ele pode fazer isso de todas as áreas que é do operacional. Já no coordenador financeiro, vou fazer isso para o do financeiro, entendeu? Dessa parte aqui de valores, depois eu fiquei pensando melhor, foi até coisa que eu trouxe, mas depois eu fiquei pensando melhor. Talvez a gente mude, mas assim, é um talvez. Então deixa aí do jeito que tá aí até a gente fechar a parte do financeiro.
+
+Matheus Torquato [18:55]: É uma coisa que o Iago pediu para algumas pessoas a gente setar dá para ver ou não ver o valor que tiver na aba que tem valor, né? Financeiro e controladoria.
+
+Dr. Thiago Correia [19:06]: Então, mas depois eu fiquei pensando, eu acho, depois. Mas assim, já tá desse jeito, deixa assim, qualquer coisa a gente muda depois. Não vamos mudar sem a ideia fechada de fica ou não. Aí as outras questões eu mando lá. Ah, só uma questão das pastas, eu vou mandar para lá também, mas até para explicar Ainda tá muito confuso, cara, esse negócio dessas pastas aí. A gente precisa dar uma limpada nisso. Eu tenho que olhar nessas partes do documento até testar mais essa coisa de frente que ficou lá. Mas assim, ficou muito— cadê? Ficou muito aberto isso aqui assim, quer ver? Talvez olhando por dentro não pareça, mas quando vocês olharem aqui pela mão Que assim, aqui já tem uma série de pastas aqui. Imagino que a maioria delas para fim de configuração, não tem problema. Só precisaria depois dar uma bloqueada nisso aqui para as pessoas não poderem fazer errado, sabe? Quem pode editar isso aqui? O workspace tem algumas informações granulares assim. Depois vocês dão uma olhada, porque as pessoas vai vir aqui, vai registrar coisa errada, daqui a pouco é uma pasta que você não precisa, dá merda lá. Mas aqui em modelos e temas eu queria unificar essas duas, porque aqui em temas eu vou ter os temas que estão lá, né? Beleza. Aí aqui eu vou ter os casos e as procurações para gerar modelo, mas eu também tenho ao mesmo tempo essa outra pasta modelo. Pelo que eu entendi, quando eu vou gerar lá para vincular as pastas de modelo, tá puxando daqui, não tá puxando de lá. Chegar aqui em um tema e tentar puxar ele vai puxar daí. Por exemplo, aqui ele vai aparecer essas nessa pasta como um todo para vincular, entendeu? E o ideal seria a gente registrar isso tudo aqui, ó. Por exemplo, eu vou sempre, eu vou ter uma pasta de modelos por tema, né? Então dentro da pasta do tema eu vou jogar aqui os modelos desse tipo de caso, desse tipo de caso, desse tipo de caso. Ele tá puxando daquela outra. E aí tanto tem a própria bagunça que tá aí como também gera dúvida na prática, no dia a dia. Tenho que gerar um modelo aqui de um tema, tenho que gerar lá. Aí eu acho que assim, todas essas daqui vocês podem apagar, tudo que tá daqui desse negócio de modelo. Todos esses arquivos a gente tem, a gente vai reconfigurar. E colocar para o sistema identificar como pastas padrões dos modelos essas que estão dentro do tema. É dentro do tema, exato. Quando a gente cria um tema, ele já vai criar ali essa pasta, ele sabe onde é que tá, ele vai identificar de lá, puxando por casos. Enfim, é porque isso aqui tá até dentro, não é que tá errado, é que tá dentro até das primeiras ideias do Iago. E antes era assim mesmo, a gente tinha uma pasta só de contrato e procuração, toda, todos os contratos, procuração aqui. Só que é porque não era via sistema, então a pessoa tinha que procurar em cada tema qual era o contrato, procuração, a gente deixava tudo no lugar só. Mas hoje com sistema não, ela vai clicar ali dentro do tema, vai puxar aquilo. Então não precisa ser dessa forma, entendeu? Acho que depois o restante eu mostro para vocês, os arquivos, tô preparando, depois eu passo. Tem duas questões que são do motor de distribuição, mas não gasta mais 30 segundos não. Ele tá distribuindo sábado, tá? Sábado e domingo ele tá distribuindo tarefa, está considerando como dia útil. Aí tem a opção da gente fazer e bloquear em todos os sábados, né? Mas é muito sábado. Se a gente conseguisse que ele já sabia que final de semana ele não joga tarefa. E nos andamentos ele tá aparecendo andamentos repetidos ainda, mas eu pedi pedir para o pessoal tirar print dos que apareceram repetidos e mandar para vocês, porque vocês conseguem também pegar os identificadores e saber por que que ele tá aparecendo. Aí eles me passarem isso aqui, vou mandar para vocês.
+
+Matheus Torquato [23:06]: Beleza, combinado então.
+
+Dr. Thiago Correia [23:08]: Fechou.
+
+Adavio Tittoni [23:08]: Agora, aqui durante essa semana, e a gente vai te passando.
+
+Dr. Thiago Correia [23:12]: Eu vou passar depois. Hoje eu provavelmente não consigo, tô tendo umas reuniões, mas eu quero ver se até a sexta eu passo essa listinha com as outras alterações. E aí é o tempo que a gente estuda esse negócio do Conta Azul e Asas. E a questão do—
+
+Adavio Tittoni [23:25]: eu ia dizer isso, provavelmente eu preciso do acesso à conta do Asas.
+
+Dr. Thiago Correia [23:30]: Eu não te passei não, já?
+
+Adavio Tittoni [23:33]: Então você me passou o token para ele gerar.
+
+Dr. Thiago Correia [23:35]: Ah, então vou te mandar um login e senha lá do Asas para você poder testar. E Matheus, você tinha me mandado um negócio, precisa do Trello, você quer Até porque acabou, a gente gastou mais tempo aí. Vou ter uma audiência daqui a pouco, eu vou ver para te mandar depois, mas vou só te mostrar os casos que a gente vai puxar. É do tema cobrança HV. Eu vou mandar para o escrito também para facilitar, mas eles todos vão estar nessa aba aqui do Trello que a gente deixou só eles. Já tem aquele identificador do ID card e tal, aquele negócio lá que você me pediu. Eu vou ver se eu gero aqui mais tarde à noite. E aí eu passo também, já a gente já testar essa validação do Trello.
+
+Matheus Torquato [24:21]: Beleza. Se quiser também me dar acesso, acho que tem como dar acesso só essa aba para mim, né, para o email.
+
+Dr. Thiago Correia [24:27]: Não tem, tem, tu tem Trello? Se tiver conta do Trello, libera essa aba e aí você consegue acessar.
+
+Matheus Torquato [24:33]: Eu acho que eu tenho, mas eu vou ver se eu tenho mesmo ou não. Daí só me dá acesso, aí eu vejo como é que eu faço para vincular, mas tem que estar como administrador. Administrador nessa aba, né? Eu vou ver se eu tenho aqui, eu te mando novo.
+
+Dr. Thiago Correia [24:46]: É porque eu acho que precisa gerar essa aba como premium para poder fazer isso. Eu acho que até já coloquei, na verdade, gerar ela como premium para poder acessar as informações de API, se eu não me engano. Mas eu acho que já estão, já está pronto. Eu ainda não tenho como prêmio, mas se precisar para fins da API, a gente gera como prêmio.
+
+Matheus Torquato [25:13]: Eu tenho aqui, eu vou te mandar meu email no grupo ali.
+
+Dr. Thiago Correia [25:20]: Beleza, beleza. Então aí eu te gero para cá e se precisar ainda realmente de alguma coisa, eu gero e você me avisa.
+
+Adavio Tittoni [25:28]: Fechou, combinado então. Beleza, tá se falando durante essa semana, tá bom?
+
+Matheus Torquato [25:32]: Gente, valeu, tchau tchau! Eu te mando um outro link lá. E aí, beleza? Beleza. Você vai querer conversar que a gente tinha conversado? Não, pode conversar, tá de boa. Eu vou mandar outro link para você, tá?
+
+Adavio Tittoni [25:49]: Para não matar essa daqui, né?
+
+Matheus Torquato [25:52]: Isso, isso.
+
+Adavio Tittoni [25:53]: Manda a reunião que a gente teve também, a outra.
+
+Matheus Torquato [25:56]: Vou mandar as duas.
