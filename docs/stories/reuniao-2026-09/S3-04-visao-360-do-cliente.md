@@ -79,3 +79,23 @@ Ordem da página que ele desenhou: **Dados de contato + dados do cliente/campos 
 - [ ] A ficha responde "como está esse cliente?" sem abrir nenhum caso
 - [ ] Números batem com a aba Financeiro do caso
 - [ ] Sem N+1 e sem vazamento de valores para quem não pode ver
+
+---
+
+## Destravada — resposta C2 do Thiago (04/09)
+
+A dúvida sobre as seis colunas do rascunho foi respondida:
+
+> "Registrado = tudo que for cadastrado em receita/despesa do caso. Lançado = foi para o ERP. Essa divisão
+> já existe no SHV, seria o caso só de agrupar a soma por receita/despesa"
+
+Ou seja, **não há régua nova a inventar**. Os selos por lançamento já existem na aba Financeiro do caso
+(**Dispensado · Lançado · Aguardando**, conforme a imagem que ele mandou), e a visão 360 só precisa
+**somar por receita/despesa** reusando a agregação existente.
+
+Mapa das colunas do rascunho:
+- **Registradas** = tudo que foi cadastrado em receita/despesa do caso;
+- **Lançado** = o que já foi para o ERP (Conta Azul);
+- **Devido · Vencido · Pago · A vencer** = a régua que a aba Financeiro já calcula.
+
+A story pode ser executada como escrita, com esse esclarecimento no AC 2.

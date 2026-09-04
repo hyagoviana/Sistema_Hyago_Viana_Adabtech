@@ -83,3 +83,17 @@ de-para — frágil.
 - [ ] Cada tema pode ter seu assunto do ProJuris definido e revisto pelo Thiago
 - [ ] Rótulos renomeados
 - [ ] typecheck + lint verdes
+
+---
+
+## Resposta B1 do Thiago (04/09)
+
+> "Tinha deixado no arquivo a ideia dessa vinculação tema SHV - Assunto Projuris como algo para
+> preenchermos na mão e ajustável (…) Facilita conforme formos criando/importando ou próximos temas, fica
+> melhor que repassar a tabela agora e ter que repetir a cada próximo tema."
+
+Confirma o AC 2 como escrito: **campo ajustável, preenchido à mão por tema**. Ele não vai mandar a tabela
+pronta — o de-para é preenchido conforme os temas nascem.
+
+**Fallback:** assunto **"CÍVEIS"**, que já existe no ProJuris. Ele **não achou um identificador sistêmico**
+para ele, então o campo precisa aceitar **texto**, não só um id de lista.

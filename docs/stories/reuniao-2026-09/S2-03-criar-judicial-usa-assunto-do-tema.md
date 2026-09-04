@@ -83,3 +83,14 @@ Como o caso é vinculado a um tema, o sistema **já sabe** qual é a classifica�
 - [ ] Processo criado pelo SHV nasce com o assunto do tema, conferido no ProJuris
 - [ ] Nenhum assunto novo é criado lá por causa de caso
 - [ ] typecheck + lint + testes verdes
+
+---
+
+## Resposta B1 do Thiago (04/09) — o fallback
+
+O AC 1.3 previa bloquear a criação quando não houvesse assunto resolvível. Com a resposta, existe um
+fallback de verdade: **"CÍVEIS"**, o assunto geral do ProJuris ("o tema 'cíveis' é o 'fallback geral',
+encaixamos aqui tudo que não encaixe em outro").
+
+A ordem passa a ser: assunto do tema → **CÍVEIS** → e só então o bloqueio, se nem o geral estiver
+configurado. Como ele não achou identificador sistêmico para "CÍVEIS", o valor é **texto**.

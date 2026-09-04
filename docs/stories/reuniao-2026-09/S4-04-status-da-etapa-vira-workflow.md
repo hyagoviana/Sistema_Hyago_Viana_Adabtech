@@ -2,7 +2,7 @@
 
 - **Sprint:** S4 — Caso
 - **ID:** S4-04 · **Item do Thiago:** 16 · **Decisão:** D1
-- **Status:** Draft
+- **Status:** ADIADA pelo owner (resposta C1, 04/09)
 - **Estimativa relativa:** G — **story de risco alto**
 - **Executor sugerido:** @dev · Quality gate: @qa + @architect
 
@@ -100,3 +100,19 @@ Ou seja: a régua para substituir o `stage_role` **já está pronta**.
 - [ ] Nenhum tema perdeu o gatilho do financeiro (relatório + teste ponta a ponta por tema)
 - [ ] Editor de etapas só com etapas
 - [ ] Rollback testado
+
+---
+
+## ⚠️ ADIADA — resposta C1 do Thiago (04/09)
+
+A decisão D1 (tirar o status da etapa e transformar o gatilho em workflow) **foi adiada por ele**:
+
+> "Essa etapa para fins de financeiro e etc acabou ficando obsoleto, mas para facilitar vamos manter da
+> forma atual e trabalhamos melhor essa alteração quando avançarmos nos próximos passos do módulo
+> financeiro."
+
+**Nada foi implementado** e nada deve ser: `stage_role` continua como está, e o gatilho do financeiro
+segue sendo a etapa marcada como "Ganho".
+
+Esta era a segunda story de risco alto do plano (a outra é a S2-04). Sai da leva — retomar quando o
+módulo financeiro avançar, junto com a decisão de o que fazer com "Encerrado"/"Perdido".

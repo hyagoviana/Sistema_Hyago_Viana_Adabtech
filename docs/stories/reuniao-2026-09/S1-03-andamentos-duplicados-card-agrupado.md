@@ -2,7 +2,7 @@
 
 - **Sprint:** S1 — Correções que travam o uso hoje
 - **ID:** S1-03 · **Item do Thiago:** 11 (parte b) · **Anexo:** `ANDAMENTOS DUPLICADOS.docx`
-- **Status:** Draft
+- **Status:** Ready for Review (escopo REESCRITO pela resposta A1)
 - **Estimativa relativa:** G (migration + agrupamento + UI + regra de distribuição)
 - **Executor sugerido:** @dev · Quality gate: @qa
 
@@ -100,3 +100,70 @@ A dedupe atual não pega isso:
 - [ ] A fila de um dia real bate com o que a controladoria enxerga no ProJuris (1 card por publicação)
 - [ ] Distribuir um card agrupado gera exatamente 1 tarefa
 - [ ] Backfill aplicado; nenhuma linha perdida
+
+---
+
+## ⚠️ Escopo reescrito — resposta A1 do Thiago (04/09)
+
+**A decisão D9 desta story foi recusada por ele.** O que estava escrito acima (agrupar por publicação,
+gerar UMA tarefa, arquivar as irmãs como consequência) não corresponde à metodologia do SHV/ProJuris:
+
+> "Existem 2 situações/etapas diferentes: o quê fazer com a intimação; se ela gera tarefa ou não.
+> Independentemente da intimação gerar tarefa, ela vai ser arquivada após ser conferida. O gerar tarefa é
+> uma outra funcionalidade."
+
+E o problema que ele quer resolver não é tarefa duplicada — é **retrabalho de leitura**:
+
+> "a pessoa vê tudo, e precisa lembrar se já olhou aquele processo ou não"
+
+### O que passou a valer
+
+| Antes (D9, recusado) | Agora (A1) |
+|---|---|
+| agrupar por **publicação** (processo + data + teor) | agrupar por **PROCESSO + DIA** |
+| a tarefa nasce do card agrupado | a tarefa se liga ao **processo**; qual intimação a originou é indiferente |
+| irmãs arquivadas como efeito colateral da tarefa | **toda** intimação é arquivada após conferida, gere tarefa ou não |
+| um só status de arquivamento | status próprio **"arquivado por repetição"**, diferente de "arquivado" |
+
+---
+
+## Dev Agent Record (04/09/2026)
+
+**Migration `20260904000001_intimacoes_repetidas_por_processo.sql` — APLICADA.**
+`ARQUIVADO_REPETICAO` no CHECK de `decisao`, coluna `grupo_processo_dia` (preenchida para as 2144 linhas
+existentes) e índice parcial para a fila.
+
+**Chave de agrupamento:** código do ProJuris → CNJ (só dígitos) → o próprio id. Linha **sem processo
+identificado vira seu próprio grupo** — agrupar o que não sabemos ser o mesmo processo esconderia
+trabalho de verdade. A expressão do código e a da migration são a mesma.
+
+**Leitura:** `listMovements` agrupa **só o que está PENDENTE**; histórico e auditoria continuam vendo
+linha a linha (`agrupado: false` força isso). Cada linha exibida traz `repetidas`, e
+`listMovementsDoGrupo` devolve as irmãs.
+
+**Decisão:** vale para o grupo, em qualquer decisão (arquivar direto ou distribuir). As irmãs pendentes
+viram `ARQUIVADO_REPETICAO` e são arquivadas **uma a uma** no ProJuris — best-effort, a falha de uma não
+derruba a decisão nem as outras.
+
+**Tela:** selo `N do mesmo processo hoje` (com explicação no title) e o toast informa quantas repetidas
+foram arquivadas junto.
+
+---
+
+## QA Results — 04/09/2026 (Quinn)
+
+**Gate: PASS**
+
+`npm run qa:repetidas`, contra o banco real — 13/13:
+
+- **a fila pendente cai de 500 para 261 linhas** (239 em stand by); 111 linhas representam repetição;
+- a soma das contagens bate exatamente com o total do banco — nenhuma linha some da conta;
+- nenhum processo aparece duas vezes na mesma data;
+- as irmãs de um grupo são do mesmo processo, no mesmo dia, e têm **códigos de intimação diferentes** —
+  é repetição de leitura, não duplicata de registro (que a UNIQUE já resolvia);
+- linha sem processo identificado tem chave própria;
+- telas de decisão já tomada **não agrupam**.
+
+**Ressalva medida:** a consulta da fila tem `limit(500)`. Com 500 linhas pendentes o teto foi atingido, ou
+seja o número real de pendentes pode ser maior — o agrupamento reduz o que se lê, mas não substitui
+paginação. Vale acompanhar se a fila continuar crescendo.

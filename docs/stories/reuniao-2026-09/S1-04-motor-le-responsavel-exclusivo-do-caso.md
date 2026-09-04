@@ -2,7 +2,7 @@
 
 - **Sprint:** S1 — Correções que travam o uso hoje
 - **ID:** S1-04 · **Item do Thiago:** 4 e 11 (parte c)
-- **Status:** Draft
+- **Status:** Ready for Review
 - **Estimativa relativa:** M
 - **Executor sugerido:** @dev · Quality gate: @qa
 
@@ -64,10 +64,10 @@ o caso pode ter **vários** responsáveis, e o motor precisa de **um**.
 
 ## Tasks / Subtasks
 
-- [ ] Função `resolveDirectedExecutor(caseId)` (server-only), com a regra dos 3 cenários (AC 1, 4).
-- [ ] Ligar nos dois pontos de montagem do payload (AC 2). (`staging-core.ts:1045`, `sync-core.ts:621`)
+- [x] Função `carregarResponsaveisDirecionados` (server-only), com a regra dos 3 cenários (AC 1, 4).
+- [x] Ligar nos dois pontos de montagem do payload (AC 2). (`staging-core.ts:1045`, `sync-core.ts:621`)
 - [ ] Registrar o alerta `ALT-RESP-003` no catálogo (`engine/alerts.ts`) e na legenda da tela (AC 1, 3).
-- [ ] Testes (AC 5).
+- [x] Testes (AC 5).
 - [ ] Validar em produção com um caso real direcionado (rodar o simulador antes de ligar).
 
 ---
@@ -86,3 +86,52 @@ o caso pode ter **vários** responsáveis, e o motor precisa de **um**.
 - [ ] Caso direcionado recebe a tarefa na pessoa certa, provado no simulador e numa rodada real
 - [ ] Casos sem direcionamento seguem exatamente como hoje (regressão zero)
 - [ ] testes + typecheck + lint verdes
+
+---
+
+## Ajuste de escopo — resposta A2 (04/09)
+
+O AC 1 previa três cenários (um responsável → direciona; dois ou mais → regra geral **+ alerta
+ALT-RESP-003**; não elegível → regra geral). O terceiro cenário deixou de existir:
+
+> "vamos manter que cada caso pode ter apenas 1 responsável para fins das funções do SHV"
+
+Sem "dois ou mais", o alerta não tem o que sinalizar — **não foi criado**. A regra de 1 responsável passou
+a ser garantida na escrita (`setCaseResponsaveis`).
+
+---
+
+## Dev Agent Record (04/09/2026)
+
+**`src/lib/distribuicao/responsavel-caso.ts`** — resolve o responsável de cada caso e devolve dois mapas
+(por `case_id` e por código do ProJuris), filtrados pelo **pool de executores elegíveis** que o chamador
+já calculou. Direcionar para quem o motor não distribui deixaria a tarefa parada.
+
+Ligado nos dois caminhos que gravavam `directed_executor_id: null` fixo: `sync-core` (pelo código do
+ProJuris, no mesmo padrão do `urgencyByCode` que já existia) e `staging-core` (pelo `case_id`, que a
+linha da fila já traz).
+
+**Desempate determinístico:** se algum caso antigo tiver dois vínculos, vence o **mais antigo** — nunca
+"qualquer um".
+
+**Efeito colateral tratado:** a reatribuição ao excluir colaborador (`reassignAndDeleteUser`) empilhava o
+destino no fim da lista. Com a regra de 1, o destino seria descartado silenciosamente; agora a escolha é
+explícita — quem sobrou continua, e se não sobrou ninguém entra o destino.
+
+---
+
+## QA Results — 04/09/2026 (Quinn)
+
+**Gate: PASS**
+
+`npm run qa:responsavel`, contra o banco — 6/6: pool vazio não direciona ninguém; o filtro de
+elegibilidade reduz corretamente; nenhum caso tem 2 responsáveis; o resolvedor devolve no máximo um.
+
+### 🔴 Diagnóstico que o Thiago precisa saber
+
+**Hoje nenhum caso seria direcionado.** Os 4 casos com responsável são do **Adavio** (2) e do **Hyago**
+(2), e **nenhum dos dois é `peticionante`** — logo não estão no pool de executores do motor. O Hyago
+inclusive está mapeado como executor, mas com a chave de peticionante desligada.
+
+O mecanismo está correto e provado; só não tem em quem agir. Para o direcionamento funcionar na prática,
+o responsável do caso precisa ser alguém que o motor distribui.

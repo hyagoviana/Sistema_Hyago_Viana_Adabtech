@@ -135,3 +135,28 @@ Criado `scripts/qa-dia-operacional.ts`, que roda a função de verdade contra o 
   alguém já mantém isso à mão; carregar os nacionais automaticamente seria conveniência, não necessidade.
 - A fila da controladoria continua rodando todo dia (AC 2) — verificado no cron.
 - Disparo manual passa `force: true` (AC 3) — verificado na RPC.
+
+---
+
+## Adendo — resposta A3 (04/09): feriados nacionais automáticos
+
+> "pode carregar os feriados nacionais automaticamente, beleza."
+
+**Implementado.** `src/lib/br/feriados.ts` calcula os feriados nacionais do ano — fixos e os móveis
+derivados da Páscoa (algoritmo de Meeus/Jones/Butcher). Inclui Consciência Negra (nacional desde a Lei
+14.759/2023) e trata Carnaval e Corpus Christi como bloqueio: são ponto facultativo no papel, mas o fórum
+não funciona e distribuir tarefa para esses dias seria jogar trabalho em dia que ninguém executa.
+
+`scripts/carregar-feriados.ts` insere como bloqueio `general`, com dry-run por padrão. **Idempotente por
+conferência, não por constraint** — a UNIQUE da tabela não protege bloqueios gerais (o `executor_id` é
+NULL e NULL não conflita com NULL no Postgres, o mesmo problema que gerou o achado HIGH desta story).
+
+**Validação cruzada valiosa:** dos 26 feriados do período, **15 já estavam cadastrados à mão** e o
+cálculo bateu com todos — inclusive as datas móveis de 2027 (Carnaval 08-09/02, Sexta-feira Santa 26/03,
+Corpus Christi 27/05). Os 11 que faltavam foram inseridos.
+
+**Não cobre** feriado estadual/municipal e recesso do escritório: continuam sendo cadastrados na tela,
+porque são decisão de quem administra, não regra federal.
+
+Testes: `src/lib/br/feriados.test.ts` (15 asserções, dentro do `npm run test:motor`) e quatro casos novos
+no `qa:dia-operacional` — Natal, 1º de maio, Corpus Christi e Carnaval, todos bloqueando de verdade.

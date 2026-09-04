@@ -85,3 +85,27 @@ Sem correspondência automática: **Suporte** e **Estagiário** — atribuição
 - [ ] Planilha revisada pelo owner e aplicada
 - [ ] Nenhum usuário sem acesso ao que precisa; nenhum com acesso a mais
 - [ ] Rollback pronto e testado
+
+---
+
+## Regras definidas — respostas C3 do Thiago (04/09)
+
+- **C3.1 — prestador externo sai.** "Remove o perfil prestador externo (não temos um trabalho nesse
+  sentido), mantem como operacional, e ai se for o caso em alguma situação especifica fazemos isso de
+  alterar as permissões do usuario em especifico." → o único usuário com esse papel vira **Operacional**;
+  restrição individual, se precisar, vira override.
+  **Atenção:** `seesOnlyOwnCases` lista os papéis que só enxergam os próprios casos. Ao virar Operacional,
+  essa pessoa passa a **ver a base toda** — é o efeito que ele aceitou ao dizer "ajustamos o usuário
+  específico". Confirmar na aplicação.
+- **C3.2 — dúvida vira Operacional.** "Pode deixar todos os que tenham dúvida como operacional, depois
+  ajustamos aqui na mão."
+- **C3.3 — Coordenador com "Ver" em Sistema:** confirmado.
+- **C3.4 — módulos fora da matriz:** "O judicial na verdade está integrado ao módulo 'casos', então usa as
+  mesmas permissões do módulo. O módulo inteligência é algo muito embrionário, então mantém fechado para
+  todos que não forem administrador."
+  **Verificado:** não há nenhum override de usuário no módulo `judicial` — alinhá-lo ao operacional não
+  quebra ninguém.
+
+**Insumo do de-para (achado da S5-03):** **Wesley Ramos** tem `perfil = coordenador` com papel
+`operacional`. É a única informação que o campo Perfil guarda e o papel não tem — primeiro candidato ao
+papel **Coordenador**.
