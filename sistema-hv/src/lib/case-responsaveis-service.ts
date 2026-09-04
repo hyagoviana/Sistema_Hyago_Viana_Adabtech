@@ -71,7 +71,12 @@ export async function listCaseResponsaveis(caseId: string): Promise<CaseResponsa
 // cache de exibição system_cases.responsavel (nomes juntos por vírgula).
 export async function setCaseResponsaveis(caseId: string, userIds: string[], actorUserId?: string) {
   const sb = getSupabaseAdmin();
-  const uniqueIds = [...new Set(userIds.filter(Boolean))];
+  // A2 (Thiago, 04/09): "vamos manter que cada caso pode ter apenas 1 responsável
+  // para fins das funções do SHV". A tabela segue N:N (não vale migração de schema
+  // por causa disso, e o histórico de vínculos antigos continua legível), mas a
+  // ESCRITA passa a guardar um só. Recusar seria pior que normalizar: quem chamou
+  // com dois queria trocar de responsável, não criar um par.
+  const uniqueIds = [...new Set(userIds.filter(Boolean))].slice(0, 1);
 
   // Estado atual (ativos).
   const { data: current } = await sb

@@ -36,6 +36,9 @@ const DECISAO_LABEL: Record<string, string> = {
   ARQUIVADO: "Arquivado",
   LIDO: "Marcado lido",
   DISTRIBUIR: "Distribuiu tarefa",
+  // S1-03 — status próprio, diferente de "Arquivado": esta não foi lida uma a
+  // uma, foi junto com outra intimação do MESMO processo no mesmo dia.
+  ARQUIVADO_REPETICAO: "Arquivado por repetição",
 };
 
 function fmt(d: string | null): string {

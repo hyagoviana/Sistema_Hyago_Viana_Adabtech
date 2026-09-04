@@ -745,12 +745,18 @@ export async function reassignAndDeleteUser(userId: string, map: ReassignMapping
     throw new UsersServiceError("Você não pode excluir a si mesmo.", 400);
   }
 
-  // 1) Responsáveis: em cada caso, troca o excluído pelo destino (mantém os demais).
+  // 1) Responsáveis: em cada caso, troca o excluído pelo destino.
+  //
+  // A2 (04/09) — cada caso tem UM responsável. Antes o destino ia para o fim da
+  // lista; com a regra nova, `setCaseResponsaveis` guarda só o primeiro, e o
+  // destino seria descartado num caso que (por dado antigo) tivesse dois. Por
+  // isso a escolha é explícita aqui: quem sobrou continua; se não sobrou ninguém,
+  // entra o destino.
   for (const r of map.responsaveis) {
     const current = await listCaseResponsaveis(r.case_id);
-    const ids = current.map((c) => c.user_id).filter((id) => id !== userId);
-    if (r.to && !ids.includes(r.to)) ids.push(r.to);
-    await setCaseResponsaveis(r.case_id, ids, actorId);
+    const restantes = current.map((c) => c.user_id).filter((id) => id !== userId);
+    const escolhido = restantes[0] ?? r.to ?? null;
+    await setCaseResponsaveis(r.case_id, escolhido ? [escolhido] : [], actorId);
   }
   // 2) Casos criados → novo criador.
   for (const c of map.casesCreated) {

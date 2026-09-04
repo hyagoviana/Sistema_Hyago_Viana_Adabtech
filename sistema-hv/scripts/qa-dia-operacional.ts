@@ -13,6 +13,11 @@ const casos: Array<[string, boolean, string]> = [
   ["2026-09-06", false, "domingo"],
   ["2026-09-07", false, "segunda-feira COM bloqueio geral (7 de setembro)"],
   ["2026-09-08", true, "terça-feira comum"],
+  // A3 (04/09) — feriados nacionais carregados automaticamente.
+  ["2026-12-25", false, "Natal (carregado pelo script de feriados)"],
+  ["2026-05-01", false, "Dia do Trabalho (idem)"],
+  ["2026-06-04", false, "Corpus Christi — móvel, calculado pela Páscoa"],
+  ["2026-02-17", false, "Carnaval (terça) — móvel"],
 ];
 
 let falhou = 0;

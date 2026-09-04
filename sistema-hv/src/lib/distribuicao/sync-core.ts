@@ -27,6 +27,7 @@ import {
   normalizeTemaKey,
 } from "@/lib/projuris/normalizer";
 import { deriveFromMarcadores } from "@/lib/distribuicao/marcadores";
+import { carregarResponsaveisDirecionados } from "@/lib/distribuicao/responsavel-caso";
 import { isWeekday } from "@/lib/distribuicao/engine/date-utils";
 import { distributeBatch } from "@/lib/distribuicao/engine/motor";
 import { buildBatchInput } from "@/lib/distribuicao/engine/transformer";
@@ -523,6 +524,14 @@ export async function runSync(
     throw new AuthError("Nenhum executor mapeado/ativo · impossivel distribuir.", 422);
   }
 
+  // S1-04 — RESPONSÁVEL DIRECIONADO do caso (nível 1 da precedência do motor).
+  // Filtrado pelo pool acima: direcionar para quem o motor não distribui deixaria
+  // a tarefa parada.
+  const direcionados = await carregarResponsaveisDirecionados(
+    supabase,
+    new Set(executors.map((e) => e.executor_id)),
+  );
+
   // Calendario: seg-sex operacional + bloqueios (geral desliga o dia; individual
   // por executor) do banco, janela [dia .. +60].
   const generalBlocks = new Set<string>();
@@ -674,7 +683,8 @@ export async function runSync(
         collective: der.collective,
         complexity_level: der.complexity_level,
         temporal_level: (urgencyByCode.get(rt.process_id) ?? 0) as 0 | 1 | 2,
-        directed_executor_id: null,
+        // S1-04 — era `null` fixo: o responsável do caso nunca chegava ao motor.
+        directed_executor_id: direcionados.porCodigoProjuris.get(rt.process_id) ?? null,
       });
     }
     tasks.push({

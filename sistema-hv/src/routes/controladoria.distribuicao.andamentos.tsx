@@ -66,6 +66,9 @@ const DECISAO_LABEL: Record<string, string> = {
   ARQUIVADO: "Arquivado",
   LIDO: "Marcado lido",
   DISTRIBUIR: "Distribuiu tarefa",
+  // S1-03 — status próprio, diferente de "Arquivado": esta não foi lida uma a
+  // uma, foi junto com outra intimação do MESMO processo no mesmo dia.
+  ARQUIVADO_REPETICAO: "Arquivado por repetição",
 };
 const SITUACAO_PROJURIS_LABEL: Record<string, string> = {
   ARQUIVADA: "Arquivada no ProJuris",
@@ -226,6 +229,8 @@ function LinhaMovimento({
     situacao_projuris: string | null;
     projuris_sync_at: string | null;
     projuris_sync_error: string | null;
+    /** S1-03 — quantas do mesmo processo, no mesmo dia, esta linha representa. */
+    repetidas?: number;
   };
   podeEditar: boolean;
 }) {
@@ -254,7 +259,12 @@ function LinhaMovimento({
           : r?.projuris?.motivo
             ? ` · NÃO refletido no ProJuris: ${r.projuris.motivo.slice(0, 80)}`
             : "";
-      toast.success(base + eco);
+      // S1-03 — diz quantas repetidas foram junto, para a pessoa não achar que
+      // ficou trabalho pendente do mesmo processo.
+      const repetidas = r?.repetidasArquivadas
+        ? ` · ${r.repetidasArquivadas} repetida(s) do mesmo processo arquivada(s) junto`
+        : "";
+      toast.success(base + eco + repetidas);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao registrar decisão");
     }
@@ -291,6 +301,18 @@ function LinhaMovimento({
         )}
         {mov.decisao !== "PENDENTE" && (
           <Badge variant="secondary">{DECISAO_LABEL[mov.decisao] ?? mov.decisao}</Badge>
+        )}
+        {/* S1-03 — Thiago: "dá até para trabalhar uma informação de que existem
+            outras intimações ou algo assim". O selo evita a dúvida "será que já
+            olhei esse processo?" que gerava o retrabalho. */}
+        {(mov.repetidas ?? 1) > 1 && (
+          <Badge
+            variant="outline"
+            className="border-[var(--gold)] text-[var(--gold-700)]"
+            title="Outras intimações deste mesmo processo, no mesmo dia, estão em stand by. Elas serão arquivadas junto com a sua decisão."
+          >
+            {mov.repetidas} do mesmo processo hoje
+          </Badge>
         )}
         {mov.projuris_sync_at && <Badge variant="secondary">no ProJuris</Badge>}
         {mov.projuris_sync_error && (

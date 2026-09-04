@@ -54,7 +54,10 @@ export async function isWritebackAtivo(): Promise<boolean> {
  */
 export async function refletirDecisaoNoProjuris(
   movementId: string,
-  decisao: "PENDENTE" | "ARQUIVADO" | "LIDO" | "DISTRIBUIR",
+  // S1-03 — `ARQUIVADO_REPETICAO` é decisão do SHV; no ProJuris ela vira o mesmo
+  // arquivamento das demais ("movimento normal que todas as intimações devem
+  // ter", Thiago 04/09). Quem chama traduz para 'ARQUIVADO'.
+  decisao: "PENDENTE" | "ARQUIVADO" | "LIDO" | "DISTRIBUIR" | "ARQUIVADO_REPETICAO",
 ): Promise<ResultadoWriteback> {
   const sb = getSupabaseAdmin();
 
@@ -77,7 +80,9 @@ export async function refletirDecisaoNoProjuris(
 
   let rota: string | null = null;
   if (mov.origem === "INTIMACAO") {
-    if (decisao === "ARQUIVADO") rota = `intimacao/${codigo}/situacao/${SITUACAO_ARQUIVADA}`;
+    // S1-03 — arquivada por repetição é arquivada no ProJuris igual às outras.
+    if (decisao === "ARQUIVADO" || decisao === "ARQUIVADO_REPETICAO")
+      rota = `intimacao/${codigo}/situacao/${SITUACAO_ARQUIVADA}`;
     else if (decisao === "PENDENTE") rota = `intimacao/${codigo}/desarquivar`;
   } else if (mov.origem === "ANDAMENTO" && decisao === "LIDO") {
     rota = `andamento/alterar-status-lido/${codigo}`;

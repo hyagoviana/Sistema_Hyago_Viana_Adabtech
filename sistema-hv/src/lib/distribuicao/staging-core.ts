@@ -43,12 +43,20 @@ import {
   ymd,
 } from "@/lib/distribuicao/sync-core";
 import { refletirDecisaoNoProjuris } from "@/lib/projuris/writeback-acoes";
+import { carregarResponsaveisDirecionados } from "@/lib/distribuicao/responsavel-caso";
 
 // ---------------------------------------------------------------------------
 // Tipos expostos à UI
 // ---------------------------------------------------------------------------
 
-export type MovementDecisao = "PENDENTE" | "ARQUIVADO" | "LIDO" | "DISTRIBUIR";
+export type MovementDecisao =
+  | "PENDENTE"
+  | "ARQUIVADO"
+  | "LIDO"
+  | "DISTRIBUIR"
+  // S1-03 — arquivada JUNTO com outra intimação do mesmo processo no mesmo dia.
+  // Não é o mesmo que ARQUIVADO: ninguém leu esta linha uma a uma.
+  | "ARQUIVADO_REPETICAO";
 
 export interface Movement {
   id: string;
@@ -68,6 +76,14 @@ export interface Movement {
   client_id: string | null;
   projuris_sync_at: string | null;
   projuris_sync_error: string | null;
+  /** S1-03 — chave "processo + dia" que agrupa as repetidas. */
+  grupo_processo_dia?: string | null;
+  /**
+   * S1-03 — quantas intimações/andamentos do MESMO processo, no MESMO dia, esta
+   * linha representa (1 = não há repetição). A fila mostra só a primeira; as
+   * outras ficam "em stand by" e são arquivadas junto com a decisão.
+   */
+  repetidas?: number;
 }
 
 export interface StagingItem {
@@ -207,6 +223,24 @@ export async function syncMovements(
       .trim();
   };
 
+  /**
+   * S1-03 (A1, Thiago 04/09) — chave "processo + dia". É por ela que a fila
+   * mostra UMA intimação por processo no dia, em vez de repetir a mesma leitura.
+   *
+   * Sem processo identificado, a linha vira seu PRÓPRIO grupo (usa o projuris_id):
+   * agrupar o que não sabemos ser o mesmo processo esconderia trabalho de verdade.
+   * Precisa casar com a expressão da migration 20260904000001.
+   */
+  const chaveGrupo = (
+    codigoProcesso: string | null,
+    cnj: string | null,
+    dia: string | null,
+    fallback: string,
+  ): string => {
+    const processo = codigoProcesso || soDigitos(cnj ?? "") || fallback;
+    return `${processo}|${dia ?? "sem-data"}`;
+  };
+
   // O doc pede a fila "sem o que já foi arquivado/baixado". Só que no ProJuris
   // deles TUDO está arquivado (15.243 de 15.245 em 180 dias; PENDENTE = 0), o
   // que deixaria a fila vazia. Então descartamos só o que é lixo de verdade
@@ -273,6 +307,14 @@ export async function syncMovements(
       raw: x as never,
       case_id: caseId,
       tema_id: caseId ? (temaPorCaso.get(caseId) ?? null) : null,
+      grupo_processo_dia: chaveGrupo(
+        codigo,
+        cnj,
+        typeof x.dataDisponibilizacao === "number"
+          ? dataBrasilia(x.dataDisponibilizacao)
+          : distributionDate,
+        str(x.codigoIntimacao) ?? identificador ?? distributionDate,
+      ),
     });
   }
 
@@ -305,6 +347,14 @@ export async function syncMovements(
       raw: a as never,
       case_id: caseId,
       tema_id: caseId ? (temaPorCaso.get(caseId) ?? null) : null,
+      // S1-03 — andamento também agrupa por processo + dia: o retrabalho de
+      // leitura que o Thiago descreveu vale para os dois tipos de linha.
+      grupo_processo_dia: chaveGrupo(
+        codigoProcesso,
+        null,
+        typeof a.dataAndamento === "number" ? dataBrasilia(a.dataAndamento) : distributionDate,
+        (a.codigoAndamento != null ? String(a.codigoAndamento) : identificador) ?? distributionDate,
+      ),
     });
   }
 
@@ -464,12 +514,17 @@ export async function listMovements(opts: {
   data?: string | null;
   /** Esconde o que o ProJuris já marcou como arquivado (ver nota em syncMovements). */
   ocultarArquivadas?: boolean;
+  /**
+   * S1-03 — `false` devolve TODAS as linhas, sem agrupar as repetidas do mesmo
+   * processo. Default: agrupado (é o que a fila da controladoria usa).
+   */
+  agrupado?: boolean;
 }): Promise<Movement[]> {
   const supabase = getSupabaseAdmin();
   let q = supabase
     .from("system_distribution_movements")
     .select(
-      "id, origem, projuris_id, projuris_processo_codigo, numero_cnj, descricao, cliente_nome, data_referencia, case_id, tema_id, decisao, task_type_id, decidido_em, situacao_projuris, client_id, projuris_sync_at, projuris_sync_error",
+      "id, origem, projuris_id, projuris_processo_codigo, numero_cnj, descricao, cliente_nome, data_referencia, case_id, tema_id, decisao, task_type_id, decidido_em, situacao_projuris, client_id, projuris_sync_at, projuris_sync_error, grupo_processo_dia",
     )
     .eq("organization_id", ORG_ID)
     .order("data_referencia", { ascending: false })
@@ -482,7 +537,63 @@ export async function listMovements(opts: {
   if (opts.ocultarArquivadas) q = q.or("situacao_projuris.is.null,situacao_projuris.neq.ARQUIVADA");
   const { data, error } = await q;
   if (error) throw new AuthError(`Falha ao listar movimentos: ${error.message}`, 500);
-  return (data ?? []) as Movement[];
+
+  // Cast: `supabase/types.ts` é gerado pelo CLI (que não roda nesta máquina) e
+  // ainda não conhece `grupo_processo_dia`. A coluna existe desde a migration
+  // 20260904000001; regerar os tipos remove o cast.
+  const linhas = (data ?? []) as unknown as Movement[];
+
+  // S1-03 (A1, Thiago 04/09) — "sistema lista apenas 1 (a primeira) e deixa as
+  // outras em stand by". O agrupamento é por PROCESSO + DIA, e vale só para o que
+  // ainda está PENDENTE: histórico e telas de auditoria continuam vendo tudo.
+  if (opts.agrupado === false || (opts.decisao && opts.decisao !== "PENDENTE")) {
+    return linhas;
+  }
+
+  const porGrupo = new Map<string, Movement[]>();
+  for (const l of linhas) {
+    const chave = l.grupo_processo_dia || `sem-grupo:${l.id}`;
+    const arr = porGrupo.get(chave) ?? [];
+    arr.push(l);
+    porGrupo.set(chave, arr);
+  }
+
+  const agrupadas: Movement[] = [];
+  for (const grupo of porGrupo.values()) {
+    // "a primeira" = a mais antiga do dia, para a leitura seguir a ordem em que
+    // chegaram. A consulta vem por data desc, então o fim do array é a primeira.
+    const principal = grupo[grupo.length - 1];
+    agrupadas.push({ ...principal, repetidas: grupo.length });
+  }
+  // Preserva a ordem da consulta (data desc) usando a posição da principal.
+  agrupadas.sort((a, b) => linhas.indexOf(a as never) - linhas.indexOf(b as never));
+  return agrupadas;
+}
+
+/**
+ * S1-03 — as outras intimações do mesmo grupo (as que ficaram "em stand by").
+ * Usada para expandir a linha na tela e para aplicar a decisão ao grupo.
+ */
+export async function listMovementsDoGrupo(movementId: string): Promise<Movement[]> {
+  const supabase = getSupabaseAdmin();
+  const { data: base } = await supabase
+    .from("system_distribution_movements")
+    .select("grupo_processo_dia" as never)
+    .eq("id", movementId)
+    .eq("organization_id", ORG_ID)
+    .maybeSingle();
+  const chave = (base as { grupo_processo_dia?: string | null } | null)?.grupo_processo_dia;
+  if (!chave) return [];
+
+  const { data } = await supabase
+    .from("system_distribution_movements")
+    .select(
+      "id, origem, projuris_id, projuris_processo_codigo, numero_cnj, descricao, cliente_nome, data_referencia, case_id, tema_id, decisao, task_type_id, decidido_em, situacao_projuris, client_id, projuris_sync_at, projuris_sync_error, grupo_processo_dia",
+    )
+    .eq("organization_id", ORG_ID)
+    .eq("grupo_processo_dia" as never, chave as never)
+    .order("data_referencia", { ascending: true });
+  return (data ?? []) as unknown as Movement[];
 }
 
 /**
@@ -495,7 +606,12 @@ export async function decideMovement(
   decisao: MovementDecisao,
   taskTypeId: string | null,
   userId: string,
-): Promise<{ stagingId: string | null; projuris?: { enviado: boolean; motivo?: string } }> {
+): Promise<{
+  stagingId: string | null;
+  projuris?: { enviado: boolean; motivo?: string };
+  /** S1-03 — quantas repetidas do mesmo processo foram arquivadas junto. */
+  repetidasArquivadas?: number;
+}> {
   const supabase = getSupabaseAdmin();
 
   const { data: mov } = await supabase
@@ -526,6 +642,48 @@ export async function decideMovement(
   // a decisão local continua valendo.
   const projuris = await refletirDecisaoNoProjuris(movementId, decisao);
 
+  // S1-03 (A1, Thiago 04/09) — a decisão vale para o GRUPO (mesmo processo, mesmo
+  // dia). Passos 5 e 6 do fluxo que ele descreveu:
+  //
+  //   "No projuris, arquiva tanto a intimação distribuida como as não
+  //    visualizadas por repetição (movimento normal que todas as intimações devem
+  //    ter). No SHV, mantém vinculada a intimação que gerou a tarefa (para o
+  //    histórico), e as outras ficam com o status 'arquivado por repetição', que
+  //    é diferente só do status 'arquivado'."
+  //
+  // Vale para QUALQUER decisão: arquivar direto ou distribuir. A tarefa fica
+  // ligada só à intimação visualizada — "na prática não tem diferença de qual
+  // intimação veio", porque o vínculo real é com o processo.
+  const irmas = (await listMovementsDoGrupo(movementId)).filter(
+    (m) => m.id !== movementId && m.decisao === "PENDENTE",
+  );
+  let repetidasArquivadas = 0;
+  if (irmas.length > 0) {
+    const { error: errIrmas } = await supabase
+      .from("system_distribution_movements")
+      .update({
+        decisao: "ARQUIVADO_REPETICAO",
+        decidido_por: userId,
+        decidido_em: new Date().toISOString(),
+      } as never)
+      .in(
+        "id",
+        irmas.map((m) => m.id),
+      );
+    if (!errIrmas) repetidasArquivadas = irmas.length;
+
+    // No ProJuris cada uma é arquivada individualmente — é o movimento que toda
+    // intimação precisa ter lá. Best-effort, uma a uma: a falha de uma não
+    // derruba a decisão nem as outras.
+    for (const irma of irmas) {
+      try {
+        await refletirDecisaoNoProjuris(irma.id, "ARQUIVADO");
+      } catch (err) {
+        console.error(`decideMovement: falha ao arquivar repetida ${irma.id} no ProJuris:`, err);
+      }
+    }
+  }
+
   if (decisao !== "DISTRIBUIR") {
     // Mudou de ideia: se já havia uma linha aberta na tela 2, ela sai.
     await supabase
@@ -533,7 +691,7 @@ export async function decideMovement(
       .update({ status: "CANCELADA" } as never)
       .eq("movement_id", movementId)
       .eq("status", "ABERTA");
-    return { stagingId: null, projuris };
+    return { stagingId: null, projuris, repetidasArquivadas };
   }
 
   // Decidir "distribuir" duas vezes (ou trocar o tipo depois de decidir) NÃO
@@ -550,11 +708,11 @@ export async function decideMovement(
 
   if (jaAberta) {
     await atualizarTipoDoStaging(jaAberta.id, taskTypeId!, mov.tema_id);
-    return { stagingId: jaAberta.id, projuris };
+    return { stagingId: jaAberta.id, projuris, repetidasArquivadas };
   }
 
   const staging = await criarStagingDoMovimento(movementId, taskTypeId!, mov, userId);
-  return { stagingId: staging, projuris };
+  return { stagingId: staging, projuris, repetidasArquivadas };
 }
 
 /**
@@ -1003,6 +1161,12 @@ export async function distribuirStaging(
   // --- Executores e calendário ---
   const { executors, calendar } = await carregarExecutoresECalendario(dataRef);
 
+  // S1-04 — responsável direcionado do CASO (nível 1 da precedência do motor).
+  const direcionados = await carregarResponsaveisDirecionados(
+    supabase,
+    new Set(executors.map((e) => e.executor_id)),
+  );
+
   // --- Temas (multiplicador) e tipos, para montar as Task[] do motor ---
   const temaIds = [...new Set(itens.map((i) => i.tema_id).filter(Boolean))] as string[];
   const multiplicadorPorTema = new Map<string, { motor: string; mult: number; temporal: number }>();
@@ -1042,7 +1206,9 @@ export async function distribuirStaging(
       collective: it.coletivo,
       complexity_level: (it.complexo ? 2 : 0) as 0 | 1 | 2,
       temporal_level: (it.urgente ? 2 : 0) as 0 | 1 | 2,
-      directed_executor_id: null,
+      // S1-04 — era `null` fixo. Aqui a linha da fila já traz o caso, então o
+      // vínculo é direto (no sync-core o caminho é pelo código do ProJuris).
+      directed_executor_id: it.case_id ? (direcionados.porCaso.get(it.case_id) ?? null) : null,
     });
     tasks.push({
       task_id: it.id,

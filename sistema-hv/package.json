@@ -25,9 +25,11 @@
     "qa:permissoes": "tsx scripts/qa-permissoes-matriz.ts",
     "qa:role-perms": "tsx scripts/qa-role-perms-matriz.ts",
     "qa:usuarios": "tsx scripts/qa-usuarios-s503.ts",
+    "qa:repetidas": "tsx scripts/qa-intimacoes-repetidas.ts",
+    "qa:responsavel": "tsx scripts/qa-responsavel-direcionado.ts",
     "qa:prioritarios": "tsx scripts/qa-prioritarios.ts",
     "qa:dia-operacional": "tsx scripts/qa-dia-operacional.ts",
-    "test:motor": "tsx src/lib/distribuicao/engine/scoring.test.ts && tsx src/lib/distribuicao/marcadores.test.ts && tsx src/lib/distribuicao/engine/dia-operacional.test.ts",
+    "test:motor": "tsx src/lib/distribuicao/engine/scoring.test.ts && tsx src/lib/distribuicao/marcadores.test.ts && tsx src/lib/distribuicao/engine/dia-operacional.test.ts && tsx src/lib/br/feriados.test.ts",
     "test:webhook-replay": "tsx scripts/zapsign-webhook-replay.ts"
   },
   "dependencies": {
