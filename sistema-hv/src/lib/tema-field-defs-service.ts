@@ -753,13 +753,58 @@ export async function updateTemaFieldDef(
 
 // EXCLUI (soft-delete) uma def. Os valores já gravados em canonical_fields NÃO
 // são apagados — a UI da ficha continua exibindo a chave livre remanescente.
-export async function deleteTemaFieldDef(id: string): Promise<{ ok: true; id: string }> {
+export async function deleteTemaFieldDef(
+  id: string,
+): Promise<{ ok: true; id: string; casosPurgados: number }> {
   const sb = getSupabaseAdmin();
+
+  // Bug 2 (Thiago, 04/09): "os dados que estavam nesse campo estão ficando (…)
+  // como se o campo fosse preservado mesmo após excluirmos". Antes só a
+  // DEFINIÇÃO era excluída; o valor sobrevivia em canonical_fields e reaparecia
+  // na ficha no bloco "Outros campos" (que existe para não perder dado de chave
+  // sem definição). Agora o valor vai junto — como já acontecia do lado do
+  // cliente desde sempre.
+  const { data: def } = await sb
+    .from("system_tema_field_defs")
+    .select("key, tema_id, organization_id, scope")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
   const { error } = await sb
     .from("system_tema_field_defs")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id)
     .is("deleted_at", null);
   if (error) throw new TemaFieldDefServiceError(error.message, 500);
-  return { ok: true as const, id };
+
+  let casosPurgados = 0;
+  const d = def as {
+    key?: string;
+    tema_id?: string;
+    organization_id?: string;
+    scope?: string;
+  } | null;
+
+  // `scope='cliente'` NÃO purga: o valor mora no balde do CLIENTE e é
+  // compartilhado com outros temas e com o cadastro. Excluir a def-espelho de um
+  // tema não pode apagar o dado do cliente.
+  if (d?.key && d.tema_id && d.scope !== "cliente") {
+    const { data: afetados, error: purgeErr } = await sb.rpc(
+      "system_fn_purge_case_field" as never,
+      {
+        p_org: d.organization_id ?? DEFAULT_ORG,
+        p_tema: d.tema_id,
+        p_key: d.key,
+      } as never,
+    );
+    // Best-effort: a definição já foi excluída; falhar aqui não desfaz isso.
+    if (purgeErr) {
+      console.error("deleteTemaFieldDef: falha ao purgar o valor dos casos:", purgeErr);
+    } else {
+      casosPurgados = typeof afetados === "number" ? afetados : 0;
+    }
+  }
+
+  return { ok: true as const, id, casosPurgados };
 }

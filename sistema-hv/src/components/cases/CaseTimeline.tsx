@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCase, useCaseEvents } from "@/hooks/useCases";
-import { useStages } from "@/hooks/usePipeline";
+import { useAllStageLabels, useStages } from "@/hooks/usePipeline";
 import { MACRO_FIN_LABELS, MACRO_OP_LABELS } from "@/lib/cases/constants";
 import { makeStageLabelResolver } from "@/lib/cases/stage-label";
 import { isManualEvent, renderEventLabel } from "./case-event-label";
@@ -49,8 +49,12 @@ export function CaseTimeline({ caseId }: { caseId: string }) {
   const serviceTypeId = (caso as { service_type_id?: string } | undefined)?.service_type_id ?? "";
   const { data: stagesOp } = useStages(serviceTypeId, "op");
   const { data: stagesFin } = useStages(serviceTypeId, "fin");
+  // BUG 1a (04/09) — inclui as etapas dos kanbans CUSTOM; sem elas o slug com
+  // sufixo técnico ("3 dias follow up mt7bl3x2nssp") vazava para a tela. Mesma
+  // correção do CaseFeed — os dois leem o mesmo `case-event-label`.
+  const { data: stageLabels } = useAllStageLabels(serviceTypeId);
   const resolveEtapa = makeStageLabelResolver(
-    [stagesOp, stagesFin],
+    [stagesOp, stagesFin, stageLabels],
     MACRO_OP_LABELS,
     MACRO_FIN_LABELS,
   );

@@ -30,7 +30,7 @@ import {
   UserCheck,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -109,15 +109,16 @@ import {
   useSetCaseUrgency,
   useSetCaseFieldsLocked,
 } from "@/hooks/useCases";
-import { useEntrarFinanceiro } from "@/hooks/usePipeline";
+import { useAllStageLabels, useEntrarFinanceiro } from "@/hooks/usePipeline";
+import { makeStageLabelResolver } from "@/lib/cases/stage-label";
 import { usePodeVerJudicial } from "@/hooks/usePodeVerJudicial";
 import { useCaseJudicial } from "@/hooks/useJudicial";
 import { useCaseOperationalTrail, useRemoveCaseFromBoard } from "@/hooks/useBoards";
 import {
   CASE_TYPE_LABELS,
+  MACRO_FIN_LABELS,
   MACRO_OP_LABELS,
   type CaseType,
-  type MacroOp,
 } from "@/lib/cases/constants";
 
 export const Route = createFileRoute("/casos/$id/")({
@@ -205,6 +206,17 @@ function CasoDetalhe() {
     }
   }
 
+  // BUG 1a/3 (Thiago, 04/09) — dicionário de rótulos de TODAS as etapas do tipo,
+  // inclusive as de kanbans custom. Sem ele a ficha e a linha do tempo mostram o
+  // slug cru ou um rótulo legado que não bate com o kanban.
+  const { data: stageLabels } = useAllStageLabels(
+    (caso as { service_type_id?: string | null } | undefined)?.service_type_id ?? null,
+  );
+  const resolveEtapa = useMemo(
+    () => makeStageLabelResolver([stageLabels], MACRO_OP_LABELS, MACRO_FIN_LABELS),
+    [stageLabels],
+  );
+
   const { data: cliente } = useClient(caso?.client_id ?? "");
 
   if (isLoading) {
@@ -243,7 +255,17 @@ function CasoDetalhe() {
     (caso as { caso_pasta_nome?: string | null }).caso_pasta_nome ??
     CASE_TYPE_LABELS[caso.case_type as CaseType] ??
     caso.case_type;
-  const opLabel = MACRO_OP_LABELS[caso.macrostatus_op as MacroOp] ?? caso.macrostatus_op;
+  // BUG 3 (Thiago, 04/09): "alguns casos estão ficando como se estivesse nessa
+  // etapa, mas essa etapa não existe no kanban principal desse tema".
+  //
+  // A etapa EXISTE — faltava a tradução. O slug `ENCERRADO` está rotulado como
+  // "Para notificação" no kanban do tema, mas a ficha lia um dicionário LEGADO
+  // fixo (MACRO_OP_LABELS), que nem tem essa chave, e caía no slug cru. Quem
+  // olhava via uma etapa que não reconhecia.
+  //
+  // Agora a fonte é a etapa CONFIGURADA; o dicionário legado é só o último
+  // recurso, para casos de tipos antigos.
+  const opLabel = resolveEtapa(caso.macrostatus_op);
   const finBifurcated = caso.macrostatus_fin !== "NAO_APLICAVEL";
   const lifecycle =
     (caso as { lifecycle?: "LEAD" | "CLIENTE" | "PERDIDO" | null }).lifecycle ?? "LEAD";

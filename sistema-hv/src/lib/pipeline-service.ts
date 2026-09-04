@@ -243,6 +243,30 @@ export async function listStages(serviceTypeId: string, kind: StageKind) {
   return data ?? [];
 }
 
+/**
+ * S1-B (bugs do Thiago, 04/09) — TODAS as etapas de um tipo de serviço: kanban
+ * principal (op), financeiro E os kanbans CUSTOM (board_id preenchido).
+ *
+ * Existe porque `listStages` filtra `board_id IS NULL` de propósito (as colunas do
+ * principal não podem receber etapa de outro kanban). Só que o rastro do caso e a
+ * linha do tempo precisam traduzir QUALQUER slug que apareça num evento — e o
+ * caso pode ter sido movido num kanban custom. Sem isto, a tela mostra o slug
+ * cru: "3 dias follow up mt7bl3x2nssp".
+ *
+ * Devolve só `slug` e `label` — é dicionário de tradução, não a estrutura do board.
+ */
+export async function listAllStageLabels(
+  serviceTypeId: string,
+): Promise<Array<{ slug: string; label: string | null }>> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_pipeline_stages_active")
+    .select("slug, label")
+    .eq("service_type_id", serviceTypeId);
+  if (error) throw new PipelineServiceError(error.message, 500);
+  return (data ?? []) as Array<{ slug: string; label: string | null }>;
+}
+
 export async function createStage(input: {
   service_type_id: string;
   kind: StageKind;

@@ -9,6 +9,7 @@ import {
   deleteServiceType,
   entrarNoFinanceiro,
   listAllBifurcatedCases,
+  listAllStageLabels,
   listCasesByServiceType,
   listComercialBoard,
   listLeadsByServiceType,
@@ -75,6 +76,15 @@ export const listStagesFn = createServerFn({ method: "GET" })
     z.object({ serviceTypeId: z.string().uuid(), kind: kindSchema }).parse(d),
   )
   .handler(async ({ data }) => handle(() => listStages(data.serviceTypeId, data.kind)));
+
+// S1-B — dicionário slug → rótulo de TODAS as etapas do tipo (inclui kanbans
+// custom). Usado pelo rastro do caso e pela linha do tempo.
+export const listAllStageLabelsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
+  .handler(
+    async ({ data }): Promise<Array<{ slug: string; label: string | null }>> =>
+      handle(() => listAllStageLabels(data.serviceTypeId)),
+  );
 
 export const listAllBifurcatedCasesFn = createServerFn({ method: "GET" }).handler(async () =>
   handle((userId) => listAllBifurcatedCases(userId)),

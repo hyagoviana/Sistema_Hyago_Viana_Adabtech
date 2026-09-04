@@ -13,6 +13,7 @@ import {
   listLeadsByServiceTypeFn,
   listLeadsPipelineFn,
   listServiceTypesFn,
+  listAllStageLabelsFn,
   listStagesFn,
   moveCaseToStageFinFn,
   moveCaseToStageOpFn,
@@ -328,5 +329,19 @@ export function useDeleteStage(serviceTypeId: string, kind: StageKind) {
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pipeline-stages", serviceTypeId, kind] }),
+  });
+}
+
+// S1-B (bugs do Thiago, 04/09) — dicionário slug → rótulo de TODAS as etapas do
+// tipo, inclusive as de kanbans custom. É o que impede o rastro do caso e a linha
+// do tempo de mostrarem o slug cru ("3 dias follow up mt7bl3x2nssp") ou um rótulo
+// legado que não é mais o que aparece no kanban.
+export function useAllStageLabels(serviceTypeId: string | null | undefined) {
+  const fn = useServerFn(listAllStageLabelsFn);
+  return useQuery({
+    queryKey: ["pipeline-stage-labels", serviceTypeId],
+    queryFn: () => fn({ data: { serviceTypeId: serviceTypeId as string } }),
+    enabled: !!serviceTypeId,
+    staleTime: 5 * 60 * 1000,
   });
 }

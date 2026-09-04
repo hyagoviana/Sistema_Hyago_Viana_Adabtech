@@ -36,7 +36,7 @@ import {
   useUpdateNote,
 } from "@/hooks/useNotes";
 import { useCase, useCaseEvents } from "@/hooks/useCases";
-import { useStages } from "@/hooks/usePipeline";
+import { useAllStageLabels, useStages } from "@/hooks/usePipeline";
 import { MACRO_FIN_LABELS, MACRO_OP_LABELS } from "@/lib/cases/constants";
 import { makeStageLabelResolver } from "@/lib/cases/stage-label";
 import { isManualEvent, renderEventLabel } from "./case-event-label";
@@ -116,10 +116,17 @@ export function CaseFeed({ caseId }: { caseId: string }) {
   const serviceTypeId = (caso as { service_type_id?: string } | undefined)?.service_type_id ?? "";
   const { data: stagesOp } = useStages(serviceTypeId, "op");
   const { data: stagesFin } = useStages(serviceTypeId, "fin");
-  const resolveEtapa = makeStageLabelResolver(
-    [stagesOp, stagesFin],
-    MACRO_OP_LABELS,
-    MACRO_FIN_LABELS,
+  // BUG 1a (Thiago, 04/09): "os comentários automaticos indo robotizados" —
+  // "Mudou de etapa: 3 dias follow up mt7bl3x2nssp → ...". O slug com sufixo é de
+  // etapa de kanban CUSTOM, e aqui só vinham as do kanban principal e do
+  // financeiro (`listStages` filtra `board_id IS NULL` de propósito). Sem a etapa
+  // na lista, o resolvedor caía no formatador de slug e o sufixo técnico vazava
+  // para a linha do tempo.
+  const { data: stageLabels } = useAllStageLabels(serviceTypeId);
+  const resolveEtapa = useMemo(
+    () =>
+      makeStageLabelResolver([stagesOp, stagesFin, stageLabels], MACRO_OP_LABELS, MACRO_FIN_LABELS),
+    [stagesOp, stagesFin, stageLabels],
   );
 
   const create = useCreateCaseNote(caseId);
@@ -137,7 +144,11 @@ export function CaseFeed({ caseId }: { caseId: string }) {
   } | null>(null);
   // #7 (2026-08-17) — alternar entre "só manuais" (comentários + marcos) e "tudo"
   // (inclui eventos automáticos/sistêmicos). Default = mostra tudo.
-  const [showSystemic, setShowSystemic] = useState(true);
+  // BUG 1b (Thiago, 04/09): "a visualização padrão nessa parte de andamentos ser
+  // o 'só manuais' (continua o tudo, só que deixa de ser a opção padrão de
+  // visualização quando abrimos)". O que a pessoa escreveu vale mais que o log
+  // automático; quem quiser o histórico completo troca no botão ao lado.
+  const [showSystemic, setShowSystemic] = useState(false);
 
   // D-M1a / F1 — feed = eventos (sem `fin_*` e sem `note_added`) + notas 'geral',
   // ordenado por created_at DESC (mais recente no topo, como a timeline atual).
