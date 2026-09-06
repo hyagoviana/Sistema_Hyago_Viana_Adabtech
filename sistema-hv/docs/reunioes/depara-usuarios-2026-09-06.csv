@@ -1,0 +1,44 @@
+﻿id;nome;email;status;perfil_antigo;papel_atual;papel_proposto;ganha_modulos;perde_modulos;atencao;CONFIRMAR_ADMIN
+a609f9dc-1914-43e0-9c9c-8bf709f785d4;adavio tittoni;adaviotittoni@gmail.com;ACTIVE;;admin (Administrador);admin;;;;SIM
+87aee273-f70a-4f41-b730-adc9e00d5328;AIMEE MUNIZ;aimee@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+2e550311-552c-5fbb-8908-98e91ddab236;Amanda Campos;amandacampos@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+46a3b534-24bf-53a5-9397-e1fdba415bf4;Ana Patricia Cruz Neves;patricia@hyagovianaadvocacia.com.br;ACTIVE;administrador;admin (Administrador);admin;;;"perfil antigo diz ""administrador""";SIM
+37cc6b29-cbb5-4d75-890a-4849d3f9032a;anna zapalowski;anna@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+6de4865e-afe6-477a-8084-ada663ff66cd;Carolina Oliveira Cordeiro;carolina@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+444917ea-6105-5fb3-ae8a-b37b80038e26;Controladoria;projuris-128861@projuris.local;ARCHIVED;;operacional (Operacional);operacional;;;usuário archived;
+c79fffe5-1313-4e9c-8c9b-1da46f1fb573;Danilo Pereira Gomes;danilogomes@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+2bf4ab0d-ae29-4feb-a764-ca152f2281d2;Eduarda Campos de Carvalho;eduarda@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+6b23f489-13d5-4ab9-8524-4fa0377d11f4;Gabriel Pereira Mourão;gabriel@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+e780c6a8-6f7f-5ae6-807c-0a6a8938e870;HYAGO ALVES VIANA;projuris-130405@projuris.local;ARCHIVED;;operacional (Operacional);operacional;;;usuário archived;
+9ee99ad5-b260-4ecf-9455-6025ae338770;Hyago Viana;hyagoviana.adv@gmail.com;ACTIVE;;admin (Administrador);admin;;;;SIM
+87da176e-19af-53fb-8cd4-2d946f7814f9;joão braga gois;joao@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+930675bd-bbcb-4193-ab07-07250a4e10fb;Jose Marcos Fogaça Marques;josemarques@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+96278727-5ae1-4348-b1a0-5dae7ff9acd2;Karen Veiga;karen@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+d741fbb9-81a8-50f7-8724-48707e66ace2;KEILANE ALVES;keilane@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+5fb2a659-3c3f-46c0-9ec0-cc252abec200;Lara Silva;larasilva@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+2305bc96-93b0-4843-95a9-e84038beb717;LAURA FRANCA;laurafranca@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+33f92848-f5b6-5751-8a04-89dafe021298;Leslie Souza;leslie@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+ce0c6605-ebcc-4e1d-9ecd-08291ef3f5f9;Luis emanuel;luisemanuel@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+07bf83ec-7fec-441d-a759-8a286df3af1e;Maria Clara Batista Chaves;mariaclara@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+90c64f5a-79e7-58fa-a04e-a35fe8fb6ccd;Maria Clara Batista Chaves;suporte@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+cf54c0e9-1b3a-4ff7-b56b-5b673973c4b6;Maria Fernanda Nakanishi;marianakanishi@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+e7fac8cd-7714-4873-b318-3b943b0adcd1;Maria Flavia Alcantara;mariaflavia@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+31704c5b-73f6-426a-a2a7-aa0471c62ac8;mariana pestana de castro felix;marianafelix@hyagovianaadvocacia.com.br;SUSPENDED;;advogado_titular (Advogado Titular (legado));coordenador;financeiro;;PASSA A VER TODOS OS CASOS (hoje só vê os próprios) · usuário suspended;
+b21954f8-8400-4306-9c4a-fabeb567cd8c;Matheus Moreira Rodrigues;financeiro@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+1d36d9e4-f9a1-471c-9eaf-acff667811a6;Matheus Rocha da Silva;matheusrocha@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+8ecb5238-0868-4640-bdd2-c4a5804e513a;Matheus Torquato;mtorquato1910@gmail.com;ACTIVE;;prestador_externo (Prestador Externo (legado));operacional;cliente;;PASSA A VER TODOS OS CASOS (hoje só vê os próprios);
+3ef3126b-403d-5b7b-861d-aa8cf78d75dc;Maxwel Bruno Santos Costa;maxwel@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+c0dcf302-73cf-476c-b214-6cf75cfd22af;Micael Medeiro;micael@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+0b196f42-5242-47fb-b187-93f7fd7f5d78;Michelly Alves;michelly@hyagovianaadvocacia.com.br;ACTIVE;financeiro;financeiro (Financeiro);financeiro;;;;
+795233df-e421-4822-91cc-b0030a117e32;Nicole Rocha Lopes Ribas;controladoria@hyagovianaadvocacia.com.br;ACTIVE;administrador;admin (Administrador);admin;;;"perfil antigo diz ""administrador""";SIM
+ceede3ad-74f2-5e4c-94ce-77b5af721631;Pablo Silva;pablo@hyagovianaadvocacia.com.br;ACTIVE;administrador;admin (Administrador);admin;;;"perfil antigo diz ""administrador""";SIM
+e889c767-f44c-5718-96f3-0aabfcf66b3c;Pedro Holanda;pedroholanda@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+8deeab19-91ef-4564-8d51-5751acb00306;Rodrigo barbosa xavier muniz;rodrigo@hyagovianaadvocacia.com.br;SUSPENDED;;operacional (Operacional);operacional;;;usuário suspended;
+11557883-87d2-4051-9dba-988015255420;Rute Rodrigues de Souza;rute@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+efb2d99a-2b88-4023-8dff-c4c1c0d72d1f;Salete Costa;atendimento@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+af8f0ba1-b599-53c6-b6d8-76b336bbe4f8;Sarah Helena;sarahhelena@hyagovianaadvocacia.com.br;ACTIVE;;operacional (Operacional);operacional;;;;
+ddd294bb-f630-50fc-b74f-1ad5a5bbede1;Thaíse Correia;thaise@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+fd1ae6da-2097-571f-a2f3-4c159bf1e30a;Thiago Correia Silva;thiagocorreia@hyagovianaadvocacia.com.br;ACTIVE;;admin (Administrador);admin;;;;SIM
+8de55d0c-312a-55c7-a56f-400b5a1b1340;Wdyson Neres Moreira da Costa;wdyson@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
+7494d6fb-f89b-4bb6-9957-a049451bec4e;Wesley Ramos;wesley@hyagovianaadvocacia.com.br;ACTIVE;coordenador;operacional (Operacional);operacional;;;"perfil antigo diz ""coordenador""";
+37fcae46-0bc9-4042-b3f7-b7d4cfe810c3;Weslla Pinheiro;weslla@hyagovianaadvocacia.com.br;ACTIVE;usuario_padrao;operacional (Operacional);operacional;;;"perfil antigo diz ""usuario_padrao""";
