@@ -2,7 +2,7 @@
 
 - **Sprint:** S5 — Permissões
 - **ID:** S5-04 · **Item do Thiago:** 15 · **Decisão:** D2
-- **Status:** Draft
+- **Status:** CONCLUÍDA (06/09) — de-para NÃO aplicado por decisão do owner
 - **Estimativa relativa:** M — **mexe no acesso de gente que está trabalhando**
 - **Executor sugerido:** @dev · Quality gate: @qa + aprovação do owner
 - **Depende de:** S5-01, S5-02, S5-03
@@ -109,3 +109,70 @@ Sem correspondência automática: **Suporte** e **Estagiário** — atribuição
 **Insumo do de-para (achado da S5-03):** **Wesley Ramos** tem `perfil = coordenador` com papel
 `operacional`. É a única informação que o campo Perfil guarda e o papel não tem — primeiro candidato ao
 papel **Coordenador**.
+
+---
+
+## Execução — 06/09/2026
+
+### O achado que travava tudo: `Configurar` era inalcançável
+
+`deriveRoleModuleAccess` tinha teto `edit`, e a S5-01 semeou a matriz só para os quatro papéis NOVOS
+(regressão zero). O **admin não tem linha lá**, caía no derivado e ficava sem `configure` — então
+`requireModule(x, "configure")` recusava **todo mundo, inclusive ele**. Os dois RPCs que a S2-02 criou
+com esse gate estavam inacessíveis.
+
+Corrigido: o admin passa a ter `configure` em todos os módulos, que é o que a descrição do papel sempre
+disse. Como `configure` está no topo da escada, isso só ADICIONA — o QA prova que nenhum papel perdeu
+`view` ou `edit`.
+
+Com isso a decisão **D10** vale como escrita:
+
+| Papel | Configura |
+|---|---|
+| Administrador | todos os módulos |
+| Coordenador | cliente, comercial, operacional (matriz) |
+| Demais | nada |
+
+### Gates aplicados (AC5, AC6)
+
+- Menu **"Editar caso"** → `usePodeConfigurar("operacional")`. Editar o **nome** do caso continua em
+  `edit`: é conteúdo, não régua.
+- **Configurar tema** → `requireModule("sistema", "configure")`, fechando o `TODO(R3)` de
+  `rpc/temas.ts`. Era `requireRole(["admin"])`, papel cravado no código que ignorava a matriz; agora
+  delegar é ajuste de permissão, não alteração de código.
+- Novo hook `usePodeConfigurar`.
+
+### O de-para — entregue, NÃO aplicado
+
+Três scripts, com o passo humano no meio de propósito:
+
+| Comando | O que faz |
+|---|---|
+| `npm run depara:gerar` | produz o CSV, **sem escrever nada** |
+| `npm run depara:aplicar` | lê a **planilha revisada** (nunca um mapa no código), grava snapshot antes de escrever |
+| `npm run depara:reverter` | desfaz a partir do snapshot |
+
+Travas: promover a Administrador exige `SIM` escrito; linha sem papel proposto aborta tudo; planilha
+desatualizada é recusada em vez de sobrescrever decisão mais recente; reverter não toca em quem já foi
+movido para outro papel depois.
+
+Planilha gerada: `docs/reunioes/depara-usuarios-2026-09-06.csv` (43 usuários).
+
+**Decisão do owner (06/09): NÃO aplicar.** Dos 43, só 2 estão em papel legado:
+
+| Pessoa | Papel | Situação | Decisão |
+|---|---|---|---|
+| Matheus Torquato | `prestador_externo` | ativo | É o **desenvolvedor**, não opera o sistema. Virar `operacional` só o faria enxergar todos os casos sem necessidade. **Fica como está.** |
+| mariana pestana | `advogado_titular` | suspensa | Não usa o sistema. **Fica como está.** |
+
+Os outros 41 já estão nos papéis da matriz. Os papéis legados continuam válidos em `ROLES` justamente
+para isso — ninguém fica sem papel. Os scripts ficam prontos para quando entrar alguém num papel legado.
+
+**Também por decisão do owner:** Nicole Rocha, Pablo Silva e Ana Patricia Cruz têm `perfil=administrador`
+no campo antigo mas papel não-admin. Ficam como estão — o campo `perfil` é resíduo do cadastro velho e
+não governa acesso nenhum.
+
+### QA — `npm run qa:s504`
+
+38 verificações: que Configurar é alcançável, que ninguém perdeu acesso, que os gates estão no código e
+que as travas do de-para existem. Ele pegou um `requireRole` que sobrou como import morto em `temas.ts`.
