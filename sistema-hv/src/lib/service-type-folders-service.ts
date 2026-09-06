@@ -3,7 +3,13 @@
 // Cada tipo pode ter VÁRIAS pastas de caso (ex.: FIES ESF) e de procuração.
 // Fonte de verdade: system_service_type_folders (migration 20260709000030).
 
-import { ensureFolderByName, getFileMeta, listFoldersInFolder, moveFile } from "./google/drive";
+import {
+  ensureFolderByName,
+  getFileMeta,
+  listFilesInFolder,
+  listFoldersInFolder,
+  moveFile,
+} from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -335,27 +341,118 @@ export async function createAndLinkFolder(input: {
   });
 }
 
-// T3 — lista as SUBPASTAS existentes na raiz de "modelos" (kind='caso') ou
-// "procuração" (kind='procuracao'), para o admin escolher qual VINCULAR a um tema.
-// São os "casos"/procurações que o dono já organizou no Drive. N:N: a mesma pasta
-// pode ser vinculada a vários temas (cada vínculo é uma linha em
-// system_service_type_folders com o service_type interno do tema).
+/**
+ * As pastas que o admin pode VINCULAR a um tema.
+ *
+ * Owner (06/09): "o vincular deve vir da aba tema — quando clicar em vincular, se
+ * for em um caso deve aparecer todas as pastas de casos dentro dos outros temas
+ * já criados, e a mesma coisa funciona para procuração".
+ *
+ * Antes isto lia a raiz legada "07- Modelos", que é justamente a que deixou de ser
+ * usada: o dropdown oferecia "TESTE6-TIPO1", "Desenrola FIES - BB" e outros
+ * resíduos, e nenhum dos tipos que o escritório usa de verdade.
+ *
+ * Agora vem dos TEMAS:
+ *   kind='caso'       → as pastas de TIPO de todos os temas
+ *   kind='procuracao' → a pasta "CONTRATO E PROCURAÇÃO" de cada tema
+ *
+ * As pastas legadas que AINDA têm arquivo continuam no fim da lista, marcadas.
+ * Removê-las de uma vez esconderia modelos que estão em uso — "03- Abatimento ESF
+ * Portaria" tem 4 deles. Some sozinho quando o escritório esvaziar as pastas.
+ */
 export async function listRootModelFolders(
   kind: FolderKind,
 ): Promise<{ id: string; name: string; url: string }[]> {
-  const parent = kind === "procuracao" ? PROCURACAO_ROOT_FOLDER_ID : MODELS_ROOT_FOLDER_ID;
-  const folders = await listFoldersInFolder(parent);
-  // Ajuste A11 (2026-07-20, Adavio) — ao vincular pasta de CASO, não oferecer
-  // pastas que são claramente de procuração/contrato/termo/financeiro (não são
-  // modelos de caso). Filtro defensivo por nome; a organização definitiva das
-  // pastas no Drive é do escritório.
-  // + 2026-07-21 (owner): denylist por ID (esconde pastas específicas que o
-  // filtro por nome não pega, ex.: "abatimento teste").
-  if (kind === "caso") {
-    const bloqueia = /(procura[çc][aã]o|contrato|termo|financeir)/i;
-    return folders.filter((f) => !CASO_FOLDER_BLOCKLIST.has(f.id) && !bloqueia.test(f.name));
+  const sb = getSupabaseAdmin();
+  const saida: { id: string; name: string; url: string }[] = [];
+  const vistos = new Set<string>();
+
+  const { data: temasRaw } = await sb
+    .from("system_temas")
+    .select("name, drive_folder_id, drive_contratacao_folder_id")
+    .not("drive_folder_id", "is", null)
+    .is("deleted_at", null)
+    .order("name");
+  const temas = (temasRaw ?? []) as Array<{
+    name: string;
+    drive_folder_id: string;
+    drive_contratacao_folder_id: string | null;
+  }>;
+
+  for (const tema of temas) {
+    if (kind === "procuracao") {
+      // Uma por tema. Se ainda não existe, é criada na hora — assim o dropdown
+      // nunca fica vazio só porque o tema é novo.
+      let id = tema.drive_contratacao_folder_id;
+      if (!id) {
+        try {
+          id = (await ensureFolderByName(PASTA_PROCURACAO_TEMA, tema.drive_folder_id)).id;
+        } catch {
+          continue;
+        }
+      }
+      if (id && !vistos.has(id)) {
+        vistos.add(id);
+        saida.push({
+          id,
+          name: `${tema.name} · ${PASTA_PROCURACAO_TEMA}`,
+          url: `https://drive.google.com/drive/folders/${id}`,
+        });
+      }
+      continue;
+    }
+
+    // kind='caso' — os TIPOS do tema são suas subpastas, menos a de procuração.
+    let subs: Array<{ id: string; name: string; url: string }> = [];
+    try {
+      subs = await listFoldersInFolder(tema.drive_folder_id);
+    } catch {
+      continue;
+    }
+    for (const sub of subs) {
+      if (sub.name.trim().toUpperCase() === PASTA_PROCURACAO_TEMA) continue;
+      if (vistos.has(sub.id)) continue;
+      vistos.add(sub.id);
+      saida.push({ id: sub.id, name: `${tema.name} · ${sub.name.trim()}`, url: sub.url });
+    }
   }
-  return folders;
+
+  // Legado: só o que ainda tem arquivo dentro. Vazio é resíduo e não precisa
+  // aparecer; com conteúdo, esconder seria fazer sumir modelo em uso.
+  const raizLegada = kind === "procuracao" ? PROCURACAO_ROOT_FOLDER_ID : MODELS_ROOT_FOLDER_ID;
+  let legadas: Array<{ id: string; name: string; url: string }> = [];
+  try {
+    legadas = await listFoldersInFolder(raizLegada);
+  } catch {
+    legadas = [];
+  }
+
+  for (const f of legadas) {
+    if (vistos.has(f.id)) continue;
+    if (kind === "caso" && CASO_FOLDER_BLOCKLIST.has(f.id)) continue;
+    if (!(await temConteudo(f.id))) continue;
+    vistos.add(f.id);
+    saida.push({ id: f.id, name: `(fora dos temas) ${f.name.trim()}`, url: f.url });
+  }
+
+  return saida;
+}
+
+/** `true` se a pasta tem algum arquivo, direto ou numa subpasta (1 nível). */
+async function temConteudo(id: string): Promise<boolean> {
+  const naoEhPasta = (f: { mimeType?: string | null }) =>
+    f.mimeType !== "application/vnd.google-apps.folder";
+  try {
+    const itens = (await listFilesInFolder(id, 100)) as Array<{ mimeType?: string | null }>;
+    if (itens.some(naoEhPasta)) return true;
+    for (const sub of await listFoldersInFolder(id)) {
+      const dentro = (await listFilesInFolder(sub.id, 100)) as Array<{ mimeType?: string | null }>;
+      if (dentro.some(naoEhPasta)) return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------------------

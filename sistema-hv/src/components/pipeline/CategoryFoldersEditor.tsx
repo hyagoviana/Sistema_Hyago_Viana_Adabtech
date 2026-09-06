@@ -181,7 +181,7 @@ function FolderKindSection({
             disabled={busy}
             className="flex-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
           >
-            <option value="">Vincular pasta existente do Drive…</option>
+            <option value="">Vincular pasta de outro tema…</option>
             {available.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
