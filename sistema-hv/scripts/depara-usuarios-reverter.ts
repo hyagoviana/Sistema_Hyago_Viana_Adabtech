@@ -80,7 +80,8 @@ async function main() {
   }
 
   console.log(`${reverter.length} a reverter:`);
-  for (const p of reverter) console.log(`   ${p.nome.padEnd(34)} ${p.role_novo} → ${p.role_anterior}`);
+  for (const p of reverter)
+    console.log(`   ${p.nome.padEnd(34)} ${p.role_novo} → ${p.role_anterior}`);
 
   if (!COMMIT) {
     console.log("\nRode com --commit para aplicar.");

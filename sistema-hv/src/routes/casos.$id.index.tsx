@@ -84,6 +84,7 @@ import {
 import {
   useMyModulePerms,
   useMyModuleValues,
+  usePodeConfigurar,
   usePodeEditar,
   usePodeVer,
 } from "@/hooks/usePermissions";
@@ -153,6 +154,10 @@ function CasoDetalhe() {
   const isAdmin = role === "admin";
   const podeFinanceiro = can(role, "financeiro.manage");
   const podeGerirCaso = usePodeEditar("operacional");
+  // S5-04 / decisão D10 — o menu "Editar caso" muda a RÉGUA do caso (tema, tipo,
+  // pipeline), não o conteúdo dele. Por isso o gate é Configurar, não Editar:
+  // "por padrão: Administrador e Coordenador".
+  const podeConfigurarCaso = usePodeConfigurar("operacional");
   const { data: perms } = useMyModulePerms();
   const { data: values } = useMyModuleValues();
   const podeVerFinanceiro = podeVerValores(role, perms ?? {}, values ?? {}, "financeiro");
@@ -403,8 +408,10 @@ function CasoDetalhe() {
             </span>
           )}
           {/* #3 (2026-08-17) — EDITAR CASO: mudar tema/tipo (pipeline), preencher
-              campos e urgência (agrupa o antigo <select> + "Vincular" + "Preencher"). */}
-          {podeGerirCaso && (
+              campos e urgência (agrupa o antigo <select> + "Vincular" + "Preencher").
+              S5-04 — gate de CONFIGURAR (D10); editar o nome do caso, logo acima,
+              continua em `edit`, porque é conteúdo e não régua. */}
+          {podeConfigurarCaso && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">

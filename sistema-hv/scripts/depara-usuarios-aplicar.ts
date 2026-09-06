@@ -39,7 +39,10 @@ function parseCsv(texto: string): string[][] {
   let linha: string[] = [];
   let dentroDeAspas = false;
 
-  const t = texto.replace(/^﻿/, "");
+  // O Excel grava com BOM; sem tirar, a primeira coluna vem com lixo invisível.
+  // O Excel grava com BOM; sem tirar, a primeira coluna vem com lixo invisível
+  // e o `indexOf("id")` do cabeçalho não acha nada.
+  const t = texto.replace(/^\uFEFF/, "");
   for (let i = 0; i < t.length; i++) {
     const c = t[i];
     if (dentroDeAspas) {
@@ -165,7 +168,12 @@ async function main() {
   const snapshot = {
     aplicado_em: new Date().toISOString(),
     planilha: ARQUIVO,
-    papeis: mudancas.map((m) => ({ id: m.id, nome: m.nome, role_anterior: m.de, role_novo: m.para })),
+    papeis: mudancas.map((m) => ({
+      id: m.id,
+      nome: m.nome,
+      role_anterior: m.de,
+      role_novo: m.para,
+    })),
   };
   const caminhoSnapshot = ARQUIVO.replace(/\.csv$/i, "") + ".snapshot.json";
   writeFileSync(caminhoSnapshot, JSON.stringify(snapshot, null, 2), "utf8");

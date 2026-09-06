@@ -336,6 +336,18 @@ const MODULE_EDIT_CAP: Record<Module, Capability | null> = {
 };
 
 function deriveRoleModuleAccess(role: Role, module: Module): ModuleAccess {
+  // S5-04 — o administrador CONFIGURA tudo.
+  //
+  // O nível `configure` entrou com a matriz (S5-01), mas esta derivação nunca o
+  // produzia: o teto era `edit`. Como só os quatro papéis novos ganharam linha em
+  // `system_role_module_perms`, o admin caía aqui e ficava sem `configure` —
+  // resultado: `requireModule(x, "configure")` recusava TODO MUNDO, inclusive
+  // ele. Um gate que ninguém passa não protege nada, só quebra a tela.
+  //
+  // A descrição do papel já dizia o que devia valer: "Acesso total ao sistema,
+  // incluindo gestão de usuários e configurações."
+  if (role === "admin") return "configure";
+
   const canView = canSeeRoute(role, MODULE_VIEW_ROUTE[module]);
   if (!canView) return "none";
   const editCap = MODULE_EDIT_CAP[module];
@@ -372,7 +384,10 @@ export const ROLE_MODULE_ACCESS: Record<Role, Record<Module, ModuleAccess>> = Ob
 // demais continuam espelhando o NAV/capabilities (regressão zero preservada).
 // ---------------------------------------------------------------------------
 for (const role of ROLES) {
-  ROLE_MODULE_ACCESS[role].financeiro = role === "admin" || role === "financeiro" ? "edit" : "none";
+  // O admin fica em `configure` também aqui: esta linha roda DEPOIS da derivação
+  // e, sem a exceção, rebaixaria para `edit` o nível que ele acabou de ganhar.
+  if (role === "admin") continue;
+  ROLE_MODULE_ACCESS[role].financeiro = role === "financeiro" ? "edit" : "none";
 }
 
 /** Escada de acesso: none < view < edit < configure. */

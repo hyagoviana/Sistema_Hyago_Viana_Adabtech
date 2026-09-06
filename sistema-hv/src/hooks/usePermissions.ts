@@ -52,6 +52,23 @@ export function usePodeEditar(module: Module): boolean {
 }
 
 /**
+ * Gate de CONFIGURAÇÃO no front — espelha `requireModule(module, "configure")`.
+ *
+ * Decisão D10 (reunião 02/09): o menu "Editar caso" é gateado pelo nível
+ * Configurar do módulo Operacional, "por padrão: Administrador e Coordenador".
+ * Configurar é mais que editar: quem edita mexe no caso, quem configura muda a
+ * régua do caso (tema, tipo, pipeline).
+ *
+ * O servidor continua sendo a proteção real; isto só evita mostrar um botão que
+ * daria 403.
+ */
+export function usePodeConfigurar(module: Module): boolean {
+  const { role } = useAuth();
+  const { data: perms } = useMyModulePerms();
+  return permissaoEfetiva(role, perms ?? {}, module, "configure");
+}
+
+/**
  * Gate de LEITURA no front (AU1) — espelha `requireModule(module, "view")`. Use
  * para esconder painéis inteiros (ex.: auditoria dentro do caso); o servidor
  * continua sendo a proteção real.

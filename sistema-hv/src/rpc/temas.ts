@@ -16,7 +16,7 @@ import {
   updateFrente,
   updateTema,
 } from "@/lib/tema-service";
-import { AuthError, requireAuth, requireRole } from "@/lib/supabase/auth-guard";
+import { AuthError, requireAuth, requireModule } from "@/lib/supabase/auth-guard";
 
 // Leitura (não sensível): exige apenas autenticação.
 async function handle<T>(fn: () => Promise<T>): Promise<T> {
@@ -34,14 +34,17 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-// Escrita (sensível): gate ADMIN server-side. config.manage é admin-only no rbac,
-// então exigimos o papel `admin` explicitamente aqui.
-// TODO(R3): migrar para requireModule("sistema", "edit") (permissaoEfetiva) quando
-// R3-03 padronizar os gates por módulo — o cruzamento está previsto na story
-// (Dependências › Cruzamento com R3).
+// Escrita (sensível): criar, renomear, excluir tema e vincular pasta é mudar a
+// RÉGUA do escritório, não operar um caso. Por isso o gate é o nível
+// **Configurar** do módulo Sistema.
+//
+// S5-04 — fecha o TODO(R3) que estava aqui: era `requireRole(["admin"])`, um
+// papel cravado no código que ignorava a matriz. Com `requireModule` a régua
+// passa a ser configurável: hoje só o Administrador tem Configurar em Sistema,
+// e delegar para outro papel vira ajuste de permissão, não alteração de código.
 async function handleAdmin<T>(fn: () => Promise<T>): Promise<T> {
   try {
-    await requireRole(["admin"]);
+    await requireModule("sistema", "configure");
     return await fn();
   } catch (err: unknown) {
     if (err instanceof AuthError) {
