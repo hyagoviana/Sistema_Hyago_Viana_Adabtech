@@ -23,7 +23,7 @@ function ImportacaoPage() {
       <PageHeader
         eyebrow="Sistema"
         title="Importar dados"
-        subtitle="Importe clientes e casos a partir de planilhas de sistemas externos (SAJ, PJe, Projuris, etc.)."
+        subtitle="Importe clientes e casos a partir de planilhas de sistemas externos (SAJ, PJe, ProJuris, etc.)."
       />
 
       <Tabs defaultValue="nova" className="mt-6">

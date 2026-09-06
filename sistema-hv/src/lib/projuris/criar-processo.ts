@@ -36,6 +36,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { buildProjurisClientFromConfig } from "@/lib/distribuicao/sync-core";
 import { isWritebackAtivo } from "@/lib/projuris/writeback-acoes";
+import { resolverAssuntoDoCaso } from "@/lib/projuris/assunto-tema";
 
 /**
  * Rotas que alimentam o formulário. Todas testadas em 31/08 e respondendo:
@@ -323,7 +324,12 @@ export async function carregarListasDeApoio(): Promise<ListasApoioProcesso> {
   };
 }
 
-/** Busca no SHV o que já dá para preencher sozinho a partir do caso. */
+/**
+ * Busca no SHV o que já dá para preencher sozinho a partir do caso.
+ *
+ * O `assunto` sai VAZIO quando nem o tema nem a configuração geral têm um — é
+ * sinal para quem chama bloquear, não para inventar um valor.
+ */
 export async function dadosDoCasoParaProcesso(
   caseId: string,
 ): Promise<Partial<NovoProcessoJudicial>> {
@@ -351,9 +357,22 @@ export async function dadosDoCasoParaProcesso(
     projuris_numero_processo?: string | null;
   };
   const clientName = (comCliente as { client_name?: string | null } | null)?.client_name ?? null;
+
+  // S2-03 — o ASSUNTO vem do TEMA, nunca mais do caso.
+  //
+  // Isto era `assunto: c.caso_pasta_nome || c.case_code`, e por isso todo
+  // processo criado pelo SHV nascia com um assunto NOVO no ProJuris — o print do
+  // Thiago mostra "INADIMPLENCIAHV-2026-0422" no campo ASSUNTO (TEMA). Lá ia
+  // acumulando um assunto por caso, e os relatórios deixavam de agrupar por tema.
+  //
+  // `resolverAssuntoDoCaso` percorre tema → assunto geral. Quando devolve null,
+  // o assunto fica VAZIO de propósito: quem chama bloqueia com mensagem. Voltar
+  // a preencher com o código do caso seria reintroduzir o defeito.
+  const assuntoResolvido = await resolverAssuntoDoCaso(caseId);
+
   return {
     nomePasta: c.caso_pasta_nome || clientName || c.case_code,
-    assunto: c.caso_pasta_nome || c.case_code,
+    assunto: assuntoResolvido?.nome ?? "",
     numeroCnj: c.projuris_numero_processo ?? "",
     // O código do caso vai junto: é o que amarra os dois lados depois.
     codigoExterno: c.case_code,

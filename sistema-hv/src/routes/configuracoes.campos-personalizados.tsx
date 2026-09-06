@@ -7,6 +7,7 @@ import { ClientFieldsManagerPanel } from "@/components/clients/ClientFieldsManag
 import { Breadcrumb, Btn, PageHeader } from "@/components/hv/primitives";
 import { TemaFieldDefsEditor } from "@/components/pipeline/TemaFieldDefsEditor";
 import { TemaContaAzulPanel } from "@/components/pipeline/TemaContaAzulPanel";
+import { TemaProjurisPanel } from "@/components/pipeline/TemaProjurisPanel";
 import { CategoryFoldersEditor } from "@/components/pipeline/CategoryFoldersEditor";
 import { TemaDistribuicaoPanel } from "@/components/pipeline/TemaDistribuicaoPanel";
 import { NovoTemaDialog } from "@/components/pipeline/NovoTemaDialog";
@@ -303,7 +304,7 @@ function TemaIdentidade({
 // Configuração do TEMA em um só lugar (doc 21.08). Cada aba é o painel que já
 // existia — só deixaram de morar em telas diferentes.
 // ---------------------------------------------------------------------------
-type AbaTema = "campos" | "pastas" | "distribuicao" | "financeiro";
+type AbaTema = "campos" | "pastas" | "distribuicao" | "integracoes";
 
 const ABAS: Array<{ id: AbaTema; label: string; hint: string }> = [
   {
@@ -322,9 +323,12 @@ const ABAS: Array<{ id: AbaTema; label: string; hint: string }> = [
     hint: "Peso e responsável exclusivo do tema no motor de distribuição.",
   },
   {
-    id: "financeiro",
-    label: "Financeiro",
-    hint: "Centro de custo e serviço do ContaAzul deste tema (1 de cada por tema).",
+    // S2-02 — era "Financeiro" e só tinha o Conta Azul. O Thiago pediu uma aba
+    // de INTEGRAÇÕES com os dois blocos, e os nomes escritos assim: "Alterar
+    // nome para 'projuris'", "Alterar nome para 'Contaazul'".
+    id: "integracoes",
+    label: "Integrações",
+    hint: "Como este tema aparece no ProJuris e no Conta Azul.",
   },
 ];
 
@@ -370,8 +374,22 @@ function TemaConfigTabs({ tema }: { tema: { id: string; name: string } }) {
         <TemaDistribuicaoPanel key={tema.id} temaId={tema.id} temaNome={tema.name} />
       )}
 
-      {/* FN1 — Desenho 6: o tema é quem carrega o centro de custo e o serviço. */}
-      {aba === "financeiro" && <TemaContaAzulPanel key={tema.id} temaId={tema.id} />}
+      {aba === "integracoes" && (
+        <div className="space-y-8">
+          <section className="space-y-3">
+            <h3 className="text-[13px] font-medium text-[var(--navy)]">ProJuris</h3>
+            {/* S2-02 — o assunto do tema. É o que impede o ProJuris de ganhar um
+                assunto novo a cada processo criado pelo SHV. */}
+            <TemaProjurisPanel key={`pj-${tema.id}`} temaId={tema.id} temaNome={tema.name} />
+          </section>
+
+          <section className="space-y-3 border-t border-[var(--border)] pt-6">
+            <h3 className="text-[13px] font-medium text-[var(--navy)]">Conta Azul</h3>
+            {/* FN1 — Desenho 6: o tema é quem carrega o centro de custo e o serviço. */}
+            <TemaContaAzulPanel key={`ca-${tema.id}`} temaId={tema.id} />
+          </section>
+        </div>
+      )}
     </div>
   );
 }

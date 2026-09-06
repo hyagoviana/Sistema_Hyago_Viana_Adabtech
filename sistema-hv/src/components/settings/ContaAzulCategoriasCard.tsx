@@ -1,4 +1,4 @@
-// CONFIGURAÇÕES › INTEGRAÇÕES — de-para das categorias financeiras com o ContaAzul.
+// CONFIGURAÇÕES › INTEGRAÇÕES — de-para das categorias financeiras com o Conta Azul.
 //
 // Pedido do Thiago (28/08), com as palavras dele:
 //   "em uma tela de configuração da parte da integração do financeiro, a gente
@@ -14,7 +14,7 @@
 //      porque depois de amarrado à mão o nome e o número lá deixam de importar.
 //
 // Só as categorias FOLHA aceitam vínculo: as de nível 1 (4.01, 10.01) existem no
-// ContaAzul para relatório e não recebem lançamento — oferecer vínculo nelas só
+// Conta Azul para relatório e não recebem lançamento — oferecer vínculo nelas só
 // geraria dúvida.
 
 import { useState } from "react";
@@ -102,12 +102,12 @@ export function ContaAzulCategoriasCard({ podeEditar }: { podeEditar: boolean })
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[15px] font-semibold text-[var(--navy)]">
-            Categorias financeiras · ContaAzul
+            Categorias financeiras · Conta Azul
           </p>
           <p className="text-[12.5px] text-muted-foreground mt-1 max-w-2xl">
-            Cada tipo de receita e despesa do sistema aponta para uma categoria do ContaAzul. É esse
-            vínculo que faz o lançamento cair no lugar certo lá. Depois de amarrado, pode renomear a
-            categoria no ContaAzul à vontade — a ligação continua valendo.
+            Cada tipo de receita e despesa do sistema aponta para uma categoria do Conta Azul. É
+            esse vínculo que faz o lançamento cair no lugar certo lá. Depois de amarrado, pode
+            renomear a categoria no Conta Azul à vontade — a ligação continua valendo.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export function ContaAzulCategoriasCard({ podeEditar }: { podeEditar: boolean })
 
       {!catalogo.isLoading && (catalogo.data ?? []).length === 0 && (
         <p className="text-[12px] text-[var(--warning,#a16207)]">
-          Não consegui ler as categorias do ContaAzul agora. Verifique a conexão em Integrações.
+          Não consegui ler as categorias do Conta Azul agora. Verifique a conexão em Integrações.
         </p>
       )}
     </div>

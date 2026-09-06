@@ -1,8 +1,8 @@
 // Server-only — FN1 (2026-08-26) — FINANCEIRO DO CASO (doc "25.08 _ Financeiro SHV").
 //
-// O registro nasce AQUI e o lançamento no ContaAzul é um passo separado (FN2).
+// O registro nasce AQUI e o lançamento no Conta Azul é um passo separado (FN2).
 // Thiago: "também defini a possibilidade de que valores sejam registrados no SHV,
-// sem necessariamente serem lançados no ContaAzul (…) em razão de uma
+// sem necessariamente serem lançados no Conta Azul (…) em razão de uma
 // especificidade da advocacia: parte dos valores são questões futuras".
 //
 // NUNCA importe este arquivo no browser (usa service_role).
@@ -23,7 +23,7 @@ export class FinanceiroCasoError extends Error {
 }
 
 // ---------------------------------------------------------------------------
-// Categorias (a árvore do ContaAzul)
+// Categorias (a árvore do Conta Azul)
 // ---------------------------------------------------------------------------
 export interface FinCategoria {
   id: string;
@@ -34,9 +34,9 @@ export interface FinCategoria {
   reembolsavel: boolean;
   /** Caminho legível: "Fiscal › Honorários contratuais › Entrada". */
   caminho: string;
-  /** Só as folhas são selecionáveis — é nelas que o ContaAzul lança. */
+  /** Só as folhas são selecionáveis — é nelas que o Conta Azul lança. */
   folha: boolean;
-  /** FN2 — id da categoria correspondente no ContaAzul (null = ainda não amarrada). */
+  /** FN2 — id da categoria correspondente no Conta Azul (null = ainda não amarrada). */
   contaazul_id: string | null;
 }
 
@@ -356,7 +356,7 @@ export async function excluirEntry(entryId: string): Promise<{ ok: true }> {
     .maybeSingle();
   if ((atual as { status?: string } | null)?.status === "LANCADO") {
     throw new FinanceiroCasoError(
-      "Este lançamento já existe no ContaAzul. Use “Revisar lançamento” antes de excluir.",
+      "Este lançamento já existe no Conta Azul. Use “Revisar lançamento” antes de excluir.",
       409,
     );
   }
@@ -435,7 +435,7 @@ export async function resumoFinanceiroCaso(caseId: string): Promise<ResumoPorTip
 }
 
 // ---------------------------------------------------------------------------
-// Tema → ContaAzul (Desenho 6)
+// Tema → Conta Azul (Desenho 6)
 // ---------------------------------------------------------------------------
 export async function setTemaContaAzul(
   temaId: string,

@@ -115,7 +115,7 @@ export function useSetTemaContaAzul() {
   });
 }
 
-// ─── ContaAzul (FN2, 2026-08-28) ─────────────────────────────────────────────
+// ─── Conta Azul (FN2, 2026-08-28) ─────────────────────────────────────────────
 
 /** Contas de recebimento e centros de custo, para os seletores do lançamento. */
 export function useCatalogoContaAzul(habilitado = true) {
@@ -131,7 +131,7 @@ export function useCatalogoContaAzul(habilitado = true) {
 }
 
 /**
- * Envia o lançamento ao ContaAzul.
+ * Envia o lançamento ao Conta Azul.
  *
  * Sem `onSuccess` automático de toast: quem chama decide a mensagem, porque
  * "não foi" nem sempre é erro (ex.: categoria ainda não cadastrada lá é uma
@@ -149,7 +149,7 @@ export function useFazerLancamentoContaAzul(caseId: string) {
   });
 }
 
-/** Amarra as categorias do SHV às do ContaAzul pelo código. */
+/** Amarra as categorias do SHV às do Conta Azul pelo código. */
 export function useSincronizarCategoriasContaAzul() {
   const fn = useServerFn(sincronizarCategoriasContaAzulFn);
   const qc = useQueryClient();
@@ -159,7 +159,7 @@ export function useSincronizarCategoriasContaAzul() {
   });
 }
 
-/** Categorias do ContaAzul para o seletor de vínculo (tela de Integrações). */
+/** Categorias do Conta Azul para o seletor de vínculo (tela de Integrações). */
 export function useCategoriasContaAzul() {
   const fn = useServerFn(listarCategoriasContaAzulFn);
   return useQuery({
@@ -170,7 +170,7 @@ export function useCategoriasContaAzul() {
   });
 }
 
-/** Amarra à mão uma categoria do SHV a uma do ContaAzul. */
+/** Amarra à mão uma categoria do SHV a uma do Conta Azul. */
 export function useVincularCategoriaContaAzul() {
   const fn = useServerFn(vincularCategoriaContaAzulFn);
   const qc = useQueryClient();

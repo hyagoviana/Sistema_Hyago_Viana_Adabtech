@@ -79,7 +79,7 @@ export function CaseFinanceiroEntryDialog({
   const criar = useCriarFinEntry(caseId);
   const { data: categorias } = useFinCategorias(kind);
 
-  // Contas reais do ContaAzul (só busca com o diálogo aberto).
+  // Contas reais do Conta Azul (só busca com o diálogo aberto).
   const catalogo = useCatalogoContaAzul(open);
   const [tipo, setTipo] = useState<string>(tiposDoKind(kind)[0] ?? "");
   const [categoriaId, setCategoriaId] = useState<string>(SEM);
@@ -101,7 +101,7 @@ export function CaseFinanceiroEntryDialog({
 
   const valorCentavos = centavosFromMask(valorTexto) ?? 0;
 
-  // Só as FOLHAS são selecionáveis — é nelas que o ContaAzul lança de fato.
+  // Só as FOLHAS são selecionáveis — é nelas que o Conta Azul lança de fato.
   const folhas = useMemo(() => (categorias ?? []).filter((c) => c.folha), [categorias]);
   const categoriaEscolhida = folhas.find((c) => c.id === categoriaId);
   // A chave "Reembolsável" só existe quando a categoria é de um balde reembolsável
@@ -201,7 +201,7 @@ export function CaseFinanceiroEntryDialog({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Categoria financeira (ContaAzul)</Label>
+            <Label className="text-xs">Categoria financeira (Conta Azul)</Label>
             <Select
               value={categoriaId}
               onValueChange={(v) => {
@@ -249,7 +249,7 @@ export function CaseFinanceiroEntryDialog({
           </div>
 
           {/* FN2 (2026-08-28) — os dois eram texto livre, e isso quebraria o
-              lançamento: o ContaAzul identifica a conta por um código, não pelo
+              lançamento: o Conta Azul identifica a conta por um código, não pelo
               nome. Quem digitasse "Bradesco" veria o envio falhar sem entender.
               Agora a conta vem da lista real da conta do escritório.
               A forma de pagamento é lista fixa porque, como o Thiago explicou,
@@ -296,8 +296,8 @@ export function CaseFinanceiroEntryDialog({
               <>
                 <Input value={conta} onChange={(e) => setConta(e.target.value)} />
                 <p className="text-[11px] text-[var(--warning,#a16207)]">
-                  Não consegui ler as contas do ContaAzul agora. Sem escolher da lista, o lançamento
-                  não vai conseguir subir.
+                  Não consegui ler as contas do Conta Azul agora. Sem escolher da lista, o
+                  lançamento não vai conseguir subir.
                 </p>
               </>
             )}

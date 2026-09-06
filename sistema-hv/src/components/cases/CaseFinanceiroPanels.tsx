@@ -6,7 +6,7 @@
 // financeira) JÁ EXISTEM na aba financeira e não são recriados aqui.
 //
 // "Fazer lançamento" e "Revisar lançamento" existem como AÇÃO, mas nesta fase
-// apenas mudam o status no SHV — quem conversa com o ContaAzul é a FN2. O botão
+// apenas mudam o status no SHV — quem conversa com o Conta Azul é a FN2. O botão
 // diz isso em voz alta para ninguém achar que já foi ao ERP.
 
 import { useState } from "react";
@@ -78,7 +78,7 @@ export function CaseFinanceiroPanels({
   const { data: entries, isLoading } = useCaseFinEntries(caseId);
   const { data: resumo } = useResumoFinanceiroCaso(caseId);
   const setStatus = useSetFinEntryStatus(caseId);
-  // FN2 — envio ao ContaAzul + a confirmação que ele exige.
+  // FN2 — envio ao Conta Azul + a confirmação que ele exige.
   const lancar = useFazerLancamentoContaAzul(caseId);
   const [confirmarLancamento, setConfirmarLancamento] = useState<(typeof lista)[number] | null>(
     null,
@@ -91,7 +91,7 @@ export function CaseFinanceiroPanels({
         | { lancado: false; motivo: string };
       if (r.lancado) {
         toast.success(
-          r.jaEstava ? "Este lançamento já estava no ContaAzul" : "Lançado no ContaAzul",
+          r.jaEstava ? "Este lançamento já estava no Conta Azul" : "Lançado no Conta Azul",
         );
       } else {
         // Não é erro do sistema: quase sempre é pendência de cadastro (categoria
@@ -118,7 +118,7 @@ export function CaseFinanceiroPanels({
       await setStatus.mutateAsync({ entryId, status });
       toast.success(
         status === "LANCADO"
-          ? "Marcado como lançado. A gravação no ContaAzul entra na próxima etapa."
+          ? "Marcado como lançado. A gravação no Conta Azul entra na próxima etapa."
           : "Status atualizado",
       );
     } catch (e) {
@@ -195,17 +195,17 @@ export function CaseFinanceiroPanels({
                   <>
                     {/* Fase 1: a ação registra a intenção. A integração é a FN2 —
                         e o texto do botão precisa deixar isso claro. */}
-                    {/* FN2 (2026-08-28) — agora o botão ESCREVE no ContaAzul.
-                        Já lançado: não oferece de novo (a API do ContaAzul não
+                    {/* FN2 (2026-08-28) — agora o botão ESCREVE no Conta Azul.
+                        Já lançado: não oferece de novo (a API do Conta Azul não
                         tem exclusão — comprovado com id real em 28/08 — então
                         cada envio é definitivo e um segundo clique só poderia
                         confundir). Para conferir, o registro está lá. */}
                     {e.contaazul_registro_id ? (
                       <span
                         className="text-[11px] text-muted-foreground px-2"
-                        title={`Registro ${e.contaazul_registro_id} no ContaAzul`}
+                        title={`Registro ${e.contaazul_registro_id} no Conta Azul`}
                       >
-                        No ContaAzul ✓
+                        No Conta Azul ✓
                       </span>
                     ) : (
                       <Button
@@ -213,7 +213,7 @@ export function CaseFinanceiroPanels({
                         variant="outline"
                         className="text-[11px] h-7"
                         disabled={lancar.isPending || e.status === "DISPENSADO"}
-                        title="Cria o registro no ContaAzul. Só pode ser desfeito por lá."
+                        title="Cria o registro no Conta Azul. Só pode ser desfeito por lá."
                         onClick={() => setConfirmarLancamento(e)}
                       >
                         {lancar.isPending ? "Enviando…" : "Fazer lançamento"}
@@ -397,9 +397,9 @@ export function CaseFinanceiroPanels({
         </div>
       </section>
 
-      {/* FN2 — confirmação OBRIGATÓRIA antes de escrever no ContaAzul.
+      {/* FN2 — confirmação OBRIGATÓRIA antes de escrever no Conta Azul.
           Não é zelo excessivo: descobri em 28/08, testando com um registro real,
-          que a API do ContaAzul NÃO tem exclusão de conta a receber. O que sai
+          que a API do Conta Azul NÃO tem exclusão de conta a receber. O que sai
           daqui só é desfeito na mão, lá dentro. Então a pessoa precisa ver o que
           vai acontecer antes de acontecer. */}
       <AlertDialog
@@ -408,7 +408,7 @@ export function CaseFinanceiroPanels({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Lançar no ContaAzul?</AlertDialogTitle>
+            <AlertDialogTitle>Lançar no Conta Azul?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
@@ -417,8 +417,8 @@ export function CaseFinanceiroPanels({
                   {confirmarLancamento?.descricao ? ` — "${confirmarLancamento.descricao}"` : ""}.
                 </p>
                 <p className="text-[var(--warning,#a16207)]">
-                  O ContaAzul não permite excluir esse tipo de registro pelo sistema. Se precisar
-                  desfazer, só pela tela do próprio ContaAzul.
+                  O Conta Azul não permite excluir esse tipo de registro pelo sistema. Se precisar
+                  desfazer, só pela tela do próprio Conta Azul.
                 </p>
               </div>
             </AlertDialogDescription>

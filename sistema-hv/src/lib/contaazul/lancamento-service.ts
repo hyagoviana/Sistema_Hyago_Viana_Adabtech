@@ -1,7 +1,7 @@
-// "Fazer lançamento" — leva de verdade para o ContaAzul a receita registrada no
+// "Fazer lançamento" — leva de verdade para o Conta Azul a receita registrada no
 // caso (FN2, 2026-08-28).
 //
-// O CONTEXTO. O Thiago: "o ContaAzul representa um ERP financeiro onde
+// O CONTEXTO. O Thiago: "o Conta Azul representa um ERP financeiro onde
 // administramos o grosso dos recebíveis e a pagar do escritório. Teoricamente
 // todos os nossos registros que envolvam valores vão obrigatoriamente passar pelo
 // sistema." A FN1 fez o registro nascer no caso; aqui ele vira lançamento lá.
@@ -40,7 +40,7 @@ export type ResultadoLancamento =
 
 const ORG = "00000000-0000-0000-0000-000000000001";
 
-/** Centavos → reais, que é como o ContaAzul recebe valor. */
+/** Centavos → reais, que é como o Conta Azul recebe valor. */
 function reais(centavos: number): number {
   return Math.round(centavos) / 100;
 }
@@ -74,7 +74,7 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
   // Só receita por enquanto: contas a PAGAR usam outro endpoint e ainda não
   // foram desenhadas com o Thiago.
   if (e.kind !== "RECEITA") {
-    return { lancado: false, motivo: "por enquanto só receita vai para o ContaAzul" };
+    return { lancado: false, motivo: "por enquanto só receita vai para o Conta Azul" };
   }
 
   // ── o que precisa estar preenchido ────────────────────────────────────────
@@ -92,7 +92,7 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
   if (!cat?.contaazul_id) {
     return {
       lancado: false,
-      motivo: `a categoria ${cat?.codigo ?? "?"} ainda não existe no ContaAzul — cadastre lá e sincronize`,
+      motivo: `a categoria ${cat?.codigo ?? "?"} ainda não existe no Conta Azul — cadastre lá e sincronize`,
     };
   }
 
@@ -123,7 +123,7 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
     if (!("contaazul_customer_id" in r) || !r.contaazul_customer_id) {
       return {
         lancado: false,
-        motivo: `não consegui cadastrar o cliente no ContaAzul: ${"error" in r ? r.error : "motivo desconhecido"}`,
+        motivo: `não consegui cadastrar o cliente no Conta Azul: ${"error" in r ? r.error : "motivo desconhecido"}`,
       };
     }
     contatoId = r.contaazul_customer_id as string;
@@ -207,11 +207,11 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
   //
   // Esta busca é a trava que impede DUPLICAR honorário — e ela precisa vir antes
   // do POST, não depois. Três caminhos levam o mesmo lançamento a ser enviado
-  // duas vezes: (a) o ContaAzul processa de forma ASSÍNCRONA, então a confirmação
+  // duas vezes: (a) o Conta Azul processa de forma ASSÍNCRONA, então a confirmação
   // logo após o envio pode não achar nada e a pessoa clica de novo; (b) a
   // gravação do id aqui pode falhar; (c) timeout com o registro já criado lá.
   // Em qualquer um deles, sem esta checagem nasceria um segundo registro — que
-  // a API do ContaAzul não deixa apagar.
+  // a API do Conta Azul não deixa apagar.
   const venc = cru.map((p) => p.venc).sort();
   const usados = await idsJaVinculados(entryId);
   const jaExiste = await procurarRegistro(
@@ -261,7 +261,7 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
     // Enviado mas ainda não visível. NÃO é erro de envio, e tentar de novo é
     // seguro: a busca no topo da função encontra o registro quando ele aparecer
     // e adota, em vez de criar outro.
-    const motivo = `enviado (protocolo ${protocolo}), mas ainda não apareceu no ContaAzul — aguarde um instante e clique de novo para confirmar`;
+    const motivo = `enviado (protocolo ${protocolo}), mas ainda não apareceu no Conta Azul — aguarde um instante e clique de novo para confirmar`;
     await marcar(entryId, null, motivo);
     return { lancado: false, motivo };
   }
@@ -271,13 +271,13 @@ export async function fazerLancamento(entryId: string): Promise<ResultadoLancame
 }
 
 /**
- * Procura no ContaAzul o registro correspondente a este lançamento.
+ * Procura no Conta Azul o registro correspondente a este lançamento.
  *
  * Casa por descrição + valor dentro da janela de vencimento. O VALOR entra na
  * comparação de propósito: só a descrição colidiria entre dois lançamentos
  * legítimos do mesmo caso — dois "Entrada" para o mesmo cliente, vencendo no
  * mesmo dia, é situação real — e o segundo adotaria o registro do primeiro,
- * ficando eternamente sem ir ao ContaAzul.
+ * ficando eternamente sem ir ao Conta Azul.
  *
  * A segunda trava é o `excluirIds`: um registro que JÁ pertence a outro
  * lançamento do SHV nunca é adotado. Com as duas, ou achamos o registro certo,
@@ -310,7 +310,7 @@ async function procurarRegistro(
   }
 }
 
-/** Ids do ContaAzul já usados por OUTROS lançamentos — não podem ser adotados. */
+/** Ids do Conta Azul já usados por OUTROS lançamentos — não podem ser adotados. */
 async function idsJaVinculados(exceto: string): Promise<Set<string>> {
   const sb = getSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

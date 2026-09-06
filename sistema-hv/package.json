@@ -27,6 +27,8 @@
     "qa:usuarios": "tsx scripts/qa-usuarios-s503.ts",
     "qa:repetidas": "tsx scripts/qa-intimacoes-repetidas.ts",
     "qa:responsavel": "tsx scripts/qa-responsavel-direcionado.ts",
+    "qa:assunto-projuris": "tsx scripts/qa-s202-s203-assunto-projuris.ts",
+    "projuris:assunto-errado": "tsx scripts/listar-processos-assunto-errado.ts",
     "qa:s204-picker": "tsx scripts/qa-s204-picker-unificado.ts",
     "qa:s204": "tsx scripts/qa-s204-arvore-drive.ts",
     "drive:migrar-s204": "tsx scripts/migrar-arvore-drive-s204.ts",

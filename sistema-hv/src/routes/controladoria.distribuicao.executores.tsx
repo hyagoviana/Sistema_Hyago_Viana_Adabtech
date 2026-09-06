@@ -107,7 +107,7 @@ function ExecutoresPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2">Nome</th>
-                  <th className="text-left py-2">Projuris ID</th>
+                  <th className="text-left py-2">ProJuris ID</th>
                   <th className="text-right py-2">Peso</th>
                   <th className="text-center py-2">Complexa</th>
                   <th className="text-center py-2">Status</th>
@@ -164,7 +164,7 @@ function ExecutoresPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Projuris ID</Label>
+              <Label>ProJuris ID</Label>
               <Input value={projurisId} onChange={(e) => setProjurisId(e.target.value)} disabled />
             </div>
             <div>

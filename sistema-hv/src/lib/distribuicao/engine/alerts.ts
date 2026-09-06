@@ -86,7 +86,7 @@ export const ALERT_CATALOG: Record<
   "ALT-SYNC-001": {
     severity: "warning",
     blocking: false,
-    message: "Write-back de responsavel no Projuris falhou (retry pendente)",
+    message: "Write-back de responsavel no ProJuris falhou (retry pendente)",
   },
   // H4: tema da intimacao nao casou com nenhuma linha de system_theme_mapping.
   // Nao-blocking: a intimacao NAO some do resumo (antes caia em `continue`

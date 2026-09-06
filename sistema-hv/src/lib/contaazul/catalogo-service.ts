@@ -1,7 +1,7 @@
-// De-para entre o catálogo do SHV e o do ContaAzul (2026-08-28).
+// De-para entre o catálogo do SHV e o do Conta Azul (2026-08-28).
 //
 // O QUE ISTO RESOLVE. A FN1 criou 30 categorias financeiras no SHV com o código
-// do doc do Thiago (`4.02.01.01`, `10.01.02`…). Do outro lado, o ContaAzul tem as
+// do doc do Thiago (`4.02.01.01`, `10.01.02`…). Do outro lado, o Conta Azul tem as
 // mesmas categorias com o código NO NOME: "4.02.01.01 - Entrada". Sem amarrar uma
 // coisa na outra, o lançamento não sabe em qual categoria de lá registrar.
 //
@@ -11,7 +11,7 @@
 //
 // O que fica de fora, por decisão dele (28/08):
 //   · as categorias de nível 1 (4.01, 4.02, 10.01) NÃO recebem lançamento, mas
-//     ficam no ContaAzul porque servem para relatório e visão no ERP;
+//     ficam no Conta Azul porque servem para relatório e visão no ERP;
 //   · a conta financeira e a forma de pagamento NÃO têm padrão — "depende do que
 //     o cliente tenha optado (pix/cartão/boleto), é negociado um a um". Por isso
 //     este serviço só LISTA as opções; quem escolhe é a pessoa, no lançamento.
@@ -40,12 +40,12 @@ export type ResultadoDePara = {
 };
 
 /**
- * Casa as categorias do SHV com as do ContaAzul pelo CÓDIGO e grava o id de lá.
+ * Casa as categorias do SHV com as do Conta Azul pelo CÓDIGO e grava o id de lá.
  *
  * Idempotente: rodar de novo não duplica nem desfaz nada — só preenche o que
  * ainda falta e corrige o que mudou de id.
  *
- * NÃO cria categoria no ContaAzul. Criar plano de contas é decisão contábil do
+ * NÃO cria categoria no Conta Azul. Criar plano de contas é decisão contábil do
  * escritório, e o Thiago já disse que vai "repassar para eles configurarem com o
  * nome exato". O nosso papel é ligar o que existe e apontar o que falta.
  */
@@ -73,7 +73,7 @@ export async function sincronizarCategorias(): Promise<ResultadoDePara> {
   const usados = new Set<string>();
 
   // Todo id que existe HOJE do outro lado. Serve para detectar vínculo órfão:
-  // categoria apagada ou renomeada no ContaAzul deixa o SHV apontando para o
+  // categoria apagada ou renomeada no Conta Azul deixa o SHV apontando para o
   // nada, e o lançamento falharia na hora de usar. Aconteceu em 28/08, quando o
   // Thiago reorganizou o plano de contas e as 4 despesas 10.x sumiram de lá.
   const idsExistentes = new Set((itens ?? []).map((c) => c.id));
@@ -102,7 +102,7 @@ export async function sincronizarCategorias(): Promise<ResultadoDePara> {
     }
     usados.add(loc.codigo);
 
-    // O ContaAzul é a fonte da verdade do NOME: é lá que o escritório mantém o
+    // O Conta Azul é a fonte da verdade do NOME: é lá que o escritório mantém o
     // plano de contas, e quem confere relatório lê o nome de lá. Quando o Thiago
     // renomeia (em 28/08, "Recuperados / Acordo / Renegociação" virou
     // "Renegociação / acordo"), o SHV acompanha em vez de mostrar o nome velho.
@@ -199,7 +199,7 @@ export async function listarServicosParaSelecao(): Promise<OpcaoCatalogo[]> {
 // interno que a gente pode usar para referenciar por dentro? pq aí ficaria mais
 // certeiro que dependermos dos números / título das categorias".
 //
-// Ele está certo. Cada categoria do ContaAzul tem um `id` próprio e é ELE que o
+// Ele está certo. Cada categoria do Conta Azul tem um `id` próprio e é ELE que o
 // lançamento usa — o número no nome nunca foi a referência, só a forma de
 // DESCOBRIR o par na primeira vez. Com o vínculo manual, o escritório aponta uma
 // vez qual é qual e o nome/número deixa de importar: podem renomear à vontade lá
@@ -208,7 +208,7 @@ export async function listarServicosParaSelecao(): Promise<OpcaoCatalogo[]> {
 // O casamento automático por código continua existindo, como atalho para quem
 // segue a numeração. Os dois convivem: o manual tem a palavra final.
 
-/** Lista as categorias do ContaAzul para o seletor de vínculo, já organizadas. */
+/** Lista as categorias do Conta Azul para o seletor de vínculo, já organizadas. */
 export async function listarCategoriasContaAzul(): Promise<
   Array<{ id: string; nome: string; tipo: string }>
 > {
@@ -223,7 +223,7 @@ export async function listarCategoriasContaAzul(): Promise<
 }
 
 /**
- * Amarra à mão uma categoria do SHV a uma do ContaAzul.
+ * Amarra à mão uma categoria do SHV a uma do Conta Azul.
  *
  * `contaazulId = null` desfaz o vínculo. Recusa um id que já pertence a OUTRA
  * categoria: dois lançamentos diferentes caindo na mesma categoria de lá seria
@@ -248,7 +248,7 @@ export async function vincularCategoriaManual(
     if (emUso) {
       return {
         ok: false,
-        motivo: `essa categoria do ContaAzul já está ligada a "${emUso.codigo} ${emUso.nome}"`,
+        motivo: `essa categoria do Conta Azul já está ligada a "${emUso.codigo} ${emUso.nome}"`,
       };
     }
   }

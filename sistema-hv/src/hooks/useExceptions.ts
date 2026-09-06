@@ -33,7 +33,7 @@ const empty = (v: string | null | undefined) => !v || v.trim() === "";
 
 /**
  * Centro de Exceções — calcula ocorrências a partir dos dados REAIS do Supabase
- * (casos, tarefas e prazos do dossiê). Não depende de Projuris/IA.
+ * (casos, tarefas e prazos do dossiê). Não depende de ProJuris/IA.
  */
 export function useExceptions(): { loading: boolean; total: number; groups: ExcGroup[] } {
   const casosQ = useCasesList();

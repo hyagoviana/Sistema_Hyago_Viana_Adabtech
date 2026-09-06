@@ -137,10 +137,10 @@ export const setTemaContaAzulFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => handle(() => setTemaContaAzul(data.temaId, data), "edit"));
 
-// ─── ContaAzul (FN2, 2026-08-28) ─────────────────────────────────────────────
+// ─── Conta Azul (FN2, 2026-08-28) ─────────────────────────────────────────────
 //
 // `fazerLancamento` ESCREVE num sistema de terceiro e não tem como desfazer: a
-// API do ContaAzul não expõe exclusão de conta a receber (testado com id real em
+// API do Conta Azul não expõe exclusão de conta a receber (testado com id real em
 // 28/08 — devolve 404 nas duas rotas). Por isso o gate é `edit` e a tela pede
 // confirmação explícita antes de chamar.
 
@@ -166,7 +166,7 @@ export const listarCatalogoContaAzulFn = createServerFn({ method: "GET" }).handl
   }, "view"),
 );
 
-/** Amarra as categorias do SHV às do ContaAzul pelo código. Idempotente. */
+/** Amarra as categorias do SHV às do Conta Azul pelo código. Idempotente. */
 export const sincronizarCategoriasContaAzulFn = createServerFn({ method: "POST" }).handler(() =>
   handle(async () => {
     const { sincronizarCategorias } = await import("@/lib/contaazul/catalogo-service");
@@ -174,7 +174,7 @@ export const sincronizarCategoriasContaAzulFn = createServerFn({ method: "POST" 
   }, "edit"),
 );
 
-/** Categorias do ContaAzul para o seletor de vínculo manual. */
+/** Categorias do Conta Azul para o seletor de vínculo manual. */
 export const listarCategoriasContaAzulFn = createServerFn({ method: "GET" }).handler(() =>
   handle(async () => {
     const { listarCategoriasContaAzul } = await import("@/lib/contaazul/catalogo-service");
@@ -182,7 +182,7 @@ export const listarCategoriasContaAzulFn = createServerFn({ method: "GET" }).han
   }, "view"),
 );
 
-/** Amarra à mão categoria do SHV ↔ categoria do ContaAzul (Thiago, 28/08). */
+/** Amarra à mão categoria do SHV ↔ categoria do Conta Azul (Thiago, 28/08). */
 export const vincularCategoriaContaAzulFn = createServerFn({ method: "POST" })
   .inputValidator((d: { categoriaId: string; contaazulId: string | null }) =>
     z.object({ categoriaId: z.string().uuid(), contaazulId: z.string().nullable() }).parse(d),

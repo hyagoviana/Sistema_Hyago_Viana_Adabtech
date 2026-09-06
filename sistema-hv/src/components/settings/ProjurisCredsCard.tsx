@@ -90,7 +90,7 @@ export function ProjurisCredsCard() {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Key className="h-4 w-4" />
-          Credenciais Projuris
+          Credenciais ProJuris
           {hasCredentials ? (
             <Badge className="bg-green-100 text-green-700 text-xs ml-2">
               <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -103,7 +103,7 @@ export function ProjurisCredsCard() {
             </Badge>
           )}
         </CardTitle>
-        <CardDescription>Conexao com a API do Projuris para sincronizar tarefas</CardDescription>
+        <CardDescription>Conexao com a API do ProJuris para sincronizar tarefas</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {credsLoading ? (

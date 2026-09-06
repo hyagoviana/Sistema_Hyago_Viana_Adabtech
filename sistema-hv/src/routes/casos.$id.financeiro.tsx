@@ -2,7 +2,7 @@
 // Agrega o que ANTES era o bloco integral inline da ficha: detalhamento de
 // parcelas/honorários (TermoPanel), cobranças/faturas (AsaasCobrancasPanel),
 // conferência (CaseConferenciaFinPanel), o "mover" financeiro (MoveCaseFinDialog),
-// entrar/voltar do financeiro, sync ContaAzul/Asaas (useSyncAllPagamentos) e os
+// entrar/voltar do financeiro, sync Conta Azul/Asaas (useSyncAllPagamentos) e os
 // COMENTÁRIOS EXCLUSIVOS do financeiro (FinNotesBlock, scope='financeiro').
 //
 // GATE: a página inteira exige financeiro:view. Sem isso, mostra estado "sem
@@ -145,7 +145,7 @@ function CasoFinanceiro() {
               <ArrowRightLeft size={14} className="mr-1.5" /> Mover etapa
             </Button>
           )}
-          {/* Sync ContaAzul/Asaas DENTRO do módulo (AC-7) — gate financeiro:edit. */}
+          {/* Sync Conta Azul/Asaas DENTRO do módulo (AC-7) — gate financeiro:edit. */}
           {podeEditarFin && (
             <Button
               variant="outline"
@@ -154,14 +154,14 @@ function CasoFinanceiro() {
               onClick={async () => {
                 try {
                   await sync.mutateAsync();
-                  toast.success("Sincronização concluída (ContaAzul + Asaas)");
+                  toast.success("Sincronização concluída (Conta Azul + Asaas)");
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Falha ao sincronizar");
                 }
               }}
             >
               <RefreshCw size={14} className={`mr-1.5 ${sync.isPending ? "animate-spin" : ""}`} />
-              {sync.isPending ? "Sincronizando…" : "Sincronizar ContaAzul/Asaas"}
+              {sync.isPending ? "Sincronizando…" : "Sincronizar Conta Azul/Asaas"}
             </Button>
           )}
         </div>

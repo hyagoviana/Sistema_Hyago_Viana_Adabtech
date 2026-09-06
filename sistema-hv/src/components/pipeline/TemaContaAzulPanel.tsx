@@ -1,4 +1,4 @@
-// FN1 — Desenho 6 do doc "25.08 _ Financeiro SHV": vínculo do TEMA com o ContaAzul.
+// FN1 — Desenho 6 do doc "25.08 _ Financeiro SHV": vínculo do TEMA com o Conta Azul.
 //
 // Thiago: "Após criarmos as classificações no Contaazul, nessa opção aqui
 // vinculamos manualmente qual o centro de custo / serviço é relacionado ao tema.
@@ -9,7 +9,7 @@
 // tema, ele é para tudo. Ele vai tudo até para o financeiro (…) cria um tema
 // aqui, vincula no centro de custo lá, que é o do tema."
 //
-// Nesta fase os campos são TEXTO: o ID vem do ContaAzul e é colado à mão. A FN2,
+// Nesta fase os campos são TEXTO: o ID vem do Conta Azul e é colado à mão. A FN2,
 // se a API permitir listar centro de custo e serviço, troca por um seletor.
 
 import { useEffect, useState } from "react";
@@ -48,7 +48,7 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
       };
       const faltam = r.semParNoContaAzul.length;
       toast.success(
-        `${r.vinculadas + r.jaVinculadas} categoria(s) ligada(s) ao ContaAzul` +
+        `${r.vinculadas + r.jaVinculadas} categoria(s) ligada(s) ao Conta Azul` +
           (faltam ? ` · ${faltam} ainda não existe(m) lá` : "") +
           (r.desvinculadas ? ` · ${r.desvinculadas} vínculo(s) solto(s) (sumiram de lá)` : ""),
       );
@@ -95,7 +95,7 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
         servicoId: svId.trim() || null,
         servicoNome: svNome.trim() || null,
       });
-      toast.success("Vínculo com o ContaAzul salvo");
+      toast.success("Vínculo com o Conta Azul salvo");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao salvar");
     }
@@ -104,7 +104,7 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
   return (
     <div className="space-y-4">
       <p className="text-[12.5px] text-muted-foreground">
-        O centro de custo e o serviço do ContaAzul são <strong>um por tema</strong>. Com eles
+        O centro de custo e o serviço do Conta Azul são <strong>um por tema</strong>. Com eles
         preenchidos, toda receita e despesa registrada num caso deste tema já sai classificada.
       </p>
 
@@ -113,10 +113,10 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
           centros de custo na conta do escritório), então cumprido: acabou a
           colagem de ID à mão, que era onde nascia erro silencioso. */}
       {catalogo.isLoading ? (
-        <p className="text-[12px] text-muted-foreground">Carregando dados do ContaAzul…</p>
+        <p className="text-[12px] text-muted-foreground">Carregando dados do Conta Azul…</p>
       ) : catalogo.data && catalogo.data.centros.length > 0 ? (
         <div className="space-y-1 max-w-md">
-          <Label className="text-xs">Centro de custo no ContaAzul</Label>
+          <Label className="text-xs">Centro de custo no Conta Azul</Label>
           <Select
             value={ccId || "__sem__"}
             onValueChange={(v) => {
@@ -141,7 +141,7 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label className="text-xs">Centro de custo — ID no ContaAzul</Label>
+            <Label className="text-xs">Centro de custo — ID no Conta Azul</Label>
             <Input value={ccId} onChange={(e) => setCcId(e.target.value)} placeholder="cole o ID" />
           </div>
           <div className="space-y-1">
@@ -155,7 +155,7 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
           legível, então um seletor aqui mostraria códigos e seria pior que colar. */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label className="text-xs">Serviço — ID no ContaAzul</Label>
+          <Label className="text-xs">Serviço — ID no Conta Azul</Label>
           <Input value={svId} onChange={(e) => setSvId(e.target.value)} placeholder="cole o ID" />
         </div>
         <div className="space-y-1">
@@ -172,8 +172,8 @@ export function TemaContaAzulPanel({ temaId }: { temaId: string }) {
         <Button size="sm" onClick={handleSalvar} disabled={salvar.isPending}>
           {salvar.isPending ? "Salvando…" : "Salvar vínculo"}
         </Button>
-        {/* Amarra as categorias do SHV às do ContaAzul pelo código. É global (não
-            por tema), mas fica aqui porque é onde se configura o ContaAzul — e
+        {/* Amarra as categorias do SHV às do Conta Azul pelo código. É global (não
+            por tema), mas fica aqui porque é onde se configura o Conta Azul — e
             precisa ser rodado toda vez que o escritório cadastrar categoria nova lá. */}
         <Button size="sm" variant="outline" onClick={handleSincronizar} disabled={sinc.isPending}>
           {sinc.isPending ? "Conferindo…" : "Sincronizar categorias"}

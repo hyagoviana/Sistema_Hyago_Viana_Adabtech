@@ -22,6 +22,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import {
+  getAssuntoGeral,
+  resolverAssuntoDoCaso,
+  setAssuntoGeral,
+  setTemaAssunto,
+} from "@/lib/projuris/assunto-tema";
 import { AuthError, requireModule } from "@/lib/supabase/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
@@ -98,10 +104,16 @@ export const sugestaoProcessoFn = createServerFn({ method: "GET" })
     handle(async () => {
       await requireModule("operacional", "view");
       const d = await dadosDoCasoParaProcesso(data.caseId);
+      // S2-03 AC3 — a tela mostra de ONDE veio o assunto ("do tema X" ou "geral")
+      // para quem cria o processo saber o que vai ser gravado no ProJuris antes
+      // de enviar, e poder trocar pontualmente.
+      const origem = await resolverAssuntoDoCaso(data.caseId);
       return {
         nomePasta: d.nomePasta ?? "",
         assunto: d.assunto ?? "",
         numeroCnj: d.numeroCnj ?? "",
+        assuntoOrigem: origem?.origem ?? null,
+        assuntoTemaNome: origem?.temaNome ?? null,
       };
     }),
   );
@@ -141,6 +153,18 @@ export const criarProcessoFn = createServerFn({ method: "POST" })
       const entrada = paraEntrada(data);
       entrada.codigoExterno = await codigoExternoDoCaso(data.caseId);
 
+      // S2-03 AC1.3 — sem assunto resolvível, BLOQUEIA. O comportamento antigo
+      // era cair no código do caso, e era isso que criava um assunto novo no
+      // ProJuris a cada processo. Mensagem diz onde resolver.
+      if (!entrada.assunto?.trim()) {
+        setResponseStatus(422);
+        throw new Error(
+          "Este caso não tem assunto do ProJuris. Defina o assunto do tema em " +
+            "Configurações › Temas › Integrações, ou o assunto geral na configuração " +
+            "da Distribuição.",
+        );
+      }
+
       const r = await criarProcessoJudicial(entrada);
       if (!r.enviado || !r.codigo) {
         return {
@@ -177,5 +201,56 @@ export const criarProcessoFn = createServerFn({ method: "POST" })
       }
 
       return { ok: true as const, codigo: r.codigo, motivo: "", corpoJson: "" };
+    }),
+  );
+
+// ---------------------------------------------------------------------------
+// S2-02 — vínculo tema ↔ assunto do ProJuris (aba Integrações do tema)
+// ---------------------------------------------------------------------------
+//
+// Thiago (resposta B1): o de-para é preenchido À MÃO, tema a tema — "facilita
+// conforme formos criando/importando ou próximos temas, fica melhor que repassar
+// a tabela agora e ter que repetir a cada próximo tema".
+//
+// Gate: módulo Sistema, nível Configurar — é configuração da organização, não
+// operação de caso.
+
+export const getAssuntoGeralProjurisFn = createServerFn({ method: "GET" }).handler(async () =>
+  handle(async () => {
+    await requireModule("sistema", "view");
+    return getAssuntoGeral();
+  }),
+);
+
+export const setAssuntoGeralProjurisFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().max(80).nullish(),
+        nome: z.string().max(200).nullish(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireModule("sistema", "configure");
+      return setAssuntoGeral(data);
+    }),
+  );
+
+export const setTemaAssuntoProjurisFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        temaId: z.string().uuid(),
+        id: z.string().max(80).nullish(),
+        nome: z.string().max(200).nullish(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handle(async () => {
+      await requireModule("sistema", "configure");
+      return setTemaAssunto(data.temaId, data);
     }),
   );

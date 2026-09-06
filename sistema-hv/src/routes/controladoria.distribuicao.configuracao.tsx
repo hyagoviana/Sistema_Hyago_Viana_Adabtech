@@ -68,7 +68,7 @@ function ConfiguracaoPage() {
   };
   const [executionResult, setExecutionResult] = useState<BatchExecutionResult | null>(null);
 
-  // Credenciais Projuris. Nao-segredos (base_url/auth_type/username) vem da
+  // Credenciais ProJuris. Nao-segredos (base_url/auth_type/username) vem da
   // config e sao editaveis. Os SEGREDOS (password/token/api_key) sao WRITE-ONLY:
   // o valor NUNCA vem do servidor; a UI so sabe se "esta definido" (flag) e grava
   // apenas o que for digitado (campo em branco = "nao alterar").

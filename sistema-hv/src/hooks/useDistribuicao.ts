@@ -300,7 +300,7 @@ export function useSetDistributionActive() {
 }
 
 // ---------------------------------------------------------------------------
-// Credenciais Projuris (H11) — leitura SEM segredos + gravacao write-only
+// Credenciais ProJuris (H11) — leitura SEM segredos + gravacao write-only
 // ---------------------------------------------------------------------------
 
 export type { DistributionCredsView };

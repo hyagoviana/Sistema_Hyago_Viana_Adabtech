@@ -8,8 +8,11 @@ import { useServerFn } from "@tanstack/react-start";
 
 import {
   criarProcessoFn,
+  getAssuntoGeralProjurisFn,
   listarApoioProcessoFn,
   previewProcessoFn,
+  setAssuntoGeralProjurisFn,
+  setTemaAssuntoProjurisFn,
   sugestaoProcessoFn,
 } from "@/rpc/projuris-processo";
 
@@ -71,5 +74,40 @@ export function useCriarProcessoProjuris(caseId: string) {
       qc.invalidateQueries({ queryKey: ["case-judicial", caseId] });
       qc.invalidateQueries({ queryKey: ["case", caseId] });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// S2-02 — assunto do ProJuris por tema (aba Integrações)
+// ---------------------------------------------------------------------------
+
+/** O assunto guarda-chuva ("CÍVEIS"), usado quando o tema não tem o seu. */
+export function useAssuntoGeralProjuris() {
+  const fn = useServerFn(getAssuntoGeralProjurisFn);
+  return useQuery({
+    queryKey: ["projuris-assunto-geral"],
+    queryFn: () => fn() as Promise<{ id: string | null; nome: string | null }>,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useSetAssuntoGeralProjuris() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setAssuntoGeralProjurisFn);
+  return useMutation({
+    mutationFn: (v: { id?: string | null; nome?: string | null }) => fn({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projuris-assunto-geral"] }),
+  });
+}
+
+export function useSetTemaAssuntoProjuris() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setTemaAssuntoProjurisFn);
+  return useMutation({
+    mutationFn: (v: { temaId: string; id?: string | null; nome?: string | null }) =>
+      fn({ data: v }),
+    // A lista de temas carrega o vínculo — sem invalidar, a tela mostraria o
+    // valor antigo depois de salvar.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["temas"] }),
   });
 }

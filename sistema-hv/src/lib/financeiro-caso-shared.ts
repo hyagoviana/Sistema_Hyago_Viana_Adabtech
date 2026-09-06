@@ -40,14 +40,14 @@ export const FIN_TIPO_LABEL: Record<FinTipo, string> = {
 };
 
 /**
- * Status do lançamento NO SHV (não é o status no ContaAzul).
+ * Status do lançamento NO SHV (não é o status no Conta Azul).
  *
  *  AGUARDANDO — registrado aqui, ainda não foi ao ERP. É o estado que dá sentido
  *               ao módulo: "valores que temos que pagar/receber sejam
  *               visualizados, sem necessariamente ter que estar no sistema, em
  *               razão de uma especificidade da advocacia" (Thiago).
  *  DISPENSADO — decidiu-se que não vai ao ERP (a hipótese futura não se confirmou).
- *  LANCADO    — existe no ContaAzul.
+ *  LANCADO    — existe no Conta Azul.
  */
 export const FIN_STATUSES = ["AGUARDANDO", "DISPENSADO", "LANCADO"] as const;
 export type FinStatus = (typeof FIN_STATUSES)[number];
