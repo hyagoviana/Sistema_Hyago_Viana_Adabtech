@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  CATEGORIAS_MODELO,
+  CATEGORIAS_DO_TIPO,
   type CategoriaModelo,
   type FolderKind,
   useCreateTypeFolder,
@@ -127,7 +127,9 @@ function FolderKindSection({
       }
       await upload.mutateAsync({ serviceTypeId, kind, folderId, file, categoria });
       toast.success(
-        `Documento enviado para ${CATEGORIAS_MODELO.find((c) => c.id === categoria)?.rotulo}`,
+        kind === "procuracao"
+          ? "Documento enviado para a pasta de procuração do tema"
+          : `Documento enviado para ${CATEGORIAS_DO_TIPO.find((c) => c.id === categoria)?.rotulo}`,
       );
       setNewName("");
     } catch (err) {
@@ -222,24 +224,34 @@ function FolderKindSection({
           </div>
         )}
 
-        <div>
-          <Label className="text-[12px]">Categoria do documento</Label>
-          <select
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value as CategoriaModelo)}
-            disabled={busy}
-            className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
-          >
-            {CATEGORIAS_MODELO.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.rotulo}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            O arquivo vai para esta subpasta dentro do tipo — é onde a geração de documento procura.
+        {/* Só para documento de CASO: a procuração tem um destino só — a pasta
+            "CONTRATO E PROCURAÇÃO" do tema, que vale para todos os tipos. */}
+        {kind === "caso" ? (
+          <div>
+            <Label className="text-[12px]">Categoria do documento</Label>
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value as CategoriaModelo)}
+              disabled={busy}
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
+            >
+              {CATEGORIAS_DO_TIPO.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.rotulo}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              O arquivo vai para esta subpasta dentro do tipo — é onde a geração de documento
+              procura.
+            </p>
+          </div>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            O arquivo vai para a pasta <strong>CONTRATO E PROCURAÇÃO</strong> do tema, e vale para
+            todos os tipos dele.
           </p>
-        </div>
+        )}
 
         <input
           ref={fileRef}

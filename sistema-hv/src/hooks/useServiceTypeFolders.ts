@@ -70,6 +70,30 @@ export const CATEGORIAS_MODELO = [
 
 export type CategoriaModelo = (typeof CATEGORIAS_MODELO)[number]["id"];
 
+// As categorias que ficam DENTRO do tipo. "Contrato e procuração" saiu daqui em
+// 06/09: a procuração vale para o tema inteiro, e cada tema tem uma só — dentro
+// de um tipo, os outros tipos ficariam sem nenhuma.
+export const CATEGORIAS_DO_TIPO = CATEGORIAS_MODELO.filter((c) => c.id !== "contrato");
+
+/**
+ * As pastas de onde vêm os modelos de DOCUMENTO DE CASO: JUDICIAL +
+ * ADMINISTRATIVO, juntos.
+ *
+ * Owner (06/09): "por lógica eu já estou procurando por um documento de caso" —
+ * a primeira tela já decidiu entre procuração e documento de caso, e separar
+ * judicial de administrativo numa tela própria era um clique sem decisão.
+ *
+ * Juntar as duas evita que um modelo colocado em JUDICIAL fique invisível.
+ */
+export function pastasDeDocumentoDeCaso(folder: ServiceTypeFolder | undefined): string[] {
+  if (!folder) return [];
+  const ids = [folder.drive_judicial_folder_id, folder.drive_administrativo_folder_id].filter(
+    (id): id is string => !!id,
+  );
+  // Tipo antigo, sem a estrutura: os modelos estão soltos na pasta dele.
+  return ids.length ? ids : [folder.drive_folder_id];
+}
+
 export function pastaDaCategoria(
   folder: ServiceTypeFolder | undefined,
   categoria: CategoriaModelo,

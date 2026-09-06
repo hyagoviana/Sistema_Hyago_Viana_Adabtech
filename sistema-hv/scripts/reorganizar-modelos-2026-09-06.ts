@@ -17,6 +17,12 @@
 //                SOLTOS na raiz de uma pasta de tipo (subidos antes de o upload
 //                passar a exigir categoria — foi o caso do tipo "teste").
 //
+//   --procuracoes  junta as procurações de cada tema numa pasta
+//                  "CONTRATO E PROCURAÇÃO" no nível do TEMA. Owner (06/09): a
+//                  procuração vale para o tema inteiro, e cada tema tem uma só —
+//                  empurrá-la para dentro de um tipo deixaria os outros sem
+//                  nenhuma ("1% fies" tem 5 tipos e 1 pasta de procuração).
+//
 // Para onde cada arquivo restaurado vai:
 //   • origem era pasta de PROCURAÇÃO  → CONTRATO E PROCURAÇÃO
 //   • origem era pasta de TIPO (caso) → ADMINISTRATIVO
@@ -43,8 +49,10 @@ import {
 } from "../src/lib/google/drive";
 import {
   CATEGORIAS_MODELO,
+  ensureTemaProcuracaoFolder,
   ensureTipoModelStructure,
   listTypeFolders,
+  PASTA_PROCURACAO_TEMA,
   pastaDaCategoria,
   type CategoriaModelo,
   type ServiceTypeFolder,
@@ -55,6 +63,7 @@ const COMMIT = process.argv.includes("--commit");
 const F_ACHATAR = process.argv.includes("--achatar");
 const F_RESTAURAR = process.argv.includes("--restaurar");
 const F_RECOLHER = process.argv.includes("--recolher");
+const F_PROCURACOES = process.argv.includes("--procuracoes");
 
 const LOTE = "s204-modelos-legados-2026-09-06";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -356,14 +365,117 @@ async function recolher() {
   else console.log("\nRode com --commit para aplicar.");
 }
 
+// ---------------------------------------------------------------------------
+// FASE 4 — procurações sobem para o nível do TEMA
+// ---------------------------------------------------------------------------
+async function procuracoes() {
+  console.log(COMMIT ? "\nPROCURAÇÕES — MODO COMMIT.\n" : "\nPROCURAÇÕES — DRY-RUN.\n");
+  const sb = getSupabaseAdmin();
+
+  const { data: temasRaw } = await sb
+    .from("system_temas")
+    .select("id, name, drive_folder_id, system_service_types(id)")
+    .is("deleted_at", null)
+    .order("name");
+
+  const temas = (temasRaw ?? []) as unknown as Array<{
+    id: string;
+    name: string;
+    drive_folder_id: string | null;
+    system_service_types: Array<{ id: string }>;
+  }>;
+
+  let movidos = 0;
+  let pastasVazias = 0;
+
+  for (const tema of temas) {
+    if (!tema.drive_folder_id) {
+      console.log(`\n📁 ${tema.name} — sem pasta no Drive, pulando`);
+      continue;
+    }
+    console.log(`\n📁 ${tema.name}`);
+
+    // A pasta de destino, no nível do tema.
+    let destino: string | null = null;
+    if (COMMIT) {
+      destino = await ensureTemaProcuracaoFolder(tema.id);
+      if (!destino) {
+        console.log(`   ⚠ não consegui criar a pasta de procuração`);
+        continue;
+      }
+    } else {
+      console.log(`   → garantiria "${PASTA_PROCURACAO_TEMA}" dentro do tema`);
+    }
+
+    // De onde vêm os arquivos: os vínculos kind='procuracao' e as pastas
+    // "CONTRATO E PROCURAÇÃO" que ficaram dentro de cada tipo.
+    const origens: Array<{ id: string; rotulo: string }> = [];
+    for (const st of tema.system_service_types) {
+      for (const v of await listTypeFolders(st.id, "procuracao")) {
+        origens.push({ id: v.drive_folder_id, rotulo: `vínculo "${v.name}"` });
+      }
+      for (const t of await listTypeFolders(st.id, "caso")) {
+        if (t.drive_contrato_folder_id) {
+          origens.push({
+            id: t.drive_contrato_folder_id,
+            rotulo: `${t.name.trim()} / CONTRATO E PROCURAÇÃO`,
+          });
+        }
+      }
+    }
+
+    for (const origem of origens) {
+      if (destino && origem.id === destino) continue;
+      const arqs = await arquivosDe(origem.id);
+      if (!arqs.length) {
+        // Pasta de categoria vazia dentro do tipo: some, já que a procuração
+        // deixou de morar ali. Vínculo do usuário nunca é apagado.
+        const ehDoTipo = origem.rotulo.includes("/ CONTRATO E PROCURAÇÃO");
+        if (ehDoTipo && COMMIT) {
+          const subs = await listFoldersInFolder(origem.id);
+          if (!subs.length) {
+            await deleteFile(origem.id);
+            pastasVazias++;
+            console.log(`   🗑 ${origem.rotulo} (vazia) → lixeira`);
+          }
+        } else if (ehDoTipo) {
+          console.log(`   🗑 ${origem.rotulo} (vazia) → lixeira`);
+        }
+        continue;
+      }
+
+      console.log(`   ${origem.rotulo} — ${arqs.length} arquivo(s)`);
+      for (const f of arqs) {
+        console.log(`      → ${f.name}`);
+        if (COMMIT && destino) {
+          await moveFile(f.id as string, destino, origem.id);
+          movidos++;
+        }
+      }
+    }
+  }
+
+  if (COMMIT) {
+    console.log(
+      `\n${movidos} arquivo(s) movido(s), ${pastasVazias} pasta(s) vazia(s) removida(s).`,
+    );
+    console.log("Rode o sync de modelos em seguida.");
+  } else {
+    console.log("\nRode com --commit para aplicar.");
+  }
+}
+
 async function main() {
-  if (!F_ACHATAR && !F_RESTAURAR && !F_RECOLHER) {
-    console.log("Escolha: --achatar, --restaurar, --recolher (some --commit para aplicar).");
+  if (!F_ACHATAR && !F_RESTAURAR && !F_RECOLHER && !F_PROCURACOES) {
+    console.log(
+      "Escolha: --achatar, --restaurar, --recolher, --procuracoes (some --commit para aplicar).",
+    );
     return;
   }
   if (F_ACHATAR) await achatar();
   if (F_RESTAURAR) await restaurar();
   if (F_RECOLHER) await recolher();
+  if (F_PROCURACOES) await procuracoes();
 }
 
 main().catch((err) => {

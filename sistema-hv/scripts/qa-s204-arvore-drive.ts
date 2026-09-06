@@ -11,7 +11,7 @@ loadDotenv({ path: ".env.local" });
 
 import { getFileMeta, listFilesInFolder, listFoldersInFolder } from "../src/lib/google/drive";
 import {
-  CATEGORIAS_MODELO,
+  CATEGORIAS_DO_TIPO,
   ensureTipoModelStructure,
   listPastasModelos,
   listTypeFolders,
@@ -75,9 +75,11 @@ async function main() {
           !subsDoTipo.some((f) => f.name.trim().toUpperCase() === "MODELOS"),
         );
 
-        // 3. As três categorias existem, com o nome literal, DIRETO no tipo.
+        // 3. As categorias DO TIPO existem, com o nome literal, direto nele.
+        //    "Contrato e procuração" não está aqui: subiu para o nível do tema
+        //    em 06/09, porque vale para todos os tipos.
         const subs = subsDoTipo;
-        for (const cat of CATEGORIAS_MODELO) {
+        for (const cat of CATEGORIAS_DO_TIPO) {
           const id = pastaDaCategoria(tipo, cat.id);
           check(`${tipo.name.trim()} — "${cat.pasta}" registrada`, !!id);
           if (!id) continue;
@@ -250,10 +252,58 @@ async function main() {
     const subs = await listFoldersInFolder(pastas[0]);
     check(
       "as categorias são subpastas DIRETAS do tipo (o sync só desce 1 nível)",
-      subs.length === CATEGORIAS_MODELO.length,
+      subs.length === CATEGORIAS_DO_TIPO.length,
       `${subs.length} subpasta(s): ${subs.map((x) => x.name).join(", ")}`,
     );
   }
+
+  // =============================================== procuração no nível do tema
+  console.log("\n  F — a procuração mora no TEMA, não dentro do tipo\n");
+
+  const { data: temasProc } = await sb
+    .from("system_temas")
+    .select("id, name, drive_folder_id, drive_contratacao_folder_id")
+    .is("deleted_at", null);
+  const listaTemas = (temasProc ?? []) as Array<{
+    id: string;
+    name: string;
+    drive_folder_id: string | null;
+    drive_contratacao_folder_id: string | null;
+  }>;
+
+  for (const tema of listaTemas.filter((t) => t.drive_folder_id)) {
+    check(
+      `${tema.name} — tem a pasta de procuração registrada`,
+      !!tema.drive_contratacao_folder_id,
+    );
+    if (!tema.drive_contratacao_folder_id) continue;
+    const m = (await getFileMeta(tema.drive_contratacao_folder_id)) as {
+      name?: string;
+      parents?: string[];
+      trashed?: boolean;
+    };
+    check(
+      `${tema.name} — a pasta é filha DIRETA do tema`,
+      m.parents?.[0] === tema.drive_folder_id && !m.trashed,
+      `pai = ${m.parents?.[0]}${m.trashed ? " (na lixeira)" : ""}`,
+    );
+    check(
+      `${tema.name} — tem o nome literal "CONTRATO E PROCURAÇÃO"`,
+      m.name?.trim().toUpperCase() === "CONTRATO E PROCURAÇÃO",
+      m.name,
+    );
+  }
+
+  // O sync precisa alcançar essas pastas, senão a procuração subiria para o
+  // Drive e nunca apareceria no popup — o defeito que a mudança veio consertar.
+  const pastasSync = await listPastasModelos();
+  const procDosTemas = listaTemas
+    .map((t) => t.drive_contratacao_folder_id)
+    .filter((id): id is string => !!id);
+  check(
+    "o sync varre as pastas de procuração dos temas",
+    procDosTemas.every((id) => pastasSync.includes(id)),
+  );
 
   // ======================================================== raízes legadas
   console.log("\n  E — as pastas legadas receberam seus arquivos de volta\n");

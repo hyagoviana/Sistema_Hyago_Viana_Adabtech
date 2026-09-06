@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { uploadFile } from "@/lib/google/drive";
 import {
   CATEGORIAS_MODELO,
+  ensureTemaProcuracaoFolder,
   ensureTipoModelStructure,
   listTypeFolders,
   pastaDaCategoria,
@@ -70,6 +71,7 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
 
         try {
           // Segurança: a pasta destino precisa estar VINCULADA a esta categoria+kind.
+          const sb = getSupabaseAdmin();
           const folders = await listTypeFolders(params.id, kind);
           if (!folders.some((f) => f.drive_folder_id === folderId)) {
             return Response.json(
@@ -79,29 +81,45 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
           }
 
           // Marcador do sync: procuração usa marcador fixo; caso usa o slug do tipo.
-          const sb = getSupabaseAdmin();
-          const { data: st } = await sb
+          const { data: tipo } = await sb
             .from("system_service_types")
             .select("slug")
             .eq("id", params.id)
             .single();
-          const marker = kind === "procuracao" ? "PROCURACAO" : (st?.slug ?? null);
+          const marker = kind === "procuracao" ? "PROCURACAO" : (tipo?.slug ?? null);
 
-          // O arquivo vai para a SUBPASTA da categoria, nunca para a raiz do tipo.
+          // Para onde o arquivo vai — nunca para a raiz do tipo.
           //
           // Antes ia para `folderId` (a pasta do tipo) e ficava solto ao lado das
-          // categorias. A geração de documento procura DENTRO da categoria, então
-          // o modelo era invisível: o popup abria vazio com o arquivo lá no Drive.
+          // subpastas. A geração procura DENTRO delas, então o modelo era
+          // invisível: o popup abria vazio com o arquivo lá no Drive.
           const vinculo = folders.find((f) => f.drive_folder_id === folderId)!;
-          let destino = pastaDaCategoria(vinculo, categoria as CategoriaModelo);
-          if (!destino) {
-            // Tipo antigo, ainda sem a estrutura: cria agora e usa.
-            const atualizado = await ensureTipoModelStructure(vinculo.id);
-            destino = pastaDaCategoria(atualizado, categoria as CategoriaModelo);
+          let destino: string | null = null;
+
+          if (kind === "procuracao") {
+            // A procuração vale para o TEMA inteiro (owner, 06/09), então mora
+            // numa pasta do tema — não dentro de um tipo.
+            const { data: st } = await sb
+              .from("system_service_types")
+              .select("tema_id")
+              .eq("id", params.id)
+              .maybeSingle();
+            const temaId = (st as { tema_id?: string | null } | null)?.tema_id;
+            if (temaId) destino = await ensureTemaProcuracaoFolder(temaId);
+            // Sem tema (service_type legado): fica na própria pasta vinculada.
+            destino ??= folderId;
+          } else {
+            destino = pastaDaCategoria(vinculo, categoria as CategoriaModelo);
+            if (!destino) {
+              // Tipo ainda sem a estrutura: cria agora e usa.
+              const atualizado = await ensureTipoModelStructure(vinculo.id);
+              destino = pastaDaCategoria(atualizado, categoria as CategoriaModelo);
+            }
           }
+
           if (!destino) {
             return Response.json(
-              { error: "Não consegui resolver a pasta da categoria no Drive" },
+              { error: "Não consegui resolver a pasta de destino no Drive" },
               { status: 502 },
             );
           }

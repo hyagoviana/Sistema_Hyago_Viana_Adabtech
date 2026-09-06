@@ -68,6 +68,14 @@ export const CATEGORIAS_MODELO = [
   { id: "administrativo", pasta: "ADMINISTRATIVO", rotulo: "Documento administrativo" },
 ] as const;
 
+// As categorias que ficam DENTRO do tipo. "Contrato e procuração" saiu daqui em
+// 06/09: a procuração vale para o tema inteiro, não para um tipo — cada tema tem
+// uma só, e empurrá-la para dentro de um tipo deixaria os outros sem nenhuma.
+export const CATEGORIAS_DO_TIPO = CATEGORIAS_MODELO.filter((c) => c.id !== "contrato");
+
+/** Nome da pasta de procuração, agora no nível do TEMA. */
+export const PASTA_PROCURACAO_TEMA = "CONTRATO E PROCURAÇÃO";
+
 export type CategoriaModelo = (typeof CATEGORIAS_MODELO)[number]["id"];
 
 // Coluna onde o id de cada categoria é guardado.
@@ -385,7 +393,7 @@ export async function ensureTipoModelStructure(vinculoId: string): Promise<Servi
   // `drive_modelos_folder_id` passa a apontar para a PRÓPRIA pasta do tipo: é ela
   // que o sync varre (e o sync desce um nível, alcançando as 3 categorias).
   const patch: Record<string, string> = { drive_modelos_folder_id: vinculo.drive_folder_id };
-  for (const cat of CATEGORIAS_MODELO) {
+  for (const cat of CATEGORIAS_DO_TIPO) {
     try {
       const sub = await ensureFolderByName(cat.pasta, vinculo.drive_folder_id);
       patch[COLUNA_POR_CATEGORIA[cat.id]] = sub.id;
@@ -436,6 +444,48 @@ export async function ensureTemaModelStructure(
   return { ok, falhas };
 }
 
+/**
+ * Garante a pasta "CONTRATO E PROCURAÇÃO" DO TEMA e devolve o id.
+ *
+ * A procuração vale para o tema inteiro (owner, 06/09) — cada tema tem uma só, e
+ * colocá-la dentro de um tipo deixaria os outros tipos sem nenhuma.
+ *
+ * Idempotente: reusa a pasta que já existir com esse nome.
+ */
+export async function ensureTemaProcuracaoFolder(temaId: string): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_temas")
+    .select("drive_folder_id, drive_contratacao_folder_id")
+    .eq("id", temaId)
+    .maybeSingle();
+  const t = data as {
+    drive_folder_id?: string | null;
+    drive_contratacao_folder_id?: string | null;
+  } | null;
+  if (!t?.drive_folder_id) return null; // tema sem pasta no Drive
+
+  const pasta = await ensureFolderByName(PASTA_PROCURACAO_TEMA, t.drive_folder_id);
+  if (t.drive_contratacao_folder_id !== pasta.id) {
+    await sb
+      .from("system_temas")
+      .update({ drive_contratacao_folder_id: pasta.id } as never)
+      .eq("id", temaId);
+  }
+  return pasta.id;
+}
+
+/** O tema por trás de um service_type. */
+async function temaDoServiceType(serviceTypeId: string): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  const { data } = await sb
+    .from("system_service_types")
+    .select("tema_id")
+    .eq("id", serviceTypeId)
+    .maybeSingle();
+  return (data as { tema_id?: string | null } | null)?.tema_id ?? null;
+}
+
 // S2-04 — de onde vêm os modelos de CONTRATO E PROCURAÇÃO de um tema.
 //
 // Na estrutura nova, procuração deixou de ser uma pasta irmã e virou uma
@@ -444,15 +494,55 @@ export async function ensureTemaModelStructure(
 // resposta é a UNIÃO das duas fontes, e não a troca de uma pela outra. Trocar
 // deixaria sem modelo de procuração qualquer caso cujo tema ainda não migrou.
 export async function listPastasContratoProcuracao(serviceTypeId: string): Promise<string[]> {
-  const [tipos, legado] = await Promise.all([
+  const [tipos, legado, temaId] = await Promise.all([
     listTypeFolders(serviceTypeId, "caso"),
     listTypeFolders(serviceTypeId, "procuracao"),
+    temaDoServiceType(serviceTypeId),
   ]);
-  const ids = [
-    ...tipos.map((t) => t.drive_contrato_folder_id).filter((id): id is string => !!id),
-    ...legado.map((f) => f.drive_folder_id),
-  ];
+
+  const ids: string[] = [];
+
+  // 1º — a pasta do TEMA. É onde a procuração mora desde 06/09.
+  if (temaId) {
+    const sb = getSupabaseAdmin();
+    const { data } = await sb
+      .from("system_temas")
+      .select("drive_contratacao_folder_id")
+      .eq("id", temaId)
+      .maybeSingle();
+    const daTema = (data as { drive_contratacao_folder_id?: string | null } | null)
+      ?.drive_contratacao_folder_id;
+    if (daTema) ids.push(daTema);
+  }
+
+  // 2º — as pastas dentro dos tipos e os vínculos `kind='procuracao'`. Continuam
+  // valendo: tema ainda não migrado, ou tipo com contrato próprio. É união, não
+  // troca — trocar deixaria sem procuração quem ainda não migrou.
+  ids.push(...tipos.map((t) => t.drive_contrato_folder_id).filter((id): id is string => !!id));
+  ids.push(...legado.map((f) => f.drive_folder_id));
+
   return [...new Set(ids)];
+}
+
+/**
+ * De onde vêm os modelos de DOCUMENTO DE CASO de um tipo: JUDICIAL +
+ * ADMINISTRATIVO, juntos.
+ *
+ * Owner (06/09): "por lógica eu já estou procurando por um documento de caso" —
+ * a escolha entre procuração e documento de caso já foi feita na primeira tela, e
+ * uma tela só para separar judicial de administrativo era um clique sem decisão.
+ *
+ * Juntar as duas (em vez de mostrar só a administrativa) evita que um modelo
+ * colocado em JUDICIAL fique invisível no sistema.
+ */
+export function pastasDeDocumentoDeCaso(folder: ServiceTypeFolder | undefined): string[] {
+  if (!folder) return [];
+  const ids = [folder.drive_judicial_folder_id, folder.drive_administrativo_folder_id].filter(
+    (id): id is string => !!id,
+  );
+  // Tipo antigo, ainda sem a estrutura: os modelos estão soltos na pasta dele.
+  if (!ids.length) return [folder.drive_folder_id];
+  return ids;
 }
 
 // S2-04 — as pastas de TIPO, que é o que o sync de modelos precisa varrer.
@@ -474,6 +564,19 @@ export async function listPastasModelos(): Promise<string[]> {
     .is("deleted_at", null);
   if (error) throw new ServiceTypeFoldersError(error.message, 500);
   const ids = ((data ?? []) as Array<{ drive_folder_id: string }>).map((r) => r.drive_folder_id);
+
+  // As procurações moram no nível do TEMA desde 06/09. Sem varrer essas pastas,
+  // o modelo de procuração subiria para o Drive e nunca apareceria no popup —
+  // exatamente o defeito que a mudança de estrutura veio consertar.
+  const { data: temas } = await sb
+    .from("system_temas")
+    .select("drive_contratacao_folder_id")
+    .not("drive_contratacao_folder_id", "is", null)
+    .is("deleted_at", null);
+  for (const t of (temas ?? []) as Array<{ drive_contratacao_folder_id: string | null }>) {
+    if (t.drive_contratacao_folder_id) ids.push(t.drive_contratacao_folder_id);
+  }
+
   return [...new Set(ids)];
 }
 

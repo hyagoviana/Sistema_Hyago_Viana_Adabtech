@@ -74,22 +74,24 @@ check(
   !/<DocumentPickerDialog[\s\S]{0,400}permiteCriarPasta/.test(flow),
 );
 
-console.log("\n  C — as 3 telas da S2-04 continuam de pé\n");
+console.log("\n  C — as DUAS telas do fluxo\n");
 
+// A terceira tela (categoria) saiu em 06/09. Owner: "por lógica eu já estou
+// procurando por um documento de caso" — a primeira tela já tinha decidido, e a
+// segunda pedia a mesma decisão de novo.
 check("tela 1 — procuração ou documento do caso", picker.includes('setMode("procuracao")'));
 check("tela 2 — tipo de caso", picker.includes("Escolha o tipo de caso"));
-check("tela 3 — categoria do documento", picker.includes("Categoria do documento"));
 check(
-  "a categoria só entra para tipo com a estrutura nova",
-  picker.includes("tipoTemEstrutura && !categoria"),
+  "a tela de categoria NÃO existe mais",
+  !picker.includes("Categoria do documento") && !picker.includes("setCategoria"),
 );
 check(
-  "categoria sem pasta aparece desabilitada, não sumida",
-  picker.includes("pasta não criada") && picker.includes("disabled={!pasta}"),
+  "documento do caso junta JUDICIAL e ADMINISTRATIVO",
+  picker.includes("pastasDeDocumentoDeCaso(tipoEscolhido)"),
 );
 check(
   "o voltar anda UM passo por vez",
-  picker.includes("tipoTemEstrutura && categoria") && picker.includes("← Trocar categoria"),
+  picker.includes("← Trocar tipo de caso") && picker.includes("← Trocar tipo de documento"),
 );
 
 console.log("\n  D — a fonte das pastas de procuração é a unificada\n");
