@@ -17,6 +17,7 @@ import {
   listCaseEventsFn,
   listCasesFn,
   listCaseResponsaveisFn,
+  setCaseResponsaveisFn,
   listComercialCasesFn,
   listComercialDocumentsFn,
   duplicarCasoParaTemaFn,
@@ -53,6 +54,24 @@ export function useCasesList(filters?: Filters) {
 }
 
 // Responsáveis (advogados) vinculados a um caso — para pré-carregar ao editar.
+/**
+ * S4-01 — troca o responsável do caso (menu "Editar caso").
+ *
+ * Um por caso (A2, Thiago 04/09): com um responsável o motor direciona as
+ * tarefas para ele; com nenhum, distribui por pontuação.
+ */
+export function useSetCaseResponsaveis(caseId: string) {
+  const qc = useQueryClient();
+  const fn = useServerFn(setCaseResponsaveisFn);
+  return useMutation({
+    mutationFn: (userIds: string[]) => fn({ data: { caseId, userIds } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["case-responsaveis", caseId ?? "none"] });
+      qc.invalidateQueries({ queryKey: ["case", caseId] });
+    },
+  });
+}
+
 export function useCaseResponsaveis(caseId: string | null | undefined) {
   const fn = useServerFn(listCaseResponsaveisFn);
   return useQuery({

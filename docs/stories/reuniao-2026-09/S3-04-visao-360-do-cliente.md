@@ -2,7 +2,7 @@
 
 - **Sprint:** S3 — Cliente
 - **ID:** S3-04 · **Item do Thiago:** 7
-- **Status:** Draft
+- **Status:** CONCLUÍDA (06/09) — QA verde
 - **Estimativa relativa:** G
 - **Executor sugerido:** @dev · Quality gate: @qa + @ux-design-expert
 

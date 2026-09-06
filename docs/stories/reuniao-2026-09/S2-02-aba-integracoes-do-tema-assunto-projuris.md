@@ -2,7 +2,7 @@
 
 - **Sprint:** S2 — Configuração de tema + Drive + ProJuris
 - **ID:** S2-02 · **Item do Thiago:** 5
-- **Status:** Draft
+- **Status:** CONCLUÍDA (06/09) — QA verde
 - **Estimativa relativa:** M
 - **Executor sugerido:** @dev · Quality gate: @qa
 

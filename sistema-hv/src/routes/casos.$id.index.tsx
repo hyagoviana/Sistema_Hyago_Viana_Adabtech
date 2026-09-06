@@ -25,7 +25,7 @@ import {
   ListPlus,
   Pencil,
   Phone,
-  SlidersHorizontal,
+  UserCog,
   Trash2,
   UserCheck,
   X,
@@ -44,7 +44,7 @@ import { CaseObservacoes } from "@/components/cases/CaseObservacoes";
 import { CaseLinkedCases } from "@/components/cases/CaseLinkedCases";
 import { CaseSigiloSection } from "@/components/cases/CaseSigiloSection";
 import { GenerateCaseDocumentFlow } from "@/components/cases/GenerateCaseDocumentFlow";
-import { CaseFilterFillDialog } from "@/components/cases/CaseFilterFillDialog";
+import { CaseResponsavelDialog } from "@/components/cases/CaseResponsavelDialog";
 import { CaseNameEditDialog } from "@/components/cases/CaseNameEditDialog";
 import { MoveCaseDialog } from "@/components/cases/MoveCaseDialog";
 import { AddCaseToBoardDialog } from "@/components/cases/AddCaseToBoardDialog";
@@ -194,7 +194,7 @@ function CasoDetalhe() {
   const [linkTemaOpen, setLinkTemaOpen] = useState(false);
   const [addBoardOpen, setAddBoardOpen] = useState(false);
   const [genFlowOpen, setGenFlowOpen] = useState(false);
-  const [fillFiltersOpen, setFillFiltersOpen] = useState(false);
+  const [responsavelOpen, setResponsavelOpen] = useState(false);
   const [nameEditOpen, setNameEditOpen] = useState(false);
 
   // M13 (T3) — urgência do caso (prioritário/urgente) p/ o motor de distribuição.
@@ -423,11 +423,15 @@ function CasoDetalhe() {
                 <DropdownMenuItem onClick={() => setLinkTemaOpen(true)}>
                   <Layers size={14} className="mr-2" /> Mudar tema / tipo (pipeline)
                 </DropdownMenuItem>
-                {(caso as { tema_id?: string | null }).tema_id && (
-                  <DropdownMenuItem onClick={() => setFillFiltersOpen(true)}>
-                    <SlidersHorizontal size={14} className="mr-2" /> Preencher campos
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={() => setResponsavelOpen(true)}>
+                  <UserCog size={14} className="mr-2" /> Mudar responsável
+                </DropdownMenuItem>
+                {/* S4-01 AC2 — "Preencher campos" SAIU daqui. Os campos do caso
+                    são editados no painel Dados do caso, na própria página; ter
+                    duas portas para a mesma edição fazia o menu de configuração
+                    parecer o lugar de mexer em conteúdo. O `CaseFilterFillDialog`
+                    continua no fluxo de geração de documento, que é onde ele
+                    resolve um problema real (preencher antes de gerar). */}
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Urgência (motor de distribuição)</DropdownMenuLabel>
                 {(
@@ -896,17 +900,7 @@ function CasoDetalhe() {
         casoCriaNovoCaso
       />
 
-      <CaseFilterFillDialog
-        open={fillFiltersOpen}
-        onOpenChange={setFillFiltersOpen}
-        caseId={caso.id}
-        clientId={caso.client_id}
-        temaId={(caso as { tema_id?: string | null }).tema_id ?? null}
-        frenteSlug={caso.frente_slug}
-        initialValues={
-          (caso as { canonical_fields?: Record<string, unknown> | null }).canonical_fields ?? null
-        }
-      />
+      <CaseResponsavelDialog caseId={id} open={responsavelOpen} onOpenChange={setResponsavelOpen} />
 
       {/* AJ2 — confirmacao de saida do kanban adicional. */}
       <AlertDialog

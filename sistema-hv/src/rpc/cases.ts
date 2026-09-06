@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { listCaseResponsaveis } from "@/lib/case-responsaveis-service";
+import { listCaseResponsaveis, setCaseResponsaveis } from "@/lib/case-responsaveis-service";
 import { MACRO_FIN, MACRO_OP } from "@/lib/cases/constants";
 import {
   aprovarConferenciaFin,
@@ -135,6 +135,29 @@ export const createCaseFn = createServerFn({ method: "POST" })
 export const listCaseResponsaveisFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => listCaseResponsaveis(data.caseId)));
+
+// S4-01 — trocar o responsável do caso pelo menu "Editar caso".
+//
+// Gate de CONFIGURAR no operacional: mudar responsável muda para quem o motor
+// direciona as tarefas do caso, o que é régua e não conteúdo — mesma linha do
+// menu que o abriga.
+export const setCaseResponsaveisFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        // A2 (Thiago, 04/09): um responsável por caso. O service já normaliza
+        // para um; a lista existe porque a tabela é N:N e o histórico continua.
+        userIds: z.array(z.string().uuid()).max(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) =>
+    handleBiz(async (userId) => {
+      await requireModule("operacional", "configure");
+      return setCaseResponsaveis(data.caseId, data.userIds, userId);
+    }),
+  );
 
 // Procuração comercial — preview dos campos <...> + valores do cadastro.
 export const previewProcuracaoFn = createServerFn({ method: "GET" })

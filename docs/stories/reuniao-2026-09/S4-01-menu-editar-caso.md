@@ -2,7 +2,7 @@
 
 - **Sprint:** S4 — Caso
 - **ID:** S4-01 · **Item do Thiago:** 9 · **Decisão:** D10
-- **Status:** Draft
+- **Status:** CONCLUÍDA (06/09) — QA verde
 - **Estimativa relativa:** G
 - **Executor sugerido:** @dev · Quality gate: @qa
 
@@ -85,3 +85,34 @@ A consolidação que ele desenhou:
 - [ ] Três menus na página do caso, com papéis claros
 - [ ] Responsável editável e chegando no motor
 - [ ] Gate provado com dois papéis diferentes
+
+---
+
+## Execução — 06/09/2026
+
+O menu já tinha **Mudar tema/tipo** e **Mudar urgência**. Faltavam duas coisas, fechadas agora:
+
+**AC1/AC3 — "Mudar responsável" não existia.** A ficha só MOSTRAVA o responsável, e o próprio comentário
+no código dizia "a edição continua no 'Editar caso'" — onde não estava. Agora existe:
+`CaseResponsavelDialog`, com o endpoint `setCaseResponsaveisFn` gateado por **Configurar no
+operacional** (mudar responsável muda para quem o motor direciona as tarefas — é régua, não conteúdo).
+
+Um responsável por caso (A2, Thiago 04/09). Só usuários **ativos** aparecem na lista: atribuir a alguém
+suspenso deixaria o caso sem dono de fato e o motor sem para quem direcionar. A tela diz o efeito em
+uma frase, porque é o que a pessoa precisa saber ao escolher.
+
+**AC2 — "Preencher campos" saiu do menu.** Os campos do caso são editados no painel Dados do caso, na
+própria página; ter duas portas para a mesma edição fazia o menu de *configuração* parecer o lugar de
+mexer em *conteúdo*. O `CaseFilterFillDialog` continua nos dois fluxos de geração de documento, que é
+onde ele resolve um problema real — preencher antes de gerar o Word.
+
+**AC4/AC6 — o gate.** Fechado pela S5-04: `usePodeConfigurar("operacional")`. O `TODO` que apontava para
+a S5-04 deixou de existir.
+
+### QA — `npm run qa:s401`
+
+13 verificações: as três ações presentes, "Preencher campos" fora do menu **mas vivo no fluxo de
+geração**, o gate nos dois lados (tela e endpoint), o limite de um responsável e o filtro de ativos.
+
+O teste de "saiu do menu" procura o `DropdownMenuItem`, não a string — o comentário que explica a
+remoção cita o nome, e citar o que mudou é justamente o que um bom comentário faz.

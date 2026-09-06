@@ -27,6 +27,7 @@
     "qa:usuarios": "tsx scripts/qa-usuarios-s503.ts",
     "qa:repetidas": "tsx scripts/qa-intimacoes-repetidas.ts",
     "qa:responsavel": "tsx scripts/qa-responsavel-direcionado.ts",
+    "qa:s401": "tsx scripts/qa-s401-menu-editar-caso.ts",
     "qa:s504": "tsx scripts/qa-s504-depara-e-configurar.ts",
     "depara:gerar": "tsx scripts/depara-usuarios-gerar.ts",
     "depara:aplicar": "tsx scripts/depara-usuarios-aplicar.ts",
