@@ -3,7 +3,7 @@
 // Cada tipo pode ter VÁRIAS pastas de caso (ex.: FIES ESF) e de procuração.
 // Fonte de verdade: system_service_type_folders (migration 20260709000030).
 
-import { createFolder, listFoldersInFolder } from "./google/drive";
+import { ensureFolderByName, listFoldersInFolder } from "./google/drive";
 import { getSupabaseAdmin } from "./supabase/server";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
@@ -93,7 +93,12 @@ async function mirrorFolderIntoTema(
         : (t?.drive_casos_folder_id ?? t?.drive_folder_id);
     if (!target) return; // tema ainda sem pasta no Drive.
 
-    await createFolder(folderName, target);
+    // Idempotente de propósito: se a pasta espelho já existe, reusa. Antes isto
+    // era um `createFolder` cego, e cada revínculo da MESMA pasta criava mais um
+    // espelho vazio ao lado do anterior (provado no tema "1% fies": vínculo em
+    // 21/07 17:44, desvinculado no mesmo minuto, revinculado às 17:45 → duas
+    // pastas "01- Abatimento ESF DGM " dentro de Casos).
+    await ensureFolderByName(folderName, target);
   } catch (err) {
     console.error(
       "service-type-folders: falha ao espelhar a pasta dentro do tema:",
@@ -224,7 +229,9 @@ export async function createAndLinkFolder(input: {
   const name = input.name.trim();
   if (!name) throw new ServiceTypeFoldersError("Informe o nome da pasta", 422);
   const parent = input.kind === "procuracao" ? PROCURACAO_ROOT_FOLDER_ID : MODELS_ROOT_FOLDER_ID;
-  const folder = await createFolder(name, parent);
+  // Mesma razão do espelho: criar cegamente deixava duplicatas na raiz de modelos
+  // (é o caso de "TESTE6-TIPO1", que existe duas vezes lá).
+  const folder = await ensureFolderByName(name, parent);
   return linkExistingFolder({
     serviceTypeId: input.serviceTypeId,
     kind: input.kind,

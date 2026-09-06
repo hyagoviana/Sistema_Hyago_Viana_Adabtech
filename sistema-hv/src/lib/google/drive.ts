@@ -164,6 +164,24 @@ export async function createFolder(name: string, parentId?: string): Promise<Dri
   }
 }
 
+// Cria a subpasta SÓ SE ainda não existir uma com esse nome sob o mesmo pai.
+//
+// O Drive aceita nomes repetidos no mesmo nível — `createFolder` chamado duas
+// vezes com o mesmo nome devolve duas pastas distintas, e no Drive elas ficam
+// lado a lado, indistinguíveis. Foi essa a origem das pastas duplicadas dentro
+// dos temas (ver `mirrorFolderIntoTema`): desvincular e revincular a mesma pasta
+// criava um segundo espelho, e o primeiro ficava órfão para sempre.
+//
+// A comparação é por nome normalizado (trim + minúsculas) porque os nomes reais
+// vêm com espaço sobrando ("01- Abatimento ESF DGM ").
+export async function ensureFolderByName(name: string, parentId: string): Promise<DriveFolder> {
+  const alvo = name.trim().toLowerCase();
+  const existentes = await listFoldersInFolder(parentId);
+  const achada = existentes.find((f) => f.name.trim().toLowerCase() === alvo);
+  if (achada) return { id: achada.id, url: achada.url, name: achada.name };
+  return createFolder(name, parentId);
+}
+
 // Renomeia uma pasta (ou arquivo) no Drive. Best-effort para o caller: usado ao
 // renomear um TEMA para manter a pasta do tema com o nome atual (T2).
 export async function renameFolder(fileId: string, name: string): Promise<void> {
