@@ -2,7 +2,7 @@
 
 - **Sprint:** S2 — Configuração de tema + Drive + ProJuris
 - **ID:** S2-04 · **Item do Thiago:** 6
-- **Status:** Draft
+- **Status:** CONCLUÍDA (06/09) — QA verde
 - **Estimativa relativa:** G — **story de risco alto**
 - **Executor sugerido:** @dev · Quality gate: @qa **obrigatório antes do passo de exclusão**
 
@@ -102,3 +102,86 @@ Palavras dele: *"mas cuidado aqui para não quebrar a lógica dos casos e procur
 - [ ] Migração aplicada e validada (inclusive geração real de documento nos dois tipos)
 - [ ] Pasta antiga na lixeira, com log
 - [ ] Rollback testado ao menos uma vez em ambiente de teste
+
+---
+
+## Execução — 06/09/2026
+
+### O que mudou em relação ao rascunho
+
+A resposta B2 do Thiago derrubou o risco alto desta story: os modelos existentes eram todos de teste,
+com cópias fora do sistema. E o desenho dele acrescentou uma camada que o rascunho não previa — a
+subdivisão por **categoria** dentro de MODELOS. O owner aprovou a árvore em 06/09 e confirmou que
+**TIPO continua sendo só pasta no Drive**, sem entidade nova.
+
+### O diagnóstico que mudou o plano
+
+Antes de mexer, medimos: **os 11 vínculos de tipo apontavam todos para `07- Modelos/<TIPO>`** — era de
+lá que o sistema lia — enquanto as pastas de mesmo nome dentro do tema eram **cascas vazias** criadas
+pelo espelho decorativo (`mirrorFolderIntoTema`). O Drive mostrava uma árvore e o sistema usava outra.
+É literalmente a queixa da reunião: *"tá puxando daqui, não tá puxando de lá"*.
+
+Isso permitiu trocar a migração delicada de arquivos (AC 5-9 do rascunho) por algo muito mais seguro:
+**mover a pasta do tipo** para dentro do tema. Mover troca o `parents` e **preserva o id**, então os
+vínculos — que apontam por id — seguiram válidos sem re-apontamento, e nenhum link já gerado quebrou.
+
+### Árvore final
+
+```
+PASTA DO TEMA
+└── TIPO
+    └── MODELOS
+        ├── JUDICIAL
+        ├── CONTRATO E PROCURAÇÃO
+        └── ADMINISTRATIVO
+```
+
+### Aplicado
+
+| Passo | Resultado |
+|---|---|
+| Pastas de tipo movidas para dentro do tema | 5 |
+| Cascas vazias para a lixeira | 5 |
+| Estruturas MODELOS criadas | 5 |
+| Arquivos de modelo arquivados e inventariados | 71 |
+| Resíduos de teste fora das raízes, tirados de circulação | 4 (migration `20260906000003`) |
+| Modelos ativos no sistema ao final | 0 — o escritório reconstrói na estrutura nova |
+
+Nada foi apagado: os arquivos estão **movidos** para `_ARQUIVO - modelos legados (2026-09-06)`, as
+pastas foram para a **lixeira** (reversível) e `system_drive_archive_log` guarda de onde cada arquivo
+veio. Foi o pedido do owner: *"apaga do sistema por enquanto, mas deixa guardado em algum lugar caso
+precise voltar com ele"*.
+
+### Fluxo de geração — 3 telas
+
+Tela 1 tipo de caso · Tela 2 categoria · Tela 3 modelo. A tela 2 só aparece para tipo com a estrutura
+nova; tipo antigo segue direto do tipo ao modelo. Categoria sem pasta aparece **desabilitada com o
+motivo**, em vez de sumir.
+
+### Uma armadilha corrigida no caminho
+
+O soft-delete dos modelos rodava **fora do try** e sobre a lista inteira de alvos. Na primeira execução
+o inventário falhou nos 71 por falta de `GRANT`, nada foi movido, e **mesmo assim 58 modelos sumiram do
+app** enquanto os arquivos seguiam no lugar — some do sistema um modelo que continua exatamente onde
+estava. Agora só saem de circulação os que foram efetivamente movidos.
+
+### QA — `npm run qa:s204`
+
+53 verificações contra o Drive e o banco reais, todas verdes: pasta de cada tipo dentro do tema com id
+preservado; MODELOS e as 3 categorias com o nome literal; reexecutar não duplica; os 71 arquivos
+continuam abríveis na pasta de arquivo; nenhum modelo ativo aponta para arquivo arquivado; e as
+categorias são subpastas **diretas** de MODELOS — se a árvore ganhar um nível, o teste avisa antes de o
+modelo sumir do popup.
+
+### Pendências desta story
+
+1. **"Indenização Mais Médicos" não tem pasta no Drive** (`drive_folder_id` nulo), então ficou de fora
+   da migração. Basta abrir a configuração do tema para a pasta nascer, e rodar
+   `npm run drive:estrutura-modelos -- --commit`.
+2. As camadas **`Casos`/`Procurações`** ficaram no Drive, já aposentadas no código (nada novo é criado
+   nelas). Duas ainda têm 1 arquivo dentro — some quando o escritório reorganizar.
+3. Os vínculos **`kind='procuracao'`** continuam válidos como estão. Na estrutura nova, procuração é a
+   categoria "CONTRATO E PROCURAÇÃO" dentro do tipo; a convivência das duas formas é intencional para
+   não quebrar caso em andamento.
+4. O fluxo de geração está **duplicado** em `GenerateCaseDocumentFlow` e no `GenerateDialog` do
+   `CaseDocumentsTab`. Os dois foram alterados igual; unificar é dívida anterior a esta story.
