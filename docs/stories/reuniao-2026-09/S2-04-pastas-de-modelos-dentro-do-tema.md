@@ -173,15 +173,53 @@ continuam abríveis na pasta de arquivo; nenhum modelo ativo aponta para arquivo
 categorias são subpastas **diretas** de MODELOS — se a árvore ganhar um nível, o teste avisa antes de o
 modelo sumir do popup.
 
-### Pendências desta story
+### Pendências — TODAS fechadas em 06/09
 
-1. **"Indenização Mais Médicos" não tem pasta no Drive** (`drive_folder_id` nulo), então ficou de fora
-   da migração. Basta abrir a configuração do tema para a pasta nascer, e rodar
-   `npm run drive:estrutura-modelos -- --commit`.
-2. As camadas **`Casos`/`Procurações`** ficaram no Drive, já aposentadas no código (nada novo é criado
-   nelas). Duas ainda têm 1 arquivo dentro — some quando o escritório reorganizar.
-3. Os vínculos **`kind='procuracao'`** continuam válidos como estão. Na estrutura nova, procuração é a
-   categoria "CONTRATO E PROCURAÇÃO" dentro do tipo; a convivência das duas formas é intencional para
-   não quebrar caso em andamento.
-4. O fluxo de geração está **duplicado** em `GenerateCaseDocumentFlow` e no `GenerateDialog` do
-   `CaseDocumentsTab`. Os dois foram alterados igual; unificar é dívida anterior a esta story.
+**1. Tema sem pasta no Drive — feito.** "Indenização Mais Médicos" tinha `drive_folder_id` nulo. Pasta
+criada, tipo movido para dentro dela, estrutura MODELOS montada. Rodar a fase `--mover` de novo devolveu
+"0 pasta(s) movida(s)", o que prova a idempotência. De quebra: a pasta do TEMA também nascia com
+`createFolder` cego — o mesmo defeito que gerou as duplicatas — e agora usa `ensureFolderByName`.
+
+**2. Camadas `Casos`/`Procurações` — removidas.** Nova fase `--camadas`. Sobrou pouco dentro delas: 2
+arquivos soltos que escaparam da varredura e 4 cascas vazias. A fase arquiva (movendo, com inventário) o
+que estiver solto, manda para a lixeira só o que estiver vazio **e** não for referenciado por vínculo
+algum — nem soft-deletado, que pode ser refeito — e só então remove a camada e limpa a coluna. Se o
+inventário falhar, o arquivo **não** é movido: mover sem registrar é a única perda irreversível.
+Resultado: 2 arquivos arquivados, 12 pastas na lixeira.
+
+**3. Procuração vem da categoria — feito.** `listPastasContratoProcuracao` devolve a **união** da
+categoria "CONTRATO E PROCURAÇÃO" de cada tipo com os vínculos `kind='procuracao'` legados — união, não
+troca: trocar deixaria sem modelo de procuração qualquer tema ainda não migrado. Os três lugares que
+derivavam as pastas por conta própria passam a ler do hook `useProcuracaoFolderIds`; antes liam só o
+legado, e num tema migrado o popup sairia vazio.
+
+**4. Fluxo duplicado — unificado.** O diálogo virou `DocumentPickerDialog`, um só. As duas cópias já
+tinham divergido: só a da ficha avisava sobre placeholder órfão e sabia abrir direto num modo/pasta; só
+a da aba oferecia criar a pasta no empty-state. Agora os dois lados têm tudo; o que era específico da
+aba virou a prop `permiteCriarPasta`, ligada só lá (a aba é onde se configura o tema, o popup do topo é
+atalho).
+
+| Arquivo | Antes | Depois |
+|---|---|---|
+| CaseDocumentsTab | 1288 | 724 |
+| GenerateCaseDocumentFlow | 821 | 326 |
+| DocumentPickerDialog | — | 605 |
+| **total** | **2109** | **1655** |
+
+QA `npm run qa:s204-picker`: 27 verificações provando que nenhuma capacidade se perdeu na fusão.
+
+### Árvore final no Drive
+
+```
+1% fies/          01- Abatimento ESF DGM / MODELOS / {3}
+                  02- Abatimento ESF Censo 05 / MODELOS / {3}
+                  04- Abatimento Militar / MODELOS / {3}
+                  05- Abatimento COVID / MODELOS / {3}
+Inadimplência HV/ Cobrança HV - êxitos / MODELOS / {3}
+Indenização Mais Médicos/  07 - Indenização Mais Médicos / MODELOS / {3}
+Desenrola FIES/            (sem tipo vinculado)
+Transferência de Residência Médica/  (sem tipo vinculado)
+```
+
+Sem camada intermediária, sem casca vazia, sem árvore paralela. Os dois temas sem tipo ganham a
+estrutura assim que o primeiro tipo for vinculado.
