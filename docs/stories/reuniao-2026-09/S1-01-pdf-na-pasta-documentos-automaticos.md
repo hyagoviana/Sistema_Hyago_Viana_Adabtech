@@ -2,7 +2,7 @@
 
 - **Sprint:** S1 — Correções que travam o uso hoje
 - **ID:** S1-01 · **Item do Thiago:** 2
-- **Status:** Ready for Review (aguarda `--commit` do backfill)
+- **Status:** CONCLUÍDA — backfill aplicado (2 arquivos movidos); reexecutar acusa 0 pendentes
 - **Estimativa relativa:** P (uma linha de código + script de backfill)
 - **Executor sugerido:** @dev · Quality gate: @qa
 
