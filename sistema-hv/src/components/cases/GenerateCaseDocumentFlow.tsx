@@ -36,7 +36,12 @@ import {
   useTemplatesByFolders,
 } from "@/hooks/useDocumentTemplates";
 import { useServiceTypes } from "@/hooks/usePipeline";
-import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
+import {
+  CATEGORIAS_MODELO,
+  type CategoriaModelo,
+  pastaDaCategoria,
+  useTypeFolders,
+} from "@/hooks/useServiceTypeFolders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -391,6 +396,14 @@ function PickDialog({
   // só os docs daquela pasta (filtro por source_folder_id).
   // Quando initialFolderId é passado, pula a escolha de pasta.
   const [folderId, setFolderId] = useState<string | null>(initialFolderId ?? null);
+  // S2-04 — o fluxo virou TRÊS telas (Thiago, resposta B2): "primeira tela vai
+  // virar a de selecionar o tipo de caso. 2ª a de selecionar se quero um modelo
+  // de procuração e contrato / documento judicial / documento administrativo.
+  // 3ª tela selecionado o modelo conforme a categoria (em que pasta está)".
+  //
+  // A categoria só entra quando o TIPO escolhido já tem a estrutura MODELOS no
+  // Drive; tipo antigo (sem estrutura) continua indo direto do tipo ao modelo.
+  const [categoria, setCategoria] = useState<CategoriaModelo | null>(null);
 
   // (2026-07-10) — as pastas são POR CATEGORIA (system_service_type_folders).
   // Resolve o tipo do caso pelo slug e busca suas pastas de caso e de procuração.
@@ -414,7 +427,16 @@ function PickDialog({
   const { data: procTemplates } = useTemplatesByFolders(
     mode === "procuracao" ? procFolderIds : null,
   );
-  const { data: folderTemplates } = useTemplatesByFolder(mode === "caso" ? folderId : null);
+  // S2-04 — o TIPO escolhido e a pasta da categoria dentro dele.
+  const tipoEscolhido = (casoFolders ?? []).find((f) => f.drive_folder_id === folderId);
+  const tipoTemEstrutura = !!tipoEscolhido?.drive_modelos_folder_id;
+  const pastaCategoria = categoria ? pastaDaCategoria(tipoEscolhido, categoria) : null;
+
+  // Tipo COM estrutura nova → os modelos vêm da pasta da categoria. Tipo antigo →
+  // da própria pasta do tipo, como sempre foi.
+  const { data: folderTemplates } = useTemplatesByFolder(
+    mode === "caso" ? (tipoTemEstrutura ? pastaCategoria : folderId) : null,
+  );
   const syncProc = useSyncProcuracaoTemplates();
 
   useEffect(() => {
@@ -423,6 +445,7 @@ function PickDialog({
       setTemplateId("");
       setValues({});
       setFolderId(initialFolderId ?? null);
+      setCategoria(null);
     }
   }, [open, initialMode, initialFolderId]);
 
@@ -473,7 +496,7 @@ function PickDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enviar contrato e procuração</DialogTitle>
+            <DialogTitle>Gerar documento</DialogTitle>
             <DialogDescription>O que você quer gerar para este caso?</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -519,10 +542,9 @@ function PickDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Documento de caso · escolha a pasta</DialogTitle>
+            <DialogTitle>Escolha o tipo de caso</DialogTitle>
             <DialogDescription>
-              Só as pastas desta categoria aparecem. Os documentos da pasta escolhida ficam
-              disponíveis para gerar.
+              Só os tipos deste tema aparecem. Depois você escolhe a categoria do documento.
             </DialogDescription>
           </DialogHeader>
           {folders.length > 0 ? (
@@ -533,6 +555,7 @@ function PickDialog({
                   type="button"
                   onClick={() => {
                     setFolderId(f.drive_folder_id);
+                    setCategoria(null);
                     setTemplateId("");
                     setValues({});
                   }}
@@ -545,8 +568,8 @@ function PickDialog({
             </div>
           ) : (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Esta categoria ainda não tem pasta de documentos de caso. Vincule/crie uma na aba
-              Documentos (ou nas Configurações da categoria).
+              Este tema ainda não tem nenhum tipo de caso. Crie um nas Configurações do tema, na aba
+              de pastas.
             </div>
           )}
           <DialogFooter>
@@ -559,8 +582,62 @@ function PickDialog({
     );
   }
 
+  // S2-04, tela 2 — a categoria do documento dentro do TIPO. Só aparece para tipo
+  // que já tem a estrutura MODELOS no Drive; tipo antigo pula direto para o
+  // modelo, com o comportamento de sempre.
+  if (mode === "caso" && folderId && tipoTemEstrutura && !categoria) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Categoria do documento</DialogTitle>
+            <DialogDescription>
+              {tipoEscolhido?.name?.trim()} · escolha em que pasta de modelos procurar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-2">
+            {CATEGORIAS_MODELO.map((c) => {
+              const pasta = pastaDaCategoria(tipoEscolhido, c.id);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={!pasta}
+                  onClick={() => {
+                    setCategoria(c.id);
+                    setTemplateId("");
+                    setValues({});
+                  }}
+                  className="flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-left transition-colors hover:border-[var(--gold)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {c.id === "contrato" ? (
+                    <FileSignature size={15} className="text-[var(--gold-700)] shrink-0" />
+                  ) : (
+                    <FileText size={15} className="text-[var(--gold-700)] shrink-0" />
+                  )}
+                  <span className="text-[13px] font-medium text-[var(--navy)]">{c.rotulo}</span>
+                  {!pasta && (
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      pasta não criada
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFolderId(null)}>
+              ← Voltar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const isProc = mode === "procuracao";
   const folderLabel = (casoFolders ?? []).find((f) => f.drive_folder_id === folderId)?.name;
+  const categoriaLabel = CATEGORIAS_MODELO.find((c) => c.id === categoria)?.rotulo;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -576,9 +653,13 @@ function PickDialog({
           <button
             type="button"
             onClick={() => {
-              // "caso": volta pra escolha das 6 pastas; "procuracao": pro tipo.
+              // Volta um passo só: da lista de modelos para a categoria (quando
+              // o tipo tem a estrutura nova), da categoria para o tipo, e da
+              // procuração para a primeira tela.
               if (isProc) {
                 setMode(null);
+              } else if (tipoTemEstrutura && categoria) {
+                setCategoria(null);
               } else {
                 setFolderId(null);
               }
@@ -587,11 +668,17 @@ function PickDialog({
             }}
             className="text-xs text-[var(--gold-700)] hover:underline"
           >
-            {isProc ? "← Trocar tipo de documento" : "← Trocar pasta"}
+            {isProc
+              ? "← Trocar tipo de documento"
+              : tipoTemEstrutura && categoria
+                ? "← Trocar categoria"
+                : "← Trocar tipo de caso"}
           </button>
           <div>
             <Label>
-              {isProc ? "Modelo de procuração" : `Documento · ${folderLabel ?? "pasta"}`}
+              {isProc
+                ? "Modelo de procuração"
+                : `${folderLabel?.trim() ?? "Tipo"}${categoriaLabel ? ` · ${categoriaLabel}` : ""}`}
             </Label>
             {templates.length === 0 ? (
               <div className="mt-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground">

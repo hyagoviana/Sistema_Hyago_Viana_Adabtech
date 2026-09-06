@@ -33,7 +33,36 @@ export type ServiceTypeFolder = {
   name: string;
   ordem: number;
   frente_slug: string | null;
+  // S2-04 — estrutura MODELOS/{3 categorias} dentro da pasta do TIPO.
+  // NULL = tipo ainda sem a estrutura nova (o fluxo antigo assume).
+  drive_modelos_folder_id: string | null;
+  drive_judicial_folder_id: string | null;
+  drive_contrato_folder_id: string | null;
+  drive_administrativo_folder_id: string | null;
 };
+
+// S2-04 — as três categorias de modelo definidas pelo Thiago. Fixas: são pastas
+// com nome literal no Drive, não uma lista configurável.
+export const CATEGORIAS_MODELO = [
+  { id: "judicial", rotulo: "Documento judicial", campo: "drive_judicial_folder_id" },
+  { id: "contrato", rotulo: "Contrato e procuração", campo: "drive_contrato_folder_id" },
+  {
+    id: "administrativo",
+    rotulo: "Documento administrativo",
+    campo: "drive_administrativo_folder_id",
+  },
+] as const;
+
+export type CategoriaModelo = (typeof CATEGORIAS_MODELO)[number]["id"];
+
+export function pastaDaCategoria(
+  folder: ServiceTypeFolder | undefined,
+  categoria: CategoriaModelo,
+): string | null {
+  if (!folder) return null;
+  const campo = CATEGORIAS_MODELO.find((c) => c.id === categoria)!.campo;
+  return (folder[campo] as string | null) ?? null;
+}
 
 // Lista as pastas de uma categoria (opcionalmente filtrando por kind).
 // `frenteSlug` (R2-04): passe a frente do CASO p/ ver pastas da frente + comuns.

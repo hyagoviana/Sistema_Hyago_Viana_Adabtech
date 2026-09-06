@@ -432,6 +432,26 @@ export async function ensureTemaModelStructure(
   return { ok, falhas };
 }
 
+// S2-04 — todas as pastas "MODELOS" registradas, para o sync de modelos varrer.
+//
+// Varrer MODELOS (e não cada categoria) é de propósito: o `template-sync` desce
+// um nível de subpasta e grava `source_folder_id` = id da subpasta, que é
+// exatamente o id de JUDICIAL / CONTRATO E PROCURAÇÃO / ADMINISTRATIVO. Assim o
+// seletor de modelos por categoria funciona sem tocar no sync.
+export async function listPastasModelos(): Promise<string[]> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from("system_service_type_folders")
+    .select("drive_modelos_folder_id")
+    .not("drive_modelos_folder_id", "is", null)
+    .is("deleted_at", null);
+  if (error) throw new ServiceTypeFoldersError(error.message, 500);
+  const ids = ((data ?? []) as unknown as Array<{ drive_modelos_folder_id: string | null }>)
+    .map((r) => r.drive_modelos_folder_id)
+    .filter((id): id is string => !!id);
+  return [...new Set(ids)];
+}
+
 // Desvincula (soft-delete) uma pasta da categoria. NÃO apaga a pasta no Drive.
 export async function unlinkFolder(id: string) {
   const sb = getSupabaseAdmin();

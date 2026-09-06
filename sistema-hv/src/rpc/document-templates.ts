@@ -16,6 +16,7 @@ import {
   syncTemplatesFromDrive,
   syncTemplatesFromDrives,
 } from "@/lib/template-sync-service";
+import { listPastasModelos } from "@/lib/service-type-folders-service";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 // Extrai o ID da pasta de uma URL do Drive OU aceita o ID cru.
@@ -139,7 +140,14 @@ export const syncDocumentTemplatesFn = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) =>
-    handle(() => syncTemplatesFromDrives(data.folderId ? [data.folderId] : MODELS_FOLDER_IDS)),
+    handle(async () => {
+      if (data.folderId) return syncTemplatesFromDrives([data.folderId]);
+      // S2-04 — além das raízes de env (legado), varre as pastas MODELOS de cada
+      // TIPO, que é onde os modelos passam a morar. Sem isto, um modelo subido em
+      // TEMA/TIPO/MODELOS/JUDICIAL nunca apareceria no sistema.
+      const pastasModelos = await listPastasModelos();
+      return syncTemplatesFromDrives([...MODELS_FOLDER_IDS, ...pastasModelos]);
+    }),
   );
 
 // ITEM 1 (2026-07-06) — PASTA de modelos de PROCURAÇÃO no Drive. Os modelos dessa
