@@ -275,6 +275,10 @@ export function DocumentPickerDialog({
           kind: "caso",
           folderId: folder.drive_folder_id,
           file,
+          // Empty-state: o primeiro modelo do tipo vai para ADMINISTRATIVO, que é
+          // o que a maioria dos modelos do escritório é (requerimentos e
+          // declarações). Quem quiser outra categoria usa a tela de configuração.
+          categoria: "administrativo",
         });
         toast.success("Pasta criada e documento anexado");
         setNomeNovaPasta("");

@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  CATEGORIAS_MODELO,
+  type CategoriaModelo,
   type FolderKind,
   useCreateTypeFolder,
   useLinkTypeFolder,
@@ -45,6 +47,11 @@ function FolderKindSection({
   const fileRef = useRef<HTMLInputElement>(null);
   const [dest, setDest] = useState<string>(NEW);
   const [newName, setNewName] = useState("");
+  // Procuração já É a categoria "contrato"; para casos, o padrão é administrativo
+  // (a maioria dos modelos do escritório são requerimentos e declarações).
+  const [categoria, setCategoria] = useState<CategoriaModelo>(
+    kind === "procuracao" ? "contrato" : "administrativo",
+  );
   // T3 — pasta existente do Drive escolhida para vincular.
   const [linkPick, setLinkPick] = useState<string>("");
 
@@ -92,6 +99,13 @@ function FolderKindSection({
   // Se o destino escolhido não existe mais (ou é a 1ª carga), cai no 1º da lista.
   const effectiveDest = dest === NEW || list.some((f) => f.drive_folder_id === dest) ? dest : NEW;
 
+  // O modelo vai para uma das 3 CATEGORIAS dentro do tipo, nunca solto na raiz.
+  //
+  // Sem isto o arquivo caía direto na pasta do tipo, ao lado das categorias — e
+  // o seletor de geração, que procura DENTRO da categoria, não achava nada. Foi
+  // o que aconteceu com o tipo "teste": o Word subiu e o popup abriu vazio.
+  const tipoSelecionado = list.find((f) => f.drive_folder_id === effectiveDest);
+
   const handleFile = async (file: File) => {
     try {
       let folderId: string;
@@ -111,8 +125,10 @@ function FolderKindSection({
       } else {
         folderId = effectiveDest;
       }
-      await upload.mutateAsync({ serviceTypeId, kind, folderId, file });
-      toast.success("Documento enviado e variáveis lidas");
+      await upload.mutateAsync({ serviceTypeId, kind, folderId, file, categoria });
+      toast.success(
+        `Documento enviado para ${CATEGORIAS_MODELO.find((c) => c.id === categoria)?.rotulo}`,
+      );
       setNewName("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao enviar documento");
@@ -205,6 +221,25 @@ function FolderKindSection({
             />
           </div>
         )}
+
+        <div>
+          <Label className="text-[12px]">Categoria do documento</Label>
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value as CategoriaModelo)}
+            disabled={busy}
+            className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm"
+          >
+            {CATEGORIAS_MODELO.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.rotulo}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            O arquivo vai para esta subpasta dentro do tipo — é onde a geração de documento procura.
+          </p>
+        </div>
 
         <input
           ref={fileRef}

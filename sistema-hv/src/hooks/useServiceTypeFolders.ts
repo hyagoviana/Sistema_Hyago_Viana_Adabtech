@@ -159,11 +159,15 @@ export function useUploadTypeTemplate() {
       kind: FolderKind;
       folderId: string;
       file: File;
+      /** Subpasta de destino dentro do tipo. Sem ela o arquivo cairia na raiz,
+       *  onde a geração de documento não procura. */
+      categoria: CategoriaModelo;
     }) => {
       const body = new FormData();
       body.append("file", vars.file);
       body.append("kind", vars.kind);
       body.append("folderId", vars.folderId);
+      body.append("categoria", vars.categoria);
       const res = await fetch(`/api/service-types/${vars.serviceTypeId}/templates/upload`, {
         method: "POST",
         body,

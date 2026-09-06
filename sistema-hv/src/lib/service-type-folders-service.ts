@@ -70,8 +70,6 @@ export const CATEGORIAS_MODELO = [
 
 export type CategoriaModelo = (typeof CATEGORIAS_MODELO)[number]["id"];
 
-const PASTA_MODELOS = "MODELOS";
-
 // Coluna onde o id de cada categoria é guardado.
 const COLUNA_POR_CATEGORIA: Record<CategoriaModelo, string> = {
   judicial: "drive_judicial_folder_id",
@@ -377,13 +375,19 @@ export async function ensureTipoModelStructure(vinculoId: string): Promise<Servi
   if (!atual) throw new ServiceTypeFoldersError("Pasta não encontrada", 404);
   const vinculo = atual as unknown as ServiceTypeFolder;
 
-  // A pasta MODELOS mora dentro da pasta do TIPO.
-  const modelos = await ensureFolderByName(PASTA_MODELOS, vinculo.drive_folder_id);
-
-  const patch: Record<string, string> = { drive_modelos_folder_id: modelos.id };
+  // As 3 categorias ficam DIRETO dentro da pasta do TIPO.
+  //
+  // Havia uma pasta "MODELOS" no meio; o owner tirou (06/09): "não precisamos da
+  // pasta modelos, pode cair direto para selecionar uma dessas 3 pastas". Era um
+  // clique a mais para chegar em qualquer modelo, sem separar nada — dentro do
+  // TIPO só existem as categorias mesmo.
+  //
+  // `drive_modelos_folder_id` passa a apontar para a PRÓPRIA pasta do tipo: é ela
+  // que o sync varre (e o sync desce um nível, alcançando as 3 categorias).
+  const patch: Record<string, string> = { drive_modelos_folder_id: vinculo.drive_folder_id };
   for (const cat of CATEGORIAS_MODELO) {
     try {
-      const sub = await ensureFolderByName(cat.pasta, modelos.id);
+      const sub = await ensureFolderByName(cat.pasta, vinculo.drive_folder_id);
       patch[COLUNA_POR_CATEGORIA[cat.id]] = sub.id;
     } catch (err) {
       // Falha numa categoria não derruba as outras — o que foi resolvido é
@@ -451,23 +455,25 @@ export async function listPastasContratoProcuracao(serviceTypeId: string): Promi
   return [...new Set(ids)];
 }
 
-// S2-04 — todas as pastas "MODELOS" registradas, para o sync de modelos varrer.
+// S2-04 — as pastas de TIPO, que é o que o sync de modelos precisa varrer.
 //
-// Varrer MODELOS (e não cada categoria) é de propósito: o `template-sync` desce
-// um nível de subpasta e grava `source_folder_id` = id da subpasta, que é
-// exatamente o id de JUDICIAL / CONTRATO E PROCURAÇÃO / ADMINISTRATIVO. Assim o
-// seletor de modelos por categoria funciona sem tocar no sync.
+// Varrer o TIPO (e não cada categoria uma a uma) é de propósito: o
+// `template-sync` desce um nível de subpasta e grava `source_folder_id` = id da
+// subpasta, que é exatamente o id de JUDICIAL / CONTRATO E PROCURAÇÃO /
+// ADMINISTRATIVO. Assim o seletor por categoria funciona sem tocar no sync.
+//
+// Varrer o TIPO tem um segundo efeito, desejado: arquivo solto na raiz do tipo
+// (subido antes de o upload passar a exigir categoria) também é registrado, com
+// `source_folder_id` = a própria pasta do tipo. Ele não some do sistema.
 export async function listPastasModelos(): Promise<string[]> {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("system_service_type_folders")
-    .select("drive_modelos_folder_id")
-    .not("drive_modelos_folder_id", "is", null)
+    .select("drive_folder_id")
+    .eq("kind", "caso")
     .is("deleted_at", null);
   if (error) throw new ServiceTypeFoldersError(error.message, 500);
-  const ids = ((data ?? []) as unknown as Array<{ drive_modelos_folder_id: string | null }>)
-    .map((r) => r.drive_modelos_folder_id)
-    .filter((id): id is string => !!id);
+  const ids = ((data ?? []) as Array<{ drive_folder_id: string }>).map((r) => r.drive_folder_id);
   return [...new Set(ids)];
 }
 

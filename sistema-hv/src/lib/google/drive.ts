@@ -289,7 +289,9 @@ export async function getFileMeta(fileId: string) {
   try {
     const res = await drive.files.get({
       fileId,
-      fields: "id, name, mimeType, size, webViewLink, createdTime, modifiedTime, parents",
+      // `trashed` importa: uma pasta na lixeira ainda responde por id, e mover
+      // um arquivo para dentro dela o enterra junto sem erro nenhum.
+      fields: "id, name, mimeType, size, webViewLink, createdTime, modifiedTime, parents, trashed",
       ...writeParams(),
     });
     return res.data;

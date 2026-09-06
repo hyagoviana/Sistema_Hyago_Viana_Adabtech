@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { uploadFile } from "@/lib/google/drive";
-import { listTypeFolders } from "@/lib/service-type-folders-service";
+import {
+  CATEGORIAS_MODELO,
+  ensureTipoModelStructure,
+  listTypeFolders,
+  pastaDaCategoria,
+  type CategoriaModelo,
+} from "@/lib/service-type-folders-service";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { syncTemplatesFromDrive } from "@/lib/template-sync-service";
 
@@ -38,6 +44,7 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
         const file = form.get("file");
         const kind = String(form.get("kind") ?? "");
         const folderId = String(form.get("folderId") ?? "");
+        const categoria = String(form.get("categoria") ?? "");
 
         if (!(file instanceof File)) {
           return Response.json({ error: "Campo 'file' ausente ou inválido" }, { status: 400 });
@@ -47,6 +54,12 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
         }
         if (!folderId) {
           return Response.json({ error: "folderId ausente" }, { status: 400 });
+        }
+        if (!CATEGORIAS_MODELO.some((c) => c.id === categoria)) {
+          return Response.json(
+            { error: "categoria inválida (judicial|contrato|administrativo)" },
+            { status: 400 },
+          );
         }
         if (!isWord(file)) {
           return Response.json(
@@ -74,9 +87,28 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
             .single();
           const marker = kind === "procuracao" ? "PROCURACAO" : (st?.slug ?? null);
 
+          // O arquivo vai para a SUBPASTA da categoria, nunca para a raiz do tipo.
+          //
+          // Antes ia para `folderId` (a pasta do tipo) e ficava solto ao lado das
+          // categorias. A geração de documento procura DENTRO da categoria, então
+          // o modelo era invisível: o popup abria vazio com o arquivo lá no Drive.
+          const vinculo = folders.find((f) => f.drive_folder_id === folderId)!;
+          let destino = pastaDaCategoria(vinculo, categoria as CategoriaModelo);
+          if (!destino) {
+            // Tipo antigo, ainda sem a estrutura: cria agora e usa.
+            const atualizado = await ensureTipoModelStructure(vinculo.id);
+            destino = pastaDaCategoria(atualizado, categoria as CategoriaModelo);
+          }
+          if (!destino) {
+            return Response.json(
+              { error: "Não consegui resolver a pasta da categoria no Drive" },
+              { status: 502 },
+            );
+          }
+
           const buffer = Buffer.from(await file.arrayBuffer());
           await uploadFile({
-            parentId: folderId,
+            parentId: destino,
             name: file.name,
             mimeType:
               file.type ||
@@ -86,7 +118,7 @@ export const Route = createFileRoute("/api/service-types/$id/templates/upload")(
 
           // Sincroniza SÓ a pasta destino: extrai as variáveis do novo .docx e
           // registra/atualiza o modelo com source_folder_id = folderId.
-          const result = await syncTemplatesFromDrive(folderId, marker);
+          const result = await syncTemplatesFromDrive(destino, marker);
           return Response.json({ ok: true, result }, { status: 201 });
         } catch (err) {
           const status = (err as { status?: number })?.status;
