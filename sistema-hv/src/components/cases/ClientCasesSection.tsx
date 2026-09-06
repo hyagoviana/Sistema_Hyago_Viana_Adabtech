@@ -5,11 +5,17 @@ import { useMemo, useState } from "react";
 import { CaseFormDialog, type CreatedCaseLite } from "./CaseFormDialog";
 import { GenerateCaseDocumentFlow } from "./GenerateCaseDocumentFlow";
 import { Badge } from "@/components/hv/primitives";
+import {
+  ClientValoresTotais,
+  EtapaInline,
+  ValoresResumo,
+} from "@/components/clients/ClientVisao360";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCasesList } from "@/hooks/useCases";
 import { useClient } from "@/hooks/useClients";
+import { useClientOverview, type CasoDoCliente } from "@/hooks/useClientOverview";
 import { usePodeEditarAlgum } from "@/hooks/usePermissions";
 import {
   augmentWithHonorarios,
@@ -124,6 +130,13 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
   const { data: honorarios } = useCaseHonorarios(genFor?.id ?? "");
   const cases = useMemo(() => data ?? [], [data]);
 
+  // S3-04 — etapas (comercial/operacional/financeira) e resumo financeiro de
+  // TODOS os casos numa consulta só (AC8). O gate de valores é aplicado no
+  // servidor: quem não pode ver dinheiro recebe os números zerados e
+  // `podeVerValores: false` — o valor nem chega no payload.
+  const { data: overview } = useClientOverview(clientId);
+  const porCaso = useMemo(() => new Map((overview?.casos ?? []).map((c) => [c.id, c])), [overview]);
+
   // R1-04 — nomes dos grupos (nível 1 = TEMA). Carregados UMA vez, sem query por
   // caso: temas de R2 (tema_id → name) e service_types legados (slug → name).
   // Ambos os hooks têm cache de 5min e são compartilhados com o resto do app.
@@ -176,12 +189,23 @@ export function ClientCasesSection({ clientId, clienteEhCliente }: Props) {
         // R1-04 — nível 1: um bloco por TEMA (header + rótulo amigável +
         // contagem). Dentro de cada tema, R1-03 particiona por lifecycle.
         <div className="space-y-8">
+          {/* S3-04 AC3 — o total do cliente vem ANTES dos casos e é o somatório
+              deles. Era um bloco separado no fim da página, sem dizer de qual
+              caso vinha cada valor. */}
+          {overview?.podeVerValores && (
+            <ClientValoresTotais
+              receitas={overview.totalReceitas}
+              despesas={overview.totalDespesas}
+            />
+          )}
           {temaGroups.map(({ key, items }) => (
             <TemaSection
               key={key}
               label={getCaseTemaLabel(items[0], temaLabelMaps)}
               count={items.length}
               items={items}
+              porCaso={porCaso}
+              mostraValores={overview?.podeVerValores ?? false}
             />
           ))}
         </div>
@@ -245,10 +269,15 @@ function TemaSection({
   label,
   count,
   items,
+  porCaso,
+  mostraValores,
 }: {
   label: string;
   count: number;
   items: CaseListItem[];
+  /** S3-04 — etapas e valores de cada caso, vindos da consulta agregada. */
+  porCaso: Map<string, CasoDoCliente>;
+  mostraValores: boolean;
 }) {
   const { clientes, leads, perdidos } = partitionCasesByLifecycle(items);
   return (
@@ -258,9 +287,24 @@ function TemaSection({
         <span className="text-[11px] text-muted-foreground">({count})</span>
       </div>
       <div className="space-y-5">
-        <CaseGroup title="Casos efetivados" items={clientes} />
-        <CaseGroup title="Aguardando assinatura" items={leads} />
-        <CaseGroup title="Perdidos" items={perdidos} />
+        <CaseGroup
+          title="Casos efetivados"
+          items={clientes}
+          porCaso={porCaso}
+          mostraValores={mostraValores}
+        />
+        <CaseGroup
+          title="Aguardando assinatura"
+          items={leads}
+          porCaso={porCaso}
+          mostraValores={mostraValores}
+        />
+        <CaseGroup
+          title="Perdidos"
+          items={perdidos}
+          porCaso={porCaso}
+          mostraValores={mostraValores}
+        />
       </div>
     </section>
   );
@@ -269,7 +313,17 @@ function TemaSection({
 // R1-03 — uma SEÇÃO por lifecycle (cabeçalho + contagem). Grupo vazio some.
 // Reutiliza o MESMO card/<li> de cada item (nada de reescrever o card nem
 // mexer no Link to="/casos/$id").
-function CaseGroup({ title, items }: { title: string; items: CaseListItem[] }) {
+function CaseGroup({
+  title,
+  items,
+  porCaso,
+  mostraValores,
+}: {
+  title: string;
+  items: CaseListItem[];
+  porCaso: Map<string, CasoDoCliente>;
+  mostraValores: boolean;
+}) {
   if (items.length === 0) return null;
   return (
     <section>
@@ -281,7 +335,7 @@ function CaseGroup({ title, items }: { title: string; items: CaseListItem[] }) {
       </div>
       <ul className="space-y-2">
         {items.map((c) => (
-          <CaseCard key={c.id} c={c} />
+          <CaseCard key={c.id} c={c} extra={porCaso.get(c.id)} mostraValores={mostraValores} />
         ))}
       </ul>
     </section>
@@ -290,7 +344,16 @@ function CaseGroup({ title, items }: { title: string; items: CaseListItem[] }) {
 
 // R1-03 — card de UM caso. Extraído SEM alterar layout/markup nem a navegação
 // (Link to="/casos/$id") em relação à versão anterior da lista única.
-function CaseCard({ c }: { c: CaseListItem }) {
+function CaseCard({
+  c,
+  extra,
+  mostraValores,
+}: {
+  c: CaseListItem;
+  /** S3-04 — o mesmo caso, visto pela consulta agregada. */
+  extra?: CasoDoCliente;
+  mostraValores: boolean;
+}) {
   return (
     <li className="card-editorial !p-4">
       <div className="flex items-center gap-4">
@@ -304,8 +367,15 @@ function CaseCard({ c }: { c: CaseListItem }) {
             {c.case_code}
           </span>
           <div className="flex items-center gap-2 mt-1">
+            {/* O rótulo preferido vem da etapa CONFIGURADA do tema (via overview).
+                `MACRO_OP_LABELS` é o dicionário LEGADO e não conhece as etapas de
+                kanban custom — foi exatamente ele que fez o caso aparecer "numa
+                etapa que não existe" no relato do Thiago em 04/09. Fica só como
+                último recurso, para tipo antigo. */}
             <Badge tone="gold">
-              {MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ?? c.macrostatus_op}
+              {extra?.etapa_operacional ??
+                MACRO_OP_LABELS[c.macrostatus_op as MacroOp] ??
+                c.macrostatus_op}
             </Badge>
             {c.proximo_passo && (
               <span className="text-[11.5px] text-muted-foreground line-clamp-1">
@@ -313,6 +383,25 @@ function CaseCard({ c }: { c: CaseListItem }) {
               </span>
             )}
           </div>
+
+          {/* S3-04 AC1/AC4 — as outras duas trilhas do caso, espelhadas. Cada uma
+              some quando o caso não passou por ela. */}
+          {extra && (extra.etapa_comercial || extra.etapa_financeira) && (
+            <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+              <EtapaInline rotulo="Comercial" valor={extra.etapa_comercial} />
+              <EtapaInline rotulo="Financeiro" valor={extra.etapa_financeira} />
+            </div>
+          )}
+
+          {/* S3-04 AC2 — resumo financeiro DO CASO, com a mesma régua da aba
+              Financeiro (`agregarParcelas`). AC7: sem o gate de valores, nem
+              chega no payload. */}
+          {mostraValores && extra && (
+            <div className="flex flex-wrap gap-x-8 gap-y-2 mt-2">
+              <ValoresResumo titulo="Receitas" v={extra.receitas} />
+              <ValoresResumo titulo="Despesas" v={extra.despesas} />
+            </div>
+          )}
         </Link>
         {/* ITEM 1 (2026-07-07) — a ação "Enviar contrato e procuração" foi
             REMOVIDA da lista de casos da ficha do cliente. Criar/listar caso

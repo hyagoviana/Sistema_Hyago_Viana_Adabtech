@@ -7,7 +7,6 @@ import { ClientCasesSection } from "@/components/cases/ClientCasesSection";
 import { ClientCpfFillDialog } from "@/components/clients/ClientCpfFillDialog";
 import { ClientDataPanel } from "@/components/clients/ClientDataPanel";
 import { ClientDocumentsSection } from "@/components/clients/ClientDocumentsSection";
-import { ClientFinanceiroSection } from "@/components/clients/ClientFinanceiroSection";
 import { Breadcrumb, Card, Eyebrow, OrnamentalDivider } from "@/components/hv/primitives";
 import { NotesBlock } from "@/components/notes/NotesBlock";
 import {
@@ -283,6 +282,41 @@ function ClienteDetalhe() {
           campos de caso não entram, como o Thiago pediu. */}
       <ClientDataPanel cliente={cliente as unknown as Record<string, unknown>} />
 
+      {/* S3-04 — a ordem da página é a que o Thiago desenhou (33-35):
+          dados do cliente → casos + financeiro → notas → documentos.
+          Documentos desceu para o fim: é consulta pontual, não a foto que se
+          quer ao abrir a ficha. */}
+
+      <ClientCasesSection
+        clientId={cliente.id}
+        clientName={cliente.full_name}
+        clientCpf={cliente.cpf_cnpj ?? undefined}
+        clientEmail={cliente.email ?? undefined}
+        clientPhone={cliente.phone ?? undefined}
+        clienteEhCliente={ehCliente}
+      />
+
+      {/* S3-04 AC3 — `ClientFinanceiroSection` SAIU: era uma ilha com o total do
+          cliente, sem dizer de qual caso vinha cada valor, e é justamente o que o
+          Thiago pediu para unificar. O total agora abre a seção de casos, e cada
+          card traz o resumo do próprio caso.
+
+          O SELO binário continua para quem não pode ver valores: é a única coisa
+          que esse papel enxerga do financeiro, e some junto se não ficar aqui. */}
+      {!podeVerFinanceiro && (
+        <>
+          <OrnamentalDivider />
+          <ClientPaymentStatusSeal clientId={cliente.id} />
+        </>
+      )}
+
+      <OrnamentalDivider />
+
+      {/* S4-03 — bloco de notas do cliente (auth-only, soft-delete). */}
+      <NotesBlock target="client" entityId={cliente.id} />
+
+      <OrnamentalDivider />
+
       <h2 className="font-display text-[24px] font-semibold text-[var(--navy)] mb-3">
         Documentos do cliente
       </h2>
@@ -295,34 +329,6 @@ function ClienteDetalhe() {
           foi REMOVIDA: documentos de caso vivem DENTRO do caso (CaseDocumentsTab),
           para não misturar docs de casos diferentes na ficha do cliente. Os docs
           pessoais do cliente (acima) permanecem. */}
-
-      <OrnamentalDivider />
-
-      <ClientCasesSection
-        clientId={cliente.id}
-        clientName={cliente.full_name}
-        clientCpf={cliente.cpf_cnpj ?? undefined}
-        clientEmail={cliente.email ?? undefined}
-        clientPhone={cliente.phone ?? undefined}
-        clienteEhCliente={ehCliente}
-      />
-
-      <OrnamentalDivider />
-
-      {/* R4-01 — gate de $ (AC-2/AC-4): sem `financeiro:view` o componente que
-          busca valores (useAllParcelas) NÃO é montado. R4-04 (AC-3) — no lugar dos
-          valores, o papel sem gate vê o SELO BINÁRIO "Em dia / Devendo" (endpoint
-          leve `requireAuth`, retorna só boolean, sem R$). */}
-      {podeVerFinanceiro ? (
-        <ClientFinanceiroSection clientId={cliente.id} />
-      ) : (
-        <ClientPaymentStatusSeal clientId={cliente.id} />
-      )}
-
-      <OrnamentalDivider />
-
-      {/* S4-03 — bloco de notas do cliente (auth-only, soft-delete). */}
-      <NotesBlock target="client" entityId={cliente.id} />
 
       {/* J2 — preencher/trocar o CPF real (marcador CL-XXXX → CPF válido). */}
       <ClientCpfFillDialog

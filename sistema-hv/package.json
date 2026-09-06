@@ -27,6 +27,7 @@
     "qa:usuarios": "tsx scripts/qa-usuarios-s503.ts",
     "qa:repetidas": "tsx scripts/qa-intimacoes-repetidas.ts",
     "qa:responsavel": "tsx scripts/qa-responsavel-direcionado.ts",
+    "qa:s304": "tsx scripts/qa-s304-visao-360.ts",
     "qa:s302": "tsx scripts/qa-s302-estado-civil-endereco.ts",
     "dados:normalizar-estado-civil": "tsx scripts/normalizar-estado-civil.ts",
     "qa:assunto-projuris": "tsx scripts/qa-s202-s203-assunto-projuris.ts",

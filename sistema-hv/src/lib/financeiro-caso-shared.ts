@@ -112,3 +112,16 @@ export function somarMeses(iso: string, meses: number): string {
   base.setUTCDate(Math.min(d ?? 1, ultimoDia));
   return base.toISOString().slice(0, 10);
 }
+
+/**
+ * Marca como VENCIDA, na leitura, a parcela cujo vencimento passou e não foi paga.
+ *
+ * Mora aqui, e não no serviço, porque a ficha do cliente (S3-04) precisa da MESMA
+ * régua para agregar. Duas cópias divergiriam no primeiro ajuste, e a ficha
+ * passaria a mostrar número diferente da aba Financeiro do caso.
+ */
+export function statusEfetivoParcela(p: { status: string; data_vencimento: string }): string {
+  if (p.status !== "AGUARDANDO") return p.status;
+  const hoje = new Date().toISOString().slice(0, 10);
+  return p.data_vencimento < hoje ? "VENCIDA" : "AGUARDANDO";
+}

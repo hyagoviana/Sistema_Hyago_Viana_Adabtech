@@ -7,8 +7,14 @@
 //
 // NUNCA importe este arquivo no browser (usa service_role).
 
+import { agregarParcelas } from "./client-overview-service";
 import { getSupabaseAdmin } from "./supabase/server";
-import { dividirEmParcelas, somarMeses, type FinKind } from "./financeiro-caso-shared";
+import {
+  dividirEmParcelas,
+  somarMeses,
+  statusEfetivoParcela,
+  type FinKind,
+} from "./financeiro-caso-shared";
 
 const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 
@@ -120,13 +126,6 @@ export interface FinEntry {
   contaazul_sync_error: string | null;
   created_at: string;
   installments: FinParcela[];
-}
-
-/** Marca como VENCIDA, na leitura, a parcela cujo vencimento passou e não foi paga. */
-function statusEfetivoParcela(p: { status: string; data_vencimento: string }): string {
-  if (p.status !== "AGUARDANDO") return p.status;
-  const hoje = new Date().toISOString().slice(0, 10);
-  return p.data_vencimento < hoje ? "VENCIDA" : "AGUARDANDO";
 }
 
 export async function listCaseFinEntries(caseId: string): Promise<FinEntry[]> {
@@ -421,13 +420,15 @@ export async function resumoFinanceiroCaso(caseId: string): Promise<ResumoPorTip
       vincendo_centavos: 0,
     };
 
-    for (const p of e.installments) {
-      if (p.status === "CANCELADA") continue;
-      atual.devido_centavos += p.valor_centavos;
-      if (p.status === "PAGA") atual.recebido_centavos += p.valor_pago_centavos ?? p.valor_centavos;
-      else if (p.status === "VENCIDA") atual.vencido_centavos += p.valor_centavos;
-      else atual.vincendo_centavos += p.valor_centavos;
-    }
+    // S3-04 — a régua é uma só, compartilhada com a ficha do cliente
+    // (`agregarParcelas`). Antes esta contagem estava escrita aqui e a ficha
+    // teria que repeti-la; duas cópias divergiriam no primeiro ajuste e os dois
+    // lugares passariam a mostrar números diferentes para o mesmo caso.
+    const r = agregarParcelas(e.installments);
+    atual.devido_centavos += r.devido_centavos;
+    atual.recebido_centavos += r.pago_centavos;
+    atual.vencido_centavos += r.vencido_centavos;
+    atual.vincendo_centavos += r.vincendo_centavos;
     porChave.set(chave, atual);
   }
 
