@@ -39,14 +39,21 @@ const DEFAULT_ORG = "00000000-0000-0000-0000-000000000001";
 const TEMAS_ROOT_FOLDER_ID =
   process.env.GOOGLE_DRIVE_TEMAS_ROOT_FOLDER_ID?.trim() || "1PtxXwOMn0ibNRXyzAQN-79mHUJc8w4Ro";
 
-// Nomes fixos das subpastas dentro da pasta de cada tema (owner, 2026-07-19).
-// "Casos" = documentos de caso; "Procurações" = documentos de assinatura (→ ZapSign).
+// S2-04 (2026-09-06) — as subpastas "Casos" e "Procurações" foram APOSENTADAS.
+//
+// Elas existiam para receber o espelho decorativo das pastas de modelo, e o
+// espelho virou um move (ver `moverPastaParaTema`). Na árvore que o Thiago
+// desenhou e o owner aprovou, o TIPO fica direto sob o tema:
+//
+//   TEMA / TIPO / MODELOS / {JUDICIAL, CONTRATO E PROCURAÇÃO, ADMINISTRATIVO}
+//
+// Esta função passa a apenas LOCALIZAR as subpastas que já existem em temas
+// antigos — não cria mais nenhuma. As colunas `drive_casos_folder_id` e
+// `drive_contratacao_folder_id` continuam sendo gravadas para não perder a
+// referência das que existem; nada novo aponta para elas.
 const SUB_CASOS = "Casos";
 const SUB_PROCURACOES = "Procurações";
 
-// Garante as subpastas "Casos" e "Contratação" dentro da pasta do tema (idempotente:
-// reaproveita as que já existem por nome, cria as que faltam). Best-effort — devolve
-// null nos ids se o Drive falhar (o tema continua utilizável).
 async function ensureTemaSubfolders(
   temaFolderId: string,
 ): Promise<{ casosId: string | null; contratacaoId: string | null }> {
@@ -61,24 +68,9 @@ async function ensureTemaSubfolders(
     return { casosId: null, contratacaoId: null };
   }
   const byName = new Map(existing.map((f) => [f.name.trim().toLowerCase(), f.id]));
-  // Resolve cada subpasta de forma INDEPENDENTE: se criar uma falhar, a outra não
-  // é perdida (evita partial-write que descartaria o id já resolvido).
-  const resolve = async (name: string): Promise<string | null> => {
-    const found = byName.get(name.toLowerCase());
-    if (found) return found;
-    try {
-      return (await createFolder(name, temaFolderId)).id;
-    } catch (err) {
-      console.error(
-        `tema-service: falha ao criar subpasta "${name}":`,
-        err instanceof Error ? err.message : err,
-      );
-      return null;
-    }
-  };
   return {
-    casosId: await resolve(SUB_CASOS),
-    contratacaoId: await resolve(SUB_PROCURACOES),
+    casosId: byName.get(SUB_CASOS.toLowerCase()) ?? null,
+    contratacaoId: byName.get(SUB_PROCURACOES.toLowerCase()) ?? null,
   };
 }
 

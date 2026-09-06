@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import {
   createAndLinkFolder,
+  ensureTemaModelStructure,
   linkExistingFolder,
   listRootModelFolders,
   listTypeFolders,
@@ -92,3 +93,11 @@ export const unlinkTypeFolderFn = createServerFn({ method: "POST" })
 export const listRootModelFoldersFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ kind: kindSchema }).parse(d))
   .handler(async ({ data }) => handle(() => listRootModelFolders(data.kind)));
+
+// S2-04 — garante a estrutura MODELOS/{JUDICIAL, CONTRATO E PROCURAÇÃO,
+// ADMINISTRATIVO} em todos os TIPOS do tema. Chamado ao abrir a configuração do
+// tema, para que um tema criado antes desta mudança ganhe a estrutura sem
+// ninguém precisar clicar em nada. Idempotente.
+export const ensureTemaModelStructureFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => ensureTemaModelStructure(data.serviceTypeId)));
