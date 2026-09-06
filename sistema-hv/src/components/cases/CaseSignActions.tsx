@@ -30,7 +30,7 @@ import {
 } from "@/hooks/useCaseDocuments";
 import { useTemplatePlaceholders, useTemplatesByFolders } from "@/hooks/useDocumentTemplates";
 import { useServiceTypes } from "@/hooks/usePipeline";
-import { useTypeFolders } from "@/hooks/useServiceTypeFolders";
+import { useProcuracaoFolderIds } from "@/hooks/useServiceTypeFolders";
 import {
   type AutoFillData,
   type TemplateField,
@@ -150,10 +150,11 @@ function SendFlowDialog({
   // que caía no fallback e puxava TODOS os modelos sem tipo).
   const { data: serviceTypes } = useServiceTypes();
   const serviceTypeId = (serviceTypes ?? []).find((t) => t.slug === caseType)?.id ?? null;
-  // R2-04 — pasta de procuração por frente do caso (frente + comuns).
-  const { data: procFolders } = useTypeFolders(serviceTypeId, "procuracao", frenteSlug);
-  const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
-  const { data: templates } = useTemplatesByFolders(procFolderIds);
+  // S2-04 — as pastas vêm de uma fonte só: a categoria "CONTRATO E PROCURAÇÃO"
+  // de cada tipo (estrutura nova) mais os vínculos `kind='procuracao'` legados.
+  // Antes lia só o legado, e num tema já migrado a lista sairia vazia.
+  const { data: procFolderIds } = useProcuracaoFolderIds(serviceTypeId);
+  const { data: templates } = useTemplatesByFolders(procFolderIds ?? []);
   const { data: docs } = useCaseDocuments(caseId);
   const generateProcuracao = useGenerateProcuracao(caseId);
   const generateContrato = useGenerateContrato(caseId);

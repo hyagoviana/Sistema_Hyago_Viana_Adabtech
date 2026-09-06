@@ -432,6 +432,25 @@ export async function ensureTemaModelStructure(
   return { ok, falhas };
 }
 
+// S2-04 — de onde vêm os modelos de CONTRATO E PROCURAÇÃO de um tema.
+//
+// Na estrutura nova, procuração deixou de ser uma pasta irmã e virou uma
+// CATEGORIA dentro de cada TIPO ("CONTRATO E PROCURAÇÃO"). Mas os vínculos
+// `kind='procuracao'` continuam válidos para os casos em andamento — então a
+// resposta é a UNIÃO das duas fontes, e não a troca de uma pela outra. Trocar
+// deixaria sem modelo de procuração qualquer caso cujo tema ainda não migrou.
+export async function listPastasContratoProcuracao(serviceTypeId: string): Promise<string[]> {
+  const [tipos, legado] = await Promise.all([
+    listTypeFolders(serviceTypeId, "caso"),
+    listTypeFolders(serviceTypeId, "procuracao"),
+  ]);
+  const ids = [
+    ...tipos.map((t) => t.drive_contrato_folder_id).filter((id): id is string => !!id),
+    ...legado.map((f) => f.drive_folder_id),
+  ];
+  return [...new Set(ids)];
+}
+
 // S2-04 — todas as pastas "MODELOS" registradas, para o sync de modelos varrer.
 //
 // Varrer MODELOS (e não cada categoria) é de propósito: o `template-sync` desce

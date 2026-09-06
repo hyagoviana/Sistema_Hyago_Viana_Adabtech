@@ -65,6 +65,7 @@ import {
   type CategoriaModelo,
   pastaDaCategoria,
   useCreateTypeFolder,
+  useProcuracaoFolderIds,
   useTypeFolders,
   useUploadTypeTemplate,
 } from "@/hooks/useServiceTypeFolders";
@@ -652,12 +653,10 @@ function GenerateDialog({
   // R2-09 — FRENTE removida: ignora o filtro de frente (`?? undefined` → todas as
   // pastas do tema); senão pastas de frente legada (ex.: COVID) somem no caso sem frente.
   const { data: casoFolders } = useTypeFolders(serviceTypeId, "caso", frenteSlug ?? undefined);
-  const { data: procFolders } = useTypeFolders(
-    serviceTypeId,
-    "procuracao",
-    frenteSlug ?? undefined,
-  );
-  const procFolderIds = (procFolders ?? []).map((f) => f.drive_folder_id);
+  // S2-04 — fonte única: categoria "CONTRATO E PROCURAÇÃO" de cada tipo +
+  // vínculos `kind='procuracao'` legados.
+  const { data: procFolderIdsData } = useProcuracaoFolderIds(serviceTypeId);
+  const procFolderIds = procFolderIdsData ?? [];
 
   // Modelos por modo: procuração (só as pastas de procuração DA CATEGORIA) vs
   // pasta de caso escolhida (também da categoria).

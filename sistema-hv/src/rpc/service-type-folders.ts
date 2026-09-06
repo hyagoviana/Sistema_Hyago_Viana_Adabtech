@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   createAndLinkFolder,
   ensureTemaModelStructure,
+  listPastasContratoProcuracao,
   linkExistingFolder,
   listRootModelFolders,
   listTypeFolders,
@@ -101,3 +102,10 @@ export const listRootModelFoldersFn = createServerFn({ method: "GET" })
 export const ensureTemaModelStructureFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => handle(() => ensureTemaModelStructure(data.serviceTypeId)));
+
+// S2-04 — ids das pastas de onde tirar modelo de CONTRATO E PROCURAÇÃO: a
+// categoria dentro de cada tipo (estrutura nova) somada aos vínculos
+// `kind='procuracao'` (legado, ainda em uso por casos em andamento).
+export const listProcuracaoFolderIdsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ serviceTypeId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => handle(() => listPastasContratoProcuracao(data.serviceTypeId)));

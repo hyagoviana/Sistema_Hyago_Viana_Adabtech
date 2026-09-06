@@ -26,6 +26,9 @@
 //   --arquivar  tira os modelos legados de circulação: MOVE os arquivos para a
 //               pasta de arquivo morto e grava o inventário em
 //               `system_drive_archive_log` (o owner pediu para guardar)
+//   --camadas   remove as camadas "Casos"/"Procurações", aposentadas pela árvore
+//               nova (o TIPO fica direto sob o tema). Arquiva o que sobrou
+//               dentro delas e limpa as colunas correspondentes no banco.
 //
 // Dry-run é o padrão em ambas. Para aplicar, some `--commit`.
 //
@@ -51,6 +54,7 @@ import { getSupabaseAdmin } from "../src/lib/supabase/server";
 const COMMIT = process.argv.includes("--commit");
 const FASE_MOVER = process.argv.includes("--mover");
 const FASE_ARQUIVAR = process.argv.includes("--arquivar");
+const FASE_CAMADAS = process.argv.includes("--camadas");
 
 const MODELOS_ROOT =
   process.env.GOOGLE_DRIVE_MODELS_ROOT_FOLDER_ID?.trim() || "1su0XT7i2B7ziHGN1PTz5ZRhSWNFEZOsJ";
@@ -369,13 +373,147 @@ async function fase2() {
   console.log(`Inventário: system_drive_archive_log, lote "${LOTE}".`);
 }
 
+// ---------------------------------------------------------------------------
+// FASE 3 — aposentar as camadas "Casos" / "Procurações"
+// ---------------------------------------------------------------------------
+//
+// Elas existiam só para receber o espelho decorativo. Na árvore aprovada o TIPO
+// fica direto sob o tema, então viraram ruído — e ruído confunde, que é
+// exatamente o que o Thiago pediu para resolver.
+//
+// Cauteloso por construção: arquiva (movendo, com inventário) o que ainda estiver
+// solto dentro delas, manda para a LIXEIRA só o que estiver vazio e não for
+// referenciado por nenhum vínculo, e limpa as colunas do banco no fim.
+async function fase3() {
+  console.log(COMMIT ? "\nFASE CAMADAS — MODO COMMIT.\n" : "\nFASE CAMADAS — DRY-RUN.\n");
+  const sb = getSupabaseAdmin();
+
+  // Ids que algum vínculo aponta — inclusive soft-deletado, que pode ser refeito.
+  const { data: vinc } = await sb
+    .from("system_service_type_folders")
+    .select("drive_folder_id, drive_modelos_folder_id");
+  const referenciados = new Set<string>();
+  for (const v of (vinc ?? []) as unknown as Array<Record<string, string | null>>) {
+    for (const k of ["drive_folder_id", "drive_modelos_folder_id"]) {
+      if (v[k]) referenciados.add(v[k] as string);
+    }
+  }
+
+  const { data: temas } = await sb
+    .from("system_temas")
+    .select("id, name, drive_casos_folder_id, drive_contratacao_folder_id")
+    .is("deleted_at", null);
+
+  // Pasta de arquivo (a mesma do lote), criada só se houver o que arquivar.
+  let destinoId: string | null = null;
+  async function destino(): Promise<string> {
+    if (destinoId) return destinoId;
+    const pai = RAIZ_DRIVE || MODELOS_ROOT;
+    const existente = (await listFoldersInFolder(pai)).find(
+      (f) => f.name.trim().toLowerCase() === PASTA_ARQUIVO.toLowerCase(),
+    );
+    destinoId = existente?.id ?? (await createFolder(PASTA_ARQUIVO, pai)).id;
+    return destinoId;
+  }
+
+  let arquivados = 0;
+  let removidas = 0;
+
+  for (const tema of (temas ?? []) as Array<{
+    id: string;
+    name: string;
+    drive_casos_folder_id: string | null;
+    drive_contratacao_folder_id: string | null;
+  }>) {
+    const patch: Record<string, null> = {};
+
+    for (const [rotulo, id, coluna] of [
+      ["Casos", tema.drive_casos_folder_id, "drive_casos_folder_id"],
+      ["Procurações", tema.drive_contratacao_folder_id, "drive_contratacao_folder_id"],
+    ] as const) {
+      if (!id) continue;
+      console.log(`\n📁 ${tema.name} / ${rotulo}`);
+
+      // 1. Arquiva o que estiver solto dentro da camada.
+      for (const f of await arquivosDe(id)) {
+        console.log(`   → arquivar "${f.name}"`);
+        if (!COMMIT) continue;
+        const alvo = await destino();
+        const { error: errLog } = await sb.from("system_drive_archive_log").insert({
+          lote: LOTE,
+          motivo: `S2-04: arquivo solto na camada aposentada "${rotulo}" do tema ${tema.name}.`,
+          drive_file_id: f.id as string,
+          nome: f.name as string,
+          mime_type: f.mimeType ?? "",
+          origem_caminho: await caminho(id),
+          origem_parent_id: id,
+          destino_parent_id: alvo,
+        } as never);
+        if (errLog) {
+          // Sem inventário não move: seria perder o rastro do arquivo.
+          console.error(`   ✗ inventário de "${f.name}":`, errLog.message);
+          continue;
+        }
+        await moveFile(f.id as string, alvo, id);
+        arquivados++;
+      }
+
+      // 2. Subpastas vazias e sem referência vão para a lixeira.
+      for (const sub of await listFoldersInFolder(id)) {
+        if (referenciados.has(sub.id)) {
+          console.log(`   ✓ "${sub.name}" — referenciada por um vínculo, fica`);
+          continue;
+        }
+        const [netos, arqs] = await Promise.all([listFoldersInFolder(sub.id), arquivosDe(sub.id)]);
+        if (netos.length || arqs.length) {
+          console.log(`   ⚠ "${sub.name}" — não está vazia, fica`);
+          continue;
+        }
+        console.log(`   🗑 "${sub.name}" (casca vazia) → lixeira`);
+        if (COMMIT) {
+          await deleteFile(sub.id);
+          removidas++;
+        }
+      }
+
+      // 3. A camada em si, se sobrou vazia.
+      if (!COMMIT) {
+        console.log(`   → removeria a camada "${rotulo}" se ficasse vazia`);
+        continue;
+      }
+      const [subsFinal, arqsFinal] = await Promise.all([listFoldersInFolder(id), arquivosDe(id)]);
+      if (subsFinal.length || arqsFinal.length) {
+        console.log(`   ⚠ camada "${rotulo}" ainda tem conteúdo — fica`);
+        continue;
+      }
+      await deleteFile(id);
+      patch[coluna] = null;
+      removidas++;
+      console.log(`   🗑 camada "${rotulo}" → lixeira`);
+    }
+
+    if (COMMIT && Object.keys(patch).length) {
+      const { error } = await sb
+        .from("system_temas")
+        .update(patch as never)
+        .eq("id", tema.id);
+      if (error) console.error(`   ✗ limpar colunas de ${tema.name}:`, error.message);
+    }
+  }
+
+  if (COMMIT)
+    console.log(`\n${arquivados} arquivo(s) arquivado(s), ${removidas} pasta(s) na lixeira.`);
+  else console.log("\nRode com --commit para aplicar.");
+}
+
 async function main() {
-  if (!FASE_MOVER && !FASE_ARQUIVAR) {
-    console.log("Escolha a fase: --mover ou --arquivar (some --commit para aplicar).");
+  if (!FASE_MOVER && !FASE_ARQUIVAR && !FASE_CAMADAS) {
+    console.log("Escolha a fase: --mover, --arquivar ou --camadas (some --commit para aplicar).");
     return;
   }
   if (FASE_MOVER) await fase1();
   if (FASE_ARQUIVAR) await fase2();
+  if (FASE_CAMADAS) await fase3();
 }
 
 main().catch((err) => {

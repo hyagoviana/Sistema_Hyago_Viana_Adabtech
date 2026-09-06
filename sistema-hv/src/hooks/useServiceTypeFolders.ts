@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   createTypeFolderFn,
   linkTypeFolderFn,
+  listProcuracaoFolderIdsFn,
   listRootModelFoldersFn,
   listTypeFoldersFn,
   unlinkTypeFolderFn,
@@ -21,6 +22,20 @@ export function useRootModelFolders(kind: FolderKind, enabled = true) {
     queryKey: ["root-model-folders", kind],
     queryFn: () => fn({ data: { kind } }) as Promise<DriveFolderOption[]>,
     enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
+// S2-04 — pastas de onde tirar modelo de contrato/procuração. Fonte única: a
+// categoria "CONTRATO E PROCURAÇÃO" de cada tipo MAIS os vínculos de procuração
+// legados. Antes cada tela derivava isso de `useTypeFolders(id, "procuracao")`,
+// que só enxerga o legado — com a estrutura nova, o popup ficaria vazio.
+export function useProcuracaoFolderIds(serviceTypeId: string | null | undefined) {
+  const fn = useServerFn(listProcuracaoFolderIdsFn);
+  return useQuery({
+    queryKey: ["procuracao-folder-ids", serviceTypeId ?? "none"],
+    queryFn: () => fn({ data: { serviceTypeId: serviceTypeId! } }) as Promise<string[]>,
+    enabled: !!serviceTypeId,
     staleTime: 60 * 1000,
   });
 }

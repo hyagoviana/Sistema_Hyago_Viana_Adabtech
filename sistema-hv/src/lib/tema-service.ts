@@ -17,8 +17,8 @@
 import slugify from "slugify";
 
 import {
-  createFolder,
   deleteFile,
+  ensureFolderByName,
   getFileMeta,
   listFoldersInFolder,
   renameFolder,
@@ -270,7 +270,7 @@ export async function createTema(input: { name: string; slug?: string; ordem?: n
   // admin cria depois pelo botão "Criar pasta do tema" (ensureTemaFolder). Não
   // derruba a criação do tema (que já tem o motor/pipeline).
   try {
-    const folder = await createFolder(name, TEMAS_ROOT_FOLDER_ID);
+    const folder = await ensureFolderByName(name, TEMAS_ROOT_FOLDER_ID);
     const subs = await ensureTemaSubfolders(folder.id);
     const { data: withFolder } = await sb
       .from("system_temas")
@@ -339,7 +339,7 @@ export async function ensureTemaFolder(temaId: string) {
   let folderUrl = (tema as { drive_folder_url?: string | null }).drive_folder_url ?? null;
   let created = false;
   if (!folderId) {
-    const folder = await createFolder(tema.name, TEMAS_ROOT_FOLDER_ID);
+    const folder = await ensureFolderByName(tema.name, TEMAS_ROOT_FOLDER_ID);
     folderId = folder.id;
     folderUrl = folder.url;
     created = true;
