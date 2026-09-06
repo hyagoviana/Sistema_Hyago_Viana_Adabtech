@@ -38,6 +38,7 @@
     "projuris:assunto-errado": "tsx scripts/listar-processos-assunto-errado.ts",
     "qa:s204-picker": "tsx scripts/qa-s204-picker-unificado.ts",
     "qa:s204": "tsx scripts/qa-s204-arvore-drive.ts",
+    "drive:migrar-legado": "tsx scripts/migrar-legado-07-modelos.ts",
     "drive:reorganizar": "tsx scripts/reorganizar-modelos-2026-09-06.ts",
     "drive:migrar-s204": "tsx scripts/migrar-arvore-drive-s204.ts",
     "drive:estrutura-modelos": "tsx scripts/construir-estrutura-modelos.ts",
