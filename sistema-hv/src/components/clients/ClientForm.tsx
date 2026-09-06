@@ -124,11 +124,28 @@ function pickAddress(address: Client["address"]): typeof EMPTY_ADDRESS {
   };
 }
 
+// S3-02 — Thiago (desenho 29): "Para o campo 'estado civil', converter em
+// múltipla escolha (standard como solteiro)". A lista é fixa: é ela que faz o
+// dado sair padronizado para as variáveis dos documentos.
+export const ESTADOS_CIVIS = [
+  "Solteiro(a)",
+  "Casado(a)",
+  "Divorciado(a)",
+  "Viúvo(a)",
+  "União estável",
+  "Separado(a)",
+] as const;
+
+// Vale só para CADASTRO NOVO (entra por EMPTY_PROFESSIONAL). Cliente já
+// existente sem o dado continua mostrando o campo vazio — exibir "Solteiro(a)"
+// ali seria afirmar um estado civil que ninguém informou.
+export const ESTADO_CIVIL_PADRAO = "Solteiro(a)";
+
 const EMPTY_PROFESSIONAL = {
   crm_numero: "",
   crm_uf: "",
   rg_orgao: "",
-  estado_civil: "",
+  estado_civil: ESTADO_CIVIL_PADRAO,
   oab_numero: "",
   oab_uf: "",
   vinculo_institucional: "",
@@ -543,13 +560,32 @@ export function ClientForm({ mode, client, onDone, onCancel }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado civil</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="solteira / casado / ..."
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    {/* S3-02 — Thiago (desenho 29): "converter em múltipla
+                        escolha (standard como solteiro)". Texto livre gerava
+                        "solteira", "SOLTEIRO", "solteiro(a)" para a mesma coisa,
+                        e isso ia direto para a variável do documento. */}
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Escolha" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {ESTADOS_CIVIS.map((e) => (
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
+                        ))}
+                        {/* Valor legado que ainda não foi normalizado (o cadastro
+                            era texto livre: "solteira", "SOLTEIRO", "casado"…).
+                            Sem esta opção o Select não teria o que exibir, o campo
+                            apareceria vazio e o primeiro salvamento APAGARIA o
+                            dado de quem nunca pediu nada. */}
+                        {field.value && !ESTADOS_CIVIS.includes(field.value as never) && (
+                          <SelectItem value={field.value}>{field.value} (como estava)</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -658,7 +694,7 @@ export function ClientForm({ mode, client, onDone, onCancel }: Props) {
               name="address.street"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rua *</FormLabel>
+                  <FormLabel>Endereço *</FormLabel>
                   <FormControl>
                     <Input placeholder="Rua das Flores" {...field} value={field.value ?? ""} />
                   </FormControl>
@@ -673,7 +709,7 @@ export function ClientForm({ mode, client, onDone, onCancel }: Props) {
                 name="address.number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Número *</FormLabel>
+                    <FormLabel>Número endereço *</FormLabel>
                     <FormControl>
                       <Input placeholder="123 / S/N" {...field} value={field.value ?? ""} />
                     </FormControl>

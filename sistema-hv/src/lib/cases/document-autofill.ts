@@ -734,6 +734,16 @@ export function buildAutoFillFromClient(
     canonical["Logradouro"] = street;
   }
   if (number) canonical["Número"] = number;
+  // S3-02 — o Thiago renomeou os rótulos do cadastro: "Rua" virou "Endereço" e
+  // "Número" virou "Número endereço". Quem preenche passa a ver esses nomes, e é
+  // por eles que vai nomear a variável no modelo Word.
+  //
+  // O alias é obrigatório aqui e não pode virar `canonical["Endereço"] = street`:
+  // "Endereço" já significa o endereço COMPLETO montado logo abaixo, e trocar o
+  // sentido faria o modelo que hoje espera a linha inteira passar a receber só a
+  // rua. Alias novo resolve os dois usos sem ambiguidade.
+  if (street) canonical["Endereço (logradouro)"] = street;
+  if (number) canonical["Número endereço"] = number;
   if (complement) canonical["Complemento"] = complement;
   if (neighborhood) {
     canonical["Bairro"] = neighborhood;
